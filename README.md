@@ -19,12 +19,12 @@ to target all browsers and mobile platforms.
 | Directory   | Description of the Build                                     |
 |:------------|--------------------------------------------------------------|
 | web         | All **Mobile** and **Desktop Browsers** 100% supported.      |
-| titanium    | Appcelerator Titanium Build with example.                    |
-| node.js     | Node.JS SDK with NPM.  **sudo npm install pubnub**           |
+| modern      | Light-weight Build for **only the latest Browsers**.         |
+| mobile      | Light-weight Build for **only the latest Mobile Apps**.      |
+| titanium    | Appcelerator Titanium Build with example project code.       |
+| node.js     | Node.JS SDK (CommonJS).  **sudo npm install pubnub**         |
 | socket.io   | Socket.IO Framework support with examples and videos.        |
-| mobile      | Light-weight Build for **only the latest Browsers**.         |
-| modern      | Light-weight Build for **only the latest Mobile Browsers**.  |
-| phonegap    | PhoneGap Specific Build.                                     |
+| phonegap    | PhoneGap Build.                                              |
 | core        | Master Source Files are located here.                        |
 
 It is a good idea to start with the **web** directory and work your way
