@@ -18,22 +18,21 @@ to target all browsers and mobile platforms.
 
 | Directory   | Description of the Build                                     |
 |:------------|--------------------------------------------------------------|
-| **web**     | All **Mobile** and **Desktop Browsers** 100% supported.      |
+| web         | All **Mobile** and **Desktop Browsers** 100% supported.      |
 | titanium    | Appcelerator Titanium Build with example.                    |
 | node.js     | Node.JS SDK with NPM.  **sudo npm install pubnub**           |
 | socket.io   | Socket.IO Framework support with examples and videos.        |
 | mobile      | Light-weight Build for **only the latest Browsers**.         |
 | modern      | Light-weight Build for **only the latest Mobile Browsers**.  |
 | phonegap    | PhoneGap Specific Build.                                     |
-| webos       | WebOS Build specifically for WebOS.                          |
-| core        | Master Source Files are located here. Ignore for Production. |
+| core        | Master Source Files are located here.                        |
 
 It is a good idea to start with the **web** directory and work your way
 further into the platform you are seeking if needed.
 The **web** directory supports all legacy, modern and mobile web browsers.
 
 Let's start off with a simple example of how to use the PubNub Network
-JavaScript SDK using the **web** build.  It's as easy as `copy/paste`!!!
+JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 ## SIMPLE EXAMPLE
 ```html
