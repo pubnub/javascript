@@ -3,7 +3,6 @@ http://www.pubnub.com/account
 
 ## PubNub 3.4.1 Real-time Cloud Push API - JAVASCRIPT
 http://www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
-http://www.pubnub.com/tutorial/javascript-push-api
 
 The PubNub Network is a blazingly fast Global Messaging Service for building
 real-time web and mobile apps. Thousands of apps and developers
@@ -11,6 +10,23 @@ rely on PubNub for delivering human-perceptive real-time
 experiences that scale to millions of users worldwide. PubNub delivers
 the infrastructure needed to build amazing Mobile, MMO games, social apps,
 business collaborative solutions, and more.
+
+## PubNub JavaScript Platforms and Languages
+
+>**NOTE**: Start with the **WEB** directory as the default deployment choice
+to target all browsers and mobile platforms.
+
+| Directory   | Description of the Build                                     |
+|:-----------:|--------------------------------------------------------------|
+| **web**     | All **Mobile** and **Desktop Browsers** 100% supported.      |
+| webos       | WebOS Build specifically for WebOS.                          |
+| titanium    | Appcelerator Titanium Build with example.                    |
+| node.js     | Node.JS SDK with NPM.  **sudo npm install pubnub**           |
+| socket.io   | Socket.IO Framework support with examples and videos.        |
+| mobile      | Light-weight Build for **only the latest Browsers**.         |
+| modern      | Light-weight Build for **only the latest Mobile Browsers**.  |
+| phonegap    | PhoneGap Specific Build.                                     |
+| core        | Master Source Files are located here. Ignore for Production. |
 
 ## SIMPLE EXAMPLE
 ```html
