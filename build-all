@@ -10,14 +10,14 @@ echo -e "  "
 echo -e "  USING: $googleminify TO MINIFY..."
 echo -e "  COMPILING PUBNUB JAVASCRIPT API..."
 
-cat ./json.js ./websocket.js ./pubnub.js > ./pubnub.tmp
-echo "(function(){" > ./pubnub.min.js
-java -jar $googleminify --js=./pubnub.tmp --compilation_level=ADVANCED_OPTIMIZATIONS >> ./pubnub.min.js
-echo "})();" >> ./pubnub.min.js
-
+## -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+## Web Build
+## -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+cat ./core/json.js ./core/websocket.js ./core/pubnub.js > ./web/pubnub.js
+echo "(function(){" > ./web/pubnub.min.js
+java -jar $googleminify --js=./web/pubnub.js --compilation_level=ADVANCED_OPTIMIZATIONS >> ./web/pubnub.min.js
+echo "})();" >> ./web/pubnub.min.js
 echo -e "  >>COMPRESSING<< PUBNUB JAVASCRIPT API..."
-cat ./pubnub.min.js | gzip -c9 > ./pubnub.min.js.gz
-
-rm ./pubnub.tmp
+cat ./web/pubnub.min.js | gzip -c9 > ./web/pubnub.min.js.gz
 echo -e "  "
-echo -e "  DONE!\n"
+echo -e "  DONE WEB BUILD!\n"
