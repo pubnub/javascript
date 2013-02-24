@@ -13,7 +13,26 @@ business collaborative solutions, and more.
 
 ## Get Started Here
 
-https://github.com/pubnub/javascript#simple-example - See the simple example.
+https://github.com/pubnub/javascript#simple-example -
+See the simple working example.
+However if you want to learn the basic code for send/receive,
+see below here:
+
+#### Basic Send
+```javascript
+PUBNUB.publish({
+    channel : "hello_world",
+    message : "Hi."
+})
+```
+
+#### Basic Receive
+```javascript
+PUBNUB.subscribe({
+    channel : "hello_world",
+    message : function(m){ alert(m) }
+})
+```
 
 ## PubNub JavaScript Platforms and Languages
 
@@ -47,7 +66,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
     // LISTEN
     PUBNUB.subscribe({
         channel : "hello_world",
-        message : function(m){ alert(m) }
+        message : function(m){ alert(m) },
         connect : publish
     })
 
@@ -61,6 +80,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 </script>
 ```
+>**NOTE:** Copy and paste this example into a *blank* HTML file.
 
 ## ADVANCED STYLE
 ```html
