@@ -21,3 +21,5 @@ echo -e "  >>COMPRESSING<< PUBNUB JAVASCRIPT API..."
 cat ./web/pubnub.min.js | gzip -c9 > ./web/pubnub.min.js.gz
 echo -e "  "
 echo -e "  DONE WEB BUILD!\n"
+
+
