@@ -11,6 +11,10 @@ experiences that scale to millions of users worldwide. PubNub delivers
 the infrastructure needed to build amazing Mobile, MMO games, social apps,
 business collaborative solutions, and more.
 
+## Get Started Here
+
+https://github.com/pubnub/javascript#simple-example - See the simple example.
+
 ## PubNub JavaScript Platforms and Languages
 
 >**NOTE**: Start with the **WEB** directory as the default deployment choice
@@ -44,13 +48,16 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
     PUBNUB.subscribe({
         channel : "hello_world",
         message : function(m){ alert(m) }
+        connect : publish
     })
 
     // SEND
-    PUBNUB.publish({
-        channel : "hello_world",
-        message : "Hi."
-    })
+    function publish() {
+        PUBNUB.publish({
+            channel : "hello_world",
+            message : "Hi."
+        })
+    }
 
 </script>
 ```
