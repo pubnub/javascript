@@ -58,6 +58,7 @@ Let's start off with a simple example of how to use the PubNub Network
 JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 ## SIMPLE EXAMPLE
+>**NOTE:** Copy and paste this example into a *blank* HTML file.
 ```html
 <div id=pubnub pub-key=demo sub-key=demo></div>
 <script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
@@ -80,7 +81,6 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 </script>
 ```
->**NOTE:** Copy and paste this example into a *blank* HTML file.
 
 ## ADVANCED STYLE
 ```html
