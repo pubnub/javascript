@@ -7,12 +7,9 @@
 (window['JSON'] && window['JSON']['stringify']) || (function () {
     window['JSON'] || (window['JSON'] = {});
 
-    if (typeof String.prototype.toJSON !== 'function') {
-        String.prototype.toJSON =
-        Number.prototype.toJSON =
-        Boolean.prototype.toJSON = function (key) {
-            return this.valueOf();
-        };
+    function toJSON(key) {
+        try      { return this.valueOf() }
+        catch(e) { return null }
     }
 
     var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
@@ -41,19 +38,17 @@
             '"' + string + '"';
     }
 
-
     function str(key, holder) {
         var i,          // The loop counter.
             k,          // The member key.
             v,          // The member value.
             length,
-            mind = gap,
             partial,
+            mind  = gap,
             value = holder[key];
 
-        if (value && typeof value === 'object' &&
-                typeof value.toJSON === 'function') {
-            value = value.toJSON(key);
+        if (value && typeof value === 'object') {
+            value = toJSON.call( value, key );
         }
 
         if (typeof rep === 'function') {
