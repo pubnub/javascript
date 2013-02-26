@@ -488,20 +488,20 @@ The Sender will continuously re-send the message; with a delay between each re-s
 This continues until an ACKNOWLEDGEMENT is received from the receiver.
 
 
-## FORCE TRANSPORT FOR JSONP OR FLASH
+## FORCE TRANSPORT FOR JSON(P) OR FLASH SOCKET MODE
 
 It is important to note that the PubNub JavaScript SDK will
 automatically select the **best** transport method.
 However if you desire, you can change this...
 
 If you desire, though it is not recommended, you may manually enforce
-JSONP or Flash Socket transports.
+JSON(P) or Flash Socket transports.
 It is simple to manually enforce these transport mechanisms if needed
 though again it is not recommended unless you are deploying on 
 specific platforms such as *Philips Embedded SmartTV* or *Opera Powered TV*
 platforms which sometimes simply require certain interfaces to be enforced.
 
-##### Require Flash Socket Transport Only Mode
+#### Require Flash Socket Transport Only Mode
 
 
 >**NOTE:** The PubNub div is required for the Flash Socket.
@@ -518,9 +518,9 @@ platforms which sometimes simply require certain interfaces to be enforced.
 </script>
 ```
 
-##### Require JSONP Transport Only Mode
+#### Require JSON(P) Transport Only Mode
 
-This will enforce the JSONP Transport to be used only and
+This will enforce the JSON(P) Transport to be used only and
 will avoid all other transport methods.
 
 
