@@ -3,6 +3,10 @@
 echo $1
 
 googleminify=$1
+VERSION=`cat ./VERSION`
+TOPOUT=pubnub-$VERSION.js
+MINOUT=pubnub-$VERSION.min.js
+GZPOUT=pubnub-$VERSION.min.js.gz
 
 if [ -z "$googleminify" ]; then googleminify="/opt/minify/compiler.jar"; fi
 
@@ -13,13 +17,18 @@ echo -e "  COMPILING PUBNUB JAVASCRIPT API..."
 ## -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ## Web Build
 ## -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-cat ./core/json.js ./core/websocket.js ./core/pubnub.js > ./web/pubnub.js
-echo "(function(){" > ./web/pubnub.min.js
-java -jar $googleminify --js=./web/pubnub.js --compilation_level=ADVANCED_OPTIMIZATIONS >> ./web/pubnub.min.js
-echo "})();" >> ./web/pubnub.min.js
+rm ./web/pubnub-$VERSION*
+echo -n "// "       >> ./web/$TOPOUT
+cat ./VERSION ./core/json.js ./core/pubnub.js ./core/websocket.js >> ./web/$TOPOUT
+echo -n "// "       >> ./web/$MINOUT
+cat ./VERSION       >> ./web/$MINOUT
+echo "(function(){" >> ./web/$MINOUT
+java -jar $googleminify --js=./web/$TOPOUT --compilation_level=ADVANCED_OPTIMIZATIONS >> ./web/$MINOUT
+echo "})();" >> ./web/$MINOUT
 echo -e "  >>COMPRESSING<< PUBNUB JAVASCRIPT API..."
-cat ./web/pubnub.min.js | gzip -c9 > ./web/pubnub.min.js.gz
+cat ./web/$MINOUT | gzip -c9 > ./web/$GZPOUT
+cp ./web/$TOPOUT ./web/pubnub.js
+cp ./web/$MINOUT ./web/pubnub.min.js
 echo -e "  "
 echo -e "  DONE WEB BUILD!\n"
-
 
