@@ -503,7 +503,9 @@ platforms which sometimes simply require certain interfaces to be enforced.
 
 ##### Require Flash Socket Transport Only Mode
 
->**NOTE:** The PubNub <div> is required for the Flash Socket.
+
+>**NOTE:** The PubNub div is required for the Flash Socket.
+
 
 ```html
 <div id=pubnub flash=true></div>
@@ -521,7 +523,9 @@ platforms which sometimes simply require certain interfaces to be enforced.
 This will enforce the JSONP Transport to be used only and
 will avoid all other transport methods.
 
->**NOTE:** you must Exclude the PubNub <div>.
+
+>**NOTE:** you must Exclude the PubNub div.
+
 
 ```html
 <script>
