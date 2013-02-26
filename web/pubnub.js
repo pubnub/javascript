@@ -256,11 +256,13 @@ var db = (function(){
 var nextorigin = (function() {
     var max = 20
     ,   ori = Math.floor(Math.random() * max);
-    return function(origin) {
+    return function( origin, failover ) {
         return origin.indexOf('pubsub') > 0
             && origin.replace(
-             'pubsub', 'ps' + (++ori < max? ori : ori=1)
-            ) || origin;
+             'pubsub', 'ps' + (
+                failover ? uuid().split('-')[0] :
+                (++ori < max? ori : ori=1)
+            ) ) || origin;
     }
 })();
 
@@ -447,6 +449,21 @@ function create(element) { return document.createElement(element) }
  */
 function timeout( fun, wait ) {
     return setTimeout( fun, wait );
+}
+
+/**
+ * uuid
+ * ====
+ * var my_uuid = uuid();
+ */
+function uuid(callback) {
+    var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+    function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+    if (callback) callback(u);
+    return u;
 }
 
 /**
@@ -677,6 +694,8 @@ var PDIV          = $('pubnub') || {}
     ,   SSL           = setup['ssl'] ? 's' : ''
     ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid') || ''
     ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
+    ,   STD_ORIGIN    = nextorigin(ORIGIN)
+    ,   SUB_ORIGIN    = nextorigin(ORIGIN)
     ,   LEAVE         = function(){}
     ,   CONNECT       = function(){}
     ,   SELF          = {
@@ -718,7 +737,7 @@ var PDIV          = $('pubnub') || {}
                 success  : function(response) { callback(response) },
                 fail     : err,
                 url      : [
-                    ORIGIN, 'v2', 'history', 'sub-key',
+                    STD_ORIGIN, 'v2', 'history', 'sub-key',
                     SUBSCRIBE_KEY, 'channel', encode(channel)
                 ]
             });
@@ -759,7 +778,7 @@ var PDIV          = $('pubnub') || {}
 
             // Compose URL Parts
             url = [
-                ORIGIN, 'v1', 'replay',
+                STD_ORIGIN, 'v1', 'replay',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 source, destination
             ];
@@ -782,23 +801,10 @@ var PDIV          = $('pubnub') || {}
             xdr({
                 callback : jsonp,
                 timeout  : SECOND*5,
-                url      : [ORIGIN, 'time', jsonp],
+                url      : [STD_ORIGIN, 'time', jsonp],
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
             });
-        },
-
-        /*
-            PUBNUB.uuid(function(uuid) { });
-        */
-        'uuid' : function(callback) {
-            var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-            function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
-            if (callback) callback(u);
-            return u;
         },
 
         /*
@@ -824,7 +830,7 @@ var PDIV          = $('pubnub') || {}
 
             // Create URL
             url = [
-                ORIGIN, 'publish',
+                STD_ORIGIN, 'publish',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 0, encode(channel),
                 jsonp, encode(msg)
@@ -887,8 +893,7 @@ var PDIV          = $('pubnub') || {}
             ,   noheresync    = args['noheresync']    || 0
             ,   sub_timeout   = args['timeout']       || SUB_TIMEOUT
             ,   windowing     = args['windowing']     || SUB_WINDOWING
-            ,   restore       = args['restore']
-            ,   origin        = nextorigin(ORIGIN);
+            ,   restore       = args['restore'];
 
             // Restore Enabled?
             if (restore) SUB_RESTORE = 1;
@@ -933,9 +938,9 @@ var PDIV          = $('pubnub') || {}
                     'channel'  : channel,
                     'callback' : function(here) {
                         each( 'uuids' in here ? here['uuids'] : [],
-                        function(uuid) { presence( {
+                        function(uid) { presence( {
                             'action'    : 'join',
-                            'uuid'      : uuid,
+                            'uuid'      : uid,
                             'timestamp' : rnow(),
                             'occupancy' : here['occupancy'] || 1
                         }, here, channel ); } );
@@ -951,7 +956,8 @@ var PDIV          = $('pubnub') || {}
                 }
                 else {
                     // New Origin on Failed Connection
-                    origin = nextorigin(ORIGIN);
+                    STD_ORIGIN = nextorigin( ORIGIN, 1 );
+                    SUB_ORIGIN = nextorigin( ORIGIN, 1 );
 
                     // Re-test Connection
                     timeout( function() {
@@ -990,7 +996,7 @@ var PDIV          = $('pubnub') || {}
                     fail     : function() { SELF['time'](_test_connection) },
                     data     : { 'uuid' : UUID },
                     url      : [
-                        origin, 'subscribe',
+                        SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
                         jsonp, TIMETOKEN
                     ],
@@ -1075,7 +1081,7 @@ var PDIV          = $('pubnub') || {}
                 success  : function(response) { callback(response) },
                 fail     : err,
                 url      : [
-                    ORIGIN, 'v2', 'presence',
+                    STD_ORIGIN, 'v2', 'presence',
                     'sub_key', SUBSCRIBE_KEY, 
                     'channel', encode(channel)
                 ]
@@ -1086,6 +1092,7 @@ var PDIV          = $('pubnub') || {}
         'xdr'      : xdr,
         'ready'    : ready,
         'db'       : db,
+        'uuid'     : uuid,
         'each'     : each,
         'map'      : map,
         'grep'     : grep,
@@ -1120,8 +1127,11 @@ var PDIV          = $('pubnub') || {}
         } );
     }
 
-    if (!UUID) UUID = SELF['uuid']();
+    if (!UUID) UUID = uuid();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
+
+    // Return without Testing 
+    if (setup['notest']) return SELF;
 
     // Announce Leave Event
     LEAVE = function( channel, blocking ) {
@@ -1182,6 +1192,7 @@ var PDIV          = $('pubnub') || {}
 
 // CREATE A PUBNUB GLOBAL OBJECT
 PUBNUB = CREATE_PUBNUB({
+    'notest'        : 1,
     'publish_key'   : attr( PDIV, 'pub-key' ),
     'subscribe_key' : attr( PDIV, 'sub-key' ),
     'ssl'           : !document.location.href.indexOf('https') ||
@@ -1201,12 +1212,11 @@ if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
 var pubnubs = $('pubnubs') || {};
 
 // PUBNUB READY TO CONNECT
-function ready() { PUBNUB['time'](rnow);
-PUBNUB['time'](function(t){ timeout( function() {
+function ready() { timeout( function() {
     if (READY) return;
     READY = 1;
     each( READY_BUFFER, function(connect) { connect() } );
-}, SECOND ); }); }
+}, SECOND ); }
 
 // Bind for PUBNUB Readiness to Subscribe
 bind( 'load', window, function(){ timeout( ready, 0 ) } );
