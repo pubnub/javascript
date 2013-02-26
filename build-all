@@ -6,7 +6,6 @@ googleminify=$1
 VERSION=`cat ./VERSION`
 TOPOUT=pubnub-$VERSION.js
 MINOUT=pubnub-$VERSION.min.js
-GZPOUT=pubnub-$VERSION.min.js.gz
 
 if [ -z "$googleminify" ]; then googleminify="/opt/minify/compiler.jar"; fi
 
@@ -26,7 +25,6 @@ echo "(function(){" >> ./web/$MINOUT
 java -jar $googleminify --js=./web/$TOPOUT --compilation_level=ADVANCED_OPTIMIZATIONS >> ./web/$MINOUT
 echo "})();" >> ./web/$MINOUT
 echo -e "  >>COMPRESSING<< PUBNUB JAVASCRIPT API..."
-cat ./web/$MINOUT | gzip -c9 > ./web/$GZPOUT
 cp ./web/$TOPOUT ./web/pubnub.js
 cp ./web/$MINOUT ./web/pubnub.min.js
 echo -e "  "
