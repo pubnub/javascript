@@ -470,3 +470,50 @@ You must allow the Receiver of a message to ACKNOWLEDGE that
 a message was successfully received.
 The Sender will continuously re-send the message; with a delay between each re-send.
 This continues until an ACKNOWLEDGEMENT is received from the receiver.
+
+
+## FORCE TRANSPORT FOR JSONP OR FLASH
+
+It is important to note that the PubNub JavaScript SDK will
+automatically select the **best** transport method.
+However if you desire, you can change this...
+
+If you desire, though it is not recommended, you may manually enforce
+JSONP or Flash Socket transports.
+It is simple to manually enforce these transport mechanisms if needed
+though again it is not recommended unless you are deploying on 
+specific platforms such as *Philips Embedded SmartTV* or *Opera Powered TV*
+platforms which sometimes simply require certain interfaces to be enforced.
+
+##### Require Flash Socket Transport Only Mode
+
+>**NOTE:** The PubNub <div> is required for the Flash Socket.
+
+```html
+<div id=pubnub flash=true></div>
+<script>
+    var flash_socket = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo',
+        origin        : 'pubsub.pubnub.com'
+    });
+</script>
+```
+
+##### Require JSONP Transport Only Mode
+
+This will enforce the JSONP Transport to be used only and
+will avoid all other transport methods.
+
+>**NOTE:** you must Exclude the PubNub <div>.
+
+```html
+<script>
+    var pubnub = PUBNUB.init({
+        jsonp         : true,
+        publish_key   : 'demo',
+        subscribe_key : 'demo',
+        origin        : 'pubsub.pubnub.com'
+    });
+</script>
+```
