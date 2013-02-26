@@ -1,7 +1,7 @@
 # YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
 http://www.pubnub.com/account
 
-## PubNub 3.4.1 Real-time Cloud Push API - JAVASCRIPT
+## PubNub 3.4.2 Real-time Cloud Push API - JAVASCRIPT
 http://www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
 
 The PubNub Network is a blazingly fast Global Messaging Service for building
@@ -16,7 +16,7 @@ business collaborative solutions, and more.
 You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 ```html
-<script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
+<script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
 <script>(function(){
     var pubnub = PUBNUB.init({
         publish_key   : 'demo',
@@ -80,7 +80,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 ```html
 <div id=pubnub pub-key=demo sub-key=demo></div>
-<script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
+<script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
 <script>
 
     // LISTEN
@@ -104,7 +104,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 ## ADVANCED STYLE
 ```html
 <div id=pubnub pub-key=demo sub-key=demo></div>
-<script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
+<script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
 <script>(function(){
     PUBNUB.subscribe({
         channel    : "hello_world",        // CONNECT TO THIS CHANNEL.
@@ -145,7 +145,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 ## SSL MODE
 ```html
 <div id=pubnub ssl=on></div>
-<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.1.min.js></script>
+<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js></script>
 <script>(function(){
 
     var pubnub = PUBNUB.init({
@@ -169,7 +169,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 ## HISTORY
 ```html
 <div id=pubnub></div>
-<script src=http://pubnub.a.ssl.fastly.net/pubnub-3.4.1.min.js></script>
+<script src=http://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js></script>
 <script>(function(){
 
     var pubnub = PUBNUB.init({
@@ -198,7 +198,7 @@ the timeline as they occured.
 
 ```html
 <div id=pubnub></div>
-<script src=http://pubnub.a.ssl.fastly.net/pubnub-3.4.1.min.js></script>
+<script src=http://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js></script>
 <script>(function(){
 
 /* GENERATE CHANNEL */
@@ -257,7 +257,7 @@ The following example opens a `new WebSocket` in
 
 ```html
 <!-- Import PubNub Core Lib -->
-<script src="https://pubnub.a.ssl.fastly.net/pubnub-3.4.1.min.js"></script>
+<script src="https://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js"></script>
 
 <!-- Use WebSocket Constructor for a New Socket Connection -->
 <script>(function() {
@@ -306,7 +306,7 @@ The following example opens a `new WebSocket` in
 
 ```html
 <!-- NON-SSL Import PubNub Core Lib -->
-<script src="http://pubnub.a.ssl.fastly.net/pubnub-3.4.1.min.js"></script>
+<script src="http://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js"></script>
 
 <!-- NON-SSL Use WebSocket Constructor for a New Socket Connection -->
 <script>(function() {
@@ -323,7 +323,7 @@ How to create a new instance of the PubNub Object directly in JavaScript.
 To do this, simply follow this `init` example:
 
 ```html
-<script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
+<script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
 <script>(function(){
 
     // INIT PubNub
@@ -366,7 +366,7 @@ Be sure to include the following JavaScript Files:
 3. encryption adapter:
 
 ```html
-<script src="http://cdn.pubnub.com/pubnub-3.4.1.min.js"></script>
+<script src="http://cdn.pubnub.com/pubnub-3.4.2.min.js"></script>
 <script src="crypto/gibberish-aes.js"></script>
 <script src="crypto/encrypt-pubnub.js"></script>
 ```
