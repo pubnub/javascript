@@ -1,7 +1,7 @@
 # YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
 http://www.pubnub.com/account
 
-## PubNub 3.4.2 Real-time Cloud Push API - JAVASCRIPT
+## The PubNub Network JavaScript v3.4.2 Real-time SDK
 http://www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
 
 The PubNub Network is a blazingly fast Global Messaging Service for building
