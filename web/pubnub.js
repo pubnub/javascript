@@ -1258,8 +1258,8 @@ typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
 // WEBSOCKET INTERFACE
 // ---------------------------------------------------------------------------
 var WS = PUBNUB['ws'] = function( url, protocols ) {
-    if (!(this instanceof WS)) return new WS(url, protocols);
-    
+    if (!(this instanceof WS)) return new WS( url, protocols );
+
     var self     = this
     ,   url      = self.url      = url || ''
     ,   protocol = self.protocol = protocols || 'Sec-WebSocket-Protocol'

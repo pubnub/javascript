@@ -33,7 +33,7 @@ echo -e "  DONE WEB BUILD!\n"
 ## -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 echo -e "  "
 echo -e "  BUILDING SOCKET.IO..."
-cat ./socket.io/socket.io.js | java -jar $googleminify > ./socket.io/socket.io.tmp
+cat ./socket.io/socket.io-base.js | java -jar $googleminify > ./socket.io/socket.io.tmp
 cat ./web/pubnub.min.js             \
     ./core/crypto/gibberish-aes.js  \
     ./core/crypto/encrypt-pubnub.js \
