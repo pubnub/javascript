@@ -54,7 +54,7 @@
 </script>
 
 <div id=pubnub pub-key=demo sub-key=demo origin=pubsub.pubnub.com></div>
-<script src=../pubnub.js></script>
+<script src=../pubnub.min.js></script>
 <script src=../../core/crypto/gibberish-aes.js></script>
 <script src=../../core/crypto/encrypt-pubnub.js></script>
 
@@ -92,7 +92,7 @@
     }
 
     var p = PUBNUB
-            , many_con_tst = 20
+            , many_con_tst = 2
             , channel = 'pn-javascript-unit-test'
             , out = p.$('unit-test-out')
             , test_tpl = p.$('test_template').innerHTML
@@ -296,6 +296,13 @@
                 test(1, 'Beginning AES Publish / Subscribe / History Tests');
 
                 function aes_history_test() {
+                    // Switchup JSONP
+                    PUBNUB.init({
+                        jsonp         : true,
+                        publish_key   : 'demo',
+                        subscribe_key : 'demo'
+                    });
+
                     s.history({
                         limit: 1,
                         reverse: false,

@@ -7,35 +7,45 @@
 </head>
 <body>
 
+<div id=out></div>
+
 <div id=pubnub sub-key=demo pub-key=demo></div>
-<script src=../pubnub.min.js></script>
+<script src=../pubnub.js></script>
 <script>(function(){
 
     "use strict"
 
     /* 'wss://ORIGIN/PUBLISH_KEY/SUBSCRIBE_KEY/CHANNEL' */
+    WebSocket  = PUBNUB.ws
     var socket = new WebSocket('wss://pubsub.pubnub.com/demo/demo/my_channel')
+    var out    = PUBNUB.$('out')
 
     socket.onmessage = function(evt) {
-        console.log('socket receive');
-        console.log(evt.data);
+        log('socket receive')
+        log(evt.data)
     }
     socket.onclose = function() {
-        console.log('socket closed');
+        log('socket closed')
     }
     socket.onerror = function() {
-        console.log('socket error');
+        log('socket error')
     }
     socket.onopen = function(evt) {
-        console.log('socket open');
-        socket.send('hello world!');
+        log('socket open')
+        socket.send('hello world!')
     }
     socket.onsend = function(evt) {
-        console.log('socket send');
-        console.log(evt);
+        log('socket send')
+        log(evt)
     }
 
-    console.log(socket)
+    log(socket)
+
+    function log(data) {
+        out.innerHTML = data + "<br>" + out.innerHTML
+        console.log(data)
+    }
+
 
 })();</script>
 </div>

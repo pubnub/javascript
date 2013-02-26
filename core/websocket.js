@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 // WEBSOCKET INTERFACE
 // ---------------------------------------------------------------------------
-WebSocket = function( url, protocols ) {
+var WS = PUBNUB['ws'] = function( url, protocols ) {
     var self     = this
     ,   url      = self.url      = url || ''
     ,   protocol = self.protocol = protocols || 'Sec-WebSocket-Protocol'
@@ -85,7 +85,7 @@ WebSocket = function( url, protocols ) {
 // ---------------------------------------------------------------------------
 // WEBSOCKET SEND
 // ---------------------------------------------------------------------------
-WebSocket.prototype.send = function(data) {
+WS.prototype.send = function(data) {
     var self = this;
     self.pubnub['publish']({
         'channel'  : self.pubnub.setup['channel'],
@@ -99,7 +99,7 @@ WebSocket.prototype.send = function(data) {
 // ---------------------------------------------------------------------------
 // WEBSOCKET CLOSE
 // ---------------------------------------------------------------------------
-WebSocket.prototype.close = function() {
+WS.prototype.close = function() {
     var self = this;
     self.pubnub['unsubscribe']({ 'channel' : self.pubnub.setup['channel'] });
     self['readyState'] = self['CLOSED'];

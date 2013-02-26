@@ -41,6 +41,7 @@ to target all browsers and mobile platforms.
 
 | Directory   | Description of the Build                                     |
 |:------------|--------------------------------------------------------------|
+| samples     | Several Sample Web Apps.                                     |
 | web         | All **Mobile** and **Desktop Browsers** 100% supported.      |
 | modern      | Light-weight Build for **only the latest Browsers**.         |
 | mobile      | Light-weight Build for **only the latest Mobile Apps**.      |
@@ -222,10 +223,17 @@ Now you can use `new WebSocket` any time!
 You will need to hit the right resource URLs.
 Make sure to follow the examples below.
 
-Here is a quick example:
+Here is a quick example providing an easy adapter:
 
 ```javascript
-var socket = new WebSocket('wss://pubsub.pubnub.com/PUB/SUB/CHANNEL')
+WebSocket  = PUBNUB.ws;
+var socket = new WebSocket('wss://pubsub.pubnub.com/PUB/SUB/CHANNEL');
+```
+
+Alternatively you may directly access the PubNub WebSocket via:
+
+```javascript
+var socket = new PUBNUB.ws('wss://pubsub.pubnub.com/PUB/SUB/CHANNEL')
 ```
 
 The following example opens a `new WebSocket` in

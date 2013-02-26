@@ -506,7 +506,12 @@ var PDIV          = $('pubnub') || {}
 ,   READY         = 0
 ,   READY_BUFFER  = []
 ,   CREATE_PUBNUB = function(setup) {
+
+    // Force JSONP if requested from user.
+    if (setup['jsonp']) XORIGN = 0;
+
     var CHANNELS      = {}
+    ,   PUB_QUEUE     = []
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
     ,   SUB_RECEIVER  = 0
@@ -551,8 +556,9 @@ var PDIV          = $('pubnub') || {}
             params['count']       = count;
             params['reverse']     = reverse;
 
-            if (start) params['start'] = start;
-            if (end)   params['end']   = end;
+            if (jsonp) params['callback'] = jsonp;
+            if (start) params['start']    = start;
+            if (end)   params['end']      = end;
 
             // Send Message
             xdr({
@@ -652,35 +658,39 @@ var PDIV          = $('pubnub') || {}
         */
         'publish' : function( args, callback ) {
             var callback = callback || args['callback'] || function(){}
-            ,   message  = args['message']
+            ,   msg      = args['message']
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
             ,   url;
 
-            if (!message)       return error('Missing Message');
+            if (!msg)           return error('Missing Message');
             if (!channel)       return error('Missing Channel');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // If trying to send Object
-            message = JSON['stringify'](message);
+            msg = JSON['stringify'](msg);
 
             // Create URL
             url = [
                 ORIGIN, 'publish',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 0, encode(channel),
-                jsonp, encode(message)
+                jsonp, encode(msg)
             ];
 
-            // Send Message
-            xdr({
+            // Queue Message Send
+            PUB_QUEUE.push({
                 callback : jsonp,
-                success  : function(response) { callback(response) },
-                fail     : function() { callback([ 0, 'Disconnected' ]) },
+                timeout  : SECOND*5,
                 url      : url,
-                data     : { 'uuid' : UUID }
+                data     : { 'uuid' : UUID },
+                success  : function(response){callback(response);publish(1)},
+                fail     : function(){callback([0,'Failed',msg]);publish(1)}
             });
+
+            // Send Message
+            publish();
         },
 
         /*
@@ -942,6 +952,14 @@ var PDIV          = $('pubnub') || {}
         'updater'  : updater,
         'init'     : CREATE_PUBNUB
     };
+
+    PUB_QUEUE.sending = 0;
+    function publish(next) {
+        if (next) PUB_QUEUE.sending = 0;
+        if (PUB_QUEUE.sending || !PUB_QUEUE.length) return;
+        PUB_QUEUE.sending = 1;
+        xdr(PUB_QUEUE.shift());
+    }
 
     function each_channel(callback) {
         each( generate_channel_list(CHANNELS), function(channel) {
