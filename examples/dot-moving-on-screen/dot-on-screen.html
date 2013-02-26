@@ -1,0 +1,69 @@
+<html>
+<body>
+<div pub-key="demo" sub-key="demo" ssl="off" origin="pubsub.pubnub.com" id="pubnub"></div>
+<style>
+#mouse {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 50px;
+    height: 50px;
+    background-color: #f00;
+    border-radius: 100px;
+
+    -webkit-perspective: 1000;
+    -webkit-backface-visibility: hidden;  
+
+    -webkit-transition: all 1s;
+    -moz-transition: all 1s;
+    -ms-transition: all 1s;
+    -o-transition: all 1s;
+    transition: all 1s;
+}
+#status {
+    font-size: 40px;
+    margin: 50px;
+}
+</style>
+
+<div id="mouse"></div>
+<div id="status">Establishing a connection...</div>
+
+<script src="../../web/pubnub.min.js"></script>
+<script>
+(function(){
+  var mouse  = document.getElementById('mouse');
+  var status = document.getElementById('status');
+  var evt    = {};
+  var send   = PUBNUB.updater( function() {
+    PUBNUB.publish({
+        channel : "hello_world",
+        message : { 'x':evt.clientX, 'y':evt.clientY }
+    });
+  }, 100 );
+
+  // LISTEN FOR MESSAGES
+  PUBNUB.subscribe({
+    channel    : "hello_world",
+    message    : function(message) {
+      mouse.style.top  = message.y + 'px';
+      mouse.style.left = message.x + 'px';
+    },
+    disconnect : function() {
+      status.innerHTML = 'Connection Lost. Will auto-reconnect when Online.';
+    },
+    reconnect  : function() {
+      status.innerHTML = 'And we are Back!';
+    },
+    connect    : function() {
+      status.innerHTML     = 'Connected!';
+      document.onmousemove = function(e) {
+        evt = e;
+        send();
+      };
+    }
+  });
+})();
+</script>
+</body>
+</html>

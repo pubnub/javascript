@@ -11,6 +11,22 @@ experiences that scale to millions of users worldwide. PubNub delivers
 the infrastructure needed to build amazing Mobile, MMO games, social apps,
 business collaborative solutions, and more.
 
+## PubNub CDN JavaScript SDK
+
+You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
+
+```html
+<script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
+<script>(function(){
+    var pubnub = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    });
+})();</script>
+```
+
+>**NOTE:** SSL Mode requires a few extra steps: [SSL MODE](README.md#ssl-mode)
+
 ## Get Started Here
 
 https://github.com/pubnub/javascript#simple-example -
@@ -41,7 +57,7 @@ to target all browsers and mobile platforms.
 
 | Directory   | Description of the Build                                     |
 |:------------|--------------------------------------------------------------|
-| samples     | Several Sample Web Apps.                                     |
+| examples    | Several Sample Web Apps.                                     |
 | web         | All **Mobile** and **Desktop Browsers** 100% supported.      |
 | modern      | Light-weight Build for **only the latest Browsers**.         |
 | mobile      | Light-weight Build for **only the latest Mobile Apps**.      |
@@ -88,7 +104,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 ## ADVANCED STYLE
 ```html
 <div id=pubnub pub-key=demo sub-key=demo></div>
-<script src=http://pubnub.s3.amazonaws.com/pubnub-3.4.1.min.js ></script>
+<script src=http://cdn.pubnub.com/pubnub-3.4.1.min.js ></script>
 <script>(function(){
     PUBNUB.subscribe({
         channel    : "hello_world",        // CONNECT TO THIS CHANNEL.
