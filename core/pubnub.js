@@ -519,7 +519,7 @@ function generate_channel_list(channels) {
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 
-var PDIV          = $('pubnub') || {}
+var PDIV          = $('pubnub') || 0
 ,   READY         = 0
 ,   READY_BUFFER  = []
 ,   CREATE_PUBNUB = function(setup) {
@@ -1039,27 +1039,6 @@ var PDIV          = $('pubnub') || {}
     return SELF;
 };
 
-// CREATE A PUBNUB GLOBAL OBJECT
-PUBNUB = CREATE_PUBNUB({
-    'notest'        : 1,
-    'publish_key'   : attr( PDIV, 'pub-key' ),
-    'subscribe_key' : attr( PDIV, 'sub-key' ),
-    'ssl'           : !document.location.href.indexOf('https') ||
-                      attr( PDIV, 'ssl' ) == 'on',
-    'origin'        : attr( PDIV, 'origin' ),
-    'uuid'          : attr( PDIV, 'uuid' )
-});
-
-// PUBNUB Flash Socket
-css( PDIV, { 'position' : 'absolute', 'top' : -SECOND } );
-
-if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
-    '<object id=pubnubs data='  + SWF +
-    '><param name=movie value=' + SWF +
-    '><param name=allowscriptaccess value=always></object>';
-
-var pubnubs = $('pubnubs') || {};
-
 // PUBNUB READY TO CONNECT
 function ready() { timeout( function() {
     if (READY) return;
@@ -1070,6 +1049,38 @@ function ready() { timeout( function() {
 // Bind for PUBNUB Readiness to Subscribe
 bind( 'load', window, function(){ timeout( ready, 0 ) } );
 
+var pdiv = PDIV || {};
+
+// CREATE A PUBNUB GLOBAL OBJECT
+PUBNUB = CREATE_PUBNUB({
+    'notest'        : 1,
+    'publish_key'   : attr( pdiv, 'pub-key' ),
+    'subscribe_key' : attr( pdiv, 'sub-key' ),
+    'ssl'           : !document.location.href.indexOf('https') ||
+                      attr( pdiv, 'ssl' ) == 'on',
+    'origin'        : attr( pdiv, 'origin' ),
+    'uuid'          : attr( pdiv, 'uuid' )
+});
+
+// jQuery Interface
+window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
+
+// For Modern JS + Testling.js - http://testling.com/
+typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
+
+var pubnubs = $('pubnubs') || 0;
+
+// LEAVE NOW IF NO PDIV.
+if (!PDIV) return;
+
+// PUBNUB Flash Socket
+css( PDIV, { 'position' : 'absolute', 'top' : -SECOND } );
+
+if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
+    '<object id=pubnubs data='  + SWF +
+    '><param name=movie value=' + SWF +
+    '><param name=allowscriptaccess value=always></object>';
+
 // Create Interface for Opera Flash
 PUBNUB['rdx'] = function( id, data ) {
     if (!data) return FDomainRequest[id]['onerror']();
@@ -1078,7 +1089,7 @@ PUBNUB['rdx'] = function( id, data ) {
 };
 
 function FDomainRequest() {
-    if (!pubnubs['get']) return 0;
+    if (!pubnubs || !pubnubs['get']) return 0;
 
     var fdomainrequest = {
         'id'    : FDomainRequest['id']++,
@@ -1093,11 +1104,5 @@ function FDomainRequest() {
     return fdomainrequest;
 }
 FDomainRequest['id'] = SECOND;
-
-// jQuery Interface
-window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
-
-// For Modern JS + Testling.js - http://testling.com/
-typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
 
 })();

@@ -7,8 +7,7 @@
 </head>
 <body>
 
-<div id=pubnub sub-key=demo pub-key=demo></div>
-<script src=../pubnub.min.js></script>
+<script src=../pubnub.js></script>
 <script>(function(){
 
 var pubnub = PUBNUB.init({
@@ -17,8 +16,9 @@ var pubnub = PUBNUB.init({
 });
 
 pubnub.subscribe({
-    channel    : 'will-disconnect,fluffy,cat,apple',
+    channel    : 'will-disconnect,a-chan,b-chan',
     message    : function(){ log('MESSAGE')    },
+    connect    : function(){ log('CONNECT')    },
     reconnect  : function(){ log('RECONNECT')  },
     disconnect : function(){ log('DISCONNECT') }
 });
