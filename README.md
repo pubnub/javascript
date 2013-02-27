@@ -194,10 +194,19 @@ If you have any questions please contact help@pubnub.com
 
 ## AES Cryptography
 
->**NOTE:** This cryptography is compatible with all other PubNub SDKs!
+>**NOTE:** This cryptography is compatible with all other 3.4 PubNub SDKs!
+Easily encrypt your PubNub messages using AES by setting a single flag
+when you publish a message and subscribing as well.
+Even better, this encryption works across all `3.4` PubNub clients,
+meaning you can encrypt/decrypt across these environments.
 
 You can now use PubNub AES256 Cryptograhpy with JavaScript and other
-SDK languages easily by following this starting point for JavaScript:
+SDK languages easily by following this starting point for JavaScript.
+We’ve worked hard to make sure that using AES encryption in PubNub is easy.
+The complexity of encrypting and decrypting the data is built into
+the free PubNub client libraries (since our libraries
+are open source, you’re welcome to see how we did it).
+To use AES encryption in PubNub, simply do the following:
 
 ```html
 <script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js></script>
