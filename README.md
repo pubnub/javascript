@@ -119,6 +119,84 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 </script>
 ```
 
+## REAL MULTIPLEXING
+
+>Multiplexing enhances mobile performance and battery savings.
+
+The PubNub Network today is the only vendor that supports real channel
+multiplexing with a single TCP Socket.
+With Multiplexing, you are able to subscribed to a group of channels
+while conserving resources and improving performance of message delivery
+all with a single network connection.
+It is easy to use multiplexing with all `3.4` client SDKs because
+it is transparent and automatic.
+Here is an example of using Channel Multiplexing.
+
+#### Adding Channels - Just keep adding!
+
+> You can continue to add channels with subsequent calls.
+
+
+```javascript
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Setup your Receiver Function
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+function receiver( message, envelope, channel ) { /*...*/ }
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// ADD ARRAY - You can add an array of channel names to connect.
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+pubnub.subscribe({
+    channel : ['chan1','chan2','chan3'],
+    message : receiver
+})
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// ADD LIST - You can add a comma separated list of channel names.
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+pubnub.subscribe({
+    channel : 'chan4,chan6,chan7',
+    message : receiver
+})
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// ADD ONE MORE - You can add a comma separated list of channel names.
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+pubnub.subscribe({
+    channel : 'chan8',
+    message : receiver
+})
+```
+
+#### Removing Channels
+
+```javascript
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// REMOVE ARRAY
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+pubnub.unsubscribe({ channel : ['chan1','chan2','chan3'] })
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// REMOVE LIST
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+pubnub.unsubscribe({ channel : 'chan4,chan6,chan7' })
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// REMOVE ONE
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+pubnub.unsubscribe({ channel : 'chan8' })
+```
+
+That's it!  It's easy to take advantage of multiplexing.
+If you have any questions please contact help@pubnub.com
+
+
+## AES Cryptography
+
+>TODO!
+
+
+
 ## HISTORY AND HERE-NOW EXAMPLE
 ```html
 <span onclick="hereNow()">Click Me for Here Now!</span>
@@ -421,7 +499,7 @@ var pubnub = PUBNUB.init({
 
 Windowing is a good idea! Please use it for improved network efficiency.
 
-#### KEEPALIVE
+#### KEEPALIVE PING INTERVAL
 
 >**NOTE:** The JavaScript library will automatically detect disconnects
 in near real-time regardless of `keepalaive`.
