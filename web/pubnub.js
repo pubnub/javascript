@@ -257,7 +257,7 @@ var nextorigin = (function() {
     var max = 20
     ,   ori = Math.floor(Math.random() * max);
     return function( origin, failover ) {
-        return origin.indexOf('pubsub') > 0
+        return origin.indexOf('pubsub.') > 0
             && origin.replace(
              'pubsub', 'ps' + (
                 failover ? uuid().split('-')[0] :
