@@ -6,6 +6,7 @@ googleminify=$1
 VERSION=`cat ./VERSION`
 TOPOUT=pubnub-$VERSION.js
 MINOUT=pubnub-$VERSION.min.js
+CRYOUT=pubnub-crypto-$VERSION.min.js
 
 if [ -z "$googleminify" ]; then googleminify="/opt/minify/compiler.jar"; fi
 
@@ -26,6 +27,16 @@ java -jar $googleminify --js=./web/$TOPOUT --compilation_level=ADVANCED_OPTIMIZA
 echo "})();" >> ./web/$MINOUT
 cp ./web/$TOPOUT ./web/pubnub.js
 cp ./web/$MINOUT ./web/pubnub.min.js
+
+## Crypto
+echo -e "  BUILDING CRYPTO..."
+echo "(function(){"                  > ./web/$CRYOUT
+cat ./core/crypto/gibberish-aes.js  \
+./core/crypto/encrypt-pubnub.js     \
+| java -jar $googleminify           >> ./web/$CRYOUT
+echo "})();"                        >> ./web/$CRYOUT
+cp ./web/$CRYOUT ./web/pubnub-crypto.min.js
+
 echo -e "  DONE WEB BUILD!\n"
 
 ## -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -34,9 +45,8 @@ echo -e "  DONE WEB BUILD!\n"
 echo -e "  "
 echo -e "  BUILDING SOCKET.IO..."
 cat ./socket.io/socket.io-base.js | java -jar $googleminify > ./socket.io/socket.io.tmp
-cat ./web/pubnub.min.js             \
-    ./core/crypto/gibberish-aes.js  \
-    ./core/crypto/encrypt-pubnub.js \
+cat ./web/pubnub.min.js       \
+    ./web/$CRYOUT             \
     ./socket.io/socket.io.tmp > ./socket.io/socket.io.min.js
 rm ./socket.io/socket.io.tmp
 echo -e "  DONE SOCKET.IO BUILD!\n"

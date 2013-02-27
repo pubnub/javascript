@@ -1,19 +1,14 @@
-// =====================================================================
-// STANFORD CRYPTO Library with AES Encryption
-// =====================================================================
+PUBNUB['secure'] = (function(){
+    var crypto = PUBNUB['crypto'];
+    crypto.size(256);
 
-PUBNUB.secure = (function () {
-
-    GibberishAES.size(256);
     var cipher_key = "";
-    var iv = GibberishAES.s2a("0123456789012345");
-
+    var iv = crypto.s2a("0123456789012345");
 
     function encrypt(data) {
-
-        var hex_message = GibberishAES.s2a(JSON.stringify(data));
-        var encryptedHexArray = GibberishAES.rawEncrypt(hex_message, cipher_key, iv);
-        var base_64_encrypted = GibberishAES.Base64.encode(encryptedHexArray);
+        var hex_message = crypto.s2a(JSON.stringify(data));
+        var encryptedHexArray = crypto.rawEncrypt(hex_message, cipher_key, iv);
+        var base_64_encrypted = crypto.Base64.encode(encryptedHexArray);
         return base_64_encrypted || data.data.message;
     }
 
@@ -21,8 +16,8 @@ PUBNUB.secure = (function () {
         options = options ? options : {};
 
         try {
-            var binary_enc = GibberishAES.Base64.decode(data);
-            var json_plain = GibberishAES.rawDecrypt(binary_enc, cipher_key, iv, false);
+            var binary_enc = crypto.Base64.decode(data);
+            var json_plain = crypto.rawDecrypt(binary_enc, cipher_key, iv, false);
             var plaintext = JSON.parse(json_plain);
 
             return plaintext;
@@ -32,68 +27,54 @@ PUBNUB.secure = (function () {
         }
     }
 
-
     return function (setup) {
-
-        cipher_key = GibberishAES.s2a(SHA256(setup.cipher_key).slice(0,32));
-
+        cipher_key = crypto.s2a(SHA256(setup.cipher_key).slice(0,32));
         var pubnub = PUBNUB.init(setup);
-
         return {
-            time: PUBNUB.time,
-
-            publish: function (args) {
+            raw_encrypt : encrypt,
+            raw_decrypt : decrypt,
+            time        : PUBNUB.time,
+            publish     : function (args) {
                 args.message = encrypt(args.message);
                 return pubnub.publish(args);
             },
-            subscribe: function (args) {
-                var callback = args.callback;
+            subscribe   : function (args) {
+                var callback = args.callback || args.message;
                 args.callback = function (message, envelope, channel) {
                     var decrypted = decrypt(message);
                     decrypted && callback(decrypted, envelope, channel);
                 }
-
                 return pubnub.subscribe(args);
             },
-            history: function (args) {
-
+            history     : function (args) {
                 var encrypted_messages = "";
                 var old_callback = args.callback;
 
                 function new_callback(response) {
-                    encrypted_messages = response[0];
-
+                    encrypted_messages     = response[0];
                     var decrypted_messages = [];
 
                     for (a = 0; a < encrypted_messages.length; a++) {
-                        var new_message = decrypt(encrypted_messages[a], {"parse_error":"DECRYPT_ERROR"});
+                        var new_message = decrypt( encrypted_messages[a], {
+                            "parse_error":"DECRYPT_ERROR"
+                        } );
                         decrypted_messages.push((new_message));
                     }
 
-                    old_callback([decrypted_messages, response[1], response[2]]);
+                    old_callback([
+                        decrypted_messages,
+                        response[1],
+                        response[2]
+                    ]);
                 }
 
                 args.callback = new_callback;
-
                 pubnub.history(args);
-
                 return true;
-            },
-
-            raw_encrypt: encrypt,
-            raw_decrypt: decrypt
+            }
         };
     };
 })();
-
-/**
- *
- *  Secure Hash Algorithm (SHA256)
- *  http://www.webtoolkit.info/
- *
- *  Original code by Angel Marin, Paul Johnston.
- *
- **/
 
 function SHA256(s) {
 
@@ -234,5 +215,4 @@ function SHA256(s) {
 
     s = Utf8Encode(s);
     return binb2hex(core_sha256(str2binb(s), s.length * chrsz));
-
 }

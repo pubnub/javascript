@@ -4,10 +4,7 @@
     <!-- Hey, let's be friends! twitter.com/pubnub -->
     <title>PubNub JavaScript Unit Test</title>
     <meta http-equiv=content-type content=text/html;charset=utf-8>
-    <link
-            rel=stylesheet
-            href=http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css
-            >
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet">
     <style type=text/css>
         #stop-test,
         #finished-fail,
@@ -21,7 +18,7 @@
 <div class=container>
 
 <!-- NOTICE / TITLE -->
-<div class="alert-message warning">
+<div class="alert alert-block">
     <a class="close" href="#">&#215;</a>
 
     <p><strong>PubNub Unit Tests</strong> for JavaScript on Mobile and Desktop Web Browser</p>
@@ -31,8 +28,8 @@
 <div class=well>
     <button id=start-test class='btn info'>Start Test</button>
     <button id=stop-test class='btn danger'>STOP</button>
-    <span id=finished-success class='label success'>100% Successful</span>
-    <span id=finished-fail class='label important'>Finished With Errors</span>
+    <span id=finished-success class='label label-success'>100% Successful</span>
+    <span id=finished-fail class='label label-important'>Finished With Errors</span>
     <span
             id=test-status
             class=label
@@ -42,21 +39,17 @@
 
 <!-- OUTPUT -->
 <table id=unit-test-out class="zebra-striped">
-    <tr>
-    <th><span class=label>Pass/Fail</span>
-    <th>Test Ready
 </table>
 
 <!-- TEMPLATES -->
 <script type=text/template id=test_template class=tpl>
-    <td><span class="label {result}">{display}</span></td>
+    <td><span class="label label-{result}">{display}</span></td>
     <td>{message}</td>
 </script>
 
 <div id=pubnub pub-key=demo sub-key=demo origin=pubsub.pubnub.com></div>
 <script src=../pubnub.min.js></script>
-<script src=../../core/crypto/gibberish-aes.js></script>
-<script src=../../core/crypto/encrypt-pubnub.js></script>
+<script src=../pubnub-crypto.min.js></script>
 
 <script>(function () {
 
@@ -106,7 +99,7 @@
      ====================================================================== */
     p.bind('mousedown,touchstart', stop_button, stop_test);
     function stop_test() {
-        p.css(start_button, { display: 'inline-block' });
+        //p.css(start_button, { display: 'inline-block' });
         p.css(stop_button, { display: 'none' });
         test.run = 0;
     }

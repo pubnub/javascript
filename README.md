@@ -125,12 +125,13 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 The PubNub Network today is the only vendor that supports real channel
 multiplexing with a single TCP Socket.
-With Multiplexing, you are able to subscribed to a group of channels
-while conserving resources and improving performance of message delivery
+With Multiplexing, you are able to subscribe to a group of channels
+while conserving device resources and
+improving performance of message delivery;
 all with a single network connection.
-It is easy to use multiplexing with all `3.4` client SDKs because
-it is transparent and automatic.
-Here is an example of using Channel Multiplexing.
+It is easy to use multiplexing with any `3.4` client SDKs because
+it is transparent and automatic!
+Here is an example of using Channel Multiplexing in JavaScript:
 
 #### Adding Channels - Just keep adding!
 
@@ -193,9 +194,40 @@ If you have any questions please contact help@pubnub.com
 
 ## AES Cryptography
 
->TODO!
+>**NOTE:** This cryptography is compatible with all other PubNub SDKs!
 
+You can now use PubNub AES256 Cryptograhpy with JavaScript and other
+SDK languages easily by following this starting point for JavaScript:
 
+```html
+<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js></script>
+<script src=https://pubnub.a.ssl.fastly.net/pubnub-crypto-3.4.2.min.js></script>
+<script>(function(){
+    var encrypted_pubnub = PUBNUB.secure({
+        publish_key   : 'demo',
+        subscribe_key : 'demo',
+        ssl           : true,
+        cipher_key    : 'my-super-secret-password-key'
+    });
+
+    secure_pubnub.subscribe({
+        channel : 'my_channel',
+        connect : send_hello,
+        message : receive_hello
+    });
+
+    function receive_hello(hello) {
+        alert(hello);
+    }
+
+    function send_hello() {
+        secure_pubnub.publish({
+            channel : 'my_channel',
+            message : 'hello!'
+        });
+    }
+})();</script>
+```
 
 ## HISTORY AND HERE-NOW EXAMPLE
 ```html
@@ -340,8 +372,6 @@ The following example opens a `new WebSocket` in
 <!-- Use WebSocket Constructor for a New Socket Connection -->
 <script>(function() {
 
-    "use strict"
-
     /* 'wss://ORIGIN/PUBLISH_KEY/SUBSCRIBE_KEY/CHANNEL' */
     var socket = new WebSocket('wss://pubsub.pubnub.com/demo/demo/my_channel')
 
@@ -428,43 +458,6 @@ To do this, simply follow this `init` example:
 ```
 
 >**NOTE:** You do not need to use the `<div id=pubnub>` DIV with this method!
-
-## Using with AES256 Encryption
-
-This client now supports AES256 encryption out of the box!
-And its super-easy to use! Check out the
-file `encrypted_chat_demo.html` for a working example of
-using encryption between JavaScript and other PubNub clients.
-
-##### Important Highlights
-
-Be sure to include the following JavaScript Files:
-1. pubnub.js, 
-2. gibberish, and 
-3. encryption adapter:
-
-```html
-<script src="http://cdn.pubnub.com/pubnub-3.4.2.min.js"></script>
-<script src="crypto/gibberish-aes.js"></script>
-<script src="crypto/encrypt-pubnub.js"></script>
-```
-
-2. When instantiating your PubNub instance object,
-use the .secure method instead of the .init method:
-
-```javascript
-var cipher_key = "enigma";
-var secure_pubnub = PUBNUB.secure({
-    publish_key   : "demo",
-    subscribe_key : "demo",
-    cipher_key    : cipher_key
-});
-```
-
-That's pretty much it.
-Use subscribe, publish, and history as you would normally,
-only the implementation is different,
-being that the message traffic is now encrypted.
 
 ## SUPER ADVANCED SETTINGS
 
