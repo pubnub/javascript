@@ -212,7 +212,7 @@ To use AES encryption in PubNub, simply do the following:
 <script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.2.min.js></script>
 <script src=https://pubnub.a.ssl.fastly.net/pubnub-crypto-3.4.2.min.js></script>
 <script>(function(){
-    var encrypted_pubnub = PUBNUB.secure({
+    var secure_pubnub = PUBNUB.secure({
         publish_key   : 'demo',
         subscribe_key : 'demo',
         ssl           : true,
