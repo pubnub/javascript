@@ -384,6 +384,7 @@ The following example opens a `new WebSocket` in
 <script>(function() {
 
     /* 'wss://ORIGIN/PUBLISH_KEY/SUBSCRIBE_KEY/CHANNEL' */
+    WebSocket  = PUBNUB.ws;
     var socket = new WebSocket('wss://pubsub.pubnub.com/demo/demo/my_channel')
 
     // On Message Receive
