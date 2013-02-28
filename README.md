@@ -136,8 +136,9 @@ Here is an example of using Channel Multiplexing in JavaScript:
 #### Adding Channels - Just keep adding!
 
 > You can continue to add channels with subsequent calls.
+
 >**NOTE:** See the Multiplexing Example:
->[Multiplexing Test](javascript/blob/master/web/tests/multiplexing.html)
+>[Multiplexing Test](web/tests/multiplexing.html)
 
 ```javascript
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
