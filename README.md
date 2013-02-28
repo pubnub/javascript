@@ -101,7 +101,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 </script>
 ```
 
-## ADVANCED STYLE
+## ADVANCED SUBSCRIBE CONNECTIVITY OPTIONS/CALLBACKS
 ```html
 <div id=pubnub pub-key=demo sub-key=demo></div>
 <script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
@@ -119,7 +119,7 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 </script>
 ```
 
-## REAL MULTIPLEXING
+## FULL MULTIPLEXING (Single TCP Socket)
 
 >Multiplexing enhances mobile performance and battery savings.
 
@@ -136,7 +136,8 @@ Here is an example of using Channel Multiplexing in JavaScript:
 #### Adding Channels - Just keep adding!
 
 > You can continue to add channels with subsequent calls.
-
+>**NOTE:** See the Multiplexing Example:
+>[Multiplexing Test](javascript/blob/master/web/tests/multiplexing.html)
 
 ```javascript
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -161,7 +162,7 @@ pubnub.subscribe({
 })
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// ADD ONE MORE - You can add a comma separated list of channel names.
+// ADD ONE MORE - You can add one channel at a time.
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 pubnub.subscribe({
     channel : 'chan8',
