@@ -30,7 +30,7 @@
     var display_latency = p.updater( function() {
         calc_median();
 
-        latency_average.innerHTML = median+'ms'
+        median && (latency_average.innerHTML = median+'ms')
         latency_max.innerHTML     = max+'ms'
         latency_last.innerHTML    = Math.ceil(
             latency_results.length /
@@ -79,6 +79,16 @@
         p.css( delay, { opacity : '1' } )
         p.css( blink, { width : '0' } )
     }
+
+    var p2 = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    });
+    var p3 = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    });
+
     function check() {
         if (check.used) {
             check.start = +new Date;
@@ -86,11 +96,12 @@
             check.ival = setTimeout( function() {
                 if (!monitor_button.running) return;
                 p.css( blink, { width : '100%' } );
-                p.css( delay, { opacity : '0.1' } )
             }, 25 );
         }
         check.used = 1;
         p.publish({ channel : channel, message : 1, callback : check });
+        p2.publish({ channel : channel, message : 1 });
+        p3.publish({ channel : channel, message : 1 });
     }
 
     p.bind( 'click', monitor_button, function() {
@@ -101,15 +112,19 @@
             set_class( monitor_button, 'btn btn-danger' );
 
             p = PUBNUB.init({
+                windowing     : 1000,
+                timeout       : 4000,
                 origin        : PUBNUB.$('origin').value,
                 publish_key   : 'demo',
                 subscribe_key : 'demo'
             });
 
             p.subscribe({
-                channel  : channel,
-                connect  : check,
-                callback : finish
+                windowing : 1000,
+                timeout   : 4000,
+                channel   : channel,
+                connect   : check,
+                callback  : finish
             });
 
             monitor_button.innerHTML = 'Stop Monitor';

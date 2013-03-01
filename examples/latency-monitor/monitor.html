@@ -2,12 +2,21 @@
 <html> 
 <head> 
     <title>PubNub Latency Check Example</title> 
-    <link href=bootstrap.min.css rel=stylesheet>
+    <meta http-equiv=content-type content=text/html;charset=utf-8>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet">
     <meta name=viewport content=width=device-width,initial-scale=1.0>
     <meta name=description content="PubNub - Latency Monitor">
     <meta name=author content="Stephen Blum - PubNub CTO">
 
     <style>
+        #controls {
+            margin-top: 80px;
+        }
+        #origin {
+            position: absolute;
+            top: 50px;
+            width: 400px;
+        }
         .span-block {
             text-align: center;
             background: #eee;
@@ -57,13 +66,11 @@
 <div class=container>
 
     <!-- ORIGIN and START -->
-    <div class=row-fluid>
-        <div class=span2>
-            &nbsp;
+    <div class=row-fluid id=controls>
+        <div class=span1>
             <input
                 id=origin
                 type=text
-                class=span3
                 value=pubsub.pubnub.com
             >
         </div>
@@ -101,7 +108,7 @@
             class="span-block"
             style=width:{size}%;background:#{color}>{ms}</div>
     </script>
-    <div class="progress progress-danger progress-striped active">
+    <div class="progress progress-striped active">
         <div id=latency-bar class=bar style=width:0%></div>
     </div>
 
