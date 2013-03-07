@@ -348,6 +348,37 @@ function start_replay() {
 })();</script>
 ```
 
+## PRESENCE
+
+PubNub Network offers Channel Presence which
+allows you to ask the question "Who's There?"
+and get back an answer with list of users and the occupancy count.
+
+```html
+<div id=pubnub pub-key=demo sub-key=demo></div>
+<script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
+<script>(function(){
+    PUBNUB.subscribe({
+        channel    : "hello_world",                        // CONNECT TO THIS CHANNEL.
+        message    : function( message, env, channel ) {}, // RECEIVED A MESSAGE.
+        presence   : function( message, env, channel ) {   // PRESENCE
+            console.log( "Channel: ",            channel           );
+            console.log( "Join/Leave/Timeout: ", message.action    );
+            console.log( "Occupancy: ",          message.occupancy );
+            console.log( "User ID: ",            message.uuid      );
+            /* message is = {
+                    "action"    : "join",
+                    "timestamp" : 1347946204,
+                    "uuid"      : "6e08b25f-48c0-4e94-92d0-0778a8b6013d",
+                    "occupancy" : 1
+            } */
+        }
+        
+    })
+})();
+</script>
+```
+
 ## WebSocket Client Interface
 
 Optionally PubNub offers you the full RFC 6455
