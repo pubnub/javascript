@@ -107,13 +107,13 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 <script src=http://cdn.pubnub.com/pubnub-3.4.2.min.js ></script>
 <script>(function(){
     PUBNUB.subscribe({
-        channel    : "hello_world",                     // CONNECT TO THIS CHANNEL.
-        restore    : false,                             // FETCH MISSED MESSAGES ON PAGE CHANGES.
-        message    : function( message, env, channel ), // RECEIVED A MESSAGE.
-        presence   : function( message, env, channel ), // OTHER USERS JOIN/LEFT CHANNEL.
-        connect    : function() {},                     // CONNECTION ESTABLISHED.
-        disconnect : function() {},                     // LOST CONNECTION (OFFLINE).
-        reconnect  : function() {}                      // CONNECTION BACK ONLINE!
+        channel    : "hello_world",                        // CONNECT TO THIS CHANNEL.
+        restore    : false,                                // FETCH MISSED MESSAGES ON PAGE CHANGES.
+        message    : function( message, env, channel ) {}, // RECEIVED A MESSAGE.
+        presence   : function( message, env, channel ) {}, // OTHER USERS JOIN/LEFT CHANNEL.
+        connect    : function() {},                        // CONNECTION ESTABLISHED.
+        disconnect : function() {},                        // LOST CONNECTION (OFFLINE).
+        reconnect  : function() {}                         // CONNECTION BACK ONLINE!
     })
 })();
 </script>
