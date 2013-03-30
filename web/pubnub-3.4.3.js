@@ -1,3 +1,154 @@
+// 3.4.3
+/* =-====================================================================-= */
+/* =-====================================================================-= */
+/* =-=========================     JSON     =============================-= */
+/* =-====================================================================-= */
+/* =-====================================================================-= */
+
+(window['JSON'] && window['JSON']['stringify']) || (function () {
+    window['JSON'] || (window['JSON'] = {});
+
+    function toJSON(key) {
+        try      { return this.valueOf() }
+        catch(e) { return null }
+    }
+
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        gap,
+        indent,
+        meta = {    // table of character substitutions
+            '\b': '\\b',
+            '\t': '\\t',
+            '\n': '\\n',
+            '\f': '\\f',
+            '\r': '\\r',
+            '"' : '\\"',
+            '\\': '\\\\'
+        },
+        rep;
+
+    function quote(string) {
+        escapable.lastIndex = 0;
+        return escapable.test(string) ?
+            '"' + string.replace(escapable, function (a) {
+                var c = meta[a];
+                return typeof c === 'string' ? c :
+                    '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+            }) + '"' :
+            '"' + string + '"';
+    }
+
+    function str(key, holder) {
+        var i,          // The loop counter.
+            k,          // The member key.
+            v,          // The member value.
+            length,
+            partial,
+            mind  = gap,
+            value = holder[key];
+
+        if (value && typeof value === 'object') {
+            value = toJSON.call( value, key );
+        }
+
+        if (typeof rep === 'function') {
+            value = rep.call(holder, key, value);
+        }
+
+        switch (typeof value) {
+        case 'string':
+            return quote(value);
+
+        case 'number':
+            return isFinite(value) ? String(value) : 'null';
+
+        case 'boolean':
+        case 'null':
+            return String(value);
+
+        case 'object':
+
+            if (!value) {
+                return 'null';
+            }
+
+            gap += indent;
+            partial = [];
+
+            if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+                length = value.length;
+                for (i = 0; i < length; i += 1) {
+                    partial[i] = str(i, value) || 'null';
+                }
+
+                v = partial.length === 0 ? '[]' :
+                    gap ? '[\n' + gap +
+                            partial.join(',\n' + gap) + '\n' +
+                                mind + ']' :
+                          '[' + partial.join(',') + ']';
+                gap = mind;
+                return v;
+            }
+            if (rep && typeof rep === 'object') {
+                length = rep.length;
+                for (i = 0; i < length; i += 1) {
+                    k = rep[i];
+                    if (typeof k === 'string') {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            } else {
+                for (k in value) {
+                    if (Object.hasOwnProperty.call(value, k)) {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            }
+
+            v = partial.length === 0 ? '{}' :
+                gap ? '{\n' + gap + partial.join(',\n' + gap) + '\n' +
+                        mind + '}' : '{' + partial.join(',') + '}';
+            gap = mind;
+            return v;
+        }
+    }
+
+    if (typeof JSON['stringify'] !== 'function') {
+        JSON['stringify'] = function (value, replacer, space) {
+            var i;
+            gap = '';
+            indent = '';
+
+            if (typeof space === 'number') {
+                for (i = 0; i < space; i += 1) {
+                    indent += ' ';
+                }
+            } else if (typeof space === 'string') {
+                indent = space;
+            }
+            rep = replacer;
+            if (replacer && typeof replacer !== 'function' &&
+                    (typeof replacer !== 'object' ||
+                     typeof replacer.length !== 'number')) {
+                throw new Error('JSON.stringify');
+            }
+            return str('', {'': value});
+        };
+    }
+
+    if (typeof JSON['parse'] !== 'function') {
+        // JSON is parsed on the server for security.
+        JSON['parse'] = function (text) {return eval('('+text+')')};
+    }
+}());
 /* ---------------------------------------------------------------------------
 WAIT! - This file depends on instructions from the PUBNUB Cloud.
 http://www.pubnub.com/account-javascript-api-include
@@ -105,11 +256,13 @@ var db = (function(){
 var nextorigin = (function() {
     var max = 20
     ,   ori = Math.floor(Math.random() * max);
-    return function(origin) {
-        return origin.indexOf('pubsub') > 0
+    return function( origin, failover ) {
+        return origin.indexOf('pubsub.') > 0
             && origin.replace(
-             'pubsub', 'ps' + (++ori < max? ori : ori=1)
-            ) || origin;
+             'pubsub', 'ps' + (
+                failover ? uuid().split('-')[0] :
+                (++ori < max? ori : ori=1)
+            ) ) || origin;
     }
 })();
 
@@ -296,6 +449,21 @@ function create(element) { return document.createElement(element) }
  */
 function timeout( fun, wait ) {
     return setTimeout( fun, wait );
+}
+
+/**
+ * uuid
+ * ====
+ * var my_uuid = uuid();
+ */
+function uuid(callback) {
+    var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+    function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+    if (callback) callback(u);
+    return u;
 }
 
 /**
@@ -502,11 +670,16 @@ function generate_channel_list(channels) {
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 
-var PDIV          = $('pubnub') || {}
+var PDIV          = $('pubnub') || 0
 ,   READY         = 0
 ,   READY_BUFFER  = []
 ,   CREATE_PUBNUB = function(setup) {
+
+    // Force JSONP if requested from user.
+    if (setup['jsonp']) XORIGN = 0;
+
     var CHANNELS      = {}
+    ,   PUB_QUEUE     = []
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
     ,   SUB_RECEIVER  = 0
@@ -521,6 +694,8 @@ var PDIV          = $('pubnub') || {}
     ,   SSL           = setup['ssl'] ? 's' : ''
     ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid') || ''
     ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
+    ,   STD_ORIGIN    = nextorigin(ORIGIN)
+    ,   SUB_ORIGIN    = nextorigin(ORIGIN)
     ,   LEAVE         = function(){}
     ,   CONNECT       = function(){}
     ,   SELF          = {
@@ -551,8 +726,9 @@ var PDIV          = $('pubnub') || {}
             params['count']       = count;
             params['reverse']     = reverse;
 
-            if (start) params['start'] = start;
-            if (end)   params['end']   = end;
+            if (jsonp) params['callback'] = jsonp;
+            if (start) params['start']    = start;
+            if (end)   params['end']      = end;
 
             // Send Message
             xdr({
@@ -561,7 +737,7 @@ var PDIV          = $('pubnub') || {}
                 success  : function(response) { callback(response) },
                 fail     : err,
                 url      : [
-                    ORIGIN, 'v2', 'history', 'sub-key',
+                    STD_ORIGIN, 'v2', 'history', 'sub-key',
                     SUBSCRIBE_KEY, 'channel', encode(channel)
                 ]
             });
@@ -602,7 +778,7 @@ var PDIV          = $('pubnub') || {}
 
             // Compose URL Parts
             url = [
-                ORIGIN, 'v1', 'replay',
+                STD_ORIGIN, 'v1', 'replay',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 source, destination
             ];
@@ -625,23 +801,10 @@ var PDIV          = $('pubnub') || {}
             xdr({
                 callback : jsonp,
                 timeout  : SECOND*5,
-                url      : [ORIGIN, 'time', jsonp],
+                url      : [STD_ORIGIN, 'time', jsonp],
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
             });
-        },
-
-        /*
-            PUBNUB.uuid(function(uuid) { });
-        */
-        'uuid' : function(callback) {
-            var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-            function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
-            if (callback) callback(u);
-            return u;
         },
 
         /*
@@ -652,35 +815,39 @@ var PDIV          = $('pubnub') || {}
         */
         'publish' : function( args, callback ) {
             var callback = callback || args['callback'] || function(){}
-            ,   message  = args['message']
+            ,   msg      = args['message']
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
             ,   url;
 
-            if (!message)       return error('Missing Message');
+            if (!msg)           return error('Missing Message');
             if (!channel)       return error('Missing Channel');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // If trying to send Object
-            message = JSON['stringify'](message);
+            msg = JSON['stringify'](msg);
 
             // Create URL
             url = [
-                ORIGIN, 'publish',
+                STD_ORIGIN, 'publish',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 0, encode(channel),
-                jsonp, encode(message)
+                jsonp, encode(msg)
             ];
 
-            // Send Message
-            xdr({
+            // Queue Message Send
+            PUB_QUEUE.push({
                 callback : jsonp,
-                success  : function(response) { callback(response) },
-                fail     : function() { callback([ 0, 'Disconnected' ]) },
+                timeout  : SECOND*5,
                 url      : url,
-                data     : { 'uuid' : UUID }
+                data     : { 'uuid' : UUID },
+                success  : function(response){callback(response);publish(1)},
+                fail     : function(){callback([0,'Failed',msg]);publish(1)}
             });
+
+            // Send Message
+            publish();
         },
 
         /*
@@ -724,10 +891,10 @@ var PDIV          = $('pubnub') || {}
             ,   disconnect    = args['disconnect']    || function(){}
             ,   presence      = args['presence']      || 0
             ,   noheresync    = args['noheresync']    || 0
+            ,   backfill      = args['backfill']      || 0
             ,   sub_timeout   = args['timeout']       || SUB_TIMEOUT
             ,   windowing     = args['windowing']     || SUB_WINDOWING
-            ,   restore       = args['restore']
-            ,   origin        = nextorigin(ORIGIN);
+            ,   restore       = args['restore'];
 
             // Restore Enabled?
             if (restore) SUB_RESTORE = 1;
@@ -772,9 +939,9 @@ var PDIV          = $('pubnub') || {}
                     'channel'  : channel,
                     'callback' : function(here) {
                         each( 'uuids' in here ? here['uuids'] : [],
-                        function(uuid) { presence( {
+                        function(uid) { presence( {
                             'action'    : 'join',
-                            'uuid'      : uuid,
+                            'uuid'      : uid,
                             'timestamp' : rnow(),
                             'occupancy' : here['occupancy'] || 1
                         }, here, channel ); } );
@@ -790,7 +957,8 @@ var PDIV          = $('pubnub') || {}
                 }
                 else {
                     // New Origin on Failed Connection
-                    origin = nextorigin(ORIGIN);
+                    STD_ORIGIN = nextorigin( ORIGIN, 1 );
+                    SUB_ORIGIN = nextorigin( ORIGIN, 1 );
 
                     // Re-test Connection
                     timeout( function() {
@@ -829,7 +997,7 @@ var PDIV          = $('pubnub') || {}
                     fail     : function() { SELF['time'](_test_connection) },
                     data     : { 'uuid' : UUID },
                     url      : [
-                        origin, 'subscribe',
+                        SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
                         jsonp, TIMETOKEN
                     ],
@@ -847,6 +1015,12 @@ var PDIV          = $('pubnub') || {}
                         TIMETOKEN = !TIMETOKEN               &&
                                     SUB_RESTORE              &&
                                     db['get'](SUBSCRIBE_KEY) || messages[1];
+
+                        // Backfill Channel
+                        if (backfill) {
+                            TIMETOKEN = 10000;
+                            backfill  = 0;
+                        }
 
                         // Update Saved Timetoken
                         db['set']( SUBSCRIBE_KEY, messages[1] );
@@ -914,7 +1088,7 @@ var PDIV          = $('pubnub') || {}
                 success  : function(response) { callback(response) },
                 fail     : err,
                 url      : [
-                    ORIGIN, 'v2', 'presence',
+                    STD_ORIGIN, 'v2', 'presence',
                     'sub_key', SUBSCRIBE_KEY, 
                     'channel', encode(channel)
                 ]
@@ -925,6 +1099,7 @@ var PDIV          = $('pubnub') || {}
         'xdr'      : xdr,
         'ready'    : ready,
         'db'       : db,
+        'uuid'     : uuid,
         'each'     : each,
         'map'      : map,
         'grep'     : grep,
@@ -943,6 +1118,14 @@ var PDIV          = $('pubnub') || {}
         'init'     : CREATE_PUBNUB
     };
 
+    PUB_QUEUE.sending = 0;
+    function publish(next) {
+        if (next) PUB_QUEUE.sending = 0;
+        if (PUB_QUEUE.sending || !PUB_QUEUE.length) return;
+        PUB_QUEUE.sending = 1;
+        xdr(PUB_QUEUE.shift());
+    }
+
     function each_channel(callback) {
         each( generate_channel_list(CHANNELS), function(channel) {
             var chan = CHANNELS[channel];
@@ -951,8 +1134,11 @@ var PDIV          = $('pubnub') || {}
         } );
     }
 
-    if (!UUID) UUID = SELF['uuid']();
+    if (!UUID) UUID = uuid();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
+
+    // Return without Testing 
+    if (setup['notest']) return SELF;
 
     // Announce Leave Event
     LEAVE = function( channel, blocking ) {
@@ -1004,23 +1190,46 @@ var PDIV          = $('pubnub') || {}
     timeout( _poll_online,  SECOND    );
     timeout( _poll_online2, KEEPALIVE );
 
-    bind( 'offline', window,        _reset_offline );
-    bind( 'offline', document,      _reset_offline );
-    bind( 'offline', document.body, _reset_offline );
+    bind( 'offline', window,   _reset_offline );
+    bind( 'offline', document, _reset_offline );
 
     // Return PUBNUB Socket Object
     return SELF;
 };
 
+// PUBNUB READY TO CONNECT
+function ready() { timeout( function() {
+    if (READY) return;
+    READY = 1;
+    each( READY_BUFFER, function(connect) { connect() } );
+}, SECOND ); }
+
+// Bind for PUBNUB Readiness to Subscribe
+bind( 'load', window, function(){ timeout( ready, 0 ) } );
+
+var pdiv = PDIV || {};
+
 // CREATE A PUBNUB GLOBAL OBJECT
 PUBNUB = CREATE_PUBNUB({
-    'publish_key'   : attr( PDIV, 'pub-key' ),
-    'subscribe_key' : attr( PDIV, 'sub-key' ),
+    'notest'        : 1,
+    'publish_key'   : attr( pdiv, 'pub-key' ),
+    'subscribe_key' : attr( pdiv, 'sub-key' ),
     'ssl'           : !document.location.href.indexOf('https') ||
-                      attr( PDIV, 'ssl' ) == 'on',
-    'origin'        : attr( PDIV, 'origin' ),
-    'uuid'          : attr( PDIV, 'uuid' )
+                      attr( pdiv, 'ssl' ) == 'on',
+    'origin'        : attr( pdiv, 'origin' ),
+    'uuid'          : attr( pdiv, 'uuid' )
 });
+
+// jQuery Interface
+window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
+
+// For Modern JS + Testling.js - http://testling.com/
+typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
+
+var pubnubs = $('pubnubs') || 0;
+
+// LEAVE NOW IF NO PDIV.
+if (!PDIV) return;
 
 // PUBNUB Flash Socket
 css( PDIV, { 'position' : 'absolute', 'top' : -SECOND } );
@@ -1030,19 +1239,6 @@ if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
     '><param name=movie value=' + SWF +
     '><param name=allowscriptaccess value=always></object>';
 
-var pubnubs = $('pubnubs') || {};
-
-// PUBNUB READY TO CONNECT
-function ready() { PUBNUB['time'](rnow);
-PUBNUB['time'](function(t){ timeout( function() {
-    if (READY) return;
-    READY = 1;
-    each( READY_BUFFER, function(connect) { connect() } );
-}, SECOND ); }); }
-
-// Bind for PUBNUB Readiness to Subscribe
-bind( 'load', window, function(){ timeout( ready, 0 ) } );
-
 // Create Interface for Opera Flash
 PUBNUB['rdx'] = function( id, data ) {
     if (!data) return FDomainRequest[id]['onerror']();
@@ -1051,7 +1247,7 @@ PUBNUB['rdx'] = function( id, data ) {
 };
 
 function FDomainRequest() {
-    if (!pubnubs['get']) return 0;
+    if (!pubnubs || !pubnubs['get']) return 0;
 
     var fdomainrequest = {
         'id'    : FDomainRequest['id']++,
@@ -1067,10 +1263,115 @@ function FDomainRequest() {
 }
 FDomainRequest['id'] = SECOND;
 
-// jQuery Interface
-window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
+})();
+(function(){
 
-// For Modern JS + Testling.js - http://testling.com/
-typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
+// ---------------------------------------------------------------------------
+// WEBSOCKET INTERFACE
+// ---------------------------------------------------------------------------
+var WS = PUBNUB['ws'] = function( url, protocols ) {
+    if (!(this instanceof WS)) return new WS( url, protocols );
+
+    var self     = this
+    ,   url      = self.url      = url || ''
+    ,   protocol = self.protocol = protocols || 'Sec-WebSocket-Protocol'
+    ,   bits     = url.split('/')
+    ,   setup    = {
+         'ssl'           : bits[0] === 'wss:'
+        ,'origin'        : bits[2]
+        ,'publish_key'   : bits[3]
+        ,'subscribe_key' : bits[4]
+        ,'channel'       : bits[5]
+    };
+
+    // READY STATES
+    self['CONNECTING'] = 0; // The connection is not yet open.
+    self['OPEN']       = 1; // The connection is open and ready to communicate.
+    self['CLOSING']    = 2; // The connection is in the process of closing.
+    self['CLOSED']     = 3; // The connection is closed or couldn't be opened.
+
+    // CLOSE STATES
+    self['CLOSE_NORMAL']         = 1000; // Normal Intended Close; completed.
+    self['CLOSE_GOING_AWAY']     = 1001; // Closed Unexpecttedly.
+    self['CLOSE_PROTOCOL_ERROR'] = 1002; // Server: Not Supported.
+    self['CLOSE_UNSUPPORTED']    = 1003; // Server: Unsupported Protocol.
+    self['CLOSE_TOO_LARGE']      = 1004; // Server: Too Much Data.
+    self['CLOSE_NO_STATUS']      = 1005; // Server: No reason.
+    self['CLOSE_ABNORMAL']       = 1006; // Abnormal Disconnect.
+
+    // Events Default
+    self['onclose']   = self['onerror'] = 
+    self['onmessage'] = self['onopen']  =
+    self['onsend']    =  function(){};
+
+    // Attributes
+    self['binaryType']     = '';
+    self['extensions']     = '';
+    self['bufferedAmount'] = 0;
+    self['trasnmitting']   = false;
+    self['buffer']         = [];
+    self['readyState']     = self['CONNECTING'];
+
+    // Close if no setup.
+    if (!url) {
+        self['readyState'] = self['CLOSED'];
+        self['onclose']({
+            'code'     : self['CLOSE_ABNORMAL'],
+            'reason'   : 'Missing URL',
+            'wasClean' : true
+        });
+        return self;
+    }
+
+    // PubNub WebSocket Emulation
+    self.pubnub       = PUBNUB['init'](setup);
+    self.pubnub.setup = setup;
+    self.setup        = setup;
+
+    self.pubnub['subscribe']({
+        'restore'    : false,
+        'channel'    : setup['channel'],
+        'disconnect' : self['onerror'],
+        'reconnect'  : self['onopen'],
+        'error'      : function() {
+            self['onclose']({
+                'code'     : self['CLOSE_ABNORMAL'],
+                'reason'   : 'Missing URL',
+                'wasClean' : false
+            });
+        },
+        'callback'   : function(message) {
+            self['onmessage']({ 'data' : message });
+        },
+        'connect'    : function() {
+            self['readyState'] = self['OPEN'];
+            self['onopen']();
+        }
+    });
+};
+
+// ---------------------------------------------------------------------------
+// WEBSOCKET SEND
+// ---------------------------------------------------------------------------
+WS.prototype.send = function(data) {
+    var self = this;
+    self.pubnub['publish']({
+        'channel'  : self.pubnub.setup['channel'],
+        'message'  : data,
+        'callback' : function(response) {
+            self['onsend']({ 'data' : response });
+        }
+    });
+};
+
+// ---------------------------------------------------------------------------
+// WEBSOCKET CLOSE
+// ---------------------------------------------------------------------------
+WS.prototype.close = function() {
+    var self = this;
+    self.pubnub['unsubscribe']({ 'channel' : self.pubnub.setup['channel'] });
+    self['readyState'] = self['CLOSED'];
+    self['onclose']({});
+};
 
 })();

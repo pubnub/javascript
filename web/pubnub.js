@@ -1,4 +1,4 @@
-// 3.4.2
+// 3.4.3
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -891,6 +891,7 @@ var PDIV          = $('pubnub') || 0
             ,   disconnect    = args['disconnect']    || function(){}
             ,   presence      = args['presence']      || 0
             ,   noheresync    = args['noheresync']    || 0
+            ,   backfill      = args['backfill']      || 0
             ,   sub_timeout   = args['timeout']       || SUB_TIMEOUT
             ,   windowing     = args['windowing']     || SUB_WINDOWING
             ,   restore       = args['restore'];
@@ -1014,6 +1015,12 @@ var PDIV          = $('pubnub') || 0
                         TIMETOKEN = !TIMETOKEN               &&
                                     SUB_RESTORE              &&
                                     db['get'](SUBSCRIBE_KEY) || messages[1];
+
+                        // Backfill Channel
+                        if (backfill) {
+                            TIMETOKEN = 10000;
+                            backfill  = 0;
+                        }
 
                         // Update Saved Timetoken
                         db['set']( SUBSCRIBE_KEY, messages[1] );
