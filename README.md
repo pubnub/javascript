@@ -379,6 +379,47 @@ and get back an answer with list of users and the occupancy count.
 </script>
 ```
 
+## BACKFILL
+
+PubNub Network offers automatic hot-memory backfill which pulls
+the full queue from of the message Network to provide a response
+filled with a compressed GZIP payload up to the maximum size
+of your queue length.
+The Default Queue size is 100 for basic PubNub Accounts.
+Adding `backfill` to a truthy value on subscribe,
+you can pull up to the last 100 message off of an in-memory
+queue.  Note that this queue is purged on a regular basis
+and you may instead wish to use PubNub Network History API
+to guarantee pulling historical messages.
+
+>If you need to increase your queue length, contact PubNub Network
+at help@pubnub.com for larger queue length.
+
+Notice that we are using `backfill : true` in
+the `pubnub.subscribe` call below.
+
+```html
+<div id=pubnub></div>
+<script src=http://pubnub.a.ssl.fastly.net/pubnub-3.4.3.min.js></script>
+<script>(function(){
+
+    var pubnub = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    });
+
+    pubnub.subscribe({
+        backfill : true,
+        channel  : 'my_channel',
+        callback : function(message) {
+            alert(JSON.stringify(message));
+        }
+    });
+
+})();</script>
+```
+
+
 ## WebSocket Client Interface
 
 Optionally PubNub offers you the full RFC 6455
