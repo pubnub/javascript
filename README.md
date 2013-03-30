@@ -381,16 +381,14 @@ and get back an answer with list of users and the occupancy count.
 
 ## BACKFILL
 
-PubNub Network offers automatic hot-memory backfill which pulls
-the full queue from of the message Network to provide a response
-filled with a compressed GZIP payload up to the maximum size
-of your queue length.
+PubNub Network offers automatic hot-memory backfill which pulls the full
+queue from the message Network to provide a response filled with a
+compressed GZIP payload up to the maximum size of your queue length.
 The Default Queue size is 100 for basic PubNub Accounts.
-Adding `backfill` to a truthy value on subscribe,
-you can pull up to the last 100 message off of an in-memory
-queue.  Note that this queue is purged on a regular basis
-and you may instead wish to use PubNub Network History API
-to guarantee pulling historical messages.
+Adding backfill to a truthy value on subscribe, you can pull up to the
+last 100 messages off of an in-memory queue.
+Note that this queue is purged on a regularly and you may instead wish
+to use PubNub Network History API to guarantee pulling historical messages.
 
 >If you need to increase your queue length, contact PubNub Network
 at help@pubnub.com for larger queue length.
