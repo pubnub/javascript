@@ -387,8 +387,8 @@ compressed GZIP payload up to the maximum size of your queue length.
 The Default Queue size is 100 for basic PubNub Accounts.
 Adding backfill to a truthy value on subscribe, you can pull up to the
 last 100 messages off of an in-memory queue.
-Note that this queue is purged on a regularly and you may instead wish
-to use PubNub Network History API to guarantee pulling historical messages.
+Note that this queue may not always return 100 messages and you may instead wish
+to use PubNub Network History API to guarantee pulling all historical messages.
 
 >If you need to increase your queue length, contact PubNub Network
 at help@pubnub.com for larger queue length.
