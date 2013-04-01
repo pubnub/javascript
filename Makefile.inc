@@ -1,0 +1,17 @@
+REPOS_DIR=..
+TOOLS_DIR=$(REPOS_DIR)/tools
+VERSION=$(shell cat $(REPOS_DIR)/VERSION)
+GOOGLE_MINIFY=/opt/minify/compiler.jar
+CORE_DIR=$(REPOS_DIR)/core
+ECHO=/bin/echo
+PUBNUB_JS=pubnub.js
+PUBNUB_MIN_JS=pubnub.min.js
+PUBNUB_UNASSEMBLED_DIR=unassembled
+PUBNUB_PLATFORM_JS=$(PUBNUB_UNASSEMBLED_DIR)/platform.js
+PUBNUB_CRYPTO_MIN_JS=pubnub-crypto.min.js
+JSON_JS=$(CORE_DIR)/json.js
+PUBNUB_COMMON_JS=$(CORE_DIR)/pubnub-common.js
+CRYPTO_DIR=$(CORE_DIR)/crypto
+GIBBERISH_JS=$(CORE_DIR)/crypto/gibberish-aes.js
+ENCRYPT_JS=$(CORE_DIR)/crypto/encrypt-pubnub.js
+PUBNUB_MIN_JS=pubnub.min.js
