@@ -210,6 +210,87 @@ var events = {
     }
 };
 
+/**
+ * ATTR
+ * ====
+ * var attribute = attr( node, 'attribute' );
+ */
+function attr( node, attribute, value ) {
+    if (value) node.setAttribute( attribute, value );
+    else return node && node.getAttribute && node.getAttribute(attribute);
+}
+
+/**
+ * $
+ * =
+ * var div = $('divid');
+ */
+function $(id) { return document.getElementById(id) }
+
+
+/**
+ * SEARCH
+ * ======
+ * var elements = search('a div span');
+ */
+function search( elements, start ) {
+    var list = [];
+    each( elements.split(/\s+/), function(el) {
+        each( (start || document).getElementsByTagName(el), function(node) {
+            list.push(node);
+        } );
+    } );
+    return list;
+}
+
+
+
+/**
+ * BIND
+ * ====
+ * bind( 'keydown', search('a')[0], function(element) {
+ *     ...
+ * } );
+ */
+function bind( type, el, fun ) {
+    each( type.split(','), function(etype) {
+        var rapfun = function(e) {
+            if (!e) e = window.event;
+            if (!fun(e)) {
+                e.cancelBubble = true;
+                e.returnValue  = false;
+                e.preventDefault && e.preventDefault();
+                e.stopPropagation && e.stopPropagation();
+            }
+        };
+
+        if ( el.addEventListener ) el.addEventListener( etype, rapfun, false );
+        else if ( el.attachEvent ) el.attachEvent( 'on' + etype, rapfun );
+        else  el[ 'on' + etype ] = rapfun;
+    } );
+}
+
+/**
+ * CSS
+ * ===
+ * var obj = create('div');
+ */
+function css( element, styles ) {
+    for (var style in styles) if (styles.hasOwnProperty(style))
+        try {element.style[style] = styles[style] + (
+            '|width|height|top|left|'.indexOf(style) > 0 &&
+            typeof styles[style] == 'number'
+            ? 'px' : ''
+        )}catch(e){}
+}
+
+/**
+ * CREATE
+ * ======
+ * var obj = create('div');
+ */
+function create(element) { return document.createElement(element) }
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -224,8 +305,13 @@ function PN(setup) {
     var SELF = PN_API(setup);
 
     SELF['init'] = PN;
-
-    
+    SELF['$'] = $;
+    SELF['attr'] = attr;
+    SELF['search'] = search;
+    SELF['bind'] = bind;
+    SELF['css'] = css;
+    SELF['create'] = create;
+	
     // Return without Testing 
     if (setup['notest']) return SELF;
 
