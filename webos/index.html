@@ -80,7 +80,7 @@
         }
     }
 
-    var p            = PUBNUB
+    var p            = PUBNUB({ publish_key : 'demo', subscribe_key : 'demo' })
     ,   many_con_tst = 'opera' in window ? -1 : 10
     ,   channel      = 'pn-javascript-unit-test'
     ,   out          = p.$('unit-test-out')
@@ -137,7 +137,7 @@
                 message  : { test : "test" },
                 callback : function(response) {
                     test( response[0], 'Successful Publish' );
-                    test( response[1] === 'D', 'Success With Demo' );
+                    test( response[1] === 'Sent', 'Success With Demo' );
                     history_test();
                 }
             });
@@ -151,7 +151,7 @@
                 channel  : channel,
                 callback : function(messages) {
                     test( messages, 'History Response' );
-                    test( messages[0].test === "test", 'History Content' );
+                    test( messages[0][0].test === "test", 'History Content' );
                 }
             });
         }
