@@ -16,3 +16,6 @@ GIBBERISH_JS=$(CORE_DIR)/crypto/gibberish-aes.js
 WEBSOCKET_JS=$(CORE_DIR)/websocket.js
 ENCRYPT_JS=$(CORE_DIR)/crypto/encrypt-pubnub.js
 PUBNUB_MIN_JS=pubnub.min.js
+
+.PHONY : test
+test :  #  empty
