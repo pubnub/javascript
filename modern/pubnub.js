@@ -1,3 +1,153 @@
+// Version: 3.4.3\n/* =-====================================================================-= */
+/* =-====================================================================-= */
+/* =-=========================     JSON     =============================-= */
+/* =-====================================================================-= */
+/* =-====================================================================-= */
+
+(window['JSON'] && window['JSON']['stringify']) || (function () {
+    window['JSON'] || (window['JSON'] = {});
+
+    function toJSON(key) {
+        try      { return this.valueOf() }
+        catch(e) { return null }
+    }
+
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        gap,
+        indent,
+        meta = {    // table of character substitutions
+            '\b': '\\b',
+            '\t': '\\t',
+            '\n': '\\n',
+            '\f': '\\f',
+            '\r': '\\r',
+            '"' : '\\"',
+            '\\': '\\\\'
+        },
+        rep;
+
+    function quote(string) {
+        escapable.lastIndex = 0;
+        return escapable.test(string) ?
+            '"' + string.replace(escapable, function (a) {
+                var c = meta[a];
+                return typeof c === 'string' ? c :
+                    '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+            }) + '"' :
+            '"' + string + '"';
+    }
+
+    function str(key, holder) {
+        var i,          // The loop counter.
+            k,          // The member key.
+            v,          // The member value.
+            length,
+            partial,
+            mind  = gap,
+            value = holder[key];
+
+        if (value && typeof value === 'object') {
+            value = toJSON.call( value, key );
+        }
+
+        if (typeof rep === 'function') {
+            value = rep.call(holder, key, value);
+        }
+
+        switch (typeof value) {
+        case 'string':
+            return quote(value);
+
+        case 'number':
+            return isFinite(value) ? String(value) : 'null';
+
+        case 'boolean':
+        case 'null':
+            return String(value);
+
+        case 'object':
+
+            if (!value) {
+                return 'null';
+            }
+
+            gap += indent;
+            partial = [];
+
+            if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+                length = value.length;
+                for (i = 0; i < length; i += 1) {
+                    partial[i] = str(i, value) || 'null';
+                }
+
+                v = partial.length === 0 ? '[]' :
+                    gap ? '[\n' + gap +
+                            partial.join(',\n' + gap) + '\n' +
+                                mind + ']' :
+                          '[' + partial.join(',') + ']';
+                gap = mind;
+                return v;
+            }
+            if (rep && typeof rep === 'object') {
+                length = rep.length;
+                for (i = 0; i < length; i += 1) {
+                    k = rep[i];
+                    if (typeof k === 'string') {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            } else {
+                for (k in value) {
+                    if (Object.hasOwnProperty.call(value, k)) {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            }
+
+            v = partial.length === 0 ? '{}' :
+                gap ? '{\n' + gap + partial.join(',\n' + gap) + '\n' +
+                        mind + '}' : '{' + partial.join(',') + '}';
+            gap = mind;
+            return v;
+        }
+    }
+
+    if (typeof JSON['stringify'] !== 'function') {
+        JSON['stringify'] = function (value, replacer, space) {
+            var i;
+            gap = '';
+            indent = '';
+
+            if (typeof space === 'number') {
+                for (i = 0; i < space; i += 1) {
+                    indent += ' ';
+                }
+            } else if (typeof space === 'string') {
+                indent = space;
+            }
+            rep = replacer;
+            if (replacer && typeof replacer !== 'function' &&
+                    (typeof replacer !== 'object' ||
+                     typeof replacer.length !== 'number')) {
+                throw new Error('JSON.stringify');
+            }
+            return str('', {'': value});
+        };
+    }
+
+    if (typeof JSON['parse'] !== 'function') {
+        // JSON is parsed on the server for security.
+        JSON['parse'] = function (text) {return eval('('+text+')')};
+    }
+}());
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -996,5 +1146,116 @@ function PN(setup) {
 
 typeof module  !== 'undefined' && (module.exports = PN) ||
 typeof exports !== 'undefined' && (exports.PN = PN)     || (PUBNUB = PN);
+
+})();
+(function(){
+
+// ---------------------------------------------------------------------------
+// WEBSOCKET INTERFACE
+// ---------------------------------------------------------------------------
+var WS = PUBNUB['ws'] = function( url, protocols ) {
+    if (!(this instanceof WS)) return new WS( url, protocols );
+
+    var self     = this
+    ,   url      = self.url      = url || ''
+    ,   protocol = self.protocol = protocols || 'Sec-WebSocket-Protocol'
+    ,   bits     = url.split('/')
+    ,   setup    = {
+         'ssl'           : bits[0] === 'wss:'
+        ,'origin'        : bits[2]
+        ,'publish_key'   : bits[3]
+        ,'subscribe_key' : bits[4]
+        ,'channel'       : bits[5]
+    };
+
+    // READY STATES
+    self['CONNECTING'] = 0; // The connection is not yet open.
+    self['OPEN']       = 1; // The connection is open and ready to communicate.
+    self['CLOSING']    = 2; // The connection is in the process of closing.
+    self['CLOSED']     = 3; // The connection is closed or couldn't be opened.
+
+    // CLOSE STATES
+    self['CLOSE_NORMAL']         = 1000; // Normal Intended Close; completed.
+    self['CLOSE_GOING_AWAY']     = 1001; // Closed Unexpecttedly.
+    self['CLOSE_PROTOCOL_ERROR'] = 1002; // Server: Not Supported.
+    self['CLOSE_UNSUPPORTED']    = 1003; // Server: Unsupported Protocol.
+    self['CLOSE_TOO_LARGE']      = 1004; // Server: Too Much Data.
+    self['CLOSE_NO_STATUS']      = 1005; // Server: No reason.
+    self['CLOSE_ABNORMAL']       = 1006; // Abnormal Disconnect.
+
+    // Events Default
+    self['onclose']   = self['onerror'] = 
+    self['onmessage'] = self['onopen']  =
+    self['onsend']    =  function(){};
+
+    // Attributes
+    self['binaryType']     = '';
+    self['extensions']     = '';
+    self['bufferedAmount'] = 0;
+    self['trasnmitting']   = false;
+    self['buffer']         = [];
+    self['readyState']     = self['CONNECTING'];
+
+    // Close if no setup.
+    if (!url) {
+        self['readyState'] = self['CLOSED'];
+        self['onclose']({
+            'code'     : self['CLOSE_ABNORMAL'],
+            'reason'   : 'Missing URL',
+            'wasClean' : true
+        });
+        return self;
+    }
+
+    // PubNub WebSocket Emulation
+    self.pubnub       = PUBNUB['init'](setup);
+    self.pubnub.setup = setup;
+    self.setup        = setup;
+
+    self.pubnub['subscribe']({
+        'restore'    : false,
+        'channel'    : setup['channel'],
+        'disconnect' : self['onerror'],
+        'reconnect'  : self['onopen'],
+        'error'      : function() {
+            self['onclose']({
+                'code'     : self['CLOSE_ABNORMAL'],
+                'reason'   : 'Missing URL',
+                'wasClean' : false
+            });
+        },
+        'callback'   : function(message) {
+            self['onmessage']({ 'data' : message });
+        },
+        'connect'    : function() {
+            self['readyState'] = self['OPEN'];
+            self['onopen']();
+        }
+    });
+};
+
+// ---------------------------------------------------------------------------
+// WEBSOCKET SEND
+// ---------------------------------------------------------------------------
+WS.prototype.send = function(data) {
+    var self = this;
+    self.pubnub['publish']({
+        'channel'  : self.pubnub.setup['channel'],
+        'message'  : data,
+        'callback' : function(response) {
+            self['onsend']({ 'data' : response });
+        }
+    });
+};
+
+// ---------------------------------------------------------------------------
+// WEBSOCKET CLOSE
+// ---------------------------------------------------------------------------
+WS.prototype.close = function() {
+    var self = this;
+    self.pubnub['unsubscribe']({ 'channel' : self.pubnub.setup['channel'] });
+    self['readyState'] = self['CLOSED'];
+    self['onclose']({});
+};
 
 })();

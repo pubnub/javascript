@@ -7,11 +7,10 @@ all: build
 .PHONY	: build
 build: $(PUBNUB_MIN_JS) $(PUBNUB_CRYPTO_MIN_JS)
 
-$(PUBNUB_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_WEB_JS)
+$(PUBNUB_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATFORM_JS)
 	## Full Version
 	$(ECHO) -n "// Version: $(VERSION)\n" > $(PUBNUB_JS)
 	cat $(JSON_JS) $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
-
 	## Minfied Version
 	$(ECHO) -n "// Version: $(VERSION)\n" > $(PUBNUB_MIN_JS)
 	$(ECHO) "(function(){" > $(PUBNUB_MIN_JS)
