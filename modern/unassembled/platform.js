@@ -243,33 +243,6 @@ function search( elements, start ) {
     return list;
 }
 
-
-
-/**
- * BIND
- * ====
- * bind( 'keydown', search('a')[0], function(element) {
- *     ...
- * } );
- */
-function bind( type, el, fun ) {
-    each( type.split(','), function(etype) {
-        var rapfun = function(e) {
-            if (!e) e = window.event;
-            if (!fun(e)) {
-                e.cancelBubble = true;
-                e.returnValue  = false;
-                e.preventDefault && e.preventDefault();
-                e.stopPropagation && e.stopPropagation();
-            }
-        };
-
-        if ( el.addEventListener ) el.addEventListener( etype, rapfun, false );
-        else if ( el.attachEvent ) el.attachEvent( 'on' + etype, rapfun );
-        else  el[ 'on' + etype ] = rapfun;
-    } );
-}
-
 /**
  * CSS
  * ===
