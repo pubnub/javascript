@@ -1,4 +1,4 @@
-SUBDIRS = web socket.io nodejs modern
+SUBDIRS = web socket.io nodejs modern titanium
 
 .PHONY: all
 all:

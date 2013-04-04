@@ -158,11 +158,11 @@ function generate_channel_list(channels) {
 }
 
 // PUBNUB READY TO CONNECT
-    function ready() { timeout( function() {
-        if (READY) return;
-        READY = 1;
-        each( READY_BUFFER, function(connect) { connect() } );
-    }, SECOND ); }
+function ready() { timeout( function() {
+    if (READY) return;
+    READY = 1;
+    each( READY_BUFFER, function(connect) { connect() } );
+}, SECOND ); }
 
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
@@ -189,8 +189,6 @@ function PN_API(setup) {
     ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}
     ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
-    
-
     function publish(next) {
         if (next) PUB_QUEUE.sending = 0;
         if (PUB_QUEUE.sending || !PUB_QUEUE.length) return;
@@ -207,14 +205,7 @@ function PN_API(setup) {
     }
 
     // Announce Leave Event
-
-    
-        var SELF = {
-
-        '_reset_offline' : function() {
-            SUB_RECEIVER && SUB_RECEIVER(1);
-        },
-
+    var SELF = {
         'LEAVE' : function( channel, blocking ) {
             var data   = { 'uuid' : UUID }
             ,   origin = nextorigin(ORIGIN)
@@ -593,7 +584,7 @@ function PN_API(setup) {
 
             CONNECT = function() {
                 // Close Previous Subscribe Connection
-                SELF['_reset_offline']();
+                _reset_offline();
 
                 // Begin Recursive Subscribe
                 clearTimeout(SUB_BUFF_WAIT);
@@ -648,23 +639,30 @@ function PN_API(setup) {
         'supplant'      : supplant,
         'now'           : rnow,
         'unique'        : unique,
-        'updater'       : updater,
-        'poll_online'   : function() {
-            _is_online() || SELF['_reset_offline']();
-            timeout( SELF['poll_online'], SECOND );
-        },
-        'poll_online2'  : function() {
-            SELF['time'](function(success){
-            success || SELF['_reset_offline']();
-            timeout( SELF['poll_online2'], KEEPALIVE );
-            })
-        }
+        'updater'       : updater
     };
+
+    function _poll_online() {
+        _is_online() || _reset_offline();
+        timeout( _poll_online, SECOND );
+    }
+
+    function _poll_online2() {
+        SELF['time'](function(success){
+            success || _reset_offline();
+            timeout( _poll_online2, KEEPALIVE );
+        })
+    }
+
+    function _reset_offline() {
+        SUB_RECEIVER && SUB_RECEIVER(1);
+    }
+
     if (!UUID) UUID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
 
-    timeout( SELF['poll_online'],  SECOND    );
-    timeout( SELF['poll_online2'], KEEPALIVE );
+    timeout( _poll_online,  SECOND    );
+    timeout( _poll_online2, KEEPALIVE );
 
     return SELF;
 }
