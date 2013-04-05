@@ -1,4 +1,4 @@
-# PubNub Node.JS SDK and NPM
+# PubNub Node.JS SDK and NPM 3.4.3consolidated
 
 Full documentation availabe - https://github.com/pubnub/javascript/blob/master/README.md
 
