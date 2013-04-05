@@ -237,6 +237,17 @@ To use AES encryption in PubNub, simply do the following:
             message : 'hello!'
         });
     }
+    
+    function get_encrypted_history() {
+        secure_pubnub.history({
+            channel: channel,
+            limit: 15,
+            callback: function(notifications) {
+            console.log(notifications);
+            }
+        });
+    }
+
 })();</script>
 ```
 
