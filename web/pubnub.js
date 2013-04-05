@@ -1132,9 +1132,7 @@ function ajax( setup ) {
 
         var url = setup.url.join(URLBIT);
         if (setup.data) {
-            var params = [];
-            var key;
-            console.log(setup.data);
+            var params = [], key;
             url += "?";
             for (key in setup.data) params.push(key+"="+setup.data[key]);
             url += params.join(PARAMSBIT);
