@@ -2,6 +2,8 @@
 http://www.pubnub.com/account
 
 ## The PubNub Network JavaScript v3.4.3 Real-time SDK
+### v3.4.3consolidated
+
 http://www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
 
 The PubNub Network is a blazingly fast Global Messaging Service for building
