@@ -243,7 +243,7 @@ To use AES encryption in PubNub, simply do the following:
             channel: channel,
             limit: 15,
             callback: function(notifications) {
-            console.log(notifications);
+                console.log(notifications);
             }
         });
     }
