@@ -332,6 +332,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
+    ,   error         = setup['error'] || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1; }
     ,   jsonp_cb      = setup['jsonp_cb'] || function(){ return 0; }
     ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}
@@ -853,11 +854,7 @@ var NOW        = 1
 ,   PARAMSBIT  = '&'
 ,   XHRTME     = 310000;
 
-/**
- * UTILITIES
- */
-//function unique() { return'x'+ ++NOW+''+(+new Date) }
-//function rnow() { return+new Date }
+
 
 /**
  * LOCAL STORAGE
@@ -994,11 +991,11 @@ function unbind( type, el, fun ) {
 }
 
 /**
- * LOG
+ * ERROR
  * ===
- * var list = grep( [1,2,3], function(item) { return item % 2 } )
+ * error('message');
  */
-var log = function(){};
+function error(message) { console['error'](message) }
 
 /**
  * EVENTS
@@ -1037,6 +1034,7 @@ function PN(setup) {
 
     setup['db'] = db;
     setup['xdr'] = xdr;
+    setup['error'] = error;
     var SELF = PN_API(setup);
 
     SELF['init'] = PN;

@@ -182,6 +182,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
+    ,   error         = setup['error'] || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1; }
     ,   jsonp_cb      = setup['jsonp_cb'] || function(){ return 0; }
     ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}

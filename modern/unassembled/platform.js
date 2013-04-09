@@ -37,11 +37,7 @@ var NOW        = 1
 ,   PARAMSBIT  = '&'
 ,   XHRTME     = 310000;
 
-/**
- * UTILITIES
- */
-//function unique() { return'x'+ ++NOW+''+(+new Date) }
-//function rnow() { return+new Date }
+
 
 /**
  * LOCAL STORAGE
@@ -178,11 +174,11 @@ function unbind( type, el, fun ) {
 }
 
 /**
- * LOG
+ * ERROR
  * ===
- * var list = grep( [1,2,3], function(item) { return item % 2 } )
+ * error('message');
  */
-var log = function(){};
+function error(message) { console['error'](message) }
 
 /**
  * EVENTS
@@ -221,6 +217,7 @@ function PN(setup) {
 
     setup['db'] = db;
     setup['xdr'] = xdr;
+    setup['error'] = error;
     var SELF = PN_API(setup);
 
     SELF['init'] = PN;
