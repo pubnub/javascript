@@ -1,3 +1,4 @@
+// Version: 3.4.4
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []

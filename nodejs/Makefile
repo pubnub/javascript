@@ -15,7 +15,8 @@ build: $(PUBNUB_JS)
 
 
 $(PUBNUB_JS): $(PUBNUB_COMMON_JS) $(PUBNUB_NODE_JS)
-	cat $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) > $(PUBNUB_JS)
+	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_JS)
+	cat $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) >> $(PUBNUB_JS)
 
 .PHONY	: clean
 clean:

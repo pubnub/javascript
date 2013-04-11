@@ -9,11 +9,11 @@ build: $(PUBNUB_MIN_JS) $(PUBNUB_CRYPTO_MIN_JS)
 
 $(PUBNUB_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATFORM_JS)
 	## Full Version
-	$(ECHO) -n "// Version: $(VERSION)\n" > $(PUBNUB_JS)
+	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_JS)
 	cat $(JSON_JS) $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
 	## Minfied Version
-	$(ECHO) -n "// Version: $(VERSION)\n" > $(PUBNUB_MIN_JS)
-	$(ECHO) "(function(){" > $(PUBNUB_MIN_JS)
+	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_MIN_JS)
+	$(ECHO) "(function(){" >> $(PUBNUB_MIN_JS)
 	cat $(PUBNUB_JS) | java -jar $(GOOGLE_MINIFY) --compilation_level=ADVANCED_OPTIMIZATIONS >> $(PUBNUB_MIN_JS)
 	$(ECHO) "})();" >> $(PUBNUB_MIN_JS)
 
