@@ -1,3 +1,4 @@
+// Version: 3.4.4
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -182,6 +183,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
+    ,   error         = setup['error'] || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1; }
     ,   jsonp_cb      = setup['jsonp_cb'] || function(){ return 0; }
     ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}
@@ -708,20 +710,13 @@ var NOW    = 1
 ,   SECOND          = 1000
 ,   XORIGN = 1;
 
-/**
- * UNIQUE
- * ======
- * var timestamp = unique();
- */
-function unique() { return'x'+ ++NOW+''+(+new Date) }
 
 /**
- * LOG
+ * ERROR
  * ===
- * log('message');
+ * error('message');
  */
-function log(message) { console['log'](message) }
-
+function error(message) { console['error'](message) }
 
 /**
  * Request
@@ -833,6 +828,7 @@ exports.init = function(setup) {
     var PN = {};
     setup['xdr'] = xdr;
     setup['db'] = db;
+    setup['error'] = error;
     PN = PN_API(setup);    
     PN.ready();
     return PN;

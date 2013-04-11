@@ -42,20 +42,13 @@ var NOW    = 1
 ,   SECOND          = 1000
 ,   XORIGN = 1;
 
-/**
- * UNIQUE
- * ======
- * var timestamp = unique();
- */
-function unique() { return'x'+ ++NOW+''+(+new Date) }
 
 /**
- * LOG
+ * ERROR
  * ===
- * log('message');
+ * error('message');
  */
-function log(message) { console['log'](message) }
-
+function error(message) { console['error'](message) }
 
 /**
  * Request
@@ -167,6 +160,7 @@ exports.init = function(setup) {
     var PN = {};
     setup['xdr'] = xdr;
     setup['db'] = db;
+    setup['error'] = error;
     PN = PN_API(setup);    
     PN.ready();
     return PN;

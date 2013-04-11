@@ -1,7 +1,7 @@
 # YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
-http://www.pubnub.com/account
+Create an account at http://www.pubnub.com/account
 
-## The PubNub Network JavaScript v3.4.3 Real-time SDK
+## The PubNub Network JavaScript Real-time SDK v3.4.3
 http://www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
 
 The PubNub Network is a blazingly fast Global Messaging Service for building
@@ -237,6 +237,17 @@ To use AES encryption in PubNub, simply do the following:
             message : 'hello!'
         });
     }
+    
+    function get_encrypted_history() {
+        secure_pubnub.history({
+            channel: channel,
+            limit: 15,
+            callback: function(notifications) {
+                console.log(notifications);
+            }
+        });
+    }
+
 })();</script>
 ```
 

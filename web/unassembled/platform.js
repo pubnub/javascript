@@ -316,9 +316,7 @@ function ajax( setup ) {
 
         var url = setup.url.join(URLBIT);
         if (setup.data) {
-            var params = [];
-            var key;
-            console.log(setup.data);
+            var params = [], key;
             url += "?";
             for (key in setup.data) params.push(key+"="+setup.data[key]);
             url += params.join(PARAMSBIT);
@@ -364,6 +362,7 @@ var PDIV          = $('pubnub') || 0
 
     setup['xdr']        = xdr;
     setup['db']         = db;
+    setup['error']      = error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
 

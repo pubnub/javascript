@@ -1,4 +1,5 @@
-// Version: 3.4.3\n/* =-====================================================================-= */
+// Version: 3.4.4
+/* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
 /* =-====================================================================-= */
@@ -332,6 +333,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
+    ,   error         = setup['error'] || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1; }
     ,   jsonp_cb      = setup['jsonp_cb'] || function(){ return 0; }
     ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}
@@ -1132,9 +1134,7 @@ function ajax( setup ) {
 
         var url = setup.url.join(URLBIT);
         if (setup.data) {
-            var params = [];
-            var key;
-            console.log(setup.data);
+            var params = [], key;
             url += "?";
             for (key in setup.data) params.push(key+"="+setup.data[key]);
             url += params.join(PARAMSBIT);
@@ -1180,6 +1180,7 @@ var PDIV          = $('pubnub') || 0
 
     setup['xdr']        = xdr;
     setup['db']         = db;
+    setup['error']      = error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
 

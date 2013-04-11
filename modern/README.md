@@ -1,4 +1,5 @@
 # PubNub HTML5 Modern JavaScript Library
+### v3.4.3consolidated
 
 For a faster PubNub load, use the PubNub HTML5 Modern JavaScript
 Library which is `CommonJS` and HTML5 `WebWorker` Ready.
