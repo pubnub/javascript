@@ -358,7 +358,7 @@ var PDIV          = $('pubnub') || 0
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
-    ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid') || '';
+    ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid')||'';
 
     setup['xdr']        = xdr;
     setup['db']         = db;
@@ -366,33 +366,32 @@ var PDIV          = $('pubnub') || 0
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
 
-    var SELF       = PN_API(setup);
-    SELF['css']    = css;
-    SELF['$']      = $;
-    SELF['create'] = create;
-    SELF['bind']   = bind;
-    SELF['head']   = head;
-    SELF['search'] = search;
-    SELF['attr']   = attr;
-    SELF['events'] = events;
-    SELF['init']   = CREATE_PUBNUB;
+    var SELF            = PN_API(setup);
+    SELF['css']         = css;
+    SELF['$']           = $;
+    SELF['create']      = create;
+    SELF['bind']        = bind;
+    SELF['head']        = head;
+    SELF['search']      = search;
+    SELF['attr']        = attr;
+    SELF['events']      = events;
+    SELF['init']        = CREATE_PUBNUB;
 
     // Return without Testing 
     if (setup['notest']) return SELF;
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
-        each_channel(function(ch){ SELF['LEAVE']( ch.name, 1 ) });
+        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
         return true;
     } );
 
     bind( 'offline', window,   SELF['_reset_offline'] );
-   	bind( 'offline', document, SELF['_reset_offline'] );
+    bind( 'offline', document, SELF['_reset_offline'] );
 
     // Return PUBNUB Socket Object
     return SELF;
 };
-
 
 // Bind for PUBNUB Readiness to Subscribe
 bind( 'load', window, function(){ timeout( ready, 0 ) } );
