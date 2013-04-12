@@ -199,7 +199,7 @@ function build_url(url_components, url_params) {
         var params = [];
         url += "?";
         for (var key in url_params) {
-             params.push(key+"="+url_params[key]);
+             params.push(key+"="+encode(url_params[key]));
         }
         url += params.join(PARAMSBIT);
     }
@@ -854,7 +854,7 @@ window['PUBNUB'] || (function() {
 var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,	PNSDK      		= encode('PubNub-JS-' + 'Web' + '/' + '3.4.4')
+,	PNSDK      		= 'PubNub-JS-' + 'Web' + '/' + '3.4.4'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**

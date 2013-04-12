@@ -33,7 +33,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,	PNSDK      = encode('PubNub-JS-' + PLATFORM + '/' + VERSION)
+,	PNSDK      = 'PubNub-JS-' + PLATFORM + '/' + VERSION
 ,   XHRTME     = 310000;
 
 

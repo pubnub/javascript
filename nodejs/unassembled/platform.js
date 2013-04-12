@@ -40,7 +40,7 @@ var NOW    = 1
 ,   XHRTME = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,	PNSDK			= encode('PubNub-JS-' + PLATFORM + '/' +  VERSION)
+,	PNSDK			= 'PubNub-JS-' + PLATFORM + '/' +  VERSION
 ,   XORIGN = 1;
 
 

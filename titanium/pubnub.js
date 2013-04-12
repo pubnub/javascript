@@ -50,7 +50,7 @@ function build_url(url_components, url_params) {
         var params = [];
         url += "?";
         for (var key in url_params) {
-             params.push(key+"="+url_params[key]);
+             params.push(key+"="+encode(url_params[key]));
         }
         url += params.join(PARAMSBIT);
     }
@@ -725,9 +725,8 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,   URLBIT     = '/'
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,   PARAMSBIT  = '&'
+,	PNSDK			= 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.4'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
@@ -759,17 +758,11 @@ var db = (function(){
  */
 function xdr_tcp(setup) {
  
-    var url      = setup.url.join(URLBIT);
-    if (setup.data) {
-        var params = [];
-        url += "?";
-        for (key in setup.data) {
-            params.push(key+"="+setup.data[key]);
-        } 
-        url += params.join(PARAMSBIT);
-    }
-    log(url);
-    var body     = []
+	var data	 = setup.data || {};
+	data['pnsdk'] = PNSDK;
+    var url      = build_url(setup.url, data);
+    
+	var body     = []
     ,   data     = ""
     ,   rbuffer  = Ti.createBuffer({ length : 2048 })
     ,   wbuffer  = Ti.createBuffer({ value : "GET " + url + " HTTP/1.0\n\n"})
@@ -835,15 +828,9 @@ function xdr_tcp(setup) {
  */
 function xdr_http_client( setup ) {
 
-    var url = setup.url.join(URLBIT);
-    if (setup.data) {
-        var params = [];
-        url += "?";
-        for (key in setup.data) {
-            params.push(key+"="+setup.data[key]);
-        } 
-        url += params.join(PARAMSBIT);
-    }
+	var data	 = setup.data || {};
+	data['pnsdk'] = PNSDK;
+    var url      = build_url(setup.url, data);
     var xhr
     ,   finished = function() {
             if (loaded) return;

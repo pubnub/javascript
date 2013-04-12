@@ -48,7 +48,7 @@ function build_url(url_components, url_params) {
         var params = [];
         url += "?";
         for (var key in url_params) {
-             params.push(key+"="+url_params[key]);
+             params.push(key+"="+encode(url_params[key]));
         }
         url += params.join(PARAMSBIT);
     }

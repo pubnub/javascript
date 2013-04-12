@@ -13,7 +13,7 @@ window['PUBNUB'] || (function() {
 var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,	PNSDK      		= encode('PubNub-JS-' + PLATFORM + '/' + VERSION)
+,	PNSDK      		= 'PubNub-JS-' + PLATFORM + '/' + VERSION
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**

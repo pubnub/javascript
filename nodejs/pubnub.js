@@ -49,7 +49,7 @@ function build_url(url_components, url_params) {
         var params = [];
         url += "?";
         for (var key in url_params) {
-             params.push(key+"="+url_params[key]);
+             params.push(key+"="+encode(url_params[key]));
         }
         url += params.join(PARAMSBIT);
     }
@@ -731,7 +731,7 @@ var NOW    = 1
 ,   XHRTME = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,	PNSDK			= encode('PubNub-JS-' + 'Nodejs' + '/' +  '3.4.4')
+,	PNSDK			= 'PubNub-JS-' + 'Nodejs' + '/' +  '3.4.4'
 ,   XORIGN = 1;
 
 
