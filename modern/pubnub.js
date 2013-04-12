@@ -8,6 +8,8 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
+,   URLBIT          = '/'
+,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -33,6 +35,26 @@ var nextorigin = (function() {
             ) ) || origin;
     }
 })();
+
+
+/**
+ * Build Url
+ * =======
+ * 
+ */
+function build_url(url_components, url_params) {
+    var url     = url_components.join(URLBIT);
+
+    if (url_params) {
+        var params = [];
+        url += "?";
+        for (var key in url_params) {
+             params.push(key+"="+url_params[key]);
+        }
+        url += params.join(PARAMSBIT);
+    }
+	return url;
+}
 
 /**
  * UPDATER
@@ -207,7 +229,7 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking ) {
-            var data   = { 'uuid' : UUID }
+            var data   = { 'uuid' : UUID}
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
 
@@ -216,6 +238,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
+			
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
@@ -701,8 +724,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,   URLBIT     = '/'
-,   PARAMSBIT  = '&'
+,	PNSDK      = encode('PubNub-JS-' + 'Modern' + '/' + '3.4.4')
 ,   XHRTME     = 310000;
 
 
@@ -758,6 +780,7 @@ function xdr( setup ) {
     ,   complete = 0
     ,   loaded   = 0
     ,   timer    = timeout( function(){done(1)}, XHRTME )
+    ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
     ,   done     = function(failed) {
@@ -784,15 +807,8 @@ function xdr( setup ) {
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.timeout = XHRTME;
-        url = setup.url.join(URLBIT);
-        if (setup.data) {
-            var params = [];
-            url += "?";
-            for (key in setup.data) {
-                params.push(key+"="+setup.data[key]);
-            }
-            url += params.join(PARAMSBIT);
-        }
+        data['pnsdk'] = PNSDK;
+        url = build_url(setup.url, data);
         xhr.open( 'GET', url, true );
         xhr.send();
     }

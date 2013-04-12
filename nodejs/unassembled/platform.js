@@ -40,6 +40,7 @@ var NOW    = 1
 ,   XHRTME = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
+,	PNSDK			= encode('PubNub-JS-' + PLATFORM + '/' +  VERSION)
 ,   XORIGN = 1;
 
 
@@ -60,7 +61,6 @@ function error(message) { console['error'](message) }
  *  });
  */
 function xdr( setup ) {
-    //setup.url.unshift('');
     var url     = setup.url.join(URLBIT)
     ,   request    
     ,   response
@@ -108,6 +108,8 @@ function xdr( setup ) {
         }
         url += params.join(PARAMSBIT);
     }
+    url += '&pnsdk=' + PNSDK ;
+    console.log(url);
     var options = {
         hostname : origin,
         port : ssl ? 443 : 80,

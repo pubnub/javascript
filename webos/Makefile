@@ -1,6 +1,7 @@
 include ../Makefile.inc
 OUTPUT_FILES=$(PUBNUB_MIN_JS) $(PUBNUB_CRYPTO_MIN_JS)
-PLATFORM=Modern
+PLATFORM=Webos
+MODERN_PLATFORM_JS=../modern/$(PUBNUB_PLATFORM_JS)
 
 .PHONY	: all
 all: build
@@ -8,10 +9,10 @@ all: build
 .PHONY	: build
 build: $(PUBNUB_MIN_JS) $(PUBNUB_CRYPTO_MIN_JS)
 
-$(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATFORM_JS)
+$(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(MODERN_PLATFORM_JS)
 	## Full Version
 	$(ECHO)  "// Version: $(VERSION)" > $(PUBNUB_JS)
-	cat $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
+	cat $(PUBNUB_COMMON_JS) $(MODERN_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
 	sed -i -e "s/VERSION/\'$(VERSION)\'/g" $(PUBNUB_JS)
 	sed -i -e "s/PLATFORM/\'$(PLATFORM)\'/g" $(PUBNUB_JS)
 	## Minfied Version

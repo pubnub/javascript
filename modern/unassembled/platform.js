@@ -33,8 +33,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,   URLBIT     = '/'
-,   PARAMSBIT  = '&'
+,	PNSDK      = encode('PubNub-JS-' + PLATFORM + '/' + VERSION)
 ,   XHRTME     = 310000;
 
 
@@ -90,6 +89,7 @@ function xdr( setup ) {
     ,   complete = 0
     ,   loaded   = 0
     ,   timer    = timeout( function(){done(1)}, XHRTME )
+    ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
     ,   done     = function(failed) {
@@ -116,15 +116,8 @@ function xdr( setup ) {
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.timeout = XHRTME;
-        url = setup.url.join(URLBIT);
-        if (setup.data) {
-            var params = [];
-            url += "?";
-            for (key in setup.data) {
-                params.push(key+"="+setup.data[key]);
-            }
-            url += params.join(PARAMSBIT);
-        }
+        data['pnsdk'] = PNSDK;
+        url = build_url(setup.url, data);
         xhr.open( 'GET', url, true );
         xhr.send();
     }

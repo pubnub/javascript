@@ -26,3 +26,5 @@ $(PUBNUB_CRYPTO_JS) : $(GIBBERISH_JS) $(ENCRYPT_JS)
 .PHONY	: clean
 clean:
 	rm -f $(OUTPUT_FILES)
+
+include ../Makefile.post

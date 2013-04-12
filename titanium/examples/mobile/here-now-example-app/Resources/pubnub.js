@@ -1,4 +1,4 @@
-// 3.4.3
+// 3.4.4
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -9,6 +9,8 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
+,   URLBIT          = '/'
+,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -34,6 +36,26 @@ var nextorigin = (function() {
             ) ) || origin;
     }
 })();
+
+
+/**
+ * Build Url
+ * =======
+ * 
+ */
+function build_url(url_components, url_params) {
+    var url     = url_components.join(URLBIT);
+
+    if (url_params) {
+        var params = [];
+        url += "?";
+        for (var key in url_params) {
+             params.push(key+"="+url_params[key]);
+        }
+        url += params.join(PARAMSBIT);
+    }
+	return url;
+}
 
 /**
  * UPDATER
@@ -184,6 +206,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
+    ,   error         = setup['error'] || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1; }
     ,   jsonp_cb      = setup['jsonp_cb'] || function(){ return 0; }
     ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}
@@ -207,7 +230,7 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking ) {
-            var data   = { 'uuid' : UUID }
+            var data   = { 'uuid' : UUID}
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
 
@@ -216,6 +239,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
+			
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
