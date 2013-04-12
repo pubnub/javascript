@@ -1,5 +1,6 @@
 include ../Makefile.inc
 OUTPUT_FILES=$(PUBNUB_MIN_JS) $(PUBNUB_CRYPTO_MIN_JS)
+PLATFORM=Modern
 
 .PHONY	: all
 all: build
@@ -11,6 +12,8 @@ $(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATFORM_JS)
 	## Full Version
 	$(ECHO)  "// Version: $(VERSION)" > $(PUBNUB_JS)
 	cat $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
+	sed -i -e "s/VERSION/\'$(VERSION)\'/g" $(PUBNUB_JS)
+	sed -i -e "s/PLATFORM/\'$(PLATFORM)\'/g" $(PUBNUB_JS)
 	## Minfied Version
 	$(ECHO)  "// Version: $(VERSION)" > $(PUBNUB_MIN_JS)
 	$(ECHO) "(function(){" >> $(PUBNUB_MIN_JS)
@@ -26,3 +29,5 @@ $(PUBNUB_CRYPTO_MIN_JS) : $(GIBBERISH_JS) $(ENCRYPTO_JS)
 .PHONY	: clean
 clean:
 	rm -f $(OUTPUT_FILES)
+
+include ../Makefile.post

@@ -33,8 +33,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,   URLBIT     = '/'
-,   PARAMSBIT  = '&'
+,	PNSDK      = 'PubNub-JS-' + PLATFORM + '/' + VERSION
 ,   XHRTME     = 310000;
 
 
@@ -90,6 +89,7 @@ function xdr( setup ) {
     ,   complete = 0
     ,   loaded   = 0
     ,   timer    = timeout( function(){done(1)}, XHRTME )
+    ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
     ,   done     = function(failed) {
@@ -116,15 +116,8 @@ function xdr( setup ) {
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.timeout = XHRTME;
-        url = setup.url.join(URLBIT);
-        if (setup.data) {
-            var params = [];
-            url += "?";
-            for (key in setup.data) {
-                params.push(key+"="+setup.data[key]);
-            }
-            url += params.join(PARAMSBIT);
-        }
+        data['pnsdk'] = PNSDK;
+        url = build_url(setup.url, data);
         xhr.open( 'GET', url, true );
         xhr.send();
     }
@@ -206,6 +199,60 @@ var events = {
     }
 };
 
+/**
+ * ATTR
+ * ====
+ * var attribute = attr( node, 'attribute' );
+ */
+function attr( node, attribute, value ) {
+    if (value) node.setAttribute( attribute, value );
+    else return node && node.getAttribute && node.getAttribute(attribute);
+}
+
+/**
+ * $
+ * =
+ * var div = $('divid');
+ */
+function $(id) { return document.getElementById(id) }
+
+
+/**
+ * SEARCH
+ * ======
+ * var elements = search('a div span');
+ */
+function search( elements, start ) {
+    var list = [];
+    each( elements.split(/\s+/), function(el) {
+        each( (start || document).getElementsByTagName(el), function(node) {
+            list.push(node);
+        } );
+    } );
+    return list;
+}
+
+/**
+ * CSS
+ * ===
+ * var obj = create('div');
+ */
+function css( element, styles ) {
+    for (var style in styles) if (styles.hasOwnProperty(style))
+        try {element.style[style] = styles[style] + (
+            '|width|height|top|left|'.indexOf(style) > 0 &&
+            typeof styles[style] == 'number'
+            ? 'px' : ''
+        )}catch(e){}
+}
+
+/**
+ * CREATE
+ * ======
+ * var obj = create('div');
+ */
+function create(element) { return document.createElement(element) }
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -221,8 +268,13 @@ function PN(setup) {
     var SELF = PN_API(setup);
 
     SELF['init'] = PN;
-
-    
+    SELF['$'] = $;
+    SELF['attr'] = attr;
+    SELF['search'] = search;
+    SELF['bind'] = bind;
+    SELF['css'] = css;
+    SELF['create'] = create;
+	
     // Return without Testing 
     if (setup['notest']) return SELF;
 

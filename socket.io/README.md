@@ -63,7 +63,6 @@ emit() or send() functions, the message will be broadcast.
 
 ## How to use
 
-First, include `pubnub.js` and `socket.io.js`:
 
 ```html
 <script src="http://cdn.pubnub.com/socket.io.min.js"></script>

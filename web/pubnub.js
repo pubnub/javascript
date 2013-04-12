@@ -158,6 +158,8 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
+,   URLBIT          = '/'
+,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -183,6 +185,26 @@ var nextorigin = (function() {
             ) ) || origin;
     }
 })();
+
+
+/**
+ * Build Url
+ * =======
+ * 
+ */
+function build_url(url_components, url_params) {
+    var url     = url_components.join(URLBIT);
+
+    if (url_params) {
+        var params = [];
+        url += "?";
+        for (var key in url_params) {
+             params.push(key+"="+encode(url_params[key]));
+        }
+        url += params.join(PARAMSBIT);
+    }
+	return url;
+}
 
 /**
  * UPDATER
@@ -357,7 +379,7 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking ) {
-            var data   = { 'uuid' : UUID }
+            var data   = { 'uuid' : UUID}
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
 
@@ -366,6 +388,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
+			
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
@@ -829,11 +852,10 @@ window['PUBNUB'] || (function() {
  * UTIL LOCALS
  */
 
-var SWF           = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
+var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
-,   URLBIT          = '/'
-,   PARAMSBIT       = '&'
 ,   UA              = navigator.userAgent
+,	PNSDK      		= 'PubNub-JS-' + 'Web' + '/' + '3.4.4'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -1034,6 +1056,7 @@ function xdr( setup ) {
     ,   xhrtme    = setup.timeout || DEF_TIMEOUT
     ,   timer     = timeout( function(){done(1)}, xhrtme )
     ,   fail      = setup.fail    || function(){}
+    ,   data      = setup.data    || {}
     ,   success   = setup.success || function(){}
 
     ,   append = function() {
@@ -1063,16 +1086,9 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-    script.src     = setup.url.join(URLBIT);
+	data['pnsdk'] = PNSDK;
+    script.src     = build_url(setup.url,data);
 
-    if (setup.data) {
-        var params = [];
-        script.src += "?";
-        for (var key in setup.data) {
-             params.push(key+"="+setup.data[key]);
-        }
-        script.src += params.join(PARAMSBIT);
-    }
     attr( script, 'id', id );
 
     append();
@@ -1106,6 +1122,7 @@ function ajax( setup ) {
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
     ,   timer    = timeout( function(){done(1)}, xhrtme )
     ,   fail     = setup.fail    || function(){}
+    ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
     ,   done     = function(failed) {
             if (complete) return;
@@ -1133,13 +1150,8 @@ function ajax( setup ) {
         xhr.onload  = xhr.onloadend = finished;
         xhr.timeout = xhrtme;
 
-        var url = setup.url.join(URLBIT);
-        if (setup.data) {
-            var params = [], key;
-            url += "?";
-            for (key in setup.data) params.push(key+"="+setup.data[key]);
-            url += params.join(PARAMSBIT);
-        }
+	    data['pnsdk'] = PNSDK;
+        var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, (typeof(setup.blocking === 'undefined')) );
         xhr.send();

@@ -7,6 +7,8 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
+,   URLBIT          = '/'
+,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -32,6 +34,26 @@ var nextorigin = (function() {
             ) ) || origin;
     }
 })();
+
+
+/**
+ * Build Url
+ * =======
+ * 
+ */
+function build_url(url_components, url_params) {
+    var url     = url_components.join(URLBIT);
+
+    if (url_params) {
+        var params = [];
+        url += "?";
+        for (var key in url_params) {
+             params.push(key+"="+encode(url_params[key]));
+        }
+        url += params.join(PARAMSBIT);
+    }
+	return url;
+}
 
 /**
  * UPDATER
@@ -206,7 +228,7 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking ) {
-            var data   = { 'uuid' : UUID }
+            var data   = { 'uuid' : UUID}
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
 
@@ -215,6 +237,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
+			
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,

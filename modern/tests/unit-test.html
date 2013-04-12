@@ -240,7 +240,7 @@
                 channel  : channel,
                 callback : function(messages) {
                     test( messages, 'History Response' );
-                    test( messages[0].test === "test", 'History Content' );
+                    test( messages[0][0].test === "test", 'History Content' );
                 }
             });
         }

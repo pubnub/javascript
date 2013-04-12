@@ -35,11 +35,10 @@ THE SOFTWARE.
 var NOW    = 1
 ,   http   = require('http')
 ,   https  = require('https')
-,   URLBIT = '/'
-,   PARAMSBIT = '&'
 ,   XHRTME = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
+,	PNSDK			= 'PubNub-JS-' + PLATFORM + '/' +  VERSION
 ,   XORIGN = 1;
 
 
@@ -60,17 +59,16 @@ function error(message) { console['error'](message) }
  *  });
  */
 function xdr( setup ) {
-    //setup.url.unshift('');
-    var url     = setup.url.join(URLBIT)
-    ,   request    
+    var request    
     ,   response
-    ,   success = setup.success || function(){}
+    ,   success  = setup.success || function(){}
     ,   fail     = setup.fail    || function(){}
-    ,   origin  = setup.origin || 'pubsub.pubnub.com'
-    ,   ssl     = setup.ssl
-    ,   failed  = 0
+    ,   origin   = setup.origin || 'pubsub.pubnub.com'
+    ,   ssl      = setup.ssl
+    ,   failed   = 0
     ,   complete = 0
     ,   loaded   = 0
+    ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
     ,   body = ''
     ,   finished = function() {
@@ -99,15 +97,9 @@ function xdr( setup ) {
         }
         ,   timer  = timeout( function(){done(1);} , xhrtme );
 
+    data['pnsdk'] = PNSDK;
+    var url = build_url(setup.url, data);
 
-    if (setup.data) {
-        var params = [];
-        url += "?";
-        for (var key in setup.data) {
-             params.push(key+"="+setup.data[key]);
-        }
-        url += params.join(PARAMSBIT);
-    }
     var options = {
         hostname : origin,
         port : ssl ? 443 : 80,

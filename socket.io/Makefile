@@ -27,3 +27,5 @@ $(SOCKET_IO_MIN_JS): $(SOCKET_IO_BASE_JS) $(PUBNUB_MIN_JS)
 .PHONY	: clean
 clean:
 	rm -f $(OUTPUT_FILES) $(SOCKET_IO_TMP)
+
+include ../Makefile.post
