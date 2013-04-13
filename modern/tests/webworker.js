@@ -2,8 +2,7 @@
 
     "use strict"
 
-    importScripts('../pubnub-3.3-common.js')
-    importScripts('../pubnub-3.3.js')
+    importScripts('../pubnub.min.js')
 
     var app = PUBNUB({
         publish_key   : 'demo',
