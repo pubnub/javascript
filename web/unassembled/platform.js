@@ -244,7 +244,7 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-	data['pnsdk'] = PNSDK;
+	data['pnsdk']  = PNSDK;
     script.src     = build_url(setup.url,data);
 
     attr( script, 'id', id );
@@ -282,6 +282,7 @@ function ajax( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
+    ,   async    = ( typeof(setup.blocking) === 'undefined' )
     ,   done     = function(failed) {
             if (complete) return;
                 complete = 1;
@@ -306,12 +307,12 @@ function ajax( setup ) {
 
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
-        xhr.timeout = xhrtme;
+        if (async) xhr.timeout = xhrtme;
 
 	    data['pnsdk'] = PNSDK;
         var url = build_url(setup.url,data);
 
-        xhr.open( 'GET', url, (typeof(setup.blocking === 'undefined')) );
+        xhr.open( 'GET', url, async );
         xhr.send();
     }
     catch(eee) {
@@ -347,7 +348,7 @@ var PDIV          = $('pubnub') || 0
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
-    ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid') || '';
+    ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid')||'';
 
     setup['xdr']        = xdr;
     setup['db']         = db;
@@ -355,33 +356,32 @@ var PDIV          = $('pubnub') || 0
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
 
-    var SELF       = PN_API(setup);
-    SELF['css']    = css;
-    SELF['$']      = $;
-    SELF['create'] = create;
-    SELF['bind']   = bind;
-    SELF['head']   = head;
-    SELF['search'] = search;
-    SELF['attr']   = attr;
-    SELF['events'] = events;
-    SELF['init']   = CREATE_PUBNUB;
+    var SELF            = PN_API(setup);
+    SELF['css']         = css;
+    SELF['$']           = $;
+    SELF['create']      = create;
+    SELF['bind']        = bind;
+    SELF['head']        = head;
+    SELF['search']      = search;
+    SELF['attr']        = attr;
+    SELF['events']      = events;
+    SELF['init']        = CREATE_PUBNUB;
 
     // Return without Testing 
     if (setup['notest']) return SELF;
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
-        each_channel(function(ch){ SELF['LEAVE']( ch.name, 1 ) });
+        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
         return true;
     } );
 
     bind( 'offline', window,   SELF['_reset_offline'] );
-   	bind( 'offline', document, SELF['_reset_offline'] );
+    bind( 'offline', document, SELF['_reset_offline'] );
 
     // Return PUBNUB Socket Object
     return SELF;
 };
-
 
 // Bind for PUBNUB Readiness to Subscribe
 bind( 'load', window, function(){ timeout( ready, 0 ) } );
