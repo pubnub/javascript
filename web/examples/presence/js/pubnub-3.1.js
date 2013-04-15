@@ -602,7 +602,7 @@ function ajax( setup ) {
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.timeout = XHRTME;
-        
+
         url     = setup.url.join(URLBIT);
         if (setup.data) {
             url += "?";
@@ -610,7 +610,7 @@ function ajax( setup ) {
                 url += key+"="+setup.data[key]+"&";
             }
         }
-        
+
         xhr.open( 'GET', url, true );
         xhr.send();
     }
@@ -650,7 +650,7 @@ var PDIV          = $('pubnub') || {}
             });
         */
         'history' : function( args, callback ) {
-            var callback = args['callback'] || callback 
+            var callback = args['callback'] || callback
             ,   limit    = args['limit'] || 100
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb();
@@ -747,7 +747,7 @@ var PDIV          = $('pubnub') || {}
             CHANNELS[channel].connected = 0;
 
             // Abort and Remove Script
-            CHANNELS[channel].done && 
+            CHANNELS[channel].done &&
             CHANNELS[channel].done(0);
         },
 
@@ -850,13 +850,13 @@ var PDIV          = $('pubnub') || {}
 
                         timeout( pubnub, 10 );
                     },
-                    
+
                 });
             }
 
             // Begin Recursive Subscribe
             pubnub();
-            
+
             if (args['presence']) {
                 SELF.subscribe({
                     channel: args['channel']+"-pnpres",
@@ -866,7 +866,7 @@ var PDIV          = $('pubnub') || {}
             }
         },
         'here_now' : function( args, callback ) {
-            var callback = args['callback'] || callback 
+            var callback = args['callback'] || callback
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
             ,   origin   = nextorigin(ORIGIN);
@@ -874,16 +874,16 @@ var PDIV          = $('pubnub') || {}
             // Make sure we have a Channel
             if (!channel)  return log('Missing Channel');
             if (!callback) return log('Missing Callback');
-            
+
             data = null;
             if (jsonp != '0') { data['callback']=jsonp; }
-            
+
             // Send Message
             xdr({
                 callback : jsonp,
                 url      : [
                     origin, 'v2', 'presence',
-                    'sub_key', SUBSCRIBE_KEY, 
+                    'sub_key', SUBSCRIBE_KEY,
                     'channel', encode(channel)
                 ],
                 data: data,
@@ -912,10 +912,10 @@ var PDIV          = $('pubnub') || {}
         'updater'  : updater,
         'init'     : CREATE_PUBNUB
     };
-    
+
     if (UUID == '') UUID = SELF.uuid();
     db.set(SUBSCRIBE_KEY+'uuid', UUID);
-    
+
     return SELF;
 };
 

@@ -51,7 +51,7 @@
                 if (socket.disconnected) return;
                 socket.disconnected = 1;
                 p.each( namespaces, function(ns) {
-                    p.events.fire( ns + 'disconnect', {} ) 
+                    p.events.fire( ns + 'disconnect', {} )
                 } );
             }
             socket.disconnected = 0;
@@ -78,9 +78,9 @@
                 },
                 callback : function(evt) {
                     if (socket.disconnected) p.each( namespaces, function(ns) {
-                        p.events.fire( ns + 'reconnect', {} ) 
+                        p.events.fire( ns + 'reconnect', {} )
                     } );
- 
+
                     socket.disconnected = 0;
 
                     var data = evt.data;
@@ -140,7 +140,7 @@
 
             user.connected = false;
             user.socket.user_count--;
-            p.events.fire( ns + 'leave', user ) 
+            p.events.fire( ns + 'leave', user )
         } );
     }
 
@@ -192,7 +192,7 @@
     }
 
     // =====================================================================
-    // Get Here Now data for present users 
+    // Get Here Now data for present users
     // =====================================================================
     function here_now( namespace, callback ) {
         var socket = get_socket(namespace);
@@ -205,13 +205,13 @@
     function locate(callback) {
         var callback = callback || function(){};
         navigator && navigator.geolocation &&
-        navigator.geolocation.getCurrentPosition(function(position) {  
+        navigator.geolocation.getCurrentPosition(function(position) {
             socket.location = [
                 position.coords.latitude,
                 position.coords.longitude
             ];
             callback(socket.location);
-        }) || callback([ 0, 0 ]); 
+        }) || callback([ 0, 0 ]);
     }
 
     // =====================================================================

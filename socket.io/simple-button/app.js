@@ -73,7 +73,7 @@ function advance() {
     var stage = indicators.stage++;
     setTimeout( function() {
         p.css( indicators[stage], { background : '#4a3' } );
-    }, 400 * (stage === 2 ? (function(){ 
+    }, 400 * (stage === 2 ? (function(){
         p.css( stages, { background : '#7d6' } );
         setTimeout( function() {
             p.css( stages, { background : '#eeeee3' } );

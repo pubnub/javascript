@@ -192,7 +192,7 @@ PUBNUB['crypto'] = (function(){
             string += block2s(plainBlocks[i]);
         }
         string += block2s(plainBlocks[i], true);
-        return binary ? string : dec_utf8(string); 
+        return binary ? string : dec_utf8(string);
     },
 
     encryptBlock = function(block, words) {
@@ -267,7 +267,7 @@ PUBNUB['crypto'] = (function(){
                 t[3+c*4] = GBX[state[c*4]] ^ GDX[state[1+c*4]] ^ G9X[state[2+c*4]] ^ GEX[state[3+c*4]];
             }
         }
-        
+
         return t;
     },
 
@@ -610,7 +610,7 @@ PUBNUB['crypto'] = (function(){
         string = rawDecrypt(cryptArr, key, iv, binary);
         return string;
     },
-    
+
     MD5 = function(numArr) {
 
         function rotateLeft(lValue, iShiftBits) {
@@ -873,7 +873,7 @@ PUBNUB['crypto'] = (function(){
         // Takes a Nx16x1 byte array and converts it to Base64
         var _chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
         chars = _chars.split(''),
-        
+
         encode = function(b, withBreaks) {
             var flatArr = [],
             b64 = '',
@@ -904,7 +904,7 @@ PUBNUB['crypto'] = (function(){
             }
             return broken_b64;
         },
-        
+
         decode = function(string) {
             string = string.replace(/\n/g, '');
             var flatArr = [],
@@ -925,12 +925,12 @@ PUBNUB['crypto'] = (function(){
             flatArr = flatArr.slice(0, flatArr.length - (flatArr.length % 16));
             return flatArr;
         };
-        
+
         //internet explorer
         if(typeof Array.indexOf === "function") {
             _chars = chars;
         }
-        
+
         /*
         //other way to solve internet explorer problem
         if(!Array.indexOf){
@@ -944,8 +944,8 @@ PUBNUB['crypto'] = (function(){
             }
         }
         */
-        
-        
+
+
         return {
             "encode": encode,
             "decode": decode

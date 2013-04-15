@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>PubNub Presence Demo</title>
-    
+
     <style>
     body { height: auto; bottom:0; top:0; font-family: Verdana, Geneva, sans-serif; }
     table { border:2px solid #000; width: 100%; height:100%; border-collapse:collapse; }
@@ -47,21 +47,21 @@
 <script src="../../pubnub.min.js"></script>
 
 <script>(function(){
- 
+
     // LISTEN FOR MESSAGES
     PUBNUB.subscribe({
         channel    : "presence_demo_chat",      // CONNECT TO THIS CHANNEL.
- 
+
         restore    : true,              // STAY CONNECTED, EVEN WHEN BROWSER IS CLOSED
                                          // OR WHEN PAGE CHANGES.
- 
+
         callback   : function(message) { // RECEIVED A MESSAGE.
             if (message['sender'] != PUBNUB.db.get($("#pubnub").attr('sub-key')+'uuid')) {
                 messageEvent(message);
             }
         },
         connect    : function() {        // CONNECTION ESTABLISHED.
-            
+
             PUBNUB.history({channel: "presence_demo_chat", limit:100, callback: function(history) {
                 for (i=0; i<history.length; i++) {
                     messageEvent(history[i]);
@@ -74,7 +74,7 @@
                     $(".users .list").append($("<li class='"+message['uuids'][i]+"'>"+message['uuids'][i]+"</li>"));
                 }
             }});
-            
+
         },
         presence   : function(message) {
             presenceEvent(message, true);

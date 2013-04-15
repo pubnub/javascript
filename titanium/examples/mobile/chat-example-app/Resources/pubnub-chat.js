@@ -133,9 +133,9 @@ Ti.App.Chat = function(setup) {
             width  : 'auto',
             color  : color || "#111",
             left   : 10,
-            font   : { 
-            	fontSize : (isAndroid) ? '19dp' : 14,
-            	fontWeight: (isAndroid) ? 'bold' : 'normal'
+            font   : {
+                fontSize : (isAndroid) ? '19dp' : 14,
+                fontWeight: (isAndroid) ? 'bold' : 'normal'
             }
         });
 

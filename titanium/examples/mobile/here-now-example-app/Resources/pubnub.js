@@ -41,7 +41,7 @@ var nextorigin = (function() {
 /**
  * Build Url
  * =======
- * 
+ *
  */
 function build_url(url_components, url_params) {
     var url     = url_components.join(URLBIT);
@@ -54,7 +54,7 @@ function build_url(url_components, url_params) {
         }
         url += params.join(PARAMSBIT);
     }
-	return url;
+    return url;
 }
 
 /**
@@ -239,7 +239,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
-			
+
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
@@ -259,7 +259,7 @@ function PN_API(setup) {
             });
         */
         'history' : function( args, callback ) {
-            var callback = args['callback'] || callback 
+            var callback = args['callback'] || callback
             ,   count    = args['count']    || args['limit'] || 100
             ,   reverse  = args['reverse']  || "false"
             ,   err      = args['error']    || function(){}
@@ -570,7 +570,7 @@ function PN_API(setup) {
                                     SUB_RESTORE              &&
                                     db['get'](SUBSCRIBE_KEY) || messages[1];
 
-                        
+
                         if (backfill) {
                             Timetoken = 10000;
                             backfill  = 0;
@@ -623,7 +623,7 @@ function PN_API(setup) {
         },
 
         'here_now' : function( args, callback ) {
-            var callback = args['callback'] || callback 
+            var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
@@ -633,7 +633,7 @@ function PN_API(setup) {
             if (!channel)       return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-            
+
             if (jsonp != '0') {
                 data = {};
                 data['callback'] = jsonp;
@@ -646,7 +646,7 @@ function PN_API(setup) {
                 fail     : err,
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
-                    'sub_key', SUBSCRIBE_KEY, 
+                    'sub_key', SUBSCRIBE_KEY,
                     'channel', encode(channel)
                 ]
             });
@@ -727,7 +727,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,	PNSDK			= 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.4'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.4'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
@@ -758,12 +758,12 @@ var db = (function(){
  *  });
  */
 function xdr_tcp(setup) {
- 
-	var data	 = setup.data || {};
-	data['pnsdk'] = PNSDK;
+
+    var data     = setup.data || {};
+    data['pnsdk'] = PNSDK;
     var url      = build_url(setup.url, data);
-    
-	var body     = []
+
+    var body     = []
     ,   data     = ""
     ,   rbuffer  = Ti.createBuffer({ length : 2048 })
     ,   wbuffer  = Ti.createBuffer({ value : "GET " + url + " HTTP/1.0\n\n"})
@@ -787,7 +787,7 @@ function xdr_tcp(setup) {
     });
 
     function read() {
-        Ti.Stream.read( sock, rbuffer, function(stream) { 
+        Ti.Stream.read( sock, rbuffer, function(stream) {
             if (+stream.bytesProcessed > -1) {
                 data = Ti.Codec.decodeString({
                     source : rbuffer,
@@ -805,7 +805,7 @@ function xdr_tcp(setup) {
                     body.join('').split('\r\n').slice(-1)
                 );
             }
-            catch (r) { 
+            catch (r) {
                 return fail();
             }
 
@@ -813,13 +813,13 @@ function xdr_tcp(setup) {
             success(data);
         } );
     }
- 
+
     try      { sock.connect() }
     catch(k) { return fail()  }
 }
 
 /**
- * Titanium XHR Request 
+ * Titanium XHR Request
  * ==============================
  *  xdr({
  *     url     : ['http://www.blah.com/url'],
@@ -829,8 +829,8 @@ function xdr_tcp(setup) {
  */
 function xdr_http_client( setup ) {
 
-	var data	 = setup.data || {};
-	data['pnsdk'] = PNSDK;
+    var data     = setup.data || {};
+    data['pnsdk'] = PNSDK;
     var url      = build_url(setup.url, data);
     var xhr
     ,   finished = function() {
@@ -967,11 +967,11 @@ function PN(setup) {
 
     SELF['init'] = PN;
 
-    
-    // Return without Testing 
+
+    // Return without Testing
     if (setup['notest']) return SELF;
-    
-	SELF['ready']();
+
+    SELF['ready']();
     return SELF;
 }
 

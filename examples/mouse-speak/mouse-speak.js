@@ -1,8 +1,8 @@
 (function(){
 
 /*
-    www.pubnub.com - PubNub realtime push service in the cloud. 
-    http://www.pubnub.com/blog/mouse-speak - Mouse Speak 
+    www.pubnub.com - PubNub realtime push service in the cloud.
+    http://www.pubnub.com/blog/mouse-speak - Mouse Speak
 
     PubNub Real Time Push APIs and Notifications Framework
     Copyright (c) 2010 Stephen Blum
@@ -444,7 +444,7 @@ function user_updated(message) {
     if (!mouse) return user_joined(message);
 
     // Is this a click message?
-    if (click) return user_click(pos); 
+    if (click) return user_click(pos);
 
     // Common to reset value if page reloaded
     if (last && (mouse.last||0) - last > 100)

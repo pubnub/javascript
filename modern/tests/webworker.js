@@ -31,20 +31,20 @@
     app.subscribe({
         channel  : channel,
         connect  : function() {
-            
-            setTimeout(function(){ 
+
+            setTimeout(function(){
                 app.here_now({
                     channel  : channel,
-                    callback : postMessage  
+                    callback : postMessage
                 })}, 5000);
-           
-            setTimeout(function(){ 
+
+            setTimeout(function(){
                 app.publish({
                     channel  : channel,
                     message  : "Subscribe Test Message",
-                    callback :  postMessage 
+                    callback :  postMessage
                 })}, 5000);
-        }, 
+        },
         callback : function(response) { postMessage(response); }
     })
 

@@ -222,7 +222,7 @@ PUBNUB.bind( 'mousedown,touchstart', username_change, function() {
 PUBNUB.bind( 'click', turn_off, function() {
     var turn_it_off = confirm("Turn OFF?");
     if (!turn_it_off) return;
-    
+
     PUBNUB.css( settings, { 'display' : 'none' } );
     PUBNUB.unsubscribe({ 'channel' : channel });
 } );

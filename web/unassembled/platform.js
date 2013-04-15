@@ -10,10 +10,10 @@ window['PUBNUB'] || (function() {
  * UTIL LOCALS
  */
 
-var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
+var SWF               = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,	PNSDK      		= 'PubNub-JS-' + PLATFORM + '/' + VERSION
+,    PNSDK              = 'PubNub-JS-' + PLATFORM + '/' + VERSION
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -21,7 +21,7 @@ var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
  */
 window.console || (window.console=window.console||{});
 console.log    || (
-    console.log   = 
+    console.log   =
     console.error =
     ((window.opera||{}).postError||function(){})
 );
@@ -244,7 +244,7 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-	data['pnsdk']  = PNSDK;
+    data['pnsdk']  = PNSDK;
     script.src     = build_url(setup.url,data);
 
     attr( script, 'id', id );
@@ -309,7 +309,7 @@ function ajax( setup ) {
         xhr.onload  = xhr.onloadend = finished;
         if (async) xhr.timeout = xhrtme;
 
-	    data['pnsdk'] = PNSDK;
+        data['pnsdk'] = PNSDK;
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
@@ -367,7 +367,7 @@ var PDIV          = $('pubnub') || 0
     SELF['events']      = events;
     SELF['init']        = CREATE_PUBNUB;
 
-    // Return without Testing 
+    // Return without Testing
     if (setup['notest']) return SELF;
 
     // Add Leave Functions

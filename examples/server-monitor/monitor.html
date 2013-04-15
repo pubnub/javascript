@@ -1,8 +1,8 @@
-<!doctype html> 
-<html> 
-<head> 
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
-    <title>PubNub ★ Monitor</title> 
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>PubNub ★ Monitor</title>
     <link href='http://fonts.googleapis.com/css?family=Bowlby+One+SC|Didact+Gothic&v2' rel='stylesheet' type='text/css'>
     <style>
         body, div {
@@ -84,9 +84,9 @@
             border-bottom-left-radius: 15px;
         }
     </style>
-</head> 
+</head>
 <body><div class=stage>
- 
+
 
 <div class=server>
     <div class=online><div class=online-text>ONLINE</div></div>
@@ -108,8 +108,8 @@
     </pre>
 </div>
 
-<div id=pubnub></div> 
-<script src=../../web/pubnub.min.js></script> 
+<div id=pubnub></div>
+<script src=../../web/pubnub.min.js></script>
 <script>(function(){
 
     // ....
@@ -119,8 +119,8 @@
         TODO - rnd namespace for server tracking.
         TODO - command(s) for adding new server
         TODO - add timeout check if server doesn't report (ignore if offline)
-        TODO - 
-        TODO - 
+        TODO -
+        TODO -
     */
 
     var p                 = PUBNUB
@@ -146,7 +146,7 @@
         server_div.innerHTML = p.supplant( server_template, server );
     }
 
-})();</script> 
+})();</script>
 </div></body>
 </html>
 

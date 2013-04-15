@@ -1,5 +1,5 @@
 (function(){
-    
+
     var p             = PUBNUB
     ,   now           = function() { return+new Date }
     ,   start         = now()
@@ -245,7 +245,7 @@
     }
 
     // ======================================================================
-    // EVENT: ROTATE AUDIO 
+    // EVENT: ROTATE AUDIO
     // ======================================================================
     p.events.bind( 'rotate-audio', function(data) {
         if (userid === data.userid) return audio.stop();
@@ -259,7 +259,7 @@
         ,   diff    = current - start_timer
         ,   mill    = (''+diff).split('').slice(-3).join('')
         ,   sec     = Math.floor(diff / 1000) % 60
-        ,   min     = Math.floor(diff / 60000); 
+        ,   min     = Math.floor(diff / 60000);
 
         sec < 10 && (sec = "0" + sec);
         min < 10 && (min = "0" + min);

@@ -60,7 +60,7 @@ var P    = PUBNUB
 
         // Button Text
         chat.button.innerHTML = 'Send';
-        
+
         // Capture Channel
         var channel = P.attr( node, 'channel' );
 

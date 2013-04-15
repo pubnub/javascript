@@ -8,8 +8,8 @@
         - chat
         - name field
         - k
-        - 
-        - 
+        -
+        -
     */
     // =======================================================================
     // COMMON VARS
@@ -476,8 +476,8 @@
     (function(){
         var pnlnk = p.create('div');
         pnlnk.innerHTML =
-            '<a href=http://www.pubnub.com/ ' + 
-            'style=color:#fdfdfd;font-weight:700;line-height:22px>' + 
+            '<a href=http://www.pubnub.com/ ' +
+            'style=color:#fdfdfd;font-weight:700;line-height:22px>' +
             'Powered by PubNub</a>';
 
         stalker_div.appendChild(pnlnk);
@@ -504,7 +504,7 @@
     var stop_button = p.create('div');
     (function(){
         stop_button.innerHTML = '<a href=# action=disconnect ' +
-                                'style=color:#fdfdfd>' + 
+                                'style=color:#fdfdfd>' +
                                 'Stop Following</a>';
 
         p.css( stop_button, { display : 'none' } );
@@ -517,7 +517,7 @@
     // =======================================================================
     var people_to_stalk_list = p.create('div')
     ,   stlk_btn_tpl         = '<a href=# action=connect user={uuid} ' +
-                               'style=color:#fdfdfd>' + 
+                               'style=color:#fdfdfd>' +
                                'Follow {name}</a>';
 
     stalker_div.appendChild(people_to_stalk_list);

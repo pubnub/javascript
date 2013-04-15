@@ -62,7 +62,7 @@ function render() {
 /* ---------------------------------------------------------------------------
 Keystrokes
 --------------------------------------------------------------------------- */
-require('tty').setRawMode(true);    
+require('tty').setRawMode(true);
 process.openStdin().on( 'keypress', function (chunk, key) {
     // Watch for Exit Command
     if (key && key.ctrl && key.name == 'c') return process.exit();

@@ -34,7 +34,7 @@ var WS = PUBNUB['ws'] = function( url, protocols ) {
     self['CLOSE_ABNORMAL']       = 1006; // Abnormal Disconnect.
 
     // Events Default
-    self['onclose']   = self['onerror'] = 
+    self['onclose']   = self['onerror'] =
     self['onmessage'] = self['onopen']  =
     self['onsend']    =  function(){};
 

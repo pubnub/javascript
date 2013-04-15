@@ -34,7 +34,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,	PNSDK			= 'PubNub-JS-' + PLATFORM + '/' +  VERSION
+,    PNSDK            = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
@@ -65,12 +65,12 @@ var db = (function(){
  *  });
  */
 function xdr_tcp(setup) {
- 
-	var data	 = setup.data || {};
-	data['pnsdk'] = PNSDK;
+
+    var data     = setup.data || {};
+    data['pnsdk'] = PNSDK;
     var url      = build_url(setup.url, data);
-    
-	var body     = []
+
+    var body     = []
     ,   data     = ""
     ,   rbuffer  = Ti.createBuffer({ length : 2048 })
     ,   wbuffer  = Ti.createBuffer({ value : "GET " + url + " HTTP/1.0\n\n"})
@@ -94,7 +94,7 @@ function xdr_tcp(setup) {
     });
 
     function read() {
-        Ti.Stream.read( sock, rbuffer, function(stream) { 
+        Ti.Stream.read( sock, rbuffer, function(stream) {
             if (+stream.bytesProcessed > -1) {
                 data = Ti.Codec.decodeString({
                     source : rbuffer,
@@ -112,7 +112,7 @@ function xdr_tcp(setup) {
                     body.join('').split('\r\n').slice(-1)
                 );
             }
-            catch (r) { 
+            catch (r) {
                 return fail();
             }
 
@@ -120,13 +120,13 @@ function xdr_tcp(setup) {
             success(data);
         } );
     }
- 
+
     try      { sock.connect() }
     catch(k) { return fail()  }
 }
 
 /**
- * Titanium XHR Request 
+ * Titanium XHR Request
  * ==============================
  *  xdr({
  *     url     : ['http://www.blah.com/url'],
@@ -136,8 +136,8 @@ function xdr_tcp(setup) {
  */
 function xdr_http_client( setup ) {
 
-	var data	 = setup.data || {};
-	data['pnsdk'] = PNSDK;
+    var data     = setup.data || {};
+    data['pnsdk'] = PNSDK;
     var url      = build_url(setup.url, data);
     var xhr
     ,   finished = function() {
@@ -274,11 +274,11 @@ function PN(setup) {
 
     SELF['init'] = PN;
 
-    
-    // Return without Testing 
+
+    // Return without Testing
     if (setup['notest']) return SELF;
-    
-	SELF['ready']();
+
+    SELF['ready']();
     return SELF;
 }
 

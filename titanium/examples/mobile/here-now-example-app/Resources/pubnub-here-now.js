@@ -60,7 +60,7 @@ Ti.App.HereNow = function(setup) {
             width  : 'auto',
             color  : color || "#111",
             left   : 10,
-            font   : { 
+            font   : {
                 fontSize : (isAndroid) ? '19dp' : 14,
                 fontWeight: (isAndroid) ? 'bold' : 'normal'
             }

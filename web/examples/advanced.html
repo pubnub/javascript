@@ -1,7 +1,7 @@
 <div id=pubnub pub-key=demo sub-key=demo></div>
 <script src="../pubnub.min.js"></script>
 <script>(function(){
- 
+
     // LISTEN FOR MESSAGES
     PUBNUB.subscribe({
         channel    : "my_channel",      // CONNECT TO THIS CHANNEL.
@@ -29,6 +29,6 @@
             console.log(message, true);
         }
     })
- 
+
 })();</script>
 

@@ -1,6 +1,6 @@
 <!doctype html>
 <html>
-<head> 
+<head>
     <title>PubNub PhoneGap JavaScript Unit Test</title>
     <link
         rel=stylesheet
@@ -137,7 +137,7 @@
             },
           });
         }
-        presence_test();            
+        presence_test();
 
         function publish_test(con, message) {
             msg = message || "test" ;
@@ -187,7 +187,7 @@
                 }
             });
         }
-        
+
         p.subscribe({
             channel  : channel,
             connect  : function() { publish_test(); setTimeout(here_now_test,5000); },

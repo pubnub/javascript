@@ -49,7 +49,7 @@ Ti.App.DetailedHistory = function(setup) {
             width  : 'auto',
             color  : color || "#111",
             left   : 10,
-            font   : { 
+            font   : {
                 fontSize : (isAndroid) ? '19dp' : 14,
                 fontWeight: (isAndroid) ? 'bold' : 'normal'
             }
@@ -81,7 +81,7 @@ Ti.App.DetailedHistory = function(setup) {
             endPoint      : { x : 2, y : 50 },
             backFillStart : false
         }
-    }); 
+    });
     // Detailed history reverse true Button
     var detailed_history_reverse_button = Ti.UI.createButton({
         title         : 'Get Detailed History Reverse',
@@ -104,7 +104,7 @@ Ti.App.DetailedHistory = function(setup) {
             endPoint      : { x : 2, y : 50 },
             backFillStart : false
         }
-    }); 
+    });
     var channel = Ti.UI.createTextField({
         width       : (isAndroid) ? '75%' : 247,
         height      : (isAndroid) ? '50dp' : 30,
@@ -186,15 +186,15 @@ Ti.App.DetailedHistory = function(setup) {
         paramobj['channel'] = channel.value;
         paramobj['callback'] = function(message) {
             append_data( JSON.stringify(message), message.color );
-        }	
+        }
         paramobj.error = function() {
             append_data("Lost connection ... ","#f00");
         }
-        if (start.value != "Start Timestamp" && start.value != "") 
+        if (start.value != "Start Timestamp" && start.value != "")
             paramobj['start'] = start.value;
-        if (end.value != "End Timestamp" && end.value != "") 
+        if (end.value != "End Timestamp" && end.value != "")
             paramobj['end'] = end.value;
-        if (count.value != "Count" && count.value != "") 
+        if (count.value != "Count" && count.value != "")
             paramobj['count'] = count.value;
         else
             paramobj['count'] = 100;
@@ -207,15 +207,15 @@ Ti.App.DetailedHistory = function(setup) {
         paramobj['channel'] = channel.value;
         paramobj['callback'] = function(message) {
             append_data( JSON.stringify(message), message.color );
-        }	
+        }
         paramobj.error = function() {
             append_data("Lost connection ... ","#f00");
         }
-        if (start.value != "Start Timestamp" && start.value != "") 
+        if (start.value != "Start Timestamp" && start.value != "")
             paramobj['start'] = start.value;
-        if (end.value != "End Timestamp" && end.value != "") 
+        if (end.value != "End Timestamp" && end.value != "")
             paramobj['end'] = end.value;
-        if (count.value != "Count" && count.value != "") 
+        if (count.value != "Count" && count.value != "")
             paramobj['count'] = count.value;
         else
             paramobj['count'] = 100;

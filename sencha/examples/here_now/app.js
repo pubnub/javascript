@@ -12,7 +12,7 @@ Ext.application({
             storeId: 'list',
             fields: ['txt']
         });
-        
+
         Ext.create('Ext.List', {
             fullscreen: true,
             store: 'list',

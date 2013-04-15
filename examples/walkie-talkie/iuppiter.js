@@ -419,30 +419,30 @@ Iuppiter.decompress = function(input, _bytes) {
         }
     };   
             
-	while (src < slen) {
-		if ((copymask <<= 1) == (1 << NBBY)) {
-			copymask = 1;
-			copymap = sstart[src++];
-		}
-		if (copymap & copymask) {
-			mlen = (sstart[src] >> (NBBY - MATCH_BITS)) + MATCH_MIN;
-			offset = ((sstart[src] << NBBY) | sstart[src + 1]) & OFFSET_MASK;
-			src += 2;
-			if ((cpy = dst - offset) >= 0)
-				while (--mlen >= 0)
-					dstart[dst++] = dstart[cpy++];
-			else
-				/*
-				 * offset before start of destination buffer
-				 * indicates corrupt source data
-				 */
-				return get();
-		} else {
-			dstart[dst++] = sstart[src++];
-		}
-	}
+    while (src < slen) {
+        if ((copymask <<= 1) == (1 << NBBY)) {
+            copymask = 1;
+            copymap = sstart[src++];
+        }
+        if (copymap & copymask) {
+            mlen = (sstart[src] >> (NBBY - MATCH_BITS)) + MATCH_MIN;
+            offset = ((sstart[src] << NBBY) | sstart[src + 1]) & OFFSET_MASK;
+            src += 2;
+            if ((cpy = dst - offset) >= 0)
+                while (--mlen >= 0)
+                    dstart[dst++] = dstart[cpy++];
+            else
+                /*
+                 * offset before start of destination buffer
+                 * indicates corrupt source data
+                 */
+                return get();
+        } else {
+            dstart[dst++] = sstart[src++];
+        }
+    }
     
-	return get();
+    return get();
 };
 
 })();

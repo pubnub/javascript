@@ -1,8 +1,8 @@
 (function(){
 
 /*
-    www.pubnub.com - PubNub realtime push service in the cloud. 
-    http://www.pubnub.com/blog/mouse-speak - Mouse Speak 
+    www.pubnub.com - PubNub realtime push service in the cloud.
+    http://www.pubnub.com/blog/mouse-speak - Mouse Speak
 
     PubNub Real Time Push APIs and Notifications Framework
     Copyright (c) 2010 Stephen Blum
@@ -401,7 +401,7 @@ function user_joined(message) {
 }
 
 fading_text.trx = /X\(8/g;
-function fading_text( message, mouse ) { 
+function fading_text( message, mouse ) {
     var p      = PUBNUB
     ,   lastln = mouse.last_seen_message.length
     ,   text   = lastln < message.length ? message.substr(lastln) : message;
@@ -426,7 +426,7 @@ function fading_text( message, mouse ) {
         else
             mouse.node.appendChild(span);
 
-        setTimeout( function() { 
+        setTimeout( function() {
             p.attr(
                 span,
                 'style', [

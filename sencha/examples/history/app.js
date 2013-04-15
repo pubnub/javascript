@@ -12,7 +12,7 @@ Ext.application({
             storeId: 'list',
             fields: ['txt']
         });
-        
+
         Ext.create('Ext.List', {
             fullscreen: true,
             store: 'list',
@@ -69,7 +69,7 @@ Ext.application({
                             var start = Ext.getCmp('start').getValue();
                             var end = Ext.getCmp('end').getValue();
                             var reverse = Ext.getCmp('reverse').getValue() ;
-                            
+
                             myStore.removeAll();
                             pubnub.history({
                               channel: channel,
