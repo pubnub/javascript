@@ -33,7 +33,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + PLATFORM + '/' + VERSION
+,	PNSDK      = 'PubNub-JS-' + PLATFORM + '/' + VERSION
 ,   XHRTME     = 310000;
 
 
@@ -110,7 +110,7 @@ function xdr( setup ) {
 
     // Send
     try {
-        xhr = typeof XDomainRequest !== 'undefined' &&
+        xhr = typeof XDomainRequest !== 'undefined' && 
               new XDomainRequest()  ||
               new XMLHttpRequest();
 
@@ -275,9 +275,7 @@ function PN(setup) {
     SELF['bind'] = bind;
     SELF['css'] = css;
     SELF['create'] = create;
-
-    // Return without Testing
-    if (setup['notest']) return SELF;
+	
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
@@ -285,10 +283,13 @@ function PN(setup) {
         return true;
     } );
 
+    // Return without Testing 
+    if (setup['notest']) return SELF;
+
     bind( 'offline', window,   SELF['_reset_offline'] );
     bind( 'offline', document, SELF['_reset_offline'] );
 
-    SELF['ready']();
+	SELF['ready']();
     return SELF;
 }
 
