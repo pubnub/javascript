@@ -367,14 +367,15 @@ var PDIV          = $('pubnub') || 0
     SELF['events']      = events;
     SELF['init']        = CREATE_PUBNUB;
 
-    // Return without Testing 
-    if (setup['notest']) return SELF;
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
         SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
         return true;
     } );
+
+    // Return without Testing 
+    if (setup['notest']) return SELF;
 
     bind( 'offline', window,   SELF['_reset_offline'] );
     bind( 'offline', document, SELF['_reset_offline'] );
