@@ -656,8 +656,9 @@ function PN_API(setup) {
         'ready'         : ready,
         'db'            : db,
         'uuid'          : uuid,
-        'each'          : each,
         'map'           : map,
+        'each'          : each,
+        'each-channel'  : each_channel,
         'grep'          : grep,
         'supplant'      : supplant,
         'now'           : rnow,
@@ -783,6 +784,7 @@ function xdr( setup ) {
     ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
+    ,   async    = ( typeof(setup.blocking) === 'undefined' )
     ,   done     = function(failed) {
             if (complete) return;
                 complete = 1;
@@ -806,10 +808,10 @@ function xdr( setup ) {
 
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
-        xhr.timeout = XHRTME;
+        if (async) xhr.timeout = XHRTME;
         data['pnsdk'] = PNSDK;
         url = build_url(setup.url, data);
-        xhr.open( 'GET', url, true );
+        xhr.open( 'GET', url, async);
         xhr.send();
     }
     catch(eee) {
@@ -971,7 +973,7 @@ function PN(setup) {
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
-        each_channel(function(ch){ SELF['LEAVE']( ch.name, 1 ) });
+        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
         return true;
     } );
 

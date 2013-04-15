@@ -1086,7 +1086,7 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-	data['pnsdk'] = PNSDK;
+	data['pnsdk']  = PNSDK;
     script.src     = build_url(setup.url,data);
 
     attr( script, 'id', id );
@@ -1124,6 +1124,7 @@ function ajax( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
+    ,   async    = ( typeof(setup.blocking) === 'undefined' )
     ,   done     = function(failed) {
             if (complete) return;
                 complete = 1;
@@ -1148,12 +1149,12 @@ function ajax( setup ) {
 
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
-        xhr.timeout = xhrtme;
+        if (async) xhr.timeout = xhrtme;
 
 	    data['pnsdk'] = PNSDK;
         var url = build_url(setup.url,data);
 
-        xhr.open( 'GET', url, (typeof(setup.blocking === 'undefined')) );
+        xhr.open( 'GET', url, async );
         xhr.send();
     }
     catch(eee) {
