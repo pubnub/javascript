@@ -190,7 +190,7 @@ var nextorigin = (function() {
 /**
  * Build Url
  * =======
- * 
+ *
  */
 function build_url(url_components, url_params) {
     var url     = url_components.join(URLBIT);
@@ -203,7 +203,7 @@ function build_url(url_components, url_params) {
         }
         url += params.join(PARAMSBIT);
     }
-	return url;
+    return url;
 }
 
 /**
@@ -388,7 +388,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
-			
+
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
@@ -408,7 +408,7 @@ function PN_API(setup) {
             });
         */
         'history' : function( args, callback ) {
-            var callback = args['callback'] || callback 
+            var callback = args['callback'] || callback
             ,   count    = args['count']    || args['limit'] || 100
             ,   reverse  = args['reverse']  || "false"
             ,   err      = args['error']    || function(){}
@@ -719,7 +719,7 @@ function PN_API(setup) {
                                     SUB_RESTORE              &&
                                     db['get'](SUBSCRIBE_KEY) || messages[1];
 
-                        
+
                         if (backfill) {
                             Timetoken = 10000;
                             backfill  = 0;
@@ -772,7 +772,7 @@ function PN_API(setup) {
         },
 
         'here_now' : function( args, callback ) {
-            var callback = args['callback'] || callback 
+            var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
@@ -782,7 +782,7 @@ function PN_API(setup) {
             if (!channel)       return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-            
+
             if (jsonp != '0') {
                 data = {};
                 data['callback'] = jsonp;
@@ -795,7 +795,7 @@ function PN_API(setup) {
                 fail     : err,
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
-                    'sub_key', SUBSCRIBE_KEY, 
+                    'sub_key', SUBSCRIBE_KEY,
                     'channel', encode(channel)
                 ]
             });
@@ -852,10 +852,10 @@ window['PUBNUB'] || (function() {
  * UTIL LOCALS
  */
 
-var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
+var SWF               = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,	PNSDK      		= 'PubNub-JS-' + 'Web' + '/' + '3.4.4'
+,    PNSDK              = 'PubNub-JS-' + 'Web' + '/' + '3.4.4'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -863,7 +863,7 @@ var SWF           	= 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
  */
 window.console || (window.console=window.console||{});
 console.log    || (
-    console.log   = 
+    console.log   =
     console.error =
     ((window.opera||{}).postError||function(){})
 );
@@ -1086,7 +1086,7 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-	data['pnsdk']  = PNSDK;
+    data['pnsdk']  = PNSDK;
     script.src     = build_url(setup.url,data);
 
     attr( script, 'id', id );
@@ -1151,7 +1151,7 @@ function ajax( setup ) {
         xhr.onload  = xhr.onloadend = finished;
         if (async) xhr.timeout = xhrtme;
 
-	    data['pnsdk'] = PNSDK;
+        data['pnsdk'] = PNSDK;
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
@@ -1216,7 +1216,7 @@ var PDIV          = $('pubnub') || 0
         return true;
     } );
 
-    // Return without Testing 
+    // Return without Testing
     if (setup['notest']) return SELF;
 
     bind( 'offline', window,   SELF['_reset_offline'] );
@@ -1322,7 +1322,7 @@ var WS = PUBNUB['ws'] = function( url, protocols ) {
     self['CLOSE_ABNORMAL']       = 1006; // Abnormal Disconnect.
 
     // Events Default
-    self['onclose']   = self['onerror'] = 
+    self['onclose']   = self['onerror'] =
     self['onmessage'] = self['onopen']  =
     self['onsend']    =  function(){};
 
