@@ -8,7 +8,7 @@
 ## ----------------------------------------------------
 
 ## ----------------------------------------------------------
-## PubNub 3.1 Real-time Cloud Push API - JAVASCRIPT PHONE GAP
+## PubNub 3.4.4 Real-time Cloud Push API - JAVASCRIPT PHONE GAP
 ## ----------------------------------------------------------
 ##
 ## www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
@@ -24,9 +24,9 @@
 <script src=pubnub.min.js></script>
 <script>(function(){
     // ----------------------------------
-    // INIT PUBNUB
+    // PUBNUB
     // ----------------------------------
-    var pubnub = PUBNUB.init({
+    var pubnub = PUBNUB({
         publish_key   : 'demo',
         subscribe_key : 'demo',
         ssl           : false,
@@ -70,9 +70,9 @@
 <!-- ============================= -->
 <script>
     // ----------------------------------
-    // INIT PUBNUB
+    // PUBNUB
     // ----------------------------------
-    var pubnub = PUBNUB.init({
+    var pubnub = PUBNUB({
         publish_key   : 'demo',
         subscribe_key : 'demo',
         ssl           : false,
