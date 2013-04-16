@@ -8,7 +8,7 @@
 ## ----------------------------------------------------
 
 ## ------------------------------------------------------
-## PubNub 3.1 Real-time Cloud Push API - JAVASCRIPT webOS
+## PubNub 3.4.4 Real-time Cloud Push API - JAVASCRIPT webOS
 ## ------------------------------------------------------
 ##
 ## www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
@@ -26,7 +26,7 @@
     // ----------------------------------
     // INIT PUBNUB
     // ----------------------------------
-    var pubnub = PUBNUB.init({
+    var pubnub = PUBNUB({
         publish_key   : 'demo',
         subscribe_key : 'demo',
         ssl           : false,
@@ -72,7 +72,7 @@
     // ----------------------------------
     // INIT PUBNUB
     // ----------------------------------
-    var pubnub = PUBNUB.init({
+    var pubnub = PUBNUB({
         publish_key   : 'demo',
         subscribe_key : 'demo',
         ssl           : false,
