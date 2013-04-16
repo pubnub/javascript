@@ -1,3 +1,8 @@
+04-16-13
+. fixed ssl leave issue on firefox
+. bumping all clients to new 3.4.4
+. added new trivial phonegap demo
+
 commit ebfb9fae11d235b509eb592c944b46fe81474108
 Author: Stephen L. Blum <stephen@pubnub.com>
 Date:   Fri Feb 15 20:20:47 2013 -0800
