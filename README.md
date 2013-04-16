@@ -34,6 +34,55 @@ See the simple working example.
 However if you want to learn the basic code for send/receive,
 see below here:
 
+## Initializing
+
+If you setup credentials using a div, for example:
+
+```html
+<div id=pubnub pub-key=demo sub-key=demo></div>
+```
+you access PubNub methods via PUBNUB class methods:
+
+```javascript
+PUBNUB.publish({
+    channel : "hello_world",
+    message : "Hi."
+})
+```
+
+If you setup credentials using the PUBNUB.init() method, for example:
+
+```javascript    
+var p = PUBNUB.init({publish_key : 'demo' , subscribe_key : 'demo'});
+```
+
+you access PubNub methods via ```p```'s instance methods:
+
+```javascript
+p.publish({
+        channel : "hello_world",
+        message : "Hi."
+    })
+```
+
+When working with any non-web JavaScript-based client (such as a mobile
+JS-based client, like PhoneGap, Titanium, etc), you MUST use this
+slightly-modified method of instantiation:
+
+```javascript
+var m = PUBNUB({publish_key : 'demo' , subscribe_key : 'demo'});
+// no explicit PUBNUB.init() method call!
+```
+
+and access PubNub methods via ```m```'s instance methods:
+    
+```javascript    
+m.publish({
+    channel : "hello_world",
+    message : "Hi."
+})
+```
+
 #### Basic Send
 ```javascript
 PUBNUB.publish({
