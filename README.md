@@ -211,8 +211,8 @@ are open source, you’re welcome to see how we did it).
 To use AES encryption in PubNub, simply do the following:
 
 ```html
-<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.3.min.js></script>
-<script src=https://pubnub.a.ssl.fastly.net/pubnub-crypto-3.4.3.min.js></script>
+<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.4.min.js></script>
+<script src=https://pubnub.a.ssl.fastly.net/pubnub-crypto-3.4.4.min.js></script>
 <script>(function(){
     var secure_pubnub = PUBNUB.secure({
         publish_key   : 'demo',
@@ -277,7 +277,7 @@ To use AES encryption in PubNub, simply do the following:
 ## SSL MODE
 ```html
 <div id=pubnub ssl=on></div>
-<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.3.min.js></script>
+<script src=https://pubnub.a.ssl.fastly.net/pubnub-3.4.4.min.js></script>
 <script>(function(){
 
     var pubnub = PUBNUB.init({
