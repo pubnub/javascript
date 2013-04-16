@@ -1,13 +1,13 @@
 ## Get your very own registration keys at http://www.pubnub.com/account
 
-### PubNub 3.3 Real-time Cloud Push API for Titanium
+### PubNub 3.4.4 Real-time Cloud Push API for Titanium
 
 PubNub is a Massively Scalable Real-time Service for Web and Mobile Games.
 This is a cloud-based service for broadcasting Real-time messages
 to millions of web and mobile clients simultaneously.
 
 #### API Usage Summary
-API Usage summary follows. But checkout the real working examples in examples 3.3/mobile!
+API Usage summary follows. But checkout the real working examples in examples/mobile
 
 And be sure to checkout how easy it is to run the demo chat application with this quick video demo: 
 https://vimeo.com/57166260
@@ -17,7 +17,7 @@ https://vimeo.com/57166260
 ```javascript
 Ti.include('pubnub.js');
 
-var pubnub = PUBNUB.init({
+var pubnub = PUBNUB({
     publish_key       : 'demo',
     subscribe_key     : 'demo',
     ssl               : false,
