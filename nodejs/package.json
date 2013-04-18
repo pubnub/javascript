@@ -2,7 +2,7 @@
   "name": "pubnub",
   "preferGlobal": false,
   "version": "3.4.4", 
-  "author": "Pubnub <stephen@pubnub.com>",
+  "author": "PubNub <stephen@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "contributors": [
     {
