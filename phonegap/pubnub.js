@@ -681,7 +681,9 @@ function PN_API(setup) {
     }
 
     function _reset_offline() {
-        CLOSE_PREVIOUS_SUB();
+        while (SUB_RECEIVER.length) {
+            (SUB_RECEIVER.shift())();
+        }
     }
 
     if (!UUID) UUID = SELF['uuid']();
