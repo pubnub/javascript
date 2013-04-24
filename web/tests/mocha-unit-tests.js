@@ -260,6 +260,7 @@
             it('should show occupancy 1 user if 1 user is subscribed to channel', function(done){
                 this.timeout(80000);
                 var x;
+                var d;
                 var ch = channel + '-' + 'here-now' ;
                     pubnub.subscribe({channel : ch ,
                         connect : function(response) {
@@ -277,7 +278,8 @@
                         },
                         callback : function(response) {
                             x = eql(response, message_jsona) || x;
-                            done(x)
+                            !d && done(x);
+                            d = true;
                         }
 
                     })
