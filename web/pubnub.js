@@ -838,6 +838,8 @@ function PN_API(setup) {
     timeout( _poll_online,  SECOND    );
     timeout( _poll_online2, KEEPALIVE );
 
+    SELF['time'](function() {});
+
     return SELF;
 }
 /* =-====================================================================-= */
