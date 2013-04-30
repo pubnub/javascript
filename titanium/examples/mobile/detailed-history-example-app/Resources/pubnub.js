@@ -1,4 +1,4 @@
-// 3.4.4
+// 3.4.5
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -200,7 +200,7 @@ function PN_API(setup) {
     ,   PUB_QUEUE     = []
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
-    ,   SUB_RECEIVER  = 0
+    ,   SUB_RECEIVER  = []
     ,   SUB_RESTORE   = 0
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
@@ -507,7 +507,7 @@ function PN_API(setup) {
             function _test_connection(success) {
                 if (success) {
                     // Begin Next Socket Connection
-                    timeout( _connect, SECOND );
+                    timeout( CONNECT, SECOND );
                 }
                 else {
                     // New Origin on Failed Connection
@@ -545,7 +545,7 @@ function PN_API(setup) {
                 if (!channels) return;
 
                 // Connect to PubNub Subscribe Servers
-                SUB_RECEIVER = xdr({
+                SUB_RECEIVER.push( xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function() { SELF['time'](_test_connection) },
@@ -556,7 +556,7 @@ function PN_API(setup) {
                         jsonp, TIMETOKEN
                     ],
                     success : function(messages) {
-                        if (!messages) return timeout( _connect, windowing );
+                        if (!messages) return timeout( CONNECT, windowing );
 
                         // Connect
                         each_channel(function(channel){
@@ -601,19 +601,21 @@ function PN_API(setup) {
                             next[0]( msg, messages, next[1] );
                         } );
 
-                        timeout( _connect, windowing );
+                        timeout( CONNECT, windowing );
                     }
-                });
+                }));
+            }
+            function CLOSE_PREVIOUS_SUB() {
+                while (SUB_RECEIVER.length) {
+                    (SUB_RECEIVER.shift())();
+                }
             }
 
             CONNECT = function() {
-                // Close Previous Subscribe Connection
-                _reset_offline();
-
-                // Begin Recursive Subscribe
-                clearTimeout(SUB_BUFF_WAIT);
-                SUB_BUFF_WAIT = timeout( _connect, 100 );
+                CLOSE_PREVIOUS_SUB();
+                _connect();
             };
+
 
             // Reduce Status Flicker
             if (!READY) return READY_BUFFER.push(CONNECT);
@@ -680,7 +682,9 @@ function PN_API(setup) {
     }
 
     function _reset_offline() {
-        SUB_RECEIVER && SUB_RECEIVER(1);
+        while (SUB_RECEIVER.length) {
+            (SUB_RECEIVER.shift())();
+        }
     }
 
     if (!UUID) UUID = SELF['uuid']();
@@ -729,7 +733,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.4'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.5'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
