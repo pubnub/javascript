@@ -1,4 +1,4 @@
-// Version: 3.4.4
+// Version: 3.4.5
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -729,7 +729,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.4.4'
+,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.4.5'
 ,   XHRTME     = 310000;
 
 
