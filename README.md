@@ -27,6 +27,20 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 >**NOTE:** SSL Mode requires a few extra steps: [SSL MODE](README.md#ssl-mode)
 
+#### Subscribe Only mode (exclude Publish Key)
+
+In the case where the client will never publish and for security considerations,
+use this following method for initialization:
+
+```html
+<script src=http://cdn.pubnub.com/pubnub-3.4.5.min.js ></script>
+<script>(function(){
+    
+    var pubnub = PUBNUB.init({ subscribe_key : 'demo' });
+    
+})();</script>
+```
+
 ## Get Started Here
 
 https://github.com/pubnub/javascript#simple-example -
@@ -36,12 +50,12 @@ see below here:
 
 ## Initializing
 
-If you setup credentials using a div, for example:
+Using your setup credentials with a div, you will for example:
 
 ```html
 <div id=pubnub pub-key=demo sub-key=demo></div>
 ```
-you access PubNub methods via PUBNUB class methods:
+Now you can access PubNub methods via `PUBNUB` Global class methods:
 
 ```javascript
 PUBNUB.publish({
