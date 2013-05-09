@@ -1,3 +1,7 @@
+04-30-13
+. fixed double susbscribe race condition bug
+. fixed issue on ie when detecting best transport
+
 04-16-13
 . fixed ssl leave issue on firefox
 . bumping all clients to new 3.4.4
