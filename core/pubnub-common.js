@@ -41,17 +41,18 @@ var nextorigin = (function() {
  * =======
  *
  */
-function build_url(url_components, url_params) {
-    var url     = url_components.join(URLBIT);
+function build_url( url_components, url_params ) {
+    var url    = url_components.join(URLBIT)
+    ,   params = [];
 
-    if (url_params) {
-        var params = [];
-        url += "?";
-        for (var key in url_params) {
-             params.push(key+"="+encode(url_params[key]));
-        }
-        url += params.join(PARAMSBIT);
-    }
+    if (!url_params) return url;
+
+    each( url_params, function( value, key ) {
+         params.push(key + "=" + encode(value));
+    } );
+
+    url += "?" + params.join(PARAMSBIT);
+
     return url;
 }
 
@@ -447,8 +448,9 @@ function PN_API(setup) {
             ,   restore       = args['restore'];
 
             // Restore Enabled?
-            if (restore) SUB_RESTORE = 1;
+            SUB_RESTORE = restore;
 
+            // Always Reset the TT
             TIMETOKEN = 0;
 
             // Make sure we have a Channel
