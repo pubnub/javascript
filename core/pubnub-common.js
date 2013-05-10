@@ -568,7 +568,8 @@ function PN_API(setup) {
                                     SUB_RESTORE              &&
                                     db['get'](SUBSCRIBE_KEY) || messages[1];
 
-
+                        // Invoke Memory Catchup and Receive Up to 100
+                        // Previous Messages from the Queue.
                         if (backfill) {
                             TIMETOKEN = 10000;
                             backfill  = 0;
