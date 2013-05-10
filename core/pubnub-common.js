@@ -441,7 +441,7 @@ function PN_API(setup) {
             ,   disconnect    = args['disconnect']    || function(){}
             ,   presence      = args['presence']      || 0
             ,   noheresync    = args['noheresync']    || 0
-            ,   backfill      = args['backfill']    || 0
+            ,   backfill      = args['backfill']      || 0
             ,   sub_timeout   = args['timeout']       || SUB_TIMEOUT
             ,   windowing     = args['windowing']     || SUB_WINDOWING
             ,   restore       = args['restore'];
@@ -570,7 +570,7 @@ function PN_API(setup) {
 
 
                         if (backfill) {
-                            Timetoken = 10000;
+                            TIMETOKEN = 10000;
                             backfill  = 0;
                         }
 
