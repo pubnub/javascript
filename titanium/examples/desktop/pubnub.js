@@ -1,4 +1,4 @@
-// 3.4.5
+// 3.4.6
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -43,17 +43,18 @@ var nextorigin = (function() {
  * =======
  *
  */
-function build_url(url_components, url_params) {
-    var url     = url_components.join(URLBIT);
+function build_url( url_components, url_params ) {
+    var url    = url_components.join(URLBIT)
+    ,   params = [];
 
-    if (url_params) {
-        var params = [];
-        url += "?";
-        for (var key in url_params) {
-             params.push(key+"="+encode(url_params[key]));
-        }
-        url += params.join(PARAMSBIT);
-    }
+    if (!url_params) return url;
+
+    each( url_params, function( value, key ) {
+         params.push(key + "=" + encode(value));
+    } );
+
+    url += "?" + params.join(PARAMSBIT);
+
     return url;
 }
 
@@ -443,14 +444,15 @@ function PN_API(setup) {
             ,   disconnect    = args['disconnect']    || function(){}
             ,   presence      = args['presence']      || 0
             ,   noheresync    = args['noheresync']    || 0
-            ,   backfill      = args['backfill']    || 0
+            ,   backfill      = args['backfill']      || 0
             ,   sub_timeout   = args['timeout']       || SUB_TIMEOUT
             ,   windowing     = args['windowing']     || SUB_WINDOWING
             ,   restore       = args['restore'];
 
             // Restore Enabled?
-            if (restore) SUB_RESTORE = 1;
+            SUB_RESTORE = restore;
 
+            // Always Reset the TT
             TIMETOKEN = 0;
 
             // Make sure we have a Channel
@@ -570,9 +572,10 @@ function PN_API(setup) {
                                     SUB_RESTORE              &&
                                     db['get'](SUBSCRIBE_KEY) || messages[1];
 
-
+                        // Invoke Memory Catchup and Receive Up to 100
+                        // Previous Messages from the Queue.
                         if (backfill) {
-                            Timetoken = 10000;
+                            TIMETOKEN = 10000;
                             backfill  = 0;
                         }
 
@@ -733,7 +736,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.5'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.6'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
