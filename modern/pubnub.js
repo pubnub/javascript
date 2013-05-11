@@ -48,7 +48,7 @@ function build_url( url_components, url_params ) {
 
     if (!url_params) return url;
 
-    each( url_params, function( value, key ) {
+    each( url_params, function( key, value ) {
          params.push(key + "=" + encode(value));
     } );
 
