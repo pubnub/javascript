@@ -1,3 +1,6 @@
+05-10-13
+. allowed `restore:false` to prevent catchup on channel traversal/changes.
+
 05-09-13
 . bringing all js distros to 3.4.5
 
