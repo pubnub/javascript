@@ -584,23 +584,26 @@ function PN_API(setup) {
 
                         // Route Channel <---> Callback for Message
                         var next_callback = (function() {
-                            var channels = (messages.length>2?messages[2]:'')
-                            ,   list     = channels.split(',');
+                            var channels = (messages.length>2?messages[2]:map(
+                                CHANNELS, function(chan) { return map(
+                                    Array(messages[0].length).join(',').split(','),
+                                    function() { return chan; }
+                                ) }).join(','));
+                            var list = channels.split(',');
 
                             return function() {
-                                var channel = list.shift()||'';
+                                var channel = list.shift()||SUB_CHANNEL;
                                 return [
                                     (CHANNELS[channel]||{})
                                     .callback||SUB_CALLBACK,
-                                    (channel||SUB_CHANNEL)
-                                    .split(PRESENCE_SUFFIX)[0]
+                                    channel.split(PRESENCE_SUFFIX)[0]
                                 ];
                             };
                         })();
 
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            if (!CHANNELS[next[1]].subscribed) return;
+                            //if (!CHANNELS[next[1]].subscribed) return;
                             next[0]( msg, messages, next[1] );
                         } );
 
