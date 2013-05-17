@@ -1,3 +1,7 @@
+05-16-13
+. fixed bug where callback could be lost during unsubscribe
+. added .ready() and .unsubscribe() to SECURE
+
 05-10-13
 . allowed `restore:false` to prevent catchup on channel traversal/changes.
 
