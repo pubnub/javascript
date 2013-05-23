@@ -76,7 +76,7 @@
 
         test( 'PUBNUB' in window, 'PubNub Lib Exists' );
         test( 'io' in window, 'Socket.IO Lib Exists' );
-        test( 'GibberishAES' in window, 'Crypto Lib Exists' );
+        test( 'secure' in PUBNUB, 'Crypto Lib Exists' );
 
         var pubnub_setup = {
             channel       : 'my_mobile_app',

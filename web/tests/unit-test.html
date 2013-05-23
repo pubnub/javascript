@@ -85,14 +85,14 @@
     }
 
     var p = PUBNUB
-            , many_con_tst = 2
-            , channel = 'pn-javascript-unit-test'
-            , out = p.$('unit-test-out')
-            , test_tpl = p.$('test_template').innerHTML
-            , start_button = p.$('start-test')
-            , stop_button = p.$('stop-test')
-            , status_area = p.$('test-status')
-            , status_tpl = p.attr(status_area, 'template');
+    , many_con_tst = 20
+    , channel = 'pn-javascript-unit-test'
+    , out = p.$('unit-test-out')
+    , test_tpl = p.$('test_template').innerHTML
+    , start_button = p.$('start-test')
+    , stop_button = p.$('stop-test')
+    , status_area = p.$('test-status')
+    , status_tpl = p.attr(status_area, 'template');
 
     /* ======================================================================
      Stop Test
@@ -109,7 +109,7 @@
      ====================================================================== */
     p.bind('mousedown,touchstart', start_button, start_test);
     function start_test() {
-        test.plan = 43 + many_con_tst * 3; // # of tests
+        test.plan = 42 + many_con_tst * 4; // # of tests
         test.done = 0;  // 0 tests done so far
         test.pass = 0;  // 0 passes so far
         test.fail = 0;  // 0 fails so far
@@ -202,7 +202,18 @@
                 },
                 connect: function (chan) {
                     test(chan, 'Many Connections: ' + chan + ' Connected!');
-                    p.publish({ channel: chan, message: chan });
+                    setTimeout( function() {
+                        p.publish({
+                            channel  : chan,
+                            message  : chan,
+                            callback : function (response) {
+                                test(
+                                    response[0],
+                                    'Many Connections: '+ chan +' Connected!'
+                                );
+                            }
+                        });
+                    }, conn * 1000 );
                 },
                 callback: function (message, envelope, channel) {
                     p.unsubscribe({ channel: channel });

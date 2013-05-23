@@ -199,7 +199,7 @@ function PN_API(setup) {
     ,   PUB_QUEUE     = []
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
-    ,   SUB_RECEIVER  = []
+    ,   SUB_RECEIVER  = 0
     ,   SUB_RESTORE   = 0
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
@@ -219,11 +219,18 @@ function PN_API(setup) {
     }
 
     function each_channel(callback) {
+        var count = 0;
+
         each( generate_channel_list(CHANNELS), function(channel) {
             var chan = CHANNELS[channel];
+
             if (!chan) return;
-            callback(chan);
+
+            count++;
+            (callback||function(){})(chan);
         } );
+
+        return count;
     }
 
     // Announce Leave Event
@@ -421,9 +428,6 @@ function PN_API(setup) {
                 if (READY) SELF['LEAVE']( channel, 0 );
                 CHANNELS[channel] = 0;
             } );
-
-            // ReOpen Connection if Any Channels Left
-            if (READY) CONNECT();
         },
 
         /*
@@ -434,16 +438,16 @@ function PN_API(setup) {
         */
         'subscribe' : function( args, callback ) {
             var channel       = args['channel']
-            ,   callback      = callback              || args['callback']
-            ,   callback      = callback              || args['message']
-            ,   connect       = args['connect']       || function(){}
-            ,   reconnect     = args['reconnect']     || function(){}
-            ,   disconnect    = args['disconnect']    || function(){}
-            ,   presence      = args['presence']      || 0
-            ,   noheresync    = args['noheresync']    || 0
-            ,   backfill      = args['backfill']      || 0
-            ,   sub_timeout   = args['timeout']       || SUB_TIMEOUT
-            ,   windowing     = args['windowing']     || SUB_WINDOWING
+            ,   callback      = callback            || args['callback']
+            ,   callback      = callback            || args['message']
+            ,   connect       = args['connect']     || function(){}
+            ,   reconnect     = args['reconnect']   || function(){}
+            ,   disconnect    = args['disconnect']  || function(){}
+            ,   presence      = args['presence']    || 0
+            ,   noheresync    = args['noheresync']  || 0
+            ,   backfill      = args['backfill']    || 0
+            ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
+            ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -544,7 +548,8 @@ function PN_API(setup) {
                 if (!channels) return;
 
                 // Connect to PubNub Subscribe Servers
-                SUB_RECEIVER.push( xdr({
+                _reset_offline();
+                SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function() { SELF['time'](_test_connection) },
@@ -605,19 +610,12 @@ function PN_API(setup) {
 
                         timeout( CONNECT, windowing );
                     }
-                }));
-            }
-            function CLOSE_PREVIOUS_SUB() {
-                while (SUB_RECEIVER.length) {
-                    (SUB_RECEIVER.shift())();
-                }
+                });
             }
 
             CONNECT = function() {
-                CLOSE_PREVIOUS_SUB();
                 _connect();
             };
-
 
             // Reduce Status Flicker
             if (!READY) return READY_BUFFER.push(CONNECT);
@@ -684,9 +682,7 @@ function PN_API(setup) {
     }
 
     function _reset_offline() {
-        while (SUB_RECEIVER.length) {
-            (SUB_RECEIVER.shift())();
-        }
+        SUB_RECEIVER && SUB_RECEIVER();
     }
 
     if (!UUID) UUID = SELF['uuid']();
