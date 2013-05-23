@@ -1,4 +1,4 @@
-// Version: 3.4.6
+// Version: 3.4.7
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -156,7 +156,7 @@ var NOW             = 1
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
 ,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
-,   DEF_KEEPALIVE   = 60     // SECONDS.
+,   DEF_KEEPALIVE   = 3600   // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
@@ -388,7 +388,6 @@ function PN_API(setup) {
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return;
 
             if (jsonp != '0') data['callback'] = jsonp;
-
 
             xdr({
                 blocking : blocking || SSL,
@@ -709,17 +708,17 @@ function PN_API(setup) {
                     success : function(messages) {
                         if (!messages) return timeout( CONNECT, windowing );
 
+                        // Restore Previous Connection Point if Needed
+                        TIMETOKEN = !TIMETOKEN               &&
+                                    SUB_RESTORE              &&
+                                    db['get'](SUBSCRIBE_KEY) || messages[1];
+
                         // Connect
                         each_channel(function(channel){
                             if (channel.connected) return;
                             channel.connected = 1;
                             channel.connect(channel.name);
                         });
-
-                        // Restore Previous Connection Point if Needed
-                        TIMETOKEN = !TIMETOKEN               &&
-                                    SUB_RESTORE              &&
-                                    db['get'](SUBSCRIBE_KEY) || messages[1];
 
                         // Invoke Memory Catchup and Receive Up to 100
                         // Previous Messages from the Queue.
@@ -752,7 +751,6 @@ function PN_API(setup) {
 
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            //if (!CHANNELS[next[1]].subscribed) return;
                             next[0]( msg, messages, next[1] );
                         } );
 
@@ -867,7 +865,7 @@ window['PUBNUB'] || (function() {
 var SWF               = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,    PNSDK              = 'PubNub-JS-' + 'Web' + '/' + '3.4.6'
+,    PNSDK              = 'PubNub-JS-' + 'Web' + '/' + '3.4.7'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
