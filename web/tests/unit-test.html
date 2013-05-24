@@ -85,7 +85,7 @@
     }
 
     var p = PUBNUB
-    , many_con_tst = 20
+    , many_con_tst = 10
     , channel = 'pn-javascript-unit-test'
     , out = p.$('unit-test-out')
     , test_tpl = p.$('test_template').innerHTML
@@ -156,7 +156,7 @@
                 callback: function (response) {
                     test(response[0], 'Successful Publish');
                     test(response[1], 'Success With Demo');
-                    setTimeout(history_test, 2500);
+                    setTimeout(history_test, 3500);
                 }
             });
         }
@@ -209,7 +209,7 @@
                             callback : function (response) {
                                 test(
                                     response[0],
-                                    'Many Connections: '+ chan +' Connected!'
+                                    'Many Connections: '+ chan +' Sent!'
                                 );
                             }
                         });
@@ -324,7 +324,7 @@
                     callback: function (response) {
                         test(response[0], 'AES Successful Publish ' + response[0]);
                         test(response[1], 'AES Success With Demo ' + response[1]);
-                        setTimeout(aes_history_test, 2500);
+                        setTimeout(aes_history_test, 3500);
                     }
                 });
             }

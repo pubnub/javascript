@@ -169,7 +169,7 @@ function encode(path) {
 /**
  * Generate Subscription Channel List
  * ==================================
- *  generate_channel_list(channels_object);
+ * generate_channel_list(channels_object);
  */
 function generate_channel_list(channels) {
     var list = [];
@@ -237,7 +237,7 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking ) {
-            var data   = { 'uuid' : UUID}
+            var data   = { 'uuid' : UUID }
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
 
@@ -429,6 +429,9 @@ function PN_API(setup) {
                 if (READY) SELF['LEAVE']( channel, 0 );
                 CHANNELS[channel] = 0;
             } );
+
+            // Reset Connection if Count Less
+            if (each_channel() < 2) CONNECT();
         },
 
         /*
@@ -447,6 +450,7 @@ function PN_API(setup) {
             ,   presence      = args['presence']    || 0
             ,   noheresync    = args['noheresync']  || 0
             ,   backfill      = args['backfill']    || 0
+            ,   timetoken     = args['timetoken']   || 0
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   restore       = args['restore'];
@@ -455,7 +459,7 @@ function PN_API(setup) {
             SUB_RESTORE = restore;
 
             // Always Reset the TT
-            TIMETOKEN = 0;
+            TIMETOKEN = timetoken;
 
             // Make sure we have a Channel
             if (!channel)       return error('Missing Channel');
@@ -589,7 +593,8 @@ function PN_API(setup) {
                         var next_callback = (function() {
                             var channels = (messages.length>2?messages[2]:map(
                                 CHANNELS, function(chan) { return map(
-                                    Array(messages[0].length).join(',').split(','),
+                                    Array(messages[0].length)
+                                    .join(',').split(','),
                                     function() { return chan; }
                                 ) }).join(','));
                             var list = channels.split(',');
