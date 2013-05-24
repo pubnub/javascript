@@ -212,16 +212,15 @@ function xdr( setup ) {
         }
 
     ,   done = function( failed, response ) {
-            console.log("DONE",failed?"FAILED":"SUCCESS", response);
             if (finished) return;
                 finished = 1;
 
-            failed || success(response);
+            (failed || !response) || success(response);
             script.onerror = null;
             clearTimeout(timer);
 
             timeout( function() {
-                failed && fail();
+                //failed && fail();
                 var s = $(id)
                 ,   p = s && s.parentNode;
                 p && p.removeChild(s);
@@ -236,12 +235,11 @@ function xdr( setup ) {
 
     script.onerror = function() { done(1) };
     data['pnsdk']  = PNSDK;
-    script.src     = build_url(setup.url,data);
+    script.src     = build_url( setup.url, data );
 
     attr( script, 'id', id );
 
     append();
-    console.log(build_url(setup.url,data));
     return done;
 }
 

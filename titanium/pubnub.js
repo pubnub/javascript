@@ -628,13 +628,14 @@ function PN_API(setup) {
                             next[0]( msg, messages, next[1] );
                         } );
 
-                        timeout( CONNECT, windowing );
+                        timeout( _connect, windowing );
                     }
                 });
             }
 
             CONNECT = function() {
-                _connect();
+                _reset_offline();
+                timeout( _connect, windowing );
             };
 
             // Reduce Status Flicker
@@ -700,6 +701,7 @@ function PN_API(setup) {
 
     function _reset_offline() {
         SUB_RECEIVER && SUB_RECEIVER();
+        SUB_RECEIVER = null;
     }
 
     if (!UUID) UUID = SELF['uuid']();
