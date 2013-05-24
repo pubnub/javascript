@@ -1,4 +1,4 @@
-// 3.4.7
+// 3.4.8
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -738,7 +738,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.7'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.4.8'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 

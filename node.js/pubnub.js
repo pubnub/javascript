@@ -1,4 +1,4 @@
-// Version: 3.4.7
+// Version: 3.4.8
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -741,7 +741,7 @@ var NOW    = 1
 ,   XHRTME = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,    PNSDK            = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.4.7'
+,    PNSDK            = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.4.8'
 ,   XORIGN = 1;
 
 
