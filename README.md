@@ -29,7 +29,8 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 #### Subscribe Only mode (exclude Publish Key)
 
-In the case where the client will never publish and for security considerations,
+In the case where the client will never publish
+and for security considerations,
 use this following method for initialization:
 
 ```html
