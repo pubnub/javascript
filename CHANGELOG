@@ -1,3 +1,10 @@
+05-23-13
+. added auth_key for ULS support.
+. added SmartTV Platform SDK.
+. fixed unclosed socket connection delay.
+. fixed race condition with Unsubscribe inside Subscribe Connect and Callbacks.
+. added upload maker for CDN deployment.
+
 05-16-13
 . fixed bug where callback could be lost during unsubscribe
 . added .ready() and .unsubscribe() to SECURE

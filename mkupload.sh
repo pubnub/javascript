@@ -2,7 +2,7 @@
 
 VERSION=`cat VERSION`
 
-mkdir -f upload
+mkdir -p upload
 rm upload/*
 
 cp web/pubnub.js upload/pubnub.js
@@ -11,7 +11,7 @@ cp web/pubnub-crypto.min.js upload/pubnub-crypto.min.js
 cp socket.io/socket.io.min.js upload/socket.io.min.js
 
 cp upload/pubnub.js upload/pubnub-$VERSION.js
-cp upload/pubnub.min.js upload/pubnub-$VERSIO.min.js
+cp upload/pubnub.min.js upload/pubnub-$VERSION.min.js
 cp upload/pubnub-crypto.min.js upload/pubnub-crypto-$VERSION.min.js
 
 gzip -9 upload/*
@@ -22,6 +22,6 @@ mv upload/pubnub-crypto.min.js.gz upload/pubnub-crypto.min.js
 mv upload/socket.io.min.js.gz upload/socket.io.min.js
 
 mv upload/pubnub-$VERSION.js.gz upload/pubnub-$VERSION.js
-mv upload/pubnub-$VERSION.min.js.gz upload/pubnub-$VERSIO.min.js
+mv upload/pubnub-$VERSION.min.js.gz upload/pubnub-$VERSION.min.js
 mv upload/pubnub-crypto-$VERSION.min.js.gz upload/pubnub-crypto-$VERSION.min.js
 
