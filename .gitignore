@@ -1,4 +1,5 @@
 node_modules
 javascript.iml
+upload/*
 .idea
 *.iml

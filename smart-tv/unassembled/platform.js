@@ -10,11 +10,8 @@ window['PUBNUB'] || (function() {
  * UTIL LOCALS
  */
 
-var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
-,   ASYNC           = 'async'
-,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + PLATFORM + '/' + VERSION
-,   XORIGN          = UA.indexOf('MSIE 6') == -1;
+var ASYNC = 'async'
+,   PNSDK = 'PubNub-JS-' + PLATFORM + '/' + VERSION;
 
 /**
  * CONSOLE COMPATIBILITY
@@ -161,8 +158,7 @@ function create(element) { return document.createElement(element) }
  * ========
  * var callback = jsonp_cb();
  */
-function jsonp_cb() { return XORIGN || FDomainRequest() ? 0 : unique() }
-
+function jsonp_cb() { return unique() }
 
 
 /**
@@ -201,8 +197,6 @@ var events = {
  *  });
  */
 function xdr( setup ) {
-    if (XORIGN || FDomainRequest()) return ajax(setup);
-
     var script    = create('script')
     ,   callback  = setup.callback
     ,   id        = unique()
@@ -218,6 +212,7 @@ function xdr( setup ) {
         }
 
     ,   done = function( failed, response ) {
+            console.log("DONE",failed?"FAILED":"SUCCESS", response);
             if (finished) return;
                 finished = 1;
 
@@ -246,82 +241,9 @@ function xdr( setup ) {
     attr( script, 'id', id );
 
     append();
+    console.log(build_url(setup.url,data));
     return done;
 }
-
-/**
- * CORS XHR Request
- * ================
- *  xdr({
- *     url     : ['http://www.blah.com/url'],
- *     success : function(response) {},
- *     fail    : function() {}
- *  });
- */
-function ajax( setup ) {
-    var xhr, response
-    ,   finished = function() {
-            if (loaded) return;
-                loaded = 1;
-
-            clearTimeout(timer);
-
-            try       { response = JSON['parse'](xhr.responseText); }
-            catch (r) { return done(1); }
-
-            success(response);
-        }
-    ,   complete = 0
-    ,   loaded   = 0
-    ,   xhrtme   = setup.timeout || DEF_TIMEOUT
-    ,   timer    = timeout( function(){done(1)}, xhrtme )
-    ,   fail     = setup.fail    || function(){}
-    ,   data     = setup.data    || {}
-    ,   success  = setup.success || function(){}
-    ,   async    = ( typeof(setup.blocking) === 'undefined' )
-    ,   done     = function(failed) {
-            if (complete) return;
-                complete = 1;
-
-            clearTimeout(timer);
-
-            if (xhr) {
-                xhr.onerror = xhr.onload = null;
-                xhr.abort && xhr.abort();
-                xhr = null;
-            }
-
-            failed && fail();
-        };
-
-    // Send
-    try {
-        xhr = FDomainRequest()      ||
-              window.XDomainRequest &&
-              new XDomainRequest()  ||
-              new XMLHttpRequest();
-
-        xhr.onerror = xhr.onabort   = function(){ done(1) };
-        xhr.onload  = xhr.onloadend = finished;
-        if (async) xhr.timeout = xhrtme;
-
-        data['pnsdk'] = PNSDK;
-        var url = build_url(setup.url,data);
-
-        xhr.open( 'GET', url, async );
-        xhr.send();
-    }
-    catch(eee) {
-        done(0);
-        XORIGN = 0;
-        return xdr(setup);
-    }
-
-    // Return 'done'
-    return done;
-}
-
-
 
  // Test Connection State
 function _is_online() {
@@ -340,7 +262,7 @@ var PDIV          = $('pubnub') || 0
 ,   CREATE_PUBNUB = function(setup) {
 
     // Force JSONP if requested from user.
-    if (setup['jsonp']) XORIGN = 0;
+    XORIGN = 0;
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
@@ -395,48 +317,5 @@ PUBNUB = CREATE_PUBNUB({
     'origin'        : attr( pdiv, 'origin' ),
     'uuid'          : attr( pdiv, 'uuid' )
 });
-
-// jQuery Interface
-window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
-
-// For Modern JS + Testling.js - http://testling.com/
-typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
-
-var pubnubs = $('pubnubs') || 0;
-
-// LEAVE NOW IF NO PDIV.
-if (!PDIV) return;
-
-// PUBNUB Flash Socket
-css( PDIV, { 'position' : 'absolute', 'top' : -SECOND } );
-
-if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
-    '<object id=pubnubs data='  + SWF +
-    '><param name=movie value=' + SWF +
-    '><param name=allowscriptaccess value=always></object>';
-
-// Create Interface for Opera Flash
-PUBNUB['rdx'] = function( id, data ) {
-    if (!data) return FDomainRequest[id]['onerror']();
-    FDomainRequest[id]['responseText'] = unescape(data);
-    FDomainRequest[id]['onload']();
-};
-
-function FDomainRequest() {
-    if (!pubnubs || !pubnubs['get']) return 0;
-
-    var fdomainrequest = {
-        'id'    : FDomainRequest['id']++,
-        'send'  : function() {},
-        'abort' : function() { fdomainrequest['id'] = {} },
-        'open'  : function( method, url ) {
-            FDomainRequest[fdomainrequest['id']] = fdomainrequest;
-            pubnubs['get']( fdomainrequest['id'], url );
-        }
-    };
-
-    return fdomainrequest;
-}
-FDomainRequest['id'] = SECOND;
 
 })();

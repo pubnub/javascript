@@ -122,12 +122,13 @@ to target all browsers and mobile platforms.
 |:------------|--------------------------------------------------------------|
 | examples    | Several Sample Web Apps.                                     |
 | web         | All **Mobile** and **Desktop Browsers** 100% supported.      |
-| modern      | Light-weight Build for **only the latest Browsers**.         |
-| mobile      | Light-weight Build for **only the latest Mobile Apps**.      |
+| modern      | Light-weight Build for **only the LATEST Browsers**.         |
+| mobile      | Light-weight Build for **only the LATEST Mobile Apps**.      |
 | titanium    | Appcelerator Titanium Build with example project code.       |
 | node.js     | Node.JS SDK (CommonJS).  **sudo npm install pubnub**         |
 | socket.io   | Socket.IO Framework support with examples and videos.        |
 | phonegap    | PhoneGap Build.                                              |
+| smart-tv    | Sony, Philips, Samsung, LG, Vizio.                           |
 | core        | Master Source Files are located here.                        |
 
 It is a good idea to start with the **web** directory and work your way

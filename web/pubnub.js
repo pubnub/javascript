@@ -1,4 +1,4 @@
-// Version: 3.4.8
+// Version: 3.5.0
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -342,7 +342,8 @@ function PN_API(setup) {
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   PUBLISH_KEY   = setup['publish_key']   || ''
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
-    ,   SSL           = setup['ssl'] ? 's' : ''
+    ,   AUTH_KEY      = setup['auth_key']      || ''
+    ,   SSL           = setup['ssl']            ? 's' : ''
     ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
     ,   STD_ORIGIN    = nextorigin(ORIGIN)
     ,   SUB_ORIGIN    = nextorigin(ORIGIN)
@@ -356,11 +357,11 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
-    ,   error         = setup['error'] || function() {}
-    ,   _is_online    = setup['_is_online'] || function() { return 1; }
-    ,   jsonp_cb      = setup['jsonp_cb'] || function(){ return 0; }
-    ,   db            = setup['db'] || {'get': function(){}, 'set': function(){}}
-    ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
+    ,   error         = setup['error']      || function() {}
+    ,   _is_online    = setup['_is_online'] || function() { return 1 }
+    ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
+    ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
+    ,   UUID          = setup['uuid']       || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
     function publish(next) {
         if (next) PUB_QUEUE.sending = 0;
@@ -387,7 +388,7 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking ) {
-            var data   = { 'uuid' : UUID }
+            var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
 
@@ -433,6 +434,7 @@ function PN_API(setup) {
             params['stringtoken'] = 'true';
             params['count']       = count;
             params['reverse']     = reverse;
+            params['auth']        = AUTH_KEY;
 
             if (jsonp) params['callback'] = jsonp;
             if (start) params['start']    = start;
@@ -484,6 +486,8 @@ function PN_API(setup) {
             if (end)          data['end']      = end;
             if (limit)        data['count']    = limit;
 
+            data['auth'] = AUTH_KEY;
+
             // Compose URL Parts
             url = [
                 STD_ORIGIN, 'v1', 'replay',
@@ -502,13 +506,22 @@ function PN_API(setup) {
         },
 
         /*
+            PUBNUB.auth('AJFLKAJSDKLA');
+        */
+        'auth' : function(auth) {
+            AUTH_KEY = auth;
+            CONNECT();
+        },
+
+        /*
             PUBNUB.time(function(time){ });
         */
         'time' : function(callback) {
             var jsonp = jsonp_cb();
             xdr({
                 callback : jsonp,
-                timeout  : SECOND*5,
+                data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
+                timeout  : SECOND * 5,
                 url      : [STD_ORIGIN, 'time', jsonp],
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
@@ -547,9 +560,9 @@ function PN_API(setup) {
             // Queue Message Send
             PUB_QUEUE.push({
                 callback : jsonp,
-                timeout  : SECOND*5,
+                timeout  : SECOND * 5,
                 url      : url,
-                data     : { 'uuid' : UUID },
+                data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
                 success  : function(response){callback(response);publish(1)},
                 fail     : function(){callback([0,'Failed',msg]);publish(1)}
             });
@@ -708,7 +721,7 @@ function PN_API(setup) {
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function() { SELF['time'](_test_connection) },
-                    data     : { 'uuid' : UUID },
+                    data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
                     url      : [
                         SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
@@ -785,17 +798,14 @@ function PN_API(setup) {
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
-            ,   data     = null;
+            ,   data     = { 'uuid' : UUID, 'auth' : AUTH_KEY };
 
             // Make sure we have a Channel
             if (!channel)       return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-            if (jsonp != '0') {
-                data = {};
-                data['callback'] = jsonp;
-            }
+            if (jsonp != '0') { data['callback'] = jsonp; }
 
             xdr({
                 callback : jsonp,
@@ -863,10 +873,10 @@ window['PUBNUB'] || (function() {
  * UTIL LOCALS
  */
 
-var SWF               = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
+var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,    PNSDK              = 'PubNub-JS-' + 'Web' + '/' + '3.4.8'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.5.0'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -878,8 +888,6 @@ console.log    || (
     console.error =
     ((window.opera||{}).postError||function(){})
 );
-
-
 
 /**
  * LOCAL STORAGE OR COOKIE
@@ -935,8 +943,6 @@ function search( elements, start ) {
     } );
     return list;
 }
-
-
 
 /**
  * BIND
