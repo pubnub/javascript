@@ -1,6 +1,6 @@
-# SmartTV JavaScript SDK for Sony, Philips, LG, Samsung and more!
+# SmartTV PubNub JavaScript SDK for Sony, Philips, LG, Samsung, Westinghouse and VIZIO!
 
-## SIMPLE EXAMPLE
+## Simple Example
 
 >**NOTE:** Copy and paste this example into a *blank* HTML file.
 
