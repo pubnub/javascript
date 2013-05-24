@@ -1,8 +1,8 @@
 # SmartTV JavaScript SDK for Sony, Philips, LG, Samsung and more!
 
-## PubNub JavaScript SDK Usage
+## SIMPLE EXAMPLE
 
-You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
+>**NOTE:** Copy and paste this example into a *blank* HTML file.
 
 ```html
 <script src=pubnub.min.js ></script>
@@ -13,20 +13,8 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
         subscribe_key : 'demo'
     });
 
-})();</script>
-```
-
-## SIMPLE EXAMPLE
-
->**NOTE:** Copy and paste this example into a *blank* HTML file.
-
-```html
-<div id=pubnub pub-key=demo sub-key=demo></div>
-<script src=http://cdn.pubnub.com/pubnub-3.4.8.min.js ></script>
-<script>
-
     // LISTEN
-    PUBNUB.subscribe({
+    pubnub.subscribe({
         channel : "hello_world",
         message : function(m){ alert(m) },
         connect : publish
@@ -34,12 +22,12 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
     // SEND
     function publish() {
-        PUBNUB.publish({
+        pubnub.publish({
             channel : "hello_world",
             message : "Hi."
         })
     }
 
-</script>
+})();</script>
 ```
 
