@@ -1,18 +1,20 @@
-05-23-13
+05-23-13 * NEW VERSION 3.5.0 *
 . added auth_key for ULS support.
 . added SmartTV Platform SDK.
-. fixed unclosed socket connection delay.
-. fixed race condition with Unsubscribe inside Subscribe Connect and Callbacks.
 . added upload maker for CDN deployment.
 
-05-16-13
+05-22-13 * NEW VERSION 3.4.8 *
+. fixed unclosed socket connection delay.
+. fixed race condition with Unsubscribe inside Subscribe Connect and Callbacks.
+
+05-16-13 * NEW VERSION 3.4.7 *
 . fixed bug where callback could be lost during unsubscribe
 . added .ready() and .unsubscribe() to SECURE
 
-05-10-13
+05-10-13 * NEW VERSION 3.4.6 *
 . allowed `restore:false` to prevent catchup on channel traversal/changes.
 
-05-09-13
+05-09-13 * NEW VERSION 3.4.5 *
 . bringing all js distros to 3.4.5
 
 04-30-13
