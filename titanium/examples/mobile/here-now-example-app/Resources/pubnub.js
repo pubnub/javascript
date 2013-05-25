@@ -445,7 +445,8 @@ function PN_API(setup) {
             } );
 
             // Reset Connection if Count Less
-            if (each_channel() < 2) CONNECT();
+            //if (each_channel() < 2)
+            CONNECT();
         },
 
         /*
@@ -571,7 +572,10 @@ function PN_API(setup) {
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
-                    fail     : function() { SELF['time'](_test_connection) },
+                    fail     : function() { 
+                        SUB_RECEIVER = null;
+                        SELF['time'](_test_connection);
+                    },
                     data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
                     url      : [
                         SUB_ORIGIN, 'subscribe',
@@ -579,6 +583,7 @@ function PN_API(setup) {
                         jsonp, TIMETOKEN
                     ],
                     success : function(messages) {
+                        SUB_RECEIVER = null;
                         if (!messages) return timeout( CONNECT, windowing );
 
                         // Restore Previous Connection Point if Needed
@@ -681,6 +686,7 @@ function PN_API(setup) {
         'each'          : each,
         'each-channel'  : each_channel,
         'grep'          : grep,
+        'offline'       : _reset_offline,
         'supplant'      : supplant,
         'now'           : rnow,
         'unique'        : unique,

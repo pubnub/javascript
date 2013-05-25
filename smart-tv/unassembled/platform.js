@@ -206,21 +206,18 @@ function xdr( setup ) {
     ,   fail      = setup.fail    || function(){}
     ,   data      = setup.data    || {}
     ,   success   = setup.success || function(){}
-
-    ,   append = function() {
-            head().appendChild(script);
-        }
-
-    ,   done = function( failed, response ) {
+    ,   append    = function() { head().appendChild(script) }
+    ,   done      = function( failed, response ) {
             if (finished) return;
-                finished = 1;
+            finished = 1;
 
-            (failed || !response) || success(response);
             script.onerror = null;
             clearTimeout(timer);
 
+            (failed || !response) || success(response);
+
             timeout( function() {
-                //failed && fail();
+                failed && fail();
                 var s = $(id)
                 ,   p = s && s.parentNode;
                 p && p.removeChild(s);
@@ -293,8 +290,8 @@ var PDIV          = $('pubnub') || 0
     // Return without Testing
     if (setup['notest']) return SELF;
 
-    bind( 'offline', window,   SELF['_reset_offline'] );
-    bind( 'offline', document, SELF['_reset_offline'] );
+    bind( 'offline', window,   SELF['offline'] );
+    bind( 'offline', document, SELF['offline'] );
 
     // Return PUBNUB Socket Object
     return SELF;
