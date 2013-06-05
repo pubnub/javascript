@@ -590,7 +590,7 @@ function PN_API(setup) {
             // Iterate over Channels
             each( channel.split(','), function(channel) {
                 if (READY) SELF['LEAVE']( channel, 0 );
-                CHANNELS[channel] = 0;
+                CHANNELS[channel] = { 'name' : channel, 'pending_leave' : true };
             } );
 
             // Reset Connection if Count Less
@@ -674,7 +674,19 @@ function PN_API(setup) {
                     }
                 });
             } );
+            function _send_pending_leaves() {
+                var stop = true;
 
+                each( CHANNELS, function(channel_name, channel){
+                    if (channel.pending_leave && READY) {
+                        SELF['LEAVE']( channel.name , 0 );
+                        CHANNELS[channel.name] = 0;
+                    } else if (channel.subscribed) {
+                        stop = false;
+					}
+                });
+				return stop;
+            }
             // Test Network Connection
             function _test_connection(success) {
                 if (success) {
@@ -733,6 +745,9 @@ function PN_API(setup) {
                     ],
                     success : function(messages) {
                         SUB_RECEIVER = null;
+                        
+                        if (_send_pending_leaves()) return;
+                        
                         if (!messages) return timeout( CONNECT, windowing );
 
                         // Restore Previous Connection Point if Needed
@@ -1080,12 +1095,17 @@ function xdr( setup ) {
     ,   append    = function() { head().appendChild(script) }
     ,   done      = function( failed, response ) {
             if (finished) return;
-            finished = 1;
+            //finished = 1;
 
             script.onerror = null;
             clearTimeout(timer);
-
-            (failed || !response) || success(response);
+            
+            if (!failed && response) {
+                finished = 1;
+                success(response);
+            }
+            
+            //(failed || !response) || success(response);
 
             timeout( function() {
                 failed && fail();
