@@ -158,7 +158,7 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 3600   // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
-,   JOIN_LEAVE_COMBINE_TIMEOUT  = 5    // SECONDS.
+,   JOIN_LEAVE_COMBINE_TIMEOUT  = 5000    // MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
@@ -594,7 +594,16 @@ function PN_API(setup) {
             each( channel.split(','), function(channel) {
                 if (READY) SELF['LEAVE']( channel, 0 );
                 CHANNELS[channel] = 0;
-                PENDING_LEAVE[channel] = { 'name' : channel, 'pending_leave' : true };
+                setTimeout(function() {
+                    SELF['publish']({
+                        'channel' : channel, 'message' : { 'pn-discard' : true },
+                        'callback' : function() {
+                            setTimeout(function() {
+                                if (READY) SELF['LEAVE']( channel, 0 );
+                            }, JOIN_LEAVE_COMBINE_TIMEOUT / 4);
+                        }
+                   });
+                }, 500);
             } );
 
             // Reset Connection if Count Less
@@ -678,14 +687,7 @@ function PN_API(setup) {
                     }
                 });
             } );
-            function _send_pending_leaves() {
-                each( PENDING_LEAVE, function(channel_name, channel){
-                    if (channel.pending_leave && READY) {
-                        SELF['LEAVE']( channel.name , 0 );
-                        PENDING_LEAVE[channel.name] = 0;
-                    } 
-                });
-            }
+
             // Test Network Connection
             function _test_connection(success) {
                 if (success) {
@@ -732,7 +734,7 @@ function PN_API(setup) {
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
-                    fail     : function() { 
+                    fail     : function() {
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
@@ -744,12 +746,7 @@ function PN_API(setup) {
                     ],
                     success : function(messages, abort) {
                         SUB_RECEIVER = null;
-                        
-                        if (abort) {
-                            _send_pending_leaves();
-							return;
-                        }
-                        
+
                         if (!messages) return timeout( CONNECT, windowing );
 
                         // Restore Previous Connection Point if Needed
@@ -795,7 +792,7 @@ function PN_API(setup) {
                         })();
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            _combine_join_leave(msg, next, messages) && next[0]( msg, messages, next[1] );
+                            _combine_join_leave(msg, next, messages) && !(msg['pn-discard']) && next[0]( msg, messages, next[1] );
                         } );
 
                         timeout( _connect, windowing );
@@ -814,12 +811,12 @@ function PN_API(setup) {
                     var action = msg['action'];
 
                     if (action === 'leave') {
-                        if (!channel.XJOIN) { 
+                        if (!channel.XJOIN) {
                             return true;
                         } else {
                             channel.XJOIN = 0;
                             return false;
-                        } 
+                        }
                     } else if (action === 'join') {
                         channel.XJOIN = 1;
                         setTimeout(function() {
@@ -829,11 +826,11 @@ function PN_API(setup) {
                             }  else {
                                channel.XJOIN = 0
                             }
-                        }, JOIN_LEAVE_COMBINE_TIMEOUT * SECOND);
+                        }, JOIN_LEAVE_COMBINE_TIMEOUT);
                     }
                     return false;
                 }
-            } 
+            }
 
             CONNECT = function() {
                 _reset_offline();
@@ -1120,7 +1117,6 @@ function xdr( setup ) {
     ,   callback  = setup.callback
     ,   id        = unique()
     ,   finished  = 0
-    ,   aborted   = 0
     ,   xhrtme    = setup.timeout || DEF_TIMEOUT
     ,   timer     = timeout( function(){done(1)}, xhrtme )
     ,   fail      = setup.fail    || function(){}
@@ -1129,17 +1125,13 @@ function xdr( setup ) {
     ,   append    = function() { head().appendChild(script) }
     ,   done      = function( failed, response ) {
             if (finished) return;
+            finished = 1;
 
             script.onerror = null;
             clearTimeout(timer);
-            
-            if (!failed && response) {
-                finished = 1;
-                success(response, aborted);
-            } else {
-                aborted = 1;
-            }
-           
+
+            (failed || !response) || success(response);
+
             timeout( function() {
                 failed && fail();
                 var s = $(id)
