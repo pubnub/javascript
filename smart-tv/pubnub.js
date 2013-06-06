@@ -158,6 +158,7 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 3600   // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
+,   JOIN_LEAVE_COMBINE_TIMEOUT  = 5    // SECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
@@ -680,7 +681,6 @@ function PN_API(setup) {
             function _send_pending_leaves() {
                 each( PENDING_LEAVE, function(channel_name, channel){
                     if (channel.pending_leave && READY) {
-                        console.log('sending pending leave');
                         SELF['LEAVE']( channel.name , 0 );
                         PENDING_LEAVE[channel.name] = 0;
                     } 
@@ -792,14 +792,9 @@ function PN_API(setup) {
                                 ];
                             };
                         })();
-                        //console.log(messages);
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            //console.log(messages); //[ [Object { action= "join" ,  timestamp= 1370499425 ,  uuid= "fd91bcca-cfb2-b7ad-cc04-1511064dc329" ,  more...}] , "13704994256153772" , "json_test_dev-pnpres" ] 
-                            //console.log(next); [function(),"json_test_dev"]
-                            // console.log(msg);  Object { action="join", timestamp=1370499425, uuid="fd91bcca-cfb2-b7ad-cc04-1511064dc329", more...}
                             _combine_join_leave(msg, next, messages) && next[0]( msg, messages, next[1] );
-                            //next[0]( msg, messages, next[1] );
                         } );
 
                         timeout( _connect, windowing );
@@ -829,12 +824,11 @@ function PN_API(setup) {
                         setTimeout(function() {
                             if (channel.XJOIN) {
                                 channel.XJOIN = 0;
-                               console.log('no leave came. genuine join');
                                next[0]( msg, messages, next[1] );
                             }  else {
                                channel.XJOIN = 0
                             }
-                        }, 5000);
+                        }, JOIN_LEAVE_COMBINE_TIMEOUT * SECOND);
                     }
                     return false;
                 }
