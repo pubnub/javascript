@@ -355,6 +355,7 @@ function PN_API(setup) {
     ,   SUB_RESTORE   = 0
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
+    ,   XJOIN         = 0
     ,   CHANNELS      = {}
     ,   xdr           = setup['xdr']
     ,   error         = setup['error']      || function() {}
@@ -791,16 +792,55 @@ function PN_API(setup) {
                                 ];
                             };
                         })();
-
+                        //console.log(messages);
                         each( messages[0], function(msg) {
                             var next = next_callback();
+                            //console.log(messages); //[ [Object { action= "join" ,  timestamp= 1370499425 ,  uuid= "fd91bcca-cfb2-b7ad-cc04-1511064dc329" ,  more...}] , "13704994256153772" , "json_test_dev-pnpres" ] 
+                            //console.log(next); [function(),"json_test_dev"]
+                            // console.log(msg);  Object { action="join", timestamp=1370499425, uuid="fd91bcca-cfb2-b7ad-cc04-1511064dc329", more...}
+                            //_combine_join_leave(msg, next, messages) && next[0]( msg, messages, next[1] );
                             next[0]( msg, messages, next[1] );
                         } );
 
                         timeout( _connect, windowing );
                     }
                 });
-            }
+                function _combine_join_leave(msg, next, messages) {
+                    if ( !msg['action'] ) {
+                        return true;
+                    }
+                    var channel_name = next[1];
+                    if (CHANNELS[channel_name] === 0) {
+                        CHANNELS[channel] = { };
+                    }
+                    var channel = CHANNELS[channel_name];
+                    //console.log(channel);
+
+                    var action = msg['action'];
+
+                    if (action === 'leave') {
+                        console.log(channel.XJOIN);
+                        if (!channel.XJOIN) { 
+                            return true;
+                        } else {
+                            channel.XJOIN = 0;
+                            return false;
+                        } 
+                    } else if (action === 'join') {
+                        channel.XJOIN = 1;
+                        setTimeout(function() {
+                            if (channel.XJOIN) {
+                                channel.XJOIN = 0;
+                               console.log('no leave came. genuine join');
+                               next[0]( msg, messages, next[1] );
+                            }  else {
+                               channel.XJOIN = 0
+                            }
+                        }, 5000);
+                    }
+                    return false;
+                }
+            } 
 
             CONNECT = function() {
                 _reset_offline();
