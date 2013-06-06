@@ -158,7 +158,7 @@ var NOW             = 1
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 3600   // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
-,   JOIN_LEAVE_COMBINE_TIMEOUT  = 5000    // MILLISECONDS.
+,   JOIN_LEAVE_COMBINE_TIMEOUT  = 2000    // MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
 ,   REPL            = /{([\w\-]+)}/g;
@@ -390,7 +390,7 @@ function PN_API(setup) {
 
     // Announce Leave Event
     var SELF = {
-        'LEAVE' : function( channel, blocking ) {
+        'LEAVE' : function( channel, blocking, callback ) {
             var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
             ,   jsonp  = jsonp_cb();
@@ -405,6 +405,7 @@ function PN_API(setup) {
                 timeout  : 2000,
                 callback : jsonp,
                 data     : data,
+                success  : function(response) { callback && callback(response) },
                 url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
@@ -592,18 +593,13 @@ function PN_API(setup) {
 
             // Iterate over Channels
             each( channel.split(','), function(channel) {
-                if (READY) SELF['LEAVE']( channel, 0 );
-                CHANNELS[channel] = 0;
-                setTimeout(function() {
-                    SELF['publish']({
-                        'channel' : channel, 'message' : { 'pn-discard' : true },
-                        'callback' : function() {
+                if (READY) SELF['LEAVE']( channel, 0, function() { 
                             setTimeout(function() {
                                 if (READY) SELF['LEAVE']( channel, 0 );
-                            }, JOIN_LEAVE_COMBINE_TIMEOUT / 4);
-                        }
-                   });
-                }, 500);
+                            }, JOIN_LEAVE_COMBINE_TIMEOUT / 2);
+
+                });
+                CHANNELS[channel] = 0;
             } );
 
             // Reset Connection if Count Less
