@@ -803,10 +803,8 @@ function PN_API(setup) {
                         return true;
                     }
                     var channel_name = next[1];
-                    if (CHANNELS[channel_name] === 0) {
-                        CHANNELS[channel] = { };
-                    }
                     var channel = CHANNELS[channel_name];
+                    if (!channel) return false;
 
                     var action = msg['action'];
 
@@ -821,10 +819,8 @@ function PN_API(setup) {
                         channel.XJOIN = 1;
                         setTimeout(function() {
                             if (channel.XJOIN) {
-                                channel.XJOIN = 0;
+                               channel.XJOIN = 0;
                                next[0]( msg, messages, next[1] );
-                            }  else {
-                               channel.XJOIN = 0
                             }
                         }, JOIN_LEAVE_COMBINE_TIMEOUT);
                     }
