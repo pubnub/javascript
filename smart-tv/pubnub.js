@@ -357,6 +357,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   XJOIN         = 0
     ,   CHANNELS      = {}
+    ,   PENDING_LEAVE = {}
     ,   xdr           = setup['xdr']
     ,   error         = setup['error']      || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
@@ -591,7 +592,8 @@ function PN_API(setup) {
             // Iterate over Channels
             each( channel.split(','), function(channel) {
                 if (READY) SELF['LEAVE']( channel, 0 );
-                CHANNELS[channel] = { 'name' : channel, 'pending_leave' : true };
+                CHANNELS[channel] = 0;
+                PENDING_LEAVE[channel] = { 'name' : channel, 'pending_leave' : true };
             } );
 
             // Reset Connection if Count Less
@@ -676,17 +678,13 @@ function PN_API(setup) {
                 });
             } );
             function _send_pending_leaves() {
-                var stop = true;
-
-                each( CHANNELS, function(channel_name, channel){
+                each( PENDING_LEAVE, function(channel_name, channel){
                     if (channel.pending_leave && READY) {
+                        console.log('sending pending leave');
                         SELF['LEAVE']( channel.name , 0 );
-                        CHANNELS[channel.name] = 0;
-                    } else if (channel.subscribed) {
-                        stop = false;
-					}
+                        PENDING_LEAVE[channel.name] = 0;
+                    } 
                 });
-				return stop;
             }
             // Test Network Connection
             function _test_connection(success) {
@@ -744,10 +742,12 @@ function PN_API(setup) {
                         SUBSCRIBE_KEY, encode(channels),
                         jsonp, TIMETOKEN
                     ],
-                    success : function(messages) {
+                    success : function(messages, abort) {
                         SUB_RECEIVER = null;
                         
-                        if (_send_pending_leaves()) return;
+                        _send_pending_leaves();
+                        if (abort)  return;
+                        
                         
                         if (!messages) return timeout( CONNECT, windowing );
 
@@ -798,8 +798,8 @@ function PN_API(setup) {
                             //console.log(messages); //[ [Object { action= "join" ,  timestamp= 1370499425 ,  uuid= "fd91bcca-cfb2-b7ad-cc04-1511064dc329" ,  more...}] , "13704994256153772" , "json_test_dev-pnpres" ] 
                             //console.log(next); [function(),"json_test_dev"]
                             // console.log(msg);  Object { action="join", timestamp=1370499425, uuid="fd91bcca-cfb2-b7ad-cc04-1511064dc329", more...}
-                            //_combine_join_leave(msg, next, messages) && next[0]( msg, messages, next[1] );
-                            next[0]( msg, messages, next[1] );
+                            _combine_join_leave(msg, next, messages) && next[0]( msg, messages, next[1] );
+                            //next[0]( msg, messages, next[1] );
                         } );
 
                         timeout( _connect, windowing );
@@ -814,12 +814,10 @@ function PN_API(setup) {
                         CHANNELS[channel] = { };
                     }
                     var channel = CHANNELS[channel_name];
-                    //console.log(channel);
 
                     var action = msg['action'];
 
                     if (action === 'leave') {
-                        console.log(channel.XJOIN);
                         if (!channel.XJOIN) { 
                             return true;
                         } else {
@@ -1127,6 +1125,7 @@ function xdr( setup ) {
     ,   callback  = setup.callback
     ,   id        = unique()
     ,   finished  = 0
+    ,   aborted   = 0
     ,   xhrtme    = setup.timeout || DEF_TIMEOUT
     ,   timer     = timeout( function(){done(1)}, xhrtme )
     ,   fail      = setup.fail    || function(){}
@@ -1135,18 +1134,17 @@ function xdr( setup ) {
     ,   append    = function() { head().appendChild(script) }
     ,   done      = function( failed, response ) {
             if (finished) return;
-            //finished = 1;
 
             script.onerror = null;
             clearTimeout(timer);
             
             if (!failed && response) {
                 finished = 1;
-                success(response);
+                success(response, aborted);
+            } else {
+                aborted = 1;
             }
-            
-            //(failed || !response) || success(response);
-
+           
             timeout( function() {
                 failed && fail();
                 var s = $(id)
