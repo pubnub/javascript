@@ -745,9 +745,10 @@ function PN_API(setup) {
                     success : function(messages, abort) {
                         SUB_RECEIVER = null;
                         
-                        _send_pending_leaves();
-                        if (abort)  return;
-                        
+                        if (abort) {
+                            _send_pending_leaves();
+							return;
+                        }
                         
                         if (!messages) return timeout( CONNECT, windowing );
 
