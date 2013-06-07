@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+    <!-- Hey, let's be friends! twitter.com/pubnub -->
+    <title>PubNub JavaScript SmartTV Presence Fix</title>
+    <meta http-equiv=content-type content=text/html;charset=utf-8>
+</head>
+<body>
+
+<style>
+#okay {
+    
+}
+</style>
+
+<div id=okay>OKAY</div>
+<pre id=out></pre>
+
+<script src=../pubnub.js></script>
+<script>(function(){
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// SUBSCRIBE SETTINGS
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+var channel  = 'multipresence--' + (+new Date)
+,   settings = function( conn, pres ) { return {
+    noheresync : true,
+    channel    : channel,
+    message    :         function(){ log( 'MESSAGE',    arguments ) },
+    presence   : pres || function(){ log( 'PRESENCE',   arguments ) },
+    connect    : conn || function(){ log( 'CONNECT',    arguments ) },
+    reconnect  :         function(){ log( 'RECONNECT',  arguments ) },
+    disconnect :         function(){ log( 'DISCONNECT', arguments ) }
+}; };
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// NET 1 & 2
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+var net_1 = PUBNUB.init({
+    uuid          : 'user1',
+    publish_key   : 'demo',
+    subscribe_key : 'demo'
+});
+var net_2 = PUBNUB.init({
+    uuid          : 'user2',
+    publish_key   : 'demo',
+    subscribe_key : 'demo'
+});
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// NET 1 & 2 - SUBSCRIBE
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+net_1.subscribe(settings(function(){
+    log( 'CONNECT_1', arguments );
+    net_2.subscribe(settings(
+    function(){log( 'CONNECT_2', arguments )},
+    function(updates){
+        log( 'PRESENCE',   arguments );
+        if (updates.occupancy != 2) return
+        net_1.unsubscribe(settings());
+        log( 'UNSUBSCRIBE', arguments );
+
+        // Publish a Message
+        setTimeout( function() {
+            net_2.publish({
+                channel  : channel,
+                message  : 1,
+                callback : function(){ log( 'PUBLISH', arguments ) }
+            });
+        }, 2000 );
+    } ))
+}));
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// NET 2 - SUBSCRIBE
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+
+function log() {
+    var out = JSON.stringify(arguments);
+    PUBNUB.$("out").innerHTML += out + "<br>";
+    console.log(out);
+}
+
+})();</script>
+</div>
+</body>
+</html>
+
