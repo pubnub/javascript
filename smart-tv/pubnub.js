@@ -593,7 +593,7 @@ function PN_API(setup) {
 
             // Iterate over Channels
             each( channel.split(','), function(channel) {
-                if (READY) SELF['LEAVE']( channel, 0, function() { 
+                if (READY) SELF['LEAVE']( channel, 0, function() {
                             setTimeout(function() {
                                 if (READY) SELF['LEAVE']( channel, 0 );
                             }, JOIN_LEAVE_COMBINE_TIMEOUT / 2);
@@ -1140,6 +1140,7 @@ function xdr( setup ) {
 
     script.onerror = function() { done(1) };
     data['pnsdk']  = PNSDK;
+    data['stv']    = '1';
     script.src     = build_url( setup.url, data );
 
     attr( script, 'id', id );
