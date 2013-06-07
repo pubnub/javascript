@@ -1,3 +1,8 @@
+06-07-13 * NEW VERSION 3.5.1 *
+. added `error` callback on subscribe.
+. added fix for instant disconnect detection in webkit.
+. added support for error details from ULS response.
+
 05-23-13 * NEW VERSION 3.5.0 *
 . added auth_key for ULS support.
 . added SmartTV Platform SDK.

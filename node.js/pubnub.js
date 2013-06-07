@@ -1,4 +1,4 @@
-// Version: 3.5.0
+// Version: 3.5.1
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -6,7 +6,7 @@ var NOW             = 1
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
 ,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
-,   DEF_KEEPALIVE   = 3600   // SECONDS.
+,   DEF_KEEPALIVE   = 60     // SECONDS.
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
@@ -461,6 +461,7 @@ function PN_API(setup) {
             ,   connect       = args['connect']     || function(){}
             ,   reconnect     = args['reconnect']   || function(){}
             ,   disconnect    = args['disconnect']  || function(){}
+            ,   errcb         = args['error']       || function(){}
             ,   presence      = args['presence']    || 0
             ,   noheresync    = args['noheresync']  || 0
             ,   backfill      = args['backfill']    || 0
@@ -583,7 +584,12 @@ function PN_API(setup) {
                     ],
                     success : function(messages) {
                         SUB_RECEIVER = null;
-                        if (!messages) return timeout( CONNECT, windowing );
+
+                        // Check for Errors
+                        if (!messages || ('error' in messages && !messages['error'])) {
+                            errcb(messages);
+                            return timeout( CONNECT, windowing );
+                        }
 
                         // Restore Previous Connection Point if Needed
                         TIMETOKEN = !TIMETOKEN               &&
@@ -685,7 +691,7 @@ function PN_API(setup) {
         'each'          : each,
         'each-channel'  : each_channel,
         'grep'          : grep,
-        'offline'       : _reset_offline,
+        'offline'       : function(){_reset_offline(1)},
         'supplant'      : supplant,
         'now'           : rnow,
         'unique'        : unique,
@@ -693,19 +699,19 @@ function PN_API(setup) {
     };
 
     function _poll_online() {
-        _is_online() || _reset_offline();
+        _is_online() || _reset_offline(1);
         timeout( _poll_online, SECOND );
     }
 
     function _poll_online2() {
         SELF['time'](function(success){
-            success || _reset_offline();
+            success || _reset_offline(1);
             timeout( _poll_online2, KEEPALIVE );
         })
     }
 
-    function _reset_offline() {
-        SUB_RECEIVER && SUB_RECEIVER();
+    function _reset_offline(err) {
+        SUB_RECEIVER && SUB_RECEIVER(err);
         SUB_RECEIVER = null;
     }
 
@@ -759,7 +765,7 @@ var NOW    = 1
 ,   XHRTME = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,    PNSDK            = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.0'
+,    PNSDK            = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.1'
 ,   XORIGN = 1;
 
 
