@@ -141,7 +141,8 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 ## SIMPLE EXAMPLE
 
->**NOTE:** Copy and paste this example into a *blank* HTML file.
+
+>**NOTE:** Copy and paste this example into a *blank* HTML file or visit http://jsfiddle.net/geremy/SqamR/ to demo
 
 ```html
 <script src=http://cdn.pubnub.com/pubnub-3.5.1.min.js ></script>
