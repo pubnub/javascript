@@ -75,9 +75,9 @@ you access PubNub methods via ```p```'s instance methods:
 
 ```javascript
 p.publish({
-        channel : "hello_world",
-        message : "Hi."
-    })
+    channel : "hello_world",
+    message : "Hi."
+})
 ```
 
 When working with any non-web JavaScript-based client (such as a mobile
@@ -144,12 +144,17 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 >**NOTE:** Copy and paste this example into a *blank* HTML file.
 
 ```html
-<div id=pubnub pub-key=demo sub-key=demo></div>
 <script src=http://cdn.pubnub.com/pubnub-3.5.1.min.js ></script>
-<script>
+<script>(function(){
 
+    // Init
+    var pubnub = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    })
+    
     // LISTEN
-    PUBNUB.subscribe({
+    pubnub.subscribe({
         channel : "hello_world",
         message : function(m){ alert(m) },
         connect : publish
@@ -157,13 +162,13 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
     // SEND
     function publish() {
-        PUBNUB.publish({
+        pubnub.publish({
             channel : "hello_world",
             message : "Hi."
         })
     }
 
-</script>
+})();</script>
 ```
 
 ## ADVANCED SUBSCRIBE CONNECTIVITY OPTIONS/CALLBACKS
