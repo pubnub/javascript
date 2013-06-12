@@ -42,6 +42,40 @@ use this following method for initialization:
 })();</script>
 ```
 
+## SIMPLE EXAMPLE
+
+>**NOTE:** Copy and paste this example into a *blank* HTML file or visit http://jsfiddle.net/geremy/SqamR/ to demo
+
+```html
+<script src=http://cdn.pubnub.com/pubnub-3.5.1.min.js ></script>
+<script>(function(){
+
+    // Init
+    var pubnub = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    })
+    
+    // LISTEN
+    pubnub.subscribe({
+        channel : "hello_world",
+        message : function(m){ alert(m) },
+        connect : publish
+    })
+
+    // SEND
+    function publish() {
+        pubnub.publish({
+            channel : "hello_world",
+            message : "Hi."
+        })
+    }
+
+})();</script>
+```
+
+
+
 ## Get Started Here
 
 https://github.com/pubnub/javascript#simple-example -
@@ -139,38 +173,6 @@ The **web** directory supports all legacy, modern and mobile web browsers.
 Let's start off with a simple example of how to use the PubNub Network
 JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
-## SIMPLE EXAMPLE
-
-
->**NOTE:** Copy and paste this example into a *blank* HTML file or visit http://jsfiddle.net/geremy/SqamR/ to demo
-
-```html
-<script src=http://cdn.pubnub.com/pubnub-3.5.1.min.js ></script>
-<script>(function(){
-
-    // Init
-    var pubnub = PUBNUB.init({
-        publish_key   : 'demo',
-        subscribe_key : 'demo'
-    })
-    
-    // LISTEN
-    pubnub.subscribe({
-        channel : "hello_world",
-        message : function(m){ alert(m) },
-        connect : publish
-    })
-
-    // SEND
-    function publish() {
-        pubnub.publish({
-            channel : "hello_world",
-            message : "Hi."
-        })
-    }
-
-})();</script>
-```
 
 ## ADVANCED SUBSCRIBE CONNECTIVITY OPTIONS/CALLBACKS
 ```html
