@@ -797,3 +797,29 @@ will avoid all other transport methods.
     });
 </script>
 ```
+
+### How we Build and Test
+
+#### Building
+
+Maintaining a plethora of JS-based clients is not easy. Even the most trivial change means altering the code across JS-based clients. 
+This became very difficult to maintain, so we decided to build a common codebase, and wrap platform-specific wrappers around it as needed at build time.
+This helps us make a fix once, and have it reflected in all JS clients immediately with little or no extra effort.
+
+#### Testing
+
+Following software and tools are used:
+
+1. Jenkins
+2. Testswarm
+3. BrowserStack
+4. node-testswarm
+5. testswarm-browserstack
+
+And a bit more detail on how it all fits together:
+
+1. Github hooks have been configured to hit Jenkins on staging pushes.
+2. Jenkins starts a new build upon the push.
+3. First mocha tests are run. If they succeed...
+4. Jenkins creates a job on testswarm to execute qunit tests across various browsers. Cross-browser testing is done via BrowserStack. A script runs on the server which keeps querying testswarm for the swarm state . The state defines which browsers are required by swarm. This script then spawns those browsers on BrowserStack. The browsers not required any more are killed. This way whenever a job is submitted, the script will start browsres and kill them once done.
+5. The job creation script keeps polling swarm for test results. If the results indicate success, the build status is set as passed... if the tests indicate failure, build status is set as failure, and mail is sent to PubNub support for further investigation.
