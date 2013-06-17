@@ -348,6 +348,8 @@ To use AES encryption in PubNub, simply do the following:
 ```
 
 ## HISTORY AND HERE-NOW EXAMPLE
+http://jsfiddle.net/geremy/8e6Cr/
+
 ```html
 <span onclick="hereNow()">Click Me for Here Now!</span>
 <span onclick="history()">Click Me for History!</span>
