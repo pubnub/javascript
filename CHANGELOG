@@ -1,3 +1,8 @@
+06-18-13 * NEW VERSION 3.5.2 *
+. removed uneeded presence leave events on non-ssl.
+. added `channel` to here_now callback.
+. fixed 40X error for Access Manager.
+
 06-07-13 * NEW VERSION 3.5.1 *
 . added `error` callback on subscribe.
 . added fix for instant disconnect detection in webkit.
