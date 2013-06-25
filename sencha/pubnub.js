@@ -1,4 +1,4 @@
-// Version: 3.5.2
+// Version: 3.5.3
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -248,11 +248,11 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             xdr({
-                'blocking' : blocking || SSL,
-                'timeout'  : 2000,
-                'callback' : jsonp,
-                'data'     : data,
-                'url'      : [
+                blocking : blocking || SSL,
+                timeout  : 2000,
+                callback : jsonp,
+                data     : data,
+                url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
                 ]
@@ -764,7 +764,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.5.2'
+,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.5.3'
 ,   XHRTME     = 310000;
 
 

@@ -1,4 +1,4 @@
-// Version: 3.5.2
+// Version: 3.5.3
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -398,11 +398,11 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             xdr({
-                'blocking' : blocking || SSL,
-                'timeout'  : 2000,
-                'callback' : jsonp,
-                'data'     : data,
-                'url'      : [
+                blocking : blocking || SSL,
+                timeout  : 2000,
+                callback : jsonp,
+                data     : data,
+                url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
                 ]
@@ -894,7 +894,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.5.2'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.5.3'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -1085,14 +1085,14 @@ function xdr( setup ) {
     if (XORIGN || FDomainRequest()) return ajax(setup);
 
     var script    = create('script')
-    ,   callback  = setup['callback']
+    ,   callback  = setup.callback
     ,   id        = unique()
     ,   finished  = 0
-    ,   xhrtme    = setup['timeout'] || DEF_TIMEOUT
+    ,   xhrtme    = setup.timeout || DEF_TIMEOUT
     ,   timer     = timeout( function(){done(1)}, xhrtme )
-    ,   fail      = setup['fail']    || function(){}
-    ,   data      = setup['data']    || {}
-    ,   success   = setup['success'] || function(){}
+    ,   fail      = setup.fail    || function(){}
+    ,   data      = setup.data    || {}
+    ,   success   = setup.success || function(){}
     ,   append    = function() { head().appendChild(script) }
     ,   done      = function( failed, response ) {
             if (finished) return;
@@ -1115,11 +1115,11 @@ function xdr( setup ) {
         done( 0, response );
     };
 
-    if (!setup['blocking']) script[ASYNC] = ASYNC;
+    if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
     data['pnsdk']  = PNSDK;
-    script.src     = build_url( setup['url'], data );
+    script.src     = build_url( setup.url, data );
 
     attr( script, 'id', id );
 
@@ -1152,12 +1152,12 @@ function ajax( setup ) {
         }
     ,   complete = 0
     ,   loaded   = 0
-    ,   xhrtme   = setup['timeout'] || DEF_TIMEOUT
+    ,   xhrtme   = setup.timeout || DEF_TIMEOUT
     ,   timer    = timeout( function(){done(1)}, xhrtme )
-    ,   fail     = setup['fail']    || function(){}
-    ,   data     = setup['data']    || {}
-    ,   success  = setup['success'] || function(){}
-    ,   async    = ( typeof(setup['blocking']) === 'undefined' )
+    ,   fail     = setup.fail    || function(){}
+    ,   data     = setup.data    || {}
+    ,   success  = setup.success || function(){}
+    ,   async    = ( typeof(setup.blocking) === 'undefined' )
     ,   done     = function(failed) {
             if (complete) return;
             complete = 1;
@@ -1185,7 +1185,7 @@ function ajax( setup ) {
         if (async) xhr.timeout = xhrtme;
 
         data['pnsdk'] = PNSDK;
-        var url = build_url( setup['url'], data );
+        var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
         xhr.send();

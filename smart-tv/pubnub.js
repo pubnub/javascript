@@ -1,4 +1,4 @@
-// Version: 3.5.2
+// Version: 3.5.3
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -398,11 +398,11 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             xdr({
-                'blocking' : blocking || SSL,
-                'timeout'  : 2000,
-                'callback' : jsonp,
-                'data'     : data,
-                'url'      : [
+                blocking : blocking || SSL,
+                timeout  : 2000,
+                callback : jsonp,
+                data     : data,
+                url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
                 ]
@@ -892,7 +892,7 @@ window['PUBNUB'] || (function() {
  */
 
 var ASYNC = 'async'
-,   PNSDK = 'PubNub-JS-' + 'SmartTV' + '/' + '3.5.2';
+,   PNSDK = 'PubNub-JS-' + 'SmartTV' + '/' + '3.5.3';
 
 /**
  * CONSOLE COMPATIBILITY
