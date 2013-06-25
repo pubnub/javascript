@@ -1,3 +1,6 @@
+06-25-13 * NEW VERSION 3.5.3 *
+. fixed the issue with minified version of JS files.
+
 06-18-13 * NEW VERSION 3.5.2 *
 . removed uneeded presence leave events on non-ssl.
 . added `channel` to here_now callback.
