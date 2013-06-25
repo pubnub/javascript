@@ -398,11 +398,11 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             xdr({
-                'blocking' : blocking || SSL,
-                'timeout'  : 2000,
-                'callback' : jsonp,
-                'data'     : data,
-                'url'      : [
+                blocking : blocking || SSL,
+                timeout  : 2000,
+                callback : jsonp,
+                data     : data,
+                url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
                 ]
