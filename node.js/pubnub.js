@@ -10,6 +10,7 @@ var NOW             = 1
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
+,   crypto          = require('crypto')
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -161,7 +162,7 @@ function map( list, fun ) {
  */
 function encode(path) {
     return map( (encodeURIComponent(path)).split(''), function(chr) {
-        return "-_.!~*'()".indexOf(chr) < 0 ? chr :
+        return ".!~*'()".indexOf(chr) < 0 ? chr :
                "%"+chr.charCodeAt(0).toString(16).toUpperCase()
     } ).join('');
 }
@@ -192,9 +193,10 @@ function PN_API(setup) {
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   PUBLISH_KEY   = setup['publish_key']   || ''
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
+    ,   SECRET_KEY    = setup['secret_key']    || ''
     ,   AUTH_KEY      = setup['auth_key']      || ''
     ,   SSL           = setup['ssl']            ? 's' : ''
-    ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
+    ,   ORIGIN        = (setup['origin']||'pubsub.pubnub.com')
     ,   STD_ORIGIN    = nextorigin(ORIGIN)
     ,   SUB_ORIGIN    = nextorigin(ORIGIN)
     ,   CONNECT       = function(){}
@@ -686,6 +688,125 @@ function PN_API(setup) {
             });
         },
 
+
+        'grant' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   channel  = args['channel']
+            ,   jsonp    = jsonp_cb()
+            ,   ttl      = args['ttl'] || -1
+            ,   r        = (args['read'] )?"1":"0"
+            ,   w        = (args['write'])?"1":"0"
+            ,   auth_key = args['auth_key']; 
+
+            function replaceAll(find, replace, str) {
+                return str.replace(new RegExp(find, 'g'), replace);
+            }
+
+            // Make sure we have a Channel
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY) return error('Missing Publish Key');
+            if (!SECRET_KEY) return error('Missing Secret Key');
+            if (!auth_key) return error('Missing Auth Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            var timestamp = Math.floor(new Date().getTime() / 1000);
+
+            var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
+                    + "grant" + "\n" + "auth=" + auth_key + "&" + "channel="
+                    + channel + "&" + "pnsdk=" + PNSDK + "&" + "r=" + r + "&" + "timestamp=" + timestamp
+                    + ((ttl > -1)?"&" + "ttl=" + ttl:"")
+                    + "&" + "w=" + w;
+
+            var signature = crypto.createHmac('sha256', new Buffer(SECRET_KEY, 'utf8')).
+                                            update(sign_input).digest('base64');
+
+            signature = replaceAll("\\+","-",signature);
+            signature = replaceAll("\\/","_",signature);
+
+            var data = { 
+                'w'         : w,
+                'r'         : r,
+                'signature' : signature,
+                'channel'   : channel,
+                'auth'      : auth_key,
+                'timestamp' : timestamp
+            };
+            if (ttl > -1) data['ttl'] = ttl
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) { callback(response) },
+                fail     : err,
+                url      : [
+                    "uls-test.pubnub.co", 'v1', 'auth', 'grant' ,
+                    'sub-key', SUBSCRIBE_KEY
+                ]
+            });
+        },
+        'audit' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   channel  = args['channel']
+            ,   jsonp    = jsonp_cb()
+            ,   ttl      = args['ttl'] || -1
+            ,   auth_key = args['auth_key']; 
+
+            function replaceAll(find, replace, str) {
+                return str.replace(new RegExp(find, 'g'), replace);
+            }
+
+            // Make sure we have a Channel
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY) return error('Missing Publish Key');
+            if (!SECRET_KEY) return error('Missing Secret Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            var timestamp = Math.floor(new Date().getTime() / 1000);
+
+            var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n" + "audit" + "\n";
+
+            if (auth_key)  sign_input += ("auth=" + auth_key + "&"); 
+            if (channel)   sign_input += ("channel=" + channel + "&") ; 
+                    
+            sign_input += "pnsdk=" + PNSDK + "&" + "timestamp=" + timestamp;
+
+            var signature = crypto.createHmac('sha256', new Buffer(SECRET_KEY, 'utf8')).
+                                            update(sign_input).digest('base64');
+
+            signature = replaceAll("\\+","-",signature);
+            signature = replaceAll("\\/","_",signature);
+
+            var data = { 
+                'signature' : signature,
+                'timestamp' : timestamp
+            };
+            if (channel) data['channel'] = channel
+            if (auth_key) data['auth'] = auth_key
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) { callback(response) },
+                fail     : err,
+                url      : [
+                    "uls-test.pubnub.co", 'v1', 'auth', 'audit' ,
+                    'sub-key', SUBSCRIBE_KEY
+                ]
+            });
+        },
+        'revoke' : function( args, callback ) {
+            args['read'] = false;
+            args['write'] = false;
+            this.grant(args,callback);
+        },
+
         // Expose PUBNUB Functions
         'xdr'           : xdr,
         'ready'         : ready,
@@ -829,10 +950,12 @@ function xdr( setup ) {
         ,   timer  = timeout( function(){done(1);} , xhrtme );
 
     data['pnsdk'] = PNSDK;
+
     var url = build_url(setup.url, data);
+    url = (ssl)?"https":"http" + "://" + url;
 
     var options = {
-        hostname : origin,
+        hostname : setup.url[0],
         port : ssl ? 443 : 80,
         path : url,
         method : 'GET'
