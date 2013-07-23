@@ -17,7 +17,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -25,7 +25,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -33,7 +33,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -41,7 +41,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -49,7 +49,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -57,7 +57,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -65,7 +65,7 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
@@ -73,10 +73,10 @@
             it('should publish json arrays without error 1', function(done){
                         pubnub.publish({channel: channel , message : message_string,
                             callback : function(response) {
-								done()
+                                done()
                             }
                         });
 
             })
         })
-	})
+    })

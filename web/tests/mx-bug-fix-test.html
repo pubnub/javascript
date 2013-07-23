@@ -32,12 +32,12 @@ var pubnub = window.pubnub = PUBNUB.init({
 // Subscribe Usage Style Examples
 // --------------------------------
 subscribe( 'cn', function() {
-    subscribe( 'b', function() { 
+    subscribe( 'b', function() {
         publish( 'cn', function() {
             publish( 'b', function() {
-                setTimeout( function() { 
+                setTimeout( function() {
                     unsubscribe('b');
-                    setTimeout( function() { 
+                    setTimeout( function() {
                         publish('cn');
                         publish('b');
                     }, 2000 );

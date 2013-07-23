@@ -236,7 +236,7 @@ asyncTest('Encryption tests', function() {
     aes_channel = channel + "aes-channel";
     aes.subscribe({
         channel: aes_channel,
-        connect: function() { 
+        connect: function() {
             setTimeout(function() {
                 aes.publish({
                     channel: aes_channel,
@@ -273,3 +273,143 @@ asyncTest('Encryption tests', function() {
     });
 })
 
+var grant_channel = channel + '-grant';
+var auth_key = "abcd";
+var pubnub_pam = PUBNUB.init({
+    origin            : 'uls-test.pubnub.co',
+    publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
+    subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
+    secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
+});
+test("#grant() should be able to grant read write access", function(done) {
+    expect(4);
+    stop(1);
+    setTimeout(function() {
+        pubnub_pam.grant({
+            channel : grant_channel,
+            auth_key : auth_key,
+            read : true,
+            write : true,
+            ttl : 100,
+            callback : function(response) {
+                ok(response.status === 200, 'Grant Response');
+                pubnub_pam.audit({
+                    channel : grant_channel,
+                    auth_key : auth_key,
+                    callback : function(response) {
+                        ok(response.status === 200, 'Grant Audit Response');
+                        ok(response.payload.auths.abcd.r === 1, 'Grant Audit Read should be 1');
+                        ok(response.payload.auths.abcd.w === 1, 'Grant Audit Write shoudld be 1');
+                        start();
+                    }
+                });
+
+            }
+        })
+    },5000);
+})
+test("#grant() should be able to grant read, revoke write access", function(done) {
+    expect(4);
+    stop(1);
+    setTimeout(function() {
+        pubnub_pam.grant({
+            channel : grant_channel,
+            auth_key : auth_key,
+            read : true,
+            write : false,
+            ttl : 100,
+            callback : function(response) {
+                ok(response.status === 200, 'Grant Response');
+                pubnub_pam.audit({
+                    channel : grant_channel,
+                    auth_key : auth_key,
+                    callback : function(response) {
+                        ok(response.status === 200, 'Grant Audit Response');
+                        ok(response.payload.auths.abcd.r === 1, 'Grant Audit Read should be 1');
+                        ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write shoudld be 0');
+                        start();
+                    }
+                });
+
+            }
+        })
+    },5000);
+})
+test("#grant() should be able to revoke read, grant write access", function(done) {
+    expect(4);
+    stop(1);
+    setTimeout(function() {
+        pubnub_pam.grant({
+            channel : grant_channel,
+            auth_key : auth_key,
+            read : false,
+            write : true,
+            ttl : 100,
+            callback : function(response) {
+                ok(response.status === 200, 'Grant Response');
+                pubnub_pam.audit({
+                    channel : grant_channel,
+                    auth_key : auth_key,
+                    callback : function(response) {
+                        ok(response.status === 200, 'Grant Audit Response');
+                        ok(response.payload.auths.abcd.r === 0, 'Grant Audit Read should be 0');
+                        ok(response.payload.auths.abcd.w === 1, 'Grant Audit Write shoudld be 1');
+                        start();
+                    }
+                });
+
+            }
+        })
+    },5000);
+})
+test("#grant() should be able to revoke read write access", function(done) {
+    expect(4);
+    stop(1);
+    setTimeout(function() {
+        pubnub_pam.grant({
+            channel : grant_channel,
+            auth_key : auth_key,
+            read : false,
+            write : false,
+            ttl : 100,
+            callback : function(response) {
+                ok(response.status === 200, 'Grant Response');
+                pubnub_pam.audit({
+                    channel : grant_channel,
+                    auth_key : auth_key,
+                    callback : function(response) {
+                        ok(response.status === 200, 'Grant Audit Response');
+                        ok(response.payload.auths.abcd.r === 0, 'Grant Audit Read should be 0');
+                        ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write shoudld be 0');
+                        start();
+                    }
+                });
+
+            }
+        })
+    },5000);
+})
+test("#revoke() should be able to revoke access", function(done) {
+    expect(4);
+    stop(1);
+    setTimeout(function() {
+        pubnub_pam.revoke({
+            channel : grant_channel,
+            auth_key : auth_key,
+            callback : function(response) {
+                ok(response.status === 200, 'Grant Response');
+                pubnub_pam.audit({
+                    channel : grant_channel,
+                    auth_key : auth_key,
+                    callback : function(response) {
+                        ok(response.status === 200, 'Grant Audit Response');
+                        ok(response.payload.auths.abcd.r === 0, 'Grant Audit Read should be 0');
+                        ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write shoudld be 0');
+                        start();
+                    }
+                });
+
+            }
+        })
+    },5000);
+})

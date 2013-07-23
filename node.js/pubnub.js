@@ -10,7 +10,6 @@ var NOW             = 1
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
-,   crypto          = require('crypto')
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -50,7 +49,7 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
-         params.push(key + "=" + encode(value));
+         params.push(key + "=" + encode_param(value));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -160,11 +159,19 @@ function map( list, fun ) {
  * ======
  * var encoded_path = encode('path');
  */
-function encode(path) {
+function encode_base(path, chars) {
     return map( (encodeURIComponent(path)).split(''), function(chr) {
-        return ".!~*'()".indexOf(chr) < 0 ? chr :
+        return chars.indexOf(chr) < 0 ? chr :
                "%"+chr.charCodeAt(0).toString(16).toUpperCase()
     } ).join('');
+}
+
+function encode(path) {
+    return encode_base(path,"-_.!~*'()");
+}
+
+function encode_param(value) {
+    return encode_base(value,".!~*'()");
 }
 
 /**
@@ -193,10 +200,12 @@ function PN_API(setup) {
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   PUBLISH_KEY   = setup['publish_key']   || ''
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
-    ,   SECRET_KEY    = setup['secret_key']    || ''
     ,   AUTH_KEY      = setup['auth_key']      || ''
+    ,   SECRET_KEY    = setup['secret_key']    || ''
+    ,   PNSDK         = setup['PNSDK']         || ''
+    ,   hmac_SHA256   = setup['hmac_SHA256']
     ,   SSL           = setup['ssl']            ? 's' : ''
-    ,   ORIGIN        = (setup['origin']||'pubsub.pubnub.com')
+    ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
     ,   STD_ORIGIN    = nextorigin(ORIGIN)
     ,   SUB_ORIGIN    = nextorigin(ORIGIN)
     ,   CONNECT       = function(){}
@@ -574,7 +583,7 @@ function PN_API(setup) {
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
-                    fail     : function() { 
+                    fail     : function() {
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
@@ -687,8 +696,6 @@ function PN_API(setup) {
                 ]
             });
         },
-
-
         'grant' : function( args, callback ) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
@@ -697,7 +704,7 @@ function PN_API(setup) {
             ,   ttl      = args['ttl'] || -1
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
-            ,   auth_key = args['auth_key']; 
+            ,   auth_key = args['auth_key'];
 
             function replaceAll(find, replace, str) {
                 return str.replace(new RegExp(find, 'g'), replace);
@@ -720,14 +727,12 @@ function PN_API(setup) {
                     + channel + "&" + "pnsdk=" + PNSDK + "&" + "r=" + r + "&" + "timestamp=" + timestamp
                     + ((ttl > -1)?"&" + "ttl=" + ttl:"")
                     + "&" + "w=" + w;
-
-            var signature = crypto.createHmac('sha256', new Buffer(SECRET_KEY, 'utf8')).
-                                            update(sign_input).digest('base64');
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
             signature = replaceAll("\\+","-",signature);
             signature = replaceAll("\\/","_",signature);
 
-            var data = { 
+            var data = {
                 'w'         : w,
                 'r'         : r,
                 'signature' : signature,
@@ -743,7 +748,7 @@ function PN_API(setup) {
                 success  : function(response) { callback(response) },
                 fail     : err,
                 url      : [
-                    "uls-test.pubnub.co", 'v1', 'auth', 'grant' ,
+                    STD_ORIGIN, 'v1', 'auth', 'grant' ,
                     'sub-key', SUBSCRIBE_KEY
                 ]
             });
@@ -754,7 +759,7 @@ function PN_API(setup) {
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
             ,   ttl      = args['ttl'] || -1
-            ,   auth_key = args['auth_key']; 
+            ,   auth_key = args['auth_key'];
 
             function replaceAll(find, replace, str) {
                 return str.replace(new RegExp(find, 'g'), replace);
@@ -772,18 +777,17 @@ function PN_API(setup) {
 
             var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n" + "audit" + "\n";
 
-            if (auth_key)  sign_input += ("auth=" + auth_key + "&"); 
-            if (channel)   sign_input += ("channel=" + channel + "&") ; 
-                    
+            if (auth_key)  sign_input += ("auth=" + auth_key + "&");
+            if (channel)   sign_input += ("channel=" + channel + "&") ;
+
             sign_input += "pnsdk=" + PNSDK + "&" + "timestamp=" + timestamp;
 
-            var signature = crypto.createHmac('sha256', new Buffer(SECRET_KEY, 'utf8')).
-                                            update(sign_input).digest('base64');
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
             signature = replaceAll("\\+","-",signature);
             signature = replaceAll("\\/","_",signature);
 
-            var data = { 
+            var data = {
                 'signature' : signature,
                 'timestamp' : timestamp
             };
@@ -796,7 +800,7 @@ function PN_API(setup) {
                 success  : function(response) { callback(response) },
                 fail     : err,
                 url      : [
-                    "uls-test.pubnub.co", 'v1', 'auth', 'audit' ,
+                    STD_ORIGIN, 'v1', 'auth', 'audit' ,
                     'sub-key', SUBSCRIBE_KEY
                 ]
             });
@@ -804,8 +808,9 @@ function PN_API(setup) {
         'revoke' : function( args, callback ) {
             args['read'] = false;
             args['write'] = false;
-            this.grant(args,callback);
+            SELF['grant'](args,callback);
         },
+
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
@@ -884,14 +889,21 @@ THE SOFTWARE.
 /**
  * UTIL LOCALS
  */
-var NOW    = 1
-,   http   = require('http')
-,   https  = require('https')
-,   XHRTME = 310000
+var NOW                = 1
+,   http               = require('http')
+,   https              = require('https')
+,   XHRTME             = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,    PNSDK            = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.3'
-,   XORIGN = 1;
+,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.3'
+,   crypto           = require('crypto')
+,   XORIGN             = 1;
+
+
+function get_hmac_SHA256(data, key) {
+    return crypto.createHmac('sha256',
+                    new Buffer(key, 'utf8')).update(data).digest('base64');
+}
 
 
 /**
@@ -950,12 +962,10 @@ function xdr( setup ) {
         ,   timer  = timeout( function(){done(1);} , xhrtme );
 
     data['pnsdk'] = PNSDK;
-
     var url = build_url(setup.url, data);
-    url = (ssl)?"https":"http" + "://" + url;
 
     var options = {
-        hostname : setup.url[0],
+        hostname : setup.url[0].split("//")[1],
         port : ssl ? 443 : 80,
         path : url,
         method : 'GET'
@@ -1007,6 +1017,8 @@ exports.init = function(setup) {
     setup['xdr'] = xdr;
     setup['db'] = db;
     setup['error'] = error;
+    setup['PNSDK'] = PNSDK;
+    setup['hmac_SHA256'] = get_hmac_SHA256;
     PN = PN_API(setup);
     PN.ready();
     return PN;

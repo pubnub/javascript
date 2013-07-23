@@ -16,7 +16,7 @@ var message_jsona = ['message' , 'Hi Hi from javascript'];
 describe('Pubnub', function() {
 
     this.timeout(60000);
-    
+
     describe('#publish()', function(){
         it('should publish strings without error', function(done){
             var ch = channel + '-' + ++count;
@@ -81,7 +81,7 @@ describe('Pubnub', function() {
             })
         })
 
-        })
+    })
     describe('#uuid()', function() {
         it('should return uuid successfully when called', function(done){
             pubnub.uuid(function(uuid) {
@@ -119,7 +119,7 @@ describe('Pubnub', function() {
         })
 
     })
-    
+
     describe('#grant()', function(){
         var grant_channel = channel + '-grant';
         var auth_key = "abcd";

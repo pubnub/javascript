@@ -226,7 +226,7 @@ asyncTest('Encryption tests', function() {
 
     aes.subscribe({
         channel: aes_channel,
-        connect: function() { 
+        connect: function() {
             aes.publish({
                 channel: aes_channel,
                 message: { test: "test" },

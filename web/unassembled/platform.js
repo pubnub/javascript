@@ -51,6 +51,10 @@ var db = (function(){
     };
 })();
 
+function get_hmac_SHA256(data,key) {
+    var hash = CryptoJS['HmacSHA256'](data, key);
+    return hash.toString(CryptoJS['enc']['Base64']);
+}
 
 /**
  * $
@@ -349,6 +353,8 @@ var PDIV          = $('pubnub') || 0
     setup['error']      = error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
+    setup['PNSDK']      = PNSDK;
+    setup['hmac_SHA256']= get_hmac_SHA256;
 
     var SELF            = PN_API(setup);
     SELF['css']         = css;

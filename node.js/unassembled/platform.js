@@ -32,14 +32,21 @@ THE SOFTWARE.
 /**
  * UTIL LOCALS
  */
-var NOW    = 1
-,   http   = require('http')
-,   https  = require('https')
-,   XHRTME = 310000
+var NOW                = 1
+,   http               = require('http')
+,   https              = require('https')
+,   XHRTME             = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,    PNSDK            = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
-,   XORIGN = 1;
+,   PNSDK           = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
+,   crypto           = require('crypto')
+,   XORIGN             = 1;
+
+
+function get_hmac_SHA256(data, key) {
+    return crypto.createHmac('sha256',
+                    new Buffer(key, 'utf8')).update(data).digest('base64');
+}
 
 
 /**
@@ -101,7 +108,7 @@ function xdr( setup ) {
     var url = build_url(setup.url, data);
 
     var options = {
-        hostname : origin,
+        hostname : setup.url[0].split("//")[1],
         port : ssl ? 443 : 80,
         path : url,
         method : 'GET'
@@ -153,6 +160,8 @@ exports.init = function(setup) {
     setup['xdr'] = xdr;
     setup['db'] = db;
     setup['error'] = error;
+    setup['PNSDK'] = PNSDK;
+    setup['hmac_SHA256'] = get_hmac_SHA256;
     PN = PN_API(setup);
     PN.ready();
     return PN;

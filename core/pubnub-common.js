@@ -48,7 +48,7 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
-         params.push(key + "=" + encode(value));
+         params.push(key + "=" + encode_param(value));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -158,11 +158,19 @@ function map( list, fun ) {
  * ======
  * var encoded_path = encode('path');
  */
-function encode(path) {
+function encode_base(path, chars) {
     return map( (encodeURIComponent(path)).split(''), function(chr) {
-        return "-_.!~*'()".indexOf(chr) < 0 ? chr :
+        return chars.indexOf(chr) < 0 ? chr :
                "%"+chr.charCodeAt(0).toString(16).toUpperCase()
     } ).join('');
+}
+
+function encode(path) {
+    return encode_base(path,"-_.!~*'()");
+}
+
+function encode_param(value) {
+    return encode_base(value,".!~*'()");
 }
 
 /**
@@ -192,6 +200,9 @@ function PN_API(setup) {
     ,   PUBLISH_KEY   = setup['publish_key']   || ''
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   AUTH_KEY      = setup['auth_key']      || ''
+    ,   SECRET_KEY    = setup['secret_key']    || ''
+    ,   PNSDK         = setup['PNSDK']         || ''
+    ,   hmac_SHA256   = setup['hmac_SHA256']
     ,   SSL           = setup['ssl']            ? 's' : ''
     ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
     ,   STD_ORIGIN    = nextorigin(ORIGIN)
@@ -571,7 +582,7 @@ function PN_API(setup) {
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
-                    fail     : function() { 
+                    fail     : function() {
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
@@ -684,6 +695,121 @@ function PN_API(setup) {
                 ]
             });
         },
+        'grant' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   channel  = args['channel']
+            ,   jsonp    = jsonp_cb()
+            ,   ttl      = args['ttl'] || -1
+            ,   r        = (args['read'] )?"1":"0"
+            ,   w        = (args['write'])?"1":"0"
+            ,   auth_key = args['auth_key'];
+
+            function replaceAll(find, replace, str) {
+                return str.replace(new RegExp(find, 'g'), replace);
+            }
+
+            // Make sure we have a Channel
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY) return error('Missing Publish Key');
+            if (!SECRET_KEY) return error('Missing Secret Key');
+            if (!auth_key) return error('Missing Auth Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            var timestamp = Math.floor(new Date().getTime() / 1000);
+
+            var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
+                    + "grant" + "\n" + "auth=" + auth_key + "&" + "channel="
+                    + channel + "&" + "pnsdk=" + PNSDK + "&" + "r=" + r + "&" + "timestamp=" + timestamp
+                    + ((ttl > -1)?"&" + "ttl=" + ttl:"")
+                    + "&" + "w=" + w;
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
+
+            signature = replaceAll("\\+","-",signature);
+            signature = replaceAll("\\/","_",signature);
+
+            var data = {
+                'w'         : w,
+                'r'         : r,
+                'signature' : signature,
+                'channel'   : channel,
+                'auth'      : auth_key,
+                'timestamp' : timestamp
+            };
+            if (ttl > -1) data['ttl'] = ttl
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) { callback(response) },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v1', 'auth', 'grant' ,
+                    'sub-key', SUBSCRIBE_KEY
+                ]
+            });
+        },
+        'audit' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   channel  = args['channel']
+            ,   jsonp    = jsonp_cb()
+            ,   ttl      = args['ttl'] || -1
+            ,   auth_key = args['auth_key'];
+
+            function replaceAll(find, replace, str) {
+                return str.replace(new RegExp(find, 'g'), replace);
+            }
+
+            // Make sure we have a Channel
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY) return error('Missing Publish Key');
+            if (!SECRET_KEY) return error('Missing Secret Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            var timestamp = Math.floor(new Date().getTime() / 1000);
+
+            var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n" + "audit" + "\n";
+
+            if (auth_key)  sign_input += ("auth=" + auth_key + "&");
+            if (channel)   sign_input += ("channel=" + channel + "&") ;
+
+            sign_input += "pnsdk=" + PNSDK + "&" + "timestamp=" + timestamp;
+
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
+
+            signature = replaceAll("\\+","-",signature);
+            signature = replaceAll("\\/","_",signature);
+
+            var data = {
+                'signature' : signature,
+                'timestamp' : timestamp
+            };
+            if (channel) data['channel'] = channel
+            if (auth_key) data['auth'] = auth_key
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) { callback(response) },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v1', 'auth', 'audit' ,
+                    'sub-key', SUBSCRIBE_KEY
+                ]
+            });
+        },
+        'revoke' : function( args, callback ) {
+            args['read'] = false;
+            args['write'] = false;
+            SELF['grant'](args,callback);
+        },
+
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
