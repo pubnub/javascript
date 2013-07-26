@@ -199,7 +199,7 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
-         params.push(key + "=" + encode_param(value));
+        (typeof value != 'undefined') && params.push(key + "=" + encode_param(value));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -431,6 +431,7 @@ function PN_API(setup) {
             ,   count    = args['count']    || args['limit'] || 100
             ,   reverse  = args['reverse']  || "false"
             ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
             ,   start    = args['start']
             ,   end      = args['end']
@@ -445,7 +446,7 @@ function PN_API(setup) {
             params['stringtoken'] = 'true';
             params['count']       = count;
             params['reverse']     = reverse;
-            params['auth']        = AUTH_KEY;
+            params['auth']        = auth_key;
 
             if (jsonp) params['callback'] = jsonp;
             if (start) params['start']    = start;
@@ -455,7 +456,13 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : params,
-                success  : function(response) { callback(response) },
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
                 fail     : err,
                 url      : [
                     STD_ORIGIN, 'v2', 'history', 'sub-key',
@@ -472,6 +479,7 @@ function PN_API(setup) {
         */
         'replay' : function(args) {
             var callback    = callback || args['callback'] || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   source      = args['source']
             ,   destination = args['destination']
             ,   stop        = args['stop']
@@ -497,7 +505,7 @@ function PN_API(setup) {
             if (end)          data['end']      = end;
             if (limit)        data['count']    = limit;
 
-            data['auth'] = AUTH_KEY;
+            data['auth'] = auth_key;
 
             // Compose URL Parts
             url = [
@@ -509,7 +517,13 @@ function PN_API(setup) {
             // Start (or Stop) Replay!
             xdr({
                 callback : jsonp,
-                success  : function(response) { callback(response) },
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
                 fail     : function() { callback([ 0, 'Disconnected' ]) },
                 url      : url,
                 data     : data
@@ -549,6 +563,8 @@ function PN_API(setup) {
             var callback = callback || args['callback'] || function(){}
             ,   msg      = args['message']
             ,   channel  = args['channel']
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   err      = args['error'] || function() {}
             ,   jsonp    = jsonp_cb()
             ,   url;
 
@@ -573,9 +589,16 @@ function PN_API(setup) {
                 callback : jsonp,
                 timeout  : SECOND * 5,
                 url      : url,
-                data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
-                success  : function(response){callback(response);publish(1)},
-                fail     : function(){callback([0,'Failed',msg]);publish(1)}
+                data     : { 'uuid' : UUID, 'auth' : auth_key },
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                    } else {
+                        callback(response);
+                    }
+                    publish(1);
+                },
+                fail     : function(response){err(response);publish(1)}
             });
 
             // Send Message
@@ -619,6 +642,7 @@ function PN_API(setup) {
             var channel       = args['channel']
             ,   callback      = callback            || args['callback']
             ,   callback      = callback            || args['message']
+            ,   auth_key      = args['auth_key']    || AUTH_KEY
             ,   connect       = args['connect']     || function(){}
             ,   reconnect     = args['reconnect']   || function(){}
             ,   disconnect    = args['disconnect']  || function(){}
@@ -737,7 +761,7 @@ function PN_API(setup) {
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
-                    data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
+                    data     : { 'uuid' : UUID, 'auth' : auth_key },
                     url      : [
                         SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
@@ -749,8 +773,7 @@ function PN_API(setup) {
                         // Check for Errors
                         if (!messages || (
                             typeof messages == 'object' &&
-                            'error' in messages         &&
-                            !messages['error'])
+                            messages['error'])
                         ) {
                             errcb(messages);
                             return timeout( CONNECT, windowing );
@@ -823,9 +846,10 @@ function PN_API(setup) {
         'here_now' : function( args, callback ) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
-            ,   data     = { 'uuid' : UUID, 'auth' : AUTH_KEY };
+            ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
 
             // Make sure we have a Channel
             if (!channel)       return error('Missing Channel');
@@ -837,7 +861,13 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : data,
-                success  : function(response) { callback(response,channel) },
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
                 fail     : err,
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
