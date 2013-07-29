@@ -1,0 +1,168 @@
+pubnub_dev_console = function(){
+    function get_input(msg, type, def_val) {
+
+        if (type == "number") {
+            var number;
+            do {
+                number = parseInt(prompt(msg,def_val))
+            } while (isNaN(number));
+            return number;
+        }
+
+        if (type == "boolean") {
+            var bool = confirm(msg);
+            return bool;
+        }
+        if (type == "string") {
+            var str;
+            do {
+                str = prompt(msg,def_val);
+            } while(!str || !str.length);
+            return str;
+        }
+        alert("Invalid input type");
+        return;
+    }
+    function print(r) {
+        //console.log(r);
+        console.log(JSON.stringify(r));
+    }
+
+    var pubnub = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    SELF = {
+
+        'init'  : function(origin, pub_key, sub_key, sec_key, auth_key, ssl) {
+            origin   = origin   || get_input("Enter origin", "string", "pubsub.pubnub.com");
+            pub_key  = pub_key  || get_input("Enter publish key", "string", "demo");
+            sub_key  = sub_key  || get_input("Enter subscribe key", "string", "demo" );
+            sec_key  = sec_key  || get_input("Enter secret key", "string");
+            auth_key = auth_key || get_input("Enter auth key","string");
+            ssl      = ssl      || get_input("SSL ?", "boolean", false);
+            var d = {};
+            d['origin'] = origin;
+            d['publish_key'] = pub_key;
+            d['subscribe_key'] = sub_key;
+            if (sec_key) d['secret_key'] = sec_key;
+            if (auth_key) d['auth_key'] = auth_key;
+            pubnub = PUBNUB.init(d);
+            return "Pubnub Object Initialized";
+        },
+
+        'input' : function(input) {
+            var count = 0;
+            var input_table = {};
+            var SUBSCRIBE         = ++count;
+            var PUBLISH           = ++count;
+            var HISTORY           = ++count;
+            var HERE_NOW          = ++count;
+            var UNSUBSCRIBE        = ++count;
+            var TIME            = ++count;
+            var SET_AUTH_KEY    = ++count;
+            var PAM_GRANT       = ++count;
+            var PAM_REVOKE      = ++count;
+            var PAM_AUDIT       = ++count;
+            var FALLBACK  = ++count;
+
+            if (!input) {
+                input = get_input("Enter command", "number");
+            }
+
+
+            switch(input) {
+
+                case SUBSCRIBE:
+                    var channel = get_input("Enter channel", "string", "hello_world");
+                    pubnub.subscribe({
+                        'channel'     : channel,
+                        'callback'     : print,
+                    });
+                break;
+                case PUBLISH:
+                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var message = get_input("Enter Message", "string", "Hi");
+                    pubnub.publish({
+                        'channel'     : channel,
+                        'message'     : message,
+                        'callback'     : print
+                    });
+                    break;
+                case HISTORY:
+                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var count = get_input("Enter count", "number", 10);
+                    var reverse = get_input("Reverse ?", "boolean");
+                    pubnub.history({
+                        'channel'     : channel,
+                        'count'        : count,
+                        'reverse'    : reverse,
+                        'callback'    : print
+                    });
+                    break;
+                case HERE_NOW:
+                    var channel = get_input("Enter channel", "string", "hello_world");
+                    pubnub.here_now({
+                        'channel' : channel,
+                        'callback' : print
+                    });
+                    break;
+                case UNSUBSCRIBE:
+                    var channel = get_input("Enter channel", "string", "hello_world");
+                    pubnub.unsubscribe({
+                        'channel' : channel
+                    });
+                    break;
+                case TIME:
+                    pubnub.time(print);
+                    break;
+                case SET_AUTH_KEY:
+                    var key = get_input("Enter Auth Key", "string");
+                    pubnub.auth(key);
+                    break;
+                case PAM_GRANT:
+                    var channel =  get_input("Enter channel", "string", "hello_world");
+                    var key = get_input("Enter Auth Key", "string");
+                    var read = get_input("Read Permission Allowed ?", "boolean");
+                    var write = get_input("Write Permission Allowed ?", "boolean");
+                    var ttl = get_input("Enter ttl", "number", 5);
+                    pubnub.grant({
+                        'channel'     : channel,
+                        'auth_key'    : key,
+                        'read'        : read,
+                        'write'        : write,
+                        'ttl'        : ttl,
+                        'callback'     : print
+                    });
+                    break;
+                case PAM_REVOKE:
+                    var channel =  get_input("Enter channel", "string", "hello_world");
+                    var key = get_input("Enter Auth Key", "string");
+                    pubnub.revoke({
+                        'channel'     : channel,
+                        'auth_key'    : key,
+                        'callback'     : print
+                    });
+                    break;
+                case PAM_AUDIT:
+                    var channel =  get_input("Enter channel", "string", " ");
+                    var key = get_input("Enter Auth Key", "string", " ");
+                    var d = {}
+                    d['callback'] = print;
+                    if (channel && channel.trim().length) d['channel'] = channel;
+                    if (key && key.trim().length) d['auth_key'] = key;
+                     pubnub.audit(d);
+                    break;
+
+                case FALLBACK:
+                    break;
+                default:
+                    break;
+            }
+            return "Request Successful";
+        }
+    };
+    return SELF;
+}
+dev_console = pubnub_dev_console();
