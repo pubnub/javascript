@@ -167,4 +167,73 @@ exports.init = function(setup) {
     return PN;
 }
 PUBNUB = exports.init({});
+
+exports.secure = function(setup) {
+    var iv = "0123456789012345";
+    var cipher_key = setup['cipher_key'];
+    var padded_cipher_key = crypto.createHash('sha256').update(cipher_key).digest("hex").slice(0,32);
+    var pubnub = exports.init(setup);
+
+    function encrypt(data) {
+        var plain_text = JSON.stringify(data);
+        var cipher = crypto.createCipheriv('aes-256-cbc', padded_cipher_key, iv);
+        var base_64_encrypted = cipher.update(plain_text, 'utf8', 'base64') + cipher.final('base64');
+        return base_64_encrypted || data;
+    }
+    function decrypt(data) {
+        var decipher = crypto.createDecipheriv('aes-256-cbc', padded_cipher_key, iv);
+        var decrypted = decipher.update(data, 'base64', 'utf8') + decipher.final('utf8');
+        return JSON.parse(decrypted);
+    }
+
+    SELF =
+    {
+        raw_encrypt : encrypt,
+        raw_decrypt : decrypt,
+        ready       : pubnub.ready,
+        time        : PUBNUB.time,
+        publish     : function (args) {
+            args.message = encrypt(args.message);
+            return pubnub.publish(args);
+        },
+        unsubscribe : function (args) {
+            return pubnub.unsubscribe(args);
+        },
+        subscribe   : function (args) {
+            var callback = args.callback || args.message;
+            args.callback = function (message, envelope, channel) {
+                var decrypted = decrypt(message);
+                decrypted && callback(decrypted, envelope, channel);
+            }
+            return pubnub.subscribe(args);
+        },
+        history     : function (args) {
+            var encrypted_messages = "";
+            var old_callback = args.callback;
+
+            function new_callback(response) {
+                encrypted_messages     = response[0];
+                var decrypted_messages = [];
+
+                for (a = 0; a < encrypted_messages.length; a++) {
+                    var new_message = decrypt( encrypted_messages[a], {
+                        "parse_error":"DECRYPT_ERROR"
+                    } );
+                    decrypted_messages.push((new_message));
+                }
+
+                old_callback([
+                    decrypted_messages,
+                    response[1],
+                    response[2]
+                ]);
+            }
+
+            args.callback = new_callback;
+            pubnub.history(args);
+            return true;
+        }
+    };
+    return SELF;
+}
 exports.unique = unique
