@@ -4,24 +4,50 @@
 <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/enc-base64-min.js"></script>
 <script src=../pubnub.min.js></script>
 <script src=./pubnub_dev_console.js></script>
+<style>
+
+button {
+margin-bottom: 5px;
+margin-top: 10px;
+}
+
+code {
+display: block;
+margin-bottom: 20px;
+}
+
+</style>
 </head>
 <body>
 <p>
-<h2>Please open your Developer Tools, Console and follow instructions below to begin</h2>
+<h2>Please open Developer Tools->Console and click around below to begin</h1>
 </p>
 <p>
-<ul>
-<li>ENTER dev_console.input(1) FOR Subscribe</li>
-<li>ENTER dev_console.input(2) FOR Publish</li>
-<li>ENTER dev_console.input(3) FOR History</li>
-<li>ENTER dev_console.input(4) FOR Here_Now</li>
-<li>ENTER dev_console.input(5) FOR Unsubscribe</li>
-<li>ENTER dev_console.input(6) FOR Time</li>
-<li>ENTER dev_console.input(7) FOR Setting auth key</li>
-<li>ENTER dev_console.input(8) FOR PAM grant</li>
-<li>ENTER dev_console.input(9) FOR PAM revoke</li>
-<li>ENTER dev_console.input(10) FOR PAM Audit</li>
-</ul>
+<h3>Init Methods</h3>
+Init with demo keys: <button onclick='dev_console.init("pubsub.pubnub.com","demo","demo","demo","myAuthKey", false)'>Init</button>
+<code>dev_console.init("pubsub.pubnub.com","demo","demo","demo","myAuthKey", false)</code>
+
+Init with PAM-enabled keys: <button onclick='dev_console.init("pam-beta.pubnub.com")'>Interactive Init</button>
+<code>dev_console.init("pam-beta.pubnub.com")</code>
+
+Init with test PAM-enabled keys: <button onclick='dev_console.init("pam-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", false)'>Init</button>
+<code>dev_console.init("pam-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", false)</code>
+
+<h2>Output</h2>
+<div id="output">You'll find your JSON output here!</div>
+
+<h2>Operations</h2>
+Subscribe: <button onclick="dev_console.input(1)">dev_console.input(1)</button><p/>
+Publish: <button onclick="dev_console.input(2)">dev_console.input(2)</button><p/>
+History: <button onclick="dev_console.input(3)">dev_console.input(3)</button><p/>
+Here Now: <button onclick="dev_console.input(4)">dev_console.input(4)</button><p/>
+Unsubscribe: <button onclick="dev_console.input(5)">dev_console.input(5)</button><p/>
+Time: <button onclick="dev_console.input(6)">dev_console.input(6)</button><p/>
+Set auth key: <button onclick="dev_console.input(7)">dev_console.input(7)</button> 
+<div id="currentAuthKey"></div><p/>
+PAM Grant: <button onclick="dev_console.input(8)">dev_console.input(8)</button><p/>
+PAM Revoke: <button onclick="dev_console.input(9)">dev_console.input(9)</button></p>
+PAM Audit: <button onclick="dev_console.input(10)">dev_console.input(10)</button></p>
 </p>
 
 </body>
