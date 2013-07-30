@@ -25,7 +25,9 @@ pubnub_dev_console = function(){
     }
     function print(r) {
         //console.log(r);
-        console.log(JSON.stringify(r));
+	output = JSON.stringify(r);
+        console.log(output);
+	document.getElementById('output').innerHTML=output;
     }
 
     var pubnub = PUBNUB.init({
@@ -39,15 +41,19 @@ pubnub_dev_console = function(){
             origin   = origin   || get_input("Enter origin", "string", "pubsub.pubnub.com");
             pub_key  = pub_key  || get_input("Enter publish key", "string", "demo");
             sub_key  = sub_key  || get_input("Enter subscribe key", "string", "demo" );
-            sec_key  = sec_key  || get_input("Enter secret key", "string");
-            auth_key = auth_key || get_input("Enter auth key","string");
+            sec_key  = sec_key  || get_input("Enter secret key", "string", "demo");
+            auth_key = auth_key || get_input("Enter auth key","string", "myAuthKey");
             ssl      = ssl      || get_input("SSL ?", "boolean", false);
             var d = {};
             d['origin'] = origin;
             d['publish_key'] = pub_key;
             d['subscribe_key'] = sub_key;
             if (sec_key) d['secret_key'] = sec_key;
-            if (auth_key) d['auth_key'] = auth_key;
+            if (auth_key) {
+		d['auth_key'] = auth_key;
+		document.getElementById('currentAuthKey').innerHTML="current auth key is: " + auth_key;
+}
+
             pubnub = PUBNUB.init(d);
             return "Pubnub Object Initialized";
         },
@@ -118,8 +124,9 @@ pubnub_dev_console = function(){
                     pubnub.time(print);
                     break;
                 case SET_AUTH_KEY:
-                    var key = get_input("Enter Auth Key", "string");
+                    var key = get_input("Enter Auth Key", "string", "myAuthKey");
                     pubnub.auth(key);
+		    document.getElementById('currentAuthKey').innerHTML="current auth key is: " + key;
                     break;
                 case PAM_GRANT:
                     var channel =  get_input("Enter channel", "string", "hello_world");
@@ -146,8 +153,8 @@ pubnub_dev_console = function(){
                     });
                     break;
                 case PAM_AUDIT:
-                    var channel =  get_input("Enter channel", "string", " ");
-                    var key = get_input("Enter Auth Key", "string", " ");
+                    var channel =  get_input("Enter channel", "string", "");
+                    var key = get_input("Enter Auth Key", "string", "");
                     var d = {}
                     d['callback'] = print;
                     if (channel && channel.trim().length) d['channel'] = channel;
