@@ -281,7 +281,7 @@ function ajax( setup ) {
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
     ,   async    = ( typeof(setup.blocking) === 'undefined' )
-    ,   done     = function(failed) {
+    ,   done     = function(failed,response) {
             if (complete) return;
             complete = 1;
 
@@ -293,7 +293,7 @@ function ajax( setup ) {
                 xhr = null;
             }
 
-            failed && fail();
+            failed && fail(response);
         };
 
     // Send
@@ -305,6 +305,23 @@ function ajax( setup ) {
 
         xhr.onerror = xhr.onabort   = function(){ done(1) };
         xhr.onload  = xhr.onloadend = finished;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                switch(xhr.status) {
+                    case 401:
+                    case 402:
+                    case 403:
+                        try {
+                            response = JSON['parse'](xhr.responseText);
+                            done(1,response);
+                        }
+                        catch (r) { return done(1, xhr.responseText); }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
         if (async) xhr.timeout = xhrtme;
 
         data['pnsdk'] = PNSDK;

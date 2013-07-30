@@ -607,7 +607,8 @@ function PN_API(setup) {
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
-                    fail     : function() {
+                    fail     : function(response) {
+                        errcb(response);
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
@@ -1101,7 +1102,7 @@ exports.secure = function(setup) {
             function new_callback(response) {
                 encrypted_messages     = response[0];
                 var decrypted_messages = [];
-
+                var a;
                 for (a = 0; a < encrypted_messages.length; a++) {
                     var new_message = decrypt( encrypted_messages[a], {
                         "parse_error":"DECRYPT_ERROR"
@@ -1122,6 +1123,5 @@ exports.secure = function(setup) {
         }
     };
     return SELF;
-
 }
 exports.unique = unique

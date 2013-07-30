@@ -276,17 +276,18 @@ asyncTest('Encryption tests', function() {
 var grant_channel = channel + '-grant';
 var auth_key = "abcd";
 var pubnub_pam = PUBNUB.init({
-    origin            : 'uls-test.pubnub.co',
+    origin            : 'pam-beta.pubnub.com',
     publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
     subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
     secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
 });
 test("#grant() should be able to grant read write access", function(done) {
-    expect(4);
-    stop(1);
+    var grant_channel_1 = grant_channel + '-1';
+    expect(6);
+    stop(3);
     setTimeout(function() {
         pubnub_pam.grant({
-            channel : grant_channel,
+            channel : grant_channel_1,
             auth_key : auth_key,
             read : true,
             write : true,
@@ -294,12 +295,51 @@ test("#grant() should be able to grant read write access", function(done) {
             callback : function(response) {
                 ok(response.status === 200, 'Grant Response');
                 pubnub_pam.audit({
-                    channel : grant_channel,
+                    channel : grant_channel_1,
                     auth_key : auth_key,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
                         ok(response.payload.auths.abcd.r === 1, 'Grant Audit Read should be 1');
                         ok(response.payload.auths.abcd.w === 1, 'Grant Audit Write shoudld be 1');
+                        pubnub_pam.history({
+                            'channel'  : grant_channel_1,
+                            'auth_key' : auth_key,
+                            'callback' : function(response) {
+                                ok(true, "Success Callback");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_1,
+                                    'auth_key' : auth_key,
+                                    'message' : 'Node Test',
+                                    'callback': function(response) {
+                                        ok(true, "Success callback" );
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(false, "Error should not occur if permission granted")
+                                        start();
+                                    }
+                                })
+                                start();
+                            },
+                            'error' : function(response) {
+                                console.log(response);
+                                ok(false, "Error should not occur if permission granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_1,
+                                    'message' : 'Node Test',
+                                    'auth_key' : auth_key,
+                                    'callback': function(response) {
+                                        ok(true, "Success Callback");
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(false, "Error should not occur if permission granted");
+                                        start();
+                                    }
+                                })
+                                start();
+                            }
+                        });
                         start();
                     }
                 });
@@ -308,25 +348,65 @@ test("#grant() should be able to grant read write access", function(done) {
         })
     },5000);
 })
+
 test("#grant() should be able to grant read, revoke write access", function(done) {
-    expect(4);
-    stop(1);
+    var grant_channel_2 = grant_channel + '-2';
+    expect(6);
+    stop(3);
     setTimeout(function() {
         pubnub_pam.grant({
-            channel : grant_channel,
+            channel : grant_channel_2,
             auth_key : auth_key,
             read : true,
             write : false,
-            ttl : 100,
+            ttl : 5,
             callback : function(response) {
                 ok(response.status === 200, 'Grant Response');
                 pubnub_pam.audit({
-                    channel : grant_channel,
+                    channel : grant_channel_2,
                     auth_key : auth_key,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
                         ok(response.payload.auths.abcd.r === 1, 'Grant Audit Read should be 1');
-                        ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write shoudld be 0');
+                        ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write should be 0');
+                        pubnub_pam.history({
+                            'channel'  : grant_channel_2,
+                            'auth_key' : auth_key,
+                            'callback' : function(response) {
+                                ok(true, "Success Callback");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_2,
+                                    'auth_key' : auth_key,
+                                    'message' : 'Test',
+                                    'callback': function(response) {
+                                        ok(false, "Success callback should not be invoked when permission not granted" );
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(true, "Error should occur if permission not granted")
+                                        start();
+                                    }
+                                })
+                                start();
+                            },
+                            'error' : function(response) {
+                                ok(false, "Error should not occur if permission granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_2,
+                                    'message' : 'Test',
+                                    'auth_key' : auth_key,
+                                    'callback': function(response) {
+                                        ok(false, "Success callback should not be invoked when permission not granted");
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(true, "Error should occur if permission not granted");
+                                        start();
+                                    }
+                                })
+                                start();
+                            }
+                        });
                         start();
                     }
                 });
@@ -335,12 +415,14 @@ test("#grant() should be able to grant read, revoke write access", function(done
         })
     },5000);
 })
+
 test("#grant() should be able to revoke read, grant write access", function(done) {
-    expect(4);
-    stop(1);
+    var grant_channel_3 = grant_channel + '-3';
+    expect(6);
+    stop(3);
     setTimeout(function() {
         pubnub_pam.grant({
-            channel : grant_channel,
+            channel : grant_channel_3,
             auth_key : auth_key,
             read : false,
             write : true,
@@ -348,12 +430,51 @@ test("#grant() should be able to revoke read, grant write access", function(done
             callback : function(response) {
                 ok(response.status === 200, 'Grant Response');
                 pubnub_pam.audit({
-                    channel : grant_channel,
+                    channel : grant_channel_3,
                     auth_key : auth_key,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
                         ok(response.payload.auths.abcd.r === 0, 'Grant Audit Read should be 0');
                         ok(response.payload.auths.abcd.w === 1, 'Grant Audit Write shoudld be 1');
+                        pubnub_pam.history({
+                            'channel'  : grant_channel_3,
+                            'auth_key' : auth_key,
+                            'callback' : function(response) {
+                                ok(false , "Success Callback should not be invoked when permission not granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_3,
+                                    'auth_key' : auth_key,
+                                    'message' : 'Node Test',
+                                    'callback': function(response) {
+                                        ok(true, "Success callback" );
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(false, "Error should not occur if permission granted")
+                                        start();
+                                    }
+                                })
+                                start();
+                            },
+                            'error' : function(response) {
+                                ok(true, "Error should occur if permission not granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_3,
+                                    'message' : 'Node Test',
+                                    'auth_key' : auth_key,
+                                    'callback': function(response) {
+                                        ok(true, "Success Callback");
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(false, "Error should not occur if permission granted");
+                                        start();
+                                    }
+                                })
+                                start();
+                            }
+
+                        });
                         start();
                     }
                 });
@@ -363,11 +484,12 @@ test("#grant() should be able to revoke read, grant write access", function(done
     },5000);
 })
 test("#grant() should be able to revoke read write access", function(done) {
-    expect(4);
-    stop(1);
+    var grant_channel_4 = grant_channel + '-4';
+    expect(6);
+    stop(3);
     setTimeout(function() {
         pubnub_pam.grant({
-            channel : grant_channel,
+            channel : grant_channel_4,
             auth_key : auth_key,
             read : false,
             write : false,
@@ -375,12 +497,50 @@ test("#grant() should be able to revoke read write access", function(done) {
             callback : function(response) {
                 ok(response.status === 200, 'Grant Response');
                 pubnub_pam.audit({
-                    channel : grant_channel,
+                    channel : grant_channel_4,
                     auth_key : auth_key,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
                         ok(response.payload.auths.abcd.r === 0, 'Grant Audit Read should be 0');
                         ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write shoudld be 0');
+                        pubnub_pam.history({
+                            'channel'  : grant_channel_4,
+                            'auth_key' : auth_key,
+                            'callback' : function(response) {
+                                ok(false, "Success Callback should not be invoked if permission not granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_4,
+                                    'auth_key' : auth_key,
+                                    'message' : 'Test',
+                                    'callback': function(response) {
+                                        ok(false , "Success Callback should not be invoked if permission not granted" );
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(false, "Error should occur if permission not granted")
+                                        start();
+                                    }
+                                })
+                                start();
+                            },
+                            'error' : function(response) {
+                                ok(true, "Error should occur if permission not granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_4,
+                                    'message' : 'Test',
+                                    'auth_key' : auth_key,
+                                    'callback': function(response) {
+                                        ok(false , "Success Callback should not be invoked if permission not granted");
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(true, "Error should occur if permission not granted");
+                                        start();
+                                    }
+                                })
+                                start();
+                            }
+                        });
                         start();
                     }
                 });
@@ -390,21 +550,61 @@ test("#grant() should be able to revoke read write access", function(done) {
     },5000);
 })
 test("#revoke() should be able to revoke access", function(done) {
-    expect(4);
-    stop(1);
+    var grant_channel_5 = grant_channel + '-5';
+    expect(6);
+    stop(3);
     setTimeout(function() {
         pubnub_pam.revoke({
-            channel : grant_channel,
+            channel : grant_channel_5,
             auth_key : auth_key,
             callback : function(response) {
                 ok(response.status === 200, 'Grant Response');
                 pubnub_pam.audit({
-                    channel : grant_channel,
+                    channel : grant_channel_5,
                     auth_key : auth_key,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
                         ok(response.payload.auths.abcd.r === 0, 'Grant Audit Read should be 0');
                         ok(response.payload.auths.abcd.w === 0, 'Grant Audit Write shoudld be 0');
+                        pubnub_pam.history({
+                            'channel'  : grant_channel_5,
+                            'auth_key' : auth_key,
+                            'callback' : function(response) {
+                                ok(false, "Success Callback should not be invoked if permission not granted ");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_5,
+                                    'auth_key' : auth_key,
+                                    'message' : 'Test',
+                                    'callback': function(response) {
+                                        ok(false , "Success Callback should not be invoked if permission not granted" );
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(false, "Error should occur if permission not granted")
+                                        start();
+                                    }
+                                })
+                                start();
+                            },
+                            'error' : function(response) {
+
+                                ok(true, "Error should occur if permission not granted");
+                                pubnub_pam.publish({
+                                    'channel' : grant_channel_5,
+                                    'message' : 'Test',
+                                    'auth_key' : auth_key,
+                                    'callback': function(response) {
+                                        ok(false , "Success Callback should not be invoked if permission not granted");
+                                        start();
+                                    },
+                                    'error'   : function(response) {
+                                        ok(true, "Error should occur if permission not granted");
+                                        start();
+                                    }
+                                })
+                                start();
+                            }
+                        });
                         start();
                     }
                 });

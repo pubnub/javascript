@@ -214,7 +214,7 @@ exports.secure = function(setup) {
             function new_callback(response) {
                 encrypted_messages     = response[0];
                 var decrypted_messages = [];
-
+                var a;
                 for (a = 0; a < encrypted_messages.length; a++) {
                     var new_message = decrypt( encrypted_messages[a], {
                         "parse_error":"DECRYPT_ERROR"
