@@ -754,8 +754,8 @@ function PN_API(setup) {
             var timestamp = Math.floor(new Date().getTime() / 1000);
 
             var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
-                    + "grant" + "\n" + "auth=" + auth_key + "&" + "channel="
-                    + channel + "&" + "pnsdk=" + PNSDK + "&" + "r=" + r + "&" + "timestamp=" + timestamp
+                    + "grant" + "\n" + "auth=" + encodeURIComponent(auth_key) + "&" + "channel="
+                    + encodeURIComponent(channel) + "&" + "pnsdk=" + encodeURIComponent(PNSDK) + "&" + "r=" + r + "&" + "timestamp=" + timestamp
                     + ((ttl > -1)?"&" + "ttl=" + ttl:"")
                     + "&" + "w=" + w;
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
@@ -767,8 +767,8 @@ function PN_API(setup) {
                 'w'         : w,
                 'r'         : r,
                 'signature' : signature,
-                'channel'   : channel,
-                'auth'      : auth_key,
+                'channel'   : encodeURIComponent(channel),
+                'auth'      : encodeURIComponent(auth_key),
                 'timestamp' : timestamp
             };
             if (ttl > -1) data['ttl'] = ttl
@@ -808,10 +808,10 @@ function PN_API(setup) {
 
             var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n" + "audit" + "\n";
 
-            if (auth_key)  sign_input += ("auth=" + auth_key + "&");
-            if (channel)   sign_input += ("channel=" + channel + "&") ;
+            if (auth_key)  sign_input += ("auth=" + encodeURIComponent(auth_key) + "&");
+            if (channel)   sign_input += ("channel=" + encodeURIComponent(channel) + "&") ;
 
-            sign_input += "pnsdk=" + PNSDK + "&" + "timestamp=" + timestamp;
+            sign_input += "pnsdk=" + encodeURIComponent(PNSDK) + "&" + "timestamp=" + timestamp;
 
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
@@ -822,8 +822,8 @@ function PN_API(setup) {
                 'signature' : signature,
                 'timestamp' : timestamp
             };
-            if (channel) data['channel'] = channel
-            if (auth_key) data['auth'] = auth_key
+            if (channel) data['channel'] = encodeURIComponent(channel)
+            if (auth_key) data['auth'] = encodeURIComponent(auth_key)
 
             xdr({
                 callback : jsonp,
