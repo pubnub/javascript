@@ -1,53 +1,95 @@
 <html>
 <head>
-<script src=../pubnub.min.js></script>
-<script src=../pubnub-crypto.min.js></script>
-<script src=./pubnub_dev_console.js></script>
-<style>
+    <script src=../pubnub.min.js></script>
+    <script src=../pubnub-crypto.min.js></script>
+    <script src=./pubnub_dev_console.js></script>
+    <style>
 
-button {
-margin-bottom: 5px;
-margin-top: 10px;
-}
+        #currentAuthKey {
+            color: blue;
+        }
 
-code {
-display: block;
-margin-bottom: 20px;
-}
+        button {
+            margin-bottom: 5px;
+            margin-top: 10px;
+        }
 
-</style>
+        code {
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        div.inline {
+            float: left;
+            margin-right: 100px;
+        }
+
+    </style>
 </head>
 <body>
 <p>
+
 <h2>Please open Developer Tools->Console and click around below to begin</h1>
 </p>
 <p>
+
 <h3>Init Methods</h3>
-Init with demo keys: <button onclick='dev_console.init("pubsub.pubnub.com","demo","demo","demo","myAuthKey", false)'>Init</button>
+Init with demo keys:
+<button onclick='dev_console.init("pubsub.pubnub.com","demo","demo","demo","myAuthKey", false)'>Init</button>
 <code>dev_console.init("pubsub.pubnub.com","demo","demo","demo","myAuthKey", false)</code>
 
-Init with PAM-enabled keys: <button onclick='dev_console.init("pam-beta.pubnub.com")'>Interactive Init</button>
-<code>dev_console.init("pam-beta.pubnub.com")</code>
+Init with PAM-enabled domain:
+<button onclick='dev_console.init("pres-beta.pubnub.com")'>Init</button>
+<code>dev_console.init("pres-beta.pubnub.com")</code>
 
-Init with test PAM-enabled keys: <button onclick='dev_console.init("pam-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", false)'>Init</button>
-<code>dev_console.init("pam-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", false)</code>
+Init with test PAM-enabled domain and default keys:
+<button onclick='dev_console.init("pres-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", false)'>
+    Init
+</button>
+<code>dev_console.init("pres-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey",
+    false)</code>
 
 <h2>Output</h2>
+
 <div id="output">You'll find your JSON output here!</div>
 
 <h2>Operations</h2>
-Subscribe: <button onclick="dev_console.input(1)">dev_console.input(1)</button><p/>
-Publish: <button onclick="dev_console.input(2)">dev_console.input(2)</button><p/>
-History: <button onclick="dev_console.input(3)">dev_console.input(3)</button><p/>
-Here Now: <button onclick="dev_console.input(4)">dev_console.input(4)</button><p/>
-Unsubscribe: <button onclick="dev_console.input(5)">dev_console.input(5)</button><p/>
-Time: <button onclick="dev_console.input(6)">dev_console.input(6)</button><p/>
-Set auth key: <button onclick="dev_console.input(7)">dev_console.input(7)</button>
-<div id="currentAuthKey"></div><p/>
-PAM Grant: <button onclick="dev_console.input(8)">dev_console.input(8)</button><p/>
-PAM Revoke: <button onclick="dev_console.input(9)">dev_console.input(9)</button></p>
-PAM Audit: <button onclick="dev_console.input(10)">dev_console.input(10)</button></p>
-</p>
+
+<div class="inline">
+    Subscribe:
+    <button onclick="dev_console.input(1)">dev_console.input(1)</button>
+    <p/>
+    Publish:
+    <button onclick="dev_console.input(2)">dev_console.input(2)</button>
+    <p/>
+    History:
+    <button onclick="dev_console.input(3)">dev_console.input(3)</button>
+    <p/>
+    Here Now:
+    <button onclick="dev_console.input(4)">dev_console.input(4)</button>
+    <p/>
+    Unsubscribe:
+    <button onclick="dev_console.input(5)">dev_console.input(5)</button>
+    <p/>
+    Time:
+    <button onclick="dev_console.input(6)">dev_console.input(6)</button>
+    <p/>
+</div>
+<div class="inline">
+    Set auth key:
+    <button onclick="dev_console.input(7)">dev_console.input(7)</button>
+    <div id="currentAuthKey"></div>
+    <p/>
+    PAM Grant:
+    <button onclick="dev_console.input(8)">dev_console.input(8)</button>
+    <p/>
+    PAM Revoke:
+    <button onclick="dev_console.input(9)">dev_console.input(9)</button>
+    </p>
+    PAM Audit:
+    <button onclick="dev_console.input(10)">dev_console.input(10)</button>
+    </p>
+    </p>
 
 </body>
 </html>
