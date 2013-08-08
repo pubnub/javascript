@@ -28,6 +28,38 @@ test("uuid() response should be long enough", function() {
     });
 });
 
+test("set_uuid() should set uuid", function() {
+    expect(1);
+    pubnub.set_uuid("abcd");
+    deepEqual(pubnub.get_uuid(), "abcd");
+});
+
+test("set_uuid() should set uuid and new presence event should come with new uuid", function() {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    var uuid = pubnub.get_uuid();
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            setTimeout(function() {
+                uuid = "efgh"
+                pubnub.set_uuid(uuid);
+            }, 3000);
+        },
+        callback : function(response) {
+
+        },
+        presence : function(response) {
+            if (response.action == "join") {
+                deepEqual(response.uuid, uuid);
+                start();
+            }
+        }
+    });
+});
+
+
+
 test("publish() should publish strings without error", function() {
     expect(2);
     stop(2);

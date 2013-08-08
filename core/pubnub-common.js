@@ -840,7 +840,13 @@ function PN_API(setup) {
             args['write'] = false;
             SELF['grant'](args,callback);
         },
-
+        'set_uuid' : function(uuid) {
+            UUID = uuid;
+            CONNECT();
+        },
+        'get_uuid' : function() {
+            return UUID;
+        },
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
