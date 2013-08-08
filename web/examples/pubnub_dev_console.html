@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src=../pubnub.min.js></script>
+    <script src=../pubnub.js></script>
     <script src=../pubnub-crypto.min.js></script>
     <script src=./pubnub_dev_console.js></script>
     <style>
@@ -24,12 +24,16 @@
             margin-right: 100px;
         }
 
+        .clear {
+            clear: both;
+        }
+
     </style>
 </head>
 <body>
 <p>
 
-<h2>Please open Developer Tools->Console and click around below to begin</h1>
+<h2>Please open Developer Tools->Console and click around below to begin</h2>
 </p>
 <p>
 
@@ -43,16 +47,20 @@ Init with PAM-enabled domain:
 <code>dev_console.init("pres-beta.pubnub.com")</code>
 
 Init with test PAM-enabled domain and default keys:
-<button onclick='dev_console.init("pres-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", false)'>
+<button onclick='dev_console.init("pam-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey", true)'>
     Init
 </button>
 <code>dev_console.init("pres-beta.pubnub.com","pub-c-c077418d-f83c-4860-b213-2f6c77bde29a","sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe","sec-c-OGU3Y2Q4ZWUtNDQwMC00NTI1LThjNWYtNWJmY2M4OGIwNjEy","myAuthKey",
-    false)</code>
+    true)</code>
 
 <h2>Output</h2>
+<button onclick='clearOutputs()'>Clear</button>
 
+<h3>Successful Response</h3>
 <div id="output">You'll find your JSON output here!</div>
-
+<h3>Error Response</h3>
+<div id="error">You'll find your default error callback output here!</div>
+<div class="clear"></div>
 <h2>Operations</h2>
 
 <div class="inline">

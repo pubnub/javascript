@@ -1,4 +1,21 @@
+function clearOutputs(){
+    document.getElementById("error").innerHTML="No errors.";
+    document.getElementById("output").innerHTML="No output.";
+}
+
 pubnub_dev_console = function(){
+
+    function getAuthKey(defaultEntry){
+        if (!defaultEntry) {
+            defaultEntry = "";
+        }
+        var key = get_input('Enter Auth Key or "none" for no auth', "string", defaultEntry);
+        if (key == "none") {
+            key = "";
+        }
+        return key;
+    }
+
     function get_input(msg, type, def_val) {
 
         if (type == "number") {
@@ -29,6 +46,12 @@ pubnub_dev_console = function(){
         document.getElementById('output').innerHTML=output;
     }
 
+    function error(e) {
+        output = JSON.stringify(e);
+        console.log(output);
+        document.getElementById('error').innerHTML=output;
+    }
+
     var pubnub = PUBNUB.init({
         'publish_key' : 'demo',
         'subscribe_key' : 'demo'
@@ -41,7 +64,7 @@ pubnub_dev_console = function(){
             pub_key  = pub_key  || get_input("Enter publish key", "string", "demo");
             sub_key  = sub_key  || get_input("Enter subscribe key", "string", "demo" );
             sec_key  = sec_key  || get_input("Enter secret key", "string", "demo");
-            auth_key = auth_key || get_input("Enter auth key","string", "myAuthKey");
+            auth_key = auth_key || getAuthKey("myAuthKey");
             ssl      = ssl      || get_input("SSL ?", "boolean", false);
             var d = {};
             d['origin'] = origin;
@@ -84,7 +107,7 @@ pubnub_dev_console = function(){
                     pubnub.subscribe({
                         'channel'     : channel,
                         'callback'    : print,
-                        'error'       : print
+                        'error'       : error
                     });
                 break;
                 case PUBLISH:
@@ -94,7 +117,7 @@ pubnub_dev_console = function(){
                         'channel'     : channel,
                         'message'     : message,
                         'callback'    : print,
-                        'error'       : print
+                        'error'       : error
                     });
                     break;
                 case HISTORY:
@@ -106,7 +129,7 @@ pubnub_dev_console = function(){
                         'count'       : count,
                         'reverse'     : reverse,
                         'callback'    : print,
-                        'error'       : print
+                        'error'       : error
                     });
                     break;
                 case HERE_NOW:
@@ -114,7 +137,7 @@ pubnub_dev_console = function(){
                     pubnub.here_now({
                         'channel'  : channel,
                         'callback' : print,
-                        'error'    : print
+                        'error'    : error
                     });
                     break;
                 case UNSUBSCRIBE:
@@ -127,13 +150,13 @@ pubnub_dev_console = function(){
                     pubnub.time(print);
                     break;
                 case SET_AUTH_KEY:
-                    var key = get_input("Enter Auth Key", "string", "myAuthKey");
+                    var key = getAuthKey("myAuthKey");
                     pubnub.auth(key);
                     document.getElementById('currentAuthKey').innerHTML="current auth key is: " + key;
                     break;
                 case PAM_GRANT:
                     var channel =  get_input("Enter channel", "string", "hello_world");
-                    var key = get_input("Enter Auth Key", "string");
+                    var key = getAuthKey();
                     var read = get_input("Read Permission Allowed ?", "boolean");
                     var write = get_input("Write Permission Allowed ?", "boolean");
                     var ttl = get_input("Enter ttl", "number", 5);
@@ -149,17 +172,17 @@ pubnub_dev_console = function(){
                     break;
                 case PAM_REVOKE:
                     var channel =  get_input("Enter channel", "string", "hello_world");
-                    var key = get_input("Enter Auth Key", "string");
+                    var key = getAuthKey();
                     pubnub.revoke({
                         'channel'     : channel,
                         'auth_key'    : key,
                         'callback'    : print,
-                        'error'       : print
+                        'error'       : error
                     });
                     break;
                 case PAM_AUDIT:
                     var channel =  get_input("Enter channel", "string", "");
-                    var key = get_input("Enter Auth Key", "string", "");
+                    var key = getAuthKey();
                     var d = {}
                     d['callback'] = print;
                     if (channel && channel.trim().length) d['channel'] = channel;
