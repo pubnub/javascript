@@ -50,7 +50,7 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
-        (typeof value != 'undefined') && params.push(key + "=" + encode_param(value));
+        (typeof value != 'undefined' && value != null && encode_param(value).length > 0) && params.push(key + "=" + encode_param(value));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -748,15 +748,16 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!PUBLISH_KEY) return error('Missing Publish Key');
             if (!SECRET_KEY) return error('Missing Secret Key');
-            if (!auth_key) return error('Missing Auth Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
             var timestamp = Math.floor(new Date().getTime() / 1000);
 
             var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
-                    + "grant" + "\n" + "auth=" + encodeURIComponent(auth_key) + "&" + "channel="
-                    + encodeURIComponent(channel) + "&" + "pnsdk=" + encodeURIComponent(PNSDK) + "&" + "r=" + r + "&" + "timestamp=" + timestamp
+                    + "grant" + "\n"
+                    + (((auth_key && encodeURIComponent(auth_key).length > 0)?"auth=" + encodeURIComponent(auth_key) + "&":""))
+                    + "channel=" + encodeURIComponent(channel) + "&" + "pnsdk=" + encodeURIComponent(PNSDK) + "&"
+                    + "r=" + r + "&" + "timestamp=" + encodeURIComponent(timestamp)
                     + ((ttl > -1)?"&" + "ttl=" + ttl:"")
                     + "&" + "w=" + w;
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
@@ -769,10 +770,10 @@ function PN_API(setup) {
                 'r'         : r,
                 'signature' : signature,
                 'channel'   : encodeURIComponent(channel),
-                'auth'      : encodeURIComponent(auth_key),
                 'timestamp' : timestamp
             };
             if (ttl > -1) data['ttl'] = ttl
+            if (auth_key) data['auth'] = encodeURIComponent(auth_key);
 
             xdr({
                 callback : jsonp,

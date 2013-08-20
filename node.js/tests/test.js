@@ -312,10 +312,11 @@ describe('Pubnub', function() {
     describe('#grant()', function(){
         var grant_channel = channel + '-grant';
         var auth_key = "abcd";
+        var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';
         var pubnub = PUBNUB.init({
             origin            : 'pam-beta.pubnub.com',
             publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
-            subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
+            subscribe_key     : sub_key,
             secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
         });
 
@@ -361,6 +362,67 @@ describe('Pubnub', function() {
                                             'channel' : grant_channel_1,
                                             'message' : 'Test',
                                             'auth_key' : auth_key,
+                                            'callback': function(response) {
+                                                assert.ok(true);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.ok(false);
+                                                done();
+                                            }
+                                        })
+                                    }
+
+                                });
+                            }
+                        });
+
+                    }
+                })
+            },5000);
+        })
+
+        it('should be able to grant read write access without auth key', function(done) {
+            var grant_channel_5 = grant_channel + '-5';
+            setTimeout(function() {
+                pubnub.grant({
+                    channel : grant_channel_5,
+                    read : true,
+                    write : true,
+                    callback : function(response) {
+                        assert.deepEqual(response.status,200);
+                        pubnub.audit({
+                            channel : grant_channel_5,
+                            callback : function(response) {
+                                assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.payload.channels.r,1);
+                                assert.deepEqual(response.payload.channels.w,1);
+                                assert.deepEqual(response.payload.subscribe_key,sub_key);
+                                pubnub.history({
+                                    'channel'  : grant_channel_5,
+                                    'auth_key' : "",
+                                    'callback' : function(response) {
+                                        assert.ok(true);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_5,
+                                            'auth_key' : "",
+                                            'message' : 'Test',
+                                            'callback': function(response) {
+                                                assert.ok(true);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.ok(false);
+                                            }
+                                        })
+                                    },
+                                    'error' : function(response) {
+                                        console.log(response);
+                                        assert.ok(false);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_5,
+                                            'message' : 'Test',
+                                            'auth_key' : "",
                                             'callback': function(response) {
                                                 assert.ok(true);
                                                 done();
@@ -568,6 +630,68 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
+        it('should be able to revoke read and write access without auth key', function(done) {
+            var grant_channel_6 = grant_channel + '-6';
+            setTimeout(function() {
+                pubnub.grant({
+                    channel : grant_channel_6,
+                    read : false,
+                    write : false,
+                    callback : function(response) {
+                        assert.deepEqual(response.status,200);
+                        pubnub.audit({
+                            channel : grant_channel_6,
+                            callback : function(response) {
+                                assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.payload.channels.r,0);
+                                assert.deepEqual(response.payload.channels.w,0);
+                                assert.deepEqual(response.payload.subscribe_key,sub_key);
+                                pubnub.history({
+                                    'channel'  : grant_channel_6,
+                                    'auth_key' : "",
+                                    'callback' : function(response) {
+                                        assert.ok(false);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_6,
+                                            'auth_key' : "",
+                                            'message' : 'Test',
+                                            'callback': function(response) {
+                                                assert.ok(false);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.ok(true);
+                                                done();
+                                            }
+                                        })
+                                    },
+                                    'error' : function(response) {
+                                        assert.ok(true);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_6,
+                                            'message' : 'Test',
+                                            'auth_key' : "",
+                                            'callback': function(response) {
+                                                assert.ok(false);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.ok(true);
+                                                done();
+                                            }
+                                        })
+                                    }
+
+                                });
+
+                            }
+                        });
+
+                    }
+                })
+            },5000);
+        })
+
 
     })
     describe('#revoke()', function(){
