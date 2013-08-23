@@ -650,6 +650,41 @@ To do this, simply follow this `init` example:
 
 >**NOTE:** You do not need to use the `<div id=pubnub>` DIV with this method!
 
+## Disable Explicit Presence Leave Events with `noleave`
+
+Sometimes you are using a lot of Multiplexed channels which when combined
+with SSL will cause slowdowns on page changes.
+For single page apps, the `noleave` option is not required.
+You do not need to use this setting for single page apps.
+If you have the following combination of scenarios, then you
+will want to use `noleave` option:
+
+  1. SSL or JSONP Transports are used.
+  2. More than `5` Multiplexed Channels.
+  3. Non-single Page App.
+
+Use the following setup commands to enable `noleave`.
+
+```html
+<script src=http://cdn.pubnub.com/pubnub-3.5.3.min.js ></script>
+<script>(function(){
+
+    // INIT PubNub
+    var pubnub = PUBNUB.init({
+        noleave       : true,
+        publish_key   : 'demo',
+        subscribe_key : 'demo'
+    })
+
+    // Continue as normal...
+
+})();</script>
+```
+
+>**NOTE:** This will have the side affect of faster page unloads
+yet no explicit leaves will occur when using presence feature.
+
+
 ## SUPER ADVANCED SETTINGS
 
 #### WINDOWING AND MESSAGE ORDERING
