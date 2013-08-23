@@ -650,7 +650,7 @@ To do this, simply follow this `init` example:
 
 >**NOTE:** You do not need to use the `<div id=pubnub>` DIV with this method!
 
-## Disable Explicit Presence Leave Events with `noleave`
+## Disable Explicit Presence Leave Events
 
 Sometimes you are using a lot of Multiplexed channels which when combined
 with SSL will cause slowdowns on page changes.
