@@ -1,4 +1,4 @@
-// Version: 3.5.3
+// Version: 3.5.3.1
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -198,6 +198,7 @@ function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
+    ,   NOLEAVE       = setup['noleave']       || 0
     ,   PUBLISH_KEY   = setup['publish_key']   || ''
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   AUTH_KEY      = setup['auth_key']      || ''
@@ -255,6 +256,9 @@ function PN_API(setup) {
 
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return;
+
+            // No Leave Patch (Prevent Blocking Leave if Desired)
+            if (NOLEAVE) return;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
@@ -927,7 +931,7 @@ var NOW                = 1
 ,   XHRTME             = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.3'
+,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.3.1'
 ,   crypto           = require('crypto')
 ,   XORIGN             = 1;
 

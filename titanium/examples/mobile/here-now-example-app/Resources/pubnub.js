@@ -1,4 +1,4 @@
-// 3.5.3
+// 3.5.3.1
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -199,6 +199,7 @@ function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
+    ,   NOLEAVE       = setup['noleave']       || 0
     ,   PUBLISH_KEY   = setup['publish_key']   || ''
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   AUTH_KEY      = setup['auth_key']      || ''
@@ -256,6 +257,9 @@ function PN_API(setup) {
 
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return;
+
+            // No Leave Patch (Prevent Blocking Leave if Desired)
+            if (NOLEAVE) return;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
@@ -924,7 +928,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.5.3'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.5.3.1'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 

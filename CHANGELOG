@@ -1,3 +1,6 @@
+06-25-13 * NEW VERSION 3.5.3.1 *
+. added noleave option to prevent explicit leave requests on page unload.
+
 06-25-13 * NEW VERSION 3.5.3 *
 . fixed the issue with minified version of JS files.
 
