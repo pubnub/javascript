@@ -3,6 +3,12 @@ var pubnub = PUBNUB.init({
     subscribe_key : 'demo'
 });
 
+var pubnub_enc = PUBNUB.secure({
+    publish_key: "demo",
+    subscribe_key: "demo",
+    cipher_key: "enigma"
+});
+
 var channel = 'javascript-test-channel-' + Math.random();
 var count = 0;
 
@@ -43,6 +49,32 @@ test("publish() should publish strings without error", function() {
         },
         callback : function(response) {
             deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+test("subscribe() should invoke error callback on decryption error", function() {
+    expect(3);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            assert.ok(false);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        },
+        error : function(response) {
+            deepEqual(response['message'], message_string);
+            deepEqual(response['error'], "DECRYPT_ERROR");
             pubnub.unsubscribe({channel : ch});
             start();
         }
@@ -158,6 +190,37 @@ asyncTest('#history() should return 2 messages when 2 messages were published on
                         pubnub.history({channel : history_channel,
                             callback : function(response) {
                                 equal(response[0].length, 2);
+                                start();
+                            }
+                        });
+                    }, 5000);
+                }
+            });
+        }
+    });
+})
+asyncTest('#history() should call error callback for decryption failure messages', function() {
+    var history_channel = channel + '-history-3';
+    expect(7);
+    pubnub.publish({channel: history_channel,
+        message : message_string,
+        callback : function(response){
+            equal(response[0],1);
+            pubnub_enc.publish({channel: history_channel,
+                message : message_string,
+                callback : function(response){
+                    equal(response[0],1);
+                    setTimeout(function() {
+                        pubnub_enc.history({channel : history_channel,
+                            callback : function(response) {
+                                equal(response[0].length, 1);
+                                equal(response[0][0], message_string);
+                                start();
+                            },
+                            error : function(response) {
+                                equal(response[0].length, 1);
+                                equal(response[0][0]['message'], message_string);
+                                equal(response[0][0]['error'], "DECRYPT_ERROR");
                                 start();
                             }
                         });

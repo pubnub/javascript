@@ -23,6 +23,32 @@ describe('Pubnub', function() {
 
     this.timeout(180000);
 
+    describe('#subscribe()', function(){
+        it('should call error callback on decryption error', function(done){
+            var ch = channel + '-' + ++count;
+            pubnub_enc.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub.publish({channel: ch , message : message_string,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.ok(false);
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                },
+                error : function(response) {
+                    assert.deepEqual(response['error'],"DECRYPT_ERROR");
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+    })
+
     describe('#publish()', function(){
 
         it('should publish strings without error', function(done){
@@ -150,27 +176,52 @@ describe('Pubnub', function() {
                         message : message_string + '-2',
                         callback : function(response){
                             assert.deepEqual(response[0], 1);
-                            done();
+                            pubnub_enc.publish({channel: history_channel,
+                                message : message_string + '-1',
+                                callback : function(response){
+                                    assert.deepEqual(response[0], 1);
+                                    pubnub_enc.publish({channel: history_channel,
+                                        message : message_string + '-2',
+                                        callback : function(response){
+                                            assert.deepEqual(response[0], 1);
+                                            pubnub.publish({channel: history_channel,
+                                            message : message_string + '-1',
+                                                callback : function(response){
+                                                    assert.deepEqual(response[0], 1);
+                                                    pubnub.publish({channel: history_channel,
+                                                        message : message_string + '-2',
+                                                        callback : function(response){
+                                                            assert.deepEqual(response[0], 1);
+                                                            done();
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
                         }
                     });
                 }
             });
 
         })
-        it('should return 2 messages when 2 messages were published on channel', function(done) {
+
+        it('should return 6 messages when 6 messages were published on channel', function(done) {
             this.timeout(40000);
             setTimeout(function() {
                 pubnub.history({channel : history_channel,
                     callback : function(response) {
-                        assert.deepEqual(response[0].length, 2);
+                        assert.deepEqual(response[0].length, 6);
                         assert.deepEqual(response[0][0], message_string + '-1');
-                        assert.deepEqual(response[0][1], message_string + '-2');
+                        assert.deepEqual(response[0][5], message_string + '-2');
                         done();
                     }
                 })
             },5000);
         })
-        it('should return 1 message when 2 messages were published on channel and count is 1', function(done) {
+        it('should return 1 message when 6 messages were published on channel and count is 1', function(done) {
             this.timeout(40000);
             setTimeout(function() {
                 pubnub.history({channel : history_channel,
@@ -183,7 +234,7 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
-        it('should return 1 message from reverse when 2 messages were published on channel and count is 1', function(done) {
+        it('should return 1 message from reverse when 6 messages were published on channel and count is 1', function(done) {
             this.timeout(40000);
             setTimeout(function() {
                 pubnub.history({channel : history_channel,
@@ -192,6 +243,20 @@ describe('Pubnub', function() {
                     callback : function(response) {
                         assert.deepEqual(response[0].length, 1);
                         assert.deepEqual(response[0][0], message_string + '-1');
+                        done();
+                    }
+                })
+            },5000);
+        })
+        it('should call error callbacks for messages which could not be decrypted when encryption is enabled', function(done) {
+            this.timeout(40000);
+            setTimeout(function() {
+                pubnub_enc.history({channel : history_channel,
+                    callback : function(response) {
+                        assert.deepEqual(response[0].length, 2);
+                    },
+                    error : function(response) {
+                        assert.deepEqual(response[0].length, 4);
                         done();
                     }
                 })

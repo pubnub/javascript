@@ -13,7 +13,6 @@ PUBNUB['secure'] = (function(){
     }
 
     function decrypt(data, options) {
-        options = options ? options : {};
 
         try {
             var binary_enc = crypto.Base64.decode(data);
@@ -23,7 +22,7 @@ PUBNUB['secure'] = (function(){
             return plaintext;
         }
         catch (e) {
-            return options.parse_error || null;
+            return null;
         }
     }
 
@@ -46,27 +45,40 @@ PUBNUB['secure'] = (function(){
                 var callback = args.callback || args.message;
                 args.callback = function (message, envelope, channel) {
                     var decrypted = decrypt(message);
-                    decrypted && callback(decrypted, envelope, channel);
+                    if(decrypted) {
+                        callback(decrypted, envelope, channel);
+                    } else {
+                        args.error && args.error({"error":"DECRYPT_ERROR", "message" : message});
+                    }
                 }
                 return pubnub.subscribe(args);
             },
             history     : function (args) {
                 var encrypted_messages = "";
                 var old_callback = args.callback;
+                var error_callback = args.error;
 
                 function new_callback(response) {
                     encrypted_messages     = response[0];
                     var decrypted_messages = [];
+                    var decrypted_failed_messages = [];
 
                     for (a = 0; a < encrypted_messages.length; a++) {
-                        var new_message = decrypt( encrypted_messages[a], {
-                            "parse_error":"DECRYPT_ERROR"
-                        } );
-                        decrypted_messages.push((new_message));
+                        var new_message = decrypt( encrypted_messages[a]);
+                        if (new_message) {
+                            decrypted_messages.push((new_message));
+                        } else {
+                            decrypted_failed_messages.push({'error' : 'DECRYPT_ERROR' , 'message' : encrypted_messages[a]});
+                        }
                     }
 
                     old_callback([
                         decrypted_messages,
+                        response[1],
+                        response[2]
+                    ]);
+                    error_callback && error_callback([
+                        decrypted_failed_messages,
                         response[1],
                         response[2]
                     ]);
