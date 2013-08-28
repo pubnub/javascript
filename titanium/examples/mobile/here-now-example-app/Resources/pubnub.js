@@ -866,19 +866,19 @@ function PN_API(setup) {
     };
 
     function _poll_online() {
-        _is_online() || _reset_offline(1);
+        _is_online() || _reset_offline(1 , {"error" : "Offline. Please check your network settings. "});
         timeout( _poll_online, SECOND );
     }
 
     function _poll_online2() {
         SELF['time'](function(success){
-            success || _reset_offline(1);
+            success || _reset_offline(1, {"error" : "Heartbeat failed to connect to Pubnub Servers. Please check your network settings."});
             timeout( _poll_online2, KEEPALIVE );
         })
     }
 
-    function _reset_offline(err) {
-        SUB_RECEIVER && SUB_RECEIVER(err);
+    function _reset_offline(err, msg) {
+        SUB_RECEIVER && SUB_RECEIVER(err, msg);
         SUB_RECEIVER = null;
     }
 

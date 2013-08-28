@@ -93,7 +93,7 @@ function xdr( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
     ,   async    = ( typeof(setup.blocking) === 'undefined' )
-    ,   done     = function(failed) {
+    ,   done     = function(failed, response) {
             if (complete) return;
                 complete = 1;
 
@@ -105,7 +105,7 @@ function xdr( setup ) {
                 xhr = null;
             }
 
-            failed && fail();
+            failed && fail(response);
         };
 
     // Send
@@ -114,8 +114,25 @@ function xdr( setup ) {
               new XDomainRequest()  ||
               new XMLHttpRequest();
 
-        xhr.onerror = xhr.onabort   = function(){ done(1) };
+        xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
         xhr.onload  = xhr.onloadend = finished;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                switch(xhr.status) {
+                    case 401:
+                    case 402:
+                    case 403:
+                        try {
+                            response = JSON['parse'](xhr.responseText);
+                            done(1,response);
+                        }
+                        catch (r) { return done(1, xhr.responseText); }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
         if (async) xhr.timeout = XHRTME;
         data['pnsdk'] = PNSDK;
         url = build_url(setup.url, data);

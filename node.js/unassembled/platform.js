@@ -87,7 +87,7 @@ function xdr( setup ) {
             catch (r) { return done(1); }
             success(response);
         }
-    ,   done    = function(failed) {
+    ,   done    = function(failed, response) {
             if (complete) return;
                 complete = 1;
 
@@ -100,7 +100,7 @@ function xdr( setup ) {
                 request.abort && request.abort();
                 request = null;
             }
-            failed && fail();
+            failed && fail(response);
         }
         ,   timer  = timeout( function(){done(1);} , xhrtme );
 
@@ -116,12 +116,30 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http).request(options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(){done(1)});
-            response.on( 'abort', function(){done(1)});
+            response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );
-            response.on( 'end', function(){finished();});
+            response.on( 'end', function(){
+                var statusCode = response.statusCode;
+
+                switch(statusCode) {
+                    case 401:
+                    case 402:
+                    case 403:
+                        try {
+                            response = JSON['parse'](body);
+                            done(1,response);
+                        }
+                        catch (r) { return done(1, body); }
+                        return;
+                    default:
+                        break;
+                }
+
+                finished();
+            });
         });
         request.end();
         request.timeout = xhrtme;

@@ -482,7 +482,6 @@ describe('Pubnub', function() {
                                         })
                                     },
                                     'error' : function(response) {
-                                        console.log(response);
                                         assert.ok(false);
                                         pubnub.publish({
                                             'channel' : grant_channel_5,
@@ -529,7 +528,7 @@ describe('Pubnub', function() {
                                     'channel'  : grant_channel_2,
                                     'auth_key' : auth_key,
                                     'callback' : function(response) {
-                                        assert.ok(true);
+                                        assert.ok(true)
                                         pubnub.publish({
                                             'channel' : grant_channel_2,
                                             'auth_key' : auth_key,
@@ -540,12 +539,12 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
-                                        console.log(response);
                                         assert.ok(false);
                                         pubnub.publish({
                                             'channel' : grant_channel_2,
@@ -557,6 +556,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -609,12 +609,13 @@ describe('Pubnub', function() {
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
+                                        assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_3,
                                             'message' : 'Test',
                                             'auth_key' : auth_key,
                                             'callback': function(response) {
-                                                assert.ok(true);
+                                                assert.ok(true)
                                                 done();
                                             },
                                             'error'   : function(response) {
@@ -665,12 +666,14 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
+                                        assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_4,
                                             'message' : 'Test',
@@ -681,6 +684,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -726,12 +730,14 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
+                                        assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_6,
                                             'message' : 'Test',
@@ -742,6 +748,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -799,12 +806,14 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
-                                        assert.ok(true);
+                                        assert.ok(true)
+                                        assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : revoke_channel,
                                             'message' : 'Test',
@@ -815,6 +824,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
+                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
