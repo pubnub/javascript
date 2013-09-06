@@ -591,15 +591,14 @@ function PN_API(setup) {
                     ],
                     success : function(messages) {
                         SUB_RECEIVER = null;
-
                         // Check for Errors
                         if (!messages || (
                             typeof messages == 'object' &&
                             'error' in messages         &&
-                            !messages['error'])
-                        ) {
+                            messages['error']
+                        )) {
                             errcb(messages);
-                            return timeout( CONNECT, windowing );
+                            return timeout( CONNECT, SECOND );
                         }
 
                         // User Idle Callback
