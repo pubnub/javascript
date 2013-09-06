@@ -1,3 +1,6 @@
+06-25-13 * NEW VERSION 3.5.32 *
+. added approx latency detection (delay) for the _last_ delivered message.
+
 06-25-13 * NEW VERSION 3.5.3.1 *
 . added noleave option to prevent explicit leave requests on page unload.
 
