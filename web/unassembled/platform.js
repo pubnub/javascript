@@ -379,7 +379,11 @@ var PDIV          = $('pubnub') || 0
 };
 
 // Bind for PUBNUB Readiness to Subscribe
-bind( 'load', window, function(){ timeout( ready, 0 ) } );
+if (document.readyState === 'complete') {
+  ready();
+} else {
+  bind( 'load', window, function(){ timeout( ready, 0 ) } );
+}
 
 var pdiv = PDIV || {};
 
