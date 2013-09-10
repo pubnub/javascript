@@ -27,7 +27,11 @@ PUBNUB['secure'] = (function(){
     }
 
     return function (setup) {
-        cipher_key = crypto.s2a(SHA256(setup.cipher_key).slice(0,32));
+        // Test for Cipher Key
+        if (!('cipher_key' in setup))
+            throw "Missing 'cipher_key' in PUBNUB.secure({})";
+
+        cipher_key = crypto.s2a(SHA256(setup['cipher_key']).slice(0,32));
         var pubnub = PUBNUB.init(setup);
         return {
             raw_encrypt : encrypt,
@@ -43,10 +47,15 @@ PUBNUB['secure'] = (function(){
             },
             subscribe   : function (args) {
                 var callback = args.callback || args.message;
-                args.callback = function (message, envelope, channel) {
+                args.callback = function (
+                    message,
+                    envelope,
+                    channel,
+                    latency
+                ) {
                     var decrypted = decrypt(message);
                     if(decrypted) {
-                        callback(decrypted, envelope, channel);
+                        callback(decrypted, envelope, channel, latency);
                     } else {
                         args.error && args.error({"error":"DECRYPT_ERROR", "message" : message});
                     }

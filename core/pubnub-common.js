@@ -5,7 +5,7 @@ var NOW             = 1
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
 ,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
-,   DEF_KEEPALIVE   = 60     // SECONDS.
+,   DEF_KEEPALIVE   = 60     // SECONDS (FOR TIMESYNC).
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
@@ -210,6 +210,7 @@ function PN_API(setup) {
     ,   SUB_ORIGIN    = nextorigin(ORIGIN)
     ,   CONNECT       = function(){}
     ,   PUB_QUEUE     = []
+    ,   TIME_DRIFT    = 0
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
     ,   SUB_RECEIVER  = 0
@@ -500,6 +501,7 @@ function PN_API(setup) {
             ,   reconnect     = args['reconnect']   || function(){}
             ,   disconnect    = args['disconnect']  || function(){}
             ,   errcb         = args['error']       || function(){}
+            ,   idlecb        = args['idle']        || function(){}
             ,   presence      = args['presence']    || 0
             ,   noheresync    = args['noheresync']  || 0
             ,   backfill      = args['backfill']    || 0
@@ -623,15 +625,18 @@ function PN_API(setup) {
                     ],
                     success : function(messages) {
                         SUB_RECEIVER = null;
-
                         // Check for Errors
                         if (!messages || (
                             typeof messages == 'object' &&
-                            messages['error'])
-                        ) {
+                            'error' in messages         &&
+                            messages['error']
+                        )) {
                             errcb(messages);
-                            return timeout( CONNECT, windowing );
+                            return timeout( CONNECT, SECOND );
                         }
+
+                        // User Idle Callback
+                        idlecb(messages[1]);
 
                         // Restore Previous Connection Point if Needed
                         TIMETOKEN = !TIMETOKEN               &&
@@ -675,9 +680,10 @@ function PN_API(setup) {
                             };
                         })();
 
+                        var latency = detect_latency(+messages[1]);
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            next[0]( msg, messages, next[1] );
+                            next[0]( msg, messages, next[1], latency );
                         } );
 
                         timeout( _connect, windowing );
@@ -870,9 +876,10 @@ function PN_API(setup) {
 
     function _poll_online2() {
         SELF['time'](function(success){
+            detect_time_detla( function(){}, success );
             success || _reset_offline(1, {"error" : "Heartbeat failed to connect to Pubnub Servers. Please check your network settings."});
             timeout( _poll_online2, KEEPALIVE );
-        })
+        });
     }
 
     function _reset_offline(err, msg) {
@@ -886,7 +893,29 @@ function PN_API(setup) {
     timeout( _poll_online,  SECOND    );
     timeout( _poll_online2, KEEPALIVE );
 
-    SELF['time'](function() {});
+    // Detect Age of Message
+    function detect_latency(tt) {
+        var adjusted_time = rnow() - TIME_DRIFT;
+        return adjusted_time - tt / 10000;
+    }
+
+    detect_time_detla();
+    function detect_time_detla( cb, time ) {
+        var stime = rnow();
+
+        time && calculate(time) || SELF['time'](calculate);
+
+        function calculate(time) {
+            if (!time) return;
+
+            var ptime   = time / 10000
+            ,   latency = (rnow() - stime) / 2;
+
+            TIME_DRIFT = rnow() - (ptime + latency);
+
+            cb && cb(TIME_DRIFT);
+        }
+    }
 
     return SELF;
 }
