@@ -1,4 +1,4 @@
-// Version: 3.5.32
+// Version: 3.5.4
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -955,7 +955,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.5.32'
+,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.5.4'
 ,   XHRTME     = 310000;
 
 
