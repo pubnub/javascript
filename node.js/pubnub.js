@@ -54,7 +54,6 @@ function build_url( url_components, url_params ) {
 
     url += "?" + params.join(PARAMSBIT);
 
-    console.log(url);
     return url;
 }
 

@@ -421,7 +421,6 @@ describe('Pubnub', function() {
                                         })
                                     },
                                     'error' : function(response) {
-                                        console.log(response);
                                         assert.ok(false);
                                         pubnub.publish({
                                             'channel' : grant_channel_1,
@@ -460,8 +459,8 @@ describe('Pubnub', function() {
                             channel : grant_channel_5,
                             callback : function(response) {
                                 assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.channels.r,1);
-                                assert.deepEqual(response.payload.channels.w,1);
+                                assert.deepEqual(response.payload.channels[grant_channel_5].r,1);
+                                assert.deepEqual(response.payload.channels[grant_channel_5].w,1);
                                 assert.deepEqual(response.payload.subscribe_key,sub_key);
                                 pubnub.history({
                                     'channel'  : grant_channel_5,
@@ -712,8 +711,8 @@ describe('Pubnub', function() {
                             channel : grant_channel_6,
                             callback : function(response) {
                                 assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.channels.r,0);
-                                assert.deepEqual(response.payload.channels.w,0);
+                                assert.deepEqual(response.payload.channels[grant_channel_6].r,0);
+                                assert.deepEqual(response.payload.channels[grant_channel_6].w,0);
                                 assert.deepEqual(response.payload.subscribe_key,sub_key);
                                 pubnub.history({
                                     'channel'  : grant_channel_6,
@@ -766,6 +765,7 @@ describe('Pubnub', function() {
 
 
     })
+    
     describe('#revoke()', function(){
         var revoke_channel = channel + '-revoke';
         var auth_key = "abcd";

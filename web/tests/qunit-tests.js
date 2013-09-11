@@ -428,8 +428,8 @@ test("#grant() should be able to grant read write access without auth key", func
                     channel : grant_channel_8,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
-                        ok(response.payload.channels.r === 1, 'Grant Audit Read should be 1');
-                        ok(response.payload.channels.w === 1, 'Grant Audit Write shoudld be 1');
+                        ok(response.payload.channels[grant_channel_8].r === 1, 'Grant Audit Read should be 1');
+                        ok(response.payload.channels[grant_channel_8].w === 1, 'Grant Audit Write shoudld be 1');
                         ok(response.payload.subscribe_key === sub_key, 'Grant Audit Response Sub Key should match');
                         pubnub_pam.history({
                             'channel'  : grant_channel_8,
@@ -694,8 +694,8 @@ test("#grant() should be able to revoke read write access without auth key", fun
                     channel : grant_channel_7,
                     callback : function(response) {
                         ok(response.status === 200, 'Grant Audit Response');
-                        ok(response.payload.channels.r === 0, 'Grant Audit Read should be 0');
-                        ok(response.payload.channels.w === 0, 'Grant Audit Write shoudld be 0');
+                        ok(response.payload.channels[grant_channel_7].r === 0, 'Grant Audit Read should be 0');
+                        ok(response.payload.channels[grant_channel_7].w === 0, 'Grant Audit Write shoudld be 0');
                         ok(response.payload.subscribe_key === sub_key, 'Grant Audit Response Sub Key should match');
                         pubnub_pam.history({
                             'channel'  : grant_channel_7,
