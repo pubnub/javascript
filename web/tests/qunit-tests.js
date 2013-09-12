@@ -69,13 +69,13 @@ test("subscribe() should invoke error callback on decryption error", function() 
         },
         callback : function(response) {
             assert.ok(false);
-            pubnub.unsubscribe({channel : ch});
+            pubnub_enc.unsubscribe({channel : ch});
             start();
         },
         error : function(response) {
             deepEqual(response['message'], message_string);
             deepEqual(response['error'], "DECRYPT_ERROR");
-            pubnub.unsubscribe({channel : ch});
+            pubnub_enc.unsubscribe({channel : ch});
             start();
         }
     });
