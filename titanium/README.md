@@ -28,6 +28,8 @@ var pubnub = PUBNUB({
 
 If you run into firewall issues on some iPhone deployments, try to set native_tcp_socket to true.
 
+When native_tcp_socket is set to false ( by default it is false ), you might see network activity indicator spinning always.
+You can stop the indicator spinning by setting Ti.App.disableNetworkActivityIndicator = true;
 
 ### Subscribe and Presence
 For a given channel, subscribe to the channel (subscribe), or subscribe to the channel's join/leave events (presence)
