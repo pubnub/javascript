@@ -1,3 +1,15 @@
+09-10-13 * NEW VERSION 3.5.4 *
+. Created new JS PAM Dev Console in web/examples
+. Fixed undefined error object bug
+. Add setter for UUID
+. Add PAM server-functionality to JS clients
+. Enhanced error callback handling for PAM publish errors
+. PAM unit tests for node.js
+. PAM unit tests for web JS
+. Hostname and domain are now independently configurable for origin
+. Pass through error callback bad decrypted data as "ENCRYPTION_ERROR" string
+
+
 06-25-13 * NEW VERSION 3.5.32 *
 . added approx latency detection (delay) for the _last_ delivered message.
 
