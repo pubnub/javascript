@@ -8,7 +8,7 @@ throughput and reliability.
 
  - **Journey Analytics**
    - The details of a messages journey over time.
- - **Auto-retry Republish on Failure**
+ - **Auto-Republish on Failed Publish**
    - Automatically re-publish messages intended to be sent.
  - **Simultaneous MultiGeo Connectivity**
    - Automatic instant zero-downtime connectivity under failure conditions.
@@ -23,10 +23,18 @@ throughput and reliability.
  - **Enhanced SDK API Interface**
    - Simplified SDK interface provides easier usage and manageability.
 
+## *Depricated* Features
+
+ - **DNS Cache Bursting**
+   - Because Simultaneous MultiGeo Connectivity and Failover
+     provides a `zero-downtime` solution, DNS Cache Bursting
+     has little value and is no longer necessary.
+
 ## Envelope Format Example
 
 ```javascript
 {
+    errors   : {},
     messages : [
         { channel   : "my_channel",
           data      : PAYLOAD,
@@ -40,25 +48,26 @@ throughput and reliability.
 
 ## SDK API
 
-The following is a new guide for the interfaces available.
+The following is a new guide for the interfaces available
+in the new 4.0 SDK.
 
 ```javascript
 // Setup
-pubnub = new PubNub({
-    connections   : 4,            // MultiGeo Connections
+var pubnub = new PubNub({
+    connections   : 4,            // Simultaneous MultiGeo Connections
     subscribe_key : "demo",       // Subscribe Key
     publish_key   : "demo",       // Publish Key
     secret_key    : "demo",       // Secret Key for Admin Auth
     auth_key      : "auth",       // Auth Key for PAM R/W
     cipher_key    : "pass",       // AES256 Cipher
-    drift_check   : 9000,         // Re-calculate Time Drift
-    windowing     : 10,           // Bundle and Order Window (ms)
-    timeout       : 310,          // Max Seconds to Force Reconn (s)
-    ssl           : false,        // SSL
-    analytics     : 'analytics',  // Channel to Save Analytic on
+    windowing     : 10,           // (ms) Bundle and Order Window
+    drift_check   : 10,           // (s)  Re-calculate Time Drift
+    timeout       : 310,          // (s)  Max Seconds to Force Reconnect
+    ssl           : false,        // SSL on or off?
+    analytics     : 'analytics',  // Channel to Save Analytic Journey
     message       : message,      // onMessage Receive
-    activity      : activity,     // onAny Activity
-    idle          : idle,         // onPing Idle Message
+    log           : log,          // onAny Activity Log for Debugging
+    idle          : idle,         // onPing Idle Message (Layer 8 Pings)
     error         : error,        // onErrors
     connect       : connect,      // onConnect
     reconnect     : reconnect,    // onReconnect
@@ -66,6 +75,28 @@ pubnub = new PubNub({
 });
 
 // Add Channels
-pubnub.subscribe([ 'b', 'c' ]);
+pubnub.subscribe([ 'a', 'b', 'c' ]);
+
+// Remove 'a' Channel
+pubnub.unsubscribe([ 'a' ]);
+
+// Remove All Channels
+pubnub.unsubscribe_all();
+
+// Add 'a' Channel
+pubnub.subscribe([ 'a' ]);
+
+// Send a Message
+pubnub.publish({ channel : "a", message : "hi!" });
+
+// Get Cipher Key
+pubnub.cipher_key();
+
+// Set Cipher Key
+pubnub.cipher_key("password");
+
+// Disable Cipher Key
+pubnub.cipher_key("");
+
 
 ```
