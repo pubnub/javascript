@@ -4,7 +4,7 @@ This is a guide and a roadmap plan for **V2 Subscribe** `"SDK v4.0"`
 which implements new features for higher performance
 throughput and reliability.
 
-## Feature List
+## New Feature List
 
  - **Journey Analytics**
    - The details of a messages journey over time.
@@ -22,6 +22,11 @@ throughput and reliability.
      discarding any duplicate messages.
  - **Enhanced SDK API Interface**
    - Simplified SDK interface provides easier usage and manageability.
+
+## Existing Features to Keep/Enhance
+
+ - **Multiplexing**
+   - Automatic TCP Multiplexing with all Channels per Connection.
 
 ## *Depricated* Features
 
@@ -60,11 +65,13 @@ var pubnub = new PubNub({
     secret_key    : "demo",       // Secret Key for Admin Auth
     auth_key      : "auth",       // Auth Key for PAM R/W
     cipher_key    : "pass",       // AES256 Cipher
+    user_id       : "abcd",       // ID associated with User for Presence
     windowing     : 10,           // (ms) Bundle and Order Window
     drift_check   : 10,           // (s)  Re-calculate Time Drift
     timeout       : 310,          // (s)  Max Seconds to Force Reconnect
     ssl           : false,        // SSL on or off?
     analytics     : 'analytics',  // Channel to Save Analytic Journey
+    presence      : presence,     // onPresence Events Received
     message       : message,      // onMessage Receive
     log           : log,          // onAny Activity Log for Debugging
     idle          : idle,         // onPing Idle Message (Layer 8 Pings)
@@ -89,14 +96,20 @@ pubnub.subscribe([ 'a' ]);
 // Send a Message
 pubnub.publish({ channel : "a", message : "hi!" });
 
-// Get Cipher Key
+// Get/Set Cipher Key
 pubnub.cipher_key();
-
-// Set Cipher Key
 pubnub.cipher_key("password");
 
 // Disable Cipher Key
-pubnub.cipher_key("");
+pubnub.disable_cipher();
+
+// Get/Set Auth Key
+pubnub.auth_key();
+pubnub.auth_key("password");
+
+// Get/Set User ID
+pubnub.user_id();
+pubnub.user_id("abcd");
 
 
 ```
