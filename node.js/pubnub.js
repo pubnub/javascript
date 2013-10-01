@@ -1,4 +1,4 @@
-// Version: 3.5.4
+// Version: 3.5.41
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -259,7 +259,9 @@ function PN_API(setup) {
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return;
 
             // No Leave Patch (Prevent Blocking Leave if Desired)
-            if (NOLEAVE) return;
+            if (NOLEAVE)      return;
+            if (!SSL)         return;
+            if (jsonp == '0') return;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
@@ -960,7 +962,7 @@ var NOW                = 1
 ,   XHRTME             = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.4'
+,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.41'
 ,   crypto           = require('crypto')
 ,   XORIGN             = 1;
 

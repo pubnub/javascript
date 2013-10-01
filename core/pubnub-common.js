@@ -258,7 +258,9 @@ function PN_API(setup) {
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return;
 
             // No Leave Patch (Prevent Blocking Leave if Desired)
-            if (NOLEAVE) return;
+            if (NOLEAVE)      return;
+            if (!SSL)         return;
+            if (jsonp == '0') return;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
