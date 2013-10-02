@@ -1,4 +1,4 @@
-// 3.5.41
+// 3.5.43
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -160,19 +160,19 @@ function map( list, fun ) {
  * ======
  * var encoded_path = encode('path');
  */
-function encode_base(path, chars) {
-    return map( (encodeURIComponent(path)).split(''), function(chr) {
+function encode_base( path, chars ) {
+    return map( (''+path||"").split(''), function(chr) {
         return chars.indexOf(chr) < 0 ? chr :
-               "%"+chr.charCodeAt(0).toString(16).toUpperCase()
+            "%"+chr.charCodeAt(0).toString(16).toUpperCase()
     } ).join('');
 }
 
-function encode(path) {
-    return encode_base(path,"-_.!~*'()");
+function encode( path, chars ) {
+    return encode_base( path, chars || "?,/%&" );
 }
 
 function encode_param(value) {
-    return encode_base(value,".!~*'()");
+    return encode_base( value, "?,/%&" );
 }
 
 /**
@@ -439,7 +439,7 @@ function PN_API(setup) {
                 STD_ORIGIN, 'publish',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 0, encode(channel),
-                jsonp, encode(msg)
+                jsonp, encode( msg, "?%" )
             ];
 
             // Queue Message Send
@@ -959,7 +959,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.5.41'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.5.43'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
