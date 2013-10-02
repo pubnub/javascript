@@ -1,13 +1,17 @@
+09-10-13 * NEW VERSION 3.5.43 *
+. added enhancement by reducing number of escaped chars on publish
+. removed blocking leave on non-ssl and non-jsonp transports for performance boost.
+
 09-10-13 * NEW VERSION 3.5.4 *
-. Created new JS PAM Dev Console in web/examples
-. Fixed undefined error object bug
-. Add setter for UUID
-. Add PAM server-functionality to JS clients
-. Enhanced error callback handling for PAM publish errors
+. created new JS PAM Dev Console in web/examples
+. fixed undefined error object bug
+. add setter for UUID
+. add PAM server-functionality to JS clients
+. enhanced error callback handling for PAM publish errors
 . PAM unit tests for node.js
 . PAM unit tests for web JS
-. Hostname and domain are now independently configurable for origin
-. Pass through error callback bad decrypted data as "ENCRYPTION_ERROR" string
+. hostname and domain are now independently configurable for origin
+. pass through error callback bad decrypted data as "ENCRYPTION_ERROR" string
 
 
 06-25-13 * NEW VERSION 3.5.32 *
