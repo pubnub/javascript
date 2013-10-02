@@ -192,7 +192,25 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 </script>
 ```
 
-## CAPTURING ERRORS FOR DEBUGGING
+## CAPTURING ERRORS FOR DEBUGGING ON PUBLISH
+
+Sometimes, for several reasons, the `publish` method will
+relay an unsuccessful relay.
+You can detect this in order to begin considering a re-publish
+decisions in your code.
+
+```javascript
+PUBNUB.publish({
+    channel  : "hello_world",
+    message  : "Hi.",
+    callback : function(details) {
+        if (details[0])  console.log("Success!");
+        if (!details[0]) console.log("Fail!");
+    }
+})
+```
+
+## CAPTURING ERRORS FOR DEBUGGING ON SUBSCRIBE
 
 Sometimes an error will occur and you may wish to log it.
 Note that the PubNub JavaScript SDK auto-recovers connections
