@@ -192,7 +192,28 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 </script>
 ```
 
-## CAPTURING ERRORS FOR DEBUGGING
+## CAPTURING ERRORS FOR DEBUGGING ON PUBLISH
+
+Sometimes, for several reasons, the `publish` method will
+relay an unsuccessful relay.
+You can detect this in order to begin considering a re-publish
+decisions in your code.
+
+```javascript
+PUBNUB.publish({
+    channel  : "hello_world",
+    message  : "Hi.",
+    callback : function(details) {
+        if (details[0])  console.log( "Success!", details[1] );
+        if (!details[0]) console.log( "Fail!",    details[1] );
+    }
+})
+```
+
+>Note: We are using the `callback` paramater and passing a function
+as the value with a single param `details`.
+
+## CAPTURING ERRORS FOR DEBUGGING ON SUBSCRIBE
 
 Sometimes an error will occur and you may wish to log it.
 Note that the PubNub JavaScript SDK auto-recovers connections
@@ -288,6 +309,14 @@ pubnub.unsubscribe({ channel : 'chan8' })
 
 That's it!  It's easy to take advantage of multiplexing.
 If you have any questions please contact help@pubnub.com
+
+
+## Publish Anytime
+
+It is important to note that you may publish to any channel
+at any time regardless of being subscribed to that channel.
+
+>There is no need to be subscribed to a channel in order to publish.
 
 
 ## AES Cryptography
