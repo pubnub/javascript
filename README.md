@@ -204,11 +204,14 @@ PUBNUB.publish({
     channel  : "hello_world",
     message  : "Hi.",
     callback : function(details) {
-        if (details[0])  console.log("Success!");
-        if (!details[0]) console.log("Fail!");
+        if (details[0])  console.log( "Success!", details[1] );
+        if (!details[0]) console.log( "Fail!",    details[1] );
     }
 })
 ```
+
+>Note: We are using the `callback` paramater and passing a function
+as the value with a single param `details`.
 
 ## CAPTURING ERRORS FOR DEBUGGING ON SUBSCRIBE
 
@@ -306,6 +309,14 @@ pubnub.unsubscribe({ channel : 'chan8' })
 
 That's it!  It's easy to take advantage of multiplexing.
 If you have any questions please contact help@pubnub.com
+
+
+## Publish Anytime
+
+It is important to note that you may publish to any channel
+at any time regardless of being subscribed to that channel.
+
+>There is no need to be subscribed to a channel in order to publish.
 
 
 ## AES Cryptography
