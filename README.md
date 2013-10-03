@@ -204,8 +204,11 @@ PUBNUB.publish({
     channel  : "hello_world",
     message  : "Hi.",
     callback : function(details) {
-        if (details[0])  console.log( "Success!", details[1] );
-        if (!details[0]) console.log( "Fail!",    details[1] );
+        var success  = details[0]
+        ,   response = details[1];
+        
+        if (success)  console.log( "Success!", response );
+        if (!success) console.log( "Fail!",    response );
     }
 })
 ```
