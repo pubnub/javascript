@@ -152,7 +152,11 @@
 
             p.publish({
                 channel: channel,
-                message: { test: "test" },
+                message: {
+                    test   : "test",
+                    chtest : "!@#$%^&*()______+1234567890-" +
+                             "=~`<>?:{}+|\\,./;'[]\=- 梦想"
+                },
                 callback: function (response) {
                     test(response[0], 'Successful Publish');
                     test(response[1], 'Success With Demo');

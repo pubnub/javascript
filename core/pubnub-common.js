@@ -48,7 +48,9 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
-        (typeof value != 'undefined' && value != null && encode_param(value).length > 0) && params.push(key + "=" + encode_param(value));
+        (typeof value != 'undefined' &&
+            value != null && encode_param(value).length > 0
+        ) && params.push(key + "=" + encode_param(value));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -166,11 +168,11 @@ function encode_base( path, chars ) {
 }
 
 function encode( path, chars ) {
-    return encode_base( path, chars || "?/%&" );
+    return encode_base( path, chars || '?/%&#' );
 }
 
 function encode_param(value) {
-    return encode_base( value, "?/%&" );
+    return encode_base( value, '?/%&#' );
 }
 
 /**
@@ -437,7 +439,7 @@ function PN_API(setup) {
                 STD_ORIGIN, 'publish',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 0, encode(channel),
-                jsonp, encode( msg, "?%&" )
+                jsonp, encode(msg)
             ];
 
             // Queue Message Send
