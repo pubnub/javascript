@@ -1067,6 +1067,9 @@ function xdr( setup ) {
                 finished();
             });
         });
+        request.on( 'error', function() {
+            done( 1, {"error":"Network Connection Error"} );
+        } );
         request.end();
         request.timeout = xhrtme;
 
