@@ -428,6 +428,119 @@ http://jsfiddle.net/geremy/8e6Cr/
 })();</script>
 ```
 
+
+## PubNub History API V2
+
+```
+/v2/history/sub-key/<sub-key>/channel/<channel>?URL_PARAMETERS
+```
+
+##### URL Parameters:
+
+```
+start     (time token): Beginning of a timeline slice (exclusive)
+end       (time token): Ending of a timeline slice (inclusive)
+count        (integer): The number of messages to return (default:100, max:100)
+callback      (string): JSONp callback function
+reverse   (true/false): If we should traverse the timeline in reverse (default is false).
+                  true: OLDEST  -->  newest.
+                 false: NEWEST  -->  oldest.
+```
+
+##### Response Format:
+
+Returns a JSON Array with three or more elements as follows:
+ 1. the list of messages
+ 2. the starting slice time token, and 
+ 3. the ending slice time token.
+
+```
+[[msg, msg, msg], timetoken, timetoken]
+```
+
+Using a combination of start/end/reverse you can:
+ - Traverse newest to oldest messages (default)
+ - Traverse oldest to newest (setting reverse=true)
+ - Page through results by providing a start __OR__ end time token.
+ - Retrieve a "slice" of the timeline by providing both a start __AND__ end time token.
+
+### JavaScript Example Code
+
+```javascript
+// ----------------------------------
+// Usage Example of get_all_history()
+// ----------------------------------
+get_all_history({
+    channel  : channel.value,
+    callback : function(messages) {
+        console.log(messages)
+    }
+});
+
+// ----------------------------------
+// Get All History Example
+// ----------------------------------
+function get_all_history(args) {
+    var channel  = args['channel']
+    ,   callback = args['callback']
+    ,   start    = 0
+    ,   count    = 100
+    ,   history  = []
+    ,   params   = {
+            channel  : channel,
+            count    : count,
+            callback : function(messages) {
+                var msgs = messages[0];
+                start = messages[1];
+                params.start = start;
+                PUBNUB.each( msgs.reverse(), function(m) {history.push(m)} );
+                if (msgs.length < count) return callback(history);
+                count = 100;
+                add_messages();
+            }
+        };
+
+    add_messages();
+    function add_messages() { PUBNUB.history(params) }
+}
+```
+
+### PubNub History REST API Examples:
+
+###### GET Most Recent Messages
+```
+http://pubsub.pubnub.com/v2/history/sub-key/demo/channel/storage_test
+>>> [["Pub1","Pub2","Pub3","Pub4","Pub5"],13406746729185766,13406746845892666]
+```
+
+###### GET oldest 3 messages (in reverse):
+```
+http://pubsub.pubnub.com/v2/history/sub-key/demo/channel/storage_test?count=3&reverse=true
+>>> [["Pub1","Pub2","Pub3"],13406746729185766,13406746780720711]
+```
+
+###### GET messages newer than a given timetoken (OLD to NEW from START):
+```
+http://pubsub.pubnub.com/v2/history/sub-key/demo/channel/storage_test?reverse=true&start=13406746780720711
+>>> [["Pub4","Pub5"],13406746814579888,13406746845892666]
+```
+
+###### GET messages until a given timetoken (NEW to OLD until an END):
+```
+http://pubsub.pubnub.com/v2/history/sub-key/demo/channel/storage_test?end=13406746780720711
+>>> [["Pub3","Pub4","Pub5"],13406746780720711,13406746845892666]
+```
+
+###### GET any messages published on _Tue, 26 Jun 2012 GMT_ (Unix timestamp in seconds * 10000000):
+* start (time token of Tues 26th): 13406688000000000
+* end (time token of Wed 27th): 13407552000000000
+
+```
+http://pubsub.pubnub.com/v2/history/sub-key/demo/channel/storage_test?start=13406688000000000&end=13407552000000000
+>>> [["Pub1","Pub2","Pub3","Pub4","Pub5"],13406746729185766,13406746845892666]
+```
+
+
 ## HISTORY
 ```html
 <div id=pubnub></div>
