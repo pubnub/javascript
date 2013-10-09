@@ -1,4 +1,4 @@
-// Version: 3.5.43
+// Version: 3.5.45
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -1089,7 +1089,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.5.43'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.5.45'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**

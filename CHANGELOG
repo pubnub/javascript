@@ -1,3 +1,6 @@
+10-09-13 * NEW VERSION 3.5.45 *
+. rebuilt with space char escaping %20 sort of thing. 
+
 10-01-13 * NEW VERSION 3.5.43 *
 . added enhancement by reducing number of escaped chars on publish
 . removed blocking leave on non-ssl and non-jsonp transports for performance boost.

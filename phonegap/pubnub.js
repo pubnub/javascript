@@ -1,4 +1,4 @@
-// Version: 3.5.43
+// Version: 3.5.45
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -959,7 +959,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.5.43'
+,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.5.45'
 ,   XHRTME     = 310000;
 
 

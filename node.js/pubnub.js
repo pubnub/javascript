@@ -1,4 +1,4 @@
-// Version: 3.5.43
+// Version: 3.5.45
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -964,7 +964,7 @@ var NOW                = 1
 ,   XHRTME             = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.43'
+,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.5.45'
 ,   crypto           = require('crypto')
 ,   XORIGN             = 1;
 
