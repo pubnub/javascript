@@ -170,11 +170,11 @@ function encode_base( path, chars ) {
 }
 
 function encode( path, chars ) {
-    return encode_base( path, chars || '?/%&#' );
+    return encode_base( path, chars || '?/%&# ' );
 }
 
 function encode_param(value) {
-    return encode_base( value, '?/%&#' );
+    return encode_base( value, '?/%&# ' );
 }
 
 /**
