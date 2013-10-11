@@ -1,3 +1,10 @@
+10-11-13 * NEW VERSION 3.5.47 *
+. simplified and reduced code.
+. improved unit tests for more chars in channel/message.
+
+10-10-13 * NEW VERSION 3.5.46 *
+. added async load special support.
+
 10-09-13 * NEW VERSION 3.5.45 *
 . rebuilt with space char escaping %20 sort of thing. 
 

@@ -49,8 +49,8 @@ function build_url( url_components, url_params ) {
 
     each( url_params, function( key, value ) {
         (typeof value != 'undefined' &&
-            value != null && encode_param(value).length > 0
-        ) && params.push(key + "=" + encode_param(value));
+            value != null && encode(value).length > 0
+        ) && params.push(key + "=" + encode(value));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -158,22 +158,9 @@ function map( list, fun ) {
 /**
  * ENCODE
  * ======
- * var encoded_path = encode('path');
+ * var encoded_data = encode('path');
  */
-function encode_base( path, chars ) {
-    return map( (''+path||"").split(''), function(chr) {
-        return chars.indexOf(chr) < 0 ? chr :
-            "%"+chr.charCodeAt(0).toString(16).toUpperCase()
-    } ).join('');
-}
-
-function encode( path, chars ) {
-    return encode_base( path, chars || '?/%&# ' );
-}
-
-function encode_param(value) {
-    return encode_base( value, '?/%&# ' );
-}
+function encode(path) { return encodeURIComponent(path) }
 
 /**
  * Generate Subscription Channel List
@@ -200,8 +187,8 @@ function PN_API(setup) {
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   NOLEAVE       = setup['noleave']       || 0
-    ,   PUBLISH_KEY   = setup['publish_key']   || ''
-    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || ''
+    ,   PUBLISH_KEY   = setup['publish_key']   || 'demo'
+    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || 'demo'
     ,   AUTH_KEY      = setup['auth_key']      || ''
     ,   SECRET_KEY    = setup['secret_key']    || ''
     ,   PNSDK         = setup['PNSDK']         || ''
@@ -225,7 +212,7 @@ function PN_API(setup) {
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
-    ,   UUID          = setup['uuid']       || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
+    ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
     function publish(next) {
         if (next) PUB_QUEUE.sending = 0;
@@ -337,7 +324,7 @@ function PN_API(setup) {
         */
         'replay' : function(args) {
             var callback    = callback || args['callback'] || function(){}
-            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   auth_key    = args['auth_key'] || AUTH_KEY
             ,   source      = args['source']
             ,   destination = args['destination']
             ,   stop        = args['stop']
@@ -448,15 +435,15 @@ function PN_API(setup) {
                 timeout  : SECOND * 5,
                 url      : url,
                 data     : { 'uuid' : UUID, 'auth' : auth_key },
+                fail     : function(response){err(response);publish(1)},
                 success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
+                    if (typeof response == 'object' && response['error'])
                         err(response);
-                    } else {
-                        callback(response);
-                    }
+                    else
+                        callback(response)
+
                     publish(1);
-                },
-                fail     : function(response){err(response);publish(1)}
+                }
             });
 
             // Send Message
@@ -486,7 +473,6 @@ function PN_API(setup) {
             } );
 
             // Reset Connection if Count Less
-            //if (each_channel() < 2)
             CONNECT();
         },
 
@@ -707,6 +693,9 @@ function PN_API(setup) {
             CONNECT();
         },
 
+        /*
+            PUBNUB.here_now({ channel : 'my_chat', callback : fun });
+        */
         'here_now' : function( args, callback ) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
@@ -740,6 +729,18 @@ function PN_API(setup) {
                 ]
             });
         },
+
+        /*
+            PUBNUB.grant({
+                channel  : 'my_chat',
+                callback : fun,
+                error    : fun,
+                ttl      : 60, // Seconds
+                read     : true,
+                write    : true,
+                auth_key : '3y8uiajdklytowsj'
+            });
+        */
         'grant' : function( args, callback ) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
@@ -750,42 +751,43 @@ function PN_API(setup) {
             ,   w        = (args['write'])?"1":"0"
             ,   auth_key = args['auth_key'];
 
-            function replaceAll(find, replace, str) {
-                return str.replace(new RegExp(find, 'g'), replace);
-            }
-
             // Make sure we have a Channel
             if (!channel)       return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-            if (!PUBLISH_KEY) return error('Missing Publish Key');
-            if (!SECRET_KEY) return error('Missing Secret Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SECRET_KEY)    return error('Missing Secret Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            var timestamp = Math.floor(new Date().getTime() / 1000);
-
-            var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
+            var timestamp  = Math.floor(new Date().getTime() / 1000)
+            ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
                     + "grant" + "\n"
-                    + (((auth_key && encodeURIComponent(auth_key).length > 0)?"auth=" + encodeURIComponent(auth_key) + "&":""))
-                    + "channel=" + encodeURIComponent(channel) + "&" + "pnsdk=" + encodeURIComponent(PNSDK) + "&"
-                    + "r=" + r + "&" + "timestamp=" + encodeURIComponent(timestamp)
+                    + ((
+                        (auth_key && encode(auth_key).length > 0) ?
+                        "auth=" + encode(auth_key) + "&"          :
+                        ""
+                    ))
+                    + "channel=" + encode(channel) + "&"
+                    + "pnsdk=" + encode(PNSDK) + "&"
+                    + "r=" + r + "&"
+                    + "timestamp=" + encode(timestamp)
                     + ((ttl > -1)?"&" + "ttl=" + ttl:"")
-                    + "&" + "w=" + w;
-            var signature = hmac_SHA256( sign_input, SECRET_KEY );
+                    + "&" + "w=" + w
+            ,   signature = hmac_SHA256( sign_input, SECRET_KEY );
 
-            signature = replaceAll("\\+","-",signature);
-            signature = replaceAll("\\/","_",signature);
+            signature = signature.replace( /\+/g, "-" );
+            signature = signature.replace( /\//g, "_" );
 
             var data = {
                 'w'         : w,
                 'r'         : r,
                 'signature' : signature,
-                'channel'   : encodeURIComponent(channel),
+                'channel'   : encode(channel),
                 'timestamp' : timestamp
             };
             if (ttl > -1) data['ttl'] = ttl
-            if (auth_key) data['auth'] = encodeURIComponent(auth_key);
+            if (auth_key) data['auth'] = encode(auth_key);
 
             xdr({
                 callback : jsonp,
@@ -798,46 +800,51 @@ function PN_API(setup) {
                 ]
             });
         },
+
+        /*
+            PUBNUB.audit({
+                channel  : 'my_chat',
+                callback : fun,
+                error    : fun,
+                read     : true,
+                write    : true,
+                auth_key : '3y8uiajdklytowsj'
+            });
+        */
         'audit' : function( args, callback ) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
-            ,   jsonp    = jsonp_cb()
-            ,   ttl      = args['ttl'] || -1
-            ,   auth_key = args['auth_key'];
-
-            function replaceAll(find, replace, str) {
-                return str.replace(new RegExp(find, 'g'), replace);
-            }
+            ,   auth_key = args['auth_key']
+            ,   jsonp    = jsonp_cb();
 
             // Make sure we have a Channel
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-            if (!PUBLISH_KEY) return error('Missing Publish Key');
-            if (!SECRET_KEY) return error('Missing Secret Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SECRET_KEY)    return error('Missing Secret Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            var timestamp = Math.floor(new Date().getTime() / 1000);
+            var timestamp  = Math.floor(new Date().getTime() / 1000)
+            ,   sign_input = SUBSCRIBE_KEY + "\n"
+                + PUBLISH_KEY + "\n"
+                + "audit" + "\n";
 
-            var sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n" + "audit" + "\n";
+            if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
+            if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
 
-            if (auth_key)  sign_input += ("auth=" + encodeURIComponent(auth_key) + "&");
-            if (channel)   sign_input += ("channel=" + encodeURIComponent(channel) + "&") ;
-
-            sign_input += "pnsdk=" + encodeURIComponent(PNSDK) + "&" + "timestamp=" + timestamp;
+            sign_input += "pnsdk=" + encode(PNSDK) + "&" + "timestamp=" + timestamp;
 
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
-            signature = replaceAll("\\+","-",signature);
-            signature = replaceAll("\\/","_",signature);
+            signature = signature.replace( /\+/g, "-" );
+            signature = signature.replace( /\//g, "_" );
 
-            var data = {
-                'signature' : signature,
-                'timestamp' : timestamp
-            };
-            if (channel) data['channel'] = encodeURIComponent(channel)
-            if (auth_key) data['auth'] = encodeURIComponent(auth_key)
+            var data = { 'signature' : signature, 'timestamp' : timestamp };
+
+            if (channel) data['channel'] = encode(channel)
+            if (auth_key) data['auth'] = encode(auth_key)
 
             xdr({
                 callback : jsonp,
@@ -850,12 +857,20 @@ function PN_API(setup) {
                 ]
             });
         },
-        'revoke' : function( args, callback ) {
-            args['read'] = false;
-            args['write'] = false;
-            SELF['grant'](args,callback);
-        },
 
+        /*
+            PUBNUB.revoke({
+                channel  : 'my_chat',
+                callback : fun,
+                error    : fun,
+                auth_key : '3y8uiajdklytowsj'
+            });
+        */
+        'revoke' : function( args, callback ) {
+            args['read']  = false;
+            args['write'] = false;
+            SELF['grant']( args, callback );
+        },
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
@@ -874,14 +889,19 @@ function PN_API(setup) {
     };
 
     function _poll_online() {
-        _is_online() || _reset_offline(1 , {"error" : "Offline. Please check your network settings. "});
+        _is_online() || _reset_offline( 1, {
+            "error" : "Offline. Please check your network settings. "
+        });
         timeout( _poll_online, SECOND );
     }
 
     function _poll_online2() {
         SELF['time'](function(success){
             detect_time_detla( function(){}, success );
-            success || _reset_offline(1, {"error" : "Heartbeat failed to connect to Pubnub Servers. Please check your network settings."});
+            success || _reset_offline( 1, {
+                "error" : "Heartbeat failed to connect to Pubnub Servers." +
+                    "Please check your network settings."
+                });
             timeout( _poll_online2, KEEPALIVE );
         });
     }
@@ -911,12 +931,9 @@ function PN_API(setup) {
 
         function calculate(time) {
             if (!time) return;
-
             var ptime   = time / 10000
             ,   latency = (rnow() - stime) / 2;
-
             TIME_DRIFT = rnow() - (ptime + latency);
-
             cb && cb(TIME_DRIFT);
         }
     }

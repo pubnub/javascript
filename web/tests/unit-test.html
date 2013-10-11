@@ -53,11 +53,13 @@
 
 <script>(function () {
 
+    var crazy = "!@#$%^&*()______+1234567890-" +
+                "=~`<>?:{}+|\\,./;'[]\=- 梦想" + '"'
+
     function test(t, msg) {
         if (!test.run) return;
 
         var entry = p.create('tr');
-
         entry.innerHTML = p.supplant(test_tpl, {
             result: t ? 'success' : 'important',
             display: t ? 'pass' : 'fail',
@@ -154,8 +156,7 @@
                 channel: channel,
                 message: {
                     test   : "test",
-                    chtest : "!@#$%^&*()______+1234567890-" +
-                             "=~`<>?:{}+|\\,./;'[]\=- 梦想"
+                    chtest : crazy
                 },
                 callback: function (response) {
                     test(response[0], 'Successful Publish');
@@ -254,7 +255,7 @@
                 // Send Message While Not Connected
                 p2.publish({
                     channel: restore_channel,
-                    message: 'test',
+                    message: 'test' + crazy,
                     callback: function () {
                         p2.subscribe({
                             restore: true,
@@ -262,7 +263,7 @@
                             callback: function (message, stack) {
                                 p2.unsubscribe({ channel: restore_channel });
                                 test(
-                                        message === "test",
+                                        message === "test" + crazy,
                                         'Subscribe Restore'
                                 );
                             }
