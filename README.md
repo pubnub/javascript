@@ -27,6 +27,23 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 >**NOTE:** SSL Mode requires a few extra steps: [SSL MODE](README.md#ssl-mode)
 
+## WARNING! - No `JSON.stringify()`
+
+It is important to not that you should never use `JSON.stringify()`
+in your source code using PUBNUB as the serialization is done for
+you automatically.
+Inststead just pass the full object as the message payload nad PubNub takes
+care of everything for you.
+
+```javascript
+pubnub.publish({
+    channel : "hello_world",
+    message : { "data" : "Hi." }
+})
+```
+
+>**WARNING: Do not use** `JSON.stringify()`.
+
 #### Subscribe Only mode (exclude Publish Key)
 
 In the case where the client will never publish
