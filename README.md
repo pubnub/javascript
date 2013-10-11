@@ -41,13 +41,10 @@ pubnub.publish({
     message : { "data" : "Hi." }
 })
 
-// --
+// -- also
 
-var a = [1,2,3];
-pubnub.publish({
-    channel : "hello_world",
-    message : a
-})
+var a = [ 1, 2, { b : 3} ];
+pubnub.publish({ channel : "hello_world", message : a })
 ```
 
 >**WARNING: Do not use** `JSON.stringify()`.
