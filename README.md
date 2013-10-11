@@ -29,9 +29,9 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 ## WARNING! - No `JSON.stringify()`
 
-It is important to not that you should never use `JSON.stringify()`
-in your source code using PUBNUB as the serialization is done for
-you automatically.
+It is important to note that you must never use `JSON.stringify()`
+when sending signals/messages via PUBNUB.
+Why?  Because the serialization is done for you automatically.
 Inststead just pass the full object as the message payload nad PubNub takes
 care of everything for you.
 
@@ -39,6 +39,14 @@ care of everything for you.
 pubnub.publish({
     channel : "hello_world",
     message : { "data" : "Hi." }
+})
+
+// --
+
+var a = [1,2,3];
+pubnub.publish({
+    channel : "hello_world",
+    message : a
 })
 ```
 
