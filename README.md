@@ -32,8 +32,8 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 It is important to note that you must never use `JSON.stringify()`
 when sending signals/messages via PUBNUB.
 Why?  Because the serialization is done for you automatically.
-Inststead just pass the full object as the message payload nad PubNub takes
-care of everything for you.
+Inststead just pass the full object as the message payload.
+PubNub takes care of everything for you.
 
 ```javascript
 pubnub.publish({
