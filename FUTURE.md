@@ -39,8 +39,11 @@ throughput and reliability.
 
 ```javascript
 {
-    errors   : {},
-    messages : [
+    service : "subscribe",
+    status  : 200,
+    error   : false,
+    message : "details",
+    payload : [
         { channel   : "my_channel",
           data      : PAYLOAD,
           timetoken : "13437561957685947" },
