@@ -13,7 +13,11 @@ var PUBNUB     = require("./../pubnub.js")
 /* ---------------------------------------------------------------------------
  - Main - 
 --------------------------------------------------------------------------- */
-grant(open_stream_listen);
+grant()
+.then(open_stream_listen)
+.then(publish_expected_successful)
+.then(revoke)
+.then(publish_expected_fail);
 
 /* ---------------------------------------------------------------------------
 Open Stream Listener.
@@ -24,33 +28,39 @@ function open_stream_listen(cb) {
     pubnub.subscribe({
         channel  : channel,
         callback : stream_receiver,
-        connect  : client_test_grant
+        connect  : proceed
     });
+
+    return next();
 }
 
 
 /* ---------------------------------------------------------------------------
 Client Test - Access Granted
 --------------------------------------------------------------------------- */
-function client_test_grant() {
-    log('client_test: granted');
+function publish_expected_successful() {
+    log('publish_expected_successful');
     pubnub.publish({
         channel  : channel,
         message  : 'test-data',
-        callback : revoke
+        callback : proceed
     });
+
+    return next();
 }
 
 /* ---------------------------------------------------------------------------
 Client Test - Access Denied
 --------------------------------------------------------------------------- */
-function client_test_deny() {
-    log('client_test: denied');
+function publish_expected_fail() {
+    log('publish_expected_fail');
     pubnub.publish({
         channel  : 'foo',
         message  : 'test-data',
-        error    : stream_receiver
+        error    : proceed
     });
+
+    return next();
 }
 
 /* ---------------------------------------------------------------------------
@@ -64,8 +74,10 @@ function grant(cb) {
         ttl      : 300,
         read     : true,
         write    : true,
-        callback : cb
+        callback : proceed
     });
+
+    return next();
 }
 
 /* ---------------------------------------------------------------------------
@@ -76,8 +88,10 @@ function revoke(cb) {
     pubnub.revoke({
         channel  : channel,
         auth_key : auth_key,
-        callback : client_test_deny
+        callback : proceed
     });
+
+    return next();
 }
 
 /* ---------------------------------------------------------------------------
@@ -85,3 +99,8 @@ Stream Receiver
 --------------------------------------------------------------------------- */
 function log(d) { console.log(d) }
 function stream_receiver(message) { log( " > " + JSON.stringify(message) ) }
+function proceed(d) { var cb = next.cb.shift();cb&&cb();stream_receiver(d) }
+function next() {
+    if (!next.cb) next.cb = [];
+    return { then : function(cb) { cb&&next.cb.push(cb); return next(); } };
+}
