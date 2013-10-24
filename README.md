@@ -107,20 +107,6 @@ see below :
 
 ## Initializing
 
-Using your setup credentials with a div, you will for example:
-
-```html
-<div id=pubnub pub-key=demo sub-key=demo></div>
-```
-Now you can access PubNub methods via `PUBNUB` Global class methods:
-
-```javascript
-PUBNUB.publish({
-    channel : "hello_world",
-    message : "Hi."
-})
-```
-
 If you setup credentials using the PUBNUB.init() method, for example:
 
 ```javascript    
