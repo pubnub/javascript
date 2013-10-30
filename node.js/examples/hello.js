@@ -4,7 +4,6 @@
     http://www.pubnub.com/account#api-keys
 
 --------------------------------------------------------------------------- */
-console.log('Type your message, press ENTER.\n');
 
 var pubnub = require("./../pubnub.js").init({
     publish_key   : "demo",
@@ -15,20 +14,9 @@ var pubnub = require("./../pubnub.js").init({
 Listen for Messages
 --------------------------------------------------------------------------- */
 pubnub.subscribe({
-    channel  : "my_channel",
+    channel  : "a",
+    windowing : 10000,
     callback : function(message) {
         console.log( " > ", message );
     }
 });
-
-/* ---------------------------------------------------------------------------
-Type Console Message
---------------------------------------------------------------------------- */
-var stdin = process.openStdin();
-stdin.on( 'data', function(chunk) {
-    pubnub.publish({
-        channel : "my_channel",
-        message : ''+chunk
-    });
-});
-

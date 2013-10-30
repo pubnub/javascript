@@ -208,6 +208,7 @@ function PN_API(setup) {
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
+    ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
     ,   error         = setup['error']      || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
@@ -216,9 +217,15 @@ function PN_API(setup) {
     ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
     function publish(next) {
-        if (next) PUB_QUEUE.sending = 0;
-        if (PUB_QUEUE.sending || !PUB_QUEUE.length) return;
-        PUB_QUEUE.sending = 1;
+
+        if (NO_WAIT_FOR_PENDING) {
+            if (!PUB_QUEUE.length) return;
+        } else {
+            if (next) PUB_QUEUE.sending = 0;
+            if ( PUB_QUEUE.sending || !PUB_QUEUE.length ) return;
+            PUB_QUEUE.sending = 1;
+        }
+        
         xdr(PUB_QUEUE.shift());
     }
 

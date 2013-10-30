@@ -113,6 +113,8 @@ function xdr( setup ) {
         path : url,
         method : 'GET'
     };
+    options.agent = false;
+    require('http').globalAgent.maxSockets = Infinity;
     try {
         request = (ssl ? https : http).request(options, function(response) {
             response.setEncoding('utf8');
