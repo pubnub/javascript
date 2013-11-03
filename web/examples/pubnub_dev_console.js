@@ -89,6 +89,7 @@ pubnub_dev_console = function(){
             var HERE_NOW          = ++count;
             var UNSUBSCRIBE        = ++count;
             var TIME            = ++count;
+            var SET_UUID        = ++count;
             var SET_AUTH_KEY    = ++count;
             var PAM_GRANT       = ++count;
             var PAM_REVOKE      = ++count;
@@ -148,6 +149,11 @@ pubnub_dev_console = function(){
                     break;
                 case TIME:
                     pubnub.time(print);
+                    break;
+                case SET_UUID:
+                    var key = get_input("Enter UUID", "string", pubnub.get_uuid());
+                    pubnub.set_uuid(key);
+                    document.getElementById('currentUUID').innerHTML="current uuid key is: " + key;
                     break;
                 case SET_AUTH_KEY:
                     var key = getAuthKey("myAuthKey");

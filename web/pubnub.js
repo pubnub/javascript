@@ -619,7 +619,7 @@ function PN_API(setup) {
         'unsubscribe' : function(args, callback) {
             var channel = args['channel']
             ,   callback      = callback            || args['callback'] || function(){}
-            ,   err         = args['error']       || function(){};
+            ,   err           = args['error']       || function(){};
 
             TIMETOKEN   = 0;
             SUB_RESTORE = 1;
@@ -1042,6 +1042,13 @@ function PN_API(setup) {
             args['write'] = false;
             SELF['grant']( args, callback );
         },
+        'set_uuid' : function(uuid) {
+            UUID = uuid;
+            CONNECT();
+        },
+        'get_uuid' : function() {
+            return UUID;
+        },
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
@@ -1419,7 +1426,7 @@ function ajax( setup ) {
         xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4) {
+            if (xhr && xhr.readyState == 4) {
                 switch(xhr.status) {
                     case 401:
                     case 402:

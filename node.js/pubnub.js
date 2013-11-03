@@ -469,7 +469,7 @@ function PN_API(setup) {
         'unsubscribe' : function(args, callback) {
             var channel = args['channel']
             ,   callback      = callback            || args['callback'] || function(){}
-            ,   err         = args['error']       || function(){};
+            ,   err           = args['error']       || function(){};
 
             TIMETOKEN   = 0;
             SUB_RESTORE = 1;
@@ -891,6 +891,13 @@ function PN_API(setup) {
             args['read']  = false;
             args['write'] = false;
             SELF['grant']( args, callback );
+        },
+        'set_uuid' : function(uuid) {
+            UUID = uuid;
+            CONNECT();
+        },
+        'get_uuid' : function() {
+            return UUID;
         },
 
         // Expose PUBNUB Functions
