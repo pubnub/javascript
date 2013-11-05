@@ -396,18 +396,21 @@ function PN_API(setup) {
 
     // Announce Leave Event
     var SELF = {
-        'LEAVE' : function( channel, blocking ) {
+        'LEAVE' : function( channel, blocking, callback, error ) {
+
             var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
+            ,   callback = callback || function(){}
+            ,   err      = error    || function(){}
             ,   jsonp  = jsonp_cb();
 
             // Prevent Leaving a Presence Channel
-            if (channel.indexOf(PRESENCE_SUFFIX) > 0) return;
+            if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
 
             // No Leave Patch (Prevent Blocking Leave if Desired)
-            if (NOLEAVE)      return;
-            if (!SSL)         return;
-            if (jsonp == '0') return;
+            if (NOLEAVE)      return false;
+            if (!SSL)         return false;
+            if (jsonp == '0') return false;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
@@ -416,11 +419,20 @@ function PN_API(setup) {
                 timeout  : 2000,
                 callback : jsonp,
                 data     : data,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
+                fail     : err,
                 url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
                 ]
             });
+            return true;
         },
         /*
             PUBNUB.history({
@@ -614,8 +626,10 @@ function PN_API(setup) {
         /*
             PUBNUB.unsubscribe({ channel : 'my_chat' });
         */
-        'unsubscribe' : function(args) {
-            var channel = args['channel'];
+        'unsubscribe' : function(args, callback) {
+            var channel = args['channel']
+            ,   callback      = callback            || args['callback'] || function(){}
+            ,   err           = args['error']       || function(){};
 
             TIMETOKEN   = 0;
             SUB_RESTORE = 1;
@@ -624,12 +638,18 @@ function PN_API(setup) {
             channel = map( (
                 channel.join ? channel.join(',') : ''+channel
             ).split(','), function(channel) {
+                if (!CHANNELS[channel]) return;
                 return channel + ',' + channel + PRESENCE_SUFFIX;
             } ).join(',');
 
             // Iterate over Channels
             each( channel.split(','), function(channel) {
-                if (READY) SELF['LEAVE']( channel, 0 );
+                var CB_CALLED = true;
+                if (!channel) return;
+                if (READY) {
+                    CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
+                }
+                if (!CB_CALLED) callback({action : "leave"});
                 CHANNELS[channel] = 0;
             } );
 
@@ -1032,6 +1052,13 @@ function PN_API(setup) {
             args['write'] = false;
             SELF['grant']( args, callback );
         },
+        'set_uuid' : function(uuid) {
+            UUID = uuid;
+            CONNECT();
+        },
+        'get_uuid' : function() {
+            return UUID;
+        },
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
@@ -1409,7 +1436,7 @@ function ajax( setup ) {
         xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4) {
+            if (xhr && xhr.readyState == 4) {
                 switch(xhr.status) {
                     case 401:
                     case 402:
