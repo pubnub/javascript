@@ -569,7 +569,10 @@ function PN_API(setup) {
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   err      = args['error'] || function() {}
             ,   jsonp    = jsonp_cb()
+            ,   add_msg  = 'push'
             ,   url;
+
+            if (args['prepend']) add_msg = 'unshift'
 
             if (!msg)           return error('Missing Message');
             if (!channel)       return error('Missing Channel');
@@ -588,7 +591,7 @@ function PN_API(setup) {
             ];
 
             // Queue Message Send
-            PUB_QUEUE.push({
+            PUB_QUEUE[add_msg]({
                 callback : jsonp,
                 timeout  : SECOND * 5,
                 url      : url,
