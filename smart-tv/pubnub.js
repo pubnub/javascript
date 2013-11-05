@@ -995,8 +995,8 @@ function PN_API(setup) {
 
             var data = { 'signature' : signature, 'timestamp' : timestamp };
 
-            if (channel) data['channel'] = encode(channel)
-            if (auth_key) data['auth'] = encode(auth_key)
+            if (channel)  data['channel'] = encode(channel);
+            if (auth_key) data['auth']    = encode(auth_key);
 
             xdr({
                 callback : jsonp,
