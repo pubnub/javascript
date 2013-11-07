@@ -816,7 +816,8 @@ function PN_API(setup) {
                 'channel'   : encode(channel),
                 'timestamp' : timestamp
             };
-            if (ttl > -1) data['ttl'] = ttl
+
+            if (ttl > -1) data['ttl'] = ttl;
             if (auth_key) data['auth'] = encode(auth_key);
 
             xdr({
@@ -873,8 +874,8 @@ function PN_API(setup) {
 
             var data = { 'signature' : signature, 'timestamp' : timestamp };
 
-            if (channel) data['channel'] = encode(channel)
-            if (auth_key) data['auth'] = encode(auth_key)
+            if (channel)  data['channel'] = encode(channel);
+            if (auth_key) data['auth']    = encode(auth_key);
 
             xdr({
                 callback : jsonp,
