@@ -104,7 +104,7 @@ pubnub_dev_console = function(){
             switch(input) {
 
                 case SUBSCRIBE:
-                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var channel = get_input("Enter channel", "string", "mychannel");
                     pubnub.subscribe({
                         'channel'     : channel,
                         'callback'    : print,
@@ -112,7 +112,7 @@ pubnub_dev_console = function(){
                     });
                 break;
                 case PUBLISH:
-                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var channel = get_input("Enter channel", "string", "mychannel");
                     var message = get_input("Enter Message", "string", "Hi");
                     pubnub.publish({
                         'channel'     : channel,
@@ -122,7 +122,7 @@ pubnub_dev_console = function(){
                     });
                     break;
                 case HISTORY:
-                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var channel = get_input("Enter channel", "string", "mychannel");
                     var count = get_input("Enter count", "number", 10);
                     var reverse = get_input("Reverse ?", "boolean");
                     pubnub.history({
@@ -134,7 +134,7 @@ pubnub_dev_console = function(){
                     });
                     break;
                 case HERE_NOW:
-                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var channel = get_input("Enter channel", "string", "mychannel");
                     pubnub.here_now({
                         'channel'  : channel,
                         'callback' : print,
@@ -142,7 +142,7 @@ pubnub_dev_console = function(){
                     });
                     break;
                 case UNSUBSCRIBE:
-                    var channel = get_input("Enter channel", "string", "hello_world");
+                    var channel = get_input("Enter channel", "string", "mychannel");
                     pubnub.unsubscribe({
                         'channel' : channel
                     });
@@ -161,7 +161,7 @@ pubnub_dev_console = function(){
                     document.getElementById('currentAuthKey').innerHTML="current auth key is: " + key;
                     break;
                 case PAM_GRANT:
-                    var channel =  get_input("Enter channel", "string", "hello_world");
+                    var channel =  get_input("Enter channel", "string", "mychannel");
                     var key = getAuthKey();
                     var read = get_input("Read Permission Allowed ?", "boolean");
                     var write = get_input("Write Permission Allowed ?", "boolean");
@@ -177,7 +177,7 @@ pubnub_dev_console = function(){
                     });
                     break;
                 case PAM_REVOKE:
-                    var channel =  get_input("Enter channel", "string", "hello_world");
+                    var channel =  get_input("Enter channel", "string", "mychannel");
                     var key = getAuthKey();
                     pubnub.revoke({
                         'channel'     : channel,
