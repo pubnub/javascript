@@ -44,11 +44,13 @@ test("set_uuid() should set uuid and new presence event should come with new uui
     expect(2);
     stop(2);
     var ch = channel + '-' + ++count;
-    var uuid = pubnub.get_uuid();
+    var uuid;
+    var uuid2;
+    var uuid1 = uuid = pubnub.get_uuid();
     pubnub.subscribe({ channel : ch,
         connect : function(response)  {
             setTimeout(function() {
-                uuid = "efgh"
+                uuid2 = uuid = "efgh"
                 pubnub.set_uuid(uuid);
             }, 3000);
         },
@@ -58,6 +60,7 @@ test("set_uuid() should set uuid and new presence event should come with new uui
         presence : function(response) {
             if (response.action == "join") {
                 deepEqual(response.uuid, uuid);
+                if (response.uuid === uuid2) pubnub.unsubscribe({channel : ch});
                 start();
             }
         }
