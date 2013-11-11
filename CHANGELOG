@@ -1,3 +1,11 @@
+11-9-13 * NEW VERSION 3.5.4.8 *
+. make encryption methods public to easier implement into your own app logic
+. in some cases, multiple subscribe requests are made in node.js with presence
+. add getter for uuid
+. handle ECONNRESET
+. carry reference of failed publish message into error object
+. implement optional queue_empty flag (experimental)
+
 10-11-13 * NEW VERSION 3.5.47 *
 . simplified and reduced code.
 . improved unit tests for more chars in channel/message.
