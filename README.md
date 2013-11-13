@@ -16,13 +16,13 @@ business collaborative solutions, and more.
 You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 ```html
-<!-- Version Specific "Auto Upgrading" -->
+<!-- Versioned SDK "Static" -->
 <script src=http://cdn.pubnub.com/pubnub-3.5.48.min.js ></script>
 
-<!-- Latest "Auto Upgrading" -->
+<!-- Latest SDK "Auto Upgrading" -->
 <script src=http://cdn.pubnub.com/pubnub.min.js ></script>
 
-<!-- SSL -->
+<!-- SSL Works Too! -->
 <script src=https://cdn.pubnub.com/pubnub.min.js ></script>
 ```
 
