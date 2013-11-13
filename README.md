@@ -16,6 +16,21 @@ business collaborative solutions, and more.
 You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
 
 ```html
+<!-- Version Specific "Auto Upgrading" -->
+<script src=http://cdn.pubnub.com/pubnub-3.5.48.min.js ></script>
+
+<!-- Latest "Auto Upgrading" -->
+<script src=http://cdn.pubnub.com/pubnub.min.js ></script>
+
+<!-- SSL -->
+<script src=https://cdn.pubnub.com/pubnub.min.js ></script>
+```
+
+>**NOTE:** SSL Mode requires a few extra steps: [SSL MODE](README.md#ssl-mode)
+
+Init Method to Create PubNub Instance:
+
+```html
 <script src=http://cdn.pubnub.com/pubnub-3.5.48.min.js ></script>
 <script>(function(){
     var pubnub = PUBNUB.init({
@@ -24,8 +39,6 @@ You may access the latest PubNub JavaScript SDK on The PubNub Network CDN.
     });
 })();</script>
 ```
-
->**NOTE:** SSL Mode requires a few extra steps: [SSL MODE](README.md#ssl-mode)
 
 ## WARNING! - No `JSON.stringify()`
 
