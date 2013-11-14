@@ -98,8 +98,7 @@ function bind( type, el, fun ) {
             if (!e) e = window.event;
             if (!fun(e)) {
                 e.cancelBubble = true;
-                e.returnValue  = false;
-                e.preventDefault && e.preventDefault();
+                e.preventDefault  && e.preventDefault();
                 e.stopPropagation && e.stopPropagation();
             }
         };
