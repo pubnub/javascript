@@ -732,7 +732,12 @@ function PN_API(setup) {
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
+            ,   disable_uuids = args['disable_uuids']
+            ,   metadata = args['metadata']
             ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
+
+            if (disable_uuids) data['disable_uuids'] = 1;
+            if (metadata) data['metadata'] = 1;
 
             // Make sure we have a Channel
             if (!channel)       return error('Missing Channel');
@@ -756,6 +761,111 @@ function PN_API(setup) {
                     STD_ORIGIN, 'v2', 'presence',
                     'sub_key', SUBSCRIBE_KEY,
                     'channel', encode(channel)
+                ]
+            });
+        },
+
+        /*
+            PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
+        */
+        'current_channels_by_uuid' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   jsonp    = jsonp_cb()
+            ,   data     = { 'auth' : auth_key };
+
+            // Make sure we have a Channel
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub_key', SUBSCRIBE_KEY,
+                    'uuid', encode(uuid)
+                ]
+            });
+        },
+
+        /*
+            PUBNUB.current_subscribers({ channel : 'my_chat', callback : fun });
+        */
+        'current_subscribers' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   jsonp    = jsonp_cb()
+            ,   data     = { 'auth' : auth_key };
+
+            // Make sure we have a Channel
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub_key', SUBSCRIBE_KEY,
+                ]
+            });
+        },
+
+        /*
+            PUBNUB.set_metadata({ channel : 'my_chat', callback : fun });
+        */
+        'set_metadata' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   jsonp    = jsonp_cb()
+            ,   data     = { 'auth' : auth_key };
+
+            // Make sure we have a Channel
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub-key', SUBSCRIBE_KEY,
+                    'channel', encode(channel),
+                    'uuid', 
                 ]
             });
         },
