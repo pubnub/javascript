@@ -396,7 +396,7 @@ function PN_API(setup) {
 
     // Announce Leave Event
     var SELF = {
-        'LEAVE' : function( channel, blocking, callback, error ) {
+        'LEAVE' : function( channel, ignoredParameter, callback, error ) {
 
             var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
@@ -415,7 +415,7 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             xdr({
-                blocking : blocking || SSL,
+                blocking : true,
                 timeout  : 2000,
                 callback : jsonp,
                 data     : data,
