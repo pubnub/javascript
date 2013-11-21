@@ -185,10 +185,6 @@ function ready() { timeout( function() {
 }, SECOND ); }
 
 
-function error_common(message, callback) {
-    callback && callback({ 'error' : message || "error occurred"});
-    error && error(message);
-}
 
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
@@ -222,6 +218,12 @@ function PN_API(setup) {
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
     ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
+
+
+    function error_common(message, callback) {
+        callback && callback({ 'error' : message || "error occurred"});
+        error && error(message);
+    }
 
     function publish(next) {
 
