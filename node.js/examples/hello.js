@@ -6,8 +6,8 @@
 --------------------------------------------------------------------------- */
 
 var pubnub = require("./../pubnub.js").init({
-    publish_key   : "demo",
-    subscribe_key : "demo"
+    publish_key   : "demo"
+    //subscribe_key : "demo"
 });
 
 /* ---------------------------------------------------------------------------
@@ -18,5 +18,9 @@ pubnub.subscribe({
     windowing : 10000,
     callback : function(message) {
         console.log( " > ", message );
+    },
+    error : function(r) {
+       console.log(JSON.stringify(r));
     }
+
 });

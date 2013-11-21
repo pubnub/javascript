@@ -5,15 +5,16 @@
     // INIT PubNub
     var pubnub = PUBNUB.init({
         publish_key   : 'demo',
-        subscribe_key : 'demo',
+        //subscribe_key : 'demo',
         ssl : true,
         jsonp : false
     });
 
     // LISTEN
     pubnub.subscribe({
-        channel : "my_channel,your_channel,our_channel",
+        //channel : "my_channel,your_channel,our_channel",
         message : function(m){ console.log(JSON.stringify(m)) },
+        error : function(e) { alert(JSON.stringify(e));},
         connect : function(channel) {
             console.log('CONNECT on ' + channel);
             // SEND
