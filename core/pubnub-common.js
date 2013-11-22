@@ -224,7 +224,7 @@ function PN_API(setup) {
             if ( PUB_QUEUE.sending || !PUB_QUEUE.length ) return;
             PUB_QUEUE.sending = 1;
         }
-        
+
         xdr(PUB_QUEUE.shift());
     }
 
@@ -768,7 +768,7 @@ function PN_API(setup) {
         /*
             PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
         */
-        'current_channels_by_uuid' : function( args, callback ) {
+        'where_now' : function( args, callback ) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
             ,   auth_key = args['auth_key'] || AUTH_KEY
@@ -800,74 +800,83 @@ function PN_API(setup) {
             });
         },
 
-        /*
-            PUBNUB.current_subscribers({ channel : 'my_chat', callback : fun });
-        */
-        'current_subscribers' : function( args, callback ) {
-            var callback = args['callback'] || callback
-            ,   err      = args['error']    || function(){}
-            ,   auth_key = args['auth_key'] || AUTH_KEY
-            ,   jsonp    = jsonp_cb()
-            ,   data     = { 'auth' : auth_key };
+        'subscriber' : {
+            'setstate' : function(args, callback) {
+                var callback = args['callback'] || callback
+                ,   err      = args['error']    || function(){}
+                ,   auth_key = args['auth_key'] || AUTH_KEY
+                ,   jsonp    = jsonp_cb()
+                ,   metadata = args['metadata']
+                ,   uuid     = args['uuid'] || UUID
+                ,   channel  = args['channel']
+                ,   data     = { 'auth' : auth_key };
 
-            // Make sure we have a Channel
-            if (!callback)      return error('Missing Callback');
-            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+                // Make sure we have a Channel
+                if (!callback)      return error('Missing Callback');
+                if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+                if (!uuid) return error('Missing UUID');
+                if (!channel) return error('Missing Channel');
+                if (!metadata) return error('Missing Meta Data');
 
-            if (jsonp != '0') { data['callback'] = jsonp; }
+                if (jsonp != '0') { data['callback'] = jsonp; }
 
-            xdr({
-                callback : jsonp,
-                data     : data,
-                success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
-                        err(response);
-                        return;
-                    }
-                    callback(response)
-                },
-                fail     : err,
-                url      : [
-                    STD_ORIGIN, 'v2', 'presence',
-                    'sub_key', SUBSCRIBE_KEY,
-                ]
-            });
-        },
+                data['metadata'] = JSON.stringify(metadata);
 
-        /*
-            PUBNUB.set_metadata({ channel : 'my_chat', callback : fun });
-        */
-        'set_metadata' : function( args, callback ) {
-            var callback = args['callback'] || callback
-            ,   err      = args['error']    || function(){}
-            ,   auth_key = args['auth_key'] || AUTH_KEY
-            ,   jsonp    = jsonp_cb()
-            ,   data     = { 'auth' : auth_key };
+                xdr({
+                    callback : jsonp,
+                    data     : data,
+                    success  : function(response) {
+                        if (typeof response == 'object' && response['error']) {
+                            err(response);
+                            return;
+                        }
+                        callback(response)
+                    },
+                    fail     : err,
+                    url      : [
+                        STD_ORIGIN, 'v2', 'presence',
+                        'sub-key', SUBSCRIBE_KEY,
+                        'channel', encode(channel),
+                        'uuid', uuid, 'data'
+                    ]
+                });
 
-            // Make sure we have a Channel
-            if (!callback)      return error('Missing Callback');
-            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            },
+            'getstate' : function(args, callback) {
+                var callback = args['callback'] || callback
+                ,   err      = args['error']    || function(){}
+                ,   auth_key = args['auth_key'] || AUTH_KEY
+                ,   jsonp    = jsonp_cb()
+                ,   uuid     = args['uuid'] || UUID
+                ,   data     = { 'auth' : auth_key };
 
-            if (jsonp != '0') { data['callback'] = jsonp; }
+                // Make sure we have a Channel
+                if (!callback)      return error('Missing Callback');
+                if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+                if (!uuid) return error('Missing UUID');
 
-            xdr({
-                callback : jsonp,
-                data     : data,
-                success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
-                        err(response);
-                        return;
-                    }
-                    callback(response)
-                },
-                fail     : err,
-                url      : [
-                    STD_ORIGIN, 'v2', 'presence',
-                    'sub-key', SUBSCRIBE_KEY,
-                    'channel', encode(channel),
-                    'uuid', 
-                ]
-            });
+                if (jsonp != '0') { data['callback'] = jsonp; }
+
+                xdr({
+                    callback : jsonp,
+                    data     : data,
+                    success  : function(response) {
+                        if (typeof response == 'object' && response['error']) {
+                            err(response);
+                            return;
+                        }
+                        callback(response)
+                    },
+                    fail     : err,
+                    url      : [
+                        STD_ORIGIN, 'v2', 'presence',
+                        'sub-key', SUBSCRIBE_KEY,
+                        'channel', encode(channel),
+                        'uuid', 'data'
+                    ]
+                });
+
+            }
         },
 
         /*

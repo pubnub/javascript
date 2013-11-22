@@ -226,7 +226,7 @@ function PN_API(setup) {
             if ( PUB_QUEUE.sending || !PUB_QUEUE.length ) return;
             PUB_QUEUE.sending = 1;
         }
-        
+
         xdr(PUB_QUEUE.shift());
     }
 

@@ -765,7 +765,7 @@ describe('Pubnub', function() {
 
 
     })
-    
+
     describe('#revoke()', function(){
         var revoke_channel = channel + '-revoke';
         var auth_key = "abcd";
