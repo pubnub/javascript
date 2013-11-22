@@ -375,7 +375,7 @@ function PN_API(setup) {
             if ( PUB_QUEUE.sending || !PUB_QUEUE.length ) return;
             PUB_QUEUE.sending = 1;
         }
-        
+
         xdr(PUB_QUEUE.shift());
     }
 
@@ -964,12 +964,12 @@ function PN_API(setup) {
                 'w'         : w,
                 'r'         : r,
                 'signature' : signature,
-                'channel'   : encode(channel),
+                'channel'   : channel,
                 'timestamp' : timestamp
             };
 
             if (ttl > -1) data['ttl'] = ttl;
-            if (auth_key) data['auth'] = encode(auth_key);
+            if (auth_key) data['auth'] = auth_key;
 
             xdr({
                 callback : jsonp,
@@ -1025,8 +1025,8 @@ function PN_API(setup) {
 
             var data = { 'signature' : signature, 'timestamp' : timestamp };
 
-            if (channel)  data['channel'] = encode(channel);
-            if (auth_key) data['auth']    = encode(auth_key);
+            if (channel)  data['channel'] = channel;
+            if (auth_key) data['auth']    = auth_key;
 
             xdr({
                 callback : jsonp,

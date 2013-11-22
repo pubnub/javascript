@@ -17,7 +17,7 @@
         connect : function(channel) {
             console.log('CONNECT on ' + channel);
             // SEND
-            pubnub.publish({ 
+            pubnub.publish({
                 channel : channel,
                 message : "Hi." ,
                 callback : function(r){
