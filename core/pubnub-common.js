@@ -848,12 +848,14 @@ function PN_API(setup) {
                 ,   auth_key = args['auth_key'] || AUTH_KEY
                 ,   jsonp    = jsonp_cb()
                 ,   uuid     = args['uuid'] || UUID
+                ,   channel  = args['channel']
                 ,   data     = { 'auth' : auth_key };
 
                 // Make sure we have a Channel
                 if (!callback)      return error('Missing Callback');
                 if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
                 if (!uuid) return error('Missing UUID');
+                if (!channel) return error('Missing Channel');
 
                 if (jsonp != '0') { data['callback'] = jsonp; }
 
@@ -872,7 +874,7 @@ function PN_API(setup) {
                         STD_ORIGIN, 'v2', 'presence',
                         'sub-key', SUBSCRIBE_KEY,
                         'channel', encode(channel),
-                        'uuid', 'data'
+                        'uuid', encode(uuid)
                     ]
                 });
 
