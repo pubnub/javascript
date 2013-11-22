@@ -4,7 +4,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>addon@pubnub.com</em:id>
     <em:name>PubNub</em:name>
-    <em:version>0.3</em:version>
+    <em:version>1.0</em:version>
     <em:description>PubNub is a blazingly fast cloud-hosted real-time messaging system to push real time data to web, tablet and mobile devices.</em:description>
     <em:bootstrap>true</em:bootstrap>
     <em:targetApplication>

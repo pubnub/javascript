@@ -44,6 +44,8 @@ function alert(string) {
   Services.prompt.alert(Services.wm.getMostRecentWindow("navigator:browser"), "", string);
 } 
 
+var subscribed_channel;
+
 function onSubscribeCommand(event) {
   !pubnub && init();
   if (event.target.id != idPrefix + "buttonSubscribe") {
@@ -53,65 +55,55 @@ function onSubscribeCommand(event) {
   var doc = win.document;
   var input_channel = {value: ""};
   var input_presence = {value: false};
-  var result1 = Services.prompt.prompt(null, "PubNub", "Enter Channel Name :", input_channel, null, {});
-  var result2 = Services.prompt.confirm(null, "PubNub", "Presence ? :", input_presence, null, {});
-
-
+  var input_unsubscribe = {value : false};
   var window = Services.wm.getMostRecentWindow("navigator:browser");
 
-  var params = {
-    channel : input_channel.value,
-    callback : function(m){
-      var window = Services.wm.getMostRecentWindow("navigator:browser");
-      var notification = new window.Notification("PubNub", {
-        body: JSON.stringify(m),
-        tag: "pubnub",
-        icon: "chrome://pubnub/skin/icon.png"
-      });
-    } 
-  };
+  //alert((subscribed_channel)?"true":"false");
 
-  if (input_presence.value === true) {
-    params['presence'] = function(m){
-      var window = Services.wm.getMostRecentWindow("navigator:browser");
-      var notification = new window.Notification("PubNub", {
-        body: JSON.stringify(m),
-        tag: "pubnub",
-        icon: "chrome://pubnub/skin/icon.png"
-      });
-    }; 
-  }
+  if (!subscribed_channel) {
+    //alert("subscribe");
+    var result1 = Services.prompt.prompt(null, "PubNub", "Enter Channel Name :", input_channel, null, {});
+    var result2 = Services.prompt.confirm(null, "PubNub", "Presence ? :", input_presence, null, {});
 
-  if (result1) {
-    pubnub.subscribe(params);
-  }
-}
 
-function onPublishCommand(event) {
-  !pubnub && init();
-  if (event.target.id != idPrefix + "buttonPublish") {
-    return;
-  }
-  var win = Services.wm.getMostRecentWindow("navigator:browser");
-  var doc = win.document;
-  var input_channel = {value: ""};
-  var input_message = {value: ""};
-  var result1 = Services.prompt.prompt(null, "PubNub", "Enter Channel Name:", input_channel, null, {});
-  var result2 = Services.prompt.prompt(null, "PubNub", "Enter a message:", input_message, null, {});
-
-  if (result1 && result2) {
-    pubnub.publish({
-        channel : input_channel.value,
-        message : input_message.value,
-        callback : function(m){
+    var window = Services.wm.getMostRecentWindow("navigator:browser");
+    var channel = input_channel.value;
+    var params = {
+      channel : channel,
+      callback : function(m){
         var window = Services.wm.getMostRecentWindow("navigator:browser");
-        var notification = new window.Notification("PubNub", {
+        var notification = new window.Notification("Message on Channel : " + channel, {
           body: JSON.stringify(m),
           tag: "pubnub",
           icon: "chrome://pubnub/skin/icon.png"
         });
       } 
-    })
+    };
+
+    subscribed_channel = input_channel.value;
+
+    if (result2) {
+      params['presence'] = function(m){
+        var window = Services.wm.getMostRecentWindow("navigator:browser");
+        var notification = new window.Notification("Presence Event on Channel : " + channel, {
+          body: JSON.stringify(m),
+          tag: "pubnub",
+          icon: "chrome://pubnub/skin/icon.png"
+        });
+      }; 
+    }
+
+    if (result1) {
+      pubnub.subscribe(params);
+    }
+  } else {
+
+    var result3 = Services.prompt.confirm(null, "PubNub", "Unsubscribe from " + subscribed_channel +" ? :", input_unsubscribe, null, {});
+
+    if (result3) {
+      pubnub.unsubscribe({channel : subscribed_channel});
+      subscribed_channel = null;
+    }
   }
 }
 
@@ -155,27 +147,7 @@ function loadIntoWindow(window) {
       toolbar.insertItem(idPrefix + "buttonSubscribe", nextSibling);
     }
     window.addEventListener("aftercustomization", saveButtonPosition, false);
-    window.addEventListener("command", onSubscribeCommand, false);
-    
-    let button2 = doc.createElement("toolbarbutton");
-    button2.setAttribute("id", idPrefix + "buttonPublish");
-    button2.setAttribute("label", "PubNub Publish");
-    button2.setAttribute("class",
-    "pubnub-button");
-    //button2.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
-    button2.setAttribute("orient", "horizontal");
-    toolbox.palette.appendChild(button2);
-    if (Services.prefs.prefHasUserValue(prefsPrefix + "toolbarID")) {
-      var toolbar = doc.getElementById(Services.prefs.getCharPref(prefsPrefix + "toolbarID"));
-      var nextSibling = null;
-      try {
-        nextSibling = doc.getElementById(Services.prefs.getCharPref(prefsPrefix + "nextSiblingID"));
-      } catch (ex) {}
-      toolbar.insertItem(idPrefix + "buttonPublish", nextSibling);
-    }
-    window.addEventListener("aftercustomization", saveButtonPosition, false);
-    window.addEventListener("command", onPublishCommand, false);
-    
+    window.addEventListener("command", onSubscribeCommand, false);    
   }
 }
  
