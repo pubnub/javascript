@@ -878,3 +878,50 @@ test("#revoke() should be able to revoke access", function(done) {
         })
     },5000);
 })
+
+function in_list(list,str) {
+    for (var x in list) {
+        if (list[x] === str) return true;
+    }
+    return false;
+ }
+
+var pubnub_pres = PUBNUB.init({
+    origin            : 'dara.devbuild.pubnub.com',
+    publish_key       : 'demo',
+    subscribe_key     : 'demo'
+});
+var uuid = Date.now()
+
+asyncTest("#where_now() should return channel x in result for uuid y, when uuid y subscribed to channel x", function() {
+    expect(2);
+    var ch = channel + '-' + 'where-now' ;
+    pubnub_pres.subscribe({
+        channel: ch ,
+        connect : function(response) {
+            setTimeout(function() {
+                pubnub_pres.where_now({
+                    uuid: uuid,
+                    callback : function(data) {
+                        deepEqual(data.status, 200);
+                        ok(in_list(data.payload.channels,ch), "subscribed Channel should be there in where now list");
+                        pubnub_pres.unsubscribe({channel : ch});
+                        start();
+                    },
+                    error : function(error) {
+                        ok(false, "Error occurred in where now " + JSON.stringify(error));
+                        start();
+                    }
+                })}, 
+                3000
+            );
+        },
+        callback : function(response) {
+        },
+        error : function(error) {
+            ok(false, "Error occurred in subscribe");
+            start();
+        }
+    })
+});
+

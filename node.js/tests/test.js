@@ -19,6 +19,13 @@ var message_string = "Hi from Javascript";
 var message_jsono = {'message': 'Hi from Javascript'};
 var message_jsona = ['message' , 'Hi from javascript'];
 
+function in_list(list,str) {
+    for (var x in list) {
+        if (list[x] === str) return true;
+    }
+    return false;
+ }
+
 describe('Pubnub', function() {
 
     this.timeout(180000);
@@ -841,5 +848,119 @@ describe('Pubnub', function() {
         })
 
     })
+    describe('#where_now()', function() {
+        var uuid = Date.now();
+        var pubnub = PUBNUB.init({
+            publish_key       : 'demo',
+            subscribe_key     : 'demo',
+            uuid              :  uuid,
+            origin            : 'dara.devbuild.pubnub.com'
+        });
+        this.timeout(80000);
+        it('should return channel x in result for uuid y, when uuid y subscribed to channel x', function(done){
+            var ch = channel + '-' + 'where-now' ;
+                pubnub.subscribe({
+                    channel: ch ,
+                    connect : function(response) {
+                        setTimeout(function() {
+                            pubnub.where_now( {uuid: uuid, callback : function(data) {
+                                assert.deepEqual(data.status, 200);
+                                assert.ok(in_list(data.payload.channels,ch), "subscribed Channel should be there in where now list");
+                                pubnub.unsubscribe({channel : ch});
+                                done();
+                            }})}, 3000
+                        );
+                    },
+                    callback : function(response) {
+                    },
+                    error : function(error) {
+                        assert.ok(false, "Error occurred in subscribe");
+                    }
+
+                })
+
+        })
+        it('should return channel a,b,c in result for uuid y, when uuid y subscribed to channel x', function(done){
+            var ch1 = channel + '-' + 'where-now' + '-1' ;
+            var ch2 = channel + '-' + 'where-now' + '-2' ;
+            var ch3 = channel + '-' + 'where-now' + '-3' ;
+            var where_now_set = false;
+            pubnub.subscribe({
+                channel: [ch1,ch2,ch3] ,
+                connect : function(response) {
+                    if (!where_now_set) {
+                        setTimeout(function() {
+                            pubnub.where_now( {uuid: uuid, callback : function(data) {
+                                assert.deepEqual(data.status, 200);
+                                assert.ok(in_list(data.payload.channels,ch1), "subscribed Channel 1 should be there in where now list");
+                                assert.ok(in_list(data.payload.channels,ch2), "subscribed Channel 2 should be there in where now list");
+                                assert.ok(in_list(data.payload.channels,ch3), "subscribed Channel 3 should be there in where now list");
+                                pubnub.unsubscribe({channel : ch1});
+                                pubnub.unsubscribe({channel : ch2});
+                                pubnub.unsubscribe({channel : ch3});                                
+                                done();
+                            }})}, 3000
+                        );
+                        where_now_set = true;
+                    }
+                },
+                callback : function(response) {
+                },
+                error : function(error) {
+                    assert.ok(false, "Error occurred in subscribe");
+                }
+
+            })
+
+        })
+
+    })
+
+
+
+    describe('#subscriber.setstate()', function() {
+        var uuid = Date.now();
+        var pubnub = PUBNUB.init({
+            publish_key       : 'demo',
+            subscribe_key     : 'demo',
+            uuid              :  uuid,
+            origin            : 'dara.devbuild.pubnub.com'
+        });
+        this.timeout(80000);
+        it('should be able to set metadata for uuid', function(done){
+            var ch = channel + '-' + 'setstate' ;
+            var uuid = pubnub.uuid();
+            var metadata = { 'name' : 'name-' + uuid};
+            pubnub.subscriber.setstate({
+                channel  : ch ,
+                uuid     : uuid,
+                metadata : metadata, 
+                callback : function(response) {
+                    assert.deepEqual(response.status, 200);
+                    assert.deepEqual(response.payload,metadata);
+                    pubnub.subscriber.getstate({
+                        channel  : ch ,
+                        uuid     : uuid,
+                        callback : function(response) {
+                            assert.deepEqual(response.status, 200);
+                            assert.deepEqual(response.payload,metadata);
+                            done();
+                        },
+                        error    : function(error) {
+                            assert.ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                        }
+                     });
+                },
+                error : function(error) {
+                    assert.ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                }
+
+            })
+
+        })
+
+
+    })
+
 
 })

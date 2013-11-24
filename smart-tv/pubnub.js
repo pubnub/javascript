@@ -891,9 +891,15 @@ function PN_API(setup) {
             if (metadata) data['metadata'] = 1;
 
             // Make sure we have a Channel
-            if (!channel)       return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            var url = [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub_key', SUBSCRIBE_KEY
+                ];
+
+            channel && url.push('channel') && url.push(encode(channel));
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
@@ -908,11 +914,7 @@ function PN_API(setup) {
                     callback(response)
                 },
                 fail     : err,
-                url      : [
-                    STD_ORIGIN, 'v2', 'presence',
-                    'sub_key', SUBSCRIBE_KEY,
-                    'channel', encode(channel)
-                ]
+                url      : url
             });
         },
 
@@ -924,6 +926,7 @@ function PN_API(setup) {
             ,   err      = args['error']    || function(){}
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   jsonp    = jsonp_cb()
+            ,   uuid     = args['uuid']     || UUID
             ,   data     = { 'auth' : auth_key };
 
             // Make sure we have a Channel
