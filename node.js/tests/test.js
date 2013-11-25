@@ -980,6 +980,63 @@ describe('Pubnub', function() {
                 }
             })
         })
+        it('should be able to delete metadata for uuid', function(done){
+            var ch = channel + '-' + 'setstate' ;
+            var uuid = pubnub.uuid();
+            var metadata = { 'name' : 'name-' + uuid, "age" : "50"};
+            pubnub.subscriber.setstate({
+                channel  : ch ,
+                uuid     : uuid,
+                metadata : metadata,
+                callback : function(response) {
+                    assert.deepEqual(response.status, 200);
+                    assert.deepEqual(response.payload,metadata);
+                    pubnub.subscriber.getstate({
+                        channel  : ch ,
+                        uuid     : uuid,
+                        callback : function(response) {
+                            assert.deepEqual(response.status, 200);
+                            assert.deepEqual(response.payload,metadata);
+                            delete metadata["age"];
+                            pubnub.subscriber.setstate({
+                                channel  : ch ,
+                                uuid     : uuid,
+                                metadata : { "age" : "null"},
+                                callback : function(response) {
+                                    assert.deepEqual(response.status, 200);
+                                    assert.deepEqual(response.payload,metadata);
+                                    pubnub.subscriber.getstate({
+                                        channel  : ch ,
+                                        uuid     : uuid,
+                                        callback : function(response) {
+                                            assert.deepEqual(response.status, 200);
+                                            assert.deepEqual(response.payload,metadata);
+                                            done();
+                                        },
+                                        error    : function(error) {
+                                            assert.ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                                            done();
+                                        }
+                                     });
+                                },
+                                error : function(error) {
+                                    assert.ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                                    done();
+                                }
+                            })
+                        },
+                        error    : function(error) {
+                            assert.ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                            done();
+                        }
+                     });
+                },
+                error : function(error) {
+                    assert.ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                    done();
+                }
+            })
+        })
     })
     describe('#here_now()', function(){
         var uuid  = Date.now()
@@ -1114,7 +1171,7 @@ describe('Pubnub', function() {
             });
             pubnub_pres_1.subscriber.setstate({
                 channel : ch1,
-                uuid : uuid + '-1',
+                uuid : uuid1,
                 metadata : {
                     name : 'name-' + uuid1
                 },
@@ -1127,7 +1184,7 @@ describe('Pubnub', function() {
             });
             pubnub_pres_2.subscriber.setstate({
                 channel : ch2,
-                uuid : uuid + '-2',
+                uuid : uuid2,
                 metadata : {
                     name : 'name-' + uuid2
                 },
@@ -1140,7 +1197,7 @@ describe('Pubnub', function() {
             });
             pubnub_pres_3.subscriber.setstate({
                 channel : ch3,
-                uuid : uuid + '-3',
+                uuid : uuid3,
                 metadata : {
                     name : 'name-' + uuid3
                 },
@@ -1228,5 +1285,269 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
+        it("should return correct metadata for uuid in different channels", function() {
+
+            var ch = channel + '-' + 'here-now-' + Date.now();
+            var ch1 = ch + '-1' ;
+            var ch2 = ch + '-2' ;
+            var ch3 = ch + '-3' ;
+
+            pubnub_pres.subscriber.setstate({
+                channel : ch,
+                uuid : uuid,
+                metadata : {
+                    name : 'name-' + uuid
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+            pubnub_pres.subscriber.setstate({
+                channel : ch1,
+                uuid : uuid,
+                metadata : {
+                    name : 'name-' + uuid1
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+            pubnub_pres.subscriber.setstate({
+                channel : ch2,
+                uuid : uuid,
+                metadata : {
+                    name : 'name-' + uuid2
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+            pubnub_pres.subscriber.setstate({
+                channel : ch3,
+                uuid : uuid,
+                metadata : {
+                    name : 'name-' + uuid3
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+
+            setTimeout(function() {
+                pubnub_pres.subscribe({
+                    channel: ch ,
+                    connect : function(response) {
+                        pubnub_pres.subscribe({
+                            channel: ch1 ,
+                            connect : function(response) {
+                                pubnub_pres.subscribe({
+                                    channel: ch2 ,
+                                    connect : function(response) {
+                                        pubnub_pres.subscribe({
+                                            channel: ch3 ,
+                                            connect : function(response) {
+                                                setTimeout(function() {
+                                                    pubnub_pres.here_now({
+                                                        metadata : true,
+                                                        callback : function(response) {
+                                                            assert.deepEqual(response.status, 200);
+                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload");
+                                                            assert.ok(response.payload.channels[ch1], "subscribed 1 channel should be present in payload");
+                                                            assert.ok(response.payload.channels[ch2], "subscribed 2 channel should be present in payload");
+                                                            assert.ok(response.payload.channels[ch3], "subscribed 3 channel should be present in payload");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch1].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch2].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch3].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
+                                                            assert.deepEqual(response.payload.channels[ch].occupancy,1);
+                                                            assert.deepEqual(response.payload.channels[ch1].occupancy,1);
+                                                            assert.deepEqual(response.payload.channels[ch2].occupancy,1);
+                                                            assert.deepEqual(response.payload.channels[ch3].occupancy,1);
+                                                            pubnub_pres.unsubscribe({channel : ch});
+                                                            pubnub_pres.unsubscribe({channel : ch1});
+                                                            pubnub_pres.unsubscribe({channel : ch2});
+                                                            pubnub_pres.unsubscribe({channel : ch3});
+                                                            done();
+                                                        },
+                                                        error : function(error) {
+                                                            assert.ok(false, "Error occurred in subscribe 3");
+                                                            done();
+                                                        }
+                                                    });
+                                                },3000);
+                                            },
+                                            callback : function(response) {
+                                            },
+                                            error : function(error) {
+                                                assert.ok(false, "Error occurred in subscribe 3");
+                                                done();
+                                            }
+                                        })
+                                    },
+                                    callback : function(response) {
+                                    },
+                                    error : function(error) {
+                                        assert.ok(false, "Error occurred in subscribe 2");
+                                        done();
+                                    }
+                                })
+                            },
+                            callback : function(response) {
+                            },
+                            error : function(error) {
+                                assert.ok(false, "Error occurred in subscribe 1");
+                                done();
+                            }
+                        })
+                    },
+                    callback : function(response) {
+                    },
+                    error : function(error) {
+                        assert.ok(false, "Error occurred in subscribe");
+                        done();
+                    }
+                })
+            },5000);
+        })
+        it("should return correct metadata for multiple uuids in single channel", function() {
+
+            var ch = channel + '-' + 'here-now-' + Date.now();
+
+            pubnub_pres.subscriber.setstate({
+                channel : ch,
+                uuid : uuid,
+                metadata : {
+                    name : 'name-' + uuid
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+            pubnub_pres.subscriber.setstate({
+                channel : ch,
+                uuid : uuid1,
+                metadata : {
+                    name : 'name-' + uuid1
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+            pubnub_pres.subscriber.setstate({
+                channel : ch,
+                uuid : uuid2,
+                metadata : {
+                    name : 'name-' + uuid2
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+            pubnub_pres.subscriber.setstate({
+                channel : ch,
+                uuid : uuid3,
+                metadata : {
+                    name : 'name-' + uuid3
+                },
+                callback : function(r) {
+                    assert.deepEqual(r.status,200);
+                },
+                error : function(e) {
+                    assert.ok(false,"Error in setstate")
+                }
+            });
+
+            setTimeout(function() {
+                pubnub_pres.subscribe({
+                    channel: ch ,
+                    connect : function(response) {
+                        pubnub_pres_1.subscribe({
+                            channel: ch ,
+                            connect : function(response) {
+                                pubnub_pres_2.subscribe({
+                                    channel: ch ,
+                                    connect : function(response) {
+                                        pubnub_pres_3.subscribe({
+                                            channel: ch ,
+                                            connect : function(response) {
+                                                setTimeout(function() {
+                                                    pubnub_pres.here_now({
+                                                        metadata : true,
+                                                        callback : function(response) {
+                                                            assert.deepEqual(response.status, 200);
+                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload"); 
+                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
+                                                            assert.deepEqual(response.payload.channels[ch].occupancy,1);
+                                                            pubnub_pres.unsubscribe({channel : ch});
+                                                            pubnub_pres_1.unsubscribe({channel : ch});
+                                                            pubnub_pres_2.unsubscribe({channel : ch});
+                                                            pubnub_pres_3.unsubscribe({channel : ch});
+                                                            done();
+                                                        },
+                                                        error : function(error) {
+                                                            assert.ok(false, "Error occurred in subscribe 3");
+                                                            done();
+                                                        }
+                                                    });
+                                                },3000);
+                                            },
+                                            callback : function(response) {
+                                            },
+                                            error : function(error) {
+                                                assert.ok(false, "Error occurred in subscribe 3");
+                                                done();
+                                            }
+                                        })
+                                    },
+                                    callback : function(response) {
+                                    },
+                                    error : function(error) {
+                                        assert.ok(false, "Error occurred in subscribe 2");
+                                        done();
+                                    }
+                                })
+                            },
+                            callback : function(response) {
+                            },
+                            error : function(error) {
+                                assert.ok(false, "Error occurred in subscribe 1");
+                                done();
+                            }
+                        })
+                    },
+                    callback : function(response) {
+                    },
+                    error : function(error) {
+                        assert.ok(false, "Error occurred in subscribe");
+                        done();
+                    }
+                })
+            },5000);
+        })
+
     })
 })
