@@ -881,17 +881,46 @@ test("#revoke() should be able to revoke access", function(done) {
 
 function in_list(list,str) {
     for (var x in list) {
-        if (list[x] === str) return true;
+        if (list[x] == str) return true;
     }
     return false;
  }
 
+ function in_list_deep(list,str) {
+    for (var x in list) {
+        if (JSON.stringify(list[x]) === JSON.stringify(str)) return true;
+    }
+    return false;
+ }
+
+var uuid = Date.now()
+var uuid1 = uuid + '-1';
+var uuid2 = uuid + '-2';
+var uuid3 = uuid + '-3';
 var pubnub_pres = PUBNUB.init({
     origin            : 'dara.devbuild.pubnub.com',
     publish_key       : 'demo',
-    subscribe_key     : 'demo'
+    subscribe_key     : 'demo',
+    uuid              : uuid
 });
-var uuid = Date.now()
+var pubnub_pres_1 = PUBNUB.init({
+    origin            : 'dara.devbuild.pubnub.com',
+    publish_key       : 'demo',
+    subscribe_key     : 'demo',
+    uuid              : uuid1
+});
+var pubnub_pres_2 = PUBNUB.init({
+    origin            : 'dara.devbuild.pubnub.com',
+    publish_key       : 'demo',
+    subscribe_key     : 'demo',
+    uuid              : uuid2
+});
+var pubnub_pres_3 = PUBNUB.init({
+    origin            : 'dara.devbuild.pubnub.com',
+    publish_key       : 'demo',
+    subscribe_key     : 'demo',
+    uuid              : uuid3
+});
 
 asyncTest("#where_now() should return channel x in result for uuid y, when uuid y subscribed to channel x", function() {
     expect(2);
@@ -912,7 +941,7 @@ asyncTest("#where_now() should return channel x in result for uuid y, when uuid 
                         ok(false, "Error occurred in where now " + JSON.stringify(error));
                         start();
                     }
-                })}, 
+                })},
                 3000
             );
         },
@@ -925,3 +954,294 @@ asyncTest("#where_now() should return channel x in result for uuid y, when uuid 
     })
 });
 
+asyncTest("#where_now() should return channel a,b,c in result for uuid y, when uuid y subscribed to channel x", function() {
+    expect(4);
+    var ch1 = channel + '-' + 'where-now' + '-1' ;
+    var ch2 = channel + '-' + 'where-now' + '-2' ;
+    var ch3 = channel + '-' + 'where-now' + '-3' ;
+    var where_now_set = false;
+    pubnub_pres.subscribe({
+        channel: [ch1,ch2,ch3] ,
+        connect : function(response) {
+            if (!where_now_set) {
+                setTimeout(function() {
+                    pubnub_pres.where_now({
+                        uuid: uuid,
+                        callback : function(data) {
+                            deepEqual(data.status, 200);
+                            ok(in_list(data.payload.channels,ch1), "subscribed Channel 1 should be there in where now list");
+                            ok(in_list(data.payload.channels,ch2), "subscribed Channel 2 should be there in where now list");
+                            ok(in_list(data.payload.channels,ch3), "subscribed Channel 3 should be there in where now list");
+                            pubnub.unsubscribe({channel : ch1});
+                            pubnub.unsubscribe({channel : ch2});
+                            pubnub.unsubscribe({channel : ch3});
+                            start();
+                        },
+                        error : function(error) {
+                            ok(false, "Error occurred in where now " + JSON.stringify(error));
+                            start();
+                        }
+                    });
+                }, 3000);
+                where_now_set = true;
+            }
+        },
+        callback : function(response) {
+        },
+        error : function(error) {
+            ok(false, "Error occurred in subscribe");
+            start();
+        }
+    })
+});
+
+asyncTest('#subscriber.setstate() should be able to set metadata for uuid', function(){
+    expect(4);
+    var ch = channel + '-' + 'setstate' ;
+    var uuid = pubnub.uuid();
+    var metadata = { 'name' : 'name-' + uuid};
+    pubnub_pres.subscriber.setstate({
+        channel  : ch ,
+        uuid     : uuid,
+        metadata : metadata,
+        callback : function(response) {
+            deepEqual(response.status, 200);
+            deepEqual(response.payload,metadata);
+            pubnub_pres.subscriber.getstate({
+                channel  : ch ,
+                uuid     : uuid,
+                callback : function(response) {
+                    deepEqual(response.status, 200);
+                    deepEqual(response.payload,metadata);
+                    start();
+                },
+                error    : function(error) {
+                    ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                    start();
+                }
+             });
+        },
+        error : function(error) {
+            ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+            start();
+        }
+    })
+})
+
+asyncTest("#here_now() should return channel channel list with occupancy details and uuids for a subscribe key", function() {
+    expect(13);
+    var ch = channel + '-' + 'here-now-' + Date.now();
+    var ch1 = ch + '-1' ;
+    var ch2 = ch + '-2' ;
+    var ch3 = ch + '-3' ;
+
+    pubnub_pres.subscribe({
+        channel: ch ,
+        connect : function(response) {
+            pubnub_pres_1.subscribe({
+                channel: ch1 ,
+                connect : function(response) {
+                    pubnub_pres_2.subscribe({
+                        channel: ch2 ,
+                        connect : function(response) {
+                            pubnub_pres_3.subscribe({
+                                channel: ch3 ,
+                                connect : function(response) {
+                                    setTimeout(function() {
+                                        pubnub_pres.here_now({
+                                            callback : function(response) {
+                                                deepEqual(response.status, 200);
+                                                ok(response.payload.channels[ch], "subscribed channel should be present in payload");
+                                                ok(response.payload.channels[ch1], "subscribed 1 channel should be present in payload");
+                                                ok(response.payload.channels[ch2], "subscribed 2 channel should be present in payload");
+                                                ok(response.payload.channels[ch3], "subscribed 3 channel should be present in payload");
+                                                ok(in_list(response.payload.channels[ch].uuids, uuid), "uuid should be there in the uuids list");
+                                                ok(in_list(response.payload.channels[ch1].uuids,uuid1), "uuid 1 should be there in the uuids list");
+                                                ok(in_list(response.payload.channels[ch2].uuids,uuid2), "uuid 2 should be there in the uuids list");
+                                                ok(in_list(response.payload.channels[ch3].uuids,uuid3), "uuid 3 should be there in the uuids list");
+                                                deepEqual(response.payload.channels[ch].occupancy,1);
+                                                deepEqual(response.payload.channels[ch1].occupancy,1);
+                                                deepEqual(response.payload.channels[ch2].occupancy,1);
+                                                deepEqual(response.payload.channels[ch3].occupancy,1);
+                                                pubnub_pres.unsubscribe({channel : ch});
+                                                pubnub_pres_1.unsubscribe({channel : ch1});
+                                                pubnub_pres_2.unsubscribe({channel : ch2});
+                                                pubnub_pres_3.unsubscribe({channel : ch3});
+                                                start();
+                                            },
+                                            error : function(error) {
+                                                ok(false, "Error occurred in subscribe 3");
+                                                start();
+                                            }
+                                        });
+                                    },3000);
+                                },
+                                callback : function(response) {
+                                },
+                                error : function(error) {
+                                    ok(false, "Error occurred in subscribe 3");
+                                    start();
+                                }
+                            })
+                        },
+                        callback : function(response) {
+                        },
+                        error : function(error) {
+                            ok(false, "Error occurred in subscribe 2");
+                            start();
+                        }
+                    })
+                },
+                callback : function(response) {
+                },
+                error : function(error) {
+                    ok(false, "Error occurred in subscribe 1");
+                    start();
+                }
+            })
+        },
+        callback : function(response) {
+        },
+        error : function(error) {
+            ok(false, "Error occurred in subscribe");
+            start();
+        }
+    })
+})
+
+asyncTest("#here_now() should return channel channel list with occupancy details and uuids + metadata for a subscribe key", function() {
+    expect(17);
+    var ch = channel + '-' + 'here-now-' + Date.now();
+    var ch1 = ch + '-1' ;
+    var ch2 = ch + '-2' ;
+    var ch3 = ch + '-3' ;
+
+    pubnub_pres.subscriber.setstate({
+        channel : ch,
+        uuid : uuid,
+        metadata : {
+            name : 'name-' + uuid
+        },
+        callback : function(r) {
+            deepEqual(r.status,200);
+        },
+        error : function(e) {
+            ok(false,"Error in setstate")
+        }
+    });
+    pubnub_pres_1.subscriber.setstate({
+        channel : ch1,
+        uuid : uuid + '-1',
+        metadata : {
+            name : 'name-' + uuid + '-1'
+        },
+        callback : function(r) {
+            deepEqual(r.status,200);
+        },
+        error : function(e) {
+            ok(false,"Error in setstate")
+        }
+    });
+    pubnub_pres_2.subscriber.setstate({
+        channel : ch2,
+        uuid : uuid + '-2',
+        metadata : {
+            name : 'name-' + uuid + '-2'
+        },
+        callback : function(r) {
+            deepEqual(r.status,200);
+        },
+        error : function(e) {
+            ok(false,"Error in setstate")
+        }
+    });
+    pubnub_pres_3.subscriber.setstate({
+        channel : ch3,
+        uuid : uuid + '-3',
+        metadata : {
+            name : 'name-' + uuid + '-3'
+        },
+        callback : function(r) {
+            deepEqual(r.status,200);
+        },
+        error : function(e) {
+            ok(false,"Error in setstate")
+        }
+    });
+
+    setTimeout(function() {
+        pubnub_pres.subscribe({
+            channel: ch ,
+            connect : function(response) {
+                pubnub_pres_1.subscribe({
+                    channel: ch1 ,
+                    connect : function(response) {
+                        pubnub_pres_2.subscribe({
+                            channel: ch2 ,
+                            connect : function(response) {
+                                pubnub_pres_3.subscribe({
+                                    channel: ch3 ,
+                                    connect : function(response) {
+                                        setTimeout(function() {
+                                            pubnub_pres.here_now({
+                                                metadata : true,
+                                                callback : function(response) {
+                                                    deepEqual(response.status, 200);
+                                                    ok(response.payload.channels[ch], "subscribed channel should be present in payload");
+                                                    ok(response.payload.channels[ch1], "subscribed 1 channel should be present in payload");
+                                                    ok(response.payload.channels[ch2], "subscribed 2 channel should be present in payload");
+                                                    ok(response.payload.channels[ch3], "subscribed 3 channel should be present in payload");
+                                                    ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.payload.channels[ch1].uuids,{ uuid : uuid1, metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.payload.channels[ch2].uuids,{ uuid : uuid2, metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.payload.channels[ch3].uuids,{ uuid : uuid3, metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    deepEqual(response.payload.channels[ch].occupancy,1);
+                                                    deepEqual(response.payload.channels[ch1].occupancy,1);
+                                                    deepEqual(response.payload.channels[ch2].occupancy,1);
+                                                    deepEqual(response.payload.channels[ch3].occupancy,1);
+                                                    pubnub_pres.unsubscribe({channel : ch});
+                                                    pubnub_pres_1.unsubscribe({channel : ch1});
+                                                    pubnub_pres_2.unsubscribe({channel : ch2});
+                                                    pubnub_pres_3.unsubscribe({channel : ch3});
+                                                    start();
+                                                },
+                                                error : function(error) {
+                                                    ok(false, "Error occurred in subscribe 3");
+                                                    start();
+                                                }
+                                            });
+                                        },3000);
+                                    },
+                                    callback : function(response) {
+                                    },
+                                    error : function(error) {
+                                        ok(false, "Error occurred in subscribe 3");
+                                        start();
+                                    }
+                                })
+                            },
+                            callback : function(response) {
+                            },
+                            error : function(error) {
+                                ok(false, "Error occurred in subscribe 2");
+                                start();
+                            }
+                        })
+                    },
+                    callback : function(response) {
+                    },
+                    error : function(error) {
+                        ok(false, "Error occurred in subscribe 1");
+                        start();
+                    }
+                })
+            },
+            callback : function(response) {
+            },
+            error : function(error) {
+                ok(false, "Error occurred in subscribe");
+                start();
+            }
+        })
+    },5000);
+})
