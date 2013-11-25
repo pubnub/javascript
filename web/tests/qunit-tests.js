@@ -922,6 +922,50 @@ var pubnub_pres_3 = PUBNUB.init({
     uuid              : uuid3
 });
 
+/*
+
+asyncTest("subscribe() should not generate spurious presence events when adding new channels to subscribe list", function() {
+    expect(4);
+    var ch1 = channel + '-subscribe-' + Date.now();
+    var ch2 = ch1 + '-2';
+    pubnub_pres.subscribe({ channel : ch1,
+        connect : function(response)  {
+            setTimeout(function(){
+                pubnub_pres.subscribe({
+                    channel  : ch2,
+                    connect  : function() {
+
+                    },
+                    callback : function(message) {
+                        
+                    },
+                    error : function(error) {
+                        ok(false, "Error in subscribe 2")
+                    },
+                    presence : function(response) {
+                        deepEqual(response.action,"join");
+                        deepEqual(response.uuid, JSON.stringify(pubnub_pres.get_uuid()));
+                        setTimeout(function(){
+                            start();
+                        }, 5000);
+                    }
+                });
+            },5000);
+        },
+        presence : function(response) {
+            deepEqual(response.action,"join");
+            deepEqual(response.uuid + '', JSON.stringify(pubnub_pres.get_uuid()));
+        },
+        callback : function(response) {
+
+        },
+        error : function(response) {
+            ok(false, "Error occurred in subscribe 1");
+            start();
+        }
+    });
+});
+*/
 asyncTest("#where_now() should return channel x in result for uuid y, when uuid y subscribed to channel x", function() {
     expect(2);
     var ch = channel + '-' + 'where-now' ;

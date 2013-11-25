@@ -1037,7 +1037,66 @@ describe('Pubnub', function() {
                 }
             })
         })
-    })
+    }),
+/*
+    describe('#subscribe()', function(){
+        var uuid  = Date.now()
+        ,   uuid1 = uuid + '-1'
+        ,   uuid2 = uuid + '-2'
+        ,   uuid3 = uuid + '-3';
+
+        var pubnub_pres = PUBNUB.init({
+            origin            : 'dara.devbuild.pubnub.com',
+            publish_key       : 'demo',
+            subscribe_key     : 'demo',
+            uuid              : uuid
+        });
+        it("should not generate spurious presence events when adding new channels to subscribe list", function() {
+            var ch1 = channel + '-subscribe-' + Date.now();
+            var ch2 = ch1 + '-2';
+            var events_count = 0;
+            pubnub_pres.subscribe({ channel : ch1,
+                connect : function(response)  {
+                    setTimeout(function(){
+                        pubnub_pres.subscribe({
+                            channel  : ch2,
+                            connect  : function() {
+
+                            },
+                            callback : function(message) {
+                                
+                            },
+                            error : function(error) {
+                                assert.ok(false, "Error in subscribe 2")
+                            },
+                            presence : function(response) {
+                                events_count++;
+                                assert.deepEqual(response.action,"join");
+                                assert.deepEqual(response.uuid, JSON.stringify(pubnub_pres.get_uuid()));
+                                setTimeout(function(){
+                                    asser.deepEqual(events_count,2);
+                                    done();
+                                }, 5000);
+                            }
+                        });
+                    },5000);
+                },
+                presence : function(response) {
+                    events_count++;
+                    assert.deepEqual(response.action,"join");
+                    assert.deepEqual(response.uuid + '', JSON.stringify(pubnub_pres.get_uuid()));
+                },
+                callback : function(response) {
+
+                },
+                error : function(response) {
+                    assert.ok(false, "Error occurred in subscribe 1");
+                    done();
+                }
+            });
+        })
+    }),
+*/
     describe('#here_now()', function(){
         var uuid  = Date.now()
         ,   uuid1 = uuid + '-1'
