@@ -126,6 +126,9 @@ function uuid(callback) {
     if (callback) callback(u);
     return u;
 }
+function isArray(arg) {
+    return Object.prototype.toString.call(arg) === "[object Array]";
+}
 
 /**
  * EACH
@@ -135,7 +138,7 @@ function uuid(callback) {
 function each( o, f ) {
     if ( !o || !f ) return;
 
-    if ( typeof o[0] != 'undefined' )
+    if ( isArray(o) )
         for ( var i = 0, l = o.length; i < l; )
             f.call( o[i], o[i], i++ );
     else
@@ -444,7 +447,7 @@ function PN_API(setup) {
 
             if (args['prepend']) add_msg = 'unshift'
 
-            if (!msg)           return error_common('Missing Message', err);
+            if(typeof(msg) === "undefined") return error_common('Missing Message', err);
             if (!channel)       return error_common('Missing Channel', err);
             if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
             if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
