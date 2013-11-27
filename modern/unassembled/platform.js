@@ -309,8 +309,9 @@ function PN(setup) {
     SELF['ready']();
     return SELF;
 }
+PN['init'] = PN
 
 typeof module  !== 'undefined' && (module.exports = PN) ||
-typeof exports !== 'undefined' && (exports.PN = PN)     || (PUBNUB = PN);
+typeof exports !== 'undefined' && (exports.PUBNUB = PN) || (PUBNUB = PN);
 
 })();

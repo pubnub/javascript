@@ -178,7 +178,7 @@ var db = (function(){
 /* =-=====================================================================-= */
 /* =-=====================================================================-= */
 
-exports.init = function(setup) {
+var CREATE_PUBNUB = function(setup) {
     var PN = {};
     setup['xdr'] = xdr;
     setup['db'] = db;
@@ -189,13 +189,13 @@ exports.init = function(setup) {
     PN.ready();
     return PN;
 }
-PUBNUB = exports.init({});
+CREATE_PUBNUB.init = CREATE_PUBNUB;
 
-exports.secure = function(setup) {
+CREATE_PUBNUB.secure = function(setup) {
     var iv = "0123456789012345";
     var cipher_key = setup['cipher_key'];
     var padded_cipher_key = crypto.createHash('sha256').update(cipher_key).digest("hex").slice(0,32);
-    var pubnub = exports.init(setup);
+    var pubnub = CREATE_PUBNUB(setup);
 
     function encrypt(data) {
         var plain_text = JSON.stringify(data);
@@ -219,7 +219,7 @@ exports.secure = function(setup) {
         raw_encrypt : encrypt,
         raw_decrypt : decrypt,
         ready       : pubnub.ready,
-        time        : PUBNUB.time,
+        time        : pubnub.time,
         publish     : function (args) {
             args.message = encrypt(args.message);
             return pubnub.publish(args);
@@ -278,4 +278,5 @@ exports.secure = function(setup) {
     };
     return SELF;
 }
-exports.unique = unique
+CREATE_PUBNUB.unique = unique
+module.exports = CREATE_PUBNUB
