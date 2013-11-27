@@ -68,6 +68,216 @@ test("set_uuid() should set uuid and new presence event should come with new uui
 });
 */
 
+test("instantiation test 1", function() {
+    var pubnub = PUBNUB({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 2", function() {
+    var pubnub = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 3", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 4", function() {
+    var pubnub1 = PUBNUB({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 5", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 6", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+
+test("instantiation test 7", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub2 = pubnub1({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub2.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
 
 test("publish() should publish strings without error", function() {
     expect(2);

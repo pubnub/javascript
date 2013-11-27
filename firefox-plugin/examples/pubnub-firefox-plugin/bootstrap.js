@@ -42,7 +42,7 @@ var idPrefix = "pubnub-";
 
 function alert(string) {
   Services.prompt.alert(Services.wm.getMostRecentWindow("navigator:browser"), "", string);
-} 
+}
 
 var subscribed_channel;
 
@@ -77,7 +77,7 @@ function onSubscribeCommand(event) {
           tag: "pubnub",
           icon: "chrome://pubnub/skin/icon.png"
         });
-      } 
+      }
     };
 
     subscribed_channel = input_channel.value;
@@ -90,7 +90,7 @@ function onSubscribeCommand(event) {
           tag: "pubnub",
           icon: "chrome://pubnub/skin/icon.png"
         });
-      }; 
+      };
     }
 
     if (result1) {
@@ -147,16 +147,16 @@ function loadIntoWindow(window) {
       toolbar.insertItem(idPrefix + "buttonSubscribe", nextSibling);
     }
     window.addEventListener("aftercustomization", saveButtonPosition, false);
-    window.addEventListener("command", onSubscribeCommand, false);    
+    window.addEventListener("command", onSubscribeCommand, false);
   }
 }
- 
+
 function unloadFromWindow(window) {
   if (!window || window.document.documentElement.getAttribute("windowtype") != "navigator:browser")
     return;
   let doc = window.document;
 }
- 
+
 var windowListener = {
   onOpenWindow: function(aWindow) {
     // Wait for the window to finish loading
@@ -166,7 +166,7 @@ var windowListener = {
       loadIntoWindow(domWindow);
     }, false);
   },
-  
+
   onCloseWindow: function(aWindow) {},
   onWindowTitleChange: function(aWindow, aTitle) {}
 };
@@ -176,17 +176,17 @@ function startup(aData, aReason) {
     sss.loadAndRegisterSheet(Services.io.newURI("chrome://pubnub/skin/pubnub.css", null, null), sss.USER_SHEET);
 
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-   
+
     // Load into any existing windows
     let windows = wm.getEnumerator("navigator:browser");
     while (windows.hasMoreElements()) {
       let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
       loadIntoWindow(domWindow);
     }
-   
+
     // Load into any new windows
     wm.addListener(windowListener);
-    init(); 
+    init();
   }
 
 function shutdown(aData, aReason) {
@@ -194,14 +194,14 @@ function shutdown(aData, aReason) {
   // up any UI changes made
   if (aReason == APP_SHUTDOWN)
     return;
- 
+
   sss.unregisterSheet(Services.io.newURI("chrome://pubnub/skin/pubnub.css", null, null), sss.USER_SHEET);
- 
+
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
- 
+
   // Stop listening for new windows
   wm.removeListener(windowListener);
- 
+
   // Unload from any existing windows
   let windows = wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
@@ -215,7 +215,7 @@ function shutdown(aData, aReason) {
   }
   scopes = null;
 }
- 
+
 function install(aData, aReason) {
   Services.prefs.setCharPref(prefsPrefix + "toolbarID", "nav-bar");
   var win = Services.wm.getMostRecentWindow("navigator:browser");

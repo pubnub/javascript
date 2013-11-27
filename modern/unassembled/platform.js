@@ -277,15 +277,24 @@ function create(element) { return document.createElement(element) }
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 
-function PN(setup) {
+function CREATE_PUBNUB(setup) {
 
 
     setup['db'] = db;
     setup['xdr'] = xdr;
     setup['error'] = error;
-    var SELF = PN_API(setup);
 
-    SELF['init'] = PN;
+    SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    }
+    var PN = PN_API(setup);
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
+
+    SELF['init'] = SELF;
     SELF['$'] = $;
     SELF['attr'] = attr;
     SELF['search'] = search;
@@ -309,9 +318,9 @@ function PN(setup) {
     SELF['ready']();
     return SELF;
 }
-PN['init'] = PN
+CREATE_PUBNUB['init'] = CREATE_PUBNUB
 
-typeof module  !== 'undefined' && (module.exports = PN) ||
-typeof exports !== 'undefined' && (exports.PUBNUB = PN) || (PUBNUB = PN);
+typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
+typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);
 
 })();

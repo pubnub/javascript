@@ -185,8 +185,6 @@ function ready() { timeout( function() {
     each( READY_BUFFER, function(connect) { connect() } );
 }, SECOND ); }
 
-
-
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
@@ -255,687 +253,687 @@ function PN_API(setup) {
     }
 
     // Announce Leave Event
-    var SELF = function(){};
-    SELF['LEAVE'] = function( channel, blocking, callback, error ) {
+    var SELF = {
+        'LEAVE' : function( channel, blocking, callback, error ) {
 
-        var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
-        ,   origin = nextorigin(ORIGIN)
-        ,   callback = callback || function(){}
-        ,   err      = error    || function(){}
-        ,   jsonp  = jsonp_cb();
+            var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
+            ,   origin = nextorigin(ORIGIN)
+            ,   callback = callback || function(){}
+            ,   err      = error    || function(){}
+            ,   jsonp  = jsonp_cb();
 
-        // Prevent Leaving a Presence Channel
-        if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
+            // Prevent Leaving a Presence Channel
+            if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
 
-        // No Leave Patch (Prevent Blocking Leave if Desired)
-        if (NOLEAVE)      return false;
-        if (!SSL)         return false;
-        if (jsonp == '0') return false;
+            // No Leave Patch (Prevent Blocking Leave if Desired)
+            if (NOLEAVE)      return false;
+            if (!SSL)         return false;
+            if (jsonp == '0') return false;
 
-        if (jsonp != '0') data['callback'] = jsonp;
+            if (jsonp != '0') data['callback'] = jsonp;
 
-        xdr({
-            blocking : blocking || SSL,
-            timeout  : 2000,
-            callback : jsonp,
-            data     : data,
-            success  : function(response) {
-                if (typeof response == 'object' && response['error']) {
-                    err(response);
-                    return;
-                }
-                callback(response)
-            },
-            fail     : err,
-            url      : [
-                origin, 'v2', 'presence', 'sub_key',
-                SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
-            ]
-        });
-        return true;
-    };
-    /*
-        PUBNUB.history({
-            channel  : 'my_chat_channel',
-            limit    : 100,
-            callback : function(history) { }
-        });
-    */
-    SELF['history'] = function( args, callback ) {
-        var callback = args['callback'] || callback
-        ,   count    = args['count']    || args['limit'] || 100
-        ,   reverse  = args['reverse']  || "false"
-        ,   err      = args['error']    || function(){}
-        ,   auth_key = args['auth_key'] || AUTH_KEY
-        ,   channel  = args['channel']
-        ,   start    = args['start']
-        ,   end      = args['end']
-        ,   params   = {}
-        ,   jsonp    = jsonp_cb();
-
-        // Make sure we have a Channel
-        if (!channel)       return error_common('Missing Channel', err);
-        if (!callback)      return error_common('Missing Callback', err);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-
-        params['stringtoken'] = 'true';
-        params['count']       = count;
-        params['reverse']     = reverse;
-        params['auth']        = auth_key;
-
-        if (jsonp) params['callback'] = jsonp;
-        if (start) params['start']    = start;
-        if (end)   params['end']      = end;
-
-        // Send Message
-        xdr({
-            callback : jsonp,
-            data     : params,
-            success  : function(response) {
-                if (typeof response == 'object' && response['error']) {
-                    err(response);
-                    return;
-                }
-                callback(response)
-            },
-            fail     : err,
-            url      : [
-                STD_ORIGIN, 'v2', 'history', 'sub-key',
-                SUBSCRIBE_KEY, 'channel', encode(channel)
-            ]
-        });
-    };
-
-    /*
-        PUBNUB.replay({
-            source      : 'my_channel',
-            destination : 'new_channel'
-        });
-    */
-    SELF['replay'] = function(args) {
-        var callback    = callback || args['callback'] || function(){}
-        ,   auth_key    = args['auth_key'] || AUTH_KEY
-        ,   source      = args['source']
-        ,   destination = args['destination']
-        ,   stop        = args['stop']
-        ,   start       = args['start']
-        ,   end         = args['end']
-        ,   reverse     = args['reverse']
-        ,   limit       = args['limit']
-        ,   jsonp       = jsonp_cb()
-        ,   data        = {}
-        ,   url;
-
-        // Check User Input
-        if (!source)        return error_common('Missing Source Channel', err);
-        if (!destination)   return error_common('Missing Destination Channel', err);
-        if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-
-        // Setup URL Params
-        if (jsonp != '0') data['callback'] = jsonp;
-        if (stop)         data['stop']     = 'all';
-        if (reverse)      data['reverse']  = 'true';
-        if (start)        data['start']    = start;
-        if (end)          data['end']      = end;
-        if (limit)        data['count']    = limit;
-
-        data['auth'] = auth_key;
-
-        // Compose URL Parts
-        url = [
-            STD_ORIGIN, 'v1', 'replay',
-            PUBLISH_KEY, SUBSCRIBE_KEY,
-            source, destination
-        ];
-
-        // Start (or Stop) Replay!
-        xdr({
-            callback : jsonp,
-            success  : function(response) {
-                if (typeof response == 'object' && response['error']) {
-                    err(response);
-                    return;
-                }
-                callback(response)
-            },
-            fail     : function() { callback([ 0, 'Disconnected' ]) },
-            url      : url,
-            data     : data
-        });
-    };
-
-    /*
-        PUBNUB.auth('AJFLKAJSDKLA');
-    */
-    SELF['auth'] = function(auth) {
-        AUTH_KEY = auth;
-        CONNECT();
-    };
-
-    /*
-        PUBNUB.time(function(time){ });
-    */
-    SELF['time'] = function(callback) {
-        var jsonp = jsonp_cb();
-        xdr({
-            callback : jsonp,
-            data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
-            timeout  : SECOND * 5,
-            url      : [STD_ORIGIN, 'time', jsonp],
-            success  : function(response) { callback(response[0]) },
-            fail     : function() { callback(0) }
-        });
-    };
-
-    /*
-        PUBNUB.publish({
-            channel : 'my_chat_channel',
-            message : 'hello!'
-        });
-    */
-    SELF['publish'] = function( args, callback ) {
-        var callback = callback || args['callback'] || function(){}
-        ,   msg      = args['message']
-        ,   channel  = args['channel']
-        ,   auth_key = args['auth_key'] || AUTH_KEY
-        ,   err      = args['error'] || function() {}
-        ,   jsonp    = jsonp_cb()
-        ,   add_msg  = 'push'
-        ,   url;
-
-        if (args['prepend']) add_msg = 'unshift'
-
-        if(typeof(msg) === "undefined") return error_common('Missing Message', err);
-        if (!channel)       return error_common('Missing Channel', err);
-        if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-
-        // If trying to send Object
-        msg = JSON['stringify'](msg);
-
-        // Create URL
-        url = [
-            STD_ORIGIN, 'publish',
-            PUBLISH_KEY, SUBSCRIBE_KEY,
-            0, encode(channel),
-            jsonp, encode(msg)
-        ];
-
-        // Queue Message Send
-        PUB_QUEUE[add_msg]({
-            callback : jsonp,
-            timeout  : SECOND * 5,
-            url      : url,
-            data     : { 'uuid' : UUID, 'auth' : auth_key },
-            fail     : function(response){err(response);publish(1)},
-            success  : function(response) {
-                if (typeof response == 'object' && response['error'])
-                    err(response);
-                else
+            xdr({
+                blocking : blocking || SSL,
+                timeout  : 2000,
+                callback : jsonp,
+                data     : data,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
                     callback(response)
+                },
+                fail     : err,
+                url      : [
+                    origin, 'v2', 'presence', 'sub_key',
+                    SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
+                ]
+            });
+            return true;
+        },
+        /*
+            PUBNUB.history({
+                channel  : 'my_chat_channel',
+                limit    : 100,
+                callback : function(history) { }
+            });
+        */
+        'history' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   count    = args['count']    || args['limit'] || 100
+            ,   reverse  = args['reverse']  || "false"
+            ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   channel  = args['channel']
+            ,   start    = args['start']
+            ,   end      = args['end']
+            ,   params   = {}
+            ,   jsonp    = jsonp_cb();
 
-                publish(1);
+            // Make sure we have a Channel
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            params['stringtoken'] = 'true';
+            params['count']       = count;
+            params['reverse']     = reverse;
+            params['auth']        = auth_key;
+
+            if (jsonp) params['callback'] = jsonp;
+            if (start) params['start']    = start;
+            if (end)   params['end']      = end;
+
+            // Send Message
+            xdr({
+                callback : jsonp,
+                data     : params,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v2', 'history', 'sub-key',
+                    SUBSCRIBE_KEY, 'channel', encode(channel)
+                ]
+            });
+        },
+
+        /*
+            PUBNUB.replay({
+                source      : 'my_channel',
+                destination : 'new_channel'
+            });
+        */
+        'replay' : function(args) {
+            var callback    = callback || args['callback'] || function(){}
+            ,   auth_key    = args['auth_key'] || AUTH_KEY
+            ,   source      = args['source']
+            ,   destination = args['destination']
+            ,   stop        = args['stop']
+            ,   start       = args['start']
+            ,   end         = args['end']
+            ,   reverse     = args['reverse']
+            ,   limit       = args['limit']
+            ,   jsonp       = jsonp_cb()
+            ,   data        = {}
+            ,   url;
+
+            // Check User Input
+            if (!source)        return error('Missing Source Channel');
+            if (!destination)   return error('Missing Destination Channel');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            // Setup URL Params
+            if (jsonp != '0') data['callback'] = jsonp;
+            if (stop)         data['stop']     = 'all';
+            if (reverse)      data['reverse']  = 'true';
+            if (start)        data['start']    = start;
+            if (end)          data['end']      = end;
+            if (limit)        data['count']    = limit;
+
+            data['auth'] = auth_key;
+
+            // Compose URL Parts
+            url = [
+                STD_ORIGIN, 'v1', 'replay',
+                PUBLISH_KEY, SUBSCRIBE_KEY,
+                source, destination
+            ];
+
+            // Start (or Stop) Replay!
+            xdr({
+                callback : jsonp,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
+                },
+                fail     : function() { callback([ 0, 'Disconnected' ]) },
+                url      : url,
+                data     : data
+            });
+        },
+
+        /*
+            PUBNUB.auth('AJFLKAJSDKLA');
+        */
+        'auth' : function(auth) {
+            AUTH_KEY = auth;
+            CONNECT();
+        },
+
+        /*
+            PUBNUB.time(function(time){ });
+        */
+        'time' : function(callback) {
+            var jsonp = jsonp_cb();
+            xdr({
+                callback : jsonp,
+                data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
+                timeout  : SECOND * 5,
+                url      : [STD_ORIGIN, 'time', jsonp],
+                success  : function(response) { callback(response[0]) },
+                fail     : function() { callback(0) }
+            });
+        },
+
+        /*
+            PUBNUB.publish({
+                channel : 'my_chat_channel',
+                message : 'hello!'
+            });
+        */
+        'publish' : function( args, callback ) {
+            var callback = callback || args['callback'] || function(){}
+            ,   msg      = args['message']
+            ,   channel  = args['channel']
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   err      = args['error'] || function() {}
+            ,   jsonp    = jsonp_cb()
+            ,   add_msg  = 'push'
+            ,   url;
+
+            if (args['prepend']) add_msg = 'unshift'
+
+            if (!msg)           return error('Missing Message');
+            if (!channel)       return error('Missing Channel');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            // If trying to send Object
+            msg = JSON['stringify'](msg);
+
+            // Create URL
+            url = [
+                STD_ORIGIN, 'publish',
+                PUBLISH_KEY, SUBSCRIBE_KEY,
+                0, encode(channel),
+                jsonp, encode(msg)
+            ];
+
+            // Queue Message Send
+            PUB_QUEUE[add_msg]({
+                callback : jsonp,
+                timeout  : SECOND * 5,
+                url      : url,
+                data     : { 'uuid' : UUID, 'auth' : auth_key },
+                fail     : function(response){err(response);publish(1)},
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error'])
+                        err(response);
+                    else
+                        callback(response)
+
+                    publish(1);
+                }
+            });
+
+            // Send Message
+            publish();
+        },
+
+        /*
+            PUBNUB.unsubscribe({ channel : 'my_chat' });
+        */
+        'unsubscribe' : function(args, callback) {
+            var channel = args['channel']
+            ,   callback      = callback            || args['callback'] || function(){}
+            ,   err           = args['error']       || function(){};
+
+            TIMETOKEN   = 0;
+            SUB_RESTORE = 1;
+
+            // Prepare Channel(s)
+            channel = map( (
+                channel.join ? channel.join(',') : ''+channel
+            ).split(','), function(channel) {
+                if (!CHANNELS[channel]) return;
+                return channel + ',' + channel + PRESENCE_SUFFIX;
+            } ).join(',');
+
+            // Iterate over Channels
+            each( channel.split(','), function(channel) {
+                var CB_CALLED = true;
+                if (!channel) return;
+                if (READY) {
+                    CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
+                }
+                if (!CB_CALLED) callback({action : "leave"});
+                CHANNELS[channel] = 0;
+            } );
+
+            // Reset Connection if Count Less
+            CONNECT();
+        },
+
+        /*
+            PUBNUB.subscribe({
+                channel  : 'my_chat'
+                callback : function(message) { }
+            });
+        */
+        'subscribe' : function( args, callback ) {
+            var channel       = args['channel']
+            ,   callback      = callback            || args['callback']
+            ,   callback      = callback            || args['message']
+            ,   auth_key      = args['auth_key']    || AUTH_KEY
+            ,   connect       = args['connect']     || function(){}
+            ,   reconnect     = args['reconnect']   || function(){}
+            ,   disconnect    = args['disconnect']  || function(){}
+            ,   errcb         = args['error']       || function(){}
+            ,   idlecb        = args['idle']        || function(){}
+            ,   presence      = args['presence']    || 0
+            ,   noheresync    = args['noheresync']  || 0
+            ,   backfill      = args['backfill']    || 0
+            ,   timetoken     = args['timetoken']   || 0
+            ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
+            ,   windowing     = args['windowing']   || SUB_WINDOWING
+            ,   restore       = args['restore'];
+
+            // Restore Enabled?
+            SUB_RESTORE = restore;
+
+            // Always Reset the TT
+            TIMETOKEN = timetoken;
+
+            // Make sure we have a Channel
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            // Setup Channel(s)
+            each( (channel.join ? channel.join(',') : ''+channel).split(','),
+            function(channel) {
+                var settings = CHANNELS[channel] || {};
+
+                // Store Channel State
+                CHANNELS[SUB_CHANNEL = channel] = {
+                    name         : channel,
+                    connected    : settings.connected,
+                    disconnected : settings.disconnected,
+                    subscribed   : 1,
+                    callback     : SUB_CALLBACK = callback,
+                    connect      : connect,
+                    disconnect   : disconnect,
+                    reconnect    : reconnect
+                };
+
+                // Presence Enabled?
+                if (!presence) return;
+
+                // Subscribe Presence Channel
+                SELF['subscribe']({
+                    'channel'  : channel + PRESENCE_SUFFIX,
+                    'callback' : presence
+                });
+
+                // Presence Subscribed?
+                if (settings.subscribed) return;
+
+                // See Who's Here Now?
+                if (noheresync) return;
+                SELF['here_now']({
+                    'channel'  : channel,
+                    'callback' : function(here) {
+                        each( 'uuids' in here ? here['uuids'] : [],
+                        function(uid) { presence( {
+                            'action'    : 'join',
+                            'uuid'      : uid,
+                            'timestamp' : rnow(),
+                            'occupancy' : here['occupancy'] || 1
+                        }, here, channel ); } );
+                    }
+                });
+            } );
+
+            // Test Network Connection
+            function _test_connection(success) {
+                if (success) {
+                    // Begin Next Socket Connection
+                    timeout( CONNECT, SECOND );
+                }
+                else {
+                    // New Origin on Failed Connection
+                    STD_ORIGIN = nextorigin( ORIGIN, 1 );
+                    SUB_ORIGIN = nextorigin( ORIGIN, 1 );
+
+                    // Re-test Connection
+                    timeout( function() {
+                        SELF['time'](_test_connection);
+                    }, SECOND );
+                }
+
+                // Disconnect & Reconnect
+                each_channel(function(channel){
+                    // Reconnect
+                    if (success && channel.disconnected) {
+                        channel.disconnected = 0;
+                        return channel.reconnect(channel.name);
+                    }
+
+                    // Disconnect
+                    if (!success && !channel.disconnected) {
+                        channel.disconnected = 1;
+                        channel.disconnect(channel.name);
+                    }
+                });
             }
-        });
 
-        // Send Message
-        publish();
-    };
+            // Evented Subscribe
+            function _connect() {
+                var jsonp    = jsonp_cb()
+                ,   channels = generate_channel_list(CHANNELS).join(',');
 
-    /*
-        PUBNUB.unsubscribe({ channel : 'my_chat' });
-    */
-    SELF['unsubscribe'] = function(args, callback) {
-        var channel = args['channel']
-        ,   callback      = callback            || args['callback'] || function(){}
-        ,   err           = args['error']       || function(){};
+                // Stop Connection
+                if (!channels) return;
 
-        TIMETOKEN   = 0;
-        SUB_RESTORE = 1;
+                // Connect to PubNub Subscribe Servers
+                _reset_offline();
+                SUB_RECEIVER = xdr({
+                    timeout  : sub_timeout,
+                    callback : jsonp,
+                    fail     : function(response) {
+                        errcb(response);
+                        SUB_RECEIVER = null;
+                        SELF['time'](_test_connection);
+                    },
+                    data     : { 'uuid' : UUID, 'auth' : auth_key },
+                    url      : [
+                        SUB_ORIGIN, 'subscribe',
+                        SUBSCRIBE_KEY, encode(channels),
+                        jsonp, TIMETOKEN
+                    ],
+                    success : function(messages) {
+                        SUB_RECEIVER = null;
+                        // Check for Errors
+                        if (!messages || (
+                            typeof messages == 'object' &&
+                            'error' in messages         &&
+                            messages['error']
+                        )) {
+                            errcb(messages);
+                            return timeout( CONNECT, SECOND );
+                        }
 
-        // Prepare Channel(s)
-        channel = map( (
-            channel.join ? channel.join(',') : ''+channel
-        ).split(','), function(channel) {
-            if (!CHANNELS[channel]) return;
-            return channel + ',' + channel + PRESENCE_SUFFIX;
-        } ).join(',');
+                        // User Idle Callback
+                        idlecb(messages[1]);
 
-        // Iterate over Channels
-        each( channel.split(','), function(channel) {
-            var CB_CALLED = true;
-            if (!channel) return;
-            if (READY) {
-                CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
+                        // Restore Previous Connection Point if Needed
+                        TIMETOKEN = !TIMETOKEN               &&
+                                    SUB_RESTORE              &&
+                                    db['get'](SUBSCRIBE_KEY) || messages[1];
+
+                        // Connect
+                        each_channel(function(channel){
+                            if (channel.connected) return;
+                            channel.connected = 1;
+                            channel.connect(channel.name);
+                        });
+
+                        // Invoke Memory Catchup and Receive Up to 100
+                        // Previous Messages from the Queue.
+                        if (backfill) {
+                            TIMETOKEN = 10000;
+                            backfill  = 0;
+                        }
+
+                        // Update Saved Timetoken
+                        db['set']( SUBSCRIBE_KEY, messages[1] );
+
+                        // Route Channel <---> Callback for Message
+                        var next_callback = (function() {
+                            var channels = (messages.length>2?messages[2]:map(
+                                CHANNELS, function(chan) { return map(
+                                    Array(messages[0].length)
+                                    .join(',').split(','),
+                                    function() { return chan; }
+                                ) }).join(','));
+                            var list = channels.split(',');
+
+                            return function() {
+                                var channel = list.shift()||SUB_CHANNEL;
+                                return [
+                                    (CHANNELS[channel]||{})
+                                    .callback||SUB_CALLBACK,
+                                    channel.split(PRESENCE_SUFFIX)[0]
+                                ];
+                            };
+                        })();
+
+                        var latency = detect_latency(+messages[1]);
+                        each( messages[0], function(msg) {
+                            var next = next_callback();
+                            next[0]( msg, messages, next[1], latency );
+                        } );
+
+                        timeout( _connect, windowing );
+                    }
+                });
             }
-            if (!CB_CALLED) callback({action : "leave"});
-            CHANNELS[channel] = 0;
-        } );
 
-        // Reset Connection if Count Less
-        CONNECT();
-    };
-
-    /*
-        PUBNUB.subscribe({
-            channel  : 'my_chat'
-            callback : function(message) { }
-        });
-    */
-    SELF['subscribe'] = function( args, callback ) {
-        var channel       = args['channel']
-        ,   callback      = callback            || args['callback']
-        ,   callback      = callback            || args['message']
-        ,   auth_key      = args['auth_key']    || AUTH_KEY
-        ,   connect       = args['connect']     || function(){}
-        ,   reconnect     = args['reconnect']   || function(){}
-        ,   disconnect    = args['disconnect']  || function(){}
-        ,   errcb         = args['error']       || function(){}
-        ,   idlecb        = args['idle']        || function(){}
-        ,   presence      = args['presence']    || 0
-        ,   noheresync    = args['noheresync']  || 0
-        ,   backfill      = args['backfill']    || 0
-        ,   timetoken     = args['timetoken']   || 0
-        ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
-        ,   windowing     = args['windowing']   || SUB_WINDOWING
-        ,   restore       = args['restore'];
-
-        // Restore Enabled?
-        SUB_RESTORE = restore;
-
-        // Always Reset the TT
-        TIMETOKEN = timetoken;
-
-        // Make sure we have a Channel
-        if (!channel)       return error_common('Missing Channel', errcb);
-        if (!callback)      return error_common('Missing Callback', errcb);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', errcb);
-
-        // Setup Channel(s)
-        each( (channel.join ? channel.join(',') : ''+channel).split(','),
-        function(channel) {
-            var settings = CHANNELS[channel] || {};
-
-            // Store Channel State
-            CHANNELS[SUB_CHANNEL = channel] = {
-                name         : channel,
-                connected    : settings.connected,
-                disconnected : settings.disconnected,
-                subscribed   : 1,
-                callback     : SUB_CALLBACK = callback,
-                connect      : connect,
-                disconnect   : disconnect,
-                reconnect    : reconnect
+            CONNECT = function() {
+                _reset_offline();
+                timeout( _connect, windowing );
             };
 
-            // Presence Enabled?
-            if (!presence) return;
+            // Reduce Status Flicker
+            if (!READY) return READY_BUFFER.push(CONNECT);
 
-            // Subscribe Presence Channel
-            SELF['subscribe']({
-                'channel'  : channel + PRESENCE_SUFFIX,
-                'callback' : presence
-            });
+            // Connect Now
+            CONNECT();
+        },
 
-            // Presence Subscribed?
-            if (settings.subscribed) return;
+        /*
+            PUBNUB.here_now({ channel : 'my_chat', callback : fun });
+        */
+        'here_now' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   channel  = args['channel']
+            ,   jsonp    = jsonp_cb()
+            ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
 
-            // See Who's Here Now?
-            if (noheresync) return;
-            SELF['here_now']({
-                'channel'  : channel,
-                'callback' : function(here) {
-                    each( 'uuids' in here ? here['uuids'] : [],
-                    function(uid) { presence( {
-                        'action'    : 'join',
-                        'uuid'      : uid,
-                        'timestamp' : rnow(),
-                        'occupancy' : here['occupancy'] || 1
-                    }, here, channel ); } );
-                }
-            });
-        } );
+            // Make sure we have a Channel
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-        // Test Network Connection
-        function _test_connection(success) {
-            if (success) {
-                // Begin Next Socket Connection
-                timeout( CONNECT, SECOND );
-            }
-            else {
-                // New Origin on Failed Connection
-                STD_ORIGIN = nextorigin( ORIGIN, 1 );
-                SUB_ORIGIN = nextorigin( ORIGIN, 1 );
+            if (jsonp != '0') { data['callback'] = jsonp; }
 
-                // Re-test Connection
-                timeout( function() {
-                    SELF['time'](_test_connection);
-                }, SECOND );
-            }
-
-            // Disconnect & Reconnect
-            each_channel(function(channel){
-                // Reconnect
-                if (success && channel.disconnected) {
-                    channel.disconnected = 0;
-                    return channel.reconnect(channel.name);
-                }
-
-                // Disconnect
-                if (!success && !channel.disconnected) {
-                    channel.disconnected = 1;
-                    channel.disconnect(channel.name);
-                }
-            });
-        }
-
-        // Evented Subscribe
-        function _connect() {
-            var jsonp    = jsonp_cb()
-            ,   channels = generate_channel_list(CHANNELS).join(',');
-
-            // Stop Connection
-            if (!channels) return;
-
-            // Connect to PubNub Subscribe Servers
-            _reset_offline();
-            SUB_RECEIVER = xdr({
-                timeout  : sub_timeout,
+            xdr({
                 callback : jsonp,
-                fail     : function(response) {
-                    errcb(response);
-                    SUB_RECEIVER = null;
-                    SELF['time'](_test_connection);
+                data     : data,
+                success  : function(response) {
+                    if (typeof response == 'object' && response['error']) {
+                        err(response);
+                        return;
+                    }
+                    callback(response)
                 },
-                data     : { 'uuid' : UUID, 'auth' : auth_key },
+                fail     : err,
                 url      : [
-                    SUB_ORIGIN, 'subscribe',
-                    SUBSCRIBE_KEY, encode(channels),
-                    jsonp, TIMETOKEN
-                ],
-                success : function(messages) {
-                    SUB_RECEIVER = null;
-                    // Check for Errors
-                    if (!messages || (
-                        typeof messages == 'object' &&
-                        'error' in messages         &&
-                        messages['error']
-                    )) {
-                        errcb(messages);
-                        return timeout( CONNECT, SECOND );
-                    }
-
-                    // User Idle Callback
-                    idlecb(messages[1]);
-
-                    // Restore Previous Connection Point if Needed
-                    TIMETOKEN = !TIMETOKEN               &&
-                                SUB_RESTORE              &&
-                                db['get'](SUBSCRIBE_KEY) || messages[1];
-
-                    // Connect
-                    each_channel(function(channel){
-                        if (channel.connected) return;
-                        channel.connected = 1;
-                        channel.connect(channel.name);
-                    });
-
-                    // Invoke Memory Catchup and Receive Up to 100
-                    // Previous Messages from the Queue.
-                    if (backfill) {
-                        TIMETOKEN = 10000;
-                        backfill  = 0;
-                    }
-
-                    // Update Saved Timetoken
-                    db['set']( SUBSCRIBE_KEY, messages[1] );
-
-                    // Route Channel <---> Callback for Message
-                    var next_callback = (function() {
-                        var channels = (messages.length>2?messages[2]:map(
-                            CHANNELS, function(chan) { return map(
-                                Array(messages[0].length)
-                                .join(',').split(','),
-                                function() { return chan; }
-                            ) }).join(','));
-                        var list = channels.split(',');
-
-                        return function() {
-                            var channel = list.shift()||SUB_CHANNEL;
-                            return [
-                                (CHANNELS[channel]||{})
-                                .callback||SUB_CALLBACK,
-                                channel.split(PRESENCE_SUFFIX)[0]
-                            ];
-                        };
-                    })();
-
-                    var latency = detect_latency(+messages[1]);
-                    each( messages[0], function(msg) {
-                        var next = next_callback();
-                        next[0]( msg, messages, next[1], latency );
-                    } );
-
-                    timeout( _connect, windowing );
-                }
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub_key', SUBSCRIBE_KEY,
+                    'channel', encode(channel)
+                ]
             });
-        }
+        },
 
-        CONNECT = function() {
-            _reset_offline();
-            timeout( _connect, windowing );
-        };
+        /*
+            PUBNUB.grant({
+                channel  : 'my_chat',
+                callback : fun,
+                error    : fun,
+                ttl      : 60, // Seconds
+                read     : true,
+                write    : true,
+                auth_key : '3y8uiajdklytowsj'
+            });
+        */
+        'grant' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   channel  = args['channel']
+            ,   jsonp    = jsonp_cb()
+            ,   ttl      = args['ttl'] || -1
+            ,   r        = (args['read'] )?"1":"0"
+            ,   w        = (args['write'])?"1":"0"
+            ,   auth_key = args['auth_key'];
 
-        // Reduce Status Flicker
-        if (!READY) return READY_BUFFER.push(CONNECT);
+            // Make sure we have a Channel
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SECRET_KEY)    return error('Missing Secret Key');
 
-        // Connect Now
-        CONNECT();
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            var timestamp  = Math.floor(new Date().getTime() / 1000)
+            ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
+                    + "grant" + "\n"
+                    + ((
+                        (auth_key && encode(auth_key).length > 0) ?
+                        "auth=" + encode(auth_key) + "&"          :
+                        ""
+                    ))
+                    + "channel=" + encode(channel) + "&"
+                    + "pnsdk=" + encode(PNSDK) + "&"
+                    + "r=" + r + "&"
+                    + "timestamp=" + encode(timestamp)
+                    + ((ttl > -1)?"&" + "ttl=" + ttl:"")
+                    + "&" + "w=" + w
+            ,   signature = hmac_SHA256( sign_input, SECRET_KEY );
+
+            signature = signature.replace( /\+/g, "-" );
+            signature = signature.replace( /\//g, "_" );
+
+            var data = {
+                'w'         : w,
+                'r'         : r,
+                'signature' : signature,
+                'channel'   : encode(channel),
+                'timestamp' : timestamp
+            };
+
+            if (ttl > -1) data['ttl'] = ttl;
+            if (auth_key) data['auth'] = encode(auth_key);
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) { callback(response) },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v1', 'auth', 'grant' ,
+                    'sub-key', SUBSCRIBE_KEY
+                ]
+            });
+        },
+
+        /*
+            PUBNUB.audit({
+                channel  : 'my_chat',
+                callback : fun,
+                error    : fun,
+                read     : true,
+                write    : true,
+                auth_key : '3y8uiajdklytowsj'
+            });
+        */
+        'audit' : function( args, callback ) {
+            var callback = args['callback'] || callback
+            ,   err      = args['error']    || function(){}
+            ,   channel  = args['channel']
+            ,   auth_key = args['auth_key']
+            ,   jsonp    = jsonp_cb();
+
+            // Make sure we have a Channel
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SECRET_KEY)    return error('Missing Secret Key');
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            var timestamp  = Math.floor(new Date().getTime() / 1000)
+            ,   sign_input = SUBSCRIBE_KEY + "\n"
+                + PUBLISH_KEY + "\n"
+                + "audit" + "\n";
+
+            if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
+            if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
+
+            sign_input += "pnsdk=" + encode(PNSDK) + "&" + "timestamp=" + timestamp;
+
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
+
+            signature = signature.replace( /\+/g, "-" );
+            signature = signature.replace( /\//g, "_" );
+
+            var data = { 'signature' : signature, 'timestamp' : timestamp };
+
+            if (channel)  data['channel'] = encode(channel);
+            if (auth_key) data['auth']    = encode(auth_key);
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) { callback(response) },
+                fail     : err,
+                url      : [
+                    STD_ORIGIN, 'v1', 'auth', 'audit' ,
+                    'sub-key', SUBSCRIBE_KEY
+                ]
+            });
+        },
+
+        /*
+            PUBNUB.revoke({
+                channel  : 'my_chat',
+                callback : fun,
+                error    : fun,
+                auth_key : '3y8uiajdklytowsj'
+            });
+        */
+        'revoke' : function( args, callback ) {
+            args['read']  = false;
+            args['write'] = false;
+            SELF['grant']( args, callback );
+        },
+        'set_uuid' : function(uuid) {
+            UUID = uuid;
+            CONNECT();
+        },
+        'get_uuid' : function() {
+            return UUID;
+        },
+
+        // Expose PUBNUB Functions
+        'xdr'           : xdr,
+        'ready'         : ready,
+        'db'            : db,
+        'uuid'          : uuid,
+        'map'           : map,
+        'each'          : each,
+        'each-channel'  : each_channel,
+        'grep'          : grep,
+        'offline'       : function(){_reset_offline(1)},
+        'supplant'      : supplant,
+        'now'           : rnow,
+        'unique'        : unique,
+        'updater'       : updater
     };
-
-    /*
-        PUBNUB.here_now({ channel : 'my_chat', callback : fun });
-    */
-    SELF['here_now'] = function( args, callback ) {
-        var callback = args['callback'] || callback
-        ,   err      = args['error']    || function(){}
-        ,   auth_key = args['auth_key'] || AUTH_KEY
-        ,   channel  = args['channel']
-        ,   jsonp    = jsonp_cb()
-        ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
-
-        // Make sure we have a Channel
-        if (!channel)       return error_common('Missing Channel', err);
-        if (!callback)      return error_common('Missing Callback', err);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-
-        if (jsonp != '0') { data['callback'] = jsonp; }
-
-        xdr({
-            callback : jsonp,
-            data     : data,
-            success  : function(response) {
-                if (typeof response == 'object' && response['error']) {
-                    err(response);
-                    return;
-                }
-                callback(response)
-            },
-            fail     : err,
-            url      : [
-                STD_ORIGIN, 'v2', 'presence',
-                'sub_key', SUBSCRIBE_KEY,
-                'channel', encode(channel)
-            ]
-        });
-    };
-
-    /*
-        PUBNUB.grant({
-            channel  : 'my_chat',
-            callback : fun,
-            error    : fun,
-            ttl      : 60, // Seconds
-            read     : true,
-            write    : true,
-            auth_key : '3y8uiajdklytowsj'
-        });
-    */
-    SELF['grant'] = function( args, callback ) {
-        var callback = args['callback'] || callback
-        ,   err      = args['error']    || function(){}
-        ,   channel  = args['channel']
-        ,   jsonp    = jsonp_cb()
-        ,   ttl      = args['ttl'] || -1
-        ,   r        = (args['read'] )?"1":"0"
-        ,   w        = (args['write'])?"1":"0"
-        ,   auth_key = args['auth_key'];
-
-        // Make sure we have a Channel
-        if (!channel)       return error_common('Missing Channel', err);
-        if (!callback)      return error_common('Missing Callback', err);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-        if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-        if (!SECRET_KEY)    return error_common('Missing Secret Key', err);
-
-        if (jsonp != '0') { data['callback'] = jsonp; }
-
-        var timestamp  = Math.floor(new Date().getTime() / 1000)
-        ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
-                + "grant" + "\n"
-                + ((
-                    (auth_key && encode(auth_key).length > 0) ?
-                    "auth=" + encode(auth_key) + "&"          :
-                    ""
-                ))
-                + "channel=" + encode(channel) + "&"
-                + "pnsdk=" + encode(PNSDK) + "&"
-                + "r=" + r + "&"
-                + "timestamp=" + encode(timestamp)
-                + ((ttl > -1)?"&" + "ttl=" + ttl:"")
-                + "&" + "w=" + w
-        ,   signature = hmac_SHA256( sign_input, SECRET_KEY );
-
-        signature = signature.replace( /\+/g, "-" );
-        signature = signature.replace( /\//g, "_" );
-
-        var data = {
-            'w'         : w,
-            'r'         : r,
-            'signature' : signature,
-            'channel'   : channel,
-            'timestamp' : timestamp
-        };
-
-        if (ttl > -1) data['ttl'] = ttl;
-        if (auth_key) data['auth'] = auth_key;
-
-        xdr({
-            callback : jsonp,
-            data     : data,
-            success  : function(response) { callback(response) },
-            fail     : err,
-            url      : [
-                STD_ORIGIN, 'v1', 'auth', 'grant' ,
-                'sub-key', SUBSCRIBE_KEY
-            ]
-        });
-    };
-
-    /*
-        PUBNUB.audit({
-            channel  : 'my_chat',
-            callback : fun,
-            error    : fun,
-            read     : true,
-            write    : true,
-            auth_key : '3y8uiajdklytowsj'
-        });
-    */
-    SELF['audit'] = function( args, callback ) {
-        var callback = args['callback'] || callback
-        ,   err      = args['error']    || function(){}
-        ,   channel  = args['channel']
-        ,   auth_key = args['auth_key']
-        ,   jsonp    = jsonp_cb();
-
-        // Make sure we have a Channel
-        if (!callback)      return error_common('Missing Callback', err);
-        if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-        if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-        if (!SECRET_KEY)    return error_common('Missing Secret Key', err);
-
-        if (jsonp != '0') { data['callback'] = jsonp; }
-
-        var timestamp  = Math.floor(new Date().getTime() / 1000)
-        ,   sign_input = SUBSCRIBE_KEY + "\n"
-            + PUBLISH_KEY + "\n"
-            + "audit" + "\n";
-
-        if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
-        if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
-
-        sign_input += "pnsdk=" + encode(PNSDK) + "&" + "timestamp=" + timestamp;
-
-        var signature = hmac_SHA256( sign_input, SECRET_KEY );
-
-        signature = signature.replace( /\+/g, "-" );
-        signature = signature.replace( /\//g, "_" );
-
-        var data = { 'signature' : signature, 'timestamp' : timestamp };
-
-        if (channel)  data['channel'] = channel;
-        if (auth_key) data['auth']    = auth_key;
-
-        xdr({
-            callback : jsonp,
-            data     : data,
-            success  : function(response) { callback(response) },
-            fail     : err,
-            url      : [
-                STD_ORIGIN, 'v1', 'auth', 'audit' ,
-                'sub-key', SUBSCRIBE_KEY
-            ]
-        });
-    };
-
-    /*
-        PUBNUB.revoke({
-            channel  : 'my_chat',
-            callback : fun,
-            error    : fun,
-            auth_key : '3y8uiajdklytowsj'
-        });
-    */
-    SELF['revoke'] = function( args, callback ) {
-        args['read']  = false;
-        args['write'] = false;
-        SELF['grant']( args, callback );
-    };
-    SELF['set_uuid'] = function(uuid) {
-        UUID = uuid;
-        CONNECT();
-    };
-    SELF['get_uuid'] = function() {
-        return UUID;
-    },
-
-    // Expose PUBNUB Functions
-    SELF['xdr']           = xdr;
-    SELF['ready']         = ready;
-    SELF['db']            = db;
-    SELF['uuid']          = uuid;
-    SELF['map']           = map;
-    SELF['each']          = each;
-    SELF['each-channel']  = each_channel;
-    SELF['grep']          = grep;
-    SELF['offline']       = function(){_reset_offline(1)};
-    SELF['supplant']      = supplant;
-    SELF['now']           = rnow;
-    SELF['unique']        = unique;
-    SELF['updater']       = updater;
-    
 
     function _poll_online() {
         _is_online() || _reset_offline( 1, {

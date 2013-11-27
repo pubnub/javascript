@@ -372,7 +372,17 @@ var PDIV          = $('pubnub') || 0
     setup['PNSDK']      = PNSDK;
     setup['hmac_SHA256']= get_hmac_SHA256;
 
-    var SELF            = PN_API(setup);
+    var SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    };
+
+    var PN = PN_API(setup);
+
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
     SELF['css']         = css;
     SELF['$']           = $;
     SELF['create']      = create;
@@ -381,7 +391,7 @@ var PDIV          = $('pubnub') || 0
     SELF['search']      = search;
     SELF['attr']        = attr;
     SELF['events']      = events;
-    SELF['init']        = CREATE_PUBNUB;
+    SELF['init']        = SELF;
 
 
     // Add Leave Functions
@@ -399,6 +409,7 @@ var PDIV          = $('pubnub') || 0
     // Return PUBNUB Socket Object
     return SELF;
 };
+CREATE_PUBNUB['init'] = CREATE_PUBNUB;
 
 // Bind for PUBNUB Readiness to Subscribe
 if (document.readyState === 'complete') {
@@ -422,7 +433,7 @@ PUBNUB = CREATE_PUBNUB({
 });
 
 // jQuery Interface
-window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
+window['jQuery'] && (window['jQuery']['PUBNUB'] = CREATE_PUBNUB);
 
 // For Modern JS + Testling.js - http://testling.com/
 typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
