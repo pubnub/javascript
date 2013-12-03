@@ -676,7 +676,6 @@ test('connection restore feature', function() {
 })
 */
 
-/*
 asyncTest('Encryption tests', function() {
     var aes = PUBNUB.init({
         publish_key: "demo",
@@ -745,7 +744,6 @@ asyncTest('Encryption tests', function() {
         }
     });
 })
-*/
 var grant_channel = channel + '-grant';
 var auth_key = "abcd";
 var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';

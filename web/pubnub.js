@@ -464,6 +464,13 @@ function PN_API(setup) {
         'set_cipher_key' : function(key) {
             CIPHER_KEY = key;
         },
+        'raw_encrypt' : function(input, key) {
+            return encrypt(input, key);
+        },
+        'raw_decrypt' : function(input, key) {
+            return decrypt(input, key);
+        },
+
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',
