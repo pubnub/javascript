@@ -509,7 +509,7 @@ function PN_API(setup) {
                     }
                     var messages = response[0];
                     var decrypted_messages = [];
-                    for (a = 0; a < messages.length; a++) {
+                    for (var a = 0; a < messages.length; a++) {
                         var new_message = decrypt(messages[a],cipher_key);
                         try {
                             decrypted_messages['push'](JSON['parse'](new_message));
@@ -1013,12 +1013,12 @@ function PN_API(setup) {
                 'w'         : w,
                 'r'         : r,
                 'signature' : signature,
-                'channel'   : encode(channel),
+                'channel'   : channel,
                 'timestamp' : timestamp
             };
 
             if (ttl > -1) data['ttl'] = ttl;
-            if (auth_key) data['auth'] = encode(auth_key);
+            if (auth_key) data['auth'] = auth_key;
 
             xdr({
                 callback : jsonp,
@@ -1074,8 +1074,8 @@ function PN_API(setup) {
 
             var data = { 'signature' : signature, 'timestamp' : timestamp };
 
-            if (channel)  data['channel'] = encode(channel);
-            if (auth_key) data['auth']    = encode(auth_key);
+            if (channel)  data['channel'] = channel;
+            if (auth_key) data['auth']    = auth_key;
 
             xdr({
                 callback : jsonp,
