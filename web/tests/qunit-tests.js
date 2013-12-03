@@ -3,11 +3,14 @@ var pubnub = PUBNUB.init({
     subscribe_key : 'demo'
 });
 
-var pubnub_enc = PUBNUB.secure({
+var pubnub_enc = PUBNUB({
     publish_key: "demo",
     subscribe_key: "demo",
     cipher_key: "enigma"
 });
+
+log_backup = console.log
+console.log = function(){} 
 
 var channel = 'javascript-test-channel-' + Math.random();
 var count = 0;
@@ -15,7 +18,6 @@ var count = 0;
 var message_string = 'Hi from Javascript';
 var message_jsono = {'message': 'Hi Hi from Javascript'};
 var message_jsona = ['message' , 'Hi Hi from javascript'];
-
 test("uuid() response", function() {
     expect(1);
     stop(1);
@@ -67,7 +69,6 @@ test("set_uuid() should set uuid and new presence event should come with new uui
     });
 });
 */
-
 test("instantiation test 1", function() {
     var pubnub = PUBNUB({
         'publish_key' : 'demo',
@@ -78,6 +79,7 @@ test("instantiation test 1", function() {
     var ch = channel + '-' + ++count;
     pubnub.subscribe({ channel : ch,
         connect : function(response)  {
+            //console.log('publish');
             pubnub.publish({channel: ch, message: message_string,
                 callback : function(response) {
                     equal(response[0],1);
@@ -299,6 +301,129 @@ test("publish() should publish strings without error", function() {
         }
     });
 });
+test("publish() should publish strings without error (Encryption Enabled)", function() {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub_enc.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub_enc.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("both encrypted and unencrypted messages should be received on a channel with cipher key", function() {
+    expect(3);
+    stop(2);
+    var count = 0;
+    var ch = channel + '-both-' + ++count;
+
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    pubnub_enc.publish({channel: ch, message: message_string,
+                        callback : function(response) {
+                            equal(response[0],1);
+                            start();
+                        }
+                    });
+                }
+            });
+        },
+        callback : function(response, channel) {
+            deepEqual(response, message_string);
+            count++;
+            if (count == 2) {
+                pubnub_enc.unsubscribe({channel : ch});
+                start();
+            }
+        }
+    });
+});
+
+test("test global cipher key", function() {
+    expect(3);
+    stop(2);
+    var count = 0;
+    var ch = channel + '-global-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        cipher_key : 'local_cipher_key',
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                cipher_key : 'enigma',
+                callback : function(response) {
+                    equal(response[0],1);
+                    pubnub_enc.publish({channel: ch, message: message_string,
+                        cipher_key : 'enigma',
+                        callback : function(response) {
+                            equal(response[0],1);
+                            start();
+                        }
+                    });
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            count++;
+            if (count == 2) {
+                pubnub_enc.unsubscribe({channel : ch});
+                start();
+            }
+        }
+    });
+});
+
+
+test("test local cipher key", function() {
+    expect(4);
+    stop(2);
+    var count = 0;
+    var ch = channel + '-local-test-' + Date.now();
+    console.log = log_backup;
+    pubnub_enc.subscribe({ channel : ch,
+        cipher_key : 'local_cipher_key',
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                cipher_key : 'local_cipher_key',
+                callback : function(response) {
+                    equal(response[0],1);
+                    pubnub_enc.publish({channel: ch, message: message_string,
+                        cipher_key : 'local_cipher_key',
+                        callback : function(response) {
+                            equal(response[0],1);
+                            start();
+                        }
+                    });
+                }
+            });
+        },
+        callback : function(response) {
+            //console.log(JSON.stringify(channel));
+            deepEqual(response, message_string);
+            count++;
+            if (count == 2) {
+                pubnub_enc.unsubscribe({channel : ch});
+                console.log = function(){};
+                start();
+            }
+        }
+    });
+});
+
+/*
 test("subscribe() should invoke error callback on decryption error", function() {
     expect(3);
     stop(2);
@@ -325,6 +450,7 @@ test("subscribe() should invoke error callback on decryption error", function() 
         }
     });
 });
+*/
 
 test("publish() should publish json array without error", function() {
     expect(2);
@@ -480,6 +606,7 @@ asyncTest('#history() should return 2 messages when 2 messages were published on
         }
     });
 })
+/*
 asyncTest('#history() should call error callback for decryption failure messages', function() {
     var history_channel = channel + '-history-3';
     expect(7);
@@ -511,6 +638,7 @@ asyncTest('#history() should call error callback for decryption failure messages
         }
     });
 })
+*/
 /*
 test('connection restore feature', function() {
     var restore_channel = channel + '-restore-channel';
@@ -548,8 +676,9 @@ test('connection restore feature', function() {
 })
 */
 
+/*
 asyncTest('Encryption tests', function() {
-    var aes = PUBNUB.secure({
+    var aes = PUBNUB.init({
         publish_key: "demo",
         subscribe_key: "demo",
         cipher_key: "enigma"
@@ -604,11 +733,11 @@ asyncTest('Encryption tests', function() {
                 });
             }, 3000);
         },
-        /*
+        
         presence: function (message, envelope, aes_channel) {
 
         },
-        */
+        
         callback: function (message, envelope, aes_channel) {
             ok(message, 'AES Subscribe Message');
             ok(message.test === "test", 'AES Subscribe Message Data');
@@ -616,7 +745,7 @@ asyncTest('Encryption tests', function() {
         }
     });
 })
-
+*/
 var grant_channel = channel + '-grant';
 var auth_key = "abcd";
 var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';

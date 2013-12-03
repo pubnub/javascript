@@ -217,8 +217,23 @@ function PN_API(setup) {
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
+    ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
+    var crypto_obj    = setup['crypto_obj'] || 
+        { 
+            'encrypt' : function(a,key){ return a},
+            'decrypt' : function(b,key){return b}
+        };
+
+    function encrypt(input, key) {
+        return crypto_obj.encrypt(input, key || CIPHER_KEY) || input;
+    }
+    function decrypt(input, key) {
+        return crypto_obj.decrypt(input, key || CIPHER_KEY) ||
+               crypto_obj.decrypt(input, CIPHER_KEY) ||
+               input;
+    }
 
     function error_common(message, callback) {
         callback && callback({ 'error' : message || "error occurred"});
@@ -293,6 +308,12 @@ function PN_API(setup) {
             });
             return true;
         },
+        'get_cipher_key' : function() {
+            return CIPHER_KEY;
+        },
+        'set_cipher_key' : function(key) {
+            CIPHER_KEY = key;
+        },
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',
@@ -306,6 +327,7 @@ function PN_API(setup) {
             ,   reverse  = args['reverse']  || "false"
             ,   err      = args['error']    || function(){}
             ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   cipher_key = args['cipher_key']
             ,   channel  = args['channel']
             ,   start    = args['start']
             ,   end      = args['end']
@@ -335,7 +357,17 @@ function PN_API(setup) {
                         err(response);
                         return;
                     }
-                    callback(response)
+                    var messages = response[0];
+                    var decrypted_messages = [];
+                    for (a = 0; a < messages.length; a++) {
+                        var new_message = decrypt(messages[a],cipher_key);
+                        try {
+                            decrypted_messages['push'](JSON['parse'](new_message));
+                        } catch (e) {
+                            decrypted_messages['push']((new_message));
+                        }
+                    }
+                    callback([decrypted_messages, response[1], response[2]]);
                 },
                 fail     : err,
                 url      : [
@@ -438,6 +470,7 @@ function PN_API(setup) {
             ,   msg      = args['message']
             ,   channel  = args['channel']
             ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   cipher_key = args['cipher_key']
             ,   err      = args['error'] || function() {}
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
@@ -451,7 +484,7 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // If trying to send Object
-            msg = JSON['stringify'](msg);
+            msg = JSON['stringify'](encrypt(msg, cipher_key));
 
             // Create URL
             url = [
@@ -563,6 +596,7 @@ function PN_API(setup) {
                     disconnected : settings.disconnected,
                     subscribed   : 1,
                     callback     : SUB_CALLBACK = callback,
+                    cipher_key   : args['cipher_key'],
                     connect      : connect,
                     disconnect   : disconnect,
                     reconnect    : reconnect
@@ -654,6 +688,7 @@ function PN_API(setup) {
                         jsonp, TIMETOKEN
                     ],
                     success : function(messages) {
+
                         SUB_RECEIVER = null;
                         // Check for Errors
                         if (!messages || (
@@ -693,7 +728,7 @@ function PN_API(setup) {
                         // Route Channel <---> Callback for Message
                         var next_callback = (function() {
                             var channels = (messages.length>2?messages[2]:map(
-                                CHANNELS, function(chan) { return map(
+                                generate_channel_list(CHANNELS), function(chan) { return map(
                                     Array(messages[0].length)
                                     .join(',').split(','),
                                     function() { return chan; }
@@ -713,8 +748,13 @@ function PN_API(setup) {
                         var latency = detect_latency(+messages[1]);
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            next[0]( msg, messages, next[1], latency );
-                        } );
+                            var decrypted_msg = decrypt(msg,CHANNELS[next[1]]['cipher_key']);
+                            try {
+                                next[0]( JSON['parse'](decrypted_msg), messages, next[1], latency );
+                            } catch (e) {
+                                next[0]( decrypted_msg, messages, next[1], latency );
+                            }
+                        });
 
                         timeout( _connect, windowing );
                     }
@@ -1162,6 +1202,33 @@ var db = (function(){
     };
 })();
 
+function crypto_obj() {
+    var iv = "0123456789012345";
+    function get_padded_key(key) {
+        return crypto.createHash('sha256').update(key).digest("hex").slice(0,32);
+    }
+
+    return {
+        'encrypt' : function(input, key) {
+            if (!key) return input;
+            var plain_text = JSON['stringify'](input);
+            var cipher = crypto.createCipheriv('aes-256-cbc', get_padded_key(key), iv);
+            var base_64_encrypted = cipher.update(plain_text, 'utf8', 'base64') + cipher.final('base64');
+            return base_64_encrypted || input;
+        },
+        'decrypt' : function(input, key) {
+            if (!key) return input;
+            var decipher = crypto.createDecipheriv('aes-256-cbc', get_padded_key(key), iv);
+            try {
+                var decrypted = decipher.update(input, 'base64', 'utf8') + decipher.final('utf8');
+            } catch (e) {
+                return null;
+            }
+            return decrypted;
+        }
+    }
+}
+
 /* =-=====================================================================-= */
 /* =-=====================================================================-= */
 /* =-=========================     PUBNUB     ============================-= */
@@ -1263,6 +1330,7 @@ var CREATE_PUBNUB = function(setup) {
     setup['error'] = error;
     setup['PNSDK'] = PNSDK;
     setup['hmac_SHA256'] = get_hmac_SHA256;
+    setup['crypto_obj'] = crypto_obj();
     SELF = function(setup) {
         return CREATE_PUBNUB(setup);
     }
