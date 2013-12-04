@@ -9,9 +9,6 @@ var pubnub_enc = PUBNUB({
     cipher_key: "enigma"
 });
 
-log_backup = console.log
-console.log = function(){} 
-
 var channel = 'javascript-test-channel-' + Math.random();
 var count = 0;
 
@@ -392,7 +389,6 @@ test("test local cipher key", function() {
     stop(2);
     var count = 0;
     var ch = channel + '-local-test-' + Date.now();
-    console.log = log_backup;
     pubnub_enc.subscribe({ channel : ch,
         cipher_key : 'local_cipher_key',
         connect : function(response)  {
