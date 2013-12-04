@@ -283,6 +283,7 @@ function CREATE_PUBNUB(setup) {
     setup['db'] = db;
     setup['xdr'] = xdr;
     setup['error'] = error;
+    setup['crypto_obj'] = crypto_obj();
 
     SELF = function(setup) {
         return CREATE_PUBNUB(setup);

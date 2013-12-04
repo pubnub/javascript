@@ -227,11 +227,11 @@ function PN_API(setup) {
         };
 
     function encrypt(input, key) {
-        return crypto_obj.encrypt(input, key || CIPHER_KEY) || input;
+        return crypto_obj['encrypt'](input, key || CIPHER_KEY) || input;
     }
     function decrypt(input, key) {
-        return crypto_obj.decrypt(input, key || CIPHER_KEY) ||
-               crypto_obj.decrypt(input, CIPHER_KEY) ||
+        return crypto_obj['decrypt'](input, key || CIPHER_KEY) ||
+               crypto_obj['decrypt'](input, CIPHER_KEY) ||
                input;
     }
 
@@ -603,7 +603,7 @@ function PN_API(setup) {
                     disconnected : settings.disconnected,
                     subscribed   : 1,
                     callback     : SUB_CALLBACK = callback,
-                    cipher_key   : args['cipher_key'],
+                    'cipher_key' : args['cipher_key'],
                     connect      : connect,
                     disconnect   : disconnect,
                     reconnect    : reconnect
