@@ -246,7 +246,6 @@ function _is_online() {
     return navigator['onLine'];
 }
 
-
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -268,8 +267,21 @@ var PDIV          = $('pubnub') || 0
     setup['error']      = error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
+    setup['PNSDK']      = PNSDK;
+    setup['crypto_obj'] = crypto_obj();
 
-    var SELF            = PN_API(setup);
+    var SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    };
+
+    var PN = PN_API(setup);
+
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
+
     SELF['css']         = css;
     SELF['$']           = $;
     SELF['create']      = create;
@@ -278,7 +290,7 @@ var PDIV          = $('pubnub') || 0
     SELF['search']      = search;
     SELF['attr']        = attr;
     SELF['events']      = events;
-    SELF['init']        = CREATE_PUBNUB;
+    SELF['init']        = SELF;
 
 
     // Add Leave Functions
@@ -296,7 +308,7 @@ var PDIV          = $('pubnub') || 0
     // Return PUBNUB Socket Object
     return SELF;
 };
-
+CREATE_PUBNUB['init'] = CREATE_PUBNUB;
 // Bind for PUBNUB Readiness to Subscribe
 bind( 'load', window, function(){ timeout( ready, 0 ) } );
 

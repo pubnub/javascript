@@ -41,7 +41,7 @@ test("set_uuid() should set uuid", function() {
     pubnub.set_uuid("abcd");
     deepEqual(pubnub.get_uuid(), "abcd");
 });
-
+/*
 test("set_uuid() should set uuid and new presence event should come with new uuid", function() {
     expect(2);
     stop(2);
@@ -68,7 +68,7 @@ test("set_uuid() should set uuid and new presence event should come with new uui
         }
     });
 });
-
+*/
 test("instantiation test 1", function() {
     var pubnub = PUBNUB({
         'publish_key' : 'demo',

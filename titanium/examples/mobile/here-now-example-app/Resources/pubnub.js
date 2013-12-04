@@ -128,7 +128,8 @@ function uuid(callback) {
     return u;
 }
 function isArray(arg) {
-    return Object.prototype.toString.call(arg) === "[object Array]";
+    var type = Object.prototype.toString.call(arg);
+    return   ( type === "[object Array]" || type === "[object NodeList]");
 }
 
 /**
@@ -837,6 +838,7 @@ function PN_API(setup) {
             ,   ttl      = args['ttl'] || -1
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
+            ,   data     = {}
             ,   auth_key = args['auth_key'];
 
             // Make sure we have a Channel

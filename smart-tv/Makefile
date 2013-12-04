@@ -17,7 +17,6 @@ $(PUBNUB_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATF
 	## Minfied Version
 	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_MIN_JS)
 	$(ECHO) "(function(){" >> $(PUBNUB_MIN_JS)
-	cat $(CRYPTOJS_HMAC_SHA256_JS) $(CRYPTOJS_ENC_BASE64_JS) >> $(PUBNUB_MIN_JS)
 	cat $(PUBNUB_JS) | java -jar $(GOOGLE_MINIFY) --compilation_level=ADVANCED_OPTIMIZATIONS >> $(PUBNUB_MIN_JS)
 	$(ECHO) "})();" >> $(PUBNUB_MIN_JS)
 

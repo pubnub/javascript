@@ -127,7 +127,8 @@ function uuid(callback) {
     return u;
 }
 function isArray(arg) {
-    return Object.prototype.toString.call(arg) === "[object Array]";
+    var type = Object.prototype.toString.call(arg);
+    return   ( type === "[object Array]" || type === "[object NodeList]");
 }
 
 /**
@@ -836,6 +837,7 @@ function PN_API(setup) {
             ,   ttl      = args['ttl'] || -1
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
+            ,   data     = {}
             ,   auth_key = args['auth_key'];
 
             // Make sure we have a Channel
@@ -2458,6 +2460,12 @@ function css( element, styles ) {
  */
 function create(element) { return document.createElement(element) }
 
+
+function get_hmac_SHA256(data,key) {
+    var hash = CryptoJS['HmacSHA256'](data, key);
+    return hash.toString(CryptoJS['enc']['Base64']);
+}
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -2470,6 +2478,8 @@ function CREATE_PUBNUB(setup) {
     setup['db'] = db;
     setup['xdr'] = xdr;
     setup['error'] = error;
+    setup['PNSDK']      = PNSDK;
+    setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
 
     SELF = function(setup) {
@@ -2507,7 +2517,7 @@ function CREATE_PUBNUB(setup) {
     return SELF;
 }
 CREATE_PUBNUB['init'] = CREATE_PUBNUB
-
+PUBNUB = CREATE_PUBNUB({})
 typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
 typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);
 

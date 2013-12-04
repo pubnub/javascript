@@ -13,8 +13,8 @@ $(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(MODERN_PLATFORM_JS)
 	## Full Version
 	$(ECHO)  "// Version: $(VERSION)" > $(PUBNUB_JS)
 	cat $(PUBNUB_COMMON_JS) $(CRYPTO_OBJ_JS) $(MODERN_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
-	sed -i -e "s/VERSION/\'$(VERSION)\'/g" $(PUBNUB_JS)
 	sed -i -e "s/PLATFORM/\'$(PLATFORM)\'/g" $(PUBNUB_JS)
+	sed -i -e "s/VERSION/\'$(VERSION)\'/g" $(PUBNUB_JS)
 	## Minfied Version
 	$(ECHO)  "// Version: $(VERSION)" > $(PUBNUB_MIN_JS)
 	$(ECHO) "(function(){" >> $(PUBNUB_MIN_JS)
