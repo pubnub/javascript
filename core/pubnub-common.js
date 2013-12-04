@@ -48,9 +48,10 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
+        var value_str = (typeof value == 'object')?JSON['stringify'](value):value;
         (typeof value != 'undefined' &&
-            value != null && encode(value).length > 0
-        ) && params.push(key + "=" + encode(value));
+            value != null && encode(value_str).length > 0
+        ) && params.push(key + "=" + encode(value_str));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -126,7 +127,8 @@ function uuid(callback) {
     return u;
 }
 function isArray(arg) {
-    return Object.prototype.toString.call(arg) === "[object Array]";
+    var type = Object.prototype.toString.call(arg);
+    return   ( type === "[object Array]" || type === "[object NodeList]");
 }
 
 /**
@@ -185,8 +187,6 @@ function ready() { timeout( function() {
     each( READY_BUFFER, function(connect) { connect() } );
 }, SECOND ); }
 
-
-
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
@@ -218,8 +218,23 @@ function PN_API(setup) {
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
+    ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
+    var crypto_obj    = setup['crypto_obj'] || 
+        { 
+            'encrypt' : function(a,key){ return a},
+            'decrypt' : function(b,key){return b}
+        };
+
+    function encrypt(input, key) {
+        return crypto_obj['encrypt'](input, key || CIPHER_KEY) || input;
+    }
+    function decrypt(input, key) {
+        return crypto_obj['decrypt'](input, key || CIPHER_KEY) ||
+               crypto_obj['decrypt'](input, CIPHER_KEY) ||
+               input;
+    }
 
     function error_common(message, callback) {
         callback && callback({ 'error' : message || "error occurred"});
@@ -294,6 +309,19 @@ function PN_API(setup) {
             });
             return true;
         },
+        'get_cipher_key' : function() {
+            return CIPHER_KEY;
+        },
+        'set_cipher_key' : function(key) {
+            CIPHER_KEY = key;
+        },
+        'raw_encrypt' : function(input, key) {
+            return encrypt(input, key);
+        },
+        'raw_decrypt' : function(input, key) {
+            return decrypt(input, key);
+        },
+
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',
@@ -307,6 +335,7 @@ function PN_API(setup) {
             ,   reverse  = args['reverse']  || "false"
             ,   err      = args['error']    || function(){}
             ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   cipher_key = args['cipher_key']
             ,   channel  = args['channel']
             ,   start    = args['start']
             ,   end      = args['end']
@@ -314,9 +343,9 @@ function PN_API(setup) {
             ,   jsonp    = jsonp_cb();
 
             // Make sure we have a Channel
-            if (!channel)       return error_common('Missing Channel', err);
-            if (!callback)      return error_common('Missing Callback', err);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             params['stringtoken'] = 'true';
             params['count']       = count;
@@ -336,7 +365,17 @@ function PN_API(setup) {
                         err(response);
                         return;
                     }
-                    callback(response)
+                    var messages = response[0];
+                    var decrypted_messages = [];
+                    for (var a = 0; a < messages.length; a++) {
+                        var new_message = decrypt(messages[a],cipher_key);
+                        try {
+                            decrypted_messages['push'](JSON['parse'](new_message));
+                        } catch (e) {
+                            decrypted_messages['push']((new_message));
+                        }
+                    }
+                    callback([decrypted_messages, response[1], response[2]]);
                 },
                 fail     : err,
                 url      : [
@@ -367,10 +406,10 @@ function PN_API(setup) {
             ,   url;
 
             // Check User Input
-            if (!source)        return error_common('Missing Source Channel', err);
-            if (!destination)   return error_common('Missing Destination Channel', err);
-            if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
+            if (!source)        return error('Missing Source Channel');
+            if (!destination)   return error('Missing Destination Channel');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // Setup URL Params
             if (jsonp != '0') data['callback'] = jsonp;
@@ -439,6 +478,7 @@ function PN_API(setup) {
             ,   msg      = args['message']
             ,   channel  = args['channel']
             ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   cipher_key = args['cipher_key']
             ,   err      = args['error'] || function() {}
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
@@ -446,13 +486,13 @@ function PN_API(setup) {
 
             if (args['prepend']) add_msg = 'unshift'
 
-            if(typeof(msg) === "undefined") return error_common('Missing Message', err);
-            if (!channel)       return error_common('Missing Channel', err);
-            if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
+            if (!msg)           return error('Missing Message');
+            if (!channel)       return error('Missing Channel');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // If trying to send Object
-            msg = JSON['stringify'](msg);
+            msg = JSON['stringify'](encrypt(msg, cipher_key));
 
             // Create URL
             url = [
@@ -539,6 +579,8 @@ function PN_API(setup) {
             ,   timetoken     = args['timetoken']   || 0
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
+            ,   metadata      = args['metadata']
+            ,   pnexpires     = args['pnexpires']
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -548,9 +590,9 @@ function PN_API(setup) {
             TIMETOKEN = timetoken;
 
             // Make sure we have a Channel
-            if (!channel)       return error_common('Missing Channel', errcb);
-            if (!callback)      return error_common('Missing Callback', errcb);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', errcb);
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // Setup Channel(s)
             each( (channel.join ? channel.join(',') : ''+channel).split(','),
@@ -564,6 +606,7 @@ function PN_API(setup) {
                     disconnected : settings.disconnected,
                     subscribed   : 1,
                     callback     : SUB_CALLBACK = callback,
+                    'cipher_key' : args['cipher_key'],
                     connect      : connect,
                     disconnect   : disconnect,
                     reconnect    : reconnect
@@ -640,6 +683,11 @@ function PN_API(setup) {
 
                 // Connect to PubNub Subscribe Servers
                 _reset_offline();
+
+                var data = { 'uuid' : UUID, 'auth' : auth_key };
+                if (metadata) data['metadata'] = metadata;
+                if (pnexpires) data['pnexpires'] = pnexpires;
+
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
@@ -648,13 +696,14 @@ function PN_API(setup) {
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
-                    data     : { 'uuid' : UUID, 'auth' : auth_key },
+                    data     : data,
                     url      : [
                         SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
                         jsonp, TIMETOKEN
                     ],
                     success : function(messages) {
+
                         SUB_RECEIVER = null;
                         // Check for Errors
                         if (!messages || (
@@ -694,7 +743,7 @@ function PN_API(setup) {
                         // Route Channel <---> Callback for Message
                         var next_callback = (function() {
                             var channels = (messages.length>2?messages[2]:map(
-                                CHANNELS, function(chan) { return map(
+                                generate_channel_list(CHANNELS), function(chan) { return map(
                                     Array(messages[0].length)
                                     .join(',').split(','),
                                     function() { return chan; }
@@ -714,8 +763,13 @@ function PN_API(setup) {
                         var latency = detect_latency(+messages[1]);
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            next[0]( msg, messages, next[1], latency );
-                        } );
+                            var decrypted_msg = decrypt(msg,CHANNELS[next[1]]['cipher_key']);
+                            try {
+                                next[0]( JSON['parse'](decrypted_msg), messages, next[1], latency );
+                            } catch (e) {
+                                next[0]( decrypted_msg, messages, next[1], latency );
+                            }
+                        });
 
                         timeout( _connect, windowing );
                     }
@@ -746,9 +800,9 @@ function PN_API(setup) {
             ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
 
             // Make sure we have a Channel
-            if (!channel)       return error_common('Missing Channel', err);
-            if (!callback)      return error_common('Missing Callback', err);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
@@ -790,14 +844,15 @@ function PN_API(setup) {
             ,   ttl      = args['ttl'] || -1
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
+            ,   data     = {}
             ,   auth_key = args['auth_key'];
 
             // Make sure we have a Channel
-            if (!channel)       return error_common('Missing Channel', err);
-            if (!callback)      return error_common('Missing Callback', err);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-            if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-            if (!SECRET_KEY)    return error_common('Missing Secret Key', err);
+            if (!channel)       return error('Missing Channel');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SECRET_KEY)    return error('Missing Secret Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
@@ -861,10 +916,10 @@ function PN_API(setup) {
             ,   jsonp    = jsonp_cb();
 
             // Make sure we have a Channel
-            if (!callback)      return error_common('Missing Callback', err);
-            if (!SUBSCRIBE_KEY) return error_common('Missing Subscribe Key', err);
-            if (!PUBLISH_KEY)   return error_common('Missing Publish Key', err);
-            if (!SECRET_KEY)    return error_common('Missing Secret Key', err);
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SECRET_KEY)    return error('Missing Secret Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 

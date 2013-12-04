@@ -1,41 +1,21 @@
 <div id=pubnub></div>
 <script src="../pubnub.js"></script>
 <script>(function(){
-
     // INIT PubNub
+    console.log(PUBNUB);
     var pubnub = PUBNUB.init({
         publish_key   : 'demo',
-        //subscribe_key : 'demo',
+        subscribe_key : 'demo',
         ssl : true,
         jsonp : false
     });
-
-    // LISTEN
     pubnub.subscribe({
-        //channel : "my_channel,your_channel,our_channel",
-        message : function(m){ console.log(JSON.stringify(m)) },
-        error : function(e) { alert(JSON.stringify(e));},
-        connect : function(channel) {
-            console.log('CONNECT on ' + channel);
-            // SEND
-            pubnub.publish({
-                channel : channel,
-                message : "Hi." ,
-                callback : function(r){
-                    console.log(JSON.stringify(r));
-                    pubnub.unsubscribe({
-                        channel : "my_channel,our_channel",
-                        callback : function(r) {
-                            console.log("UNSUB CALLBACK " + JSON.stringify(r));
-                        },
-                        error : function(e) {
-                            console.log('UNSUB ERROR ' + JSON.stringify(e));
-                        }
-                    });
-                }
-            });
-        }
-    });
+        callback : console.log,
+        error : console.log,
+        channel : "abcd",
+        metadata : { "age" : 30},
+        pnexpires : 5
+    })
 
 
 })();</script>

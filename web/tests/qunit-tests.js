@@ -3,7 +3,7 @@ var pubnub = PUBNUB.init({
     subscribe_key : 'demo'
 });
 
-var pubnub_enc = PUBNUB.secure({
+var pubnub_enc = PUBNUB({
     publish_key: "demo",
     subscribe_key: "demo",
     cipher_key: "enigma"
@@ -15,7 +15,6 @@ var count = 0;
 var message_string = 'Hi from Javascript';
 var message_jsono = {'message': 'Hi Hi from Javascript'};
 var message_jsona = ['message' , 'Hi Hi from javascript'];
-
 test("uuid() response", function() {
     expect(1);
     stop(1);
@@ -67,7 +66,217 @@ test("set_uuid() should set uuid and new presence event should come with new uui
     });
 });
 */
+test("instantiation test 1", function() {
+    var pubnub = PUBNUB({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            //console.log('publish');
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
 
+test("instantiation test 2", function() {
+    var pubnub = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 3", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 4", function() {
+    var pubnub1 = PUBNUB({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 5", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("instantiation test 6", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub1({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+
+test("instantiation test 7", function() {
+    var pubnub1 = PUBNUB.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub2 = pubnub1({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    var pubnub = pubnub2.init({
+        'publish_key' : 'demo',
+        'subscribe_key' : 'demo'
+    });
+
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
 
 test("publish() should publish strings without error", function() {
     expect(2);
@@ -89,8 +298,129 @@ test("publish() should publish strings without error", function() {
         }
     });
 });
-test("subscribe() should invoke error callback on decryption error", function() {
+test("publish() should publish strings without error (Encryption Enabled)", function() {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub_enc.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            pubnub_enc.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("both encrypted and unencrypted messages should be received on a channel with cipher key", function() {
     expect(3);
+    stop(2);
+    var count = 0;
+    var ch = channel + '-both-' + ++count;
+
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                callback : function(response) {
+                    equal(response[0],1);
+                    pubnub_enc.publish({channel: ch, message: message_string,
+                        callback : function(response) {
+                            equal(response[0],1);
+                            start();
+                        }
+                    });
+                }
+            });
+        },
+        callback : function(response, channel) {
+            deepEqual(response, message_string);
+            count++;
+            if (count == 2) {
+                pubnub_enc.unsubscribe({channel : ch});
+                start();
+            }
+        }
+    });
+});
+
+test("test global cipher key", function() {
+    expect(3);
+    stop(2);
+    var count = 0;
+    var ch = channel + '-global-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        cipher_key : 'local_cipher_key',
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                cipher_key : 'enigma',
+                callback : function(response) {
+                    equal(response[0],1);
+                    pubnub_enc.publish({channel: ch, message: message_string,
+                        cipher_key : 'enigma',
+                        callback : function(response) {
+                            equal(response[0],1);
+                            start();
+                        }
+                    });
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            count++;
+            if (count == 2) {
+                pubnub_enc.unsubscribe({channel : ch});
+                start();
+            }
+        }
+    });
+});
+
+
+test("test local cipher key", function() {
+    expect(4);
+    stop(2);
+    var count = 0;
+    var ch = channel + '-local-test-' + Date.now();
+    pubnub_enc.subscribe({ channel : ch,
+        cipher_key : 'local_cipher_key',
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string,
+                cipher_key : 'local_cipher_key',
+                callback : function(response) {
+                    equal(response[0],1);
+                    pubnub_enc.publish({channel: ch, message: message_string,
+                        cipher_key : 'local_cipher_key',
+                        callback : function(response) {
+                            equal(response[0],1);
+                            start();
+                        }
+                    });
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string);
+            count++;
+            if (count == 2) {
+                pubnub_enc.unsubscribe({channel : ch});
+                console.log = function(){};
+                start();
+            }
+        }
+    });
+});
+
+
+test("subscribe() should pass on plain text on decryption error", function() {
+    expect(2);
     stop(2);
     var ch = channel + '-' + ++count;
     pubnub_enc.subscribe({ channel : ch,
@@ -103,13 +433,12 @@ test("subscribe() should invoke error callback on decryption error", function() 
             });
         },
         callback : function(response) {
-            assert.ok(false);
+            deepEqual(response,message_string);
             pubnub_enc.unsubscribe({channel : ch});
             start();
         },
         error : function(response) {
-            deepEqual(response['message'], message_string);
-            deepEqual(response['error'], "DECRYPT_ERROR");
+            ok(false, "error should not occur");
             pubnub_enc.unsubscribe({channel : ch});
             start();
         }
@@ -270,9 +599,10 @@ asyncTest('#history() should return 2 messages when 2 messages were published on
         }
     });
 })
-asyncTest('#history() should call error callback for decryption failure messages', function() {
+
+asyncTest('#history() should pass on plain text in case of decryption failure', function() {
     var history_channel = channel + '-history-3';
-    expect(7);
+    expect(5);
     pubnub.publish({channel: history_channel,
         message : message_string,
         callback : function(response){
@@ -284,14 +614,13 @@ asyncTest('#history() should call error callback for decryption failure messages
                     setTimeout(function() {
                         pubnub_enc.history({channel : history_channel,
                             callback : function(response) {
-                                equal(response[0].length, 1);
+                                equal(response[0].length, 2);
                                 equal(response[0][0], message_string);
+                                equal(response[0][1], message_string);
                                 start();
                             },
                             error : function(response) {
-                                equal(response[0].length, 1);
-                                equal(response[0][0]['message'], message_string);
-                                equal(response[0][0]['error'], "DECRYPT_ERROR");
+                                ok(false,"error should not occur");
                                 start();
                             }
                         });
@@ -301,6 +630,7 @@ asyncTest('#history() should call error callback for decryption failure messages
         }
     });
 })
+
 /*
 test('connection restore feature', function() {
     var restore_channel = channel + '-restore-channel';
@@ -339,7 +669,7 @@ test('connection restore feature', function() {
 */
 
 asyncTest('Encryption tests', function() {
-    var aes = PUBNUB.secure({
+    var aes = PUBNUB.init({
         publish_key: "demo",
         subscribe_key: "demo",
         cipher_key: "enigma"
@@ -394,11 +724,11 @@ asyncTest('Encryption tests', function() {
                 });
             }, 3000);
         },
-        /*
+        
         presence: function (message, envelope, aes_channel) {
 
         },
-        */
+        
         callback: function (message, envelope, aes_channel) {
             ok(message, 'AES Subscribe Message');
             ok(message.test === "test", 'AES Subscribe Message Data');
@@ -406,7 +736,6 @@ asyncTest('Encryption tests', function() {
         }
     });
 })
-
 var grant_channel = channel + '-grant';
 var auth_key = "abcd";
 var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';

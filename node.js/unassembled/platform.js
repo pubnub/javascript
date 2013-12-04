@@ -172,30 +172,43 @@ var db = (function(){
     };
 })();
 
+function crypto_obj() {
+    var iv = "0123456789012345";
+    function get_padded_key(key) {
+        return crypto.createHash('sha256').update(key).digest("hex").slice(0,32);
+    }
+
+    return {
+        'encrypt' : function(input, key) {
+            if (!key) return input;
+            var plain_text = JSON['stringify'](input);
+            var cipher = crypto.createCipheriv('aes-256-cbc', get_padded_key(key), iv);
+            var base_64_encrypted = cipher.update(plain_text, 'utf8', 'base64') + cipher.final('base64');
+            return base_64_encrypted || input;
+        },
+        'decrypt' : function(input, key) {
+            if (!key) return input;
+            var decipher = crypto.createDecipheriv('aes-256-cbc', get_padded_key(key), iv);
+            try {
+                var decrypted = decipher.update(input, 'base64', 'utf8') + decipher.final('utf8');
+            } catch (e) {
+                return null;
+            }
+            return decrypted;
+        }
+    }
+}
+
 /* =-=====================================================================-= */
 /* =-=====================================================================-= */
 /* =-=========================     PUBNUB     ============================-= */
 /* =-=====================================================================-= */
 /* =-=====================================================================-= */
-
-exports.init = function(setup) {
-    var PN = {};
-    setup['xdr'] = xdr;
-    setup['db'] = db;
-    setup['error'] = error;
-    setup['PNSDK'] = PNSDK;
-    setup['hmac_SHA256'] = get_hmac_SHA256;
-    PN = PN_API(setup);
-    PN.ready();
-    return PN;
-}
-PUBNUB = exports.init({});
-
-exports.secure = function(setup) {
+var secure = function(setup) {
     var iv = "0123456789012345";
     var cipher_key = setup['cipher_key'];
     var padded_cipher_key = crypto.createHash('sha256').update(cipher_key).digest("hex").slice(0,32);
-    var pubnub = exports.init(setup);
+    var pubnub = CREATE_PUBNUB(setup);
 
     function encrypt(data) {
         var plain_text = JSON.stringify(data);
@@ -219,7 +232,7 @@ exports.secure = function(setup) {
         raw_encrypt : encrypt,
         raw_decrypt : decrypt,
         ready       : pubnub.ready,
-        time        : PUBNUB.time,
+        time        : pubnub.time,
         publish     : function (args) {
             args.message = encrypt(args.message);
             return pubnub.publish(args);
@@ -276,6 +289,34 @@ exports.secure = function(setup) {
             return true;
         }
     };
+    SELF.secure = secure;
+    SELF.init = CREATE_PUBNUB;
     return SELF;
 }
-exports.unique = unique
+
+var CREATE_PUBNUB = function(setup) {
+    setup['xdr'] = xdr;
+    setup['db'] = db;
+    setup['error'] = error;
+    setup['PNSDK'] = PNSDK;
+    setup['hmac_SHA256'] = get_hmac_SHA256;
+    setup['crypto_obj'] = crypto_obj();
+    SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    }
+    var PN = PN_API(setup);
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
+    SELF.init = SELF;
+    SELF.secure = secure;
+    SELF.ready();
+    return SELF;
+}
+CREATE_PUBNUB.init = CREATE_PUBNUB;
+
+CREATE_PUBNUB.unique = unique
+CREATE_PUBNUB.secure = secure
+module.exports = CREATE_PUBNUB

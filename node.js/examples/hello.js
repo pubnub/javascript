@@ -5,17 +5,23 @@
 
 --------------------------------------------------------------------------- */
 
-var pubnub = require("./../pubnub.js").init({
-    publish_key   : "demo"
-    //subscribe_key : "demo"
-});
+var PUBNUB = require("../pubnub.js")
 
+var pubnub1 = PUBNUB({
+    publish_key   : "demo",
+    subscribe_key : "demo",
+    cipher_key : "demo"
+});
+var pubnub = pubnub1.secure({
+    publish_key   : "demo",
+    subscribe_key : "demo",
+    cipher_key : "demo"
+});
 /* ---------------------------------------------------------------------------
 Listen for Messages
 --------------------------------------------------------------------------- */
 pubnub.subscribe({
     channel  : "a",
-    windowing : 10000,
     callback : function(message) {
         console.log( " > ", message );
     },
@@ -24,3 +30,6 @@ pubnub.subscribe({
     }
 
 });
+setTimeout(function(){
+pubnub.publish({'channel' : 'a', 'message' : 'hi', callback : console.log});
+},3000);

@@ -265,14 +265,24 @@ var events = {
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 
-function PN(setup) {
+function CREATE_PUBNUB(setup) {
 
 
     setup['db'] = db;
     setup['xdr'] = setup['native_tcp_socket'] ? xdr_tcp : xdr_http_client
-    var SELF = PN_API(setup);
 
-    SELF['init'] = PN;
+
+    SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    }
+    var PN = PN_API(setup);
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
+
+    SELF['init'] = SELF;
 
 
     // Return without Testing
@@ -281,8 +291,9 @@ function PN(setup) {
     SELF['ready']();
     return SELF;
 }
+CREATE_PUBNUB['init'] = CREATE_PUBNUB;
 
-typeof module  !== 'undefined' && (module.exports = PN) ||
-typeof exports !== 'undefined' && (exports.PN = PN)     || (PUBNUB = PN);
+typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
+typeof exports !== 'undefined' && (exports.PN = CREATE_PUBNUB)     || (PUBNUB = CREATE_PUBNUB);
 
 })();

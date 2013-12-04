@@ -15,5 +15,8 @@ CRYPTO_DIR=$(CORE_DIR)/crypto
 GIBBERISH_JS=$(CORE_DIR)/crypto/gibberish-aes.js
 WEBSOCKET_JS=$(CORE_DIR)/websocket.js
 ENCRYPT_JS=$(CORE_DIR)/crypto/encrypt-pubnub.js
+CRYPTO_OBJ_JS=$(CORE_DIR)/crypto/crypto-obj.js
+CRYPTOJS_HMAC_SHA256_JS=$(CORE_DIR)/external_js/hmac-sha256.js
+CRYPTOJS_ENC_BASE64_JS=$(CORE_DIR)/external_js/enc-base64-min.js
 PUBNUB_MIN_JS=pubnub.min.js
 
