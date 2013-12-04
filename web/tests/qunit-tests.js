@@ -41,7 +41,7 @@ test("set_uuid() should set uuid", function() {
     pubnub.set_uuid("abcd");
     deepEqual(pubnub.get_uuid(), "abcd");
 });
-/*
+
 test("set_uuid() should set uuid and new presence event should come with new uuid", function() {
     expect(2);
     stop(2);
@@ -68,7 +68,7 @@ test("set_uuid() should set uuid and new presence event should come with new uui
         }
     });
 });
-*/
+
 test("instantiation test 1", function() {
     var pubnub = PUBNUB({
         'publish_key' : 'demo',
@@ -411,7 +411,6 @@ test("test local cipher key", function() {
             });
         },
         callback : function(response) {
-            //console.log(JSON.stringify(channel));
             deepEqual(response, message_string);
             count++;
             if (count == 2) {
@@ -423,9 +422,9 @@ test("test local cipher key", function() {
     });
 });
 
-/*
-test("subscribe() should invoke error callback on decryption error", function() {
-    expect(3);
+
+test("subscribe() should pass on plain text on decryption error", function() {
+    expect(2);
     stop(2);
     var ch = channel + '-' + ++count;
     pubnub_enc.subscribe({ channel : ch,
@@ -438,19 +437,17 @@ test("subscribe() should invoke error callback on decryption error", function() 
             });
         },
         callback : function(response) {
-            assert.ok(false);
+            deepEqual(response,message_string);
             pubnub_enc.unsubscribe({channel : ch});
             start();
         },
         error : function(response) {
-            deepEqual(response['message'], message_string);
-            deepEqual(response['error'], "DECRYPT_ERROR");
+            ok(false, "error should not occur");
             pubnub_enc.unsubscribe({channel : ch});
             start();
         }
     });
 });
-*/
 
 test("publish() should publish json array without error", function() {
     expect(2);
@@ -606,10 +603,10 @@ asyncTest('#history() should return 2 messages when 2 messages were published on
         }
     });
 })
-/*
-asyncTest('#history() should call error callback for decryption failure messages', function() {
+
+asyncTest('#history() should pass on plain text in case of decryption failure', function() {
     var history_channel = channel + '-history-3';
-    expect(7);
+    expect(5);
     pubnub.publish({channel: history_channel,
         message : message_string,
         callback : function(response){
@@ -621,14 +618,13 @@ asyncTest('#history() should call error callback for decryption failure messages
                     setTimeout(function() {
                         pubnub_enc.history({channel : history_channel,
                             callback : function(response) {
-                                equal(response[0].length, 1);
+                                equal(response[0].length, 2);
                                 equal(response[0][0], message_string);
+                                equal(response[0][1], message_string);
                                 start();
                             },
                             error : function(response) {
-                                equal(response[0].length, 1);
-                                equal(response[0][0]['message'], message_string);
-                                equal(response[0][0]['error'], "DECRYPT_ERROR");
+                                ok(false,"error should not occur");
                                 start();
                             }
                         });
@@ -638,7 +634,7 @@ asyncTest('#history() should call error callback for decryption failure messages
         }
     });
 })
-*/
+
 /*
 test('connection restore feature', function() {
     var restore_channel = channel + '-restore-channel';
