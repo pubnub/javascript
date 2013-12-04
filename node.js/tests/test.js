@@ -6,7 +6,7 @@ var pubnub = PUBNUB.init({
     subscribe_key     : 'demo'
 });
 
-var pubnub_enc = PUBNUB.secure({
+var pubnub_enc = PUBNUB({
     publish_key     : 'demo',
     subscribe_key   : 'demo',
     cipher_key      : 'enigma'
@@ -24,7 +24,7 @@ describe('Pubnub', function() {
     this.timeout(180000);
 
     describe('#subscribe()', function(){
-        it('should call error callback on decryption error', function(done){
+        it('should pass plain text to callback on decryption error', function(done){
             var ch = channel + '-' + ++count;
             pubnub_enc.subscribe({channel : ch ,
                 connect : function(response) {
@@ -35,12 +35,12 @@ describe('Pubnub', function() {
                     });
                 },
                 callback : function(response) {
-                    assert.ok(false);
+                    assert.deepEqual(response,message_string);
                     pubnub_enc.unsubscribe({channel : ch});
                     done();
                 },
                 error : function(response) {
-                    assert.deepEqual(response['error'],"DECRYPT_ERROR");
+                    assert.ok(false);
                     pubnub_enc.unsubscribe({channel : ch});
                     done();
                 }
@@ -248,15 +248,16 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
-        it('should call error callbacks for messages which could not be decrypted when encryption is enabled', function(done) {
+        it('should pass on plain text for messages which could not be decrypted when encryption is enabled', function(done) {
             this.timeout(40000);
             setTimeout(function() {
                 pubnub_enc.history({channel : history_channel,
                     callback : function(response) {
-                        assert.deepEqual(response[0].length, 2);
+                        assert.deepEqual(response[0].length, 6);
+                        done();
                     },
                     error : function(response) {
-                        assert.deepEqual(response[0].length, 4);
+                        assert.ok(false);
                         done();
                     }
                 })
