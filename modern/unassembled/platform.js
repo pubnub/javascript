@@ -271,6 +271,12 @@ function css( element, styles ) {
  */
 function create(element) { return document.createElement(element) }
 
+
+function get_hmac_SHA256(data,key) {
+    var hash = CryptoJS['HmacSHA256'](data, key);
+    return hash.toString(CryptoJS['enc']['Base64']);
+}
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -283,6 +289,8 @@ function CREATE_PUBNUB(setup) {
     setup['db'] = db;
     setup['xdr'] = xdr;
     setup['error'] = error;
+    setup['PNSDK']      = PNSDK;
+    setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
 
     SELF = function(setup) {
