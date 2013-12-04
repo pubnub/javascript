@@ -22,7 +22,7 @@ PUBNUB['secure'] = (function(){
             return plaintext;
         }
         catch (e) {
-            return null;
+            return undefined;
         }
     }
 
@@ -54,7 +54,7 @@ PUBNUB['secure'] = (function(){
                     latency
                 ) {
                     var decrypted = decrypt(message);
-                    if(decrypted) {
+                    if(typeof(decrypted) !== "undefined") {
                         callback(decrypted, envelope, channel, latency);
                     } else {
                         args.error && args.error({"error":"DECRYPT_ERROR", "message" : message});
