@@ -48,9 +48,10 @@ function build_url( url_components, url_params ) {
     if (!url_params) return url;
 
     each( url_params, function( key, value ) {
+        var value_str = (typeof value == 'object')?JSON['stringify'](value):value;
         (typeof value != 'undefined' &&
-            value != null && encode(value).length > 0
-        ) && params.push(key + "=" + encode(value));
+            value != null && encode(value_str).length > 0
+        ) && params.push(key + "=" + encode(value_str));
     } );
 
     url += "?" + params.join(PARAMSBIT);
@@ -578,6 +579,8 @@ function PN_API(setup) {
             ,   timetoken     = args['timetoken']   || 0
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
+            ,   metadata      = args['metadata']
+            ,   pnexpires     = args['pnexpires']
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -680,6 +683,11 @@ function PN_API(setup) {
 
                 // Connect to PubNub Subscribe Servers
                 _reset_offline();
+
+                var data = { 'uuid' : UUID, 'auth' : auth_key };
+                if (metadata) data['metadata'] = metadata;
+                if (pnexpires) data['pnexpires'] = pnexpires;
+
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
@@ -688,7 +696,7 @@ function PN_API(setup) {
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
-                    data     : { 'uuid' : UUID, 'auth' : auth_key },
+                    data     : data,
                     url      : [
                         SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
