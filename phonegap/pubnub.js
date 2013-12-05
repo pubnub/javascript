@@ -285,8 +285,7 @@ function PN_API(setup) {
 
             // No Leave Patch (Prevent Blocking Leave if Desired)
             if (NOLEAVE)      return false;
-            if (!SSL)         return false;
-            if (jsonp == '0') return false;
+            if (!SSL && jsonp == '0') return false;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
