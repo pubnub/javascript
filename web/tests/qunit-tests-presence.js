@@ -20,7 +20,7 @@ asyncTest("subscribe() should not generate spurious presence events when adding 
 
                     },
                     callback : function(message) {
-                        
+
                     },
                     error : function(error) {
                         ok(false, "Error in subscribe 2")

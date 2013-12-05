@@ -331,6 +331,14 @@ function generate_channel_list(channels) {
     return list.sort();
 }
 
+function generate_channel_list_for_heartbeat(channels) {
+    var list = [];
+    each( channels, function( channel, status ) {
+        if (status.subscribed && status.pnexpires) list.push(channel);
+    } );
+    return list.sort();
+}
+
 // PUBNUB READY TO CONNECT
 function ready() { timeout( function() {
     if (READY) return;
@@ -363,6 +371,10 @@ function PN_API(setup) {
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
+    ,   PRESENCE_HB_TIMEOUT  = null
+    ,   PRESENCE_HB_ENABLED  = true
+    ,   PRESENCE_HB_INTERVAL = 500
+    ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
     ,   error         = setup['error']      || function() {}
@@ -372,8 +384,8 @@ function PN_API(setup) {
     ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
 
-    var crypto_obj    = setup['crypto_obj'] || 
-        { 
+    var crypto_obj    = setup['crypto_obj'] ||
+        {
             'encrypt' : function(a,key){ return a},
             'decrypt' : function(b,key){return b}
         };
@@ -390,6 +402,45 @@ function PN_API(setup) {
     function error_common(message, callback) {
         callback && callback({ 'error' : message || "error occurred"});
         error && error(message);
+    }
+    function _presence_heartbeat() {
+
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500){
+            PRESENCE_HB_RUNNING = false;
+            return;
+        }
+
+        clearTimeout(PRESENCE_HB_TIMEOUT);
+
+        if (!PRESENCE_HB_ENABLED) return;
+
+        PRESENCE_HB_RUNNING = true;
+        SELF['presence_heartbeat'](function(success){
+            PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+        });
+    }
+
+    function start_presence_heartbeat() {
+        !PRESENCE_HB_RUNNING && _presence_heartbeat();
+    }
+    function update_presence_hb_interval(pnexpires, addition) {
+
+        if (!pnexpires) return;
+        var OLD_PRESENCE_HB_INTERVAL = PRESENCE_HB_INTERVAL;
+        if (addition) {
+            if (pnexpires < PRESENCE_HB_INTERVAL) {
+                PRESENCE_HB_INTERVAL = pnexpires;
+            }
+        } else {
+            if (pnexpires == PRESENCE_HB_INTERVAL) {
+                var min = 500;
+                each( CHANNELS, function( channel, status ) {
+                    if (status.subscribed && status.pnexpires < min) min = status.pnexpires ;
+                });
+                PRESENCE_HB_INTERVAL = min;
+            }
+        }
+        (OLD_PRESENCE_HB_INTERVAL != PRESENCE_HB_INTERVAL) && _presence_heartbeat();
     }
 
     function publish(next) {
@@ -470,6 +521,21 @@ function PN_API(setup) {
         },
         'raw_decrypt' : function(input, key) {
             return decrypt(input, key);
+        },
+        'start_presence_heartbeat' : function() {
+            PRESENCE_HB_ENABLED = true;
+            _presence_heartbeat();
+        },
+        'stop_presence_heartbeat' : function() {
+            PRESENCE_HB_ENABLED = false;
+            _presence_heartbeat();
+        },
+        'set_pnexpires' : function(channel, pnexpires) {
+            if (!channel || !pnexpires) return;
+            if (CHANNELS[channel]) {
+                CHANNELS[channel]['pnexpires'] = pnexpires;
+            }
+            update_presence_hb_interval(pnexpires,true);
         },
 
         /*
@@ -700,7 +766,9 @@ function PN_API(setup) {
                     CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
+                var expires = CHANNELS[channel]?CHANNELS[channel]['pnexpires']:null;
                 CHANNELS[channel] = 0;
+                update_presence_hb_interval(expires, false);
             } );
 
             // Reset Connection if Count Less
@@ -730,7 +798,7 @@ function PN_API(setup) {
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   metadata      = args['metadata']
-            ,   pnexpires     = args['pnexpires']
+            ,   pnexpires     = args['pnexpires'] || 0
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -757,10 +825,12 @@ function PN_API(setup) {
                     subscribed   : 1,
                     callback     : SUB_CALLBACK = callback,
                     'cipher_key' : args['cipher_key'],
+                    'pnexpires'    : pnexpires,
                     connect      : connect,
                     disconnect   : disconnect,
                     reconnect    : reconnect
                 };
+                update_presence_hb_interval(pnexpires, true);
 
                 // Presence Enabled?
                 if (!presence) return;
@@ -837,7 +907,7 @@ function PN_API(setup) {
                 var data = { 'uuid' : UUID, 'auth' : auth_key };
                 if (metadata) data['metadata'] = metadata;
                 if (pnexpires) data['pnexpires'] = pnexpires;
-
+                start_presence_heartbeat();
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
                     callback : jsonp,
@@ -1249,6 +1319,22 @@ function PN_API(setup) {
         'get_uuid' : function() {
             return UUID;
         },
+        'presence_heartbeat' : function(callback) {
+            var jsonp = jsonp_cb();
+            xdr({
+                callback : jsonp,
+                data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
+                timeout  : SECOND * 5,
+                url      : [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub-key', SUBSCRIBE_KEY,
+                    'channel' , encode(generate_channel_list_for_heartbeat(CHANNELS).join(',')),
+                    'heartbeat'
+                ],
+                success  : function(response) { callback(response[0]) },
+                fail     : function() { callback(0) }
+            });
+        },
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
@@ -1284,6 +1370,25 @@ function PN_API(setup) {
         });
     }
 
+    function _presence_heartbeat() {
+
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500){
+            PRESENCE_HB_RUNNING = false;
+            return;
+        }
+
+        clearTimeout(PRESENCE_HB_TIMEOUT);
+
+        PRESENCE_HB_RUNNING = true;
+        SELF['presence_heartbeat'](function(success){
+            PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+        });
+    }
+
+    function start_presence_heartbeat() {
+        !PRESENCE_HB_RUNNING && _presence_heartbeat();
+    }
+
     function _reset_offline(err, msg) {
         SUB_RECEIVER && SUB_RECEIVER(err, msg);
         SUB_RECEIVER = null;
@@ -1294,6 +1399,7 @@ function PN_API(setup) {
 
     timeout( _poll_online,  SECOND    );
     timeout( _poll_online2, KEEPALIVE );
+    PRESENCE_HB_TIMEOUT = timeout( start_presence_heartbeat, ( PRESENCE_HB_INTERVAL - 3 ) * SECOND ) ;
 
     // Detect Age of Message
     function detect_latency(tt) {

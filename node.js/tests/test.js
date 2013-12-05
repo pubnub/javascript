@@ -1127,7 +1127,7 @@ describe('Pubnub', function() {
 
                             },
                             callback : function(message) {
-                                
+
                             },
                             error : function(error) {
                                 assert.ok(false, "Error in subscribe 2")
@@ -1618,7 +1618,7 @@ describe('Pubnub', function() {
                                                         metadata : true,
                                                         callback : function(response) {
                                                             assert.deepEqual(response.status, 200);
-                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload"); 
+                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload");
                                                             assert.ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
                                                             assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
                                                             assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");

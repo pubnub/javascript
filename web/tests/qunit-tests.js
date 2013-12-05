@@ -724,11 +724,11 @@ asyncTest('Encryption tests', function() {
                 });
             }, 3000);
         },
-        
+
         presence: function (message, envelope, aes_channel) {
 
         },
-        
+
         callback: function (message, envelope, aes_channel) {
             ok(message, 'AES Subscribe Message');
             ok(message.test === "test", 'AES Subscribe Message Data');
@@ -1266,7 +1266,7 @@ asyncTest("subscribe() should not generate spurious presence events when adding 
 
                     },
                     callback : function(message) {
-                        
+
                     },
                     error : function(error) {
                         ok(false, "Error in subscribe 2")
@@ -1445,7 +1445,7 @@ asyncTest('#subscriber.setstate() should be able to delete metadata for uuid', f
                                 ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
                                 start();
                             }
-                        })                    
+                        })
                 },
                 error    : function(error) {
                     ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
