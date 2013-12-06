@@ -213,7 +213,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   PRESENCE_HB_INTERVAL = setup['pnexpires']
+    ,   PRESENCE_HB_INTERVAL = setup['pnexpires'] || 0
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
@@ -341,8 +341,15 @@ function PN_API(setup) {
         'raw_decrypt' : function(input, key) {
             return decrypt(input, key);
         },
+        'get_pnexpires' : function() {
+            return PRESENCE_HB_INTERVAL;
+        },
         'set_pnexpires' : function(pnexpires) {
-            PRESENCE_HB_INTERVAL = pnexpires;
+            if (pnexpires > 0 && pnexpires <= 5) {
+                error_common("Pubnub Presence Expiry Timeout cannot be less than 5 seconds");
+                return;
+            }
+            PRESENCE_HB_INTERVAL = pnexpires || 0;
             CONNECT();
             _presence_heartbeat();
         },
@@ -605,7 +612,7 @@ function PN_API(setup) {
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   metadata      = args['metadata']
-            ,   pnexpires     = args['pnexpires']
+            ,   pnexpires     = args['pnexpires']   || 0
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -713,7 +720,7 @@ function PN_API(setup) {
 
                 var data = { 'uuid' : UUID, 'auth' : auth_key };
                 if (metadata) data['metadata'] = metadata;
-                data['pnexpires'] = PRESENCE_HB_INTERVAL;
+                if (PRESENCE_HB_INTERVAL) data['pnexpires'] = PRESENCE_HB_INTERVAL;
                 start_presence_heartbeat();
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
