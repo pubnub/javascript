@@ -213,7 +213,6 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   PRESENCE_HB_ENABLED  = true
     ,   PRESENCE_HB_INTERVAL = setup['pnexpires']
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
@@ -246,14 +245,12 @@ function PN_API(setup) {
     }
     function _presence_heartbeat() {
 
+        clearTimeout(PRESENCE_HB_TIMEOUT);
+
         if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500){
             PRESENCE_HB_RUNNING = false;
             return;
         }
-
-        clearTimeout(PRESENCE_HB_TIMEOUT);
-
-        if (!PRESENCE_HB_ENABLED) return;
 
         PRESENCE_HB_RUNNING = true;
         SELF['presence_heartbeat'](function(success){
@@ -344,16 +341,7 @@ function PN_API(setup) {
         'raw_decrypt' : function(input, key) {
             return decrypt(input, key);
         },
-        'start_presence_heartbeat' : function() {
-            PRESENCE_HB_ENABLED = true;
-            _presence_heartbeat();
-        },
-        'stop_presence_heartbeat' : function() {
-            PRESENCE_HB_ENABLED = false;
-            _presence_heartbeat();
-        },
         'set_pnexpires' : function(pnexpires) {
-            if (!pnexpires) return;
             PRESENCE_HB_INTERVAL = pnexpires;
             CONNECT();
             _presence_heartbeat();
