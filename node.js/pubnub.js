@@ -10,6 +10,7 @@ var NOW             = 1
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
+,   PRESENCE_HB_THRESHOLD = 5
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -214,7 +215,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   CHANNELS      = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   PRESENCE_HB_INTERVAL = setup['pnexpires'] || 0
+    ,   PRESENCE_HB_INTERVAL = validate_presence_heartbeat(setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
@@ -230,6 +231,24 @@ function PN_API(setup) {
             'encrypt' : function(a,key){ return a},
             'decrypt' : function(b,key){return b}
         };
+
+    function validate_presence_heartbeat(pnexpires, cur_pnexpires, error) {
+        var err = false;
+
+        if (typeof pnexpires === 'number') {
+            if (pnexpires > PRESENCE_HB_THRESHOLD || pnexpires == 0)
+                err = false;
+            else 
+                err = true;
+        } else {
+            err = true;
+        }
+
+        if (err) {
+            error && error("Presence Heartbeat value invalid. Valid range ( x > " + PRESENCE_HB_THRESHOLD + " or x = 0). Current Value : " + (cur_pnexpires || PRESENCE_HB_THRESHOLD));
+            return cur_pnexpires || PRESENCE_HB_THRESHOLD;
+        } else return pnexpires;
+    }
 
     function encrypt(input, key) {
         return crypto_obj['encrypt'](input, key || CIPHER_KEY) || input;
@@ -346,11 +365,7 @@ function PN_API(setup) {
             return PRESENCE_HB_INTERVAL;
         },
         'set_pnexpires' : function(pnexpires) {
-            if (pnexpires > 0 && pnexpires <= 5) {
-                error_common("Pubnub Presence Expiry Timeout cannot be less than 5 seconds");
-                return;
-            }
-            PRESENCE_HB_INTERVAL = pnexpires || 0;
+            PRESENCE_HB_INTERVAL = validate_presence_heartbeat(pnexpires, PRESENCE_HB_INTERVAL, error);
             CONNECT();
             _presence_heartbeat();
         },
@@ -613,7 +628,7 @@ function PN_API(setup) {
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   metadata      = args['metadata']
-            ,   pnexpires     = args['pnexpires']   || 0
+            ,   pnexpires     = args['pnexpires']
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -627,7 +642,7 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-            if (pnexpires) PRESENCE_HB_INTERVAL = pnexpires;
+            if (pnexpires || pnexpires === 0) PRESENCE_HB_INTERVAL = validate_presence_heartbeat(pnexpires, PRESENCE_HB_INTERVAL, error)
 
             // Setup Channel(s)
             each( (channel.join ? channel.join(',') : ''+channel).split(','),
@@ -1185,21 +1200,6 @@ function PN_API(setup) {
         });
     }
 
-    function _presence_heartbeat() {
-
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 320){
-            PRESENCE_HB_RUNNING = false;
-            return;
-        }
-
-        clearTimeout(PRESENCE_HB_TIMEOUT);
-
-        PRESENCE_HB_RUNNING = true;
-        SELF['presence_heartbeat'](function(success){
-            PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
-        });
-    }
-
     function start_presence_heartbeat() {
         !PRESENCE_HB_RUNNING && _presence_heartbeat();
     }
@@ -1538,7 +1538,7 @@ var secure = function(setup) {
 var CREATE_PUBNUB = function(setup) {
     setup['xdr'] = xdr;
     setup['db'] = db;
-    setup['error'] = error;
+    setup['error'] = setup['error'] || error;
     setup['PNSDK'] = PNSDK;
     setup['hmac_SHA256'] = get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
