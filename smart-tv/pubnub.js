@@ -417,7 +417,7 @@ function PN_API(setup) {
 
         clearTimeout(PRESENCE_HB_TIMEOUT);
 
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500){
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || !generate_channel_list(CHANNELS).length){
             PRESENCE_HB_RUNNING = false;
             return;
         }
@@ -1348,10 +1348,6 @@ function PN_API(setup) {
                 });
             timeout( _poll_online2, KEEPALIVE );
         });
-    }
-
-    function start_presence_heartbeat() {
-        !PRESENCE_HB_RUNNING && _presence_heartbeat();
     }
 
     function _reset_offline(err, msg) {

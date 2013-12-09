@@ -76,7 +76,6 @@ test("instantiation test 1", function() {
     var ch = channel + '-' + ++count;
     pubnub.subscribe({ channel : ch,
         connect : function(response)  {
-            //console.log('publish');
             pubnub.publish({channel: ch, message: message_string,
                 callback : function(response) {
                     equal(response[0],1);
@@ -411,7 +410,6 @@ test("test local cipher key", function() {
             count++;
             if (count == 2) {
                 pubnub_enc.unsubscribe({channel : ch});
-                console.log = function(){};
                 start();
             }
         }
@@ -786,7 +784,6 @@ test("#grant() should be able to grant read write access", function(done) {
                                 start();
                             },
                             'error' : function(response) {
-                                console.log(response);
                                 ok(false, "Error should not occur if permission granted");
                                 pubnub_pam.publish({
                                     'channel' : grant_channel_1,
@@ -2075,4 +2072,57 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
             }
         })
     },5000);
+})
+
+asyncTest("presence heartbeat value validation", function() {
+    expect(10);
+    var ch = channel + '-pnhb-' + Date.now();
+
+    var pubnub = PUBNUB({
+            publish_key   : 'demo',
+            subscribe_key : 'demo',
+            pnexpires     : 6,
+            origin        : 'dara.devbuild.pubnub.com'
+    });
+    deepEqual(6, pubnub.get_pnexpires());
+    pubnub.set_pnexpires(1);
+    deepEqual(6, pubnub.get_pnexpires());
+    pubnub.set_pnexpires(8);
+    deepEqual(8, pubnub.get_pnexpires());
+    pubnub.set_pnexpires(0);
+    deepEqual(0, pubnub.get_pnexpires());
+    pubnub.set_pnexpires(9);
+    deepEqual(9, pubnub.get_pnexpires());
+    pubnub.set_pnexpires(3);
+    deepEqual(9, pubnub.get_pnexpires());
+
+    pubnub.subscribe({
+        channel  : 'abcd',
+        callback : function(r) {console.log(r);}
+    })
+    deepEqual(9, pubnub.get_pnexpires());
+
+    pubnub.subscribe({
+        channel   : 'abcd1',
+        callback  : function(r) {console.log(r);},
+        pnexpires : 1
+    })
+    deepEqual(9, pubnub.get_pnexpires());
+
+    pubnub.subscribe({
+        channel   : 'abcd1',
+        callback  : function(r) {console.log(r);},
+        pnexpires : 7
+    })
+    deepEqual(7, pubnub.get_pnexpires());
+
+    pubnub.subscribe({
+        channel   : 'abcd1',
+        callback  : function(r) {console.log(r);},
+        pnexpires : 0
+    })
+    deepEqual(0, pubnub.get_pnexpires());
+
+    start();
+    
 })
