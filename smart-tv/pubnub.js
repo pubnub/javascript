@@ -423,8 +423,14 @@ function PN_API(setup) {
         }
 
         PRESENCE_HB_RUNNING = true;
-        SELF['presence_heartbeat'](function(success){
-            PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+        SELF['presence_heartbeat']({
+            callback : function() {
+                PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+            },
+            error : function(e) {
+                error && error("Presence Heartbeat unable to reach Pubnub servers." + JSON.stringify(e));
+                PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+            }
         });
     }
 
@@ -1299,8 +1305,10 @@ function PN_API(setup) {
         'get_uuid' : function() {
             return UUID;
         },
-        'presence_heartbeat' : function(callback) {
-            var jsonp = jsonp_cb();
+        'presence_heartbeat' : function(args) {
+            var callback = args['callback'] || function() {}
+            var error    = args['error']    || function() {}
+            var jsonp    = jsonp_cb();
             xdr({
                 callback : jsonp,
                 data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
@@ -1312,7 +1320,7 @@ function PN_API(setup) {
                     'heartbeat'
                 ],
                 success  : function(response) { callback(response[0]) },
-                fail     : function() { callback(0) }
+                fail     : function(e) { error(e); }
             });
         },
 
