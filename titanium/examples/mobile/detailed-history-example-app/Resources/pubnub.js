@@ -214,6 +214,7 @@ function PN_API(setup) {
     ,   SUB_RESTORE   = 0
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
+    ,   RESUMED       = false
     ,   CHANNELS      = {}
     ,   PRESENCE_HB_TIMEOUT  = null
     ,   PRESENCE_HB_INTERVAL = validate_presence_heartbeat(setup['pnexpires'] || 0, setup['error'])
@@ -239,7 +240,7 @@ function PN_API(setup) {
         if (typeof pnexpires === 'number') {
             if (pnexpires > PRESENCE_HB_THRESHOLD || pnexpires == 0)
                 err = false;
-            else 
+            else
                 err = true;
         } else {
             err = true;
@@ -316,6 +317,19 @@ function PN_API(setup) {
 
         return count;
     }
+    function _invoke_callback(response, callback, err) {
+        if (typeof response == 'object') {
+            if (response['error']) {
+                err(response['error']);
+                return;
+            }
+            if (response['payload']) {
+                callback(response['payload']);
+                return;
+            }
+        }
+        callback(response)
+    }
 
     // Announce Leave Event
     var SELF = {
@@ -342,11 +356,7 @@ function PN_API(setup) {
                 callback : jsonp,
                 data     : data,
                 success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
-                        err(response);
-                        return;
-                    }
-                    callback(response)
+                    _invoke_callback(response, callback, err);
                 },
                 fail     : err,
                 url      : [
@@ -355,6 +365,9 @@ function PN_API(setup) {
                 ]
             });
             return true;
+        },
+        'set_resumed' : function(resumed) {
+                RESUMED = resumed;
         },
         'get_cipher_key' : function() {
             return CIPHER_KEY;
@@ -417,7 +430,7 @@ function PN_API(setup) {
                 data     : params,
                 success  : function(response) {
                     if (typeof response == 'object' && response['error']) {
-                        err(response);
+                        err(response['error']);
                         return;
                     }
                     var messages = response[0];
@@ -487,11 +500,7 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
-                        err(response);
-                        return;
-                    }
-                    callback(response)
+                    _invoke_callback(response, callback, err);
                 },
                 fail     : function() { callback([ 0, 'Disconnected' ]) },
                 url      : url,
@@ -565,11 +574,7 @@ function PN_API(setup) {
                 data     : { 'uuid' : UUID, 'auth' : auth_key },
                 fail     : function(response){err(response);publish(1)},
                 success  : function(response) {
-                    if (typeof response == 'object' && response['error'])
-                        err(response);
-                    else
-                        callback(response)
-
+                    _invoke_callback(response, callback, err);
                     publish(1);
                 }
             });
@@ -768,7 +773,7 @@ function PN_API(setup) {
                             'error' in messages         &&
                             messages['error']
                         )) {
-                            errcb(messages);
+                            errcb(messages['error']);
                             return timeout( CONNECT, SECOND );
                         }
 
@@ -786,6 +791,15 @@ function PN_API(setup) {
                             channel.connected = 1;
                             channel.connect(channel.name);
                         });
+
+                        if (RESUMED && !SUB_RESTORE) {
+                                TIMETOKEN = 0;
+                                RESUMED = false;
+                                // Update Saved Timetoken
+                                db['set']( SUBSCRIBE_KEY, 0 );
+                                timeout( _connect, windowing );
+                                return;
+                        }
 
                         // Invoke Memory Catchup and Receive Up to 100
                         // Previous Messages from the Queue.
@@ -878,11 +892,7 @@ function PN_API(setup) {
                 callback : jsonp,
                 data     : data,
                 success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
-                        err(response);
-                        return;
-                    }
-                    callback(response)
+                    _invoke_callback(response, callback, err);
                 },
                 fail     : err,
                 url      : url
@@ -910,11 +920,7 @@ function PN_API(setup) {
                 callback : jsonp,
                 data     : data,
                 success  : function(response) {
-                    if (typeof response == 'object' && response['error']) {
-                        err(response);
-                        return;
-                    }
-                    callback(response)
+                    _invoke_callback(response, callback, err);
                 },
                 fail     : err,
                 url      : [
@@ -951,11 +957,7 @@ function PN_API(setup) {
                     callback : jsonp,
                     data     : data,
                     success  : function(response) {
-                        if (typeof response == 'object' && response['error']) {
-                            err(response);
-                            return;
-                        }
-                        callback(response)
+                        _invoke_callback(response, callback, err);
                     },
                     fail     : err,
                     url      : [
@@ -988,11 +990,7 @@ function PN_API(setup) {
                     callback : jsonp,
                     data     : data,
                     success  : function(response) {
-                        if (typeof response == 'object' && response['error']) {
-                            err(response);
-                            return;
-                        }
-                        callback(response)
+                        _invoke_callback(response, callback, err);
                     },
                     fail     : err,
                     url      : [
@@ -1070,7 +1068,9 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : data,
-                success  : function(response) { callback(response) },
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
                 fail     : err,
                 url      : [
                     STD_ORIGIN, 'v1', 'auth', 'grant' ,
@@ -1127,7 +1127,9 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : data,
-                success  : function(response) { callback(response) },
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
                 fail     : err,
                 url      : [
                     STD_ORIGIN, 'v1', 'auth', 'audit' ,
@@ -1158,7 +1160,7 @@ function PN_API(setup) {
         },
         'presence_heartbeat' : function(args) {
             var callback = args['callback'] || function() {}
-            var error    = args['error']    || function() {}
+            var err    = args['error']    || function() {}
             var jsonp    = jsonp_cb();
             xdr({
                 callback : jsonp,
@@ -1170,8 +1172,10 @@ function PN_API(setup) {
                     'channel' , encode(generate_channel_list(CHANNELS).join(',')),
                     'heartbeat'
                 ],
-                success  : function(response) { callback(response[0]) },
-                fail     : function(e) { error(e); }
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(e) { err(e); }
             });
         },
 

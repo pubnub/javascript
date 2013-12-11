@@ -409,14 +409,14 @@ describe('Pubnub', function() {
                     read : true,
                     write : true,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
+                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.auths.abcd.r,1);
-                                assert.deepEqual(response.payload.auths.abcd.w,1);
+                                //assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.auths.abcd.r,1);
+                                assert.deepEqual(response.auths.abcd.w,1);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : auth_key,
@@ -470,14 +470,14 @@ describe('Pubnub', function() {
                     read : true,
                     write : true,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
+                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.auths[auth_key].r,1);
-                                assert.deepEqual(response.payload.auths[auth_key].w,1);
+                                //assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.auths[auth_key].r,1);
+                                assert.deepEqual(response.auths[auth_key].w,1);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : auth_key,
@@ -531,14 +531,14 @@ describe('Pubnub', function() {
                     read : true,
                     write : true,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
+                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.channels[grant_channel_local].r,1);
-                                assert.deepEqual(response.payload.channels[grant_channel_local].w,1);
-                                assert.deepEqual(response.payload.subscribe_key,sub_key);
+                                //assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.channels[grant_channel_local].r,1);
+                                assert.deepEqual(response.channels[grant_channel_local].w,1);
+                                assert.deepEqual(response.subscribe_key,sub_key);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : "",
@@ -592,14 +592,14 @@ describe('Pubnub', function() {
                     read : true,
                     write : false,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
+                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.auths.abcd.r,1);
-                                assert.deepEqual(response.payload.auths.abcd.w,0);
+                                //assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.auths.abcd.r,1);
+                                assert.deepEqual(response.auths.abcd.w,0);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : auth_key,
@@ -615,7 +615,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
+                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -632,7 +632,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
+                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -656,14 +656,14 @@ describe('Pubnub', function() {
                     read : false,
                     write : true,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
+                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.auths.abcd.r,0);
-                                assert.deepEqual(response.payload.auths.abcd.w,1);
+                                //assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.auths.abcd.r,0);
+                                assert.deepEqual(response.auths.abcd.w,1);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : auth_key,
@@ -685,7 +685,7 @@ describe('Pubnub', function() {
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
-                                        assert.deepEqual(response.status, 403);
+                                        //assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_local,
                                             'message' : 'Test',
@@ -719,14 +719,14 @@ describe('Pubnub', function() {
                     read : false,
                     write : false,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
+                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.auths.abcd.r,0);
-                                assert.deepEqual(response.payload.auths.abcd.w,0);
+                                //assert.deepEqual(response.status,200);
+                                assert.deepEqual(response.auths.abcd.r,0);
+                                assert.deepEqual(response.auths.abcd.w,0);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : auth_key,
@@ -742,14 +742,14 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
+                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
-                                        assert.deepEqual(response.status, 403);
+                                        //assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_local,
                                             'message' : 'Test',
@@ -760,7 +760,7 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
+                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -783,14 +783,12 @@ describe('Pubnub', function() {
                     read : false,
                     write : false,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.channels[grant_channel_local].r,0);
-                                assert.deepEqual(response.payload.channels[grant_channel_local].w,0);
-                                assert.deepEqual(response.payload.subscribe_key,sub_key);
+                                assert.deepEqual(response.channels[grant_channel_local].r,0);
+                                assert.deepEqual(response.channels[grant_channel_local].w,0);
+                                assert.deepEqual(response.subscribe_key,sub_key);
                                 pubnub.history({
                                     'channel'  : grant_channel_local,
                                     'auth_key' : "",
@@ -806,14 +804,12 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
-                                        assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_local,
                                             'message' : 'Test',
@@ -824,7 +820,6 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -860,14 +855,12 @@ describe('Pubnub', function() {
                     channel : revoke_channel,
                     auth_key : auth_key,
                     callback : function(response) {
-                        assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : revoke_channel,
                             auth_key : auth_key,
                             callback : function(response) {
-                                assert.deepEqual(response.status,200);
-                                assert.deepEqual(response.payload.auths.abcd.r,0);
-                                assert.deepEqual(response.payload.auths.abcd.w,0);
+                                assert.deepEqual(response.auths.abcd.r,0);
+                                assert.deepEqual(response.auths.abcd.w,0);
                                 pubnub.history({
                                     'channel'  : revoke_channel,
                                     'auth_key' : auth_key,
@@ -883,14 +876,12 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
                                         assert.ok(true)
-                                        assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : revoke_channel,
                                             'message' : 'Test',
@@ -901,7 +892,6 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -936,8 +926,7 @@ describe('Pubnub', function() {
                             pubnub.where_now({
                                 uuid: uuid,
                                 callback : function(data) {
-                                    assert.deepEqual(data.status, 200);
-                                    assert.ok(in_list(data.payload.channels,ch), "subscribed Channel should be there in where now list");
+                                    assert.ok(in_list(data.channels,ch), "subscribed Channel should be there in where now list");
                                     pubnub.unsubscribe({channel : ch});
                                     done();
                                 },
@@ -970,10 +959,9 @@ describe('Pubnub', function() {
                             pubnub.where_now( {
                                 uuid: uuid,
                                 callback : function(data) {
-                                    assert.deepEqual(data.status, 200);
-                                    assert.ok(in_list(data.payload.channels,ch1), "subscribed Channel 1 should be there in where now list");
-                                    assert.ok(in_list(data.payload.channels,ch2), "subscribed Channel 2 should be there in where now list");
-                                    assert.ok(in_list(data.payload.channels,ch3), "subscribed Channel 3 should be there in where now list");
+                                    assert.ok(in_list(data.channels,ch1), "subscribed Channel 1 should be there in where now list");
+                                    assert.ok(in_list(data.channels,ch2), "subscribed Channel 2 should be there in where now list");
+                                    assert.ok(in_list(data.channels,ch3), "subscribed Channel 3 should be there in where now list");
                                     pubnub.unsubscribe({channel : ch1});
                                     pubnub.unsubscribe({channel : ch2});
                                     pubnub.unsubscribe({channel : ch3});
@@ -1021,14 +1009,12 @@ describe('Pubnub', function() {
                 uuid     : uuid,
                 metadata : metadata,
                 callback : function(response) {
-                    assert.deepEqual(response.status, 200);
-                    assert.deepEqual(response.payload,metadata);
+                    assert.deepEqual(response, metadata);
                     pubnub.subscriber.getstate({
                         channel  : ch ,
                         uuid     : uuid,
                         callback : function(response) {
-                            assert.deepEqual(response.status, 200);
-                            assert.deepEqual(response.payload,metadata);
+                            assert.deepEqual(response, metadata);
                             done();
                         },
                         error    : function(error) {
@@ -1052,28 +1038,24 @@ describe('Pubnub', function() {
                 uuid     : uuid,
                 metadata : metadata,
                 callback : function(response) {
-                    assert.deepEqual(response.status, 200);
-                    assert.deepEqual(response.payload,metadata);
+                    assert.deepEqual(response,metadata);
                     pubnub.subscriber.getstate({
                         channel  : ch ,
                         uuid     : uuid,
                         callback : function(response) {
-                            assert.deepEqual(response.status, 200);
-                            assert.deepEqual(response.payload,metadata);
+                            assert.deepEqual(response,metadata);
                             delete metadata["age"];
                             pubnub.subscriber.setstate({
                                 channel  : ch ,
                                 uuid     : uuid,
                                 metadata : { "age" : "null"},
                                 callback : function(response) {
-                                    assert.deepEqual(response.status, 200);
-                                    assert.deepEqual(response.payload,metadata);
+                                    assert.deepEqual(response,metadata);
                                     pubnub.subscriber.getstate({
                                         channel  : ch ,
                                         uuid     : uuid,
                                         callback : function(response) {
-                                            assert.deepEqual(response.status, 200);
-                                            assert.deepEqual(response.payload,metadata);
+                                            assert.deepEqual(response,metadata);
                                             done();
                                         },
                                         error    : function(error) {
@@ -1212,19 +1194,18 @@ describe('Pubnub', function() {
                                             setTimeout(function() {
                                                 pubnub_pres.here_now({
                                                     callback : function(response) {
-                                                        assert.deepEqual(response.status, 200);
-                                                        assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload");
-                                                        assert.ok(response.payload.channels[ch1], "subscribed 1 channel should be present in payload");
-                                                        assert.ok(response.payload.channels[ch2], "subscribed 2 channel should be present in payload");
-                                                        assert.ok(response.payload.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                        assert.ok(in_list(response.payload.channels[ch].uuids, uuid), "uuid should be there in the uuids list");
-                                                        assert.ok(in_list(response.payload.channels[ch1].uuids,uuid1), "uuid 1 should be there in the uuids list");
-                                                        assert.ok(in_list(response.payload.channels[ch2].uuids,uuid2), "uuid 2 should be there in the uuids list");
-                                                        assert.ok(in_list(response.payload.channels[ch3].uuids,uuid3), "uuid 3 should be there in the uuids list");
-                                                        assert.deepEqual(response.payload.channels[ch].occupancy,1);
-                                                        assert.deepEqual(response.payload.channels[ch1].occupancy,1);
-                                                        assert.deepEqual(response.payload.channels[ch2].occupancy,1);
-                                                        assert.deepEqual(response.payload.channels[ch3].occupancy,1);
+                                                        assert.ok(response.channels[ch], "subscribed channel should be present in payload");
+                                                        assert.ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
+                                                        assert.ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
+                                                        assert.ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
+                                                        assert.ok(in_list(response.channels[ch].uuids, uuid), "uuid should be there in the uuids list");
+                                                        assert.ok(in_list(response.channels[ch1].uuids,uuid1), "uuid 1 should be there in the uuids list");
+                                                        assert.ok(in_list(response.channels[ch2].uuids,uuid2), "uuid 2 should be there in the uuids list");
+                                                        assert.ok(in_list(response.channels[ch3].uuids,uuid3), "uuid 3 should be there in the uuids list");
+                                                        assert.deepEqual(response.channels[ch].occupancy,1);
+                                                        assert.deepEqual(response.channels[ch1].occupancy,1);
+                                                        assert.deepEqual(response.channels[ch2].occupancy,1);
+                                                        assert.deepEqual(response.channels[ch3].occupancy,1);
                                                         pubnub_pres.unsubscribe({channel : ch});
                                                         pubnub_pres_1.unsubscribe({channel : ch1});
                                                         pubnub_pres_2.unsubscribe({channel : ch2});
@@ -1348,19 +1329,18 @@ describe('Pubnub', function() {
                                                     pubnub_pres.here_now({
                                                         metadata : true,
                                                         callback : function(response) {
-                                                            assert.deepEqual(response.status, 200);
-                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload");
-                                                            assert.ok(response.payload.channels[ch1], "subscribed 1 channel should be present in payload");
-                                                            assert.ok(response.payload.channels[ch2], "subscribed 2 channel should be present in payload");
-                                                            assert.ok(response.payload.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch1].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid 1 should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch2].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid 2 should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch3].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid 3 should be there in the uuids list");
-                                                            assert.deepEqual(response.payload.channels[ch].occupancy,1);
-                                                            assert.deepEqual(response.payload.channels[ch1].occupancy,1);
-                                                            assert.deepEqual(response.payload.channels[ch2].occupancy,1);
-                                                            assert.deepEqual(response.payload.channels[ch3].occupancy,1);
+                                                            assert.ok(response.channels[ch], "subscribed channel should be present in payload");
+                                                            assert.ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
+                                                            assert.ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
+                                                            assert.ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid 1 should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid 2 should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid 3 should be there in the uuids list");
+                                                            assert.deepEqual(response.channels[ch].occupancy,1);
+                                                            assert.deepEqual(response.channels[ch1].occupancy,1);
+                                                            assert.deepEqual(response.channels[ch2].occupancy,1);
+                                                            assert.deepEqual(response.channels[ch3].occupancy,1);
                                                             pubnub_pres.unsubscribe({channel : ch});
                                                             pubnub_pres_1.unsubscribe({channel : ch1});
                                                             pubnub_pres_2.unsubscribe({channel : ch2});
@@ -1484,19 +1464,18 @@ describe('Pubnub', function() {
                                                     pubnub_pres.here_now({
                                                         metadata : true,
                                                         callback : function(response) {
-                                                            assert.deepEqual(response.status, 200);
-                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload");
-                                                            assert.ok(response.payload.channels[ch1], "subscribed 1 channel should be present in payload");
-                                                            assert.ok(response.payload.channels[ch2], "subscribed 2 channel should be present in payload");
-                                                            assert.ok(response.payload.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch1].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch2].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch3].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
-                                                            assert.deepEqual(response.payload.channels[ch].occupancy,1);
-                                                            assert.deepEqual(response.payload.channels[ch1].occupancy,1);
-                                                            assert.deepEqual(response.payload.channels[ch2].occupancy,1);
-                                                            assert.deepEqual(response.payload.channels[ch3].occupancy,1);
+                                                            assert.ok(response.channels[ch], "subscribed channel should be present in payload");
+                                                            assert.ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
+                                                            assert.ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
+                                                            assert.ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
+                                                            assert.deepEqual(response.channels[ch].occupancy,1);
+                                                            assert.deepEqual(response.channels[ch1].occupancy,1);
+                                                            assert.deepEqual(response.channels[ch2].occupancy,1);
+                                                            assert.deepEqual(response.channels[ch3].occupancy,1);
                                                             pubnub_pres.unsubscribe({channel : ch});
                                                             pubnub_pres.unsubscribe({channel : ch1});
                                                             pubnub_pres.unsubscribe({channel : ch2});
@@ -1554,7 +1533,7 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1567,7 +1546,7 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1580,7 +1559,7 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1593,7 +1572,7 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1617,13 +1596,12 @@ describe('Pubnub', function() {
                                                     pubnub_pres.here_now({
                                                         metadata : true,
                                                         callback : function(response) {
-                                                            assert.deepEqual(response.status, 200);
-                                                            assert.ok(response.payload.channels[ch], "subscribed channel should be present in payload");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.payload.channels[ch].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
-                                                            assert.deepEqual(response.payload.channels[ch].occupancy,1);
+                                                            assert.ok(response.channels[ch], "subscribed channel should be present in payload");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
+                                                            assert.deepEqual(response.channels[ch].occupancy,1);
                                                             pubnub_pres.unsubscribe({channel : ch});
                                                             pubnub_pres_1.unsubscribe({channel : ch});
                                                             pubnub_pres_2.unsubscribe({channel : ch});
