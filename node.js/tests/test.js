@@ -409,12 +409,10 @@ describe('Pubnub', function() {
                     read : true,
                     write : true,
                     callback : function(response) {
-                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                //assert.deepEqual(response.status,200);
                                 assert.deepEqual(response.auths.abcd.r,1);
                                 assert.deepEqual(response.auths.abcd.w,1);
                                 pubnub.history({
@@ -470,12 +468,10 @@ describe('Pubnub', function() {
                     read : true,
                     write : true,
                     callback : function(response) {
-                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                //assert.deepEqual(response.status,200);
                                 assert.deepEqual(response.auths[auth_key].r,1);
                                 assert.deepEqual(response.auths[auth_key].w,1);
                                 pubnub.history({
@@ -531,11 +527,9 @@ describe('Pubnub', function() {
                     read : true,
                     write : true,
                     callback : function(response) {
-                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             callback : function(response) {
-                                //assert.deepEqual(response.status,200);
                                 assert.deepEqual(response.channels[grant_channel_local].r,1);
                                 assert.deepEqual(response.channels[grant_channel_local].w,1);
                                 assert.deepEqual(response.subscribe_key,sub_key);
@@ -592,12 +586,10 @@ describe('Pubnub', function() {
                     read : true,
                     write : false,
                     callback : function(response) {
-                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                //assert.deepEqual(response.status,200);
                                 assert.deepEqual(response.auths.abcd.r,1);
                                 assert.deepEqual(response.auths.abcd.w,0);
                                 pubnub.history({
@@ -614,8 +606,9 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
                                                 assert.ok(true);
-                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -631,8 +624,9 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
                                                 assert.ok(true);
-                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -656,12 +650,10 @@ describe('Pubnub', function() {
                     read : false,
                     write : true,
                     callback : function(response) {
-                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                //assert.deepEqual(response.status,200);
                                 assert.deepEqual(response.auths.abcd.r,0);
                                 assert.deepEqual(response.auths.abcd.w,1);
                                 pubnub.history({
@@ -685,7 +677,8 @@ describe('Pubnub', function() {
                                     },
                                     'error' : function(response) {
                                         assert.ok(true);
-                                        //assert.deepEqual(response.status, 403);
+                                        assert.deepEqual(response.message, "Forbidden");
+                                        in_list_deep(response.payload.channels,grant_channel_local);
                                         pubnub.publish({
                                             'channel' : grant_channel_local,
                                             'message' : 'Test',
@@ -719,12 +712,10 @@ describe('Pubnub', function() {
                     read : false,
                     write : false,
                     callback : function(response) {
-                        //assert.deepEqual(response.status,200);
                         pubnub.audit({
                             channel : grant_channel_local,
                             auth_key : auth_key,
                             callback : function(response) {
-                                //assert.deepEqual(response.status,200);
                                 assert.deepEqual(response.auths.abcd.r,0);
                                 assert.deepEqual(response.auths.abcd.w,0);
                                 pubnub.history({
@@ -742,14 +733,16 @@ describe('Pubnub', function() {
                                             },
                                             'error'   : function(response) {
                                                 assert.ok(true);
-                                                //assert.deepEqual(response.status, 403);
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
+                                        assert.deepEqual(response.message, "Forbidden");
+                                        in_list_deep(response.payload.channels,grant_channel_local);
                                         assert.ok(true);
-                                        //assert.deepEqual(response.status, 403);
                                         pubnub.publish({
                                             'channel' : grant_channel_local,
                                             'message' : 'Test',
@@ -759,8 +752,9 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
                                                 assert.ok(true);
-                                                //assert.deepEqual(response.status, 403);
                                                 done();
                                             }
                                         })
@@ -803,6 +797,8 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
                                                 assert.ok(true);
                                                 done();
                                             }
@@ -819,6 +815,8 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
                                                 assert.ok(true);
                                                 done();
                                             }
@@ -875,13 +873,17 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,revoke_channel);
                                                 assert.ok(true);
                                                 done();
                                             }
                                         })
                                     },
                                     'error' : function(response) {
-                                        assert.ok(true)
+                                        assert.deepEqual(response.message, "Forbidden");
+                                        in_list_deep(response.payload.channels,revoke_channel);
+                                        assert.ok(true);
                                         pubnub.publish({
                                             'channel' : revoke_channel,
                                             'message' : 'Test',
@@ -891,6 +893,8 @@ describe('Pubnub', function() {
                                                 done();
                                             },
                                             'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,revoke_channel);
                                                 assert.ok(true);
                                                 done();
                                             }

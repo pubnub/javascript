@@ -318,8 +318,8 @@ function PN_API(setup) {
     }
     function _invoke_callback(response, callback, err) {
         if (typeof response == 'object') {
-            if (response['error']) {
-                err(response['error']);
+            if (response['error'] && response['message'] && response['payload']) {
+                err({'message' : response['message'], 'payload' : response['payload']});
                 return;
             }
             if (response['payload']) {
@@ -328,6 +328,12 @@ function PN_API(setup) {
             }
         }
         callback(response)
+    }
+
+    function _invoke_error(response,err) {
+        if (typeof response == 'object' && response['error']) {
+            err({'message' : response['message'], 'payload' : response['payload']});
+        } else err(response);
     }
 
     // Announce Leave Event
@@ -357,7 +363,9 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : err,
+                fail     : function(response) {
+                    _invoke_error(response, err);                    
+                },
                 url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
@@ -429,7 +437,7 @@ function PN_API(setup) {
                 data     : params,
                 success  : function(response) {
                     if (typeof response == 'object' && response['error']) {
-                        err(response['error']);
+                        err({'message' : response['message'], 'payload' : response['payload']});
                         return;
                     }
                     var messages = response[0];
@@ -444,7 +452,9 @@ function PN_API(setup) {
                     }
                     callback([decrypted_messages, response[1], response[2]]);
                 },
-                fail     : err,
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
                 url      : [
                     STD_ORIGIN, 'v2', 'history', 'sub-key',
                     SUBSCRIBE_KEY, 'channel', encode(channel)
@@ -571,7 +581,10 @@ function PN_API(setup) {
                 timeout  : SECOND * 5,
                 url      : url,
                 data     : { 'uuid' : UUID, 'auth' : auth_key },
-                fail     : function(response){err(response);publish(1)},
+                fail     : function(response){
+                    _invoke_error(response, err);
+                    publish(1);
+                },
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                     publish(1);
@@ -753,7 +766,7 @@ function PN_API(setup) {
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function(response) {
-                        errcb(response);
+                        _invoke_error(response, errcb);
                         SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
@@ -893,7 +906,9 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : err,
+                fail     : function(resonse) {
+                    _invoke_error(response, err);
+                },
                 url      : url
             });
         },
@@ -921,7 +936,9 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : err,
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub_key', SUBSCRIBE_KEY,
@@ -958,7 +975,9 @@ function PN_API(setup) {
                     success  : function(response) {
                         _invoke_callback(response, callback, err);
                     },
-                    fail     : err,
+                    fail     : function(response) {
+                        _invoke_error(response, err);
+                    },
                     url      : [
                         STD_ORIGIN, 'v2', 'presence',
                         'sub-key', SUBSCRIBE_KEY,
@@ -991,7 +1010,9 @@ function PN_API(setup) {
                     success  : function(response) {
                         _invoke_callback(response, callback, err);
                     },
-                    fail     : err,
+                    fail     : function(response) {
+                        _invoke_error(response, err);
+                    },
                     url      : [
                         STD_ORIGIN, 'v2', 'presence',
                         'sub-key', SUBSCRIBE_KEY,
@@ -1070,7 +1091,9 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : err,
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
                 url      : [
                     STD_ORIGIN, 'v1', 'auth', 'grant' ,
                     'sub-key', SUBSCRIBE_KEY
@@ -1129,7 +1152,9 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : err,
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
                 url      : [
                     STD_ORIGIN, 'v1', 'auth', 'audit' ,
                     'sub-key', SUBSCRIBE_KEY
@@ -1174,7 +1199,7 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : function(e) { err(e); }
+                fail     : function(response) { _invoke_error(response, err); }
             });
         },
 
