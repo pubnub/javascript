@@ -918,7 +918,7 @@ describe('Pubnub', function() {
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              :  uuid,
-            origin            : 'dara.devbuild.pubnub.com'
+            origin            : 'presence-beta.pubnub.com'
         });
         this.timeout(80000);
         it('should return channel x in result for uuid y, when uuid y subscribed to channel x', function(done){
@@ -1001,7 +1001,7 @@ describe('Pubnub', function() {
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              :  uuid,
-            origin            : 'dara.devbuild.pubnub.com'
+            origin            : 'presence-beta.pubnub.com'
         });
         this.timeout(80000);
         it('should be able to set metadata for uuid', function(done){
@@ -1095,7 +1095,7 @@ describe('Pubnub', function() {
         ,   uuid3 = uuid + '-3';
 
         var pubnub_pres = PUBNUB.init({
-            origin            : 'dara.devbuild.pubnub.com',
+            origin            : 'presence-beta.pubnub.com',
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              : uuid
@@ -1153,25 +1153,25 @@ describe('Pubnub', function() {
         ,   uuid3 = uuid + '-3';
 
         var pubnub_pres = PUBNUB.init({
-            origin            : 'dara.devbuild.pubnub.com',
+            origin            : 'presence-beta.pubnub.com',
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              : uuid
         });
         var pubnub_pres_1 = PUBNUB.init({
-            origin            : 'dara.devbuild.pubnub.com',
+            origin            : 'presence-beta.pubnub.com',
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              : uuid1
         });
         var pubnub_pres_2 = PUBNUB.init({
-            origin            : 'dara.devbuild.pubnub.com',
+            origin            : 'presence-beta.pubnub.com',
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              : uuid2
         });
         var pubnub_pres_3 = PUBNUB.init({
-            origin            : 'dara.devbuild.pubnub.com',
+            origin            : 'presence-beta.pubnub.com',
             publish_key       : 'demo',
             subscribe_key     : 'demo',
             uuid              : uuid3

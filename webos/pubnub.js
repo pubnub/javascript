@@ -906,7 +906,7 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : function(resonse) {
+                fail     : function(response) {
                     _invoke_error(response, err);
                 },
                 url      : url
