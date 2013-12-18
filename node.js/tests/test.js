@@ -995,7 +995,7 @@ describe('Pubnub', function() {
 
 
 
-    describe('#subscriber.setstate()', function() {
+    describe('#state()', function() {
         var uuid = Date.now();
         var pubnub = PUBNUB.init({
             publish_key       : 'demo',
@@ -1008,13 +1008,13 @@ describe('Pubnub', function() {
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
             var metadata = { 'name' : 'name-' + uuid};
-            pubnub.subscriber.setstate({
+            pubnub.state({
                 channel  : ch ,
                 uuid     : uuid,
                 metadata : metadata,
                 callback : function(response) {
                     assert.deepEqual(response, metadata);
-                    pubnub.subscriber.getstate({
+                    pubnub.state({
                         channel  : ch ,
                         uuid     : uuid,
                         callback : function(response) {
@@ -1022,13 +1022,13 @@ describe('Pubnub', function() {
                             done();
                         },
                         error    : function(error) {
-                            assert.ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                            assert.ok(false, "Error occurred in state " + JSON.stringify(error));
                             done();
                         }
                      });
                 },
                 error : function(error) {
-                    assert.ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                    assert.ok(false, "Error occurred in state " + JSON.stringify(error));
                     done();
                 }
             })
@@ -1037,25 +1037,25 @@ describe('Pubnub', function() {
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
             var metadata = { 'name' : 'name-' + uuid, "age" : "50"};
-            pubnub.subscriber.setstate({
+            pubnub.state({
                 channel  : ch ,
                 uuid     : uuid,
                 metadata : metadata,
                 callback : function(response) {
                     assert.deepEqual(response,metadata);
-                    pubnub.subscriber.getstate({
+                    pubnub.state({
                         channel  : ch ,
                         uuid     : uuid,
                         callback : function(response) {
                             assert.deepEqual(response,metadata);
                             delete metadata["age"];
-                            pubnub.subscriber.setstate({
+                            pubnub.state({
                                 channel  : ch ,
                                 uuid     : uuid,
                                 metadata : { "age" : "null"},
                                 callback : function(response) {
                                     assert.deepEqual(response,metadata);
-                                    pubnub.subscriber.getstate({
+                                    pubnub.state({
                                         channel  : ch ,
                                         uuid     : uuid,
                                         callback : function(response) {
@@ -1063,25 +1063,25 @@ describe('Pubnub', function() {
                                             done();
                                         },
                                         error    : function(error) {
-                                            assert.ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                                            assert.ok(false, "Error occurred in state " + JSON.stringify(error));
                                             done();
                                         }
                                      });
                                 },
                                 error : function(error) {
-                                    assert.ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                                    assert.ok(false, "Error occurred in state " + JSON.stringify(error));
                                     done();
                                 }
                             })
                         },
                         error    : function(error) {
-                            assert.ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                            assert.ok(false, "Error occurred in state " + JSON.stringify(error));
                             done();
                         }
                      });
                 },
                 error : function(error) {
-                    assert.ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                    assert.ok(false, "Error occurred in state " + JSON.stringify(error));
                     done();
                 }
             })
@@ -1263,7 +1263,7 @@ describe('Pubnub', function() {
             var ch2 = ch + '-2' ;
             var ch3 = ch + '-3' ;
 
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch,
                 uuid : uuid,
                 metadata : {
@@ -1273,10 +1273,10 @@ describe('Pubnub', function() {
                     assert.deepEqual(r.status,200);
                 },
                 error : function(e) {
-                    assert.ok(false,"Error in setstate")
+                    assert.ok(false,"Error in state")
                 }
             });
-            pubnub_pres_1.subscriber.setstate({
+            pubnub_pres_1.state({
                 channel : ch1,
                 uuid : uuid1,
                 metadata : {
@@ -1286,10 +1286,10 @@ describe('Pubnub', function() {
                     assert.deepEqual(r.status,200);
                 },
                 error : function(e) {
-                    assert.ok(false,"Error in setstate")
+                    assert.ok(false,"Error in state")
                 }
             });
-            pubnub_pres_2.subscriber.setstate({
+            pubnub_pres_2.state({
                 channel : ch2,
                 uuid : uuid2,
                 metadata : {
@@ -1299,10 +1299,10 @@ describe('Pubnub', function() {
                     assert.deepEqual(r.status,200);
                 },
                 error : function(e) {
-                    assert.ok(false,"Error in setstate")
+                    assert.ok(false,"Error in state")
                 }
             });
-            pubnub_pres_3.subscriber.setstate({
+            pubnub_pres_3.state({
                 channel : ch3,
                 uuid : uuid3,
                 metadata : {
@@ -1312,7 +1312,7 @@ describe('Pubnub', function() {
                     assert.deepEqual(r.status,200);
                 },
                 error : function(e) {
-                    assert.ok(false,"Error in setstate")
+                    assert.ok(false,"Error in state")
                 }
             });
 
@@ -1398,7 +1398,7 @@ describe('Pubnub', function() {
             var ch2 = ch + '-2' ;
             var ch3 = ch + '-3' ;
 
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch,
                 uuid : uuid,
                 metadata : {
@@ -1408,10 +1408,10 @@ describe('Pubnub', function() {
                     assert.deepEqual(r.status,200);
                 },
                 error : function(e) {
-                    assert.ok(false,"Error in setstate")
+                    assert.ok(false,"Error in state")
                 }
             });
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch1,
                 uuid : uuid,
                 metadata : {
@@ -1424,7 +1424,7 @@ describe('Pubnub', function() {
                     assert.ok(false,"Error in setstate")
                 }
             });
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch2,
                 uuid : uuid,
                 metadata : {
@@ -1434,10 +1434,10 @@ describe('Pubnub', function() {
                     assert.deepEqual(r.status,200);
                 },
                 error : function(e) {
-                    assert.ok(false,"Error in setstate")
+                    assert.ok(false,"Error in state")
                 }
             });
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch3,
                 uuid : uuid,
                 metadata : {
@@ -1530,7 +1530,7 @@ describe('Pubnub', function() {
 
             var ch = channel + '-' + 'here-now-' + Date.now();
 
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch,
                 uuid : uuid,
                 metadata : {
@@ -1543,7 +1543,7 @@ describe('Pubnub', function() {
                     assert.ok(false,"Error in setstate")
                 }
             });
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch,
                 uuid : uuid1,
                 metadata : {
@@ -1556,7 +1556,7 @@ describe('Pubnub', function() {
                     assert.ok(false,"Error in setstate")
                 }
             });
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch,
                 uuid : uuid2,
                 metadata : {
@@ -1569,7 +1569,7 @@ describe('Pubnub', function() {
                     assert.ok(false,"Error in setstate")
                 }
             });
-            pubnub_pres.subscriber.setstate({
+            pubnub_pres.state({
                 channel : ch,
                 uuid : uuid3,
                 metadata : {

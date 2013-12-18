@@ -1362,18 +1362,18 @@ asyncTest("#where_now() should return channel a,b,c in result for uuid y, when u
     })
 });
 
-asyncTest('#subscriber.setstate() should be able to set metadata for uuid', function(){
+asyncTest('#state() should be able to set metadata for uuid', function(){
     expect(2);
     var ch = channel + '-' + 'setstate' ;
     var uuid = pubnub.uuid();
     var metadata = { 'name' : 'name-' + uuid};
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel  : ch ,
         uuid     : uuid,
         metadata : metadata,
         callback : function(response) {
             deepEqual(response,metadata);
-            pubnub_pres.subscriber.getstate({
+            pubnub_pres.state({
                 channel  : ch ,
                 uuid     : uuid,
                 callback : function(response) {
@@ -1381,42 +1381,42 @@ asyncTest('#subscriber.setstate() should be able to set metadata for uuid', func
                     start();
                 },
                 error    : function(error) {
-                    ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                    ok(false, "Error occurred in state " + JSON.stringify(error));
                     start();
                 }
              });
         },
         error : function(error) {
-            ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+            ok(false, "Error occurred in state " + JSON.stringify(error));
             start();
         }
     })
 })
 
-asyncTest('#subscriber.setstate() should be able to delete metadata for uuid', function(){
+asyncTest('#state() should be able to delete metadata for uuid', function(){
     expect(4);
     var ch = channel + '-' + 'setstate' ;
     var uuid = pubnub.uuid();
     var metadata = { 'name' : 'name-' + uuid, "age" : "50"};
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel  : ch ,
         uuid     : uuid,
         metadata : metadata,
         callback : function(response) {
             deepEqual(response,metadata);
-            pubnub_pres.subscriber.getstate({
+            pubnub_pres.state({
                 channel  : ch ,
                 uuid     : uuid,
                 callback : function(response) {
                     deepEqual(response,metadata);
                     delete metadata["age"];
-                        pubnub_pres.subscriber.setstate({
+                        pubnub_pres.state({
                             channel  : ch ,
                             uuid     : uuid,
                             metadata : { "age" : "null"},
                             callback : function(response) {
                                 deepEqual(response,metadata);
-                                pubnub_pres.subscriber.getstate({
+                                pubnub_pres.state({
                                     channel  : ch ,
                                     uuid     : uuid,
                                     callback : function(response) {
@@ -1424,25 +1424,25 @@ asyncTest('#subscriber.setstate() should be able to delete metadata for uuid', f
                                         start();
                                     },
                                     error    : function(error) {
-                                        ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                                        ok(false, "Error occurred in state " + JSON.stringify(error));
                                         start();
                                     }
                                  });
                             },
                             error : function(error) {
-                                ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+                                ok(false, "Error occurred in state " + JSON.stringify(error));
                                 start();
                             }
                         })
                 },
                 error    : function(error) {
-                    ok(false, "Error occurred in subscriber.getstate " + JSON.stringify(error));
+                    ok(false, "Error occurred in state " + JSON.stringify(error));
                     start();
                 }
              });
         },
         error : function(error) {
-            ok(false, "Error occurred in subscriber.setstate " + JSON.stringify(error));
+            ok(false, "Error occurred in state " + JSON.stringify(error));
             start();
         }
     })
@@ -1535,7 +1535,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     var ch2 = ch + '-2' ;
     var ch3 = ch + '-3' ;
 
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid,
         metadata : {
@@ -1549,7 +1549,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres_1.subscriber.setstate({
+    pubnub_pres_1.state({
         channel : ch1,
         uuid : uuid + '-1',
         metadata : {
@@ -1563,7 +1563,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres_2.subscriber.setstate({
+    pubnub_pres_2.state({
         channel : ch2,
         uuid : uuid + '-2',
         metadata : {
@@ -1577,7 +1577,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres_3.subscriber.setstate({
+    pubnub_pres_3.state({
         channel : ch3,
         uuid : uuid + '-3',
         metadata : {
@@ -1675,7 +1675,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     var ch2 = ch + '-2' ;
     var ch3 = ch + '-3' ;
 
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid,
         metadata : {
@@ -1689,7 +1689,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres_1.subscriber.setstate({
+    pubnub_pres_1.state({
         channel : ch1,
         uuid : uuid1,
         metadata : {
@@ -1703,7 +1703,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres_2.subscriber.setstate({
+    pubnub_pres_2.state({
         channel : ch2,
         uuid : uuid2,
         metadata : {
@@ -1717,7 +1717,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres_3.subscriber.setstate({
+    pubnub_pres_3.state({
         channel : ch3,
         uuid : uuid3,
         metadata : {
@@ -1816,7 +1816,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
     var ch2 = ch + '-2' ;
     var ch3 = ch + '-3' ;
 
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid,
         metadata : {
@@ -1830,7 +1830,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch1,
         uuid : uuid,
         metadata : {
@@ -1844,7 +1844,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch2,
         uuid : uuid,
         metadata : {
@@ -1858,7 +1858,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch3,
         uuid : uuid,
         metadata : {
@@ -1953,7 +1953,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
     expect(10);
     var ch = channel + '-' + 'here-now-' + Date.now();
 
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid,
         metadata : {
@@ -1967,7 +1967,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid1,
         metadata : {
@@ -1981,7 +1981,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid2,
         metadata : {
@@ -1995,7 +1995,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
             ok(false,"Error in setstate")
         }
     });
-    pubnub_pres.subscriber.setstate({
+    pubnub_pres.state({
         channel : ch,
         uuid : uuid3,
         metadata : {

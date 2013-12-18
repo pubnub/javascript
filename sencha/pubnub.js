@@ -364,7 +364,7 @@ function PN_API(setup) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
-                    _invoke_error(response, err);                    
+                    _invoke_error(response, err);
                 },
                 url      : [
                     origin, 'v2', 'presence', 'sub_key',
@@ -947,81 +947,55 @@ function PN_API(setup) {
             });
         },
 
-        'subscriber' : {
-            'setstate' : function(args, callback) {
-                var callback = args['callback'] || callback
-                ,   err      = args['error']    || function(){}
-                ,   auth_key = args['auth_key'] || AUTH_KEY
-                ,   jsonp    = jsonp_cb()
-                ,   metadata = args['metadata']
-                ,   uuid     = args['uuid'] || UUID
-                ,   channel  = args['channel']
-                ,   data     = { 'auth' : auth_key };
+        'state' : function(args, callback) {
+            var callback = args['callback'] || callback || function(r) {}
+            ,   err      = args['error']    || function(){}
+            ,   auth_key = args['auth_key'] || AUTH_KEY
+            ,   jsonp    = jsonp_cb()
+            ,   metadata = args['metadata']
+            ,   uuid     = args['uuid'] || UUID
+            ,   channel  = args['channel']
+            ,   url
+            ,   data     = { 'auth' : auth_key };
 
-                // Make sure we have a Channel
-                if (!callback)      return error('Missing Callback');
-                if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-                if (!uuid) return error('Missing UUID');
-                if (!channel) return error('Missing Channel');
-                if (!metadata) return error('Missing Meta Data');
+            // Make sure we have a Channel
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!uuid) return error('Missing UUID');
+            if (!channel) return error('Missing Channel');
 
-                if (jsonp != '0') { data['callback'] = jsonp; }
+            if (jsonp != '0') { data['callback'] = jsonp; }
 
-                data['metadata'] = JSON.stringify(metadata);
+            data['metadata'] = JSON.stringify(metadata);
 
-                xdr({
-                    callback : jsonp,
-                    data     : data,
-                    success  : function(response) {
-                        _invoke_callback(response, callback, err);
-                    },
-                    fail     : function(response) {
-                        _invoke_error(response, err);
-                    },
-                    url      : [
-                        STD_ORIGIN, 'v2', 'presence',
-                        'sub-key', SUBSCRIBE_KEY,
-                        'channel', encode(channel),
-                        'uuid', uuid, 'data'
-                    ]
-                });
-
-            },
-            'getstate' : function(args, callback) {
-                var callback = args['callback'] || callback
-                ,   err      = args['error']    || function(){}
-                ,   auth_key = args['auth_key'] || AUTH_KEY
-                ,   jsonp    = jsonp_cb()
-                ,   uuid     = args['uuid'] || UUID
-                ,   channel  = args['channel']
-                ,   data     = { 'auth' : auth_key };
-
-                // Make sure we have a Channel
-                if (!callback)      return error('Missing Callback');
-                if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-                if (!uuid) return error('Missing UUID');
-                if (!channel) return error('Missing Channel');
-
-                if (jsonp != '0') { data['callback'] = jsonp; }
-
-                xdr({
-                    callback : jsonp,
-                    data     : data,
-                    success  : function(response) {
-                        _invoke_callback(response, callback, err);
-                    },
-                    fail     : function(response) {
-                        _invoke_error(response, err);
-                    },
-                    url      : [
-                        STD_ORIGIN, 'v2', 'presence',
-                        'sub-key', SUBSCRIBE_KEY,
-                        'channel', encode(channel),
-                        'uuid', encode(uuid)
-                    ]
-                });
-
+            if (metadata) {
+                url      = [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub-key', SUBSCRIBE_KEY,
+                    'channel', encode(channel),
+                    'uuid', uuid, 'data'
+                ]
+            } else {
+                url      = [
+                    STD_ORIGIN, 'v2', 'presence',
+                    'sub-key', SUBSCRIBE_KEY,
+                    'channel', encode(channel),
+                    'uuid', encode(uuid)
+                ]
             }
+
+            xdr({
+                callback : jsonp,
+                data     : data,
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
+                url      : url
+
+            });
+
         },
 
         /*
