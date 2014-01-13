@@ -343,7 +343,7 @@ function PN_API(setup) {
                 destination : 'new_channel'
             });
         */
-        'replay' : function(args) {
+        'replay' : function(args, callback) {
             var callback    = callback || args['callback'] || function(){}
             ,   auth_key    = args['auth_key'] || AUTH_KEY
             ,   source      = args['source']
