@@ -3,12 +3,11 @@
 ## YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
 ## http://www.pubnub.com/account
 ##
-## USE "DEMO" INCLUDES (BELOW) FREE! WHILE DEVELOPING
 ##
 ## ----------------------------------------------------
 
 ## ----------------------------------------------------------
-## PubNub 3.4.4 Real-time Cloud Push API - JAVASCRIPT PHONE GAP
+## PubNub 3.5 Real-time Cloud Push API - JAVASCRIPT PHONE GAP
 ## ----------------------------------------------------------
 ##
 ## www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
