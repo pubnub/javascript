@@ -1,22 +1,19 @@
-## ---------------------------------------------------
-##
-## YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
-## http://www.pubnub.com/account
-##
-##
-## ----------------------------------------------------
 
-## ----------------------------------------------------------
-## PubNub 3.5 Real-time Cloud Push API - JAVASCRIPT PHONE GAP
-## ----------------------------------------------------------
-##
-## www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
-## http://www.pubnub.com/tutorial/javascript-push-api
-##
-## PubNub is a Massively Scalable Real-time Service for Web and Mobile Games.
-## This is a cloud-based service for broadcasting Real-time messages
-## to thousands of web and mobile clients simultaneously.
+### YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
+### http://www.pubnub.com/account
 
+----------------------------------------------------------
+PubNub 3.5 Real-time Cloud Push API - JAVASCRIPT PHONE GAP
+----------------------------------------------------------
+
+#### www.pubnub.com - PubNub Real-time Push Service in the Cloud. 
+#### http://www.pubnub.com/tutorial/javascript-push-api
+####
+#### PubNub is a Massively Scalable Real-time Service for Web and Mobile Games.
+#### This is a cloud-based service for broadcasting Real-time messages
+#### to thousands of web and mobile clients simultaneously.
+
+```
 <!-- ============================= -->
 <!-- INCLUDE SCRIPT PREFERED STYLE -->
 <!-- ============================= -->
@@ -96,3 +93,4 @@
     })
 
 </script>
+```
