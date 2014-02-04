@@ -366,7 +366,7 @@ var PDIV          = $('pubnub') || 0
 
     setup['xdr']        = xdr;
     setup['db']         = db;
-    setup['error']      = error;
+    setup['error']      = setup['error'] || error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
     setup['PNSDK']      = PNSDK;
