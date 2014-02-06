@@ -2088,47 +2088,47 @@ asyncTest("presence heartbeat value validation", function() {
     var pubnub = PUBNUB({
             publish_key   : 'demo',
             subscribe_key : 'demo',
-            pnexpires     : 6,
+            heartbeat     : 6,
             origin        : 'presence-beta.pubnub.com'
     });
-    deepEqual(6, pubnub.get_pnexpires());
-    pubnub.set_pnexpires(1);
-    deepEqual(6, pubnub.get_pnexpires());
-    pubnub.set_pnexpires(8);
-    deepEqual(8, pubnub.get_pnexpires());
-    pubnub.set_pnexpires(0);
-    deepEqual(0, pubnub.get_pnexpires());
-    pubnub.set_pnexpires(9);
-    deepEqual(9, pubnub.get_pnexpires());
-    pubnub.set_pnexpires(3);
-    deepEqual(9, pubnub.get_pnexpires());
+    deepEqual(6, pubnub.get_heartbeat());
+    pubnub.set_heartbeat(1);
+    deepEqual(6, pubnub.get_heartbeat());
+    pubnub.set_heartbeat(8);
+    deepEqual(8, pubnub.get_heartbeat());
+    pubnub.set_heartbeat(0);
+    deepEqual(0, pubnub.get_heartbeat());
+    pubnub.set_heartbeat(9);
+    deepEqual(9, pubnub.get_heartbeat());
+    pubnub.set_heartbeat(3);
+    deepEqual(9, pubnub.get_heartbeat());
 
     pubnub.subscribe({
         channel  : 'abcd',
         callback : function(r) {console.log(r);}
     })
-    deepEqual(9, pubnub.get_pnexpires());
+    deepEqual(9, pubnub.get_heartbeat());
 
     pubnub.subscribe({
         channel   : 'abcd1',
         callback  : function(r) {console.log(r);},
-        pnexpires : 1
+        heartbeat : 1
     })
-    deepEqual(9, pubnub.get_pnexpires());
+    deepEqual(9, pubnub.get_heartbeat());
 
     pubnub.subscribe({
         channel   : 'abcd1',
         callback  : function(r) {console.log(r);},
-        pnexpires : 7
+        heartbeat : 7
     })
-    deepEqual(7, pubnub.get_pnexpires());
+    deepEqual(7, pubnub.get_heartbeat());
 
     pubnub.subscribe({
         channel   : 'abcd1',
         callback  : function(r) {console.log(r);},
-        pnexpires : 0
+        heartbeat : 0
     })
-    deepEqual(0, pubnub.get_pnexpires());
+    deepEqual(0, pubnub.get_heartbeat());
 
     start();
 

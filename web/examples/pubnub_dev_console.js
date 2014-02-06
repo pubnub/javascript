@@ -72,15 +72,15 @@ pubnub_dev_console = function(){
 
     SELF = {
 
-        'init'  : function(origin, pub_key, sub_key, sec_key, auth_key, ssl, pnexpires_enabled) {
+        'init'  : function(origin, pub_key, sub_key, sec_key, auth_key, ssl, heartbeat_enabled) {
             origin      = origin   || get_input("Enter origin", "string", "pubsub.pubnub.com");
             pub_key     = pub_key  || get_input("Enter publish key", "string", "demo");
             sub_key     = sub_key  || get_input("Enter subscribe key", "string", "demo" );
             sec_key     = sec_key  || get_input("Enter secret key", "string", "demo");
             auth_key    = auth_key || getAuthKey("myAuthKey");
             ssl         = ssl      || get_input("SSL ?", "boolean", false);
-            var pnexpires;
-            if (pnexpires_enabled) pnexpires   = get_input("Presence Heartbeat Interval ?", "number", 30);
+            var heartbeat;
+            if (heartbeat_enabled) heartbeat   = get_input("Presence Heartbeat Interval ?", "number", 30);
             var d = {};
             d['origin'] = origin;
             d['publish_key'] = pub_key;
@@ -91,7 +91,7 @@ pubnub_dev_console = function(){
               document.getElementById('currentAuthKey').innerHTML="current auth key is: " + auth_key;
             }
             d['ssl'] = ssl;
-            if (pnexpires) d['pnexpires'] = pnexpires;
+            if (heartbeat) d['pnexpires'] = heartbeat;
             pubnub = PUBNUB.init(d);
             return "Pubnub Object Initialized";
         },

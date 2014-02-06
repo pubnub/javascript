@@ -11,6 +11,7 @@ var NOW             = 1
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
+,   PRESENCE_HB_DEFAULT  = 30
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -216,7 +217,7 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   PRESENCE_HB_INTERVAL = validate_presence_heartbeat(setup['pnexpires'] || 0, setup['error'])
+    ,   PRESENCE_HB_INTERVAL = validate_presence_heartbeat(setup['heartbeat'] || 0, setup['error'])
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
@@ -233,22 +234,28 @@ function PN_API(setup) {
             'decrypt' : function(b,key){return b}
         };
 
-    function validate_presence_heartbeat(pnexpires, cur_pnexpires, error) {
+    function validate_presence_heartbeat(heartbeat, cur_heartbeat, error) {
         var err = false;
 
-        if (typeof pnexpires === 'number') {
-            if (pnexpires > PRESENCE_HB_THRESHOLD || pnexpires == 0)
+        if (typeof heartbeat === 'number') {
+            if (heartbeat > PRESENCE_HB_THRESHOLD || heartbeat == 0)
                 err = false;
             else
                 err = true;
+        } else if(typeof heartbeat === 'boolean'){
+            if (!heartbeat) {
+                return 0;
+            } else {
+                return PRESENCE_HB_DEFAULT;
+            }
         } else {
             err = true;
         }
 
         if (err) {
-            error && error("Presence Heartbeat value invalid. Valid range ( x > " + PRESENCE_HB_THRESHOLD + " or x = 0). Current Value : " + (cur_pnexpires || PRESENCE_HB_THRESHOLD));
-            return cur_pnexpires || PRESENCE_HB_THRESHOLD;
-        } else return pnexpires;
+            error && error("Presence Heartbeat value invalid. Valid range ( x > " + PRESENCE_HB_THRESHOLD + " or x = 0). Current Value : " + (cur_heartbeat || PRESENCE_HB_THRESHOLD));
+            return cur_heartbeat || PRESENCE_HB_THRESHOLD;
+        } else return heartbeat;
     }
 
     function encrypt(input, key) {
@@ -388,11 +395,11 @@ function PN_API(setup) {
         'raw_decrypt' : function(input, key) {
             return decrypt(input, key);
         },
-        'get_pnexpires' : function() {
+        'get_heartbeat' : function() {
             return PRESENCE_HB_INTERVAL;
         },
-        'set_pnexpires' : function(pnexpires) {
-            PRESENCE_HB_INTERVAL = validate_presence_heartbeat(pnexpires, PRESENCE_HB_INTERVAL, error);
+        'set_heartbeat' : function(heartbeat) {
+            PRESENCE_HB_INTERVAL = validate_presence_heartbeat(heartbeat, PRESENCE_HB_INTERVAL, error);
             CONNECT();
             _presence_heartbeat();
         },
@@ -653,7 +660,7 @@ function PN_API(setup) {
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   state         = args['state']
-            ,   pnexpires     = args['pnexpires']
+            ,   heartbeat     = args['heartbeat']
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -667,7 +674,7 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-            if (pnexpires || pnexpires === 0) PRESENCE_HB_INTERVAL = validate_presence_heartbeat(pnexpires, PRESENCE_HB_INTERVAL, error)
+            if (heartbeat || heartbeat === 0) PRESENCE_HB_INTERVAL = validate_presence_heartbeat(heartbeat, PRESENCE_HB_INTERVAL, error)
 
             // Setup Channel(s)
             each( (channel.join ? channel.join(',') : ''+channel).split(','),
