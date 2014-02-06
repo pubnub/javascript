@@ -3,13 +3,15 @@ var PUBNUB = require('../pubnub.js');
 
 var pubnub = PUBNUB.init({
     publish_key     : 'demo',
-    subscribe_key     : 'demo'
+    subscribe_key     : 'demo',
+    origin : 'presence-beta.pubnub.com'
 });
 
 var pubnub_enc = PUBNUB({
     publish_key     : 'demo',
     subscribe_key   : 'demo',
-    cipher_key      : 'enigma'
+    cipher_key      : 'enigma',
+    origin : 'presence-beta.pubnub.com'
 });
 
 var channel = 'javascript-test-channel-' + Date.now();
@@ -68,6 +70,7 @@ describe('Pubnub', function() {
         it('should publish strings without error', function(done){
             var ch = channel + '-' + ++count;
             pubnub.subscribe({channel : ch ,
+                metadata : { "name" : "dev" },
                 connect : function(response) {
                     pubnub.publish({channel: ch , message : message_string,
                         callback : function(response) {

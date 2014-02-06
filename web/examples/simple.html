@@ -12,10 +12,18 @@
     pubnub.subscribe({
         callback : console.log,
         error : console.log,
-        channel : "abcd",
-        metadata : { "age" : 30},
-        pnexpires : 5
+        channel : "abcd,xyz",
+        metadata : { "abcd" : {"age" : 30}, "xyz" : { "age" : 50 } },
+        pnexpires : 15
     })
+
+    setTimeout(function(){
+        pubnub.state({
+            callback : console.log,
+            channel  : "xyz",
+            metadata : { "age" : 100}
+        });
+    }, 30000);
 
 
 })();</script>
