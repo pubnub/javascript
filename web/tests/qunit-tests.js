@@ -1362,22 +1362,22 @@ asyncTest("#where_now() should return channel a,b,c in result for uuid y, when u
     })
 });
 
-asyncTest('#state() should be able to set metadata for uuid', function(){
+asyncTest('#state() should be able to set state for uuid', function(){
     expect(2);
     var ch = channel + '-' + 'setstate' ;
     var uuid = pubnub.uuid();
-    var metadata = { 'name' : 'name-' + uuid};
+    var state = { 'name' : 'name-' + uuid};
     pubnub_pres.state({
         channel  : ch ,
         uuid     : uuid,
-        metadata : metadata,
+        state : state,
         callback : function(response) {
-            deepEqual(response,metadata);
+            deepEqual(response,state);
             pubnub_pres.state({
                 channel  : ch ,
                 uuid     : uuid,
                 callback : function(response) {
-                    deepEqual(response,metadata);
+                    deepEqual(response,state);
                     start();
                 },
                 error    : function(error) {
@@ -1393,34 +1393,34 @@ asyncTest('#state() should be able to set metadata for uuid', function(){
     })
 })
 
-asyncTest('#state() should be able to delete metadata for uuid', function(){
+asyncTest('#state() should be able to delete state for uuid', function(){
     expect(4);
     var ch = channel + '-' + 'setstate' ;
     var uuid = pubnub.uuid();
-    var metadata = { 'name' : 'name-' + uuid, "age" : "50"};
+    var state = { 'name' : 'name-' + uuid, "age" : "50"};
     pubnub_pres.state({
         channel  : ch ,
         uuid     : uuid,
-        metadata : metadata,
+        state : state,
         callback : function(response) {
-            deepEqual(response,metadata);
+            deepEqual(response,state);
             pubnub_pres.state({
                 channel  : ch ,
                 uuid     : uuid,
                 callback : function(response) {
-                    deepEqual(response,metadata);
-                    delete metadata["age"];
+                    deepEqual(response,state);
+                    delete state["age"];
                         pubnub_pres.state({
                             channel  : ch ,
                             uuid     : uuid,
-                            metadata : { "age" : "null"},
+                            state : { "age" : "null"},
                             callback : function(response) {
-                                deepEqual(response,metadata);
+                                deepEqual(response,state);
                                 pubnub_pres.state({
                                     channel  : ch ,
                                     uuid     : uuid,
                                     callback : function(response) {
-                                        deepEqual(response,metadata);
+                                        deepEqual(response,state);
                                         start();
                                     },
                                     error    : function(error) {
@@ -1528,7 +1528,7 @@ asyncTest("#here_now() should return channel channel list with occupancy details
     })
 })
 
-asyncTest("#here_now() should return channel list with occupancy details and uuids + metadata for a subscribe key", function() {
+asyncTest("#here_now() should return channel list with occupancy details and uuids + state for a subscribe key", function() {
     expect(16);
     var ch = channel + '-' + 'here-now-' + Date.now();
     var ch1 = ch + '-1' ;
@@ -1538,7 +1538,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres.state({
         channel : ch,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid
         },
         callback : function(r) {
@@ -1552,7 +1552,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres_1.state({
         channel : ch1,
         uuid : uuid + '-1',
-        metadata : {
+        state : {
             name : 'name-' + uuid + '-1'
         },
         callback : function(r) {
@@ -1566,7 +1566,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres_2.state({
         channel : ch2,
         uuid : uuid + '-2',
-        metadata : {
+        state : {
             name : 'name-' + uuid + '-2'
         },
         callback : function(r) {
@@ -1580,7 +1580,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres_3.state({
         channel : ch3,
         uuid : uuid + '-3',
-        metadata : {
+        state : {
             name : 'name-' + uuid + '-3'
         },
         callback : function(r) {
@@ -1607,16 +1607,16 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
                                     connect : function(response) {
                                         setTimeout(function() {
                                             pubnub_pres.here_now({
-                                                metadata : true,
+                                                state : true,
                                                 callback : function(response) {
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
                                                     ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                     ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                     ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,1);
                                                     deepEqual(response.channels[ch1].occupancy,1);
                                                     deepEqual(response.channels[ch2].occupancy,1);
@@ -1668,7 +1668,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     },5000);
 })
 
-asyncTest("#here_now() should return channel list with occupancy details and uuids + metadata ( of currently subscribed u) for a subscribe key", function() {
+asyncTest("#here_now() should return channel list with occupancy details and uuids + state ( of currently subscribed u) for a subscribe key", function() {
     expect(16);
     var ch = channel + '-' + 'here-now-' + Date.now();
     var ch1 = ch + '-1' ;
@@ -1678,7 +1678,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres.state({
         channel : ch,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid
         },
         callback : function(r) {
@@ -1692,7 +1692,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres_1.state({
         channel : ch1,
         uuid : uuid1,
-        metadata : {
+        state : {
             name : 'name-' + uuid1
         },
         callback : function(r) {
@@ -1706,7 +1706,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres_2.state({
         channel : ch2,
         uuid : uuid2,
-        metadata : {
+        state : {
             name : 'name-' + uuid2
         },
         callback : function(r) {
@@ -1720,7 +1720,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     pubnub_pres_3.state({
         channel : ch3,
         uuid : uuid3,
-        metadata : {
+        state : {
             name : 'name-' + uuid3
         },
         callback : function(r) {
@@ -1747,17 +1747,17 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
                                     connect : function(response) {
                                         setTimeout(function() {
                                             pubnub_pres.here_now({
-                                                metadata : true,
+                                                state : true,
                                                 callback : function(response) {
                                                     //deepEqual(response.status, 200);
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
                                                     ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                     ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                     ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,1);
                                                     deepEqual(response.channels[ch1].occupancy,1);
                                                     deepEqual(response.channels[ch2].occupancy,1);
@@ -1809,7 +1809,7 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
     },5000);
 })
 
-asyncTest("#here_now() should return correct metadata for uuid in different channels", function() {
+asyncTest("#here_now() should return correct state for uuid in different channels", function() {
     expect(16);
     var ch = channel + '-' + 'here-now-' + Date.now();
     var ch1 = ch + '-1' ;
@@ -1819,7 +1819,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
     pubnub_pres.state({
         channel : ch,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid
         },
         callback : function(r) {
@@ -1833,7 +1833,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
     pubnub_pres.state({
         channel : ch1,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid1
         },
         callback : function(r) {
@@ -1847,7 +1847,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
     pubnub_pres.state({
         channel : ch2,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid2
         },
         callback : function(r) {
@@ -1861,7 +1861,7 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
     pubnub_pres.state({
         channel : ch3,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid3
         },
         callback : function(r) {
@@ -1888,17 +1888,17 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
                                     connect : function(response) {
                                         setTimeout(function() {
                                             pubnub_pres.here_now({
-                                                metadata : true,
+                                                state : true,
                                                 callback : function(response) {
                                                     //deepEqual(response.status, 200);
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
                                                     ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                     ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                     ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid + '', metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid + '', metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid + '', metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid + '', state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid + '', state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid + '', state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,1);
                                                     deepEqual(response.channels[ch1].occupancy,1);
                                                     deepEqual(response.channels[ch2].occupancy,1);
@@ -1949,14 +1949,14 @@ asyncTest("#here_now() should return correct metadata for uuid in different chan
         })
     },5000);
 })
-asyncTest("#here_now() should return correct metadata for multiple uuids in single channel", function() {
+asyncTest("#here_now() should return correct state for multiple uuids in single channel", function() {
     expect(10);
     var ch = channel + '-' + 'here-now-' + Date.now();
 
     pubnub_pres.state({
         channel : ch,
         uuid : uuid,
-        metadata : {
+        state : {
             name : 'name-' + uuid
         },
         callback : function(r) {
@@ -1970,7 +1970,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
     pubnub_pres.state({
         channel : ch,
         uuid : uuid1,
-        metadata : {
+        state : {
             name : 'name-' + uuid1
         },
         callback : function(r) {
@@ -1984,7 +1984,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
     pubnub_pres.state({
         channel : ch,
         uuid : uuid2,
-        metadata : {
+        state : {
             name : 'name-' + uuid2
         },
         callback : function(r) {
@@ -1998,7 +1998,7 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
     pubnub_pres.state({
         channel : ch,
         uuid : uuid3,
-        metadata : {
+        state : {
             name : 'name-' + uuid3
         },
         callback : function(r) {
@@ -2025,9 +2025,10 @@ asyncTest("#here_now() should return correct metadata for multiple uuids in sing
                                     connect : function(response) {
                                         setTimeout(function() {
                                             pubnub_pres.here_now({
-                                                metadata : true,
+                                                state : true,
                                                 callback : function(response) {
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
+                                                    console.log(response.channels[ch]);
                                                     ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
                                                     ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 + '', metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
                                                     ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 + '', metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");

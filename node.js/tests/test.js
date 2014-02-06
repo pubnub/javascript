@@ -4,14 +4,14 @@ var PUBNUB = require('../pubnub.js');
 var pubnub = PUBNUB.init({
     publish_key     : 'demo',
     subscribe_key     : 'demo',
-    origin : 'presence-beta.pubnub.com'
+    origin : 'pubsub.pubnub.com'
 });
 
 var pubnub_enc = PUBNUB({
     publish_key     : 'demo',
     subscribe_key   : 'demo',
     cipher_key      : 'enigma',
-    origin : 'presence-beta.pubnub.com'
+    origin : 'pubsub.pubnub.com'
 });
 
 var channel = 'javascript-test-channel-' + Date.now();
@@ -70,7 +70,7 @@ describe('Pubnub', function() {
         it('should publish strings without error', function(done){
             var ch = channel + '-' + ++count;
             pubnub.subscribe({channel : ch ,
-                metadata : { "name" : "dev" },
+                state : { "name" : "dev" },
                 connect : function(response) {
                     pubnub.publish({channel: ch , message : message_string,
                         callback : function(response) {
@@ -1007,21 +1007,21 @@ describe('Pubnub', function() {
             origin            : 'presence-beta.pubnub.com'
         });
         this.timeout(80000);
-        it('should be able to set metadata for uuid', function(done){
+        it('should be able to set state for uuid', function(done){
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
-            var metadata = { 'name' : 'name-' + uuid};
+            var state = { 'name' : 'name-' + uuid};
             pubnub.state({
                 channel  : ch ,
                 uuid     : uuid,
-                metadata : metadata,
+                state : state,
                 callback : function(response) {
-                    assert.deepEqual(response, metadata);
+                    assert.deepEqual(response, state);
                     pubnub.state({
                         channel  : ch ,
                         uuid     : uuid,
                         callback : function(response) {
-                            assert.deepEqual(response, metadata);
+                            assert.deepEqual(response, state);
                             done();
                         },
                         error    : function(error) {
@@ -1036,33 +1036,33 @@ describe('Pubnub', function() {
                 }
             })
         })
-        it('should be able to delete metadata for uuid', function(done){
+        it('should be able to delete state for uuid', function(done){
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
-            var metadata = { 'name' : 'name-' + uuid, "age" : "50"};
+            var state = { 'name' : 'name-' + uuid, "age" : "50"};
             pubnub.state({
                 channel  : ch ,
                 uuid     : uuid,
-                metadata : metadata,
+                state : state,
                 callback : function(response) {
-                    assert.deepEqual(response,metadata);
+                    assert.deepEqual(response,state);
                     pubnub.state({
                         channel  : ch ,
                         uuid     : uuid,
                         callback : function(response) {
-                            assert.deepEqual(response,metadata);
-                            delete metadata["age"];
+                            assert.deepEqual(response,state);
+                            delete state["age"];
                             pubnub.state({
                                 channel  : ch ,
                                 uuid     : uuid,
-                                metadata : { "age" : "null"},
+                                state : { "age" : "null"},
                                 callback : function(response) {
-                                    assert.deepEqual(response,metadata);
+                                    assert.deepEqual(response,state);
                                     pubnub.state({
                                         channel  : ch ,
                                         uuid     : uuid,
                                         callback : function(response) {
-                                            assert.deepEqual(response,metadata);
+                                            assert.deepEqual(response,state);
                                             done();
                                         },
                                         error    : function(error) {
@@ -1259,7 +1259,7 @@ describe('Pubnub', function() {
             })
         })
 
-        it("should return channel channel list with occupancy details and uuids + metadata for a subscribe key", function() {
+        it("should return channel channel list with occupancy details and uuids + state for a subscribe key", function() {
 
             var ch = channel + '-' + 'here-now-' + Date.now();
             var ch1 = ch + '-1' ;
@@ -1269,7 +1269,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch,
                 uuid : uuid,
-                metadata : {
+                state : {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
@@ -1282,7 +1282,7 @@ describe('Pubnub', function() {
             pubnub_pres_1.state({
                 channel : ch1,
                 uuid : uuid1,
-                metadata : {
+                state : {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
@@ -1295,7 +1295,7 @@ describe('Pubnub', function() {
             pubnub_pres_2.state({
                 channel : ch2,
                 uuid : uuid2,
-                metadata : {
+                state : {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
@@ -1308,7 +1308,7 @@ describe('Pubnub', function() {
             pubnub_pres_3.state({
                 channel : ch3,
                 uuid : uuid3,
-                metadata : {
+                state : {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
@@ -1334,16 +1334,16 @@ describe('Pubnub', function() {
                                             connect : function(response) {
                                                 setTimeout(function() {
                                                     pubnub_pres.here_now({
-                                                        metadata : true,
+                                                        state : true,
                                                         callback : function(response) {
                                                             assert.ok(response.channels[ch], "subscribed channel should be present in payload");
                                                             assert.ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                             assert.ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                             assert.ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid 1 should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid 2 should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid 3 should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , state : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1 , state : {name : 'name-' + uuid1 }}), "uuid 1 should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2 , state : {name : 'name-' + uuid2 }}), "uuid 2 should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3 , state : {name : 'name-' + uuid3 }}), "uuid 3 should be there in the uuids list");
                                                             assert.deepEqual(response.channels[ch].occupancy,1);
                                                             assert.deepEqual(response.channels[ch1].occupancy,1);
                                                             assert.deepEqual(response.channels[ch2].occupancy,1);
@@ -1394,7 +1394,7 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
-        it("should return correct metadata for uuid in different channels", function() {
+        it("should return correct state for uuid in different channels", function() {
 
             var ch = channel + '-' + 'here-now-' + Date.now();
             var ch1 = ch + '-1' ;
@@ -1404,7 +1404,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch,
                 uuid : uuid,
-                metadata : {
+                state : {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
@@ -1417,7 +1417,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch1,
                 uuid : uuid,
-                metadata : {
+                state : {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
@@ -1430,7 +1430,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch2,
                 uuid : uuid,
-                metadata : {
+                state : {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
@@ -1443,7 +1443,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch3,
                 uuid : uuid,
-                metadata : {
+                state : {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
@@ -1469,16 +1469,16 @@ describe('Pubnub', function() {
                                             connect : function(response) {
                                                 setTimeout(function() {
                                                     pubnub_pres.here_now({
-                                                        metadata : true,
+                                                        state : true,
                                                         callback : function(response) {
                                                             assert.ok(response.channels[ch], "subscribed channel should be present in payload");
                                                             assert.ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                             assert.ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                             assert.ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , state : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid , state : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid , state : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid , state : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
                                                             assert.deepEqual(response.channels[ch].occupancy,1);
                                                             assert.deepEqual(response.channels[ch1].occupancy,1);
                                                             assert.deepEqual(response.channels[ch2].occupancy,1);
@@ -1529,14 +1529,14 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
-        it("should return correct metadata for multiple uuids in single channel", function() {
+        it("should return correct state for multiple uuids in single channel", function() {
 
             var ch = channel + '-' + 'here-now-' + Date.now();
 
             pubnub_pres.state({
                 channel : ch,
                 uuid : uuid,
-                metadata : {
+                state : {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
@@ -1549,7 +1549,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch,
                 uuid : uuid1,
-                metadata : {
+                state : {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
@@ -1562,7 +1562,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch,
                 uuid : uuid2,
-                metadata : {
+                state : {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
@@ -1575,7 +1575,7 @@ describe('Pubnub', function() {
             pubnub_pres.state({
                 channel : ch,
                 uuid : uuid3,
-                metadata : {
+                state : {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
@@ -1601,13 +1601,13 @@ describe('Pubnub', function() {
                                             connect : function(response) {
                                                 setTimeout(function() {
                                                     pubnub_pres.here_now({
-                                                        metadata : true,
+                                                        state : true,
                                                         callback : function(response) {
                                                             assert.ok(response.channels[ch], "subscribed channel should be present in payload");
-                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , metadata : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 , metadata : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 , metadata : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
-                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid3 , metadata : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid , state : { name : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 , state : {name : 'name-' + uuid1 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 , state : {name : 'name-' + uuid2 }}), "uuid should be there in the uuids list");
+                                                            assert.ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid3 , state : {name : 'name-' + uuid3 }}), "uuid should be there in the uuids list");
                                                             assert.deepEqual(response.channels[ch].occupancy,1);
                                                             pubnub_pres.unsubscribe({channel : ch});
                                                             pubnub_pres_1.unsubscribe({channel : ch});
