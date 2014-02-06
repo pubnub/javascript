@@ -898,11 +898,11 @@ function PN_API(setup) {
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
-            ,   disable_uuids = args['disable_uuids']
-            ,   state = args['state']
+            ,   uuids    = args['uuids'] || true
+            ,   state    = args['state']
             ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
 
-            if (disable_uuids) data['disable_uuids'] = 1;
+            if (!uuids) data['disable_uuids'] = 1;
             if (state) data['metadata'] = 1;
 
             // Make sure we have a Channel
