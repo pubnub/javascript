@@ -218,7 +218,8 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   PRESENCE_HB_INTERVAL = validate_presence_heartbeat(setup['heartbeat'] || 0, setup['error'])
+    ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
+    ,   PRESENCE_HB_INTERVAL = PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
@@ -276,7 +277,7 @@ function PN_API(setup) {
 
         clearTimeout(PRESENCE_HB_TIMEOUT);
 
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || !generate_channel_list(CHANNELS).length){
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS).length){
             PRESENCE_HB_RUNNING = false;
             return;
         }
@@ -284,11 +285,11 @@ function PN_API(setup) {
         PRESENCE_HB_RUNNING = true;
         SELF['presence_heartbeat']({
             callback : function() {
-                PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+                PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND );
             },
             error : function(e) {
                 error && error("Presence Heartbeat unable to reach Pubnub servers." + JSON.stringify(e));
-                PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND );
+                PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND );
             }
         });
     }
@@ -397,11 +398,19 @@ function PN_API(setup) {
             return decrypt(input, key);
         },
         'get_heartbeat' : function() {
-            return PRESENCE_HB_INTERVAL;
+            return PRESENCE_HB;
         },
         'set_heartbeat' : function(heartbeat) {
-            PRESENCE_HB_INTERVAL = validate_presence_heartbeat(heartbeat, PRESENCE_HB_INTERVAL, error);
+            PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB_INTERVAL, error);
+            PRESENCE_HB_INTERVAL = (PRESENCE_HB - 3 >= 1)?PRESENCE_HB - 3:1;
             CONNECT();
+            _presence_heartbeat();
+        },
+        'get_heartbeat_interval' : function() {
+            return PRESENCE_HB_INTERVAL;
+        },
+        'set_heartbeat_interval' : function(heartbeat_interval) {
+            PRESENCE_HB_INTERVAL = heartbeat_interval;
             _presence_heartbeat();
         },
 
@@ -661,7 +670,7 @@ function PN_API(setup) {
             ,   sub_timeout   = args['timeout']     || SUB_TIMEOUT
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   state         = args['state']
-            ,   heartbeat     = args['heartbeat']
+            ,   heartbeat     = args['heartbeat'] || args['pnexpires']
             ,   restore       = args['restore'];
 
             // Restore Enabled?
@@ -675,7 +684,9 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-            if (heartbeat || heartbeat === 0) PRESENCE_HB_INTERVAL = validate_presence_heartbeat(heartbeat, PRESENCE_HB_INTERVAL, error)
+            if (heartbeat || heartbeat === 0) {
+                set_heartbeat(heartbeat);
+            }
 
             // Setup Channel(s)
             each( (channel.join ? channel.join(',') : ''+channel).split(','),
@@ -779,7 +790,7 @@ function PN_API(setup) {
                 var st = JSON.stringify(STATE);
                 if (st.length > 2) data['metadata'] = JSON.stringify(STATE);
 
-                if (PRESENCE_HB_INTERVAL) data['pnexpires'] = PRESENCE_HB_INTERVAL;
+                if (PRESENCE_HB) data['pnexpires'] = PRESENCE_HB;
                 start_presence_heartbeat();
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,

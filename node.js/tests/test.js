@@ -1055,7 +1055,7 @@ describe('Pubnub', function() {
                             pubnub.state({
                                 channel  : ch ,
                                 uuid     : uuid,
-                                state : { "age" : "null"},
+                                state : { "age" : null},
                                 callback : function(response) {
                                     assert.deepEqual(response,state);
                                     pubnub.state({

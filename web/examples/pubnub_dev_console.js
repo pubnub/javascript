@@ -91,7 +91,7 @@ pubnub_dev_console = function(){
               document.getElementById('currentAuthKey').innerHTML="current auth key is: " + auth_key;
             }
             d['ssl'] = ssl;
-            if (heartbeat) d['pnexpires'] = heartbeat;
+            if (heartbeat) d['heartbeat'] = heartbeat;
             pubnub = PUBNUB.init(d);
             return "Pubnub Object Initialized";
         },
@@ -111,6 +111,8 @@ pubnub_dev_console = function(){
             var PAM_REVOKE       = ++count;
             var PAM_AUDIT        = ++count;
             var STATE            = ++count;
+            var HEARTBEAT        = ++count;
+            var HEARTBEAT_INTERVAL = ++count;
             var FALLBACK         = ++count;
 
             if (!input) {
@@ -221,13 +223,21 @@ pubnub_dev_console = function(){
                     break;
                 case STATE:
                     var channel =  get_input("Enter channel", "string", "");
-                    var state   =  get_input("Enter State ( Javascript Object )", "object", "")
+                    var state   =  get_input("Enter State ( Javascript Object )", "object", "");
                     pubnub.state({
                         'channel'     : channel,
                         'state'       : state,
                         'callback'    : print,
                         'error'       : print
                     });
+                    break;
+                case HEARTBEAT:
+                    var heartbeat = get_input("Enter Heartbeat ( in seconds )", "number", 30);
+                    pubnub.set_heartbeat(heartbeat);
+                    break;
+                case HEARTBEAT_INTERVAL:
+                    var heartbeat_interval = get_input("Enter Heartbeat Interval ( in seconds )", "number", 15);
+                    pubnub.set_heartbeat_interval(heartbeat_interval);
                     break;
                 case FALLBACK:
                     break;
