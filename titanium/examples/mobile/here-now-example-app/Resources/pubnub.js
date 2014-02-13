@@ -284,10 +284,10 @@ function PN_API(setup) {
 
         PRESENCE_HB_RUNNING = true;
         SELF['presence_heartbeat']({
-            callback : function() {
+            'callback' : function(r) {
                 PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND );
             },
-            error : function(e) {
+            'error' : function(e) {
                 error && error("Presence Heartbeat unable to reach Pubnub servers." + JSON.stringify(e));
                 PRESENCE_HB_TIMEOUT = timeout( _presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND );
             }
@@ -336,7 +336,7 @@ function PN_API(setup) {
                 return;
             }
         }
-        callback(response)
+        callback(response);
     }
 
     function _invoke_error(response,err) {
@@ -1197,8 +1197,8 @@ function PN_API(setup) {
             var jsonp    = jsonp_cb();
             var data     = { 'uuid' : UUID, 'auth' : AUTH_KEY };
 
-            var st = JSON.stringify(STATE);
-            if (st.length > 2) data['metadata'] = JSON.stringify(STATE);
+            var st = JSON['stringify'](STATE);
+            if (st.length > 2) data['metadata'] = JSON['stringify'](STATE);
 
             xdr({
                 callback : jsonp,
@@ -1207,7 +1207,7 @@ function PN_API(setup) {
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
-                    'channel' , encode(generate_channel_list(CHANNELS).join(',')),
+                    'channel' , encode(generate_channel_list(CHANNELS)['join'](',')),
                     'heartbeat'
                 ],
                 success  : function(response) {
