@@ -1195,7 +1195,7 @@ function PN_API(setup) {
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
-            ,   ttl      = args['ttl'] || -1
+            ,   ttl      = args['ttl']
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
             ,   data     = {}
@@ -1221,10 +1221,13 @@ function PN_API(setup) {
                     + "channel=" + encode(channel) + "&"
                     + "pnsdk=" + encode(PNSDK) + "&"
                     + "r=" + r + "&"
-                    + "timestamp=" + encode(timestamp)
-                    + ((ttl > -1)?"&" + "ttl=" + ttl:"")
-                    + "&" + "w=" + w
-            ,   signature = hmac_SHA256( sign_input, SECRET_KEY );
+                    + "timestamp=" + encode(timestamp);
+                     
+            if (ttl) sign_input += "&" + "ttl=" + ttl;
+             
+            sign_input += "&" + "w=" + w;
+
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
             signature = signature.replace( /\+/g, "-" );
             signature = signature.replace( /\//g, "_" );
@@ -1237,7 +1240,7 @@ function PN_API(setup) {
                 'timestamp' : timestamp
             };
 
-            if (ttl > -1) data['ttl'] = ttl;
+            if (ttl) data['ttl'] = ttl;
             if (auth_key) data['auth'] = auth_key;
 
             xdr({

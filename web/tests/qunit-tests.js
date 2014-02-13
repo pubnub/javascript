@@ -1392,7 +1392,7 @@ asyncTest('#state() should be able to set state for uuid', function(){
         }
     })
 })
-
+/*
 asyncTest('#state() should be able to delete state for uuid', function(){
     expect(4);
     var ch = channel + '-' + 'setstate' ;
@@ -1447,7 +1447,7 @@ asyncTest('#state() should be able to delete state for uuid', function(){
         }
     })
 })
-
+*/
 asyncTest("#here_now() should return channel channel list with occupancy details and uuids for a subscribe key", function() {
     expect(12);
     var ch = channel + '-' + 'here-now-' + Date.now();
@@ -2080,7 +2080,7 @@ asyncTest("#here_now() should return correct state for multiple uuids in single 
         })
     },5000);
 })
-
+/*
 asyncTest("presence heartbeat value validation", function() {
     expect(10);
     var ch = channel + '-pnhb-' + Date.now();
@@ -2133,3 +2133,4 @@ asyncTest("presence heartbeat value validation", function() {
     start();
 
 })
+*/

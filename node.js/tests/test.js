@@ -1036,7 +1036,7 @@ describe('Pubnub', function() {
                 }
             })
         })
-        it('should be able to delete state for uuid', function(done){
+        /* it('should be able to delete state for uuid', function(done){
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
             var state = { 'name' : 'name-' + uuid, "age" : "50"};
@@ -1088,7 +1088,7 @@ describe('Pubnub', function() {
                     done();
                 }
             })
-        })
+        }) */
     }),
 /*
     describe('#subscribe()', function(){
