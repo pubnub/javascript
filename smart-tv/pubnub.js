@@ -1223,7 +1223,7 @@ function PN_API(setup) {
                     + "r=" + r + "&"
                     + "timestamp=" + encode(timestamp);
                      
-            if (ttl) sign_input += "&" + "ttl=" + ttl;
+            if (ttl || ttl === 0) sign_input += "&" + "ttl=" + ttl;
              
             sign_input += "&" + "w=" + w;
 
@@ -1240,7 +1240,7 @@ function PN_API(setup) {
                 'timestamp' : timestamp
             };
 
-            if (ttl) data['ttl'] = ttl;
+            if (ttl || ttl === 0) data['ttl'] = ttl;
             if (auth_key) data['auth'] = auth_key;
 
             xdr({
