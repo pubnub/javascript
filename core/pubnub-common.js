@@ -217,7 +217,7 @@ function PN_API(setup) {
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
-    ,   PRESENCE_HB_INTERVAL = PRESENCE_HB - 3
+    ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   xdr           = setup['xdr']
