@@ -79,8 +79,15 @@ pubnub_dev_console = function(){
             sec_key     = sec_key  || get_input("Enter secret key", "string", "demo");
             auth_key    = auth_key || getAuthKey("myAuthKey");
             ssl         = ssl      || get_input("SSL ?", "boolean", false);
-            var heartbeat;
-            if (heartbeat_enabled) heartbeat   = get_input("Presence Heartbeat Interval ?", "number", 30);
+            uuid        = "pubnub_dev_console";
+
+            var heartbeat, heartbeatInterval;
+
+            if (heartbeat_enabled) {
+                heartbeat           = get_input("Presence Heartbeat Timeout (seconds)?", "number", 30);
+                heartbeatInterval   = get_input("Presence Heartbeat Interval (seconds)?", "number", 5);
+            }
+
             var d = {};
             d['origin'] = origin;
             d['publish_key'] = pub_key;
@@ -91,7 +98,13 @@ pubnub_dev_console = function(){
               document.getElementById('currentAuthKey').innerHTML="current auth key is: " + auth_key;
             }
             d['ssl'] = ssl;
-            if (heartbeat) d['heartbeat'] = heartbeat;
+            d['uuid'] = uuid;
+
+            if (heartbeat) {
+                d['heartbeat'] = heartbeat;
+                d['heartbeat_interval'] = heartbeatInterval;
+            }
+
             pubnub = PUBNUB.init(d);
             return "Pubnub Object Initialized";
         },
