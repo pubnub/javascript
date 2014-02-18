@@ -908,7 +908,7 @@ function PN_API(setup) {
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
             ,   jsonp    = jsonp_cb()
-            ,   uuids    = args['uuids'] || true
+            ,   uuids    = ('uuids' in args) ? args['uuids'] : true
             ,   state    = args['state']
             ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
 
