@@ -1202,7 +1202,7 @@ function PN_API(setup) {
             var st = JSON['stringify'](STATE);
             if (st.length > 2) data['state'] = JSON['stringify'](STATE);
 
-            if (HEARTBEAT > 0 && HEARTBEAT < 320) data['heartbeat'] = HEARTBEAT;
+            if (PRESENCE_HB > 0 && PRESENCE_HB < 320) data['heartbeat'] = PRESENCE_HB;
 
             xdr({
                 callback : jsonp,

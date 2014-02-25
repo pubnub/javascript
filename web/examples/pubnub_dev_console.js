@@ -79,7 +79,7 @@ pubnub_dev_console = function(){
             sec_key     = sec_key  || get_input("Enter secret key", "string", "demo");
             auth_key    = auth_key || getAuthKey("myAuthKey");
             ssl         = ssl      || get_input("SSL ?", "boolean", false);
-            uuid        = "pubnub_dev_console";
+            uuid        = "console-" + Math.random();
 
             var heartbeat, heartbeatInterval;
 
