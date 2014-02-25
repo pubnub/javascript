@@ -784,11 +784,11 @@ function PN_API(setup) {
                 _reset_offline();
 
                 var data = { 'uuid' : UUID, 'auth' : auth_key };
-      
-                var st = JSON.stringify(STATE);
-                if (st.length > 2) data['metadata'] = JSON.stringify(STATE);
 
-                if (PRESENCE_HB) data['pnexpires'] = PRESENCE_HB;
+                var st = JSON.stringify(STATE);
+                if (st.length > 2) data['state'] = JSON.stringify(STATE);
+
+                if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
                 start_presence_heartbeat();
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
@@ -913,7 +913,7 @@ function PN_API(setup) {
             ,   data     = { 'uuid' : UUID, 'auth' : auth_key };
 
             if (!uuids) data['disable_uuids'] = 1;
-            if (state) data['metadata'] = 1;
+            if (state) data['state'] = 1;
 
             // Make sure we have a Channel
             if (!callback)      return error('Missing Callback');
@@ -995,7 +995,7 @@ function PN_API(setup) {
 
             if (CHANNELS[channel] && CHANNELS[channel].subscribed) STATE[channel] = state;
 
-            data['metadata'] = JSON.stringify(state);
+            data['state'] = JSON.stringify(state);
 
             if (state) {
                 url      = [
@@ -1071,9 +1071,9 @@ function PN_API(setup) {
                     + "pnsdk=" + encode(PNSDK) + "&"
                     + "r=" + r + "&"
                     + "timestamp=" + encode(timestamp);
-                     
+
             if (ttl || ttl === 0) sign_input += "&" + "ttl=" + ttl;
-             
+
             sign_input += "&" + "w=" + w;
 
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
@@ -1196,7 +1196,9 @@ function PN_API(setup) {
             var data     = { 'uuid' : UUID, 'auth' : AUTH_KEY };
 
             var st = JSON['stringify'](STATE);
-            if (st.length > 2) data['metadata'] = JSON['stringify'](STATE);
+            if (st.length > 2) data['state'] = JSON['stringify'](STATE);
+
+            if (HEARTBEAT > 0 && HEARTBEAT < 320) data['heartbeat'] = HEARTBEAT;
 
             xdr({
                 callback : jsonp,

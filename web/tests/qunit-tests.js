@@ -1210,9 +1210,9 @@ function in_list(list,str) {
     return false;
  }
 
- function in_list_deep(list,str) {
+ function in_list_deep(list,obj) {
     for (var x in list) {
-        if (JSON.stringify(list[x]) === JSON.stringify(str)) return true;
+        if (_.isEqual(list[x], obj)) return true;
     }
     return false;
  }
@@ -1613,10 +1613,10 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
                                                     ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                     ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                     ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,1);
                                                     deepEqual(response.channels[ch1].occupancy,1);
                                                     deepEqual(response.channels[ch2].occupancy,1);
@@ -1754,10 +1754,10 @@ asyncTest("#here_now() should return channel list with occupancy details and uui
                                                     ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                     ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                     ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid1, state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid2, state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid3, state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,1);
                                                     deepEqual(response.channels[ch1].occupancy,1);
                                                     deepEqual(response.channels[ch2].occupancy,1);
@@ -1895,10 +1895,10 @@ asyncTest("#here_now() should return correct state for uuid in different channel
                                                     ok(response.channels[ch1], "subscribed 1 channel should be present in payload");
                                                     ok(response.channels[ch2], "subscribed 2 channel should be present in payload");
                                                     ok(response.channels[ch3], "subscribed 3 channel should be present in payload");
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid + '', metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid + '', metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid + '', metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch1].uuids,{ uuid : uuid + '', state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch2].uuids,{ uuid : uuid + '', state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch3].uuids,{ uuid : uuid + '', state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,1);
                                                     deepEqual(response.channels[ch1].occupancy,1);
                                                     deepEqual(response.channels[ch2].occupancy,1);
@@ -2029,10 +2029,10 @@ asyncTest("#here_now() should return correct state for multiple uuids in single 
                                                 callback : function(response) {
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
                                                     console.log(response.channels[ch]);
-                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', metadata : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 + '', metadata : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 + '', metadata : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
-                                                    ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid3 + '', metadata : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 + '', state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 + '', state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
+                                                    ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid3 + '', state : {name : 'name-' + uuid3}}), "uuid 3 should be there in the uuids list");
                                                     deepEqual(response.channels[ch].occupancy,4);
                                                     pubnub_pres.unsubscribe({channel : ch});
                                                     pubnub_pres_1.unsubscribe({channel : ch});
