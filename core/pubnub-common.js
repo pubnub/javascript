@@ -358,7 +358,6 @@ function PN_API(setup) {
 
             // No Leave Patch (Prevent Blocking Leave if Desired)
             if (NOLEAVE)      return false;
-            if (!SSL && jsonp == '0') return false;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
@@ -420,17 +419,18 @@ function PN_API(setup) {
             });
         */
         'history' : function( args, callback ) {
-            var callback = args['callback'] || callback
-            ,   count    = args['count']    || args['limit'] || 100
-            ,   reverse  = args['reverse']  || "false"
-            ,   err      = args['error']    || function(){}
-            ,   auth_key = args['auth_key'] || AUTH_KEY
-            ,   cipher_key = args['cipher_key']
-            ,   channel  = args['channel']
-            ,   start    = args['start']
-            ,   end      = args['end']
-            ,   params   = {}
-            ,   jsonp    = jsonp_cb();
+            var callback         = args['callback'] || callback
+            ,   count            = args['count']    || args['limit'] || 100
+            ,   reverse          = args['reverse']  || "false"
+            ,   err              = args['error']    || function(){}
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   cipher_key       = args['cipher_key']
+            ,   channel          = args['channel']
+            ,   start            = args['start']
+            ,   end              = args['end']
+            ,   include_token    = args['include_token']
+            ,   params           = {}
+            ,   jsonp            = jsonp_cb();
 
             // Make sure we have a Channel
             if (!channel)       return error('Missing Channel');
@@ -442,9 +442,10 @@ function PN_API(setup) {
             params['reverse']     = reverse;
             params['auth']        = auth_key;
 
-            if (jsonp) params['callback'] = jsonp;
-            if (start) params['start']    = start;
-            if (end)   params['end']      = end;
+            if (jsonp) params['callback']              = jsonp;
+            if (start) params['start']                 = start;
+            if (end)   params['end']                   = end;
+            if (include_token) params['include_token'] = 'true';
 
             // Send Message
             xdr({
@@ -789,6 +790,7 @@ function PN_API(setup) {
                 if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
                 if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
+
                 start_presence_heartbeat();
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,

@@ -363,6 +363,8 @@ var PDIV          = $('pubnub') || 0
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid')||'';
 
+    var leave_on_unload = setup['leave_on_unload'] || 0;
+
     setup['xdr']        = xdr;
     setup['db']         = db;
     setup['error']      = setup['error'] || error;
@@ -396,7 +398,7 @@ var PDIV          = $('pubnub') || 0
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
-        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 0 ) });
+        if (leave_on_unload) SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 0 ) });
         return true;
     } );
 
