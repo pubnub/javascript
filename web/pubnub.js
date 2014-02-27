@@ -508,10 +508,12 @@ function PN_API(setup) {
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
 
-            if (COMPATIBLE_35 && (!SSL && jsonp == '0')) return false;
-
-            // No Leave Patch (Prevent Blocking Leave if Desired)
-            if (!COMPATIBLE_35 && NOLEAVE)      return false;
+            if (COMPATIBLE_35) {
+                if (!SSL)         return false;
+                if (jsonp == '0') return false;
+            }
+            
+            if (NOLEAVE)  return false;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
