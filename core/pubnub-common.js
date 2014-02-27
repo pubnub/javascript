@@ -220,6 +220,7 @@ function PN_API(setup) {
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
+    ,   COMPATIBLE_35 = setup['compatible_3.5']  || false
     ,   xdr           = setup['xdr']
     ,   error         = setup['error']      || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
@@ -356,8 +357,10 @@ function PN_API(setup) {
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
 
+            if (COMPATIBLE_35 && (!SSL && jsonp == '0')) return false;
+
             // No Leave Patch (Prevent Blocking Leave if Desired)
-            if (NOLEAVE)      return false;
+            if (!COMPATIBLE_35 && NOLEAVE)      return false;
 
             if (jsonp != '0') data['callback'] = jsonp;
 
