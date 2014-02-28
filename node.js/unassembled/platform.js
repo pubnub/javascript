@@ -112,9 +112,11 @@ function xdr( setup ) {
     var headers = {};
     var payload = '';
 
-    if (publish) payload = decodeURIComponent(setup.url.pop());
+    if (publish && mode == 'POST')
+        payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
+    url = '/' + url.split('/').slice(3).join('/');
 
     options.hostname = setup.url[0].split("//")[1];
     options.port     = ssl ? 443 : 80;
@@ -122,6 +124,8 @@ function xdr( setup ) {
     options.method   = mode;
     options.agent    = false;
     options.body     = payload;
+
+    console.log(options);
 
     require('http').globalAgent.maxSockets = Infinity;
     try {
@@ -157,7 +161,7 @@ function xdr( setup ) {
             done( 1, {"error":"Network Connection Error"} );
         } );
 
-        if (mode == 'POST') request.write(payload+'\r\n');
+        if (mode == 'POST') request.write(payload);
         request.end();
 
     } catch(e) {

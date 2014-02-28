@@ -7,7 +7,8 @@
 
 var pubnub = require("./../pubnub.js").init({
     publish_key   : "demo",
-    subscribe_key : "demo"
+    subscribe_key : "demo",
+    origin:'balancer7.us-west-1.pubnub.com'
 });
 
 
@@ -15,8 +16,8 @@ var pubnub = require("./../pubnub.js").init({
 Listen for Messages
 --------------------------------------------------------------------------- */
 pubnub.publish({
-    channel  : "my_channel",
-    message  : ["askldjflk$%^&&^asjd"],
+    channel  : "JAY",
+    message  : "askldjflksjd_POST",
     callback : log,
     error    : retry
 });
