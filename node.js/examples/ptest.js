@@ -113,7 +113,7 @@ function connected() {
 
 function initClientWithArgs(config) {
     console.log("Using keyset " + config.keyset.description + " with keys " + config.keyset.sub + " " + config.keyset.pub);
-    console.log("Using environment " + config.environment + ".");
+    console.log("Using environment " + config.origin + ".");
     console.log("Setting ch1 to " + config.ch1);
     console.log("Setting ch2 to " + config.ch2);
     console.log("Setting UUID to " + config.uuid);
