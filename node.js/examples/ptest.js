@@ -2,7 +2,7 @@ var clOptions = [];
 var config = {};
 
 process.argv.forEach(function (val, index, array) {
-    //console.log(index + ': ' + val);
+    console.log(index + ': ' + val);
     clOptions[index] = val;
 });
 
@@ -12,20 +12,20 @@ var keysets = {
         "pub": "pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86",
         "sub": "sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe",
         "sec": "sec-c-MmI2YjRjODAtNWU5My00ZmZjLTg0MzUtZGM1NGExNjJkNjg1",
-        "description": "499 on Leave Enabled"
+        "description": "Compatibility Mode ON"
     },
 
     "keyset2": {
         "pub": "pub-c-c9b0fe21-4ae1-433b-b766-62667cee65ef",
         "sub": "sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe",
         "sec": "sec-c-ZDUxZGEyNmItZjY4Ny00MjJmLWE0MjQtZTQyMDM0NTY2MDVk",
-        "description": "499 on Leave Disabled"
+        "description": "Compatibility Mode OFF"
     }
 };
 
+var pubnub = {};
 
 // console.log(clOptions);
-
 //[ 0 'node',
 //  1  '/Users/gcohen/clients/javascript/node.js/examples/ptest.js',
 //  2  'keyset1',
@@ -33,22 +33,6 @@ var keysets = {
 //  4  'gecA',
 //  5  'gecB' ]
 
-validateArgs(clOptions);
-
-function usageOutput() {
-    console.log("\nUsage: " + clOptions[1] + " KEYSET ENVIRONMENT CHANNEL(S)");
-    console.log("KEYSET: 1 or 2");
-    console.log("ENVIRONMENT: prod or beta");
-    console.log("CHANNEL(S): CH1[,CH2,CH3,CH4]");
-    console.log("\n");
-    process.exit(1);
-}
-
-function initClientWithArgs(config) {
-    console.log("Using keyset " + config.keyset.description + ".");
-    console.log("Using environment " + config.environment + ".");
-
-}
 
 function validateArgs(opts) {
 
@@ -69,49 +53,142 @@ function validateArgs(opts) {
 
     // set env
     if ((clOptions[3] == "beta") || (clOptions[3] == "prod")) {
-        config.environment = clOptions[3];
+        if (clOptions[3] == "beta") {
+            config.origin = "presence-beta.pubnub.com";
+        } else {
+            config.origin = "pubsub.pubnub.com";
+        }
+
     } else {
         usageOutput();
     }
 
     // set channels
-    if ((clOptions[3] == "beta") || (clOptions[3] == "prod")) {
-        config.environment = clOptions[3];
-    } else {
-        usageOutput();
+    if (clOptions[4]) {
+        config.ch1 = clOptions[4];
     }
+
+    if (clOptions[5]) {
+        config.ch2 = clOptions[5];
+    }
+
+    // set uuid
+    if (clOptions[6]) {
+        config.uuid = clOptions[6];
+    } else {
+        config.uuid = Math.random();
+    }
+
+    config.ssl = false;
+
+    if (clOptions[7] == 0) {
+        config.ssl = false;
+    } else if (clOptions[7] == 1) {
+        config.ssl = true;
+    }
+
 
     initClientWithArgs(config);
 
+}
 
+validateArgs(clOptions);
+
+function usageOutput() {
+    console.log("\nUsage: " + clOptions[1] + " KEYSET ENVIRONMENT CHANNEL(S)");
+    console.log("KEYSET: 1 or 2");
+    console.log("ENVIRONMENT: prod or beta");
+    console.log("CH1");
+    console.log("CH2");
+    console.log("UUID");
+    console.log("SSL");
+    console.log("\n");
+    console.log("Example Usage: node ptest.js 1 beta gecA gecB myUUIDHere 0\n")
+    process.exit(1);
+}
+
+function connected() {
+    console.log("Connected.");
+}
+
+function initClientWithArgs(config) {
+    console.log("Using keyset " + config.keyset.description + " with keys " + config.keyset.sub + " " + config.keyset.pub);
+    console.log("Using environment " + config.environment + ".");
+    console.log("Setting ch1 to " + config.ch1);
+    console.log("Setting ch2 to " + config.ch2);
+    console.log("Setting UUID to " + config.uuid);
+    console.log("Setting SSL to " + config.ssl);
+
+
+    pubnub = require("./../pubnub.js").init({
+        origin: config.origin,
+        publish_key: config.keyset.pub,
+        subscribe_key: config.keyset.sub,
+        uuid: config.uuid
+    })
+
+
+
+
+
+
+
+
+        , exec = require('child_process').exec;
 }
 
 
-var pubnub = require("./../pubnub.js").init({
-        publish_key: "demo",
-        subscribe_key: "demo"
-    })
-    , exec = require('child_process').exec;
+var readline = require('readline'),
+    rl = readline.createInterface(process.stdin, process.stdout);
 
-pubnub.subscribe({
-    channel: "my_channel",
-    connect: function () {
-        // Publish a Message on Connect
-        pubnub.publish({
-            channel: "my_channel",
-            message: { text: 'Ready to Receive Voice Script.' }
-        });
-    },
-    callback: function (message) {
-        console.log(message);
-        exec('say ' + (
-            'voice' in message &&
-                message.voice ? '-v ' +
-                message.voice + ' ' : ''
-            ) + message.text);
+rl.setPrompt('> ');
+rl.prompt();
 
-    },
-    error: function () {
-        console.log("Network Connection Dropped");
+rl.on('line',function (line) {
+    switch (line.trim()) {
+        case 'suba':
+            console.log('Subscribing to ' + config.ch1);
+            subscribe(config.ch1);
+            break;
+        case 'subb':
+            console.log('Subscribing to ' + config.ch2);
+            subscribe(config.ch2);
+            break;
+        case 'unsuba':
+            console.log('UnSubscribing to ' + config.ch1);
+            unsubscribe(config.ch1);
+            break;
+        default:
+            console.log('ERROR ERROR ERROR `' + line.trim() + '`');
+            break;
     }
-});
+    rl.prompt();
+}).on('close', function () {
+        console.log('BYE BYE!');
+        process.exit(0);
+    });
+
+
+function subscribe(ch) {
+    pubnub.subscribe({
+        channel: ch,
+        connect: function () {
+            console.log("Connected to " + ch + ".");
+        },
+
+        callback: function (message) {
+            console.log(message);
+
+        },
+        error: function () {
+            console.log("Error.");
+        }
+    });
+}
+
+function unsubscribe(ch) {
+    pubnub.unsubscribe({
+        channel: ch
+    });
+
+}
