@@ -105,18 +105,27 @@ function xdr( setup ) {
         ,   timer  = timeout( function(){done(1);} , xhrtme );
 
     data['pnsdk'] = PNSDK;
-    var url = build_url(setup.url, data);
 
-    var options = {
-        hostname : setup.url[0].split("//")[1],
-        port : ssl ? 443 : 80,
-        path : url,
-        method : 'GET'
-    };
-    options.agent = false;
+    var publish = setup.url[1] === 'publish';
+    var mode    = publish ? 'POST' : 'GET';
+    var options = {};
+    var headers = {};
+    var payload = '';
+
+    if (publish) payload = decodeURIComponent(setup.url.pop());
+
+    var url = build_url( setup.url, data );
+
+    options.hostname = setup.url[0].split("//")[1];
+    options.port     = ssl ? 443 : 80;
+    options.path     = url;
+    options.method   = mode;
+    options.agent    = false;
+    options.body     = payload;
+
     require('http').globalAgent.maxSockets = Infinity;
     try {
-        request = (ssl ? https : http).request(options, function(response) {
+        request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
             response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
             response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
@@ -143,11 +152,13 @@ function xdr( setup ) {
                 finished();
             });
         });
+        request.timeout = xhrtme;
         request.on( 'error', function() {
             done( 1, {"error":"Network Connection Error"} );
         } );
+
+        if (mode == 'POST') request.write(payload+'\r\n');
         request.end();
-        request.timeout = xhrtme;
 
     } catch(e) {
         done(0);

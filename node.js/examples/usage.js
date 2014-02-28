@@ -14,7 +14,8 @@ var network = pubnub.init({
 });
 
 var delivery_count = 0;
-var crazy          = ' ~`!@#$%^&*(顶顅Ȓ)+=[]\\{}|;\':"./<>?abcd'
+//var crazy          = ' ~`!@#$%^&*(顶顅Ȓ)+=[]\\{}|;\':"./<>?abcd'
+var crazy          = ' ~`!@#$%^&*(顶顅Ȓ)+=[]\\{}|;\':"./<>abcd'
 
 /* ---------------------------------------------------------------------------
 Listen for Messages
@@ -23,6 +24,8 @@ network.subscribe({
     channel  : "hello_world",
     connect  : function() {
 
+        console.log('connected');
+
         // Publish a Message on Connect
         network.publish({
             channel  : "hello_world",
@@ -30,6 +33,9 @@ network.subscribe({
                 count    : ++delivery_count,
                 some_key : "Hello World!",
                 crazy    : crazy
+            },
+            error : function(info){
+                console.log(info);
             },
             callback : function(info){
                 if (!info[0]) console.log("Failed Message Delivery")
