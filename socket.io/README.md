@@ -457,7 +457,7 @@ For updated details, see [Server Sent Events](#sending-events-from-a-server).
 
 Also review a dedicated example of sending data into Socket.IO from the
 standard PubNub libraries or the HTTP REST API -
-[Non-Socket.IO Communication](https://github.com/pubnub/pubnub-api/tree/master/socket.io/non-socket-io-communication)
+[Non-Socket.IO Communication](#sending-events-from-a-server)
 
 ## License 
 
