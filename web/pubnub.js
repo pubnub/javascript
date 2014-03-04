@@ -288,10 +288,10 @@ function isArray(arg) {
  * ====
  * each( [1,2,3], function(item) { } )
  */
-function each( o, f ) {
+function each( o, f, old_logic) {
     if ( !o || !f ) return;
 
-    if ( isArray(o) )
+    if ( isArray(o) || ( old_logic && typeof o[0] != 'undefined' ) )
         for ( var i = 0, l = o.length; i < l; )
             f.call( o[i], o[i], i++ );
     else
@@ -2671,13 +2671,23 @@ function error(message) { console['error'](message) }
  * ======
  * var elements = search('a div span');
  */
-function search( elements, start ) {
+function search( elements, start) {
     var list = [];
     each( elements.split(/\s+/), function(el) {
         each( (start || document).getElementsByTagName(el), function(node) {
             list.push(node);
         } );
-    } );
+    });
+    return list;
+}
+
+function search_old(a) { 
+    var list = [];
+    each( elements.split(/\s+/), function(el) {
+        each( (document).getElementsByTagName(el), function(node) {
+            list.push(node);
+        } );
+    }, 1);
     return list;
 }
 
@@ -2721,7 +2731,7 @@ function unbind( type, el, fun ) {
  * ====
  * head().appendChild(elm);
  */
-function head() { return search('head')[0] }
+function head() { return search_old('head')[0] }
 
 /**
  * ATTR

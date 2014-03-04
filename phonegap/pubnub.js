@@ -138,10 +138,10 @@ function isArray(arg) {
  * ====
  * each( [1,2,3], function(item) { } )
  */
-function each( o, f ) {
+function each( o, f, old_logic) {
     if ( !o || !f ) return;
 
-    if ( isArray(o) )
+    if ( isArray(o) || ( old_logic && typeof o[0] != 'undefined' ) )
         for ( var i = 0, l = o.length; i < l; )
             f.call( o[i], o[i], i++ );
     else
