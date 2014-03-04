@@ -87,7 +87,7 @@ function search( elements, start) {
 
 function search_old(a) { 
     var list = [];
-    each( elements.split(/\s+/), function(el) {
+    each( a.split(/\s+/), function(el) {
         each( (document).getElementsByTagName(el), function(node) {
             list.push(node);
         } );
