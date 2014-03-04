@@ -90,7 +90,7 @@ function search_old(a) {
     each( a.split(/\s+/), function(el) {
         each( (document).getElementsByTagName(el), function(node) {
             list.push(node);
-        } );
+        },1 );
     }, 1);
     return list;
 }
