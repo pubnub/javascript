@@ -38,6 +38,9 @@ test("set_uuid() should set uuid", function() {
     pubnub.set_uuid("abcd");
     deepEqual(pubnub.get_uuid(), "abcd");
 });
+
+
+
 /*
 test("set_uuid() should set uuid and new presence event should come with new uuid", function() {
     expect(2);
@@ -412,6 +415,29 @@ test("test local cipher key", function() {
                 pubnub_enc.unsubscribe({channel : ch});
                 start();
             }
+        }
+    });
+});
+
+
+test("subscribe() should take heartbeat as argument", function() {
+    expect(1);
+    stop(1);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        heartbeat : 30,
+        connect : function(response)  {
+            ok(true,"connect should be called");
+            pubnub.unsubscribe({channel : ch});
+            start();
+        },
+        callback : function(response) {
+
+        },
+        error : function(response) {
+            ok(false, "error should not occur");
+            pubnub.unsubscribe({channel : ch});
+            start();
         }
     });
 });
