@@ -689,7 +689,7 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (heartbeat || heartbeat === 0) {
-                set_heartbeat(heartbeat);
+                SELF['set_heartbeat'](heartbeat);
             }
 
             // Setup Channel(s)
