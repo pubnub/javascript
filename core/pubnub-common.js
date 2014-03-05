@@ -1061,7 +1061,6 @@ function PN_API(setup) {
             ,   ttl      = args['ttl']
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
-            ,   data     = {}
             ,   auth_key = args['auth_key'];
 
             // Make sure we have a Channel
@@ -1070,8 +1069,6 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SECRET_KEY)    return error('Missing Secret Key');
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
 
             var timestamp  = Math.floor(new Date().getTime() / 1000)
             ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
@@ -1103,6 +1100,7 @@ function PN_API(setup) {
                 'timestamp' : timestamp
             };
 
+            if (jsonp != '0') { data['callback'] = jsonp; }
             if (ttl || ttl === 0) data['ttl'] = ttl;
             if (auth_key) data['auth'] = auth_key;
 
@@ -1145,8 +1143,6 @@ function PN_API(setup) {
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SECRET_KEY)    return error('Missing Secret Key');
 
-            if (jsonp != '0') { data['callback'] = jsonp; }
-
             var timestamp  = Math.floor(new Date().getTime() / 1000)
             ,   sign_input = SUBSCRIBE_KEY + "\n"
                 + PUBLISH_KEY + "\n"
@@ -1164,6 +1160,7 @@ function PN_API(setup) {
 
             var data = { 'signature' : signature, 'timestamp' : timestamp };
 
+            if (jsonp != '0') { data['callback'] = jsonp; }
             if (channel)  data['channel'] = channel;
             if (auth_key) data['auth']    = auth_key;
 
