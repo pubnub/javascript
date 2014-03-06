@@ -1,0 +1,172 @@
+<html>
+<script src=http://cdn.pubnub.com/pubnub-3.5.48.min.js></script>
+<!--<script src=../pubnub.js></script>-->
+<script>
+
+    // Init
+
+//    var pubnub = PUBNUB.init({
+//        publish_key: 'demo',
+//        subscribe_key: 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe',
+//        origin: "presence-beta.pubnub.com",
+//        ssl: false
+//    })
+
+//
+//
+//    <hr/>
+//            INIT
+//    <div onclick="compatOn(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
+//    <div onclick="compatOn(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
+//            <hr/>
+//    <div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
+//    <div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
+//            <hr/>
+//    Test Steps
+//    <div onclick="subToA()">Sub To A</div>
+//    <div onclick="subToB()">Sub To B</div>
+//    <div onclick="unsubToa()">UnSub To A</div>
+//            <hr>
+//    <div onclick="unsubTob()">UnSub To B</div>
+//
+//
+//
+
+    // Begin Compat On
+        // Begin SSL Off
+
+    var PN_LISTENER_UUID = "PN_LISTENER";
+    var PN_ACTOR_UUID = "PN_ACTOR";
+
+    var listener = compatOn(false, 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe', true);
+    var pn = compatOn(false, 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe', false);
+
+    subToA(listener, pn);
+
+
+
+    function initLog(compat, ssl, key) {
+        console.log("Compat: " + compat + " SSL: " + ssl + " " + key);
+    }
+
+    function compatOn(ssl, key, listener){
+
+        var uuid = listener ? PN_LISTENER_UUID : PN_ACTOR_UUID;
+
+        var pubnub = PUBNUB.init({
+            publish_key: 'demo',
+            subscribe_key: key,
+            origin: "presence-beta.pubnub.com",
+            ssl: ssl,
+            //"compatible_3.5" : true,
+            uuid: uuid
+        });
+
+        initLog(true, ssl, key);
+        return pubnub;
+    }
+
+
+    function compatOff(ssl, key){
+        pubnub = PUBNUB.init({
+            publish_key: 'demo',
+            subscribe_key: key ,
+            origin: "presence-beta.pubnub.com",
+            ssl: ssl,
+            'compatible_3.5' : true
+        });
+
+        initLog(false, ssl, key);
+        return pubnub;
+    }
+
+
+    function subToA(listener, pn) {
+        listener.subscribe({
+            noheresync: true,
+            channel: "gecA",
+            message: function (m) {
+                console.log("Listener heard: " + m);
+            },
+            presence: function(msg, e, ch) {
+                if (msg.uuid != PN_LISTENER_UUID && msg.uuid == PN_ACTOR_UUID) {
+                    console.log("Presence Listener: " + msg.action + " on " + msg.uuid + ": " + ch);
+                }
+
+
+            },
+            connect: function() {
+                // pn.set_uuid("foo");
+
+                pn.subscribe({
+                    noheresync: true,
+                    channel: "gecA",
+                    message: function (m) {
+                        console.log("PN msg received: " + m);
+                    },
+                    connect: function() {
+                        console.log("PN Connected");
+                    }
+                });
+
+
+            }
+        });
+    }
+
+    function subToB() {
+        pubnub.subscribe({
+            channel: "gecB",
+            message: function (m) {
+                console.log(m);
+            },
+            connect: connected
+        });
+    }
+
+
+    function unsubToa() {
+        pn.unsubscribe({
+            channel: "gecA"
+        });
+
+
+        listener.unsubscribe({
+            channel: "gecA"
+        });
+
+    }
+
+    function unsubTob() {
+        pubnub.unsubscribe({
+            channel: "gecB"
+        });
+    }
+
+    function connected() {
+        console.log("connected.");
+    }
+
+</script>
+
+<style>
+    div {margin-bottom: 10}
+</style>
+
+<hr/>
+INIT
+<div onclick="compatOn(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
+<div onclick="compatOn(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
+<hr/>
+<div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
+<div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
+<hr/>
+Test Steps
+<div onclick="subToA()">Sub To A</div>
+<div onclick="subToB()">Sub To B</div>
+<div onclick="unsubToa()">UnSub To A</div>
+<hr>
+<div onclick="unsubTob()">UnSub To B</div>
+
+
+</html>
