@@ -7,8 +7,7 @@
 
 var pubnub = require("./../pubnub.js").init({
     publish_key   : "demo",
-    subscribe_key : "demo",
-    origin:'balancer7.us-west-1.pubnub.com'
+    subscribe_key : "demo"
 });
 
 
