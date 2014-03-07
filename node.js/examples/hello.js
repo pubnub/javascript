@@ -7,15 +7,10 @@
 
 var PUBNUB = require("../pubnub.js")
 
-var pubnub1 = PUBNUB({
+var pubnub = PUBNUB({
     publish_key   : "demo",
-    subscribe_key : "demo",
-    cipher_key : "demo"
-});
-var pubnub = pubnub1.secure({
-    publish_key   : "demo",
-    subscribe_key : "demo",
-    cipher_key : "demo"
+    subscribe_key : "demo"
+    //cipher_key : "demo"
 });
 /* ---------------------------------------------------------------------------
 Listen for Messages
@@ -27,9 +22,7 @@ pubnub.subscribe({
     },
     error : function(r) {
        console.log(JSON.stringify(r));
-    }
+    },
+    presence : function(r) { console.log(JSON.stringify(r)) }
 
 });
-setTimeout(function(){
-pubnub.publish({'channel' : 'a', 'message' : 'hi', callback : console.log});
-},3000);

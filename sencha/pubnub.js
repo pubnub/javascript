@@ -138,10 +138,10 @@ function isArray(arg) {
  * ====
  * each( [1,2,3], function(item) { } )
  */
-function each( o, f ) {
+function each( o, f, old_logic) {
     if ( !o || !f ) return;
 
-    if ( isArray(o) )
+    if ( isArray(o) || ( old_logic && typeof o[0] != 'undefined' ) )
         for ( var i = 0, l = o.length; i < l; )
             f.call( o[i], o[i], i++ );
     else
@@ -174,13 +174,20 @@ function encode(path) { return encodeURIComponent(path) }
  * ==================================
  * generate_channel_list(channels_object);
  */
-function generate_channel_list(channels) {
+function generate_channel_list(channels, nopresence) {
     var list = [];
     each( channels, function( channel, status ) {
-        if (status.subscribed) list.push(channel);
-    } );
+        if (nopresence) {
+            if(channel.search('-pnpres') < 0) { 
+                if (status.subscribed) list.push(channel);
+            }    
+        } else {
+            if (status.subscribed) list.push(channel);
+        }  
+    });
     return list.sort();
 }
+
 
 // PUBNUB READY TO CONNECT
 function ready() { timeout( function() {
@@ -277,7 +284,7 @@ function PN_API(setup) {
 
         clearTimeout(PRESENCE_HB_TIMEOUT);
 
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS).length){
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS,true).length){
             PRESENCE_HB_RUNNING = false;
             return;
         }
@@ -690,7 +697,7 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (heartbeat || heartbeat === 0) {
-                set_heartbeat(heartbeat);
+                SELF['set_heartbeat'](heartbeat);
             }
 
             // Setup Channel(s)
@@ -1215,7 +1222,7 @@ function PN_API(setup) {
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
-                    'channel' , encode(generate_channel_list(CHANNELS)['join'](',')),
+                    'channel' , encode(generate_channel_list(CHANNELS, true)['join'](',')),
                     'heartbeat'
                 ],
                 success  : function(response) {

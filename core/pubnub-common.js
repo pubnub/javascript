@@ -137,10 +137,10 @@ function isArray(arg) {
  * ====
  * each( [1,2,3], function(item) { } )
  */
-function each( o, f ) {
+function each( o, f, old_logic) {
     if ( !o || !f ) return;
 
-    if ( isArray(o) )
+    if ( isArray(o) || ( old_logic && typeof o[0] != 'undefined' ) )
         for ( var i = 0, l = o.length; i < l; )
             f.call( o[i], o[i], i++ );
     else
@@ -173,13 +173,20 @@ function encode(path) { return encodeURIComponent(path) }
  * ==================================
  * generate_channel_list(channels_object);
  */
-function generate_channel_list(channels) {
+function generate_channel_list(channels, nopresence) {
     var list = [];
     each( channels, function( channel, status ) {
-        if (status.subscribed) list.push(channel);
-    } );
+        if (nopresence) {
+            if(channel.search('-pnpres') < 0) { 
+                if (status.subscribed) list.push(channel);
+            }    
+        } else {
+            if (status.subscribed) list.push(channel);
+        }  
+    });
     return list.sort();
 }
+
 
 // PUBNUB READY TO CONNECT
 function ready() { timeout( function() {
@@ -276,7 +283,7 @@ function PN_API(setup) {
 
         clearTimeout(PRESENCE_HB_TIMEOUT);
 
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS).length){
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS,true).length){
             PRESENCE_HB_RUNNING = false;
             return;
         }
@@ -689,7 +696,7 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (heartbeat || heartbeat === 0) {
-                set_heartbeat(heartbeat);
+                SELF['set_heartbeat'](heartbeat);
             }
 
             // Setup Channel(s)
@@ -1054,7 +1061,6 @@ function PN_API(setup) {
             ,   ttl      = args['ttl']
             ,   r        = (args['read'] )?"1":"0"
             ,   w        = (args['write'])?"1":"0"
-            ,   data     = {}
             ,   auth_key = args['auth_key'];
 
             // Make sure we have a Channel
@@ -1063,8 +1069,6 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SECRET_KEY)    return error('Missing Secret Key');
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
 
             var timestamp  = Math.floor(new Date().getTime() / 1000)
             ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
@@ -1096,6 +1100,7 @@ function PN_API(setup) {
                 'timestamp' : timestamp
             };
 
+            if (jsonp != '0') { data['callback'] = jsonp; }
             if (ttl || ttl === 0) data['ttl'] = ttl;
             if (auth_key) data['auth'] = auth_key;
 
@@ -1138,8 +1143,6 @@ function PN_API(setup) {
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SECRET_KEY)    return error('Missing Secret Key');
 
-            if (jsonp != '0') { data['callback'] = jsonp; }
-
             var timestamp  = Math.floor(new Date().getTime() / 1000)
             ,   sign_input = SUBSCRIBE_KEY + "\n"
                 + PUBLISH_KEY + "\n"
@@ -1157,6 +1160,7 @@ function PN_API(setup) {
 
             var data = { 'signature' : signature, 'timestamp' : timestamp };
 
+            if (jsonp != '0') { data['callback'] = jsonp; }
             if (channel)  data['channel'] = channel;
             if (auth_key) data['auth']    = auth_key;
 
@@ -1214,7 +1218,7 @@ function PN_API(setup) {
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
-                    'channel' , encode(generate_channel_list(CHANNELS)['join'](',')),
+                    'channel' , encode(generate_channel_list(CHANNELS, true)['join'](',')),
                     'heartbeat'
                 ],
                 success  : function(response) {
