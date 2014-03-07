@@ -771,12 +771,13 @@ The following example opens a `new WebSocket` in
 
 ```html
 <!-- NON-SSL Import PubNub Core Lib -->
-<script src="http://pubnub.a.ssl.fastly.net/pubnub-3.5.48.min.js"></script>
+<script src="http://pubnub.a.ssl.fastly.net/pubnub.min.js"></script>
 
 <!-- NON-SSL Use WebSocket Constructor for a New Socket Connection -->
 <script>(function() {
 
 // Note "ws://" rather than "wss://"
+WebSocket  = PUBNUB.ws;
 var socket = new WebSocket('ws://pubsub.pubnub.com/demo/demo/my_channel')
 
 })();</script>
