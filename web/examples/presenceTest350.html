@@ -3,108 +3,107 @@
 
 var channelA = "gecA";
 var channelB = "gecB";
+var randomSuffix = "";
+
+var ssl = false;
+var clientLevel = "";
+var serverLevel = "";
+
+var pubKey = "";
+var subKey = "";
+
+var listenerUUID = "PN_LISTENER";
+var actorUUID = "PN_ACTOR";
+
+var pnLoadedInterval = "";
+var listener = "";
+var actor = "";
+var extraCompat = "";
+
+
 var keysets = {
 
     "keyset1": {
-        "pub": "pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86",
-        "sub": "sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe",
-        "sec": "sec-c-MmI2YjRjODAtNWU5My00ZmZjLTg0MzUtZGM1NGExNjJkNjg1",
+        "pubKey": "pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86",
+        "subKey": "sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe",
+        "secKey": "sec-c-MmI2YjRjODAtNWU5My00ZmZjLTg0MzUtZGM1NGExNjJkNjg1",
         "description": "Compatibility Mode ON"
     },
 
     "keyset2": {
-        "pub": "pub-c-c9b0fe21-4ae1-433b-b766-62667cee65ef",
-        "sub": "sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe",
-        "sec": "sec-c-ZDUxZGEyNmItZjY4Ny00MjJmLWE0MjQtZTQyMDM0NTY2MDVk",
+        "pubKey": "pub-c-c9b0fe21-4ae1-433b-b766-62667cee65ef",
+        "subKey": "sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe",
+        "secKey": "sec-c-ZDUxZGEyNmItZjY4Ny00MjJmLWE0MjQtZTQyMDM0NTY2MDVk",
         "description": "Compatibility Mode OFF"
     }
 };
 
-
 var tests = {
-    // test1
-    // 1. actor subscribes to a
-    // 2. expect a join from actor on UUID PN_ACTOR_UUID within 5s
 
     "35_35_SSL_OFF": {
 
-        "description": "3.5 -> 3.5 Base Compatibility, SSL Off.",
-        "client": "3.5",
-        "server": "3.5",
-        "keyset": keysets.keyset1,
-        "ssl": false,
-
-        "max_steps": 3,
-
-        1: {
-            "actor": ["subscribe", channelA, 0],
-            "listener": ["join", channelA, 5]
+        "common": {
+            "description": "3.5 -> 3.5 Base Compatibility, SSL Off.",
+            "client": "3.5",
+            "server": "3.5",
+            "keyset": keysets.keyset1,
+            "ssl": false,
+            "maxSteps": 3
         },
 
-        2: {
-            "actor": ["subscribe", channelB, 5],
+        "testSpecific": {
 
-            "listener": [
-                ["leave", channelA, 5],
-                ["join", channelA, 5],
-                ["join", channelB, 5]
-            ]
         },
 
-        3: {
-            "actor": ["unsubscribe", channelA, 5],
-            "listener": [
-                ["leave", channelA, 5],
-                ["leave", channelB, 5],
-                ["join", channelB, 5]
-            ]
+        "platformSpecific": {
+            "JS_WEB": {
+                "clientExtraCompatibilityFlag": true // actually doesn't matter for 3.5 -> 3.5
+            }
+        },
+
+        "steps": {
+            1: {
+                "actor": ["subscribe", channelA, 0],
+                "listener": ["join", channelA, 5]
+            },
+
+            2: {
+                "actor": ["subscribe", channelB, 5],
+
+                "listener": [
+                    ["leave", channelA, 5],
+                    ["join", channelA, 5],
+                    ["join", channelB, 5]
+                ]
+            },
+
+            3: {
+                "actor": ["unsubscribe", channelA, 5],
+                "listener": [
+                    ["leave", channelA, 5],
+                    ["leave", channelB, 5],
+                    ["join", channelB, 5]
+                ]
+            }
         }
     }
 };
 
-runTest(tests["35_35"]);
 
+runTest(tests["35_35_SSL_OFF"]);
 
-function runTest(testNub){
+function runTest(testNub) {
     console.log("Running test: " + testNub.description);
-
+    ssl = testNub.common.ssl;
+    clientLevel = testNub.common.client;
+    serverLevel = testNub.common.server;
+    pubKey = testNub.common.keyset.pubKey;
+    subKey = testNub.common.keyset.subKey;
+    extraCompat = testNub.platformSpecific.JS_WEB.clientExtraCompatibilityFlag;
 }
 
-var PN_LISTENER_UUID = "PN_LISTENER";
-var PN_ACTOR_UUID = "PN_ACTOR";
-
-var compatMode = true;
-var ssl = false;
-var clientLevel = "3.5";
-var serverLevel = "3.6";
 var pnLoading = true;
-var pnLoadedInterval = "";
-
-var pubKey = (compatMode == true) ? keysets.keyset1.pub : keysets.keyset2.pub;
-var subKey = (compatMode == true) ? keysets.keyset1.sub : keysets.keyset2.sub;
-
 loadPNLib();
-
-var listener = "";
-var actor = "";
-
-function waitForPNLoad() {
-    if (pnLoading) {
-        console.log("Waiting for PN to finish loading.");
-        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
-    } else {
-        console.log("Initializing listener and actor instances.");
-        clearInterval(pnLoadedInterval);
-
-        listener = pnInit(ssl, subKey, true);
-        actor = pnInit(ssl, subKey, false);
-
-        // Start the Listener. The actor will be spawned after the listener is connected.
-        subToA(listener, actor);
-
-
-    }
-}
 
 function loadPNLib() {
     if (typeof PUBNUB === 'undefined') {
@@ -155,17 +154,32 @@ function loadPNLib() {
 }
 
 
-function initLog(compat, ssl, key, extra_compat, origin) {
-    console.log(key + "\nOrigin: " + origin + "\nClient level: " + clientLevel + "\nServer level: " + serverLevel + "\nCompat: " + compat + "\nClient extra compat flag: " + extra_compat + "\nSSL: " + ssl);
+function waitForPNLoad() {
+    if (pnLoading) {
+        console.log("Waiting for PN to finish loading.");
+        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
+    } else {
+        console.log("Initializing listener and actor instances.");
+        clearInterval(pnLoadedInterval);
+
+        randomSuffix = Math.floor((Math.random() * 10000) + 1);
+
+        actorUUID = actorUUID + randomSuffix;
+        listenerUUID = listenerUUID + randomSuffix;
+
+        listener = pnInit(ssl, subKey, true);
+        actor = pnInit(ssl, subKey, false);
+
+        // Start the Listener. The actor will be spawned after the listener is connected.
+        subToA(listener, actor);
+
+
+    }
 }
 
-function pnInit(ssl, key, isListener, extra_compat) {
+function pnInit(ssl, key, isListener) {
 
-    if (extra_compat == null) {
-        extra_compat = false;
-    }
-
-    var uuid = isListener ? PN_LISTENER_UUID : PN_ACTOR_UUID;
+    var uuid = isListener ? listenerUUID : actorUUID;
     var origin = (clientLevel == "3.6") ? "presence-beta.pubnub.com" : "pubsub.pubnub.com";
 
     var pubnub = PUBNUB.init({
@@ -173,11 +187,11 @@ function pnInit(ssl, key, isListener, extra_compat) {
         subscribe_key: key,
         origin: origin,
         ssl: ssl,
-        "compatible_3.5": extra_compat,
+        "compatible_3.5": extraCompat,
         uuid: uuid
     });
 
-    initLog(true, ssl, key, extra_compat, origin);
+    console.log(uuid + ": " + key + "\nOrigin: " + origin + "\nClient level: " + clientLevel + "\nServer level: " + serverLevel + "\nCompat: " + true + "\nClient extra compat flag: " + extraCompat + "\nSSL: " + ssl);
     return pubnub;
 }
 
@@ -190,7 +204,7 @@ function subToA(listener, pn) {
             console.log("Listener heard: " + m);
         },
         presence: function (msg, e, ch) {
-            if (msg.uuid != PN_LISTENER_UUID && msg.uuid == PN_ACTOR_UUID) {
+            if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
                 console.log("Presence Listener: " + msg.action + " on " + msg.uuid + ": " + ch);
             }
 
@@ -249,27 +263,6 @@ function connected() {
 }
 
 </script>
-
-<style>
-    div {
-        margin-bottom: 10
-    }
-</style>
-
-<hr/>
-INIT
-<div onclick="pnInit(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
-<div onclick="pnInit(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
-<hr/>
-<div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
-<div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
-<hr/>
-Test Steps
-<div onclick="subToA()">Sub To A</div>
-<div onclick="subToB()">Sub To B</div>
-<div onclick="unsubToa()">UnSub To A</div>
-<hr>
-<div onclick="unsubTob()">UnSub To B</div>
 
 
 </html>
