@@ -1,0 +1,104 @@
+<html>
+<!--<script src=http://cdn.pubnub.com/pubnub-3.5.48.min.js></script>-->
+<script src=../pubnub.js></script>
+<script>
+
+    // Init
+
+//    var pubnub = PUBNUB.init({
+//        publish_key: 'demo',
+//        subscribe_key: 'subKey-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe',
+//        origin: "presence-beta.pubnub.com",
+//        ssl: false
+//    })
+
+    function initLog(ssl, key) {
+        console.log("SSL: " + ssl + " " + key);
+    }
+
+    function compatOn(ssl,key){
+        pubnub = PUBNUB.init({
+            publish_key: 'demo',
+            subscribe_key: key,
+            origin: "presence-beta.pubnub.com",
+            ssl: ssl,
+            //"compatible_3.5" : true,
+            uuid: "jst1"
+        });
+
+        initLog(ssl, key);
+    }
+
+    function compatOff(ssl, key){
+        pubnub = PUBNUB.init({
+            publish_key: 'demo',
+            subscribe_key: key ,
+            origin: "presence-beta.pubnub.com",
+            ssl: ssl,
+            'compatible_3.5' : false
+        });
+
+        initLog(ssl, key);
+    }
+
+
+    function subToA() {
+        pubnub.subscribe({
+            channel: "gecA",
+            message: function (m) {
+                console.log(m);
+            },
+            connect: connected
+        });
+    }
+
+    function subToB() {
+        pubnub.subscribe({
+            channel: "gecB",
+            message: function (m) {
+                console.log(m);
+            },
+            connect: connected
+        });
+    }
+
+
+    function unsubToa() {
+        pubnub.unsubscribe({
+            channel: "gecA"
+        });
+    }
+
+    function unsubTob() {
+        pubnub.unsubscribe({
+            channel: "gecB"
+        });
+    }
+
+    function connected() {
+        console.log("connected.");
+    }
+
+</script>
+
+<style>
+    div {margin-bottom: 10}
+</style>
+
+<hr/>
+INIT
+<div onclick="compatOn(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
+<div onclick="compatOn(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
+<hr/>
+<div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
+<div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
+<hr/>
+Test Steps
+<div onclick="subToA()">Sub To A</div>
+<div onclick="subToB()">Sub To B</div>
+<div onclick="unsubToa()">UnSub To A</div>
+<hr>
+<div onclick="unsubTob()">UnSub To B</div>
+
+
+</html>
