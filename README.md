@@ -696,7 +696,8 @@ the `pubnub.subscribe` call below.
 ## WebSocket Client Interface
 
 Optionally PubNub offers you the full RFC 6455
-Support for WebSocket Client Specification.
+Support for WebSocket Client Specification
+[Websocket Tutorial](http://www.pubnub.com/websockets/).
 PubNub WebSockets enables any browser (modern or not) to support
 the HTML5 WebSocket standard APIs.
 Use the WebSocket Client Directly in your Browser that
