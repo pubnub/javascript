@@ -10,6 +10,7 @@ var channelB = "gecB";
 var listenerInit = "";
 var randomSuffix = "";
 var currentTest = "";
+var currentStep = "";
 var ssl = false;
 var clientLevel = "";
 var serverLevel = "";
@@ -216,6 +217,8 @@ function startCurrentTest() {
 
     a = 0;
 
+    currentStep = a;
+
         console.log("\nStep " + (a + 1) + " of " + numberOfSteps);
 
         var actorDelay = steps[a].actor[2];
@@ -232,6 +235,8 @@ function startCurrentTest() {
 
     testInProgressInterval = setInterval(waitForTestInProgress, 5000);
 
+    // TODO: Step Timeout
+    //testTimeout = setTimeout(timeoutTest, (listenerTimeout * 1000));
 
     if (actorAction == "subscribe") {
             setTimeout(function () {
@@ -250,6 +255,13 @@ initTest(tests["35_35_SSL_OFF"]);
 function onActorPresenceEvent(msg, e, ch) {
     if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
         console.log("Listener heard Presence event: " + msg.action + " on " + msg.uuid + ": " + ch);
+        var listener = currentTest.steps[0].listener;
+
+        if (listener[0] == msg.action && listener[1] == ch && actorUUID == msg.uuid) {
+            console.log("Step PASSED: " + currentStep);
+            testInProgress = false;
+        }
+
         var a = 0;
     }
 }
