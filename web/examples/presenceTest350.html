@@ -70,17 +70,16 @@ var tests = {
         "steps": {
             0: {
                 "actor": ["subscribe", channelA, 0],
-                "listener": ["join", channelA, 5]
+                "listener": ["join", channelA, 0]                  // [should get this event, on channel ch, within this many seconds]
             },
 
             1: {
                 "actor": ["subscribe", channelB, 5],
 
                 "listener": [
-                    ["leave", channelA, 5],
-                    ["join", channelA, 5],
-                    ["join", channelB, 5]
-                ]
+                    [ ["leave", channelA, 5],["join", channelA, 5], ["join", channelB, 5] ]  // when two rules are in an array, they:
+                ]                                                                               // can happen in any order
+                                                                                                // must both happen, in order for that step to pass
             },
 
             2: {
