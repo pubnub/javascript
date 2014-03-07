@@ -1,10 +1,15 @@
 <html>
 <script>
 
+var testInProgress = true;
+var testInProgressInterval = 0;
+var pnLoading = true;
 var channelA = "gecA";
 var channelB = "gecB";
-var randomSuffix = "";
 
+var listenerInit = "";
+var randomSuffix = "";
+var currentTest = "";
 var ssl = false;
 var clientLevel = "";
 var serverLevel = "";
@@ -51,8 +56,8 @@ var tests = {
             "maxSteps": 3
         },
 
-        "testSpecific": {
-
+        "init": {
+            "listener": ["subscribe", [channelA, channelB], 0]
         },
 
         "platformSpecific": {
@@ -62,12 +67,12 @@ var tests = {
         },
 
         "steps": {
-            1: {
+            0: {
                 "actor": ["subscribe", channelA, 0],
                 "listener": ["join", channelA, 5]
             },
 
-            2: {
+            1: {
                 "actor": ["subscribe", channelB, 5],
 
                 "listener": [
@@ -77,7 +82,7 @@ var tests = {
                 ]
             },
 
-            3: {
+            2: {
                 "actor": ["unsubscribe", channelA, 5],
                 "listener": [
                     ["leave", channelA, 5],
@@ -89,28 +94,10 @@ var tests = {
     }
 };
 
-
-runTest(tests["35_35_SSL_OFF"]);
-
-function runTest(testNub) {
-    console.log("Running test: " + testNub.description);
-    ssl = testNub.common.ssl;
-    clientLevel = testNub.common.client;
-    serverLevel = testNub.common.server;
-    pubKey = testNub.common.keyset.pubKey;
-    subKey = testNub.common.keyset.subKey;
-    extraCompat = testNub.platformSpecific.JS_WEB.clientExtraCompatibilityFlag;
-}
-
-var pnLoading = true;
-loadPNLib();
-
 function loadPNLib() {
     if (typeof PUBNUB === 'undefined') {
 
         console.log("PN is not loaded. Trying to load.");
-
-
         if (clientLevel == "3.6") {
             if (ssl) {
                 url = "https://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
@@ -130,7 +117,6 @@ function loadPNLib() {
         else {
             console.log("ERROR! Could not determine proper JS to load.");
         }
-
 
         var fileref = document.createElement('script');
         fileref.setAttribute("type", "text/javascript");
@@ -153,30 +139,6 @@ function loadPNLib() {
     }
 }
 
-
-function waitForPNLoad() {
-    if (pnLoading) {
-        console.log("Waiting for PN to finish loading.");
-        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
-    } else {
-        console.log("Initializing listener and actor instances.");
-        clearInterval(pnLoadedInterval);
-
-        randomSuffix = Math.floor((Math.random() * 10000) + 1);
-
-        actorUUID = actorUUID + randomSuffix;
-        listenerUUID = listenerUUID + randomSuffix;
-
-        listener = pnInit(ssl, subKey, true);
-        actor = pnInit(ssl, subKey, false);
-
-        // Start the Listener. The actor will be spawned after the listener is connected.
-        subToA(listener, actor);
-
-
-    }
-}
-
 function pnInit(ssl, key, isListener) {
 
     var uuid = isListener ? listenerUUID : actorUUID;
@@ -195,71 +157,143 @@ function pnInit(ssl, key, isListener) {
     return pubnub;
 }
 
+function waitForPNLoad() {
+    if (pnLoading) {
+        console.log("Waiting for PN to finish loading.");
+        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
+    } else {
+        console.log("Initializing listener and actor instances.");
+        clearInterval(pnLoadedInterval);
 
-function subToA(listener, pn) {
-    listener.subscribe({
+        randomSuffix = Math.floor((Math.random() * 10000) + 1);
+
+        actorUUID = actorUUID + randomSuffix;
+        listenerUUID = listenerUUID + randomSuffix;
+
+        listener = pnInit(ssl, subKey, true);
+        actor = pnInit(ssl, subKey, false);
+
+        startCurrentTest();
+
+    }
+}
+
+function initTest(testNub) {
+    console.log("Running test: " + testNub.description);
+    currentTest = testNub;
+    ssl = testNub.common.ssl;
+    clientLevel = testNub.common.client;
+    serverLevel = testNub.common.server;
+    pubKey = testNub.common.keyset.pubKey;
+    subKey = testNub.common.keyset.subKey;
+    extraCompat = testNub.platformSpecific.JS_WEB.clientExtraCompatibilityFlag;
+    listenerInit = testNub.init.listener;
+
+    loadPNLib();
+
+}
+
+function waitForTestInProgress(){
+
+    console.log("111");
+    if (testInProgress) {
+        console.log("Still waiting for test to complete.");
+
+    } else {
+        clearInterval(testInProgressInterval);
+        console.log("Test in progress complete.");
+    }
+
+}
+
+function startCurrentTest() {
+    var steps = currentTest.steps;
+    var numberOfSteps = Object.keys(steps).length;
+
+    console.log("Initiating test sequence for " + currentTest.common.description);
+
+    //for (var a = 0; a < numberOfSteps; a++) {
+
+    a = 0;
+
+        console.log("\nStep " + (a + 1) + " of " + numberOfSteps);
+
+        var actorDelay = steps[a].actor[2];
+        var actorAction = steps[a].actor[0];
+        var actorChannel = steps[a].actor[1];
+
+        var listenerTimeout = steps[a].listener[2];
+        var listenerExpectedEvent = steps[a].listener[0];
+        var listenerChannel = steps[a].listener[1];
+
+        console.log("Actor should wait " + actorDelay + " seconds to " + actorAction + " to channel " + actorChannel);
+        console.log("-- Then --");
+        console.log("Listener should wait up to " + listenerTimeout + " seconds to receive a " + listenerExpectedEvent + " on channel " + listenerChannel);
+
+    testInProgressInterval = setInterval(waitForTestInProgress, 5000);
+
+
+    if (actorAction == "subscribe") {
+            setTimeout(function () {
+                initListenerAndSubscribeActorToChannel(actorChannel)
+            }, actorDelay);
+        }
+
+
+    //}
+
+}
+
+initTest(tests["35_35_SSL_OFF"]);
+
+
+function onActorPresenceEvent(msg, e, ch) {
+    if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
+        console.log("Listener heard Presence event: " + msg.action + " on " + msg.uuid + ": " + ch);
+        var a = 0;
+    }
+}
+
+function onChannelMessage(m) {
+    console.log("Listener heard Message: " + m);
+}
+
+function actorSubscribe(channel) {
+    actor.subscribe({
         noheresync: true,
-        channel: "gecA",
+        channel: channel,
         message: function (m) {
-            console.log("Listener heard: " + m);
-        },
-        presence: function (msg, e, ch) {
-            if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
-                console.log("Presence Listener: " + msg.action + " on " + msg.uuid + ": " + ch);
-            }
-
-
+            console.log("Actor: msg received: " + m);
         },
         connect: function () {
-            // actor.set_uuid("foo");
-
-            pn.subscribe({
-                noheresync: true,
-                channel: "gecA",
-                message: function (m) {
-                    console.log("PN msg received: " + m);
-                },
-                connect: function () {
-                    console.log("PN Connected");
-                }
-            });
-
-
+            console.log("Actor: Connected");
         }
     });
 }
 
-function subToB() {
-    pubnub.subscribe({
-        channel: "gecB",
-        message: function (m) {
-            console.log(m);
-        },
-        connect: connected
+function initListenerAndSubscribeActorToChannel(actorChannel) {
+    listener.subscribe({
+        noheresync: true,
+        channel: listenerInit[1],
+        message: onChannelMessage,
+        presence: onActorPresenceEvent,
+        connect: actorSubscribe(actorChannel)
     });
 }
 
+// UnSubToA
 
-function unsubToa() {
+
+function unSubTo(channel) {
     actor.unsubscribe({
-        channel: "gecA"
+        channel: channel
     });
 
 
     listener.unsubscribe({
-        channel: "gecA"
+        channel: channel
     });
 
-}
-
-function unsubTob() {
-    pubnub.unsubscribe({
-        channel: "gecB"
-    });
-}
-
-function connected() {
-    console.log("connected.");
 }
 
 </script>
