@@ -1,209 +1,252 @@
 <html>
 <script>
 
-    var keysets = {
+var channelA = "gecA";
+var channelB = "gecB";
+var keysets = {
 
-        "keyset1": {
-            "pub": "pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86",
-            "sub": "sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe",
-            "sec": "sec-c-MmI2YjRjODAtNWU5My00ZmZjLTg0MzUtZGM1NGExNjJkNjg1",
-            "description": "Compatibility Mode ON"
+    "keyset1": {
+        "pub": "pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86",
+        "sub": "sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe",
+        "sec": "sec-c-MmI2YjRjODAtNWU5My00ZmZjLTg0MzUtZGM1NGExNjJkNjg1",
+        "description": "Compatibility Mode ON"
+    },
+
+    "keyset2": {
+        "pub": "pub-c-c9b0fe21-4ae1-433b-b766-62667cee65ef",
+        "sub": "sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe",
+        "sec": "sec-c-ZDUxZGEyNmItZjY4Ny00MjJmLWE0MjQtZTQyMDM0NTY2MDVk",
+        "description": "Compatibility Mode OFF"
+    }
+};
+
+
+var tests = {
+    // test1
+    // 1. actor subscribes to a
+    // 2. expect a join from actor on UUID PN_ACTOR_UUID within 5s
+
+    "35_35_SSL_OFF": {
+
+        "description": "3.5 -> 3.5 Base Compatibility, SSL Off.",
+        "client": "3.5",
+        "server": "3.5",
+        "keyset": keysets.keyset1,
+        "ssl": false,
+
+        "max_steps": 3,
+
+        1: {
+            "actor": ["subscribe", channelA, 0],
+            "listener": ["join", channelA, 5]
         },
 
-        "keyset2": {
-            "pub": "pub-c-c9b0fe21-4ae1-433b-b766-62667cee65ef",
-            "sub": "sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe",
-            "sec": "sec-c-ZDUxZGEyNmItZjY4Ny00MjJmLWE0MjQtZTQyMDM0NTY2MDVk",
-            "description": "Compatibility Mode OFF"
-        }
-    };
+        2: {
+            "actor": ["subscribe", channelB, 5],
 
-    var PN_LISTENER_UUID = "PN_LISTENER";
-    var PN_ACTOR_UUID = "PN_ACTOR";
+            "listener": [
+                ["leave", channelA, 5],
+                ["join", channelA, 5],
+                ["join", channelB, 5]
+            ]
+        },
 
-    var compatMode = true;
-    var ssl = false;
-
-    var clientLevel = "3.5";
-    var serverLevel = "3.6";
-    var pnLoading = true;
-    var pnLoadedInterval = "";
-
-    var pubKey = (compatMode == true) ? keysets.keyset1.pub : keysets.keyset2.pub;
-    var subKey = (compatMode == true) ? keysets.keyset1.sub : keysets.keyset2.sub;
-
-    loadPNLib();
-
-    var listener = "";
-    var actor = "";
-
-    function waitForPNLoad(){
-        if (pnLoading) {
-            console.log("Waiting for PN to finish loading.");
-            pnLoadedInterval = setInterval(waitForPNLoad, 1000);
-        } else {
-            console.log("Initializing listener and actor instances.");
-            clearInterval(pnLoadedInterval);
-
-            listener = pnInit(ssl, subKey, true);
-            actor = pnInit(ssl, subKey, false);
-
-            // Start the Listener. The actor will be spawned after the listener is connected.
-            subToA(listener, actor);
-
-
+        3: {
+            "actor": ["unsubscribe", channelA, 5],
+            "listener": [
+                ["leave", channelA, 5],
+                ["leave", channelB, 5],
+                ["join", channelB, 5]
+            ]
         }
     }
+};
 
-    function loadPNLib(){
-        if (typeof PUBNUB === 'undefined') {
-
-            console.log("PN is not loaded. Trying to load.");
+runTest(tests["35_35"]);
 
 
-            if (clientLevel == "3.6") {
-                if (ssl) {
-                    url = "https://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
-                }
-                else {
-                    url = "http://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
-                }
-            }
-            else if (clientLevel == "3.5") {
-                if (ssl) {
-                    url = "https://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js";
-                }
-                else {
-                    url = "http://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js";
-                }
+function runTest(testNub){
+    console.log("Running test: " + testNub.description);
+
+}
+
+var PN_LISTENER_UUID = "PN_LISTENER";
+var PN_ACTOR_UUID = "PN_ACTOR";
+
+var compatMode = true;
+var ssl = false;
+var clientLevel = "3.5";
+var serverLevel = "3.6";
+var pnLoading = true;
+var pnLoadedInterval = "";
+
+var pubKey = (compatMode == true) ? keysets.keyset1.pub : keysets.keyset2.pub;
+var subKey = (compatMode == true) ? keysets.keyset1.sub : keysets.keyset2.sub;
+
+loadPNLib();
+
+var listener = "";
+var actor = "";
+
+function waitForPNLoad() {
+    if (pnLoading) {
+        console.log("Waiting for PN to finish loading.");
+        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
+    } else {
+        console.log("Initializing listener and actor instances.");
+        clearInterval(pnLoadedInterval);
+
+        listener = pnInit(ssl, subKey, true);
+        actor = pnInit(ssl, subKey, false);
+
+        // Start the Listener. The actor will be spawned after the listener is connected.
+        subToA(listener, actor);
+
+
+    }
+}
+
+function loadPNLib() {
+    if (typeof PUBNUB === 'undefined') {
+
+        console.log("PN is not loaded. Trying to load.");
+
+
+        if (clientLevel == "3.6") {
+            if (ssl) {
+                url = "https://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
             }
             else {
-                console.log("ERROR! Could not determine proper JS to load.");
+                url = "http://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
             }
-
-
-            var fileref = document.createElement('script');
-            fileref.setAttribute("type", "text/javascript");
-            fileref.setAttribute("src", url);
-
-            if (typeof fileref != "undefined")
-                document.getElementsByTagName("head")[0].appendChild(fileref)
-
-            fileref.onload = function (e) {
-
-                console.log("Pn is now Loaded!");
-                pnLoading = false;
-
+        }
+        else if (clientLevel == "3.5") {
+            if (ssl) {
+                url = "https://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js";
             }
+            else {
+                url = "http://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js";
+            }
+        }
+        else {
+            console.log("ERROR! Could not determine proper JS to load.");
+        }
 
-            pnLoadedInterval = setInterval(waitForPNLoad, 1000);
 
-        } else {
-            console.log("PN is already loaded.");
+        var fileref = document.createElement('script');
+        fileref.setAttribute("type", "text/javascript");
+        fileref.setAttribute("src", url);
+
+        if (typeof fileref != "undefined")
+            document.getElementsByTagName("head")[0].appendChild(fileref)
+
+        fileref.onload = function (e) {
+            console.log("Pn is now Loaded!");
             pnLoading = false;
-            waitForPNLoad();
-        }
-    }
-
-
-    function initLog(compat, ssl, key, extra_compat, origin) {
-        console.log(key + "\nOrigin: " + origin + "\nClient level: " + clientLevel + "\nServer level: " + serverLevel + "\nCompat: " + compat + "\nClient extra compat flag: " + extra_compat + "\nSSL: " + ssl);
-    }
-
-    function pnInit(ssl, key, isListener, extra_compat) {
-
-
-
-
-
-        if (extra_compat == null) {
-            extra_compat = false;
         }
 
-        var uuid = isListener ? PN_LISTENER_UUID : PN_ACTOR_UUID;
-        var origin = (clientLevel == "3.6") ? "presence-beta.pubnub.com" : "pubsub.pubnub.com";
+        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
 
-        var pubnub = PUBNUB.init({
-            publish_key: 'demo',
-            subscribe_key: key,
-            origin: origin,
-            ssl: ssl,
-            "compatible_3.5": extra_compat,
-            uuid: uuid
-        });
-
-        initLog(true, ssl, key, extra_compat, origin);
-        return pubnub;
+    } else {
+        console.log("PN is already loaded.");
+        pnLoading = false;
+        waitForPNLoad();
+    }
+}
 
 
+function initLog(compat, ssl, key, extra_compat, origin) {
+    console.log(key + "\nOrigin: " + origin + "\nClient level: " + clientLevel + "\nServer level: " + serverLevel + "\nCompat: " + compat + "\nClient extra compat flag: " + extra_compat + "\nSSL: " + ssl);
+}
+
+function pnInit(ssl, key, isListener, extra_compat) {
+
+    if (extra_compat == null) {
+        extra_compat = false;
     }
 
+    var uuid = isListener ? PN_LISTENER_UUID : PN_ACTOR_UUID;
+    var origin = (clientLevel == "3.6") ? "presence-beta.pubnub.com" : "pubsub.pubnub.com";
 
-    function subToA(listener, pn) {
-        listener.subscribe({
-            noheresync: true,
-            channel: "gecA",
-            message: function (m) {
-                console.log("Listener heard: " + m);
-            },
-            presence: function (msg, e, ch) {
-                if (msg.uuid != PN_LISTENER_UUID && msg.uuid == PN_ACTOR_UUID) {
-                    console.log("Presence Listener: " + msg.action + " on " + msg.uuid + ": " + ch);
-                }
+    var pubnub = PUBNUB.init({
+        publish_key: 'demo',
+        subscribe_key: key,
+        origin: origin,
+        ssl: ssl,
+        "compatible_3.5": extra_compat,
+        uuid: uuid
+    });
 
-
-            },
-            connect: function () {
-                // actor.set_uuid("foo");
-
-                pn.subscribe({
-                    noheresync: true,
-                    channel: "gecA",
-                    message: function (m) {
-                        console.log("PN msg received: " + m);
-                    },
-                    connect: function () {
-                        console.log("PN Connected");
-                    }
-                });
+    initLog(true, ssl, key, extra_compat, origin);
+    return pubnub;
+}
 
 
+function subToA(listener, pn) {
+    listener.subscribe({
+        noheresync: true,
+        channel: "gecA",
+        message: function (m) {
+            console.log("Listener heard: " + m);
+        },
+        presence: function (msg, e, ch) {
+            if (msg.uuid != PN_LISTENER_UUID && msg.uuid == PN_ACTOR_UUID) {
+                console.log("Presence Listener: " + msg.action + " on " + msg.uuid + ": " + ch);
             }
-        });
-    }
-
-    function subToB() {
-        pubnub.subscribe({
-            channel: "gecB",
-            message: function (m) {
-                console.log(m);
-            },
-            connect: connected
-        });
-    }
 
 
-    function unsubToa() {
-        actor.unsubscribe({
-            channel: "gecA"
-        });
+        },
+        connect: function () {
+            // actor.set_uuid("foo");
+
+            pn.subscribe({
+                noheresync: true,
+                channel: "gecA",
+                message: function (m) {
+                    console.log("PN msg received: " + m);
+                },
+                connect: function () {
+                    console.log("PN Connected");
+                }
+            });
 
 
-        listener.unsubscribe({
-            channel: "gecA"
-        });
+        }
+    });
+}
 
-    }
+function subToB() {
+    pubnub.subscribe({
+        channel: "gecB",
+        message: function (m) {
+            console.log(m);
+        },
+        connect: connected
+    });
+}
 
-    function unsubTob() {
-        pubnub.unsubscribe({
-            channel: "gecB"
-        });
-    }
 
-    function connected() {
-        console.log("connected.");
-    }
+function unsubToa() {
+    actor.unsubscribe({
+        channel: "gecA"
+    });
+
+
+    listener.unsubscribe({
+        channel: "gecA"
+    });
+
+}
+
+function unsubTob() {
+    pubnub.unsubscribe({
+        channel: "gecB"
+    });
+}
+
+function connected() {
+    console.log("connected.");
+}
 
 </script>
 
