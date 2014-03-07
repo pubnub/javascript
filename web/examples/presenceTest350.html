@@ -1,82 +1,112 @@
 <html>
-<script src=http://cdn.pubnub.com/pubnub-3.5.48.min.js></script>
-<!--<script src=../pubnub.js></script>-->
 <script>
+
+    function loadJS(filename) {
+
+        var fileref = document.createElement('script')
+        fileref.setAttribute("type", "text/javascript")
+        fileref.setAttribute("src", filename)
+
+
+        if (typeof fileref != "undefined")
+            document.getElementsByTagName("head")[0].appendChild(fileref)
+    }
+
 
     // Init
 
-//    var pubnub = PUBNUB.init({
-//        publish_key: 'demo',
-//        subscribe_key: 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe',
-//        origin: "presence-beta.pubnub.com",
-//        ssl: false
-//    })
+    //    var pubnub = PUBNUB.init({
+    //        publish_key: 'demo',
+    //        subscribe_key: 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe',
+    //        origin: "presence-beta.pubnub.com",
+    //        ssl: false
+    //    })
 
-//
-//
-//    <hr/>
-//            INIT
-//    <div onclick="compatOn(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
-//    <div onclick="compatOn(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
-//            <hr/>
-//    <div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
-//    <div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
-//            <hr/>
-//    Test Steps
-//    <div onclick="subToA()">Sub To A</div>
-//    <div onclick="subToB()">Sub To B</div>
-//    <div onclick="unsubToa()">UnSub To A</div>
-//            <hr>
-//    <div onclick="unsubTob()">UnSub To B</div>
-//
-//
-//
+    //
+    //
+    //    <hr/>
+    //            INIT
+    //    <div onclick="pnInit(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
+    //    <div onclick="pnInit(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
+    //            <hr/>
+    //    <div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
+    //    <div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
+    //            <hr/>
+    //    Test Steps
+    //    <div onclick="subToA()">Sub To A</div>
+    //    <div onclick="subToB()">Sub To B</div>
+    //    <div onclick="unsubToa()">UnSub To A</div>
+    //            <hr>
+    //    <div onclick="unsubTob()">UnSub To B</div>
+    //
+    //
+    //
 
     // Begin Compat On
-        // Begin SSL Off
+    // Begin SSL Off
 
     var PN_LISTENER_UUID = "PN_LISTENER";
     var PN_ACTOR_UUID = "PN_ACTOR";
 
-    var listener = compatOn(false, 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe', true);
-    var pn = compatOn(false, 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe', false);
+    var compatMode = true;
+    var ssl = false;
+
+    var clientLevel = "3.5";
+    var serverLevel = "3.6";
+
+    var listener = pnInit(ssl, 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe', true);
+    var pn = pnInit(ssl, 'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe', false);
 
     subToA(listener, pn);
 
 
-
-    function initLog(compat, ssl, key) {
-        console.log("Compat: " + compat + " SSL: " + ssl + " " + key);
+    function initLog(compat, ssl, key, extra_compat, origin) {
+        console.log(key + "\nOrigin: " + origin + "\nClient level: " + clientLevel + "\nServer level: " + serverLevel + "\nCompat: " + compat + "\nClient extra compat flag: " + extra_compat + "\nSSL: " + ssl);
     }
 
-    function compatOn(ssl, key, listener){
+    function pnInit(ssl, key, isListener, extra_compat) {
 
-        var uuid = listener ? PN_LISTENER_UUID : PN_ACTOR_UUID;
+        if (clientLevel == "3.6") {
+
+            if (ssl) {
+                loadJS("https://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js");
+            }
+            else {
+                loadJS("http://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js");
+            }
+        }
+        else if (clientLevel == "3.5") {
+            if (ssl) {
+                loadJS("https://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js");
+            }
+            else {
+                loadJS("http://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js");
+            }
+        }
+
+
+        else {
+            console.log("ERROR! Could not load JS.");
+        }
+
+
+        if (!extra_compat) {
+            extra_compat = false;
+        }
+
+        var uuid = isListener ? PN_LISTENER_UUID : PN_ACTOR_UUID;
+        var origin = (clientLevel == "3.6") ? "presence-beta.pubnub.com" : "pubsub.pubnub.com";
 
         var pubnub = PUBNUB.init({
             publish_key: 'demo',
             subscribe_key: key,
-            origin: "presence-beta.pubnub.com",
+            origin: origin,
             ssl: ssl,
-            //"compatible_3.5" : true,
+            "compatible_3.5": extra_compat,
             uuid: uuid
         });
 
-        initLog(true, ssl, key);
-        return pubnub;
-    }
-
-
-    function compatOff(ssl, key){
-        pubnub = PUBNUB.init({
-            publish_key: 'demo',
-            subscribe_key: key ,
-            origin: "presence-beta.pubnub.com",
-            ssl: ssl,
-            'compatible_3.5' : true
-        });
-
-        initLog(false, ssl, key);
+        initLog(true, ssl, key, extra_compat, origin);
         return pubnub;
     }
 
@@ -88,14 +118,14 @@
             message: function (m) {
                 console.log("Listener heard: " + m);
             },
-            presence: function(msg, e, ch) {
+            presence: function (msg, e, ch) {
                 if (msg.uuid != PN_LISTENER_UUID && msg.uuid == PN_ACTOR_UUID) {
                     console.log("Presence Listener: " + msg.action + " on " + msg.uuid + ": " + ch);
                 }
 
 
             },
-            connect: function() {
+            connect: function () {
                 // pn.set_uuid("foo");
 
                 pn.subscribe({
@@ -104,7 +134,7 @@
                     message: function (m) {
                         console.log("PN msg received: " + m);
                     },
-                    connect: function() {
+                    connect: function () {
                         console.log("PN Connected");
                     }
                 });
@@ -150,13 +180,15 @@
 </script>
 
 <style>
-    div {margin-bottom: 10}
+    div {
+        margin-bottom: 10
+    }
 </style>
 
 <hr/>
 INIT
-<div onclick="compatOn(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
-<div onclick="compatOn(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
+<div onclick="pnInit(true,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL ON</div>
+<div onclick="pnInit(false,'sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe')">Compat On - SSL OFF</div>
 <hr/>
 <div onclick="compatOff(true, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL ON</div>
 <div onclick="compatOff(false, 'sub-c-d91ee366-9dbd-11e3-a759-02ee2ddab7fe')">Compat Off - SSL OFF</div>
