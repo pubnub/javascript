@@ -1,8 +1,9 @@
 <html>
 <script>
 
-var testInProgress = true;
-var testInProgressInterval = 0;
+var testResults = [];
+var stepInProgress = true;
+var stepInProgressInterval = 0;
 var pnLoading = true;
 var channelA = "gecA";
 var channelB = "gecB";
@@ -70,16 +71,20 @@ var tests = {
         "steps": {
             0: {
                 "actor": ["subscribe", channelA, 0],
-                "listener": ["join", channelA, 0]                  // [should get this event, on channel ch, within this many seconds]
+                "listener": ["join", channelA, 5000]                  // [should get this event, on channel ch, within this many seconds]
             },
 
             1: {
                 "actor": ["subscribe", channelB, 5],
 
                 "listener": [
-                    [ ["leave", channelA, 5],["join", channelA, 5], ["join", channelB, 5] ]  // when two rules are in an array, they:
+                    [
+                        ["leave", channelA, 5],
+                        ["join", channelA, 5],
+                        ["join", channelB, 5]
+                    ]  // when two rules are in an array, they:
                 ]                                                                               // can happen in any order
-                                                                                                // must both happen, in order for that step to pass
+                // must both happen, in order for that step to pass
             },
 
             2: {
@@ -193,15 +198,15 @@ function initTest(testNub) {
 
 }
 
-function waitForTestInProgress(){
+function waitForStepInProgress() {
 
     console.log("111");
-    if (testInProgress) {
+    if (stepInProgress) {
         console.log("Still waiting for test to complete.");
 
     } else {
-        clearInterval(testInProgressInterval);
-        console.log("Test in progress complete.");
+        clearInterval(stepInProgressInterval);
+        console.log("Step " + currentStep + " complete.");
     }
 
 }
@@ -218,55 +223,62 @@ function startCurrentTest() {
 
     currentStep = a;
 
-        console.log("\nStep " + (a + 1) + " of " + numberOfSteps);
+    console.log("\nStep " + (a + 1) + " of " + numberOfSteps);
 
-        var actorDelay = steps[a].actor[2];
-        var actorAction = steps[a].actor[0];
-        var actorChannel = steps[a].actor[1];
+    var actorDelay = steps[a].actor[2];
+    var actorAction = steps[a].actor[0];
+    var actorChannel = steps[a].actor[1];
 
-        var listenerTimeout = steps[a].listener[2];
-        var listenerExpectedEvent = steps[a].listener[0];
-        var listenerChannel = steps[a].listener[1];
+    var listenerTimeout = steps[a].listener[2];
+    var listenerExpectedEvent = steps[a].listener[0];
+    var listenerChannel = steps[a].listener[1];
 
-        console.log("Actor should wait " + actorDelay + " seconds to " + actorAction + " to channel " + actorChannel);
-        console.log("-- Then --");
-        console.log("Listener should wait up to " + listenerTimeout + " seconds to receive a " + listenerExpectedEvent + " on channel " + listenerChannel);
+    console.log("Actor should wait " + actorDelay + " seconds to " + actorAction + " to channel " + actorChannel);
+    console.log("-- Then --");
+    console.log("Listener should wait up to " + listenerTimeout + " ms to receive a " + listenerExpectedEvent + " on channel " + listenerChannel);
 
-    testInProgressInterval = setInterval(waitForTestInProgress, 5000);
+    stepInProgressInterval = setInterval(waitForStepInProgress, 5000);
 
     // TODO: Step Timeout
     //testTimeout = setTimeout(timeoutTest, (listenerTimeout * 1000));
 
+    if (currentStep == 0) {
+        var initListener = true;
+    } else {
+        var initListener = false;
+    }
+
     if (actorAction == "subscribe") {
-            setTimeout(function () {
-                initListenerAndSubscribeActorToChannel(actorChannel)
-            }, actorDelay);
-        }
+        subscribeToChannel(actorChannel, initListener)
+    }
 
 
     //}
-
 }
 
-initTest(tests["35_35_SSL_OFF"]);
+function subscribeToChannel(actorChannel, initListener) {
 
+    if (initListener) {
 
-function onActorPresenceEvent(msg, e, ch) {
-    if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
-        console.log("Listener heard Presence event: " + msg.action + " on " + msg.uuid + ": " + ch);
-        var listener = currentTest.steps[0].listener;
+        // Spawn the listener, then the actor
 
-        if (listener[0] == msg.action && listener[1] == ch && actorUUID == msg.uuid) {
-            console.log("Step PASSED: " + currentStep);
-            testInProgress = false;
-        }
+        listener.subscribe({
+            noheresync: true,
+            channel: listenerInit[1],
+            message: onChannelMessage,
+            presence: onActorPresenceEvent,
+            connect: function () {
+                console.log("Listener Connected. Subscribing actor...");
+                actorSubscribe(actorChannel)
+            }
+        });
 
-        var a = 0;
+    } else {
+
+        // Just spawn the actor
+
+        actorSubscribe(actorChannel)
     }
-}
-
-function onChannelMessage(m) {
-    console.log("Listener heard Message: " + m);
 }
 
 function actorSubscribe(channel) {
@@ -277,20 +289,39 @@ function actorSubscribe(channel) {
             console.log("Actor: msg received: " + m);
         },
         connect: function () {
-            console.log("Actor: Connected");
+            console.log("Actor: connected.");
+            setTimeout(function(){
+                console.log("Actor: Subscribe complete.");
+                stepInProgress = false;
+            }, currentTest.steps[currentStep].listener[2]);
         }
     });
 }
 
-function initListenerAndSubscribeActorToChannel(actorChannel) {
-    listener.subscribe({
-        noheresync: true,
-        channel: listenerInit[1],
-        message: onChannelMessage,
-        presence: onActorPresenceEvent,
-        connect: actorSubscribe(actorChannel)
-    });
+
+initTest(tests["35_35_SSL_OFF"]);
+
+// This is what the listner calls when he hears an event
+function onActorPresenceEvent(msg, e, ch) {
+    if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
+        console.log("Listener heard Presence event: " + msg.action + " on " + msg.uuid + ": " + ch);
+
+        if (!testResults[currentStep]) {
+            testResults.push([]);
+        }
+
+        testResults[currentStep].push({step: currentStep, action: msg.action, uuid: msg.uuid, timestamp: msg.timestamp, date: new Date });
+
+        var a = 0;
+    }
 }
+
+function onChannelMessage(m) {
+    console.log("Listener heard Message: " + m);
+}
+
+
+
 
 // UnSubToA
 
