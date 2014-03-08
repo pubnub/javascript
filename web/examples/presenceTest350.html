@@ -51,17 +51,14 @@ var keysets = {
     }
 };
 
-var tests = [];
-var test_1 = {
-
-
-    "common": {
-        "description": "3.5 -> 3.5 Base Compatibility, SSL Off.",
+var tests = [
+    {
+        "common": {
+        "description": "Test 1: 3.5 -> 3.5 Base Compatibility, SSL Off.",
         "client": "3.5",
         "server": "3.5",
         "keyset": keysets.keyset1,
-        "ssl": false,
-        "maxSteps": 3
+        "ssl": false
     },
 
     "init": {
@@ -104,9 +101,55 @@ var test_1 = {
         }
     }
 
-};
+},
 
-tests.push(test_1);
+    {
+        "common": {
+            "description": "Test 2: 3.5 -> 3.5 Base Compatibility, SSL On.",
+            "client": "3.5",
+            "server": "3.5",
+            "keyset": keysets.keyset1,
+            "ssl": true
+        },
+
+        "init": {
+            "listener": ["subscribe", [channelA, channelB], 0]
+        },
+
+        "platformSpecific": {
+            "JS_WEB": {
+                "clientExtraCompatibilityFlag": true // actually doesn't matter for 3.5 -> 3.5
+            }
+        },
+
+        "steps": {
+            0: {
+                "actor": ["subscribe", channelA, 0],
+                "listener": [
+                    ["join", channelA, 5000]
+                ]                  // [should get this event, on channel ch, within this many seconds]
+            },
+
+            1: {
+                "actor": ["subscribe", channelB, 0],
+
+                "listener": [
+                    ["join", channelB, 5000]
+                ]                                               // when more than two rules are in an array, they:
+                // can happen in any order
+                // must both happen, in order for that step to pass
+            },
+
+            2: {
+                "actor": ["unsubscribe", channelA, 0],
+                "listener": [
+                    ["timeout", channelA, 720000]
+                ]
+            }
+        }
+
+    }
+];
 
 
 function loadPNLib() {
@@ -454,7 +497,7 @@ function onActorChannelMessage(m) {
 
 /* Start! */
 
-initTest(test_1);
+initTest(tests[1]);
 
 </script>
 
