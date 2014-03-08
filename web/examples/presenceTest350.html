@@ -54,7 +54,7 @@ var keysets = {
 var tests = [
     {
         "common": {
-        "description": "Test 1: 3.5 -> 3.5 Base Compatibility, SSL Off.",
+        "description": "(0) Test 1: 3.5 -> 3.5 Base Compatibility, SSL Off.",
         "client": "3.5",
         "server": "3.5",
         "keyset": keysets.keyset1,
@@ -67,7 +67,7 @@ var tests = [
 
     "platformSpecific": {
         "JS_WEB": {
-            "clientExtraCompatibilityFlag": true // actually doesn't matter for 3.5 -> 3.5
+            "clientExtraCompatibilityFlag": false // actually doesn't matter for 3.5 -> 3.5
         }
     },
 
@@ -105,7 +105,7 @@ var tests = [
 
     {
         "common": {
-            "description": "Test 2: 3.5 -> 3.5 Base Compatibility, SSL On.",
+            "description": "(1) Test 2: 3.5 -> 3.5 Base Compatibility, SSL On.",
             "client": "3.5",
             "server": "3.5",
             "keyset": keysets.keyset1,
@@ -118,7 +118,54 @@ var tests = [
 
         "platformSpecific": {
             "JS_WEB": {
-                "clientExtraCompatibilityFlag": true // actually doesn't matter for 3.5 -> 3.5
+                "clientExtraCompatibilityFlag": false // actually doesn't matter for 3.5 -> 3.5
+            }
+        },
+
+        "steps": {
+            0: {
+                "actor": ["subscribe", channelA, 0],
+                "listener": [
+                    ["join", channelA, 5000]
+                ]                  // [should get this event, on channel ch, within this many seconds]
+            },
+
+            1: {
+                "actor": ["subscribe", channelB, 0],
+
+                "listener": [
+                    ["join", channelB, 5000]
+                ]                                               // when more than two rules are in an array, they:
+                // can happen in any order
+                // must both happen, in order for that step to pass
+            },
+
+            2: {
+                "actor": ["unsubscribe", channelA, 0],
+                "listener": [
+                    ["timeout", channelA, 720000]
+                ]
+            }
+        }
+
+    },
+
+    {
+        "common": {
+            "description": "(2) Test 3: 3.5 -> 3.6 BW Compatibility, SSL On.",
+            "client": "3.5",
+            "server": "3.6",
+            "keyset": keysets.keyset1,
+            "ssl": true
+        },
+
+        "init": {
+            "listener": ["subscribe", [channelA, channelB], 0]
+        },
+
+        "platformSpecific": {
+            "JS_WEB": {
+                "clientExtraCompatibilityFlag": false // actually doesn't matter for 3.5 -> 3.5
             }
         },
 
@@ -149,6 +196,7 @@ var tests = [
         }
 
     }
+
 ];
 
 
@@ -188,7 +236,7 @@ function loadPNLib() {
             pnLoading = false;
         }
 
-        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
+        pnLoadedInterval = setInterval(waitForPNLoad, 5000);
 
     } else {
         console.log("PN is already loaded.");
@@ -218,7 +266,7 @@ function pnInit(ssl, key, isListener) {
 function waitForPNLoad() {
     if (pnLoading) {
         console.log("Waiting for PN to finish loading.");
-        pnLoadedInterval = setInterval(waitForPNLoad, 1000);
+        //pnLoadedInterval = setInterval(waitForPNLoad, 1000);
     } else {
         console.log("\nInitializing listener and actor instances.");
         clearInterval(pnLoadedInterval);
@@ -318,7 +366,7 @@ function analyzeResults() {
         if (numActualResults == numExpectedResults) {
             console.log("\nPASS: Step " + step + " numbers of actual/expected results are equal (" + numActualResults + ")\n");
 
-            while (actualTempArray.length > 0) {
+            while (expectedTempArray.length > 0) {
                 var actualIndex = actualTempArray.indexOf(expectedTempArray[0]);
 
                 if (actualIndex != -1) {
@@ -331,7 +379,8 @@ function analyzeResults() {
             if (expectedTempArray.length == 0 && actualTempArray.length == 0) {
                 console.log("\nPASS: Step " + step + " literal results are equal.\n");
             } else {
-                console.log("\nFAIL: Step " + step + " literal results are NOT equal.\n");
+                console.log("\nFAIL: Step " + step + " literal results are NOT equal. Actual results that differed from expected are:");
+                console.log(JSON.stringify(actualTempArray) + "\n");
             }
         }
 
@@ -378,7 +427,7 @@ function startNextStep() {
 
     console.log("maxWaitTime set to: " + maxWaitTime + "\n");
 
-    stepInProgressInterval = setInterval(waitForStepInProgress, 1000);
+    stepInProgressInterval = setInterval(waitForStepInProgress, 5000);
 
     setTimeout(function () {
         stepInProgress = false;
@@ -497,7 +546,7 @@ function onActorChannelMessage(m) {
 
 /* Start! */
 
-initTest(tests[1]);
+initTest(tests[2]);
 
 </script>
 
