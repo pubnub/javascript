@@ -84,14 +84,13 @@ var test_1 = {
         1: {
             "actor": ["subscribe", channelB, 0],
 
-            "listener":
-                [
-                    ["leave", channelA, 5000],
-                    ["join", channelA, 5000],
-                    ["join", channelB, 5000]
-                ]                                               // when more than two rules are in an array, they:
-                                                                    // can happen in any order
-                                                                    // must both happen, in order for that step to pass
+            "listener": [
+                ["leave", channelA, 5000],
+                ["join", channelA, 5000],
+                ["join", channelB, 5000]
+            ]                                               // when more than two rules are in an array, they:
+            // can happen in any order
+            // must both happen, in order for that step to pass
         },
 
         2: {
@@ -218,7 +217,11 @@ function waitForStepInProgress() {
 
         console.log("\n" + new Date + ": step " + currentStep + " complete.");
 
-        for (a = 0; a < testResults[currentStep].length; a++){
+        if (!testResults[currentStep]) {
+            testResults.push([{step: currentStep, action: "none", uuid: "none", timestamp: "none", date: new Date}]);
+        }
+
+        for (a = 0; a < testResults[currentStep].length; a++) {
             var stringResults = JSON.stringify(testResults[currentStep][a]);
             console.log("\nStep " + currentStep + " results: " + stringResults + "\n");
         }
