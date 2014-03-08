@@ -1,4 +1,12 @@
 <html>
+<head>
+<style> 
+
+  .pass{background-color: green;} 
+
+  .fail{background-color: red;} 
+
+</style>
 <script>
 
 var maxWaitTime = 0;
@@ -31,6 +39,7 @@ var extraCompat = "";
 
 var currentStep = 0;
 var currentTest = 0;
+var currentTestId = 0;
 var numberOfSteps = 0;
 
 
@@ -817,6 +826,7 @@ function waitForPNLoad() {
     }
 }
 
+
 function initTest(testNub) {
     console.log("Running test: " + testNub.common.description + "\n");
     currentTest = testNub;
@@ -829,6 +839,11 @@ function initTest(testNub) {
     listenerInit = testNub.init.listener;
 
     loadPNLib();
+}
+
+function startTestById(id) {
+    currentTestId = id;
+    initTest(tests[id]);
 }
 
 function waitForStepInProgress() {
@@ -876,7 +891,6 @@ function logResultSummary() {
 
 function analyzeResults() {
 
-
     for (step = 0; step < testResults.length; step++) {
 
         var numExpectedResults = currentTest.steps[step].listener.length;
@@ -898,6 +912,8 @@ function analyzeResults() {
         }
 
         if (numActualResults == numExpectedResults) {
+            var row = document.getElementById('row-' + currentTestId);
+            row.className = "pass";
             console.log("\nPASS: Step " + step + " numbers of actual/expected results are equal (" + numActualResults + ")\n");
 
             while (expectedTempArray.length > 0) {
@@ -913,12 +929,15 @@ function analyzeResults() {
             if (expectedTempArray.length == 0 && actualTempArray.length == 0) {
                 console.log("\nPASS: Step " + step + " literal results are equal.\n");
             } else {
+                row.className = "fail";
                 console.log("\nFAIL: Step " + step + " literal results are NOT equal. Actual results that differed from expected are:");
                 console.log(JSON.stringify(actualTempArray) + "\n");
             }
         }
 
         else {
+            var row = document.getElementById('row-' + currentTestId);
+            row.className = "fail";
             console.log("\FAIL: Step " + step + " numbers of actual/expected results are equal (" + numActualResults + ")\n");
         }
     }
@@ -1080,9 +1099,114 @@ function onActorChannelMessage(m) {
 
 /* Start! */
 
-initTest(tests[6]);
+//initTest(tests[1]);
+
+
+function createButton(context,text,func, id){
+    var button = document.createElement("button");
+    button.id = id;
+    button.onclick = function(){ func(button.id);};
+    button.innerHTML = text;
+    context.appendChild(button);
+}
+
+function createCheckbox(context,id, func){
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.id = id;
+    input.onclick = function() {func && func(input.id);};
+    context.appendChild(input);
+}
+
+function makeTable(){
+
+    var tableContainer = document.createElement("div");
+
+    // add it to the page
+    document.getElementsByTagName("body")[0].appendChild(tableContainer);
+
+    
+    var tableElement = document.createElement("table");
+
+    // add it to the page
+    tableContainer.appendChild(tableElement);
+
+    
+    var numberOfListItems = tests.length;
+
+    for( var i =  0 ; i < numberOfListItems ; ++i){
+
+        // create a <li> for each one.
+        var row = document.createElement("tr");
+        row.id = 'row-' + i;
+
+        var column = document.createElement("td");
+        // add the item text
+        column.innerHTML = tests[i]['common']['description'] ;
+        var column2 = document.createElement("td");
+
+        createButton(column2,"Run", function(id) {
+            startTestById(id.split('-')[1]);
+        }, 'button-' + i);
+        
+        var column3 = document.createElement("td");
+        
+        createCheckbox(column3,'check-' + i);
+        
+        row.appendChild(column);
+        row.appendChild(column2);
+        row.appendChild(column3);
+        tableElement.appendChild(row);
+    }
+
+ 
+    var row = document.createElement("tr");
+    
+
+    var column1 = document.createElement("td");
+
+    row.appendChild(column1);
+
+
+    var column2 = document.createElement("td");
+    
+    createButton(column2,"Run Selected", function(){
+        for (var i = 0; i < tests.length; ++i) {
+            var check = document.getElementById('check-' + i);
+            if (check.checked) {
+                startTestById(i);
+            }
+        }
+    }, 'runall');
+    row.appendChild(column2);
+
+
+    var column3 = document.createElement("td");
+    
+    createCheckbox(column3,'checkalltoggle', function(id){
+        var checkalltoggle = document.getElementById('checkalltoggle');
+        for (var i = 0; i < tests.length; ++i) {
+            var check = document.getElementById('check-' + i);
+            if (checkalltoggle.checked) check.checked = true; else check.checked = false ;
+        }
+
+    });
+    row.appendChild(column3);
+
+
+    tableElement.appendChild(row);
+
+
+}
+
+                        
+
 
 </script>
+</head>
+<body>
+</body>
 
-
+<script type="text/javascript">makeTable();
+</script>
 </html>
