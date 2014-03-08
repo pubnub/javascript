@@ -218,7 +218,7 @@ function waitForStepInProgress() {
 
         if (!testResults[currentStep]) {
             testResults.push([
-                {step: currentStep, action: "none", uuid: "none", timestamp: "none", date: new Date}
+                {step: currentStep, action: "none", uuid: "none", timestamp: "none", "channel": "none", date: new Date}
             ]);
         }
 
@@ -249,6 +249,55 @@ function logResultSummary() {
     }
 }
 
+function analyzeResults() {
+
+
+    for (step = 0; step < testResults.length; step++) {
+
+        var numExpectedResults = currentTest.steps[step].listener.length;
+        var numActualResults = testResults[step].length
+
+        var expectedTempArray = [];
+        var actualTempArray = [];
+
+        for (expected = 0; expected < currentTest.steps[step].listener.length; expected++) {
+            //console.log("Listener should have heard results: ");
+            //console.log(JSON.stringify(currentTest.steps[step].listener[step]));
+            expectedTempArray.push(currentTest.steps[step].listener[expected][0] + currentTest.steps[step].listener[expected][1]);
+        }
+
+        for (result = 0; result < testResults[step].length; result++) {
+            //console.log("Actor actual results were: ");
+            //console.log(JSON.stringify(testResults[step][result]));
+            actualTempArray.push(testResults[step][result].action + testResults[step][result].channel);
+        }
+
+        if (numActualResults == numExpectedResults) {
+            console.log("\nPASS: Step " + step + " numbers of actual/expected results are equal (" + numActualResults + ")\n");
+
+            while (actualTempArray.length > 0) {
+                var actualIndex = actualTempArray.indexOf(expectedTempArray[0]);
+
+                if (actualIndex != -1) {
+                    actualTempArray.splice(actualIndex, 1);
+                }
+                expectedTempArray.splice(0, 1);
+
+            }
+
+            if (expectedTempArray.length == 0 && actualTempArray.length == 0) {
+                console.log("\nPASS: Step " + step + " literal results are equal.\n");
+            } else {
+                console.log("\nFAIL: Step " + step + " literal results are NOT equal.\n");
+            }
+        }
+
+        else {
+            console.log("\FAIL: Step " + step + " numbers of actual/expected results are equal (" + numActualResults + ")\n");
+        }
+    }
+}
+
 function startNextStep() {
 
     stepInProgress = true;
@@ -259,6 +308,7 @@ function startNextStep() {
 
         console.log("\nSummary of test results:");
         logResultSummary();
+        analyzeResults();
         return;
     }
 
@@ -393,7 +443,7 @@ function onActorPresenceEvent(msg, e, ch) {
             testResults.push([]);
         }
 
-        testResults[currentStep].push({step: currentStep, action: msg.action, uuid: msg.uuid, timestamp: msg.timestamp, date: new Date });
+        testResults[currentStep].push({step: currentStep, action: msg.action, uuid: msg.uuid, timestamp: msg.timestamp, channel: ch, date: new Date });
     }
 }
 
