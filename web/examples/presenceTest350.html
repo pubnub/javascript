@@ -1,6 +1,7 @@
 <html>
 <script>
 
+var maxWaitTime = 0;
 var alreadyConnected = false;
 var testResults = [];
 var stepInProgress = true;
@@ -98,7 +99,7 @@ var test_1 = {
             "listener": [
                 ["leave", channelA, 5000],
                 ["leave", channelB, 5000],
-                ["join", channelB, 5000]
+                ["join", channelB, 15000]
             ]
         }
     }
@@ -188,7 +189,6 @@ function waitForPNLoad() {
         actor = pnInit(ssl, subKey, false);
 
         startCurrentTest();
-
     }
 }
 
@@ -204,7 +204,6 @@ function initTest(testNub) {
     listenerInit = testNub.init.listener;
 
     loadPNLib();
-
 }
 
 function waitForStepInProgress() {
@@ -218,7 +217,9 @@ function waitForStepInProgress() {
         console.log("\n" + new Date + ": step " + currentStep + " complete.");
 
         if (!testResults[currentStep]) {
-            testResults.push([{step: currentStep, action: "none", uuid: "none", timestamp: "none", date: new Date}]);
+            testResults.push([
+                {step: currentStep, action: "none", uuid: "none", timestamp: "none", date: new Date}
+            ]);
         }
 
         for (a = 0; a < testResults[currentStep].length; a++) {
@@ -241,7 +242,8 @@ function startCurrentTest() {
 
 function startNextStep() {
 
-    var maxWaitTime = 0;
+    stepInProgress = true;
+    maxWaitTime = 0;
 
     if (currentStep + 1 > numberOfSteps) {
         console.log("\n*** All Test Steps Complete! ***\n");
@@ -271,7 +273,11 @@ function startNextStep() {
 
     console.log("maxWaitTime set to: " + maxWaitTime + "\n");
 
-    stepInProgressInterval = setInterval(waitForStepInProgress, maxWaitTime);
+    stepInProgressInterval = setInterval(waitForStepInProgress, 1000);
+
+    setTimeout(function () {
+        stepInProgress = false;
+    }, maxWaitTime);
 
     console.log("\n" + new Date + ": Starting step " + currentStep);
 
@@ -283,20 +289,57 @@ function startNextStep() {
 
     if (actorAction == "subscribe") {
         subscribeToChannel(actorChannel, initListener)
+    } else if (actorAction == "unsubscribe") {
+        unsubscribeToChannel(actorChannel, initListener)
     }
 }
 
+/* UNSUBSCRIBE */
 
-function subscribeToChannel(actorChannel, initListener) {
-
+function unsubscribeToChannel(actorChannel, initListener) {
     if (initListener) {
 
         // Spawn the listener, then the actor
-
         listener.subscribe({
             noheresync: true,
             channel: listenerInit[1],
-            message: onChannelMessage,
+            message: onActorChannelMessage,
+            presence: onActorPresenceEvent,
+            connect: function (ch) {
+                if (alreadyConnected) {
+                    console.log("Listener is already connected. Not doing that again.");
+                    return;
+                }
+
+                alreadyConnected = true;
+                console.log("Listener Connected.");
+                actorUnsubscribe(actorChannel)
+            }
+        });
+    } else {
+        // Just spawn the actor
+        actorUnsubscribe(actorChannel)
+    }
+}
+
+function actorUnsubscribe(channel) {
+    console.log("Unsubscribing actor...");
+    actor.unsubscribe({
+        channel: channel
+    });
+}
+
+
+/* SUBSCRIBE */
+
+function subscribeToChannel(actorChannel, initListener) {
+    if (initListener) {
+
+        // Spawn the listener, then the actor
+        listener.subscribe({
+            noheresync: true,
+            channel: listenerInit[1],
+            message: onActorChannelMessage,
             presence: onActorPresenceEvent,
             connect: function (ch) {
                 if (alreadyConnected) {
@@ -309,7 +352,6 @@ function subscribeToChannel(actorChannel, initListener) {
                 actorSubscribe(actorChannel)
             }
         });
-
     } else {
         // Just spawn the actor
         actorSubscribe(actorChannel)
@@ -326,15 +368,9 @@ function actorSubscribe(channel) {
         },
         connect: function () {
             console.log("Actor: Subscribe complete on channel " + channel + ".");
-            setTimeout(function () {
-                stepInProgress = false;
-            }, currentTest.steps[currentStep].listener[2]);
         }
     });
 }
-
-
-initTest(test_1);
 
 // This is what the listener calls when he hears an event
 function onActorPresenceEvent(msg, e, ch) {
@@ -349,25 +385,14 @@ function onActorPresenceEvent(msg, e, ch) {
     }
 }
 
-function onChannelMessage(m) {
+function onActorChannelMessage(m) {
     console.log("Listener heard Message: " + m);
 }
 
 
-// UnSubToA
+/* Start! */
 
-
-function unSubTo(channel) {
-    actor.unsubscribe({
-        channel: channel
-    });
-
-
-    listener.unsubscribe({
-        channel: channel
-    });
-
-}
+initTest(test_1);
 
 </script>
 
