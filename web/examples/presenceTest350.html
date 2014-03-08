@@ -99,7 +99,7 @@ var test_1 = {
             "listener": [
                 ["leave", channelA, 5000],
                 ["leave", channelB, 5000],
-                ["join", channelB, 15000]
+                ["join", channelB, 5000]
             ]
         }
     }
@@ -240,6 +240,15 @@ function startCurrentTest() {
     startNextStep();
 }
 
+function logResultSummary() {
+    for (step = 0; step < testResults.length; step++) {
+        for (result = 0; result < testResults[step].length; result++) {
+            stringResult = JSON.stringify(testResults[step][result]);
+            console.log(stringResult);
+        }
+    }
+}
+
 function startNextStep() {
 
     stepInProgress = true;
@@ -247,6 +256,9 @@ function startNextStep() {
 
     if (currentStep + 1 > numberOfSteps) {
         console.log("\n*** All Test Steps Complete! ***\n");
+
+        console.log("\nSummary of test results:");
+        logResultSummary();
         return;
     }
 
