@@ -931,7 +931,7 @@ function analyzeResults() {
             } else {
                 row.className = "fail";
                 console.log("\nFAIL: Step " + step + " literal results are NOT equal. Actual results that differed from expected are:");
-                console.log(JSON.stringify(actualTempArray) + "\n");
+                console.log("What we got that wasn't expected: " + JSON.stringify(actualTempArray) + "\n");
             }
         }
 
