@@ -1,6 +1,7 @@
 <html>
 <script>
 
+var alreadyConnected = false;
 var testResults = [];
 var stepInProgress = true;
 var stepInProgressInterval = 0;
@@ -27,6 +28,10 @@ var listener = "";
 var actor = "";
 var extraCompat = "";
 
+var currentStep = 0;
+var currentTest = 0;
+var numberOfSteps = 0;
+
 
 var keysets = {
 
@@ -45,59 +50,64 @@ var keysets = {
     }
 };
 
-var tests = {
+var tests = [];
+var test_1 = {
 
-    "35_35_SSL_OFF": {
 
-        "common": {
-            "description": "3.5 -> 3.5 Base Compatibility, SSL Off.",
-            "client": "3.5",
-            "server": "3.5",
-            "keyset": keysets.keyset1,
-            "ssl": false,
-            "maxSteps": 3
+    "common": {
+        "description": "3.5 -> 3.5 Base Compatibility, SSL Off.",
+        "client": "3.5",
+        "server": "3.5",
+        "keyset": keysets.keyset1,
+        "ssl": false,
+        "maxSteps": 3
+    },
+
+    "init": {
+        "listener": ["subscribe", [channelA, channelB], 0]
+    },
+
+    "platformSpecific": {
+        "JS_WEB": {
+            "clientExtraCompatibilityFlag": true // actually doesn't matter for 3.5 -> 3.5
+        }
+    },
+
+    "steps": {
+        0: {
+            "actor": ["subscribe", channelA, 0],
+            "listener": [
+                ["join", channelA, 5000]
+            ]                  // [should get this event, on channel ch, within this many seconds]
         },
 
-        "init": {
-            "listener": ["subscribe", [channelA, channelB], 0]
+        1: {
+            "actor": ["subscribe", channelB, 0],
+
+            "listener":
+                [
+                    ["leave", channelA, 5000],
+                    ["join", channelA, 5000],
+                    ["join", channelB, 5000]
+                ]                                               // when more than two rules are in an array, they:
+                                                                    // can happen in any order
+                                                                    // must both happen, in order for that step to pass
         },
 
-        "platformSpecific": {
-            "JS_WEB": {
-                "clientExtraCompatibilityFlag": true // actually doesn't matter for 3.5 -> 3.5
-            }
-        },
-
-        "steps": {
-            0: {
-                "actor": ["subscribe", channelA, 0],
-                "listener": ["join", channelA, 5000]                  // [should get this event, on channel ch, within this many seconds]
-            },
-
-            1: {
-                "actor": ["subscribe", channelB, 5],
-
-                "listener": [
-                    [
-                        ["leave", channelA, 5],
-                        ["join", channelA, 5],
-                        ["join", channelB, 5]
-                    ]  // when two rules are in an array, they:
-                ]                                                                               // can happen in any order
-                // must both happen, in order for that step to pass
-            },
-
-            2: {
-                "actor": ["unsubscribe", channelA, 5],
-                "listener": [
-                    ["leave", channelA, 5],
-                    ["leave", channelB, 5],
-                    ["join", channelB, 5]
-                ]
-            }
+        2: {
+            "actor": ["unsubscribe", channelA, 0],
+            "listener": [
+                ["leave", channelA, 5000],
+                ["leave", channelB, 5000],
+                ["join", channelB, 5000]
+            ]
         }
     }
+
 };
+
+tests.push(test_1);
+
 
 function loadPNLib() {
     if (typeof PUBNUB === 'undefined') {
@@ -167,7 +177,7 @@ function waitForPNLoad() {
         console.log("Waiting for PN to finish loading.");
         pnLoadedInterval = setInterval(waitForPNLoad, 1000);
     } else {
-        console.log("Initializing listener and actor instances.");
+        console.log("\nInitializing listener and actor instances.");
         clearInterval(pnLoadedInterval);
 
         randomSuffix = Math.floor((Math.random() * 10000) + 1);
@@ -184,7 +194,7 @@ function waitForPNLoad() {
 }
 
 function initTest(testNub) {
-    console.log("Running test: " + testNub.description);
+    console.log("Running test: " + testNub.common.description + "\n");
     currentTest = testNub;
     ssl = testNub.common.ssl;
     clientLevel = testNub.common.client;
@@ -200,47 +210,67 @@ function initTest(testNub) {
 
 function waitForStepInProgress() {
 
-    console.log("111");
     if (stepInProgress) {
         console.log("Still waiting for test to complete.");
 
     } else {
         clearInterval(stepInProgressInterval);
-        console.log("Step " + currentStep + " complete.");
-    }
 
+        console.log("\n" + new Date + ": step " + currentStep + " complete.");
+
+        for (a = 0; a < testResults[currentStep].length; a++){
+            var stringResults = JSON.stringify(testResults[currentStep][a]);
+            console.log("\nStep " + currentStep + " results: " + stringResults + "\n");
+        }
+
+        currentStep++;
+        startNextStep();
+    }
 }
 
 function startCurrentTest() {
-    var steps = currentTest.steps;
-    var numberOfSteps = Object.keys(steps).length;
+    console.log("\nStarting test: " + currentTest.common.description);
+    alreadyConnected = false;
+    numberOfSteps = Object.keys(currentTest.steps).length;
 
-    console.log("Initiating test sequence for " + currentTest.common.description);
+    startNextStep();
+}
 
-    //for (var a = 0; a < numberOfSteps; a++) {
+function startNextStep() {
 
-    a = 0;
+    var maxWaitTime = 0;
 
-    currentStep = a;
+    if (currentStep + 1 > numberOfSteps) {
+        console.log("\n*** All Test Steps Complete! ***\n");
+        return;
+    }
 
-    console.log("\nStep " + (a + 1) + " of " + numberOfSteps);
+    console.log("\nStep " + (currentStep) + ".");
 
-    var actorDelay = steps[a].actor[2];
-    var actorAction = steps[a].actor[0];
-    var actorChannel = steps[a].actor[1];
+    var actorDelay = currentTest.steps[currentStep].actor[2];
+    var actorAction = currentTest.steps[currentStep].actor[0];
+    var actorChannel = currentTest.steps[currentStep].actor[1];
 
-    var listenerTimeout = steps[a].listener[2];
-    var listenerExpectedEvent = steps[a].listener[0];
-    var listenerChannel = steps[a].listener[1];
-
-    console.log("Actor should wait " + actorDelay + " seconds to " + actorAction + " to channel " + actorChannel);
+    console.log("\nActor should wait " + actorDelay + " seconds to " + actorAction + " to channel " + actorChannel);
     console.log("-- Then --");
-    console.log("Listener should wait up to " + listenerTimeout + " ms to receive a " + listenerExpectedEvent + " on channel " + listenerChannel);
 
-    stepInProgressInterval = setInterval(waitForStepInProgress, 5000);
+    for (a = 0; a < currentTest.steps[currentStep].listener.length; a++) {
 
-    // TODO: Step Timeout
-    //testTimeout = setTimeout(timeoutTest, (listenerTimeout * 1000));
+        var listenerTimeout = currentTest.steps[currentStep].listener[a][2];
+        var listenerExpectedEvent = currentTest.steps[currentStep].listener[a][0];
+        var listenerChannel = currentTest.steps[currentStep].listener[a][1];
+
+        console.log("Listener should wait up to " + listenerTimeout + " ms to receive a " + listenerExpectedEvent + " on channel " + listenerChannel);
+        if (listenerTimeout > maxWaitTime) {
+            maxWaitTime = listenerTimeout;
+        }
+    }
+
+    console.log("maxWaitTime set to: " + maxWaitTime + "\n");
+
+    stepInProgressInterval = setInterval(waitForStepInProgress, maxWaitTime);
+
+    console.log("\n" + new Date + ": Starting step " + currentStep);
 
     if (currentStep == 0) {
         var initListener = true;
@@ -251,10 +281,8 @@ function startCurrentTest() {
     if (actorAction == "subscribe") {
         subscribeToChannel(actorChannel, initListener)
     }
-
-
-    //}
 }
+
 
 function subscribeToChannel(actorChannel, initListener) {
 
@@ -267,21 +295,26 @@ function subscribeToChannel(actorChannel, initListener) {
             channel: listenerInit[1],
             message: onChannelMessage,
             presence: onActorPresenceEvent,
-            connect: function () {
-                console.log("Listener Connected. Subscribing actor...");
+            connect: function (ch) {
+                if (alreadyConnected) {
+                    console.log("Listener is already connected. Not doing that again.");
+                    return;
+                }
+
+                alreadyConnected = true;
+                console.log("Listener Connected.");
                 actorSubscribe(actorChannel)
             }
         });
 
     } else {
-
         // Just spawn the actor
-
         actorSubscribe(actorChannel)
     }
 }
 
 function actorSubscribe(channel) {
+    console.log("Subscribing actor...");
     actor.subscribe({
         noheresync: true,
         channel: channel,
@@ -289,9 +322,8 @@ function actorSubscribe(channel) {
             console.log("Actor: msg received: " + m);
         },
         connect: function () {
-            console.log("Actor: connected.");
-            setTimeout(function(){
-                console.log("Actor: Subscribe complete.");
+            console.log("Actor: Subscribe complete on channel " + channel + ".");
+            setTimeout(function () {
                 stepInProgress = false;
             }, currentTest.steps[currentStep].listener[2]);
         }
@@ -299,9 +331,9 @@ function actorSubscribe(channel) {
 }
 
 
-initTest(tests["35_35_SSL_OFF"]);
+initTest(test_1);
 
-// This is what the listner calls when he hears an event
+// This is what the listener calls when he hears an event
 function onActorPresenceEvent(msg, e, ch) {
     if (msg.uuid != listenerUUID && msg.uuid == actorUUID) {
         console.log("Listener heard Presence event: " + msg.action + " on " + msg.uuid + ": " + ch);
@@ -311,16 +343,12 @@ function onActorPresenceEvent(msg, e, ch) {
         }
 
         testResults[currentStep].push({step: currentStep, action: msg.action, uuid: msg.uuid, timestamp: msg.timestamp, date: new Date });
-
-        var a = 0;
     }
 }
 
 function onChannelMessage(m) {
     console.log("Listener heard Message: " + m);
 }
-
-
 
 
 // UnSubToA
