@@ -742,6 +742,12 @@ var tests = [
 
 ];
 
+function playSound ( soundname )
+  {
+    var thissound = document.getElementById( soundname );
+    thissound.play();
+  }
+
 
 function loadPNLib() {
     if (typeof PUBNUB === 'undefined') {
@@ -912,6 +918,7 @@ function analyzeResults() {
         }
 
         if (numActualResults == numExpectedResults) {
+            playSound('beep');
             var row = document.getElementById('row-' + currentTestId);
             row.className = "pass";
             console.log("\nPASS: Step " + step + " numbers of actual/expected results are equal (" + numActualResults + ")\n");
@@ -931,7 +938,7 @@ function analyzeResults() {
             } else {
                 row.className = "fail";
                 console.log("\nFAIL: Step " + step + " literal results are NOT equal. Actual results that differed from expected are:");
-                console.log("What we got that wasn't expected: " + JSON.stringify(actualTempArray) + "\n");
+                console.log(JSON.stringify(actualTempArray) + "\n");
             }
         }
 
@@ -1206,7 +1213,7 @@ function makeTable(){
 </head>
 <body>
 </body>
-
+<audio id="beep" src="beep.wav" preload="auto"></audio>
 <script type="text/javascript">makeTable();
 </script>
 </html>
