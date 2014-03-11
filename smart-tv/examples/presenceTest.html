@@ -197,6 +197,8 @@ var tests = [
             2: {
                 "actor": ["unsubscribe", channelA, 0],
                 "listener": [
+                    ["leave", channelA, 5000],
+                    ["join", channelA, 300000],
                     ["timeout", channelA, 720000]
                 ]
             }
