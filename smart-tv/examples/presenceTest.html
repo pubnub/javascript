@@ -752,21 +752,18 @@ function loadPNLib() {
         console.log("PN is not loaded. Trying to load.");
         if (clientLevel == "3.6") {
             if (ssl) {
-                url = "https://s3.amazonaws.com/pubnub/presenceTest/pubnub-jsonp-3.6.0beta.js";
+                url = "https://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
             }
             else {
-                url = "http://s3.amazonaws.com/pubnub/presenceTest/pubnub-jsonp-3.6.0beta.js";
+                url = "http://s3.amazonaws.com/pubnub/pubnub-3.6.0-beta.js";
             }
         }
         else if (clientLevel == "3.5") {
             if (ssl) {
-//                url = "https://s3.amazonaws.com/pubnub/presenceTest/pubnub-jsonp-3.5.48.js";
-                url = "https://cdn.pubnub.com/pubnub-3.5.48.min.js";
-
+                url = "https://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js";
             }
             else {
-                //url = "http://s3.amazonaws.com/pubnub/presenceTest/pubnub-jsonp-3.5.48.js";
-                url = "http://cdn.pubnub.com/pubnub-3.5.48.min.js";
+                url = "http://s3.amazonaws.com/pubnub/pubnub-3.5.48.min.js";
             }
         }
         else {
