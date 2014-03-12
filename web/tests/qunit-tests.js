@@ -1248,25 +1248,25 @@ var uuid1 = uuid + '-1';
 var uuid2 = uuid + '-2';
 var uuid3 = uuid + '-3';
 var pubnub_pres = PUBNUB.init({
-    origin            : 'presence-beta.pubnub.com',
+    origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
     uuid              : uuid
 });
 var pubnub_pres_1 = PUBNUB.init({
-    origin            : 'presence-beta.pubnub.com',
+    origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
     uuid              : uuid1
 });
 var pubnub_pres_2 = PUBNUB.init({
-    origin            : 'presence-beta.pubnub.com',
+    origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
     uuid              : uuid2
 });
 var pubnub_pres_3 = PUBNUB.init({
-    origin            : 'presence-beta.pubnub.com',
+    origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
     uuid              : uuid3
@@ -2115,7 +2115,7 @@ asyncTest("presence heartbeat value validation", function() {
             publish_key   : 'demo',
             subscribe_key : 'demo',
             heartbeat     : 6,
-            origin        : 'presence-beta.pubnub.com'
+            origin        : 'pubsub.pubnub.com'
     });
     deepEqual(6, pubnub.get_heartbeat());
     pubnub.set_heartbeat(1);
