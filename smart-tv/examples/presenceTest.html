@@ -536,9 +536,9 @@ var tests = [
             2: {
                 "actor": ["unsubscribe", channelA, 0],
                 "listener": [
-                    ["leave", channelB, 5000],
-                    ["join", channelB, 5000],
-                    ["leave", channelA, 5000]
+                    ["leave", channelA, 5000],
+                    ["join", channelA, 5000],
+                    ["timeout", channelA, 720000]
                 ]
             }
         }
@@ -576,6 +576,8 @@ var tests = [
                 "actor": ["subscribe", channelB, 0],
 
                 "listener": [
+                    ["leave", channelA, 5000],
+                    ["join", channelA, 5000],
                     ["join", channelB, 5000]
                 ]                                               // when more than two rules are in an array, they:
                 // can happen in any order
@@ -585,6 +587,8 @@ var tests = [
             2: {
                 "actor": ["unsubscribe", channelA, 0],
                 "listener": [
+                    ["leave", channelA, 5000],
+                    ["join", channelA, 5000],
                     ["timeout", channelA, 720000]
                 ]
             }
