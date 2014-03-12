@@ -20,12 +20,15 @@ $(PUBNUB_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATF
 	cat $(CRYPTOJS_HMAC_SHA256_JS) $(CRYPTOJS_ENC_BASE64_JS) >> $(PUBNUB_MIN_JS)
 	cat $(PUBNUB_JS) | java -jar $(GOOGLE_MINIFY) --compilation_level=ADVANCED_OPTIMIZATIONS>> $(PUBNUB_MIN_JS)
 	$(ECHO) "})();" >> $(PUBNUB_MIN_JS)
+	cp $(PUBNUB_MIN_JS) ../smart-tv/
+	cp $(PUBNUB_JS) ../smart-tv/
 
 $(PUBNUB_CRYPTO_MIN_JS) : $(GIBBERISH_JS) $(ENCRYPTO_JS)
 	## Cryptography
 	$(ECHO) "(function(){" >> $(PUBNUB_CRYPTO_MIN_JS)
 	cat $(GIBBERISH_JS) $(ENCRYPT_JS) | java -jar $(GOOGLE_MINIFY) >> $(PUBNUB_CRYPTO_MIN_JS)
 	$(ECHO) "})();" >> $(PUBNUB_CRYPTO_MIN_JS)
+	cp $(PUBNUB_CRYPTO_MIN_JS) ../smart-tv/
 
 .PHONY	: clean
 clean:

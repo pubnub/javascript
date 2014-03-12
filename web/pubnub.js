@@ -1202,7 +1202,7 @@ function PN_API(setup) {
                 channel  : 'my_chat',
                 callback : fun,
                 error    : fun,
-                ttl      : 60, // Seconds
+                ttl      : 24 * 60, // Minutes
                 read     : true,
                 write    : true,
                 auth_key : '3y8uiajdklytowsj'

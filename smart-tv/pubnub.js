@@ -1202,7 +1202,7 @@ function PN_API(setup) {
                 channel  : 'my_chat',
                 callback : fun,
                 error    : fun,
-                ttl      : 60, // Seconds
+                ttl      : 24 * 60, // Minutes
                 read     : true,
                 write    : true,
                 auth_key : '3y8uiajdklytowsj'
@@ -2614,8 +2614,11 @@ window['PUBNUB'] || (function() {
  * UTIL LOCALS
  */
 
-var ASYNC = 'async'
-,   PNSDK = 'PubNub-JS-' + 'SmartTV' + '/' + '3.6.0';
+var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
+,   ASYNC           = 'async'
+,   UA              = navigator.userAgent
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.0'
+,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
  * CONSOLE COMPATIBILITY
@@ -2652,6 +2655,10 @@ var db = (function(){
     };
 })();
 
+function get_hmac_SHA256(data,key) {
+    var hash = CryptoJS['HmacSHA256'](data, key);
+    return hash.toString(CryptoJS['enc']['Base64']);
+}
 
 /**
  * $
@@ -2672,13 +2679,23 @@ function error(message) { console['error'](message) }
  * ======
  * var elements = search('a div span');
  */
-function search( elements, start ) {
+function search( elements, start) {
     var list = [];
     each( elements.split(/\s+/), function(el) {
         each( (start || document).getElementsByTagName(el), function(node) {
             list.push(node);
-        }, true);
-    }, true);
+        } );
+    });
+    return list;
+}
+
+function search_old(a) { 
+    var list = [];
+    each( a.split(/\s+/), function(el) {
+        each( (document).getElementsByTagName(el), function(node) {
+            list.push(node);
+        },1 );
+    }, 1);
     return list;
 }
 
@@ -2695,8 +2712,7 @@ function bind( type, el, fun ) {
             if (!e) e = window.event;
             if (!fun(e)) {
                 e.cancelBubble = true;
-                e.returnValue  = false;
-                e.preventDefault && e.preventDefault();
+                e.preventDefault  && e.preventDefault();
                 e.stopPropagation && e.stopPropagation();
             }
         };
@@ -2723,7 +2739,7 @@ function unbind( type, el, fun ) {
  * ====
  * head().appendChild(elm);
  */
-function head() { return search('head')[0] }
+function head() { return search_old('head')[0] }
 
 /**
  * ATTR
@@ -2762,7 +2778,8 @@ function create(element) { return document.createElement(element) }
  * ========
  * var callback = jsonp_cb();
  */
-function jsonp_cb() { return unique() }
+function jsonp_cb() { return XORIGN || FDomainRequest() ? 0 : unique() }
+
 
 
 /**
@@ -2801,6 +2818,8 @@ var events = {
  *  });
  */
 function xdr( setup ) {
+    if (XORIGN || FDomainRequest()) return ajax(setup);
+
     var script    = create('script')
     ,   callback  = setup.callback
     ,   id        = unique()
@@ -2844,6 +2863,98 @@ function xdr( setup ) {
     return done;
 }
 
+/**
+ * CORS XHR Request
+ * ================
+ *  xdr({
+ *     url     : ['http://www.blah.com/url'],
+ *     success : function(response) {},
+ *     fail    : function() {}
+ *  });
+ */
+function ajax( setup ) {
+    var xhr, response
+    ,   finished = function() {
+            if (loaded) return;
+            loaded = 1;
+
+            clearTimeout(timer);
+
+            try       { response = JSON['parse'](xhr.responseText); }
+            catch (r) { return done(1); }
+
+            complete = 1;
+            success(response);
+        }
+    ,   complete = 0
+    ,   loaded   = 0
+    ,   xhrtme   = setup.timeout || DEF_TIMEOUT
+    ,   timer    = timeout( function(){done(1)}, xhrtme )
+    ,   fail     = setup.fail    || function(){}
+    ,   data     = setup.data    || {}
+    ,   success  = setup.success || function(){}
+    ,   async    = ( typeof(setup.blocking) === 'undefined' )
+    ,   done     = function(failed,response) {
+            if (complete) return;
+            complete = 1;
+
+            clearTimeout(timer);
+
+            if (xhr) {
+                xhr.onerror = xhr.onload = null;
+                xhr.abort && xhr.abort();
+                xhr = null;
+            }
+
+            failed && fail(response);
+        };
+
+    // Send
+    try {
+        xhr = FDomainRequest()      ||
+              window.XDomainRequest &&
+              new XDomainRequest()  ||
+              new XMLHttpRequest();
+
+        xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
+        xhr.onload  = xhr.onloadend = finished;
+        xhr.onreadystatechange = function() {
+            if (xhr && xhr.readyState == 4) {
+                switch(xhr.status) {
+                    case 401:
+                    case 402:
+                    case 403:
+                        try {
+                            response = JSON['parse'](xhr.responseText);
+                            done(1,response);
+                        }
+                        catch (r) { return done(1, xhr.responseText); }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        if (async) xhr.timeout = xhrtme;
+
+        data['pnsdk'] = PNSDK;
+        var url = build_url(setup.url,data);
+
+        xhr.open( 'GET', url, async );
+        xhr.send();
+    }
+    catch(eee) {
+        done(0);
+        XORIGN = 0;
+        return xdr(setup);
+    }
+
+    // Return 'done'
+    return done;
+}
+
+
+
  // Test Connection State
 function _is_online() {
     if (!('onLine' in navigator)) return 1;
@@ -2860,11 +2971,13 @@ var PDIV          = $('pubnub') || 0
 ,   CREATE_PUBNUB = function(setup) {
 
     // Force JSONP if requested from user.
-    XORIGN = 0;
+    if (setup['jsonp']) XORIGN = 0;
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid')||'';
+
+    var leave_on_unload = setup['leave_on_unload'] || 0;
 
     setup['xdr']        = xdr;
     setup['db']         = db;
@@ -2872,6 +2985,7 @@ var PDIV          = $('pubnub') || 0
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
     setup['PNSDK']      = PNSDK;
+    setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
 
     var SELF = function(setup) {
@@ -2885,7 +2999,6 @@ var PDIV          = $('pubnub') || 0
             SELF[prop] = PN[prop];
         }
     }
-
     SELF['css']         = css;
     SELF['$']           = $;
     SELF['create']      = create;
@@ -2899,7 +3012,7 @@ var PDIV          = $('pubnub') || 0
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
-        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
+        if (leave_on_unload) SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 0 ) });
         return true;
     } );
 
@@ -2913,8 +3026,14 @@ var PDIV          = $('pubnub') || 0
     return SELF;
 };
 CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+
 // Bind for PUBNUB Readiness to Subscribe
-bind( 'load', window, function(){ timeout( ready, 0 ) } );
+if (document.readyState === 'complete') {
+    timeout( ready, 0 );
+}
+else {
+    bind( 'load', window, function(){ timeout( ready, 0 ) } );
+}
 
 var pdiv = PDIV || {};
 
@@ -2928,6 +3047,49 @@ PUBNUB = CREATE_PUBNUB({
     'origin'        : attr( pdiv, 'origin' ),
     'uuid'          : attr( pdiv, 'uuid' )
 });
+
+// jQuery Interface
+window['jQuery'] && (window['jQuery']['PUBNUB'] = CREATE_PUBNUB);
+
+// For Modern JS + Testling.js - http://testling.com/
+typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
+
+var pubnubs = $('pubnubs') || 0;
+
+// LEAVE NOW IF NO PDIV.
+if (!PDIV) return;
+
+// PUBNUB Flash Socket
+css( PDIV, { 'position' : 'absolute', 'top' : -SECOND } );
+
+if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
+    '<object id=pubnubs data='  + SWF +
+    '><param name=movie value=' + SWF +
+    '><param name=allowscriptaccess value=always></object>';
+
+// Create Interface for Opera Flash
+PUBNUB['rdx'] = function( id, data ) {
+    if (!data) return FDomainRequest[id]['onerror']();
+    FDomainRequest[id]['responseText'] = unescape(data);
+    FDomainRequest[id]['onload']();
+};
+
+function FDomainRequest() {
+    if (!pubnubs || !pubnubs['get']) return 0;
+
+    var fdomainrequest = {
+        'id'    : FDomainRequest['id']++,
+        'send'  : function() {},
+        'abort' : function() { fdomainrequest['id'] = {} },
+        'open'  : function( method, url ) {
+            FDomainRequest[fdomainrequest['id']] = fdomainrequest;
+            pubnubs['get']( fdomainrequest['id'], url );
+        }
+    };
+
+    return fdomainrequest;
+}
+FDomainRequest['id'] = SECOND;
 
 })();
 (function(){
