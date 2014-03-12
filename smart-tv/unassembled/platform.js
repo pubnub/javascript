@@ -73,8 +73,8 @@ function search( elements, start ) {
     each( elements.split(/\s+/), function(el) {
         each( (start || document).getElementsByTagName(el), function(node) {
             list.push(node);
-        } );
-    } );
+        }, true);
+    }, true);
     return list;
 }
 

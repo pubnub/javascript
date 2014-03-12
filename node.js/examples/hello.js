@@ -12,6 +12,9 @@ var pubnub = PUBNUB({
     subscribe_key : "demo"
     //cipher_key : "demo"
 });
+
+
+console.log(pubnub.get_version());
 /* ---------------------------------------------------------------------------
 Listen for Messages
 --------------------------------------------------------------------------- */

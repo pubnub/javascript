@@ -11,6 +11,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
+,   SDK_VER         = VERSION
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -421,6 +422,9 @@ function PN_API(setup) {
         'set_heartbeat_interval' : function(heartbeat_interval) {
             PRESENCE_HB_INTERVAL = heartbeat_interval;
             _presence_heartbeat();
+        },
+        'get_version' : function() {
+            return SDK_VER;
         },
 
         /*
