@@ -696,7 +696,8 @@ the `pubnub.subscribe` call below.
 ## WebSocket Client Interface
 
 Optionally PubNub offers you the full RFC 6455
-Support for WebSocket Client Specification.
+Support for WebSocket Client Specification
+[Websocket Tutorial](http://www.pubnub.com/websockets/).
 PubNub WebSockets enables any browser (modern or not) to support
 the HTML5 WebSocket standard APIs.
 Use the WebSocket Client Directly in your Browser that
@@ -723,7 +724,7 @@ The following example opens a `new WebSocket` in
 
 ```html
 <!-- Import PubNub Core Lib -->
-<script src="https://pubnub.a.ssl.fastly.net/pubnub-3.5.48.min.js"></script>
+<script src="https://pubnub.a.ssl.fastly.net/pubnub.min.js"></script>
 
 <!-- Use WebSocket Constructor for a New Socket Connection -->
 <script>(function() {
@@ -771,12 +772,13 @@ The following example opens a `new WebSocket` in
 
 ```html
 <!-- NON-SSL Import PubNub Core Lib -->
-<script src="http://pubnub.a.ssl.fastly.net/pubnub-3.5.48.min.js"></script>
+<script src="http://pubnub.a.ssl.fastly.net/pubnub.min.js"></script>
 
 <!-- NON-SSL Use WebSocket Constructor for a New Socket Connection -->
 <script>(function() {
 
 // Note "ws://" rather than "wss://"
+WebSocket  = PUBNUB.ws;
 var socket = new WebSocket('ws://pubsub.pubnub.com/demo/demo/my_channel')
 
 })();</script>

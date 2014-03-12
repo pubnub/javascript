@@ -2,7 +2,7 @@ var clOptions = [];
 var config = {};
 
 process.argv.forEach(function (val, index, array) {
-    //console.log(index + ': ' + val);
+    console.log(index + ': ' + val);
     clOptions[index] = val;
 });
 
