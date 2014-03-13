@@ -404,6 +404,7 @@ var PDIV          = $('pubnub') || 0
     SELF['attr']        = attr;
     SELF['events']      = events;
     SELF['init']        = SELF;
+    SELF['secure']      = SELF;
 
 
     // Add Leave Functions
@@ -422,6 +423,7 @@ var PDIV          = $('pubnub') || 0
     return SELF;
 };
 CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+CREATE_PUBNUB['secure'] = CREATE_PUBNUB;
 
 // Bind for PUBNUB Readiness to Subscribe
 if (document.readyState === 'complete') {

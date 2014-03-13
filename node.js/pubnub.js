@@ -1,4 +1,4 @@
-// Version: 3.6.0
+// Version: 3.6.1
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.0'
+,   SDK_VER         = '3.6.1'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -131,7 +131,7 @@ function uuid(callback) {
 }
 function isArray(arg) {
     var type = Object.prototype.toString.call(arg);
-    return   ( type === "[object Array]" || type === "[object NodeList]");
+    return   ( type === "[object Array]" || type === "[object NodeList]"  || type === "[object ScriptBridgingArrayProxyObject]");
 }
 
 /**
@@ -1342,7 +1342,7 @@ var NOW                = 1
 ,   XHRTME             = 310000
 ,   DEF_TIMEOUT     = 10000
 ,   SECOND          = 1000
-,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.0'
+,   PNSDK           = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.1'
 ,   crypto           = require('crypto')
 ,   XORIGN             = 1;
 
@@ -1517,100 +1517,7 @@ function crypto_obj() {
     }
 }
 
-/* =-=====================================================================-= */
-/* =-=====================================================================-= */
-/* =-=========================     PUBNUB     ============================-= */
-/* =-=====================================================================-= */
-/* =-=====================================================================-= */
-var secure = function(setup) {
-    var iv = "0123456789012345";
-    var cipher_key = setup['cipher_key'];
-    var padded_cipher_key = crypto.createHash('sha256').update(cipher_key).digest("hex").slice(0,32);
-    var pubnub = CREATE_PUBNUB(setup);
 
-    function encrypt(data) {
-        var plain_text = JSON.stringify(data);
-        var cipher = crypto.createCipheriv('aes-256-cbc', padded_cipher_key, iv);
-        var base_64_encrypted = cipher.update(plain_text, 'utf8', 'base64') + cipher.final('base64');
-        return base_64_encrypted || data;
-    }
-    function decrypt(data) {
-        var decipher = crypto.createDecipheriv('aes-256-cbc', padded_cipher_key, iv);
-        try {
-            var decrypted = decipher.update(data, 'base64', 'utf8') + decipher.final('utf8');
-        } catch (e) {
-            return null;
-        }
-
-        return JSON.parse(decrypted);
-    }
-
-    SELF =
-    {
-        raw_encrypt : encrypt,
-        raw_decrypt : decrypt,
-        ready       : pubnub.ready,
-        time        : pubnub.time,
-        publish     : function (args) {
-            args.message = encrypt(args.message);
-            return pubnub.publish(args);
-        },
-        unsubscribe : function (args) {
-            return pubnub.unsubscribe(args);
-        },
-        subscribe   : function (args) {
-            var callback = args.callback || args.message;
-            args.callback = function (message, envelope, channel) {
-                var decrypted = decrypt(message);
-                if(decrypted) {
-                    callback(decrypted, envelope, channel);
-                } else {
-                    args.error && args.error({"error":"DECRYPT_ERROR", "message" : message});
-                }
-            }
-            return pubnub.subscribe(args);
-        },
-        history     : function (args) {
-            var encrypted_messages = "";
-            var old_callback = args.callback;
-            var error_callback = args.error;
-
-            function new_callback(response) {
-                encrypted_messages     = response[0];
-                var decrypted_messages = [];
-                var decrypted_error_messages = [];
-                var a;
-                for (a = 0; a < encrypted_messages.length; a++) {
-                    var new_message = decrypt( encrypted_messages[a]);
-                    if(new_message) {
-                        decrypted_messages.push((new_message));
-                    } else {
-                        decrypted_error_messages.push({"error":"DECRYPT_ERROR", "message" : encrypted_messages[a]});
-                    }
-
-                }
-
-                old_callback([
-                    decrypted_messages,
-                    response[1],
-                    response[2]
-                ]);
-                error_callback && error_callback([
-                    decrypted_error_messages,
-                    response[1],
-                    response[2]
-                ]);
-            }
-
-            args.callback = new_callback;
-            pubnub.history(args);
-            return true;
-        }
-    };
-    SELF.secure = secure;
-    SELF.init = CREATE_PUBNUB;
-    return SELF;
-}
 
 var CREATE_PUBNUB = function(setup) {
     setup['xdr'] = xdr;
@@ -1629,12 +1536,12 @@ var CREATE_PUBNUB = function(setup) {
         }
     }
     SELF.init = SELF;
-    SELF.secure = secure;
+    SELF.secure = SELF;
     SELF.ready();
     return SELF;
 }
 CREATE_PUBNUB.init = CREATE_PUBNUB;
 
 CREATE_PUBNUB.unique = unique
-CREATE_PUBNUB.secure = secure
+CREATE_PUBNUB.secure = CREATE_PUBNUB;
 module.exports = CREATE_PUBNUB

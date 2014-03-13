@@ -130,7 +130,7 @@ function uuid(callback) {
 }
 function isArray(arg) {
     var type = Object.prototype.toString.call(arg);
-    return   ( type === "[object Array]" || type === "[object NodeList]");
+    return   ( type === "[object Array]" || type === "[object NodeList]"  || type === "[object ScriptBridgingArrayProxyObject]");
 }
 
 /**

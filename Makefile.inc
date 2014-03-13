@@ -8,7 +8,6 @@ PUBNUB_JS=pubnub.js
 PUBNUB_MIN_JS=pubnub.min.js
 PUBNUB_UNASSEMBLED_DIR=unassembled
 PUBNUB_PLATFORM_JS=$(PUBNUB_UNASSEMBLED_DIR)/platform.js
-PUBNUB_CRYPTO_MIN_JS=pubnub-crypto.min.js
 JSON_JS=$(CORE_DIR)/json.js
 PUBNUB_COMMON_JS=$(CORE_DIR)/pubnub-common.js
 CRYPTO_DIR=$(CORE_DIR)/crypto

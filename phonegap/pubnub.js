@@ -1,4 +1,4 @@
-// Version: 3.6.0
+// Version: 3.6.1
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.0'
+,   SDK_VER         = '3.6.1'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -131,7 +131,7 @@ function uuid(callback) {
 }
 function isArray(arg) {
     var type = Object.prototype.toString.call(arg);
-    return   ( type === "[object Array]" || type === "[object NodeList]");
+    return   ( type === "[object Array]" || type === "[object NodeList]"  || type === "[object ScriptBridgingArrayProxyObject]");
 }
 
 /**
@@ -2487,7 +2487,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.6.0'
+,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.6.1'
 ,   XHRTME     = 310000;
 
 
@@ -2782,6 +2782,7 @@ function CREATE_PUBNUB(setup) {
     return SELF;
 }
 CREATE_PUBNUB['init'] = CREATE_PUBNUB
+CREATE_PUBNUB['secure'] = CREATE_PUBNUB
 PUBNUB = CREATE_PUBNUB({})
 typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
 typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);

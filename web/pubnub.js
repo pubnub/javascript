@@ -1,4 +1,4 @@
-// Version: 3.6.0
+// Version: 3.6.1
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -162,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.0'
+,   SDK_VER         = '3.6.1'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -281,7 +281,7 @@ function uuid(callback) {
 }
 function isArray(arg) {
     var type = Object.prototype.toString.call(arg);
-    return   ( type === "[object Array]" || type === "[object NodeList]");
+    return   ( type === "[object Array]" || type === "[object NodeList]"  || type === "[object ScriptBridgingArrayProxyObject]");
 }
 
 /**
@@ -2617,7 +2617,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.0'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.1'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -3008,6 +3008,7 @@ var PDIV          = $('pubnub') || 0
     SELF['attr']        = attr;
     SELF['events']      = events;
     SELF['init']        = SELF;
+    SELF['secure']      = SELF;
 
 
     // Add Leave Functions
@@ -3026,6 +3027,7 @@ var PDIV          = $('pubnub') || 0
     return SELF;
 };
 CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+CREATE_PUBNUB['secure'] = CREATE_PUBNUB;
 
 // Bind for PUBNUB Readiness to Subscribe
 if (document.readyState === 'complete') {
