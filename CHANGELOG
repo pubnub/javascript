@@ -4,6 +4,7 @@
 . crypto.js is now automatically merged into pubnub.js. No need to manually include it anymore.
 . .secure() now aliases to .init() for bw compatibility, but its no longer needed.
 . fixed blocking leave bug in Firefox
+. crypto support for Titanium
 
 11-9-13 * NEW VERSION 3.5.4.8 *
 . make encryption methods public to easier implement into your own app logic
