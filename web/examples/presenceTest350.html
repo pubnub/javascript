@@ -801,7 +801,7 @@ function loadPNLib() {
 function pnInit(ssl, key, isListener) {
 
     var uuid = isListener ? listenerUUID : actorUUID;
-    var origin = (serverLevel == "3.6") ? "presence-beta.pubnub.com" : "pubsub.pubnub.com";
+    var origin = (serverLevel == "3.6") ? "pubsub.pubnub.com" : "pubsub.pubnub.com";
 
     var pubnub = PUBNUB.init({
         publish_key: 'demo',

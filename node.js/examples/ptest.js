@@ -54,7 +54,7 @@ function validateArgs(opts) {
     // set env
     if ((clOptions[3] == "beta") || (clOptions[3] == "prod")) {
         if (clOptions[3] == "beta") {
-            config.origin = "presence-beta.pubnub.com";
+            config.origin = "pubsub.pubnub.com";
         } else {
             config.origin = "pubsub.pubnub.com";
         }

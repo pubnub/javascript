@@ -1,7 +1,7 @@
 var channel = 'javascript-test-channel-' + Math.random();
 var uuid = Date.now()
 var pubnub_pres = PUBNUB.init({
-    origin            : 'presence-beta.pubnub.com',
+    origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
     uuid              : uuid
