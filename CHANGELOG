@@ -1,3 +1,10 @@
+3-13-14 * NEW VERSION 3.6.1 *
+. Presence V3 Features
+. Global cipher key feature
+. crypto.js is now automatically merged into pubnub.js. No need to manually include it anymore.
+. .secure() now aliases to .init() for bw compatibility, but its no longer needed.
+. fixed blocking leave bug in Firefox
+
 11-9-13 * NEW VERSION 3.5.4.8 *
 . make encryption methods public to easier implement into your own app logic
 . in some cases, multiple subscribe requests are made in node.js with presence
