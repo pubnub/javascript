@@ -18,12 +18,12 @@ var channel = 'javascript-test-channel-' + Date.now();
 var count = 0;
 
 var message_string = "Hi from Javascript";
-var message_jsono = {'message': 'Hi from Javascript'};
-var message_jsona = ['message' , 'Hi from javascript'];
+var message_jsono = {"message": "Hi from Javascript"};
+var message_jsona = ["message" , "Hi from javascript"];
 var message_num = 123;
 var message_num_str = "123";
-var message_jsono_str = "{'message': 'Hi from Javascript'}";
-var message_jsona_str = "['message' , 'Hi from javascript']";
+var message_jsono_str = '{"message" : "Hi from Javascript"}';
+var message_jsona_str = '["message" , "Hi from javascript"]';
 
 
 function in_list(list,str) {
@@ -259,14 +259,14 @@ describe('Pubnub', function() {
             var ch = channel + '-' + ++count ;
             pubnub.subscribe({channel : ch ,
                 connect : function(response) {
-                    pubnub.publish({channel: ch , message : message_num_str,
+                    pubnub.publish({channel: ch , message : message_jsono_str,
                         callback : function(response) {
                             assert.deepEqual(response[0],1);
                         }
                     });
                 },
                 callback : function(response) {
-                    assert.deepEqual(response,message_num_str);
+                    assert.deepEqual(response,message_jsono_str);
                     pubnub.unsubscribe({channel : ch});
                     done();
                 }

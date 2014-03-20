@@ -13,8 +13,8 @@ var channel = 'javascript-test-channel-' + Math.random();
 var count = 0;
 
 var message_string = 'Hi from Javascript';
-var message_jsono = {'message': 'Hi Hi from Javascript'};
-var message_jsona = ['message' , 'Hi Hi from javascript'];
+var message_jsono = {"message": "Hi Hi from Javascript"};
+var message_jsona = ["message" , "Hi Hi from javascript"];
 test("uuid() response", function() {
     expect(1);
     stop(1);
@@ -527,6 +527,7 @@ test("publish() should publish numbers without error", function() {
             });
         },
         callback : function(response) {
+            console.log('Callback ' + typeof response);
             deepEqual(response, message_number);
             pubnub.unsubscribe({channel : ch});
             start();
@@ -575,6 +576,7 @@ test("subscribe() should receive a string (not a number)", function () {
             });
         },
         callback : function(response) {
+            console.log('Callback ' + typeof response);
             deepEqual(response, message_string_numeric);
             pubnub.unsubscribe({channel : ch});
             start();
@@ -940,7 +942,7 @@ var grant_channel = channel + '-grant';
 var auth_key = "abcd";
 var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';
 var pubnub_pam = PUBNUB.init({
-    origin            : 'pubsub.pubnub.com',
+    origin            : 'pam-beta.pubnub.com',
     publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
     subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
     secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
@@ -1502,6 +1504,7 @@ asyncTest("#where_now() should return channel x in result for uuid y, when uuid 
                 pubnub_pres.where_now({
                     uuid: uuid,
                     callback : function(data) {
+                        console.log(JSON.stringify(data));
                         ok(in_list(data.channels,ch), "subscribed Channel should be there in where now list");
                         pubnub_pres.unsubscribe({channel : ch});
                         start();
@@ -2229,6 +2232,7 @@ asyncTest("#here_now() should return correct state for multiple uuids in single 
                                                 state : true,
                                                 callback : function(response) {
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
+                                                    console.log(response.channels[ch]);
                                                     ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
                                                     ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 + '', state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
                                                     ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 + '', state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");
