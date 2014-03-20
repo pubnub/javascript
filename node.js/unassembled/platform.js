@@ -208,7 +208,7 @@ function crypto_obj() {
             } catch (e) {
                 return null;
             }
-            return decrypted;
+            return JSON.parse(decrypted);
         }
     }
 }
