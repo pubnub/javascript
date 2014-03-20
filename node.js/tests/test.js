@@ -548,7 +548,7 @@ describe('Pubnub', function() {
         var auth_key = "abcd";
         var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';
         var pubnub = PUBNUB.init({
-            origin            : 'pam-beta.pubnub.com',
+            origin            : 'pubsub.pubnub.com',
             publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
             subscribe_key     : sub_key,
             secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
@@ -994,7 +994,7 @@ describe('Pubnub', function() {
         var revoke_channel = channel + '-revoke';
         var auth_key = "abcd";
         var pubnub = PUBNUB.init({
-            origin            : 'pam-beta.pubnub.com',
+            origin            : 'pubsub.pubnub.com',
             publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
             subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
             secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
