@@ -511,6 +511,182 @@ test("publish() should publish json object without error", function() {
     });
 });
 
+var message_number = 123456;
+
+test("publish() should publish numbers without error", function() {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_number,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_number);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+test("publish() should publish numbers without error (Encryption Enabled)", function() {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub_enc.publish({channel: ch, message: message_number,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_number);
+            pubnub_enc.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+
+
+var message_string_numeric = '12345';
+var message_string_array = '[0,1,2,3]';
+var message_string_object = '{"foo":"bar"}';
+
+
+test("subscribe() should receive a string (not a number)", function () {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string_numeric,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string_numeric);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("subscribe() should receive a string (not a number) ( encryption enabled )", function () {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub_enc.publish({channel: ch, message: message_string_numeric,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string_numeric);
+            pubnub_enc.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("subscribe() should receive a string (not an array)", function () {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string_array,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string_array);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("subscribe() should receive a string (not an array) ( encryption enabled )", function () {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub_enc.publish({channel: ch, message: message_string_array,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string_array);
+            pubnub_enc.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("subscribe() should receive a string (not an object)", function () {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub.publish({channel: ch, message: message_string_object,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string_object);
+            pubnub.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
+test("subscribe() should receive a string (not an object) ( encryption enabled )", function () {
+    expect(2);
+    stop(2);
+    var ch = channel + '-' + ++count;
+    pubnub_enc.subscribe({ channel : ch,
+        connect : function(response)  {
+            pubnub_enc.publish({channel: ch, message: message_string_object,
+                callback : function(response) {
+                    equal(response[0],1);
+                    start();
+                }
+            });
+        },
+        callback : function(response) {
+            deepEqual(response, message_string_object);
+            pubnub_enc.unsubscribe({channel : ch});
+            start();
+        }
+    });
+});
+
 
 asyncTest("#here_now() should show occupancy 1 when 1 user subscribed to channel", function() {
     expect(3);
@@ -764,7 +940,7 @@ var grant_channel = channel + '-grant';
 var auth_key = "abcd";
 var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';
 var pubnub_pam = PUBNUB.init({
-    origin            : 'pam-beta.pubnub.com',
+    origin            : 'pubsub.pubnub.com',
     publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
     subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
     secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
@@ -1326,7 +1502,6 @@ asyncTest("#where_now() should return channel x in result for uuid y, when uuid 
                 pubnub_pres.where_now({
                     uuid: uuid,
                     callback : function(data) {
-                        console.log(JSON.stringify(data));
                         ok(in_list(data.channels,ch), "subscribed Channel should be there in where now list");
                         pubnub_pres.unsubscribe({channel : ch});
                         start();
@@ -2054,7 +2229,6 @@ asyncTest("#here_now() should return correct state for multiple uuids in single 
                                                 state : true,
                                                 callback : function(response) {
                                                     ok(response.channels[ch], "subscribed channel should be present in payload");
-                                                    console.log(response.channels[ch]);
                                                     ok(in_list_deep(response.channels[ch].uuids, { uuid : uuid + '', state : { 'name' : 'name-' + uuid } } ), "uuid should be there in the uuids list");
                                                     ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid1 + '', state : {name : 'name-' + uuid1}}), "uuid 1 should be there in the uuids list");
                                                     ok(in_list_deep(response.channels[ch].uuids,{ uuid : uuid2 + '', state : {name : 'name-' + uuid2}}), "uuid 2 should be there in the uuids list");

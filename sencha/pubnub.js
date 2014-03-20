@@ -894,11 +894,7 @@ function PN_API(setup) {
                         each( messages[0], function(msg) {
                             var next = next_callback();
                             var decrypted_msg = decrypt(msg,CHANNELS[next[1]]['cipher_key']);
-                            try {
-                                next[0]( JSON['parse'](decrypted_msg), messages, next[1], latency );
-                            } catch (e) {
-                                next[0]( decrypted_msg, messages, next[1], latency );
-                            }
+                            next[0]( decrypted_msg, messages, next[1], latency);
                         });
 
                         timeout( _connect, windowing );

@@ -20,6 +20,11 @@ var count = 0;
 var message_string = "Hi from Javascript";
 var message_jsono = {'message': 'Hi from Javascript'};
 var message_jsona = ['message' , 'Hi from javascript'];
+var message_num = 123;
+var message_num_str = "123";
+var message_jsono_str = "{'message': 'Hi from Javascript'}";
+var message_jsona_str = "['message' , 'Hi from javascript']";
+
 
 function in_list(list,str) {
     for (var x in list) {
@@ -177,6 +182,152 @@ describe('Pubnub', function() {
 
             })
         })
+
+        it('should publish numbers without error', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub.publish({channel: ch , message : message_num,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_num);
+                    pubnub.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish numbers without error when encryption is enabled', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub_enc.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub_enc.publish({channel: ch , message : message_num,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_num);
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish number strings without error', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub.publish({channel: ch , message : message_num_str,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_num_str);
+                    pubnub.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish numbers strings error when encryption is enabled', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub_enc.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub_enc.publish({channel: ch , message : message_num_str,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_num_str);
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish json object strings without error', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub.publish({channel: ch , message : message_num_str,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_num_str);
+                    pubnub.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish json object strings error when encryption is enabled', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub_enc.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub_enc.publish({channel: ch , message : message_jsono_str,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_jsono_str);
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish json array strings without error', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub.publish({channel: ch , message : message_jsona_str,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_jsona_str);
+                    pubnub.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish json array strings error when encryption is enabled', function(done){
+            var ch = channel + '-' + ++count ;
+            pubnub_enc.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub_enc.publish({channel: ch , message : message_jsona_str,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_jsona_str);
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+
     })
 
     describe('#history()', function(){
