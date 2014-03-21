@@ -347,7 +347,8 @@ function PN_API(setup) {
     }
 
     function _invoke_error(response,err) {
-        if (typeof response == 'object' && response['error']) {
+        if (typeof response == 'object' && response['error'] &&
+            response['message'] && response['payload']) {
             err({'message' : response['message'], 'payload' : response['payload']});
         } else err(response);
     }
@@ -734,7 +735,8 @@ function PN_API(setup) {
                 // Subscribe Presence Channel
                 SELF['subscribe']({
                     'channel'  : channel + PRESENCE_SUFFIX,
-                    'callback' : presence
+                    'callback' : presence,
+                    'restore'  : restore
                 });
 
                 // Presence Subscribed?
