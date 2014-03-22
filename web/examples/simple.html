@@ -5,25 +5,13 @@
     console.log(PUBNUB);
     var pubnub = PUBNUB.init({
         publish_key   : 'demo',
-        subscribe_key : 'demo',
-        ssl : true,
-        jsonp : false
+        subscribe_key : 'demo'
     });
     pubnub.subscribe({
-        callback : console.log,
-        error : console.log,
-        channel : "abcd,xyz",
-        metadata : { "abcd" : {"age" : 30}, "xyz" : { "age" : 50 } },
-        heartbeat : 15
+        callback : function(r){console.log(r);},
+        error : function(r){ console.log(r);},
+        channel : "abcd"
     })
-
-    setTimeout(function(){
-        pubnub.state({
-            callback : console.log,
-            channel  : "xyz",
-            metadata : { "age" : 100}
-        });
-    }, 30000);
 
 
 })();</script>

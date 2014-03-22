@@ -1239,7 +1239,7 @@ function PN_API(setup) {
         'each'          : each,
         'each-channel'  : each_channel,
         'grep'          : grep,
-        'offline'       : function(){_reset_offline(1)},
+        'offline'       : function(){_reset_offline(1, { "message":"Offline. Please check your network settings." })},
         'supplant'      : supplant,
         'now'           : rnow,
         'unique'        : unique,

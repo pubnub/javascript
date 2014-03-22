@@ -221,7 +221,7 @@ function xdr( setup ) {
     ,   id        = unique()
     ,   finished  = 0
     ,   xhrtme    = setup.timeout || DEF_TIMEOUT
-    ,   timer     = timeout( function(){done(1)}, xhrtme )
+    ,   timer     = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
     ,   fail      = setup.fail    || function(){}
     ,   data      = setup.data    || {}
     ,   success   = setup.success || function(){}
@@ -285,7 +285,7 @@ function ajax( setup ) {
     ,   complete = 0
     ,   loaded   = 0
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
-    ,   timer    = timeout( function(){done(1)}, xhrtme )
+    ,   timer    = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
