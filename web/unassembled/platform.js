@@ -289,7 +289,7 @@ function ajax( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
-    ,   async    = !setup.blocking
+    ,   async    = !(setup.blocking)
     ,   done     = function(failed,response) {
             if (complete) return;
             complete = 1;
