@@ -311,18 +311,23 @@ function CREATE_PUBNUB(setup) {
     SELF['css'] = css;
     SELF['create'] = create;
 
-
-    // Add Leave Functions
-    bind( 'beforeunload', window, function() {
-        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
-        return true;
-    } );
+    if (typeof(window) !== 'undefined'){
+        bind( 'beforeunload', window, function() {
+            SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
+            return true;
+        });
+    }
 
     // Return without Testing
     if (setup['notest']) return SELF;
 
-    bind( 'offline', window,   SELF['_reset_offline'] );
-    bind( 'offline', document, SELF['_reset_offline'] );
+    if (typeof(window) !== 'undefined'){
+        bind( 'offline', window,   SELF['_reset_offline'] );
+    }
+
+    if (typeof(document) !== 'undefined'){
+        bind( 'offline', document, SELF['_reset_offline'] );
+    }
 
     SELF['ready']();
     return SELF;

@@ -1225,21 +1225,20 @@ function PN_API(setup) {
 
             var timestamp  = Math.floor(new Date().getTime() / 1000)
             ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
-                    + "grant" + "\n"
-                    + ((
-                        (auth_key && encode(auth_key).length > 0) ?
-                        "auth=" + encode(auth_key) + "&"          :
-                        ""
-                    ))
-                    + "channel=" + encode(channel) + "&"
-                    + "pnsdk=" + encode(PNSDK) + "&"
+                    + "grant" + "\n";
+
+
+            if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
+            if (jsonp != '0')   sign_input += ("callback=" + encode(jsonp) + "&") ;
+            if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
+
+            sign_input += "pnsdk=" + encode(PNSDK) + "&"
                     + "r=" + r + "&"
                     + "timestamp=" + encode(timestamp);
-
+                    
             if (ttl || ttl === 0) sign_input += "&" + "ttl=" + ttl;
 
             sign_input += "&" + "w=" + w;
-
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
             signature = signature.replace( /\+/g, "-" );
@@ -1302,6 +1301,7 @@ function PN_API(setup) {
                 + "audit" + "\n";
 
             if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
+            if (jsonp != '0')   sign_input += ("callback=" + encode(jsonp) + "&") ;
             if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
 
             sign_input += "pnsdk=" + encode(PNSDK) + "&" + "timestamp=" + timestamp;
@@ -2891,7 +2891,7 @@ function ajax( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
-    ,   async    = ( typeof(setup.blocking) === 'undefined' )
+    ,   async    = !(setup.blocking)
     ,   done     = function(failed,response) {
             if (complete) return;
             complete = 1;

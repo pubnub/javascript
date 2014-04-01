@@ -1,12 +1,14 @@
 var pubnub = PUBNUB.init({
     publish_key   : 'demo',
-    subscribe_key : 'demo'
+    subscribe_key : 'demo',
+    jsonp         : true
 });
 
 var pubnub_enc = PUBNUB({
     publish_key: "demo",
     subscribe_key: "demo",
-    cipher_key: "enigma"
+    cipher_key: "enigma",
+    jsonp     : true
 });
 
 var channel = 'javascript-test-channel-' + Math.random();
@@ -72,7 +74,8 @@ test("set_uuid() should set uuid and new presence event should come with new uui
 test("instantiation test 1", function() {
     var pubnub = PUBNUB({
         'publish_key' : 'demo',
-        'subscribe_key' : 'demo'
+        'subscribe_key' : 'demo',
+        jsonp           : true
     });
     expect(2);
     stop(2);
@@ -97,7 +100,8 @@ test("instantiation test 1", function() {
 test("instantiation test 2", function() {
     var pubnub = PUBNUB.init({
         'publish_key' : 'demo',
-        'subscribe_key' : 'demo'
+        'subscribe_key' : 'demo',
+        jsonp           : true
     });
     expect(2);
     stop(2);
@@ -122,12 +126,14 @@ test("instantiation test 2", function() {
 test("instantiation test 3", function() {
     var pubnub1 = PUBNUB.init({
         'publish_key' : 'demo',
-        'subscribe_key' : 'demo'
+        'subscribe_key' : 'demo',
+        jsonp          : true
     });
 
     var pubnub = pubnub1.init({
         'publish_key' : 'demo',
-        'subscribe_key' : 'demo'
+        'subscribe_key' : 'demo',
+        jsonp         : true
     });
 
     expect(2);
@@ -872,7 +878,8 @@ asyncTest('Encryption tests', function() {
     var aes = PUBNUB.init({
         publish_key: "demo",
         subscribe_key: "demo",
-        cipher_key: "enigma"
+        cipher_key: "enigma",
+        jsonp    : true
     });
     expect(16);
     var test_plain_string_1 = "Pubnub Messaging API 1";
@@ -943,7 +950,8 @@ var pubnub_pam = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
     publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
     subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
-    secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
+    secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh',
+    jsonp             : true
 });
 test("#grant() should be able to grant read write access", function(done) {
     var grant_channel_1 = grant_channel + '-1';
@@ -1427,25 +1435,29 @@ var pubnub_pres = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
-    uuid              : uuid
+    uuid              : uuid,
+    jsonp             : true
 });
 var pubnub_pres_1 = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
-    uuid              : uuid1
+    uuid              : uuid1,
+    jsonp             : true
 });
 var pubnub_pres_2 = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
-    uuid              : uuid2
+    uuid              : uuid2,
+    jsonp             : true
 });
 var pubnub_pres_3 = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
     publish_key       : 'demo',
     subscribe_key     : 'demo',
-    uuid              : uuid3
+    uuid              : uuid3,
+    jsonp             : true
 });
 
 /*
