@@ -24,6 +24,17 @@ var pubnub = require("pubnub").init({
 });
 
 /* ---------------------------------------------------------------------------
+Publish Messages
+--------------------------------------------------------------------------- */
+var message = { "some" : "data" };
+pubnub.publish({ 
+    channel   : 'my_channel',
+    message   : message,
+    callback  : function(e) { console.log( "SUCCESS!", e ); },
+    error     : function(e) { console.log( "FAILED! RETRY PUBLISH!", e ); }
+});
+
+/* ---------------------------------------------------------------------------
 Listen for Messages
 --------------------------------------------------------------------------- */
 pubnub.subscribe({
@@ -43,4 +54,6 @@ stdin.on( 'data', function(chunk) {
         message : ''+chunk
     });
 });
+
+
 ```
