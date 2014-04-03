@@ -54,7 +54,7 @@ function validateArgs(opts) {
     // set env
     if ((clOptions[3] == "beta") || (clOptions[3] == "prod")) {
         if (clOptions[3] == "beta") {
-            config.origin = "presence-beta.pubnub.com";
+            config.origin = "pubsub.pubnub.com";
         } else {
             config.origin = "pubsub.pubnub.com";
         }
@@ -158,8 +158,12 @@ rl.on('line',function (line) {
             console.log('UnSubscribing to ' + config.ch1);
             unsubscribe(config.ch1);
             break;
+        case'subab':
+            console.log('Subscribing to ' + config.ch1 + " and " + config.ch2 + ".");
+            subscribe([config.ch1,config.ch2].join(","));
+            break;
+
         default:
-            console.log('ERROR ERROR ERROR `' + line.trim() + '`');
             break;
     }
     rl.prompt();
@@ -169,9 +173,15 @@ rl.on('line',function (line) {
     });
 
 
+function displayPresenceEvent(message, channel) {
+    console.log("");
+    console.log(message.timestamp + "> " + message.action + " on channel " + channel + " by: " + message.uuid );
+}
+
 function subscribe(ch) {
     pubnub.subscribe({
         channel: ch,
+        noheresync: 1,
         connect: function () {
             console.log("Connected to " + ch + ".");
         },
@@ -182,7 +192,13 @@ function subscribe(ch) {
         },
         error: function () {
             console.log("Error.");
+        },
+
+        presence: function (message, env, channel) {
+            displayPresenceEvent(message, channel);
+            console.log("***");
         }
+
     });
 }
 

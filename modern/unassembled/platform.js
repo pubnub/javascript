@@ -271,21 +271,39 @@ function css( element, styles ) {
  */
 function create(element) { return document.createElement(element) }
 
+
+function get_hmac_SHA256(data,key) {
+    var hash = CryptoJS['HmacSHA256'](data, key);
+    return hash.toString(CryptoJS['enc']['Base64']);
+}
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 
-function PN(setup) {
+function CREATE_PUBNUB(setup) {
 
 
     setup['db'] = db;
     setup['xdr'] = xdr;
-    setup['error'] = error;
-    var SELF = PN_API(setup);
+    setup['error'] = setup['error'] || error;
+    setup['PNSDK']      = PNSDK;
+    setup['hmac_SHA256']= get_hmac_SHA256;
+    setup['crypto_obj'] = crypto_obj();
 
-    SELF['init'] = PN;
+    SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    }
+    var PN = PN_API(setup);
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
+
+    SELF['init'] = SELF;
     SELF['$'] = $;
     SELF['attr'] = attr;
     SELF['search'] = search;
@@ -293,24 +311,31 @@ function PN(setup) {
     SELF['css'] = css;
     SELF['create'] = create;
 
-
-    // Add Leave Functions
-    bind( 'beforeunload', window, function() {
-        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
-        return true;
-    } );
+    if (typeof(window) !== 'undefined'){
+        bind( 'beforeunload', window, function() {
+            SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
+            return true;
+        });
+    }
 
     // Return without Testing
     if (setup['notest']) return SELF;
 
-    bind( 'offline', window,   SELF['_reset_offline'] );
-    bind( 'offline', document, SELF['_reset_offline'] );
+    if (typeof(window) !== 'undefined'){
+        bind( 'offline', window,   SELF['_reset_offline'] );
+    }
+
+    if (typeof(document) !== 'undefined'){
+        bind( 'offline', document, SELF['_reset_offline'] );
+    }
 
     SELF['ready']();
     return SELF;
 }
-
-typeof module  !== 'undefined' && (module.exports = PN) ||
-typeof exports !== 'undefined' && (exports.PN = PN)     || (PUBNUB = PN);
+CREATE_PUBNUB['init'] = CREATE_PUBNUB
+CREATE_PUBNUB['secure'] = CREATE_PUBNUB
+PUBNUB = CREATE_PUBNUB({})
+typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
+typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);
 
 })();

@@ -7,20 +7,26 @@
 
 var pubnub = require("./../pubnub.js").init({
     publish_key   : "demo",
-    subscribe_key : "demo",
-    origin:'balancer7.us-west-1.pubnub.com'
+    subscribe_key : "demo"
 });
 
 
 /* ---------------------------------------------------------------------------
 Listen for Messages
 --------------------------------------------------------------------------- */
+
+function publish(channel, msg) {
 pubnub.publish({
-    channel  : "JAY",
-    message  : "askldjflksjd_POST",
+    channel  : channel,
+    message  : msg,
     callback : log,
     error    : retry
 });
-
+}
 function log(e) { console.log(e) }
 function retry() { console.log('retry?') }
+
+
+for (var i = 0; i < 1000; i++) {
+	publish('dsm-test',i);
+}

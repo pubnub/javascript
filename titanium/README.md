@@ -1,6 +1,6 @@
 ## Get your very own registration keys at http://www.pubnub.com/account
 
-### PubNub 3.4.4 Real-time Cloud Push API for Titanium
+### PubNub 3.6 Real-time Cloud Push API for Titanium
 
 PubNub is a Massively Scalable Real-time Service for Web and Mobile Games.
 This is a cloud-based service for broadcasting Real-time messages

@@ -1,7 +1,6 @@
 <html>
 <head>
-    <script src=../pubnub.js></script>
-    <script src=../pubnub-crypto.min.js></script>
+    <script src=../pubnub.min.js></script>
     <script src=./pubnub_dev_console.js></script>
     <style>
 
@@ -43,6 +42,11 @@ Init with test PAM-enabled domain and default keys:
 <button onclick='dev_console.init("pubsub.pubnub.com","pub-c-e72b633d-bb2f-42ba-8e98-69a9d3f7bdaa","sub-c-8e798456-4520-11e3-9b46-02ee2ddab7fe","sec-c-ZjFjZmRhODMtM2E5Yi00N2ViLWJjYTktMjk2NmExOTQyMmYz","myauthkey", false)'>
     Init
 </button>
+<p/>
+Init with origin set to presence keys:
+<button onclick='dev_console.init("pubsub.pubnub.com","pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86","sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe","demo","demo", false, true)'>
+    Init with beta presence origin
+</button>
 
 <h2>Output</h2>
 <button onclick='clearOutputs()'>Clear</button>
@@ -79,17 +83,26 @@ Init with test PAM-enabled domain and default keys:
 </div>
 <div class="inline">
     Set auth key:
-    <button onclick="dev_console.input(8)">dev_console.input(7)</button>
+    <button onclick="dev_console.input(8)">dev_console.input(8)</button>
     <div id="currentAuthKey"></div>
     <p/>
     PAM Grant:
-    <button onclick="dev_console.input(9)">dev_console.input(8)</button>
+    <button onclick="dev_console.input(9)">dev_console.input(9)</button>
     <p/>
     PAM Revoke:
-    <button onclick="dev_console.input(10)">dev_console.input(9)</button>
+    <button onclick="dev_console.input(10)">dev_console.input(10)</button>
     </p>
     PAM Audit:
-    <button onclick="dev_console.input(11)">dev_console.input(10)</button>
+    <button onclick="dev_console.input(11)">dev_console.input(11)</button>
+    </p>
+    Set State:
+    <button onclick="dev_console.input(12)">dev_console.input(12)</button>
+    </p>
+    Set Heartbeat:
+    <button onclick="dev_console.input(13)">dev_console.input(13)</button>
+    </p>
+    Set Heartbeat Interval:
+    <button onclick="dev_console.input(14)">dev_console.input(14)</button>
 </div>
 
 </body>

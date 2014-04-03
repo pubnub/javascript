@@ -1,0 +1,11 @@
+input {
+    display: block;
+}
+
+label {
+    color: red;
+}
+
+img {
+    width: 600px;
+}

@@ -75,13 +75,23 @@ function error(message) { console['error'](message) }
  * ======
  * var elements = search('a div span');
  */
-function search( elements, start ) {
+function search( elements, start) {
     var list = [];
     each( elements.split(/\s+/), function(el) {
         each( (start || document).getElementsByTagName(el), function(node) {
             list.push(node);
         } );
-    } );
+    });
+    return list;
+}
+
+function search_old(a) { 
+    var list = [];
+    each( a.split(/\s+/), function(el) {
+        each( (document).getElementsByTagName(el), function(node) {
+            list.push(node);
+        },1 );
+    }, 1);
     return list;
 }
 
@@ -125,7 +135,7 @@ function unbind( type, el, fun ) {
  * ====
  * head().appendChild(elm);
  */
-function head() { return search('head')[0] }
+function head() { return search_old('head')[0] }
 
 /**
  * ATTR
@@ -211,7 +221,7 @@ function xdr( setup ) {
     ,   id        = unique()
     ,   finished  = 0
     ,   xhrtme    = setup.timeout || DEF_TIMEOUT
-    ,   timer     = timeout( function(){done(1)}, xhrtme )
+    ,   timer     = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
     ,   fail      = setup.fail    || function(){}
     ,   data      = setup.data    || {}
     ,   success   = setup.success || function(){}
@@ -275,11 +285,11 @@ function ajax( setup ) {
     ,   complete = 0
     ,   loaded   = 0
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
-    ,   timer    = timeout( function(){done(1)}, xhrtme )
+    ,   timer    = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
-    ,   async    = ( typeof(setup.blocking) === 'undefined' )
+    ,   async    = !(setup.blocking)
     ,   done     = function(failed,response) {
             if (complete) return;
             complete = 1;
@@ -347,7 +357,6 @@ function _is_online() {
     return navigator['onLine'];
 }
 
-
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -364,15 +373,28 @@ var PDIV          = $('pubnub') || 0
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid')||'';
 
+    var leave_on_unload = setup['leave_on_unload'] || 0;
+
     setup['xdr']        = xdr;
     setup['db']         = db;
-    setup['error']      = error;
+    setup['error']      = setup['error'] || error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
     setup['PNSDK']      = PNSDK;
     setup['hmac_SHA256']= get_hmac_SHA256;
+    setup['crypto_obj'] = crypto_obj();
 
-    var SELF            = PN_API(setup);
+    var SELF = function(setup) {
+        return CREATE_PUBNUB(setup);
+    };
+
+    var PN = PN_API(setup);
+
+    for (var prop in PN) {
+        if (PN.hasOwnProperty(prop)) {
+            SELF[prop] = PN[prop];
+        }
+    }
     SELF['css']         = css;
     SELF['$']           = $;
     SELF['create']      = create;
@@ -381,12 +403,13 @@ var PDIV          = $('pubnub') || 0
     SELF['search']      = search;
     SELF['attr']        = attr;
     SELF['events']      = events;
-    SELF['init']        = CREATE_PUBNUB;
+    SELF['init']        = SELF;
+    SELF['secure']      = SELF;
 
 
     // Add Leave Functions
     bind( 'beforeunload', window, function() {
-        SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 0 ) });
+        if (leave_on_unload) SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 0 ) });
         return true;
     } );
 
@@ -399,6 +422,8 @@ var PDIV          = $('pubnub') || 0
     // Return PUBNUB Socket Object
     return SELF;
 };
+CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+CREATE_PUBNUB['secure'] = CREATE_PUBNUB;
 
 // Bind for PUBNUB Readiness to Subscribe
 if (document.readyState === 'complete') {
@@ -422,7 +447,7 @@ PUBNUB = CREATE_PUBNUB({
 });
 
 // jQuery Interface
-window['jQuery'] && (window['jQuery']['PUBNUB'] = PUBNUB);
+window['jQuery'] && (window['jQuery']['PUBNUB'] = CREATE_PUBNUB);
 
 // For Modern JS + Testling.js - http://testling.com/
 typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();

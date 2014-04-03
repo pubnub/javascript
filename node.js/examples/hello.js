@@ -5,18 +5,27 @@
 
 --------------------------------------------------------------------------- */
 
-var pubnub = require("./../pubnub.js").init({
+var PUBNUB = require("../pubnub.js")
+
+var pubnub = PUBNUB({
     publish_key   : "demo",
     subscribe_key : "demo"
+    //cipher_key : "demo"
 });
 
+
+console.log(pubnub.get_version());
 /* ---------------------------------------------------------------------------
 Listen for Messages
 --------------------------------------------------------------------------- */
 pubnub.subscribe({
     channel  : "a",
-    windowing : 10000,
     callback : function(message) {
         console.log( " > ", message );
-    }
+    },
+    error : function(r) {
+       console.log(JSON.stringify(r));
+    },
+    presence : function(r) { console.log(JSON.stringify(r)) }
+
 });
