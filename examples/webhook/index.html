@@ -1,0 +1,40 @@
+<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+<script>(function(){
+
+var pubnub = PUBNUB({
+    subscribe_key : 'demo',
+      publish_key : 'demo'
+});
+
+pubnub.subscribe({
+       message : function(message) { console.log(message) },
+       channel : 'user_17',
+    disconnect : function() {
+        // I'm Connected!
+        // jQuery Example
+        console.log('connected!');
+        $.ajax({
+            type : "GET",
+             url : "/user/disconnect",
+            data : { name: "John", location: "Boston" }
+        })
+        .done(function(msg){
+            console.log( "Sent! " + msg );
+        });
+    },
+    connect : function() {
+        // I disconnected!
+        // jQuery Example
+        console.log('Disconnected!');
+        $.ajax({
+            type : "GET",
+             url : "/user/disconnect",
+            data : { name: "John", location: "Boston" }
+        })
+        .done(function(msg){
+            console.log( "Sent! " + msg );
+        });
+    }
+});
+
+})();</script>
