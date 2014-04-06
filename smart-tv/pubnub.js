@@ -1,4 +1,4 @@
-// Version: 3.6.2
+// Version: 3.6.3
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -162,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.2'
+,   SDK_VER         = '3.6.3'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -356,7 +356,6 @@ function PN_API(setup) {
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || 'demo'
     ,   AUTH_KEY      = setup['auth_key']      || ''
     ,   SECRET_KEY    = setup['secret_key']    || ''
-    ,   PNSDK         = setup['PNSDK']         || ''
     ,   hmac_SHA256   = setup['hmac_SHA256']
     ,   SSL           = setup['ssl']            ? 's' : ''
     ,   ORIGIN        = 'http'+SSL+'://'+(setup['origin']||'pubsub.pubnub.com')
@@ -381,6 +380,7 @@ function PN_API(setup) {
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   COMPATIBLE_35 = setup['compatible_3.5']  || false
     ,   xdr           = setup['xdr']
+    ,   params        = setup['params'] || {}
     ,   error         = setup['error']      || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
@@ -393,6 +393,37 @@ function PN_API(setup) {
             'encrypt' : function(a,key){ return a},
             'decrypt' : function(b,key){return b}
         };
+
+    function _get_url_params(data) {
+        if (!data) data = {};
+        each( params , function( key, value ) {
+            data[key] = value;
+        });
+        return data;
+    }
+
+    function _object_to_key_list(o) {
+        var l = []
+        each( o , function( key, value ) {
+            l.push(key);
+        });
+        return l;
+    }    
+    function _object_to_key_list_sorted(o) {
+        return _object_to_key_list(o).sort();
+    }
+
+    function _get_pam_sign_input_from_params(params) {
+        var si = "";
+        var l = _object_to_key_list_sorted(params);
+
+        for (var i in l) {
+            var k = l[i]
+            si += k + "=" + encode(params[k]) ;
+            if (i != l.length - 1) si += "&"
+        }
+        return si;
+    }
 
     function validate_presence_heartbeat(heartbeat, cur_heartbeat, error) {
         var err = false;
@@ -530,7 +561,7 @@ function PN_API(setup) {
                 blocking : blocking || SSL,
                 timeout  : 2000,
                 callback : jsonp,
-                data     : data,
+                data     : _get_url_params(data),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -578,6 +609,9 @@ function PN_API(setup) {
         'get_version' : function() {
             return SDK_VER;
         },
+        '_add_param' : function(key,val) {
+            params[key] = val;
+        },
 
         /*
             PUBNUB.history({
@@ -618,7 +652,7 @@ function PN_API(setup) {
             // Send Message
             xdr({
                 callback : jsonp,
-                data     : params,
+                data     : _get_url_params(params),
                 success  : function(response) {
                     if (typeof response == 'object' && response['error']) {
                         err({'message' : response['message'], 'payload' : response['payload']});
@@ -697,7 +731,7 @@ function PN_API(setup) {
                 },
                 fail     : function() { callback([ 0, 'Disconnected' ]) },
                 url      : url,
-                data     : data
+                data     : _get_url_params(data)
             });
         },
 
@@ -716,7 +750,7 @@ function PN_API(setup) {
             var jsonp = jsonp_cb();
             xdr({
                 callback : jsonp,
-                data     : { 'uuid' : UUID, 'auth' : AUTH_KEY },
+                data     : _get_url_params({ 'uuid' : UUID, 'auth' : AUTH_KEY }),
                 timeout  : SECOND * 5,
                 url      : [STD_ORIGIN, 'time', jsonp],
                 success  : function(response) { callback(response[0]) },
@@ -764,7 +798,7 @@ function PN_API(setup) {
                 callback : jsonp,
                 timeout  : SECOND * 5,
                 url      : url,
-                data     : { 'uuid' : UUID, 'auth' : auth_key },
+                data     : _get_url_params({ 'uuid' : UUID, 'auth' : auth_key }),
                 fail     : function(response){
                     _invoke_error(response, err);
                     publish(1);
@@ -953,7 +987,7 @@ function PN_API(setup) {
                 // Connect to PubNub Subscribe Servers
                 _reset_offline();
 
-                var data = { 'uuid' : UUID, 'auth' : auth_key };
+                var data = _get_url_params({ 'uuid' : UUID, 'auth' : auth_key });
 
                 var st = JSON.stringify(STATE);
                 if (st.length > 2) data['state'] = JSON.stringify(STATE);
@@ -969,7 +1003,7 @@ function PN_API(setup) {
                         //SUB_RECEIVER = null;
                         SELF['time'](_test_connection);
                     },
-                    data     : data,
+                    data     : _get_url_params(data),
                     url      : [
                         SUB_ORIGIN, 'subscribe',
                         SUBSCRIBE_KEY, encode(channels),
@@ -1097,7 +1131,7 @@ function PN_API(setup) {
 
             xdr({
                 callback : jsonp,
-                data     : data,
+                data     : _get_url_params(data),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -1127,7 +1161,7 @@ function PN_API(setup) {
 
             xdr({
                 callback : jsonp,
-                data     : data,
+                data     : _get_url_params(data),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -1151,7 +1185,7 @@ function PN_API(setup) {
             ,   uuid     = args['uuid'] || UUID
             ,   channel  = args['channel']
             ,   url
-            ,   data     = { 'auth' : auth_key };
+            ,   data     = _get_url_params({ 'auth' : auth_key });
 
             // Make sure we have a Channel
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
@@ -1182,7 +1216,7 @@ function PN_API(setup) {
 
             xdr({
                 callback : jsonp,
-                data     : data,
+                data     : _get_url_params(data),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -1227,27 +1261,9 @@ function PN_API(setup) {
             ,   sign_input = SUBSCRIBE_KEY + "\n" + PUBLISH_KEY + "\n"
                     + "grant" + "\n";
 
-
-            if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
-            if (jsonp != '0')   sign_input += ("callback=" + encode(jsonp) + "&") ;
-            if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
-
-            sign_input += "pnsdk=" + encode(PNSDK) + "&"
-                    + "r=" + r + "&"
-                    + "timestamp=" + encode(timestamp);
-                    
-            if (ttl || ttl === 0) sign_input += "&" + "ttl=" + ttl;
-
-            sign_input += "&" + "w=" + w;
-            var signature = hmac_SHA256( sign_input, SECRET_KEY );
-
-            signature = signature.replace( /\+/g, "-" );
-            signature = signature.replace( /\//g, "_" );
-
             var data = {
                 'w'         : w,
                 'r'         : r,
-                'signature' : signature,
                 'channel'   : channel,
                 'timestamp' : timestamp
             };
@@ -1255,6 +1271,17 @@ function PN_API(setup) {
             if (jsonp != '0') { data['callback'] = jsonp; }
             if (ttl || ttl === 0) data['ttl'] = ttl;
             if (auth_key) data['auth'] = auth_key;
+
+            data = _get_url_params(data)
+
+            sign_input += _get_pam_sign_input_from_params(data);
+
+            var signature = hmac_SHA256( sign_input, SECRET_KEY );
+
+            signature = signature.replace( /\+/g, "-" );
+            signature = signature.replace( /\//g, "_" );
+
+            data['signature'] = signature;
 
             xdr({
                 callback : jsonp,
@@ -1300,23 +1327,21 @@ function PN_API(setup) {
                 + PUBLISH_KEY + "\n"
                 + "audit" + "\n";
 
-            if (auth_key)  sign_input += ("auth=" + encode(auth_key) + "&");
-            if (jsonp != '0')   sign_input += ("callback=" + encode(jsonp) + "&") ;
-            if (channel)   sign_input += ("channel=" + encode(channel) + "&") ;
+            var data = {'timestamp' : timestamp };
+            if (jsonp != '0') { data['callback'] = jsonp; }
+            if (channel)  data['channel'] = channel;
+            if (auth_key) data['auth']    = auth_key;    
 
-            sign_input += "pnsdk=" + encode(PNSDK) + "&" + "timestamp=" + timestamp;
+            data = _get_url_params(data)
+
+            sign_input += _get_pam_sign_input_from_params(data);
 
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
 
             signature = signature.replace( /\+/g, "-" );
             signature = signature.replace( /\//g, "_" );
 
-            var data = { 'signature' : signature, 'timestamp' : timestamp };
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
-            if (channel)  data['channel'] = channel;
-            if (auth_key) data['auth']    = auth_key;
-
+            data['signature'] = signature;
             xdr({
                 callback : jsonp,
                 data     : data,
@@ -1366,7 +1391,7 @@ function PN_API(setup) {
 
             xdr({
                 callback : jsonp,
-                data     : data,
+                data     : _get_url_params(data),
                 timeout  : SECOND * 5,
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
@@ -2615,7 +2640,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.2'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.3'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -2852,7 +2877,6 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-    data['pnsdk']  = PNSDK;
     script.src     = build_url( setup.url, data );
 
     attr( script, 'id', id );
@@ -2935,7 +2959,6 @@ function ajax( setup ) {
         }
         if (async) xhr.timeout = xhrtme;
 
-        data['pnsdk'] = PNSDK;
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
@@ -2982,9 +3005,9 @@ var PDIV          = $('pubnub') || 0
     setup['error']      = setup['error'] || error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
-    setup['PNSDK']      = PNSDK;
     setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
+    setup['params']     = { 'pnsdk' : PNSDK }
 
     var SELF = function(setup) {
         return CREATE_PUBNUB(setup);

@@ -271,6 +271,7 @@ function CREATE_PUBNUB(setup) {
     setup['db'] = db;
     setup['xdr'] = setup['native_tcp_socket'] ? xdr_tcp : xdr_http_client
     setup['crypto_obj'] = crypto_obj();
+    setup['params']      = { 'pnsdk' : PNSDK }
 
 
     SELF = function(setup) {

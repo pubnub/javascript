@@ -250,7 +250,6 @@ function xdr( setup ) {
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
     script.onerror = function() { done(1) };
-    data['pnsdk']  = PNSDK;
     script.src     = build_url( setup.url, data );
 
     attr( script, 'id', id );
@@ -333,7 +332,6 @@ function ajax( setup ) {
         }
         if (async) xhr.timeout = xhrtme;
 
-        data['pnsdk'] = PNSDK;
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
@@ -380,9 +378,9 @@ var PDIV          = $('pubnub') || 0
     setup['error']      = setup['error'] || error;
     setup['_is_online'] = _is_online;
     setup['jsonp_cb']   = jsonp_cb;
-    setup['PNSDK']      = PNSDK;
     setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
+    setup['params']     = { 'pnsdk' : PNSDK }
 
     var SELF = function(setup) {
         return CREATE_PUBNUB(setup);

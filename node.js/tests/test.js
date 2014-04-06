@@ -553,6 +553,9 @@ describe('Pubnub', function() {
             subscribe_key     : sub_key,
             secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
         });
+        for ( var i = 0; i < Math.floor((Math.random()*10)+1); i++) {
+            pubnub._add_param('a-' + Math.floor((Math.random()*1000)+1) , Date.now());
+        }
 
         it('should be able to grant read write access', function(done) {
             var grant_channel_local = grant_channel + Date.now();
@@ -1000,6 +1003,9 @@ describe('Pubnub', function() {
             secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
         });
 
+        for ( var i = 0; i < Math.floor((Math.random()*10)+1); i++) {
+            pubnub._add_param('a-' + Math.floor((Math.random()*1000)+1) , Date.now());
+        }
 
         it('should be able to revoke access', function(done) {
             setTimeout(function() {
