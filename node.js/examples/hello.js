@@ -13,19 +13,15 @@ var pubnub = PUBNUB({
     //cipher_key : "demo"
 });
 
+pubnub.publish({
+	post: false,
+channel : 'PubNubTest_RX',
+message : { 'test' : 'f?ds' },
+callback : function(details) {
+var success = details[0]
+, response = details[1];
 
-console.log(pubnub.get_version());
-/* ---------------------------------------------------------------------------
-Listen for Messages
---------------------------------------------------------------------------- */
-pubnub.subscribe({
-    channel  : "a",
-    callback : function(message) {
-        console.log( " > ", message );
-    },
-    error : function(r) {
-       console.log(JSON.stringify(r));
-    },
-    presence : function(r) { console.log(JSON.stringify(r)) }
-
+if (success) console.log( "Success!", response );
+if (!success) console.log( "Fail!", response );
+}
 });

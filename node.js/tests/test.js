@@ -19,6 +19,7 @@ var count = 0;
 
 var message_string = "Hi from Javascript";
 var message_jsono = {"message": "Hi from Javascript"};
+var message_jsono_q = {"message": "How are you ?"};
 var message_jsona = ["message" , "Hi from javascript"];
 var message_num = 123;
 var message_num_str = "123";
@@ -140,6 +141,42 @@ describe('Pubnub', function() {
                 },
                 callback : function(response) {
                     assert.deepEqual(response,message_jsono);
+                    pubnub_enc.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish json objects without error ( with ? in content ) ', function(done){
+            var ch = channel + '-' + ++count;
+            pubnub.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub.publish({channel: ch , message : message_jsono_q,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_jsono_q);
+                    pubnub.unsubscribe({channel : ch});
+                    done();
+                }
+
+            })
+        })
+        it('should publish json objects without error when encryption is enabled ( with ? in content )', function(done){
+            var ch = channel + '-' + ++count;
+            pubnub_enc.subscribe({channel : ch ,
+                connect : function(response) {
+                    pubnub_enc.publish({channel: ch , message : message_jsono_q,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                        }
+                    });
+                },
+                callback : function(response) {
+                    assert.deepEqual(response,message_jsono_q);
                     pubnub_enc.unsubscribe({channel : ch});
                     done();
                 }
