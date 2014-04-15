@@ -75,6 +75,7 @@ function xdr( setup ) {
     ,   failed   = 0
     ,   complete = 0
     ,   loaded   = 0
+    ,   mode     = setup['mode'] || 'GET'
     ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
     ,   body = ''
@@ -106,13 +107,11 @@ function xdr( setup ) {
 
     data['pnsdk'] = PNSDK;
 
-    var publish = setup.url[1] === 'publish';
-    var mode    = publish ? 'POST' : 'GET';
     var options = {};
     var headers = {};
     var payload = '';
 
-    if (publish && mode == 'POST')
+    if (mode == 'POST')
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );

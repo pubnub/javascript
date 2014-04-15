@@ -620,6 +620,7 @@ function PN_API(setup) {
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   cipher_key = args['cipher_key']
             ,   err      = args['error'] || function() {}
+            ,   post     = args['post'] || false
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
             ,   url;
@@ -655,7 +656,8 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                     publish(1);
-                }
+                },
+                mode     : (post)?'POST':'GET'
             });
 
             // Send Message

@@ -621,6 +621,7 @@ function PN_API(setup) {
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   cipher_key = args['cipher_key']
             ,   err      = args['error'] || function() {}
+            ,   post     = args['post'] || false
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
             ,   url;
@@ -656,7 +657,8 @@ function PN_API(setup) {
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                     publish(1);
-                }
+                },
+                mode     : (post)?'POST':'GET'
             });
 
             // Send Message
@@ -1402,6 +1404,7 @@ function xdr( setup ) {
     ,   failed   = 0
     ,   complete = 0
     ,   loaded   = 0
+    ,   mode     = setup['mode'] || 'GET'
     ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
     ,   body = ''
@@ -1433,13 +1436,11 @@ function xdr( setup ) {
 
     data['pnsdk'] = PNSDK;
 
-    var publish = setup.url[1] === 'publish';
-    var mode    = publish ? 'POST' : 'GET';
     var options = {};
     var headers = {};
     var payload = '';
 
-    if (publish && mode == 'POST')
+    if (mode == 'POST')
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
