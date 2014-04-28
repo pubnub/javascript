@@ -1,4 +1,6 @@
-# YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
+# Please direct all Support Questions and Concerns to Support@PubNub.com
+
+###### YOU MUST HAVE A PUBNUB ACCOUNT TO USE THE API.
 Create an account at http://www.pubnub.com/account
 
 ## The PubNub Network JavaScript Real-time SDK v3.6.1
@@ -1027,3 +1029,5 @@ And a bit more detail on how it all fits together:
 3. First mocha tests are run. If they succeed...
 4. Jenkins creates a job on testswarm to execute qunit tests across various browsers. Cross-browser testing is done via BrowserStack. A script runs on the server which keeps querying testswarm for the swarm state . The state defines which browsers are required by swarm. This script then spawns those browsers on BrowserStack. The browsers not required any more are killed. This way whenever a job is submitted, the script will start browsres and kill them once done.
 5. The job creation script keeps polling swarm for test results. If the results indicate success, the build status is set as passed... if the tests indicate failure, build status is set as failure, and mail is sent to PubNub support for further investigation.
+
+# Please direct all Support Questions and Concerns to Support@PubNub.com
