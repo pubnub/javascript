@@ -85,16 +85,6 @@ function search( elements, start) {
     return list;
 }
 
-function search_old(a) { 
-    var list = [];
-    each( a.split(/\s+/), function(el) {
-        each( (document).getElementsByTagName(el), function(node) {
-            list.push(node);
-        },1 );
-    }, 1);
-    return list;
-}
-
 /**
  * BIND
  * ====
@@ -398,7 +388,7 @@ var PDIV          = $('pubnub') || 0
     SELF['create']      = create;
     SELF['bind']        = bind;
     SELF['head']        = head;
-    SELF['search']      = search_old;
+    SELF['search']      = search;
     SELF['attr']        = attr;
     SELF['events']      = events;
     SELF['init']        = SELF;

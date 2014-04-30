@@ -128,9 +128,9 @@ function uuid(callback) {
     if (callback) callback(u);
     return u;
 }
+
 function isArray(arg) {
-    var type = Object.prototype.toString.call(arg);
-    return   ( type === "[object Array]" || type === "[object NodeList]"  || type === "[object ScriptBridgingArrayProxyObject]");
+  return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
 }
 
 /**
@@ -138,10 +138,10 @@ function isArray(arg) {
  * ====
  * each( [1,2,3], function(item) { } )
  */
-function each( o, f, old_logic) {
+function each( o, f) {
     if ( !o || !f ) return;
 
-    if ( isArray(o) || ( old_logic && typeof o[0] != 'undefined' ) )
+    if ( isArray(o) )
         for ( var i = 0, l = o.length; i < l; )
             f.call( o[i], o[i], i++ );
     else
