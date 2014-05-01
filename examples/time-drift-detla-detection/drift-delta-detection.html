@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+    <title>PubNub Clock Sync Drift Detection</title>
+    <style>
+        #latency {
+            font-size: 30px;
+            font-family: "Helvetica Neue";
+            font-weight: 200;
+            color: #eeeee2;
+            background: #444;
+            padding: 10px;
+            border-radius: 500px;
+            text-align: center;
+
+            -webkit-transition: all 0.1s;
+            -moz-transition: all 0.1s;
+            -ms-transition: all 0.1s;
+            -o-transition: all 0.1s;
+            transition: all 0.1s;
+        }
+        h1 {
+            font-family: "Helvetica Neue";
+            text-align: center;
+            font-weight: 100;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Clock Drift -->
+<h1>PubNub Clock Sync Drift Detection</h1>
+<div id=latency>40</div>
+<div id=pubnub></div>
+<h3>Checking drift once per second.</h3>
+
+
+<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+<script>(function(){
+
+    // Drift Functions
+    function now(){ return+new Date }
+    function clock_drift(cb) {
+        clock_drift.start = now();
+        PUBNUB.time(function(timetoken){
+            var latency     = (now() - clock_drift.start) / 2
+            ,   server_time = (timetoken / 10000) + latency
+            ,   local_time  = now()
+            ,   drift       = local_time - server_time;
+
+            cb(drift);
+        });
+
+        if (clock_drift.ival) return;
+        clock_drift.ival = setInterval( function(){clock_drift(cb)}, 1000 );
+    }
+
+    // This is how you use the code
+    // Periodically Get Latency in Miliseconds
+    clock_drift(function(latency){
+        var out = PUBNUB.$('latency');
+        out.innerHTML = "Clock Drift Delta: " + latency + "ms";
+
+        // Flash Update
+        PUBNUB.css( out, { background : latency > 2000 ? '#f32' : '#5b5' } );
+        setTimeout( function() {
+            PUBNUB.css( out, { background : '#444' } );
+        }, 300 );
+    });
+
+
+})();</script>
+</body>
+</html>
+
