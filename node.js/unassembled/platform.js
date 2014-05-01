@@ -32,15 +32,16 @@ THE SOFTWARE.
 /**
  * UTIL LOCALS
  */
-var NOW                = 1
-,   http               = require('http')
-,   https              = require('https')
-,   XHRTME             = 310000
-,   DEF_TIMEOUT     = 10000
-,   SECOND          = 1000
-,   PNSDK           = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
-,   crypto           = require('crypto')
-,   XORIGN             = 1;
+var NOW                 = 1
+,   http                = require('http')
+,   https               = require('https')
+,   XHRTME              = 310000
+,   DEF_TIMEOUT         = 10000
+,   SECOND              = 1000
+,   PNSDK               = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
+,   crypto              = require('crypto')
+,   proxy               = null
+,   XORIGN              = 1;
 
 
 function get_hmac_SHA256(data, key) {
@@ -117,20 +118,22 @@ function xdr( setup ) {
     var url = build_url( setup.url, data );
     url = '/' + url.split('/').slice(3).join('/');
 
-    options.hostname = setup.url[0].split("//")[1];
-    options.port     = ssl ? 443 : 80;
-    options.path     = url;
+    var origin       = setup.url[0].split("//")[1]
+
+    options.hostname = proxy ? proxy.hostname : setup.url[0].split("//")[1];
+    options.port     = proxy ? proxy.port : ssl ? 443 : 80;
+    options.path     = proxy ? "http://" + origin + url:url;
+    options.headers  = proxy ? { 'Host': origin }:null;
     options.method   = mode;
     options.agent    = false;
     options.body     = payload;
-
 
     require('http').globalAgent.maxSockets = Infinity;
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(){console.log('error');done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'abort', function(){console.log('abort');done(1, body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );
@@ -150,7 +153,6 @@ function xdr( setup ) {
                     default:
                         break;
                 }
-
                 finished();
             });
         });
@@ -215,6 +217,7 @@ function crypto_obj() {
 
 
 var CREATE_PUBNUB = function(setup) {
+    proxy = setup['proxy'];
     setup['xdr'] = xdr;
     setup['db'] = db;
     setup['error'] = setup['error'] || error;
