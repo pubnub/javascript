@@ -1,3 +1,7 @@
+5-01-14 * 3.6.3 * d8e1ebb15dc8b644b8e0430b0859368f35bdb72f
+. Improved isArray logic
+. Added HTTP Proxy Support for Node.JS
+
 4-04-14 * 3.6.2 * 57fec62ad09272e628060e722aef74267ce68c0f
 . WebHook example added
 . Pam / JSONP Fix for Chrome
