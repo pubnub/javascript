@@ -7,6 +7,7 @@
 
 var pubnub = require("./../pubnub.js").init({
     publish_key   : "demo",
+    ssl : true,
     subscribe_key : "demo"
 });
 
@@ -27,6 +28,6 @@ function log(e) { console.log(e) }
 function retry() { console.log('retry?') }
 
 
-for (var i = 0; i < 1000; i++) {
+for (var i = 1; i < 2; i++) {
 	publish('dsm-test',i);
 }

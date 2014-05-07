@@ -1,4 +1,4 @@
-// Version: 3.6.5
+// Version: 3.6.4
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.5'
+,   SDK_VER         = '3.6.4'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2512,7 +2512,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.6.5'
+,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.6.4'
 ,   XHRTME     = 310000;
 
 

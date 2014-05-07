@@ -1,4 +1,4 @@
-// 3.6.5
+// 3.6.4
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -13,7 +13,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.5'
+,   SDK_VER         = '3.6.4'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2514,7 +2514,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.6.5'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.6.4'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 
