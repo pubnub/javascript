@@ -1,4 +1,4 @@
-// Version: 3.6.3
+// Version: 3.6.5
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.3'
+,   SDK_VER         = '3.6.5'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1367,7 +1367,7 @@ var NOW                 = 1
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.3'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.5'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1;
@@ -1445,6 +1445,8 @@ function xdr( setup ) {
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
+    if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
+
     url = '/' + url.split('/').slice(3).join('/');
 
     var origin       = setup.url[0].split("//")[1]

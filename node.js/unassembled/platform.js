@@ -116,6 +116,8 @@ function xdr( setup ) {
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
+    if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
+
     url = '/' + url.split('/').slice(3).join('/');
 
     var origin       = setup.url[0].split("//")[1]
