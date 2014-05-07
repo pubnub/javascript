@@ -1,5 +1,5 @@
-var test_channel_count = 500;
-var pubnub             = require('./pnpool')( 25, {
+var test_channel_count = 1000;
+var pubnub             = require('./pnpool')( 30, {
     publish_key   : 'demo',
     subscribe_key : 'demo'
 } );
@@ -7,6 +7,7 @@ var pubnub             = require('./pnpool')( 25, {
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Subscribe/Publish Many Channels
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+var channel_count = 0;
 (new Array(test_channel_count)).join().split(',').forEach(function(_,a){
     var channel = 'channel-'+(a+1);
 
@@ -15,6 +16,7 @@ var pubnub             = require('./pnpool')( 25, {
         channel : channel,
         message : message,
         connect : function() {
+            console.log( 'connected to', ++channel_count, 'channels' );
             setTimeout( function() { 
             
                 // Send Message
