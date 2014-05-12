@@ -1,4 +1,4 @@
-// Version: 3.6.4
+// Version: 3.6.5
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.4'
+,   SDK_VER         = '3.6.5'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1046,7 +1046,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (CHANNELS[channel] && CHANNELS[channel].subscribed) STATE[channel] = state;
+            if (CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
 
             data['state'] = JSON.stringify(state);
 
@@ -1367,7 +1367,7 @@ var NOW                 = 1
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.4'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.5'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1;

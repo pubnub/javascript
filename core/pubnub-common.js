@@ -1045,7 +1045,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (CHANNELS[channel] && CHANNELS[channel].subscribed) STATE[channel] = state;
+            if (CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
 
             data['state'] = JSON.stringify(state);
 

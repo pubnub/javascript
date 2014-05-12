@@ -1,4 +1,4 @@
-// Version: 3.6.4
+// Version: 3.6.5
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.4'
+,   SDK_VER         = '3.6.5'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1046,7 +1046,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (CHANNELS[channel] && CHANNELS[channel].subscribed) STATE[channel] = state;
+            if (CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
 
             data['state'] = JSON.stringify(state);
 
@@ -2512,7 +2512,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.6.4'
+,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.6.5'
 ,   XHRTME     = 310000;
 
 

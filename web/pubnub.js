@@ -1,4 +1,4 @@
-// Version: 3.6.4
+// Version: 3.6.5
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -162,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.4'
+,   SDK_VER         = '3.6.5'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1196,7 +1196,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (CHANNELS[channel] && CHANNELS[channel].subscribed) STATE[channel] = state;
+            if (CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
 
             data['state'] = JSON.stringify(state);
 
@@ -2642,7 +2642,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.4'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.5'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
