@@ -2659,7 +2659,18 @@ console.log    || (
  * LOCAL STORAGE OR COOKIE
  */
 var db = (function(){
-    var ls = window['localStorage'];
+    try {
+        var ls = window['localStorage'];
+    } catch (e) {
+        var ls = {
+            _data       : {},
+            setItem     : function(id, val) { return this._data[id] = String(val); },
+            getItem     : function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : undefined; },
+            removeItem  : function(id) { return delete this._data[id]; },
+            clear       : function() { return this._data = {}; }
+        }
+    }
+
     return {
         'get' : function(key) {
             try {
