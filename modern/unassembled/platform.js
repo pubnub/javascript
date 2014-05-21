@@ -42,7 +42,18 @@ var NOW        = 1
  * LOCAL STORAGE
  */
 var db = (function(){
-    var ls = typeof localStorage != 'undefined' && localStorage;
+    try {
+        var ls = typeof localStorage != 'undefined' && localStorage;
+    } catch (e) {
+        var ls = {
+            _data       : {},
+            setItem     : function(id, val) { return this._data[id] = String(val); },
+            getItem     : function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : undefined; },
+            removeItem  : function(id) { return delete this._data[id]; },
+            clear       : function() { return this._data = {}; }
+        }
+    }
+
     return {
         get : function(key) {
             try {
