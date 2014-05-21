@@ -2660,6 +2660,7 @@ console.log    || (
  */
 var db = (function(){
     var ls = window['localStorage'];
+
     return {
         'get' : function(key) {
             try {
