@@ -44,7 +44,7 @@ function in_list(list,str) {
 describe('Pubnub', function() {
 
     this.timeout(180000);
-
+    
     describe('#subscribe()', function(){
         it('should pass plain text to callback on decryption error', function(done){
             var ch = channel + '-' + ++count;
@@ -364,6 +364,64 @@ describe('Pubnub', function() {
 
             })
         })
+        it('should store in history when store is not there or store is true', function(done){
+            var ch = channel + '-' + ++count;
+            var messages = [1,2,3]
+            pubnub.publish({channel: ch , message : messages[0],
+                callback : function(response) {
+                    assert.deepEqual(response[0],1);
+                    pubnub.publish({channel: ch , message : messages[1],
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                            pubnub.publish({channel: ch , message : messages[2],
+                                callback : function(response) {
+                                    assert.deepEqual(response[0],1);
+                                    setTimeout(function(){
+                                        pubnub.history({
+                                            channel  : ch,  
+                                            callback : function(response) {
+                                                assert.deepEqual(messages, response[0]);
+                                                done(); 
+                                            },
+                                            count : 3
+                                        });
+                                    },5000);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        })
+        it('should not store in history when store is false', function(done){
+            var ch = channel + '-' + ++count;
+            var messages = [4,5,6]
+            pubnub.publish({channel: ch , message : messages[0], store_in_history : false,
+                callback : function(response) {
+                    assert.deepEqual(response[0],1);
+                    pubnub.publish({channel: ch , message : messages[1], store_in_history : false,
+                        callback : function(response) {
+                            assert.deepEqual(response[0],1);
+                            pubnub.publish({channel: ch , message : messages[2], store_in_history : false,
+                                callback : function(response) {
+                                    assert.deepEqual(response[0],1);
+                                    setTimeout(function(){
+                                        pubnub.history({
+                                            channel  : ch,  
+                                            callback : function(response) {
+                                                assert.notDeepEqual(messages, response[0]);
+                                                done(); 
+                                            },
+                                            count : 3
+                                        });
+                                    },5000);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        })
 
     })
 
@@ -578,7 +636,7 @@ describe('Pubnub', function() {
         })
 
     })
-
+    
 
     describe('#grant()', function(){
         var grant_channel = channel + '-grant';
@@ -593,19 +651,19 @@ describe('Pubnub', function() {
         for ( var i = 0; i < Math.floor((Math.random()*10)+1); i++) {
             pubnub._add_param('a-' + Math.floor((Math.random()*1000)+1) , Date.now());
         }
-
+        
         it('should be able to grant read write access', function(done) {
             var grant_channel_local = grant_channel + Date.now();
             setTimeout(function() {
                 pubnub.grant({
-                    channel : grant_channel_local,
-                    auth_key : auth_key,
+                    'channel' : grant_channel_local,
+                    'auth_key' : auth_key,
                     read : true,
                     write : true,
                     callback : function(response) {
                         pubnub.audit({
-                            channel : grant_channel_local,
-                            auth_key : auth_key,
+                            'channel' : grant_channel_local,
+                            'auth_key' : auth_key,
                             callback : function(response) {
                                 assert.deepEqual(response.auths.abcd.r,1);
                                 assert.deepEqual(response.auths.abcd.w,1);
@@ -652,19 +710,20 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
+        
         it('should be able to grant read write access with space in auth key and channel', function(done) {
             var auth_key = "ab cd";
             var grant_channel_local = grant_channel + "   " + Date.now();
             setTimeout(function() {
                 pubnub.grant({
                     channel : grant_channel_local,
-                    auth_key : auth_key,
+                    'auth_key' : auth_key,
                     read : true,
                     write : true,
                     callback : function(response) {
                         pubnub.audit({
                             channel : grant_channel_local,
-                            auth_key : auth_key,
+                            'auth_key' : auth_key,
                             callback : function(response) {
                                 assert.deepEqual(response.auths[auth_key].r,1);
                                 assert.deepEqual(response.auths[auth_key].w,1);
@@ -712,7 +771,7 @@ describe('Pubnub', function() {
             },5000);
         })
 
-
+        
         it('should be able to grant read write access without auth key', function(done) {
             var grant_channel_local = grant_channel + Date.now();
             setTimeout(function() {
@@ -1026,10 +1085,140 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
+        it('should be able to revoke read write access at sub key level', function(done) {
+            var grant_channel_local = grant_channel + Date.now();
+            var auth_key = "abcd";
+            var pubnub = PUBNUB.init({
+                origin            : 'pubsub.pubnub.com',
+                publish_key       : 'pub-c-0f16b5d0-edc2-4a56-8ec3-17106c525013',
+                subscribe_key     : 'sub-c-977d0ee4-e14f-11e3-9bc6-02ee2ddab7fe',
+                secret_key        : 'sec-c-YmYzNDBkNTYtZGIzZi00YWJiLThjNTMtNGNhMzIzM2Y0OWUy'
+            });
+
+            setTimeout(function() {
+                pubnub.grant({
+                    read : false,
+                    write : false,
+                    callback : function(response) {
+                        pubnub.audit({
+                            callback : function(response) {
+                                assert.deepEqual(response.subscribe_key,'sub-c-977d0ee4-e14f-11e3-9bc6-02ee2ddab7fe');
+                                pubnub.history({
+                                    'channel'  : grant_channel_local,
+                                    'auth_key' : "",
+                                    'callback' : function(response) {
+                                        assert.ok(false);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_local,
+                                            'auth_key' : "",
+                                            'message' : 'Test',
+                                            'callback': function(response) {
+                                                assert.ok(false);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
+                                                assert.ok(true);
+                                                done();
+                                            }
+                                        })
+                                    },
+                                    'error' : function(response) {
+                                        assert.ok(true);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_local,
+                                            'message' : 'Test',
+                                            'auth_key' : "",
+                                            'callback': function(response) {
+                                                assert.ok(false);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.deepEqual(response.message, "Forbidden");
+                                                in_list_deep(response.payload.channels,grant_channel_local);
+                                                assert.ok(true);
+                                                done();
+                                            }
+                                        })
+                                    }
+
+                                });
+
+                            }
+                        });
+
+                    }
+                })
+            },5000);
+        })
+        it('should be able to grant read write access at sub key level', function(done) {
+            var grant_channel_local = grant_channel + Date.now();
+            var auth_key = "abcd";
+            var pubnub = PUBNUB.init({
+                origin            : 'pubsub.pubnub.com',
+                publish_key       : 'pub-c-0f16b5d0-edc2-4a56-8ec3-17106c525013',
+                subscribe_key     : 'sub-c-977d0ee4-e14f-11e3-9bc6-02ee2ddab7fe',
+                secret_key        : 'sec-c-YmYzNDBkNTYtZGIzZi00YWJiLThjNTMtNGNhMzIzM2Y0OWUy'
+            });
+            setTimeout(function() {
+                pubnub.grant({
+                    auth_key : auth_key,
+                    read : true,
+                    write : true,
+                    callback : function(response) {
+                        pubnub.audit({
+                            auth_key : auth_key,
+                            callback : function(response) {
+                                assert.deepEqual(response.subscribe_key,'sub-c-977d0ee4-e14f-11e3-9bc6-02ee2ddab7fe');
+                                pubnub.history({
+                                    'channel'  : grant_channel_local,
+                                    'auth_key' : auth_key,
+                                    'callback' : function(response) {
+                                        assert.ok(true);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_local,
+                                            'auth_key' : auth_key,
+                                            'message' : 'Test',
+                                            'callback': function(response) {
+                                                assert.ok(true);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.ok(false);
+                                            }
+                                        })
+                                    },
+                                    'error' : function(response) {
+                                        assert.ok(false);
+                                        pubnub.publish({
+                                            'channel' : grant_channel_local,
+                                            'message' : 'Test',
+                                            'auth_key' : auth_key,
+                                            'callback': function(response) {
+                                                assert.ok(true);
+                                                done();
+                                            },
+                                            'error'   : function(response) {
+                                                assert.ok(false);
+                                                done();
+                                            }
+                                        })
+                                    }
+
+                                });
+                            }
+                        });
+
+                    }
+                })
+            },5000);
+        })
+
 
 
     })
-
+    
     describe('#revoke()', function(){
         var revoke_channel = channel + '-revoke';
         var auth_key = "abcd";
@@ -1230,7 +1419,7 @@ describe('Pubnub', function() {
                 }
             })
         })
-        /* it('should be able to delete state for uuid', function(done){
+        /*it('should be able to delete state for uuid', function(done){
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
             var state = { 'name' : 'name-' + uuid, "age" : "50"};
@@ -1284,7 +1473,6 @@ describe('Pubnub', function() {
             })
         }) */
     }),
-/*
     describe('#subscribe()', function(){
         var uuid  = Date.now()
         ,   uuid1 = uuid + '-1'
@@ -1342,7 +1530,9 @@ describe('Pubnub', function() {
             });
         })
     }),
-*/
+
+
+
     describe('#here_now()', function(){
         var uuid  = Date.now()
         ,   uuid1 = uuid + '-1'

@@ -247,7 +247,7 @@ function PN_API(setup) {
     function _get_url_params(data) {
         if (!data) data = {};
         each( params , function( key, value ) {
-            data[key] = value;
+            if (!(key in data)) data[key] = value;
         });
         return data;
     }
@@ -622,6 +622,7 @@ function PN_API(setup) {
             ,   cipher_key = args['cipher_key']
             ,   err      = args['error'] || function() {}
             ,   post     = args['post'] || false
+            ,   store    = ('store_in_history' in args) ? args['store_in_history']: true
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
             ,   url;
@@ -644,12 +645,16 @@ function PN_API(setup) {
                 jsonp, encode(msg)
             ];
 
+            params = { 'uuid' : UUID, 'auth' : auth_key }
+
+            if (!store) params['store'] ="0"
+
             // Queue Message Send
             PUB_QUEUE[add_msg]({
                 callback : jsonp,
                 timeout  : SECOND * 5,
                 url      : url,
-                data     : _get_url_params({ 'uuid' : UUID, 'auth' : auth_key }),
+                data     : _get_url_params(params),
                 fail     : function(response){
                     _invoke_error(response, err);
                     publish(1);
@@ -1102,8 +1107,6 @@ function PN_API(setup) {
             ,   w        = (args['write'])?"1":"0"
             ,   auth_key = args['auth_key'];
 
-            // Make sure we have a Channel
-            if (!channel)       return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
@@ -1116,15 +1119,17 @@ function PN_API(setup) {
             var data = {
                 'w'         : w,
                 'r'         : r,
-                'channel'   : channel,
                 'timestamp' : timestamp
             };
-
+            if (channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
             if (jsonp != '0') { data['callback'] = jsonp; }
             if (ttl || ttl === 0) data['ttl'] = ttl;
+
             if (auth_key) data['auth'] = auth_key;
 
             data = _get_url_params(data)
+
+            if (!auth_key) delete data['auth'];
 
             sign_input += _get_pam_sign_input_from_params(data);
 
@@ -1181,11 +1186,13 @@ function PN_API(setup) {
 
             var data = {'timestamp' : timestamp };
             if (jsonp != '0') { data['callback'] = jsonp; }
-            if (channel)  data['channel'] = channel;
+            if (channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
             if (auth_key) data['auth']    = auth_key;    
 
             data = _get_url_params(data)
-
+            
+            if (!auth_key) delete data['auth'];
+            
             sign_input += _get_pam_sign_input_from_params(data);
 
             var signature = hmac_SHA256( sign_input, SECRET_KEY );
