@@ -1249,6 +1249,8 @@ function PN_API(setup) {
 
             if (PRESENCE_HB > 0 && PRESENCE_HB < 320) data['heartbeat'] = PRESENCE_HB;
 
+            if (jsonp != '0') { data['callback'] = jsonp; }
+            
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
