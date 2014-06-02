@@ -458,6 +458,30 @@ function PN_API(setup) {
         'get_version' : function() {
             return SDK_VER;
         },
+        'getGcmMessageObject' : function(obj) {
+            return {
+                'data' : obj
+            }
+        },
+        'getApnsMessageObject' : function(obj) {
+            var x =  {
+                'aps' : { 'badge' : 1, 'alert' : ''}
+            }
+            for (k in obj) {
+                k[x] = obj[k];
+            }
+            return x;
+        },        
+        'getPnMessageObject' : function(apns, gcm, n) {
+            var x = {};
+            if (gcm) x['pn_gcm'] = gcm;
+            if (apns) x['pn_apns'] = apns;
+            for ( k in n ) {
+                x[k] = n[k];
+            }
+            return x;
+        },
+
         '_add_param' : function(key,val) {
             params[key] = val;
         },
