@@ -67,3 +67,8 @@ pubnub.subscribe({
 	}
 })
 
+var PNmessage = require("../pubnub.js").PNmessage
+
+var a = PNmessage()
+
+console.log(a);

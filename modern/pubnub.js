@@ -197,6 +197,60 @@ function ready() { timeout( function() {
     each( READY_BUFFER, function(connect) { connect() } );
 }, SECOND ); }
 
+function PNmessage() {
+    msg = {
+        'apns' : {},
+        'send' : function() {
+            var m = {};
+
+            if (Object.keys(msg['apns']).length) {
+                m['pn_apns'] = {
+                        'aps' : {
+                            'alert' : msg['apns']['alert'],
+                            'badge' : msg['apns']['badge']
+                        }
+                }
+                for (var k in msg['apns']) {
+                    m['pn_apns'][k] = msg['apns'][k];
+                }
+                var exclude1 = ['badge','alert'];
+                for (var k in exclude1) {
+                    //console.log(exclude[k]);
+                    delete m['pn_apns'][exclude1[k]];
+                }
+            }
+
+
+
+            if (msg['gcm']) {
+                m['pn_gcm'] = {
+                    'data' : msg['gcm']
+                } 
+            }
+
+            for (var k in msg) {
+                m[k] = msg[k];
+            }
+            var exclude = ['apns','gcm','send', 'channel','callback','error'];
+            for (var k in exclude) {
+                //console.log(exclude[k]);
+                delete m[exclude[k]];
+            }
+
+            console.log(JSON.stringify(m));
+            if (msg['pubnub'] && msg['channel']) {
+                msg['pubnub'].publish({
+                    'message' : m,
+                    'channel' : msg['channel'],
+                    'callback' : msg['callback'],
+                    'error' : msg['error']
+                })
+            }
+        }
+    };
+    return msg;
+}
+
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
@@ -473,7 +527,7 @@ function PN_API(setup) {
             }
             return x;
         },        
-        'getPnMessageObject' : function(apns, gcm, n) {
+        'newPnMessage' : function() {
             var x = {};
             if (gcm) x['pn_gcm'] = gcm;
             if (apns) x['pn_apns'] = apns;
