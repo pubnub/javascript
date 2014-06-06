@@ -937,7 +937,8 @@ function PN_API(setup) {
                         var latency = detect_latency(+messages[1]);
                         each( messages[0], function(msg) {
                             var next = next_callback();
-                            var decrypted_msg = decrypt(msg,CHANNELS[next[1]]['cipher_key']);
+                            var decrypted_msg = decrypt(msg,
+                                (CHANNELS[next[1]])?CHANNELS[next[1]]['cipher_key']:null);
                             next[0]( decrypted_msg, messages, next[1], latency);
                         });
 
