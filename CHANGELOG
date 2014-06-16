@@ -1,3 +1,6 @@
+5-08-14 * 3.6.4 * e02160be2b046e1b76fcf3e11c86bb7b80192a77
+. fixes bug where ssl settings were not getting applied for node.js 
+
 5-01-14 * 3.6.3 * d8e1ebb15dc8b644b8e0430b0859368f35bdb72f
 . Improved isArray logic
 . Added HTTP Proxy Support for Node.JS
