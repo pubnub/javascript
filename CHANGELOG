@@ -1,3 +1,8 @@
+6-16-14 * 3.6.5 * c9f52629bd06d4259f0e33617a9c988be033849f
+. fix for subscribing to presence only channel
+. fix for jsonp heartbeat
+. channel is no longer mandatory for PAM
+
 5-08-14 * 3.6.4 * e02160be2b046e1b76fcf3e11c86bb7b80192a77
 . fixes bug where ssl settings were not getting applied for node.js 
 
