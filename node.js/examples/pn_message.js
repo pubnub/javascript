@@ -6,32 +6,50 @@ var pubnub = PUBNUB({
 	subscribe_key : "demo"
 });
 
+// Create a pubnub message
 var a = PNmessage()
 
+// set pubnub object for pubnub message
 a.pubnub = pubnub;
+
+// set callback method 
 a.callback = console.log
+
+// set error callback method
 a.error = console.log
+
+// set channel
 a.channel = 'my_channel'
 
-a.gcm = ['i am gcm array']
+
+
+
+// populating apns info
+
 a.apns.alert = "this is alert"
 a.apns.badge = 2
 a.apns.key = "hi am apns"
-
+// publish
 a.send()
 
 
-var b = PNmessage()
-
-b.pubnub = pubnub;
-b.callback = console.log
-b.error = console.log
-b.channel = 'my_channel'
-
-b.send()
+// populating gcm info
+a.gcm = ['i am gcm array']
+// publish
+a.send()
 
 
+// populating common info
+a.mykey = "hi"
+// publish
+a.send()
 
+
+
+
+
+
+// populating all info in one go and publishing
 var c = PNmessage()
 
 c.pubnub = pubnub;
