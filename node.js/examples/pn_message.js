@@ -2,8 +2,9 @@
 var PNmessage = require("../pubnub.js").PNmessage
 var PUBNUB = require("../pubnub.js")
 var pubnub = PUBNUB({
-	publish_key   : "demo",
-	subscribe_key : "demo"
+	publish_key   : "demo-36",
+	subscribe_key : "demo-36",
+	origin : "gcm-beta.pubnub.com"
 });
 
 // Create a pubnub message
@@ -19,7 +20,7 @@ a.callback = console.log
 a.error = console.log
 
 // set channel
-a.channel = 'my_channel'
+a.channel = 'push'
 
 
 
@@ -55,7 +56,7 @@ var c = PNmessage()
 c.pubnub = pubnub;
 c.callback = console.log
 c.error = console.log
-c.channel = 'my_channel'
+c.channel = 'push'
 
 c.gcm = ['i am gcm array']
 c.apns.alert = "this is alert"
