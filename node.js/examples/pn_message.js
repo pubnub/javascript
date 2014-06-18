@@ -22,9 +22,6 @@ a.error = console.log
 // set channel
 a.channel = 'push'
 
-
-
-
 // populating apns info
 
 a.apns.alert = "this is alert"
@@ -44,11 +41,6 @@ a.send()
 a.mykey = "hi"
 // publish
 a.send()
-
-
-
-
-
 
 // populating all info in one go and publishing
 var c = PNmessage()
