@@ -57,7 +57,7 @@ c.callback = console.log
 c.error = console.log
 c.channel = 'my_channel'
 
-c.gcm = ['i am gcm array']
+c.gcm = {"message":"be sure not to send objects!", "foo":"bar" }
 c.apns.alert = "this is alert"
 c.apns.badge = 2
 c.apns.key = "hi am apns"
