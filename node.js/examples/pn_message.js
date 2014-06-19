@@ -57,3 +57,12 @@ c.apns.key = "hi am apns"
 c.mykey = "hi" 
 
 c.send()
+
+// following also works
+
+pubnub.publish({
+    'channel'  : 'push',
+    'message'  : c,
+    'callback' : console.log,
+    'error'    : console.log
+});

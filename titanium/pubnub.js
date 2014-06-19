@@ -201,7 +201,7 @@ function ready() { timeout( function() {
 function PNmessage() {
     msg = {
         'apns' : {},
-        'send' : function() {
+        'getPubnubMessage' : function() {
             var m = {};
 
             if (Object.keys(msg['apns']).length) {
@@ -238,7 +238,12 @@ function PNmessage() {
                 delete m[exclude[k]];
             }
 
-            console.log(JSON.stringify(m));
+            return m;
+        },
+        'send' : function() {
+            
+            var m = msg.getPubnubMessage();
+            
             if (msg['pubnub'] && msg['channel']) {
                 msg['pubnub'].publish({
                     'message' : m,
@@ -712,6 +717,10 @@ function PN_API(setup) {
             if (!channel)       return error('Missing Channel');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            if (msg['getPubnubMessage']) {
+                msg = msg['getPubnubMessage']();
+            } 
 
             // If trying to send Object
             msg = JSON['stringify'](encrypt(msg, cipher_key));
