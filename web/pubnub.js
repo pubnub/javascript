@@ -347,60 +347,57 @@ function ready() { timeout( function() {
     each( READY_BUFFER, function(connect) { connect() } );
 }, SECOND ); }
 
-function PNmessage() {
-    msg = {
-        'apns' : {},
-        'getPubnubMessage' : function() {
-            var m = {};
+function PNmessage(args) {
+    msg = args || {'apns' : {}},
+    msg['getPubnubMessage'] = function() {
+        var m = {};
 
-            if (Object.keys(msg['apns']).length) {
-                m['pn_apns'] = {
-                        'aps' : {
-                            'alert' : msg['apns']['alert'],
-                            'badge' : msg['apns']['badge']
-                        }
-                }
-                for (var k in msg['apns']) {
-                    m['pn_apns'][k] = msg['apns'][k];
-                }
-                var exclude1 = ['badge','alert'];
-                for (var k in exclude1) {
-                    //console.log(exclude[k]);
-                    delete m['pn_apns'][exclude1[k]];
-                }
+        if (Object.keys(msg['apns']).length) {
+            m['pn_apns'] = {
+                    'aps' : {
+                        'alert' : msg['apns']['alert'] ,
+                        'badge' : msg['apns']['badge']
+                    }
             }
-
-
-
-            if (msg['gcm']) {
-                m['pn_gcm'] = {
-                    'data' : msg['gcm']
-                } 
+            for (var k in msg['apns']) {
+                m['pn_apns'][k] = msg['apns'][k];
             }
-
-            for (var k in msg) {
-                m[k] = msg[k];
-            }
-            var exclude = ['apns','gcm','send', 'channel','callback','error'];
-            for (var k in exclude) {
+            var exclude1 = ['badge','alert'];
+            for (var k in exclude1) {
                 //console.log(exclude[k]);
-                delete m[exclude[k]];
+                delete m['pn_apns'][exclude1[k]];
             }
+        }
 
-            return m;
-        },
-        'send' : function() {
-            
-            var m = msg.getPubnubMessage();
-            
-            if (msg['pubnub'] && msg['channel']) {
-                msg['pubnub'].publish({
-                    'message' : m,
-                    'channel' : msg['channel'],
-                    'callback' : msg['callback'],
-                    'error' : msg['error']
-                })
-            }
+
+
+        if (msg['gcm']) {
+            m['pn_gcm'] = {
+                'data' : msg['gcm']
+            } 
+        }
+
+        for (var k in msg) {
+            m[k] = msg[k];
+        }
+        var exclude = ['apns','gcm','send', 'channel','callback','error'];
+        for (var k in exclude) {
+            delete m[exclude[k]];
+        }
+
+        return m;
+    };
+    msg['send'] = function() {
+        
+        var m = msg.getPubnubMessage();
+        
+        if (msg['pubnub'] && msg['channel']) {
+            msg['pubnub'].publish({
+                'message' : m,
+                'channel' : msg['channel'],
+                'callback' : msg['callback'],
+                'error' : msg['error']
+            })
         }
     };
     return msg;

@@ -71,3 +71,17 @@ pubnub.publish({
 // and this also works
 
 pubnub.publish({'message'  : c});
+
+
+// and this too 
+
+var d = PNmessage({
+	'callback' : console.log,
+	'error'    : console.log,
+	'channel'  : 'push',
+	'apns'     : {'alert' : "this is alert", 'badge' : 2, 'key' : "hi am apns"},
+	'gcm'      : {"message":"be sure not to send objects!", "foo":"bar" },
+	'mykey'    : "hi"
+});
+
+pubnub.publish({'message'  : d});
