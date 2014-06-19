@@ -831,7 +831,7 @@ asyncTest('#history() should pass on plain text in case of decryption failure', 
     });
 })
 
-/*
+
 test('connection restore feature', function() {
     var restore_channel = channel + '-restore-channel';
     expect(2);
@@ -866,7 +866,46 @@ test('connection restore feature', function() {
         }
     });
 })
-*/
+
+test('connection restore feature global setting at pubnub object', function() {
+    var restore_channel = channel + '-restore-channel';
+    expect(2);
+    stop(2);
+
+    var pubnub = PUBNUB.init({
+        publish_key   : 'demo',
+        subscribe_key : 'demo',
+        restore       : true
+    });
+
+    pubnub.subscribe({
+        channel: restore_channel,
+        callback: function () {
+        },
+        connect: function () {
+            pubnub.unsubscribe({ channel: restore_channel });
+
+            // Send Message While Not Connected
+            pubnub.publish({
+                channel: restore_channel,
+                message: 'test',
+                callback: function (response) {
+                    equal(response[0],1);
+                    start();
+                    pubnub.subscribe({
+                        channel: restore_channel,
+                        callback: function (message, stack) {
+                            pubnub.unsubscribe({ channel: restore_channel });
+                            equal(message, "test");
+                            start();
+                        }
+                    });
+                }
+            });
+        }
+    });
+})
+
 
 asyncTest('Encryption tests', function() {
     var aes = PUBNUB.init({

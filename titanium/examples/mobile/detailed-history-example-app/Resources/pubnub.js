@@ -218,7 +218,7 @@ function PN_API(setup) {
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
     ,   SUB_RECEIVER  = 0
-    ,   SUB_RESTORE   = 0
+    ,   SUB_RESTORE   = setup['restore'] || 0
     ,   SUB_BUFF_WAIT = 0
     ,   TIMETOKEN     = 0
     ,   RESUMED       = false
@@ -680,7 +680,7 @@ function PN_API(setup) {
             ,   err           = args['error']       || function(){};
 
             TIMETOKEN   = 0;
-            SUB_RESTORE = 1;
+            //SUB_RESTORE = 1;    REVISIT !!!!
 
             // Prepare Channel(s)
             channel = map( (
@@ -730,7 +730,7 @@ function PN_API(setup) {
             ,   windowing     = args['windowing']   || SUB_WINDOWING
             ,   state         = args['state']
             ,   heartbeat     = args['heartbeat'] || args['pnexpires']
-            ,   restore       = args['restore'];
+            ,   restore       = args['restore'] || SUB_RESTORE;
 
             // Restore Enabled?
             SUB_RESTORE = restore;
