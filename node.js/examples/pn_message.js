@@ -85,3 +85,7 @@ var d = PNmessage({
 });
 
 pubnub.publish({'message'  : d});
+
+// and this as well 
+
+d.send()
