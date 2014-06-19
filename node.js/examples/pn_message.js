@@ -66,3 +66,8 @@ pubnub.publish({
     'callback' : console.log,
     'error'    : console.log
 });
+
+
+// and this also works
+
+pubnub.publish({'message'  : c});

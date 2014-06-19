@@ -697,12 +697,14 @@ function PN_API(setup) {
             });
         */
         'publish' : function( args, callback ) {
-            var callback = callback || args['callback'] || function(){}
-            ,   msg      = args['message']
-            ,   channel  = args['channel']
+            var msg      = args['message'];
+            if (!msg) return error('Missing Message');
+
+            var callback = callback || args['callback'] || msg['callback'] || function(){}
+            ,   channel  = args['channel'] || msg['channel']
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   cipher_key = args['cipher_key']
-            ,   err      = args['error'] || function() {}
+            ,   err      = args['error'] || msg['error'] || function() {}
             ,   post     = args['post'] || false
             ,   store    = ('store_in_history' in args) ? args['store_in_history']: true
             ,   jsonp    = jsonp_cb()
@@ -711,7 +713,6 @@ function PN_API(setup) {
 
             if (args['prepend']) add_msg = 'unshift'
 
-            if (!msg)           return error('Missing Message');
             if (!channel)       return error('Missing Channel');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
