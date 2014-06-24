@@ -2622,10 +2622,10 @@ function xdr( setup ) {
                 }
             }
         }
-        if (async) xhr.timeout = XHRTME;
         data['pnsdk'] = PNSDK;
         url = build_url(setup.url, data);
         xhr.open( 'GET', url, async);
+        if (async) xhr.timeout = XHRTME;
         xhr.send();
     }
     catch(eee) {

@@ -320,11 +320,12 @@ function ajax( setup ) {
                 }
             }
         }
-        if (async) xhr.timeout = xhrtme;
+
 
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
+        if (async) xhr.timeout = xhrtme;
         xhr.send();
     }
     catch(eee) {
