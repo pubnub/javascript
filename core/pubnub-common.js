@@ -1274,6 +1274,7 @@ function PN_API(setup) {
         'uuid'          : uuid,
         'map'           : map,
         'each'          : each,
+        'isArray'       : isArray,
         'each-channel'  : each_channel,
         'grep'          : grep,
         'offline'       : function(){_reset_offline(1, { "message":"Offline. Please check your network settings." })},
