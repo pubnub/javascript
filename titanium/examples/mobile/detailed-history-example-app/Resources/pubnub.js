@@ -1,4 +1,4 @@
-// 3.6.6
+// 3.6.7
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -13,7 +13,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.6'
+,   SDK_VER         = '3.6.7'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -794,7 +794,7 @@ function PN_API(setup) {
                         function(uid) { presence( {
                             'action'    : 'join',
                             'uuid'      : uid,
-                            'timestamp' : rnow(),
+                            'timestamp' : Math.floor(rnow() / 1000),
                             'occupancy' : here['occupancy'] || 1
                         }, here, channel ); } );
                     }
@@ -2524,7 +2524,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.6.6'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.6.7'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 

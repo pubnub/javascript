@@ -792,7 +792,7 @@ function PN_API(setup) {
                         function(uid) { presence( {
                             'action'    : 'join',
                             'uuid'      : uid,
-                            'timestamp' : rnow(),
+                            'timestamp' : Math.floor(rnow() / 1000),
                             'occupancy' : here['occupancy'] || 1
                         }, here, channel ); } );
                     }

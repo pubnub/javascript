@@ -1,4 +1,4 @@
-// Version: 3.6.6
+// Version: 3.6.7
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.6'
+,   SDK_VER         = '3.6.7'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -793,7 +793,7 @@ function PN_API(setup) {
                         function(uid) { presence( {
                             'action'    : 'join',
                             'uuid'      : uid,
-                            'timestamp' : rnow(),
+                            'timestamp' : Math.floor(rnow() / 1000),
                             'occupancy' : here['occupancy'] || 1
                         }, here, channel ); } );
                     }
@@ -1377,7 +1377,7 @@ var NOW                 = 1
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.6'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.6.7'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1;
