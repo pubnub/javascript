@@ -28,19 +28,19 @@ a.apns.alert = "this is alert"
 a.apns.badge = 2
 a.apns.key = "hi am apns"
 // publish
-a.send()
+a.publish()
 
 
 // populating gcm info
 a.gcm = ['i am gcm array']
 // publish
-a.send()
+a.publish()
 
 
 // populating common info
 a.mykey = "hi"
 // publish
-a.send()
+a.publish()
 
 // populating all info in one go and publishing
 var c = PNmessage()
@@ -56,7 +56,7 @@ c.apns.badge = 2
 c.apns.key = "hi am apns"
 c.mykey = "hi" 
 
-c.send()
+c.publish()
 
 // following also works
 
@@ -88,4 +88,4 @@ pubnub.publish({'message'  : d});
 
 // and this as well 
 
-d.send()
+d.publish()

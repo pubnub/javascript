@@ -380,14 +380,14 @@ function PNmessage(args) {
         for (var k in msg) {
             m[k] = msg[k];
         }
-        var exclude = ['apns','gcm','send', 'channel','callback','error'];
+        var exclude = ['apns','gcm','publish', 'channel','callback','error'];
         for (var k in exclude) {
             delete m[exclude[k]];
         }
 
         return m;
     };
-    msg['send'] = function() {
+    msg['publish'] = function() {
         
         var m = msg.getPubnubMessage();
         
