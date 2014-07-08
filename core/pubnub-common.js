@@ -196,6 +196,62 @@ function ready() { timeout( function() {
     each( READY_BUFFER, function(connect) { connect() } );
 }, SECOND ); }
 
+function PNmessage(args) {
+    msg = args || {'apns' : {}},
+    msg['getPubnubMessage'] = function() {
+        var m = {};
+
+        if (Object.keys(msg['apns']).length) {
+            m['pn_apns'] = {
+                    'aps' : {
+                        'alert' : msg['apns']['alert'] ,
+                        'badge' : msg['apns']['badge']
+                    }
+            }
+            for (var k in msg['apns']) {
+                m['pn_apns'][k] = msg['apns'][k];
+            }
+            var exclude1 = ['badge','alert'];
+            for (var k in exclude1) {
+                //console.log(exclude[k]);
+                delete m['pn_apns'][exclude1[k]];
+            }
+        }
+
+
+
+        if (msg['gcm']) {
+            m['pn_gcm'] = {
+                'data' : msg['gcm']
+            } 
+        }
+
+        for (var k in msg) {
+            m[k] = msg[k];
+        }
+        var exclude = ['apns','gcm','publish', 'channel','callback','error'];
+        for (var k in exclude) {
+            delete m[exclude[k]];
+        }
+
+        return m;
+    };
+    msg['publish'] = function() {
+        
+        var m = msg.getPubnubMessage();
+        
+        if (msg['pubnub'] && msg['channel']) {
+            msg['pubnub'].publish({
+                'message' : m,
+                'channel' : msg['channel'],
+                'callback' : msg['callback'],
+                'error' : msg['error']
+            })
+        }
+    };
+    return msg;
+}
+
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
@@ -458,6 +514,30 @@ function PN_API(setup) {
         'get_version' : function() {
             return SDK_VER;
         },
+        'getGcmMessageObject' : function(obj) {
+            return {
+                'data' : obj
+            }
+        },
+        'getApnsMessageObject' : function(obj) {
+            var x =  {
+                'aps' : { 'badge' : 1, 'alert' : ''}
+            }
+            for (k in obj) {
+                k[x] = obj[k];
+            }
+            return x;
+        },        
+        'newPnMessage' : function() {
+            var x = {};
+            if (gcm) x['pn_gcm'] = gcm;
+            if (apns) x['pn_apns'] = apns;
+            for ( k in n ) {
+                x[k] = n[k];
+            }
+            return x;
+        },
+
         '_add_param' : function(key,val) {
             params[key] = val;
         },
@@ -614,12 +694,14 @@ function PN_API(setup) {
             });
         */
         'publish' : function( args, callback ) {
-            var callback = callback || args['callback'] || function(){}
-            ,   msg      = args['message']
-            ,   channel  = args['channel']
+            var msg      = args['message'];
+            if (!msg) return error('Missing Message');
+
+            var callback = callback || args['callback'] || msg['callback'] || function(){}
+            ,   channel  = args['channel'] || msg['channel']
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   cipher_key = args['cipher_key']
-            ,   err      = args['error'] || function() {}
+            ,   err      = args['error'] || msg['error'] || function() {}
             ,   post     = args['post'] || false
             ,   store    = ('store_in_history' in args) ? args['store_in_history']: true
             ,   jsonp    = jsonp_cb()
@@ -628,10 +710,13 @@ function PN_API(setup) {
 
             if (args['prepend']) add_msg = 'unshift'
 
-            if (!msg)           return error('Missing Message');
             if (!channel)       return error('Missing Channel');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            if (msg['getPubnubMessage']) {
+                msg = msg['getPubnubMessage']();
+            } 
 
             // If trying to send Object
             msg = JSON['stringify'](encrypt(msg, cipher_key));

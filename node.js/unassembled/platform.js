@@ -245,3 +245,4 @@ CREATE_PUBNUB.init = CREATE_PUBNUB;
 CREATE_PUBNUB.unique = unique
 CREATE_PUBNUB.secure = CREATE_PUBNUB;
 module.exports = CREATE_PUBNUB
+module.exports.PNmessage = PNmessage;
