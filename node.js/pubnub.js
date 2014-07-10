@@ -1608,7 +1608,7 @@ var db = (function(){
             return store[key];
         },
         'set' : function( key, value ) {
-            db[key] = value;
+            store[key] = value;
         }
     };
 })();
