@@ -472,8 +472,8 @@ function PN_API(setup) {
     }
     function apply_updates(o, updates, callback) {
         for (var t in updates) {
-            var u = updates[t].shift();
             var action = updates[t][updates[t].length -1]['action'];
+            var u = updates[t].shift();
             while(u) {
                 apply_update(o, u);
                 u = updates[t].shift();
