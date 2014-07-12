@@ -278,6 +278,7 @@ function ajax( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
+    ,   method   = setup.mode  || 'GET' 
     ,   async    = !(setup.blocking)
     ,   done     = function(failed,response) {
             if (complete) return;
@@ -324,7 +325,7 @@ function ajax( setup ) {
 
         var url = build_url(setup.url,data);
 
-        xhr.open( 'GET', url, async );
+        xhr.open( method, url, async );
         if (async) xhr.timeout = xhrtme;
         xhr.send();
     }

@@ -253,6 +253,14 @@ function PNmessage(args) {
     return msg;
 }
 
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
+
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
@@ -543,6 +551,189 @@ function PN_API(setup) {
             params[key] = val;
         },
 
+        'get' : function(args) {
+            var callback         = args['callback']
+            ,   err              = args['error']    || function(){}
+            ,   object_id        = args['object_id'];
+
+            var synced = false;
+            var updates = [];
+            var a = {'stale' : true, 'last_update' : 0};
+
+            SELF['subscribe']({
+                channel     : 'pn_ds_' + object_id,
+                connect     : function(r, timetoken) {
+                    SELF['read']({
+                        'object_id' : object_id,
+                        'timetoken' : timetoken,
+                        'callback'  : function(r) {
+                            for (var attrname in r) { a[attrname] = r[attrname]; }
+                            a.stale = false;
+                            a.last_update = timetoken;
+                            synced = true;
+                            /*
+                            for ( u in updates) {
+                                var location = updates[u].location;
+                                location = location.split(".");
+                                //console.log(location);
+                            }  */
+                        },
+                        'error'     : function(r) {
+                            console.log(r);
+                        }
+                    })
+                },
+                callback    : function(r) {
+                    if (!synced) {
+                        updates.push(r);
+                    } else {
+                        path = r.location.split(".");
+                        var last = path.pop();
+                        path.shift();
+                        var x = a;
+                        for (p in path) {
+                            try {
+                                if (!x[path[p]]) x[path[p]] = {};
+                                x = x[path[p]];
+                            } catch (e) {
+                                x[path[p]] = {};
+                                x = x[path[p]];
+                            }
+                        }
+                        if (r.action == 'update')
+                            x[last] = r.value;
+                        else if (r.action == 'delete') {
+                            delete x[last]
+                        }
+
+                        a.last_update = r.timetoken;
+                        var tmp_cb_param = r.location.split(".");
+                        tmp_cb_param.shift();
+
+                        callback && callback({
+                            'action'    : r.action,
+                            'path'      : tmp_cb_param.join("/"),
+                            'value'     : r.value
+                        });
+                    }
+                },
+                error       : function(r) {
+                    //a.stale = true;
+                    console.log('SUBSCRIBE ERROR');
+                    err("Object could not be updated");
+                }
+            });
+            return a;
+        },
+
+        'read' : function(args, callback) {
+            var callback         = args['callback'] || callback
+            ,   err              = args['error']    || function(){}
+            ,   object_id        = args['object_id']
+            ,   path             = args['path']
+            ,   jsonp            = jsonp_cb()
+            ,   data             = {};
+
+            // Make sure we have a Channel
+            if (!object_id)     return error('Missing Object Id');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            var url = [
+                STD_ORIGIN, 'datasync',
+                'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
+            ];
+
+            if (path) url.push(encode(path));
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            xdr({
+                callback : jsonp,
+                data     : _get_url_params(data),
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
+                url      : url
+            });
+        },
+        'write' : function(args, callback) {
+            var callback         = args['callback'] || callback
+            ,   err              = args['error']    || function(){}
+            ,   object_id        = args['object_id']
+            ,   content          = args['data']
+            ,   jsonp            = jsonp_cb()
+            ,   data             = {}
+            ,   path             = args['path'] || 'root';
+
+            // Make sure we have a Channel
+            if (!object_id)     return error('Missing Object Id');
+            if (!object_id)     return error('Missing Object Id');
+            if (!data)          return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+
+
+            var url = [
+                STD_ORIGIN, 'datasync','pub-key', PUBLISH_KEY,
+                'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
+            ];
+
+            if (path) url.push(path);
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            xdr({
+                callback : jsonp,
+                data     : _get_url_params(data),
+                body     : encode(JSON.stringify(content)),
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    console.log('ERROR');
+                    _invoke_error(response, err);
+                },
+                url      : url,
+                mode  : 'PATCH'
+            });
+        },
+        'delete' : function(args, callback) {
+            var callback         = args['callback'] || callback
+            ,   err              = args['error']    || function(){}
+            ,   jsonp            = jsonp_cb()
+            ,   data             = {}
+            ,   object_id        = args['object_id'];
+
+            // Make sure we have a Channel
+            if (!object_id)     return error('Missing Object Id');
+            if (!callback)      return error('Missing Callback');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            var url = [
+                STD_ORIGIN, 'datasync','pub-key', PUBLISH_KEY,
+                'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
+            ];
+
+            if (jsonp != '0') { data['callback'] = jsonp; }
+
+            xdr({
+                callback : jsonp,
+                data     : _get_url_params(data),
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
+                url      : url,
+                mode : 'DELETE'
+            });
+        },
+
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',
@@ -677,6 +868,7 @@ function PN_API(setup) {
             PUBNUB.time(function(time){ });
         */
         'time' : function(callback) {
+            /*
             var jsonp = jsonp_cb();
             xdr({
                 callback : jsonp,
@@ -686,6 +878,7 @@ function PN_API(setup) {
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
             });
+            */
         },
 
         /*
@@ -727,8 +920,10 @@ function PN_API(setup) {
                 STD_ORIGIN, 'publish',
                 PUBLISH_KEY, SUBSCRIBE_KEY,
                 0, encode(channel),
-                jsonp, encode(msg)
+                jsonp
             ];
+
+            if (!post) url.push(encode(msg));
 
             params = { 'uuid' : UUID, 'auth' : auth_key }
 
@@ -739,6 +934,7 @@ function PN_API(setup) {
                 callback : jsonp,
                 timeout  : SECOND * 5,
                 url      : url,
+                body     : (post)? msg: null,
                 data     : _get_url_params(params),
                 fail     : function(response){
                     _invoke_error(response, err);
@@ -976,7 +1172,7 @@ function PN_API(setup) {
                         each_channel(function(channel){
                             if (channel.connected) return;
                             channel.connected = 1;
-                            channel.connect(channel.name);
+                            channel.connect(channel.name, messages[1]);
                         });
 
                         if (RESUMED && !SUB_RESTORE) {
@@ -1395,8 +1591,8 @@ function PN_API(setup) {
     if (!UUID) UUID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
 
-    timeout( _poll_online,  SECOND    );
-    timeout( _poll_online2, KEEPALIVE );
+    //timeout( _poll_online,  SECOND    );
+    //timeout( _poll_online2, KEEPALIVE );
     PRESENCE_HB_TIMEOUT = timeout( start_presence_heartbeat, ( PRESENCE_HB_INTERVAL - 3 ) * SECOND ) ;
 
     // Detect Age of Message
@@ -1536,8 +1732,7 @@ function xdr( setup ) {
     var headers = {};
     var payload = '';
 
-    if (mode == 'POST')
-        payload = decodeURIComponent(setup.url.pop());
+    if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = decodeURIComponent(setup['body']);
 
     var url = build_url( setup.url, data );
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
@@ -1547,12 +1742,15 @@ function xdr( setup ) {
     var origin       = setup.url[0].split("//")[1]
 
     options.hostname = proxy ? proxy.hostname : setup.url[0].split("//")[1];
-    options.port     = proxy ? proxy.port : ssl ? 443 : 80;
+    var hs = options.hostname.split(":");
+    options.hostname = hs[0];
+    options.port     = proxy ? proxy.port : (hs.length > 1)? hs[1]: ssl ? 443 : 80;
     options.path     = proxy ? "http://" + origin + url:url;
     options.headers  = proxy ? { 'Host': origin }:null;
     options.method   = mode;
     options.agent    = false;
     options.body     = payload;
+    options.headers =  {'Content-Length': payload.length};
 
     require('http').globalAgent.maxSockets = Infinity;
     try {
@@ -1587,7 +1785,9 @@ function xdr( setup ) {
             done( 1, {"error":"Network Connection Error"} );
         } );
 
-        if (mode == 'POST') request.write(payload);
+        if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1)
+            request.write(payload);
+        
         request.end();
 
     } catch(e) {
