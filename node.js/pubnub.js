@@ -288,6 +288,7 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
+    ,   DS_UPDATE_DELAY = null
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -449,6 +450,39 @@ function PN_API(setup) {
         } else err(response);
     }
 
+    function apply_update(o, update) {
+        var path = update.location.split(".");
+        var last = path.pop();
+        path.shift();
+        var x = o;
+        for (p in path) {
+            try {
+                if (!x[path[p]]) x[path[p]] = {};
+                x = x[path[p]];
+            } catch (e) {
+                x[path[p]] = {};
+                x = x[path[p]];
+            }
+        }
+        if (update.action == 'update')
+            x[last] = update.value;
+        else if (update.action == 'delete') {
+            delete x[last]
+        }
+        o.last_update = update.timetoken;
+    }
+    function apply_updates(o, updates, callback) {
+        for (var t in updates) {
+            var u = updates[t].shift();
+            var action = updates[t][updates[t].length -1]['action'];
+            while(u) {
+                apply_update(o, u);
+                u = updates[t].shift();
+            }
+            callback(action);
+            delete updates[t];
+        }
+    }
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -557,7 +591,7 @@ function PN_API(setup) {
             ,   object_id        = args['object_id'];
 
             var synced = false;
-            var updates = [];
+            var updates = {};
             var a = {'stale' : true, 'last_update' : 0};
 
             SELF['subscribe']({
@@ -569,14 +603,8 @@ function PN_API(setup) {
                         'callback'  : function(r) {
                             for (var attrname in r) { a[attrname] = r[attrname]; }
                             a.stale = false;
-                            a.last_update = timetoken;
                             synced = true;
-                            /*
-                            for ( u in updates) {
-                                var location = updates[u].location;
-                                location = location.split(".");
-                                //console.log(location);
-                            }  */
+                            apply_updates(a, updates, callback);
                         },
                         'error'     : function(r) {
                             console.log(r);
@@ -585,41 +613,18 @@ function PN_API(setup) {
                 },
                 callback    : function(r) {
                     if (!synced) {
-                        updates.push(r);
+                        updates[r.timetoken].push(r);
                     } else {
-                        path = r.location.split(".");
-                        var last = path.pop();
-                        path.shift();
-                        var x = a;
-                        for (p in path) {
-                            try {
-                                if (!x[path[p]]) x[path[p]] = {};
-                                x = x[path[p]];
-                            } catch (e) {
-                                x[path[p]] = {};
-                                x = x[path[p]];
-                            }
-                        }
-                        if (r.action == 'update')
-                            x[last] = r.value;
-                        else if (r.action == 'delete') {
-                            delete x[last]
-                        }
-
-                        a.last_update = r.timetoken;
-                        var tmp_cb_param = r.location.split(".");
-                        tmp_cb_param.shift();
-
-                        callback && callback({
-                            'action'    : r.action,
-                            'path'      : tmp_cb_param.join("/"),
-                            'value'     : r.value
-                        });
+                        if (!updates[r.timetoken]) updates[r.timetoken] = []
+                        updates[r.timetoken].push(r);
+                        clearTimeout(DS_UPDATE_DELAY);
+                        DS_UPDATE_DELAY = setTimeout(function(){
+                            apply_updates(a, updates, callback);
+                        }, 5000);
                     }
                 },
                 error       : function(r) {
-                    //a.stale = true;
-                    console.log('SUBSCRIBE ERROR');
+                    a.stale = true;
                     err("Object could not be updated");
                 }
             });
