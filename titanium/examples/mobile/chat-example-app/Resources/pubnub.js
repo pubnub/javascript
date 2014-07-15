@@ -484,18 +484,37 @@ function PN_API(setup) {
         }
         o.last_update = update.timetoken;
     }
-    function apply_updates(o, updates, callback) {
+    function apply_all_updates(o, updates, callback) {
         for (var t in updates) {
-            var action = updates[t][updates[t].length -1]['action'];
-            var u = updates[t].shift();
-            while(u) {
-                apply_update(o, u);
-                u = updates[t].shift();
+            var update = updates[t];
+            if (update && update.complete == true) {
+                var actions_list = update.list;
+                var action = actions_list[actions_list.length -1]['action'];
+                var action_event = actions_list.shift();
+                while(action_event) {
+                    apply_update(o, action_event);
+                    action_event = actions_list.shift();
+                }
+                callback(action);
+                delete update;
             }
-            callback(action);
-            delete updates[t];
         }
     }
+    function apply_updates(o, updates, callback, trans_id) {
+        var update = updates[trans_id];
+        if (update && update.complete == true) {
+            var actions_list = update.list;
+            var action = actions_list[actions_list.length -1]['action'];
+            var action_event = actions_list.shift();
+            while(action_event) {
+                apply_update(o, action_event);
+                action_event = actions_list.shift();
+            }
+            callback(action);
+            delete update;
+        }
+    }
+
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -618,7 +637,7 @@ function PN_API(setup) {
                 }
             }
             SELF['subscribe']({
-                channel     : 'pn_ds_' + object_id,
+                channel     : 'pn_ds_' + object_id + ',' + 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
                     function read(start_at, obj_at) {
                         SELF['read']({
@@ -628,24 +647,19 @@ function PN_API(setup) {
                             'obj_at'    : obj_at,
                             'page_max_bytes' : 5,
                             'callback'  : function(r, next_page) {
-                                /*
-                                for (var attrname in r) {
-                                    if (!a[attrname])
-                                        a[attrname] = r[attrname];
-                                }
-                                */
+
                                 setTimeout(function(){
                                     mergeAtOneLevel(a,r);
-                                }, 50);
-                                //console.log(JSON.stringify(r,null,2));
+                                }, 10);
+
                                 if (!next_page || (next_page && next_page == "null")) {
                                     a.stale = false;
                                     synced = true;
-                                    apply_updates(a, updates, callback);
+                                    apply_all_updates(a, updates, callback);
                                 } else {
                                     setTimeout(function() {
                                         read(next_page);
-                                    }, 50);
+                                    }, 10);
                                 }
                             },
                             'error'     : function(r) {
@@ -656,16 +670,17 @@ function PN_API(setup) {
                     read();
                 },
                 callback    : function(r) {
-                    if (!updates[r.timetoken])
-                        updates[r.timetoken] = []
-                    
-                    updates[r.timetoken].push(r);
 
-                    if (synced) {
-                        clearTimeout(DS_UPDATE_DELAY);
-                        DS_UPDATE_DELAY = setTimeout(function(){
-                            apply_updates(a, updates, callback);
-                        }, 5000);
+                    if (r.action) {
+                        if (!updates[r.trans_id])
+                            updates[r.trans_id] = {'complete' : false, 'list' : []}
+                        updates[r.trans_id]['list'].push(r);
+
+                    } else if (r.status) {
+                        if (r.status == 'complete' && updates[r.trans_id]) {
+                            updates[r.trans_id].complete = true;
+                            if (synced) apply_updates(a, updates, callback, r.trans_id);
+                        }
                     }
                 },
                 error       : function(r) {
