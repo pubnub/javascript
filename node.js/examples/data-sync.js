@@ -13,23 +13,21 @@ var pubnub = PUBNUB({
     origin        : "pubsub-beta.pubnub.com"
 });
 
-function r() {
+function read() {
 pubnub.read({
 	callback : console.log,
     error : console.log,
-    object_id : 'devd1'
+    object_id : 'abcd1'
 });
 }
-/*
-var x = JSON.parse(process.argv[2])
+
+var x = { "a" : Date.now()}
 pubnub.write({
-	callback : console.log,
+	callback : function(r){console.log(JSON.stringify(r)); read();},
     error : console.log,
-    object_id : 'game',
-    path  : 'abcd',
+    object_id : 'abcd1',
     data : x
 })
-r()
 /*
 pubnub.delete({
 	callback : console.log,
@@ -59,7 +57,7 @@ setInterval(function(){
     }, 50);
 },100);
 */
-
+/*
 var o = pubnub.get({
 	'object_id' : 'devd1',
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
@@ -68,6 +66,6 @@ var o = pubnub.get({
 setTimeout(function(){
     console.log(JSON.stringify(o, null, 2));
 },5000);
-
+*/
 
 

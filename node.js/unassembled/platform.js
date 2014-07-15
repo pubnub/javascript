@@ -112,7 +112,7 @@ function xdr( setup ) {
     var headers = {};
     var payload = '';
 
-    if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = decodeURIComponent(setup['body']);
+    if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
     var url = build_url( setup.url, data );
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;

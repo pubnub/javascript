@@ -910,7 +910,7 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
-                body     : encode(JSON.stringify(content)),
+                body     : JSON.stringify(content),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -3318,7 +3318,7 @@ function ajax( setup ) {
 
         xhr.open( method, url, async );
         if (async) xhr.timeout = xhrtme;
-        xhr.send();
+        xhr.send(setup.body);
     }
     catch(eee) {
         done(0);

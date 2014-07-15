@@ -760,7 +760,7 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
-                body     : encode(JSON.stringify(content)),
+                body     : JSON.stringify(content),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -1803,7 +1803,7 @@ function xdr( setup ) {
     var headers = {};
     var payload = '';
 
-    if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = decodeURIComponent(setup['body']);
+    if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
     var url = build_url( setup.url, data );
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
