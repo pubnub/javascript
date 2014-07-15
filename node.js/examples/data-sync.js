@@ -60,6 +60,7 @@ setInterval(function(){
 
 var o = pubnub.get_synced_object({
 	'object_id' : 'devd1',
+    'path' : 'x.a.b',
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
     error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); }
 });
