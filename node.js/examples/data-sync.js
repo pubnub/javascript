@@ -65,12 +65,9 @@ var o = pubnub.get({
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
     error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); }
 });
-/*
-setInterval(function(){
-    console.log(JSON.stringify(o));
-    r();
+setTimeout(function(){
+    console.log(JSON.stringify(o, null, 2));
 },5000);
-*/
 
 
 

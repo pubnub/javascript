@@ -403,6 +403,14 @@ function PNmessage(args) {
     return msg;
 }
 
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
+
 function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
@@ -430,6 +438,7 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
+    ,   DS_UPDATE_DELAY = null
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -591,6 +600,48 @@ function PN_API(setup) {
         } else err(response);
     }
 
+    function apply_update(o, update) {
+        var path = update.location.split(".");
+        var pathNodes = [];
+        var last = path.pop();
+        path.shift();
+        var x = o;
+        for (p in path) {
+            try {
+                if (!x[path[p]]) x[path[p]] = {};
+            } catch (e) {
+                x[path[p]] = {};  
+            }
+            x = x[path[p]];
+            pathNodes.push(x);
+        }
+        if (update.action == 'update')
+            x[last] = update.value;
+        else if (update.action == 'delete') {
+            delete x[last]
+            for (var i = pathNodes.length - 1; i >= 1; i--) {
+                if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
+                    delete pathNodes[i-1][path[i]]
+                }
+            }
+            if ( o[path[0]] && Object.keys(o[path[0]]).length == 0) {
+                delete o[path[0]];
+            }
+        }
+        o.last_update = update.timetoken;
+    }
+    function apply_updates(o, updates, callback) {
+        for (var t in updates) {
+            var action = updates[t][updates[t].length -1]['action'];
+            var u = updates[t].shift();
+            while(u) {
+                apply_update(o, u);
+                u = updates[t].shift();
+            }
+            callback(action);
+            delete updates[t];
+        }
+    }
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -699,27 +750,20 @@ function PN_API(setup) {
             ,   object_id        = args['object_id'];
 
             var synced = false;
-            var updates = [];
+            var updates = {};
             var a = {'stale' : true, 'last_update' : 0};
 
             SELF['subscribe']({
                 channel     : 'pn_ds_' + object_id,
                 connect     : function(r, timetoken) {
-                    console.log(timetoken);
                     SELF['read']({
                         'object_id' : object_id,
                         'timetoken' : timetoken,
                         'callback'  : function(r) {
                             for (var attrname in r) { a[attrname] = r[attrname]; }
                             a.stale = false;
-                            a.last_update = timetoken;
                             synced = true;
-                            /*
-                            for ( u in updates) {
-                                var location = updates[u].location;
-                                location = location.split(".");
-                                //console.log(location);
-                            }  */
+                            apply_updates(a, updates, callback);
                         },
                         'error'     : function(r) {
                             console.log(r);
@@ -727,42 +771,20 @@ function PN_API(setup) {
                     })
                 },
                 callback    : function(r) {
-                    if (!synced) {
-                        updates.push(r);
-                    } else {
-                        path = r.location.split(".");
-                        var last = path.pop();
-                        path.shift();
-                        var x = a;
-                        for (p in path) {
-                            try {
-                                if (!x[path[p]]) x[path[p]] = {};
-                                x = x[path[p]];
-                            } catch (e) {
-                                x[path[p]] = {};
-                                x = x[path[p]];
-                            }
-                        }
-                        if (r.action == 'update')
-                            x[last] = r.value;
-                        else if (r.action == 'delete') {
-                            delete x[last]
-                        }
+                    if (!updates[r.timetoken])
+                        updates[r.timetoken] = []
+                    
+                    updates[r.timetoken].push(r);
 
-                        a.last_update = r.timetoken;
-                        var tmp_cb_param = r.location.split(".");
-                        tmp_cb_param.shift();
-
-                        callback && callback({
-                            'action'    : r.action,
-                            'path'      : tmp_cb_param.join("/"),
-                            'value'     : r.value
-                        });
+                    if (synced) {
+                        clearTimeout(DS_UPDATE_DELAY);
+                        DS_UPDATE_DELAY = setTimeout(function(){
+                            apply_updates(a, updates, callback);
+                        }, 5000);
                     }
                 },
                 error       : function(r) {
-                    //a.stale = true;
-                    console.log('SUBSCRIBE ERROR');
+                    a.stale = true;
                     err("Object could not be updated");
                 }
             });
@@ -1011,6 +1033,7 @@ function PN_API(setup) {
             PUBNUB.time(function(time){ });
         */
         'time' : function(callback) {
+            /*
             var jsonp = jsonp_cb();
             xdr({
                 callback : jsonp,
@@ -1020,6 +1043,7 @@ function PN_API(setup) {
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
             });
+            */
         },
 
         /*
@@ -1732,8 +1756,8 @@ function PN_API(setup) {
     if (!UUID) UUID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
 
-    timeout( _poll_online,  SECOND    );
-    timeout( _poll_online2, KEEPALIVE );
+    //timeout( _poll_online,  SECOND    );
+    //timeout( _poll_online2, KEEPALIVE );
     PRESENCE_HB_TIMEOUT = timeout( start_presence_heartbeat, ( PRESENCE_HB_INTERVAL - 3 ) * SECOND ) ;
 
     // Detect Age of Message

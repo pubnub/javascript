@@ -452,22 +452,31 @@ function PN_API(setup) {
 
     function apply_update(o, update) {
         var path = update.location.split(".");
+        var pathNodes = [];
         var last = path.pop();
         path.shift();
         var x = o;
         for (p in path) {
             try {
                 if (!x[path[p]]) x[path[p]] = {};
-                x = x[path[p]];
             } catch (e) {
-                x[path[p]] = {};
-                x = x[path[p]];
+                x[path[p]] = {};  
             }
+            x = x[path[p]];
+            pathNodes.push(x);
         }
         if (update.action == 'update')
             x[last] = update.value;
         else if (update.action == 'delete') {
             delete x[last]
+            for (var i = pathNodes.length - 1; i >= 1; i--) {
+                if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
+                    delete pathNodes[i-1][path[i]]
+                }
+            }
+            if ( o[path[0]] && Object.keys(o[path[0]]).length == 0) {
+                delete o[path[0]];
+            }
         }
         o.last_update = update.timetoken;
     }
@@ -612,11 +621,12 @@ function PN_API(setup) {
                     })
                 },
                 callback    : function(r) {
-                    if (!synced) {
-                        updates[r.timetoken].push(r);
-                    } else {
-                        if (!updates[r.timetoken]) updates[r.timetoken] = []
-                        updates[r.timetoken].push(r);
+                    if (!updates[r.timetoken])
+                        updates[r.timetoken] = []
+                    
+                    updates[r.timetoken].push(r);
+
+                    if (synced) {
                         clearTimeout(DS_UPDATE_DELAY);
                         DS_UPDATE_DELAY = setTimeout(function(){
                             apply_updates(a, updates, callback);
