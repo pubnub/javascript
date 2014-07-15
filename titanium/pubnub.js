@@ -482,7 +482,7 @@ function PN_API(setup) {
                 delete o[path[0]];
             }
         }
-        o.last_update = update.timetoken;
+        o.pn_ds_meta.last_update = update.timetoken;
     }
     function apply_updates(o, updates, callback, trans_id) {
         var update = updates[trans_id];
@@ -610,14 +610,14 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-        'get' : function(args) {
+        'get_synced_object' : function(args) {
             var callback         = args['callback']
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id'];
 
             var synced = false;
             var updates = {};
-            var a = {'stale' : true, 'last_update' : 0};
+            var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}};
             function mergeAtOneLevel(a, b) {
                 for (var attrname in b) {
                     if (!a[attrname]) {
@@ -630,7 +630,7 @@ function PN_API(setup) {
                 }
             }
             SELF['subscribe']({
-                channel     : 'pn_ds_' + object_id + ',' + 'pn_dstr_' + object_id,
+                channel     : 'pn_ds_' + object_id + '.*,' + 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
                     function read(start_at, obj_at) {
                         SELF['read']({
@@ -646,7 +646,7 @@ function PN_API(setup) {
                                 }, 10);
 
                                 if (!next_page || (next_page && next_page == "null")) {
-                                    a.stale = false;
+                                    a.pn_ds_meta.stale = false;
                                     synced = true;
                                     apply_all_updates(a, updates, callback);
                                 } else {
@@ -677,7 +677,7 @@ function PN_API(setup) {
                     }
                 },
                 error       : function(r) {
-                    a.stale = true;
+                    a.pn_ds_meta.stale = true;
                     err("Object could not be updated");
                 }
             });
@@ -732,7 +732,7 @@ function PN_API(setup) {
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
             ,   data             = {}
-            ,   path             = args['path'] || 'root';
+            ,   path             = args['path'];
 
             // Make sure we have a Channel
             if (!object_id)     return error('Missing Object Id');
@@ -766,12 +766,13 @@ function PN_API(setup) {
                 mode  : 'PATCH'
             });
         },
-        'delete' : function(args, callback) {
+        'remove' : function(args, callback) {
             var callback         = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   jsonp            = jsonp_cb()
             ,   data             = {}
-            ,   object_id        = args['object_id'];
+            ,   object_id        = args['object_id']
+            ,   path             = args['path'];
 
             // Make sure we have a Channel
             if (!object_id)     return error('Missing Object Id');
@@ -782,6 +783,8 @@ function PN_API(setup) {
                 STD_ORIGIN, 'datasync','pub-key', PUBLISH_KEY,
                 'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
             ];
+            
+            if (path) url.push(path);
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
