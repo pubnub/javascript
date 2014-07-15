@@ -436,7 +436,10 @@ function PN_API(setup) {
                 return;
             }
             if (response['payload']) {
-                callback(response['payload']);
+                if (response['next_page'])
+                    callback(response['payload'], response['next_page']);
+                else 
+                    callback(response['payload']);
                 return;
             }
         }
@@ -602,23 +605,54 @@ function PN_API(setup) {
             var synced = false;
             var updates = {};
             var a = {'stale' : true, 'last_update' : 0};
-
+            function mergeAtOneLevel(a, b) {
+                for (var attrname in b) {
+                    if (!a[attrname]) {
+                        a[attrname] = b[attrname];
+                    } else {
+                        setTimeout(function(){
+                            mergeAtOneLevel(a[attrname], b[attrname]);
+                        }, 50);
+                    }
+                }
+            }
             SELF['subscribe']({
                 channel     : 'pn_ds_' + object_id,
                 connect     : function(r, timetoken) {
-                    SELF['read']({
-                        'object_id' : object_id,
-                        'timetoken' : timetoken,
-                        'callback'  : function(r) {
-                            for (var attrname in r) { a[attrname] = r[attrname]; }
-                            a.stale = false;
-                            synced = true;
-                            apply_updates(a, updates, callback);
-                        },
-                        'error'     : function(r) {
-                            console.log(r);
-                        }
-                    })
+                    function read(start_at, obj_at) {
+                        SELF['read']({
+                            'object_id' : object_id,
+                            'timetoken' : timetoken,
+                            'start_at'  : start_at,
+                            'obj_at'    : obj_at,
+                            'page_max_bytes' : 5,
+                            'callback'  : function(r, next_page) {
+                                /*
+                                for (var attrname in r) {
+                                    if (!a[attrname])
+                                        a[attrname] = r[attrname];
+                                }
+                                */
+                                setTimeout(function(){
+                                    mergeAtOneLevel(a,r);
+                                }, 50);
+                                //console.log(JSON.stringify(r,null,2));
+                                if (!next_page || (next_page && next_page == "null")) {
+                                    a.stale = false;
+                                    synced = true;
+                                    apply_updates(a, updates, callback);
+                                } else {
+                                    setTimeout(function() {
+                                        read(next_page);
+                                    }, 50);
+                                }
+                            },
+                            'error'     : function(r) {
+                                console.log(r);
+                            }
+                        })
+                    }
+                    read();
                 },
                 callback    : function(r) {
                     if (!updates[r.timetoken])
@@ -646,6 +680,9 @@ function PN_API(setup) {
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   path             = args['path']
+            ,   start_at         = args['start_at']
+            ,   obj_at           = args['obj_at']
+            ,   page_max_bytes   = args['page_max_bytes']
             ,   jsonp            = jsonp_cb()
             ,   data             = {};
 
@@ -662,6 +699,10 @@ function PN_API(setup) {
             if (path) url.push(encode(path));
 
             if (jsonp != '0') { data['callback'] = jsonp; }
+
+            if (start_at) { data['start_at'] = start_at; }
+            if (obj_at)   { data['obj_at']   = obj_at; }
+            if (page_max_bytes)   { data['page_max_bytes']   = page_max_bytes; }
 
             xdr({
                 callback : jsonp,
