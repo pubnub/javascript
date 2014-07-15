@@ -629,7 +629,9 @@ function PN_API(setup) {
                 }
             }
             SELF['subscribe']({
-                channel     : 'pn_ds_' + object_id + '.*,' + 'pn_dstr_' + object_id,
+                channel     :   'pn_ds_' + object_id + ','   +
+                                'pn_ds_' + object_id + '.*,' +
+                                'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
                     function read(start_at, obj_at) {
                         SELF['read']({
