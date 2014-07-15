@@ -483,34 +483,27 @@ function PN_API(setup) {
         }
         o.last_update = update.timetoken;
     }
-    function apply_all_updates(o, updates, callback) {
-        for (var t in updates) {
-            var update = updates[t];
-            if (update && update.complete == true) {
-                var actions_list = update.list;
-                var action = actions_list[actions_list.length -1]['action'];
-                var action_event = actions_list.shift();
-                while(action_event) {
-                    apply_update(o, action_event);
-                    action_event = actions_list.shift();
-                }
-                callback(action);
-                delete update;
-            }
-        }
-    }
     function apply_updates(o, updates, callback, trans_id) {
         var update = updates[trans_id];
         if (update && update.complete == true) {
             var actions_list = update.list;
-            var action = actions_list[actions_list.length -1]['action'];
-            var action_event = actions_list.shift();
-            while(action_event) {
+            var callback_param_list = [];
+
+            for (var i in actions_list) {
+                var action_event = actions_list[i];
                 apply_update(o, action_event);
-                action_event = actions_list.shift();
+                action_event.location = action_event.location.split("pn_ds_")[1];
+                delete action_event.trans_id;
+                delete action_event.timetoken;
             }
-            callback(action);
+            callback(actions_list);
             delete update;
+        }
+    }
+
+    function apply_all_updates(o, updates, callback) {
+        for (var t in updates) {
+            apply_updates(o, updates, callback, t);
         }
     }
 

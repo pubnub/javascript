@@ -20,7 +20,7 @@ pubnub.read({
     object_id : 'abcd1'
 });
 }
-
+/*
 var x = { "a" : Date.now()}
 pubnub.write({
 	callback : function(r){console.log(JSON.stringify(r)); read();},
@@ -57,7 +57,7 @@ setInterval(function(){
     }, 50);
 },100);
 */
-/*
+
 var o = pubnub.get({
 	'object_id' : 'devd1',
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
@@ -66,6 +66,6 @@ var o = pubnub.get({
 setTimeout(function(){
     console.log(JSON.stringify(o, null, 2));
 },5000);
-*/
+
 
 
