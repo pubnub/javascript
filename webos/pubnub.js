@@ -713,7 +713,7 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             var url = [
-                STD_ORIGIN, 'datasync',
+                STD_ORIGIN, 'v1', 'datasync',
                 'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
             ];
 
@@ -757,7 +757,7 @@ function PN_API(setup) {
 
 
             var url = [
-                STD_ORIGIN, 'datasync','pub-key', PUBLISH_KEY,
+                STD_ORIGIN, 'v1', 'datasync','pub-key', PUBLISH_KEY,
                 'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
             ];
 
@@ -796,7 +796,7 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             var url = [
-                STD_ORIGIN, 'datasync','pub-key', PUBLISH_KEY,
+                STD_ORIGIN, 'v1', 'datasync','pub-key', PUBLISH_KEY,
                 'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
             ];
             
@@ -1280,12 +1280,20 @@ function PN_API(setup) {
 
                         // Route Channel <---> Callback for Message
                         var next_callback = (function() {
-                            var channels = (messages.length>2?messages[2]:map(
+                            var channels = '';
+
+                            if (messages.length > 3) {
+                                channels = messages[3];
+                            } else if (messages.length > 2) {
+                                channels = messages[2];
+                            } else {
+                                channels = map(
                                 generate_channel_list(CHANNELS), function(chan) { return map(
                                     Array(messages[0].length)
                                     .join(',').split(','),
                                     function() { return chan; }
-                                ) }).join(','));
+                                ) }).join(',');
+                            }   
                             var list = channels.split(',');
 
                             return function() {

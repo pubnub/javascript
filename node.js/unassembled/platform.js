@@ -115,6 +115,7 @@ function xdr( setup ) {
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
     var url = build_url( setup.url, data );
+
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 
     url = '/' + url.split('/').slice(3).join('/');
