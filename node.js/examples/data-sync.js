@@ -14,7 +14,7 @@ var pubnub = PUBNUB({
 });
 
 function read() {
-pubnub.read({
+pubnub.get({
 	callback : console.log,
     error : console.log,
     object_id : 'abcd1'

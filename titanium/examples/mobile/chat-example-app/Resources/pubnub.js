@@ -645,7 +645,7 @@ function PN_API(setup) {
                                 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
                     function read(start_at, obj_at) {
-                        SELF['read']({
+                        SELF['get']({
                             'object_id' : object_id,
                             'path'      : path,
                             'timetoken' : timetoken,
@@ -697,7 +697,7 @@ function PN_API(setup) {
             return a;
         },
 
-        'read' : function(args, callback) {
+        'get' : function(args, callback) {
             var callback         = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
@@ -740,13 +740,18 @@ function PN_API(setup) {
                 url      : url
             });
         },
-        'write' : function(args, callback) {
+        'set'   : function(args, callback) {
+            args.mode = 'PUT'
+            SELF['merge'](args);
+        },
+        'merge' : function(args, callback) {
             var callback         = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
             ,   data             = {}
+            ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
 
             // Make sure we have a Channel
@@ -758,8 +763,8 @@ function PN_API(setup) {
 
 
             var url = [
-                STD_ORIGIN, 'v1', 'datasync','pub-key', PUBLISH_KEY,
-                'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
+                STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
+                 'pub-key', PUBLISH_KEY,'obj-id', encode(object_id)
             ];
 
             if (path) {
@@ -780,7 +785,7 @@ function PN_API(setup) {
                     _invoke_error(response, err);
                 },
                 url      : url,
-                mode  : 'PATCH'
+                mode  : mode
             });
         },
         'remove' : function(args, callback) {
@@ -797,8 +802,8 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             var url = [
-                STD_ORIGIN, 'v1', 'datasync','pub-key', PUBLISH_KEY,
-                'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
+                STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
+                 'pub-key', PUBLISH_KEY, 'obj-id', encode(object_id)
             ];
             
             if (path) url.push(path);
@@ -1476,6 +1481,7 @@ function PN_API(setup) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
+            ,   obj_id   = args['object_id']
             ,   jsonp    = jsonp_cb()
             ,   ttl      = args['ttl']
             ,   r        = (args['read'] )?"1":"0"
@@ -1497,6 +1503,8 @@ function PN_API(setup) {
                 'timestamp' : timestamp
             };
             if (channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
+            if (obj_id != 'undefined' && obj_id != null && obj_id.length > 0) data['obj-id'] = obj_id;
+
             if (jsonp != '0') { data['callback'] = jsonp; }
             if (ttl || ttl === 0) data['ttl'] = ttl;
 
@@ -1545,6 +1553,7 @@ function PN_API(setup) {
             var callback = args['callback'] || callback
             ,   err      = args['error']    || function(){}
             ,   channel  = args['channel']
+            ,   obj_id   = args['object_id']
             ,   auth_key = args['auth_key']
             ,   jsonp    = jsonp_cb();
 
@@ -1562,6 +1571,7 @@ function PN_API(setup) {
             var data = {'timestamp' : timestamp };
             if (jsonp != '0') { data['callback'] = jsonp; }
             if (channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
+            if (obj_id != 'undefined' && obj_id != null && obj_id.length > 0) data['obj-id'] = obj_id;
             if (auth_key) data['auth']    = auth_key;    
 
             data = _get_url_params(data)
