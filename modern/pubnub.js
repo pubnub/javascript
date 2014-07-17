@@ -57,7 +57,6 @@ function build_url( url_components, url_params ) {
             value != null && encode(value_str).length > 0
         ) && params.push(key + "=" + encode(value_str));
     } );
-
     url += "?" + params.join(PARAMSBIT);
     return url;
 }
@@ -510,6 +509,64 @@ function PN_API(setup) {
         }
     }
 
+    function get(args, callback) {
+        var callback         = args['callback'] || callback
+        ,   err              = args['error']    || function(){}
+        ,   object_id        = args['object_id']
+        ,   path             = args['path']
+        ,   start_at         = args['start_at']
+        ,   obj_at           = args['obj_at']
+        ,   page_max_bytes   = args['page_max_bytes']
+        ,   jsonp            = jsonp_cb()
+        ,   data             = {};
+
+        // Make sure we have a Channel
+        if (!object_id)     return error('Missing Object Id');
+        if (!callback)      return error('Missing Callback');
+        if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+        var url = [
+            STD_ORIGIN, 'v1', 'datasync',
+            'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
+        ];
+
+        if (path) {
+            url.push(encode(path.split(".").join("/")));
+        }
+
+        if (jsonp != '0') { data['callback'] = jsonp; }
+
+        if (start_at) { data['start_at'] = start_at; }
+        if (obj_at)   { data['obj_at']   = obj_at; }
+        if (page_max_bytes)   { data['page_max_bytes']   = page_max_bytes; }
+
+        xdr({
+            callback : jsonp,
+            data     : _get_url_params(data),
+            success  : function(response) {
+                callback(response);
+            },
+            fail     : function(response) {
+                _invoke_error(response, err);
+            },
+            url      : url
+        });
+    }
+    var level = 1;
+    function mergeAtOneLevel(a, b) {
+
+        if (a && b) {
+            for (var attrname in b) {
+                if (!a[attrname]) {
+                    a[attrname] = b[attrname];
+                } else {
+                    console.log(++level);
+                    mergeAtOneLevel(a[attrname], b[attrname]);
+                }
+            }
+        }
+    }
+
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -622,17 +679,7 @@ function PN_API(setup) {
             var depth = 0;
             var updates = {};
             var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}};
-            function mergeAtOneLevel(a, b) {
-                for (var attrname in b) {
-                    if (!a[attrname]) {
-                        a[attrname] = b[attrname];
-                    } else {
-                        setTimeout(function(){
-                            mergeAtOneLevel(a[attrname], b[attrname]);
-                        }, 1);
-                    }
-                }
-            }
+
             if (path) {
                 var split_array = path.split(".");
                 depth = split_array.length;
@@ -643,36 +690,36 @@ function PN_API(setup) {
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
-                    function read(start_at, obj_at) {
-                        SELF['get']({
-                            'object_id' : object_id,
-                            'path'      : path,
-                            'timetoken' : timetoken,
-                            'start_at'  : start_at,
-                            'obj_at'    : obj_at,
-                            //'page_max_bytes' : 5,
-                            'callback'  : function(r, next_page) {
+                    if (r == 'pn_ds_' + object_id) {
+                        function read(start_at) {
+                            get({
+                                'object_id' : object_id,
+                                'path'      : path,
+                                'timetoken' : timetoken,
+                                'start_at'  : start_at,
+                                //'page_max_bytes' : 5,
+                                'callback'  : function(r) {
+                                    //setTimeout(function(){
+                                        mergeAtOneLevel(a,r.payload);
+                                    //}, 10);
 
-                                setTimeout(function(){
-                                    mergeAtOneLevel(a,r);
-                                }, 10);
-
-                                if (!next_page || (next_page && next_page == "null")) {
-                                    a.pn_ds_meta.stale = false;
-                                    synced = true;
-                                    apply_all_updates(a, updates, callback, depth);
-                                } else {
-                                    setTimeout(function() {
-                                        read(next_page);
-                                    }, 10);
+                                    if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                                        a.pn_ds_meta.stale = false;
+                                        synced = true;
+                                        apply_all_updates(a, updates, callback, depth);
+                                    } else {
+                                        //setTimeout(function() {
+                                            read(r.next_page);
+                                        //}, 10);
+                                    }
+                                },
+                                'error'     : function(r) {
+                                    console.log(r);
                                 }
-                            },
-                            'error'     : function(r) {
-                                console.log(r);
-                            }
-                        })
-                    }
-                    read();
+                            })
+                        }
+                        read();
+                    } 
                 },
                 callback    : function(r) {
 
@@ -689,6 +736,7 @@ function PN_API(setup) {
                     }
                 },
                 error       : function(r) {
+                    console.log(JSON.stringify(r));
                     a.pn_ds_meta.stale = true;
                     err("Object could not be updated");
                 }
@@ -697,7 +745,7 @@ function PN_API(setup) {
         },
 
         'get' : function(args, callback) {
-            var callback         = args['callback'] || callback
+             var callback         = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   path             = args['path']
@@ -712,32 +760,30 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-            var url = [
-                STD_ORIGIN, 'v1', 'datasync',
-                'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
-            ];
+            var obj = {};
+            function read(start_at,callback, error) {
+                get({
+                    'object_id' : object_id,
+                    'path'      : path,
+                    'start_at'  : start_at,
+                    //'page_max_bytes' : 5,
+                    'callback'  : function(r) {
 
-            if (path) {
-                url.push(encode(path.split(".").join("/")));
+                        mergeAtOneLevel(obj,r.payload);
+
+                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                            callback && callback(obj);
+                        } else {
+                            setTimeout(function() {
+
+                                read(r.next_page,callback, error);
+                            }, 10);
+                        }
+                    },
+                    'error'     : error
+                })
             }
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
-
-            if (start_at) { data['start_at'] = start_at; }
-            if (obj_at)   { data['obj_at']   = obj_at; }
-            if (page_max_bytes)   { data['page_max_bytes']   = page_max_bytes; }
-
-            xdr({
-                callback : jsonp,
-                data     : _get_url_params(data),
-                success  : function(response) {
-                    _invoke_callback(response, callback, err);
-                },
-                fail     : function(response) {
-                    _invoke_error(response, err);
-                },
-                url      : url
-            });
+            read(null,callback, error);
         },
         'set'   : function(args, callback) {
             args.mode = 'PUT'
@@ -755,8 +801,8 @@ function PN_API(setup) {
 
             // Make sure we have a Channel
             if (!object_id)     return error('Missing Object Id');
-            if (!object_id)     return error('Missing Object Id');
-            if (!data)          return error('Missing Callback');
+            if (!content)       return error('Missing Data');
+            if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
 

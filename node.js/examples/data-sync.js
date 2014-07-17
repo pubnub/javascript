@@ -17,9 +17,10 @@ function read() {
 pubnub.get({
 	callback : console.log,
     error : console.log,
-    object_id : 'abcd1'
+    object_id : 'biggest',
 });
 }
+//read()
 /*
 var x = { "a" : Date.now()}
 pubnub.write({
@@ -59,14 +60,36 @@ setInterval(function(){
 */
 
 var o = pubnub.get_synced_object({
-	'object_id' : 'devd1',
-    'path' : 'x.a.b',
+	'object_id' : 'biggest',
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
     error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); }
 });
 setTimeout(function(){
     console.log(JSON.stringify(o, null, 2));
+},15000);
+/*
+setInterval(function(){
+    pubnub.set({
+        'object_id' : 'devd2',
+        'data' : {"a" : "set-" + Date.now()},
+        callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
+        error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); }
+    });
+}, 10000);
+/*
+pubnub.grant({
+    'object_id' : 'devd2',
+    'read' : true,
+    'write' : false,
+    callback : function(r){ console.log(JSON.stringify(r, null, 2)); },
+    error : function(r){console.log(JSON.stringify(r, null, 2)); }
+});
+
+setTimeout(function(){
+    pubnub.audit({
+        'object_id' : 'devd2',
+        callback : function(r){ console.log(JSON.stringify(r, null, 2)); },
+        error : function(r){console.log(JSON.stringify(r, null, 2)); }
+    }  );
 },5000);
-
-
-
+*/
