@@ -552,19 +552,21 @@ function PN_API(setup) {
             url      : url
         });
     }
-    var level = 1;
-    function mergeAtOneLevel(a, b) {
+
+    function mergeAtOneLevel(a, b, callback) {
 
         if (a && b) {
             for (var attrname in b) {
                 if (!a[attrname]) {
                     a[attrname] = b[attrname];
                 } else {
-                    console.log(++level);
-                    mergeAtOneLevel(a[attrname], b[attrname]);
+                    setTimeout(function(){
+                        mergeAtOneLevel(a[attrname], b[attrname]);
+                    },10);
                 }
             }
         }
+        callback && callback();
     }
 
     // Announce Leave Event
@@ -672,6 +674,7 @@ function PN_API(setup) {
         'get_synced_object' : function(args) {
             var callback         = args['callback']
             ,   err              = args['error']    || function(){}
+            ,   connect          = args['connect']
             ,   object_id        = args['object_id']
             ,   path             = args['path'] || '';
 
@@ -691,30 +694,27 @@ function PN_API(setup) {
                                 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
                     if (r == 'pn_ds_' + object_id) {
-                        function read(start_at) {
+                        function read(start_at, callback, error) {
                             get({
                                 'object_id' : object_id,
                                 'path'      : path,
                                 'timetoken' : timetoken,
                                 'start_at'  : start_at,
-                                //'page_max_bytes' : 5,
                                 'callback'  : function(r) {
-                                    //setTimeout(function(){
-                                        mergeAtOneLevel(a,r.payload);
-                                    //}, 10);
-
-                                    if (!r.next_page || (r.next_page && r.next_page == "null")) {
-                                        a.pn_ds_meta.stale = false;
-                                        synced = true;
-                                        apply_all_updates(a, updates, callback, depth);
-                                    } else {
-                                        //setTimeout(function() {
-                                            read(r.next_page);
-                                        //}, 10);
-                                    }
+                                    
+                                    mergeAtOneLevel(a, r.payload, function(){
+                                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                                            a.pn_ds_meta.stale = false;
+                                            synced = true;
+                                            apply_all_updates(a, updates, callback, depth);
+                                            connect && connect(object_id);
+                                        } else {
+                                            read(r.next_page, callback, error);
+                                        }
+                                    });
                                 },
                                 'error'     : function(r) {
-                                    console.log(r);
+                                   error && error(r);
                                 }
                             })
                         }
@@ -769,16 +769,13 @@ function PN_API(setup) {
                     //'page_max_bytes' : 5,
                     'callback'  : function(r) {
 
-                        mergeAtOneLevel(obj,r.payload);
-
-                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
-                            callback && callback(obj);
-                        } else {
-                            setTimeout(function() {
-
+                        mergeAtOneLevel(obj,r.payload, function(){
+                            if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                                callback && callback(obj);
+                            } else {
                                 read(r.next_page,callback, error);
-                            }, 10);
-                        }
+                            }
+                        });
                     },
                     'error'     : error
                 })

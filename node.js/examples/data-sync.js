@@ -58,15 +58,13 @@ setInterval(function(){
     }, 50);
 },100);
 */
-
 var o = pubnub.get_synced_object({
 	'object_id' : 'biggest',
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
-    error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); }
+    error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
+    connect : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); console.log(r)}
 });
-setTimeout(function(){
-    console.log(JSON.stringify(o, null, 2));
-},15000);
+
 /*
 setInterval(function(){
     pubnub.set({
