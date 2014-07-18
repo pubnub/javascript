@@ -692,7 +692,7 @@ function PN_API(setup) {
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
-                    if (r == 'pn_ds_' + object_id) {
+                    if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
                         function read(start_at, callback, error) {
                             get({
                                 'object_id' : object_id,
