@@ -998,7 +998,9 @@ function PN_API(setup) {
                  'pub-key', PUBLISH_KEY, 'obj-id', encode(object_id)
             ];
             
-            if (path) url.push(path);
+            if (path) {
+                url.push(encode(path.split(".").join("/")));
+            }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
