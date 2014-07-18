@@ -15,12 +15,13 @@ var pubnub = PUBNUB({
 
 function read() {
 pubnub.get({
-	callback : console.log,
-    error : console.log,
-    object_id : 'biggest',
+	//callback : function(r){console.log(JSON.stringify(r,null,2));},
+    callback : console.log,
+	error : console.log,
+    object_id : 'dp',
 });
 }
-//read()
+read()
 /*
 var x = { "a" : Date.now()}
 pubnub.write({
@@ -58,8 +59,9 @@ setInterval(function(){
     }, 50);
 },100);
 */
+/*
 var o = pubnub.get_synced_object({
-	'object_id' : 'biggest',
+	'object_id' : 'dp',
     callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
     error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
     connect : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); console.log(r)}

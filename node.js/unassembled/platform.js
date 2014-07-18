@@ -85,6 +85,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
+
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);

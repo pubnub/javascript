@@ -553,20 +553,20 @@ function PN_API(setup) {
         });
     }
 
-    function mergeAtOneLevel(a, b, callback) {
-
+    function mergeAtOneLevel(a, b) {
+        if ( a == null ) {
+            return b;
+        }
         if (a && b) {
             for (var attrname in b) {
                 if (!a[attrname]) {
                     a[attrname] = b[attrname];
                 } else {
-                    setTimeout(function(){
-                        mergeAtOneLevel(a[attrname], b[attrname]);
-                    },10);
+                    a[attrname] = mergeAtOneLevel(a[attrname], b[attrname]);
                 }
             }
         }
-        callback && callback();
+        return a;
     }
 
     // Announce Leave Event
@@ -682,7 +682,6 @@ function PN_API(setup) {
             var depth = 0;
             var updates = {};
             var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}};
-
             if (path) {
                 var split_array = path.split(".");
                 depth = split_array.length;
@@ -693,6 +692,7 @@ function PN_API(setup) {
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
+                    console.log('hi' + r);
                     if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
                         function read(start_at, callback, error) {
                             get({
@@ -702,16 +702,17 @@ function PN_API(setup) {
                                 'start_at'  : start_at,
                                 'callback'  : function(r) {
                                     
-                                    mergeAtOneLevel(a, r.payload, function(){
-                                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
-                                            a.pn_ds_meta.stale = false;
-                                            synced = true;
-                                            apply_all_updates(a, updates, callback, depth);
-                                            connect && connect(object_id);
-                                        } else {
-                                            read(r.next_page, callback, error);
-                                        }
-                                    });
+                                    a = mergeAtOneLevel(a, r.payload);
+
+                                    if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                                        a.pn_ds_meta.stale = false;
+                                        synced = true;
+                                        apply_all_updates(a, updates, callback, depth);
+                                        connect && connect(object_id);
+                                    } else {
+                                        read(r.next_page, callback, error);
+                                    }
+
                                 },
                                 'error'     : function(r) {
                                    error && error(r);
@@ -760,7 +761,7 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-            var obj = {};
+            var obj = null;
             function read(start_at,callback, error) {
                 get({
                     'object_id' : object_id,
@@ -768,14 +769,17 @@ function PN_API(setup) {
                     'start_at'  : start_at,
                     //'page_max_bytes' : 5,
                     'callback'  : function(r) {
-
-                        mergeAtOneLevel(obj,r.payload, function(){
-                            if (!r.next_page || (r.next_page && r.next_page == "null")) {
-                                callback && callback(obj);
-                            } else {
-                                read(r.next_page,callback, error);
-                            }
-                        });
+                        if (obj == null && typeof r.payload !== 'object') {
+                            callback && callback(r.payload);
+                            return;
+                        }
+                        obj = mergeAtOneLevel(obj,r.payload); 
+                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                            callback && callback(obj);
+                        } else {
+                            read(r.next_page,callback, error);
+                        }
+                        
                     },
                     'error'     : error
                 })
