@@ -59,6 +59,7 @@ function build_url( url_components, url_params ) {
         ) && params.push(key + "=" + encode(value_str));
     } );
     url += "?" + params.join(PARAMSBIT);
+
     return url;
 }
 
@@ -455,13 +456,15 @@ function PN_API(setup) {
 
     function apply_update(o, update, depth) {
         var path = update.location.split(".");
+        var path_length = path.length;
         var pathNodes = [];
         var last = path.pop();
         path.shift();
         if (depth) {
             for (var i = 0; i < depth; i++) path.shift();
         }
-        var x = o;
+        var x = o.data;
+
         for (p in path) {
             try {
                 if (!x[path[p]]) x[path[p]] = {};
@@ -471,19 +474,31 @@ function PN_API(setup) {
             x = x[path[p]];
             pathNodes.push(x);
         }
-        if (update.action == 'update')
-            x[last] = update.value;
+
+        if (update.action == 'update') {
+            if (path_length - depth > 0) 
+                x[last] = update.value;
+            else
+                o.data  = update.value;
+
+        }
         else if (update.action == 'delete') {
-            delete x[last]
-            for (var i = pathNodes.length - 1; i >= 1; i--) {
-                if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
-                    delete pathNodes[i-1][path[i]]
+
+            if (path_length - depth > 0) {
+                delete x[last]
+                for (var i = pathNodes.length - 1; i >= 1; i--) {
+                    if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
+                        delete pathNodes[i-1][path[i]]
+                    }
                 }
-            }
-            if ( o[path[0]] && Object.keys(o[path[0]]).length == 0) {
-                delete o[path[0]];
+                if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
+                    delete o.data[path[0]];
+                }
+            } else {
+                o.data = {}
             }
         }
+
         o.pn_ds_meta.last_update = update.timetoken;
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
@@ -682,7 +697,7 @@ function PN_API(setup) {
             var synced = false;
             var depth = 0;
             var updates = {};
-            var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}};
+            var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}, "data" : {}};
             if (path) {
                 var split_array = path.split(".");
                 depth = split_array.length;
@@ -693,7 +708,7 @@ function PN_API(setup) {
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
                 connect     : function(r, timetoken) {
-                    console.log('hi' + r);
+
                     if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
                         function read(start_at, callback, error) {
                             get({
@@ -702,9 +717,11 @@ function PN_API(setup) {
                                 'timetoken' : timetoken,
                                 'start_at'  : start_at,
                                 'callback'  : function(r) {
-                                    
-                                    a = mergeAtOneLevel(a, r.payload);
-
+                                    if (typeof r.payload === 'object') {
+                                        a.data = mergeAtOneLevel(a.data, r.payload);
+                                    } else {
+                                        a.data = r.payload;
+                                    }
                                     if (!r.next_page || (r.next_page && r.next_page == "null")) {
                                         a.pn_ds_meta.stale = false;
                                         synced = true;
