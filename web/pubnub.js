@@ -1173,7 +1173,7 @@ function PN_API(setup) {
             PUBNUB.time(function(time){ });
         */
         'time' : function(callback) {
-            /*
+            
             var jsonp = jsonp_cb();
             xdr({
                 callback : jsonp,
@@ -1183,7 +1183,7 @@ function PN_API(setup) {
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
             });
-            */
+            
         },
 
         /*
