@@ -2,12 +2,12 @@
 
 Enter Chat and press enter
 
-<div><input id=input placeholder=chat-here></div>
+<div><input id='input' placeholder='chat-here'></div>
 <code>Chat Output</code>
-<div id=box></div>
-<div id=pubnub pub-key=demo sub-key=demo></div>
-<script src=../../web/pubnub.min.js></script>
-<script src=sound.js></script>
+<div id='box'></div>
+<div id='pubnub' pub-key='demo' sub-key='demo'></div>
+<script src='../../web/pubnub.min.js'></script>
+<script src='sound.js'></script>
 <script>(function(){
     var box = PUBNUB.$('box'), input = PUBNUB.$('input'), channel = 'chatlllll';
     PUBNUB.subscribe({
