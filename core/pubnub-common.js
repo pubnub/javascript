@@ -770,7 +770,8 @@ function PN_API(setup) {
             ,   obj_at           = args['obj_at']
             ,   page_max_bytes   = args['page_max_bytes']
             ,   jsonp            = jsonp_cb()
-            ,   data             = {};
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key };
 
             // Make sure we have a Channel
             if (!object_id)     return error('Missing Object Id');
@@ -812,7 +813,8 @@ function PN_API(setup) {
             ,   object_id        = args['object_id']
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
-            ,   data             = {}
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
 
@@ -854,7 +856,8 @@ function PN_API(setup) {
             var callback         = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   jsonp            = jsonp_cb()
-            ,   data             = {}
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   object_id        = args['object_id']
             ,   path             = args['path'];
 
