@@ -683,7 +683,8 @@ function PN_API(setup) {
         ,   obj_at           = args['obj_at']
         ,   page_max_bytes   = args['page_max_bytes']
         ,   jsonp            = jsonp_cb()
-        ,   data             = {};
+        ,   auth_key         = args['auth_key'] || AUTH_KEY
+        ,   data             = { 'uuid' : UUID, 'auth' : auth_key };
 
         // Make sure we have a Channel
         if (!object_id)     return error('Missing Object Id');
