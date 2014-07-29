@@ -8,88 +8,38 @@
 var PUBNUB = require("../pubnub.js")
 
 var pubnub = PUBNUB({
-    publish_key   : "demo",
-    subscribe_key : "demo",
+    write_key   : "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
+    read_key : "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
     origin        : "pubsub-beta.pubnub.com"
 });
 
-function read() {
-pubnub.get({
-	//callback : function(r){console.log(JSON.stringify(r,null,2));},
-    callback : console.log,
-	error : console.log,
-    object_id : 'dp',
+var ds = pubnub.sync("dp.a.b");
+
+ds.on.ready(function(){
+	console.log('READY');
+	console.log(JSON.stringify(ds.content.data, null, 2));
 });
-}
-read()
-/*
-var x = { "a" : Date.now()}
-pubnub.write({
-	callback : function(r){console.log(JSON.stringify(r)); read();},
-    error : console.log,
-    object_id : 'abcd1',
-    data : x
+
+
+// Data Events
+ds.on.update(function(params) { 
+	console.log(JSON.stringify(params));
+	console.log(JSON.stringify(ds.content.data, null, 2));
 })
-/*
-pubnub.delete({
-	callback : console.log,
-    error : console.log,
-    object_id : 'game',
-});
-*/
-/*  
-setInterval(function(){
-    pubnub.write({
-        callback : function(){},
-        //callback : console.log,
-        error : console.log,
-        object_id : 'devdb',
-        path  : '/home/owner/Bob',
-        data : {'is_away' : true}
-    })
-    setTimeout(function(){
-        pubnub.write({
-            callback : function(){},
-            //callback : console.log,
-            error : console.log,
-            object_id : 'devdb',
-            path  : '/home/owner/Bob',
-            data : {'is_away' : false}
-        })
-    }, 50);
-},100);
-*/
-/*
-var o = pubnub.get_synced_object({
-	'object_id' : 'dp',
-    callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
-    error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
-    connect : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); console.log(r)}
-});
+ds.on.set(function(params){ 
+	console.log(JSON.stringify(params));
+	console.log(JSON.stringify(ds.content.data, null, 2));
+})
+ds.on.remove(function(params){ 
+	console.log(JSON.stringify(params));
+	console.log(JSON.stringify(ds.content.data, null, 2));
+})
+ds.on.error(function(params){ 
+	console.log(JSON.stringify(params));
+	console.log(JSON.stringify(ds.content.data, null, 2));
+})
 
-/*
-setInterval(function(){
-    pubnub.set({
-        'object_id' : 'devd2',
-        'data' : {"a" : "set-" + Date.now()},
-        callback : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); },
-        error : function(r){ console.log(r); console.log(JSON.stringify(o, null, 2)); }
-    });
-}, 10000);
-/*
-pubnub.grant({
-    'object_id' : 'devd2',
-    'read' : true,
-    'write' : false,
-    callback : function(r){ console.log(JSON.stringify(r, null, 2)); },
-    error : function(r){console.log(JSON.stringify(r, null, 2)); }
-});
-
-setTimeout(function(){
-    pubnub.audit({
-        'object_id' : 'devd2',
-        callback : function(r){ console.log(JSON.stringify(r, null, 2)); },
-        error : function(r){console.log(JSON.stringify(r, null, 2)); }
-    }  );
-},5000);
-*/
+// Network Events
+ds.on.network.connect(function(params)      { console.log(JSON.stringify(params)); })
+ds.on.network.disconnect(function(params)   { console.log(JSON.stringify(params)); })
+ds.on.network.reconnect(function(params)    { console.log(JSON.stringify(params)); })
