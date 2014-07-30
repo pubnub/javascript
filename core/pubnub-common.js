@@ -213,7 +213,6 @@ function PNmessage(args) {
             }
             var exclude1 = ['badge','alert'];
             for (var k in exclude1) {
-                //console.log(exclude[k]);
                 delete m['pn_apns'][exclude1[k]];
             }
         }
@@ -754,7 +753,6 @@ function PN_API(setup) {
                     }
                 },
                 error       : function(r) {
-                    console.log(JSON.stringify(r));
                     a.pn_ds_meta.stale = true;
                     err("Object could not be updated");
                 }
@@ -846,7 +844,6 @@ function PN_API(setup) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
-                    console.log('ERROR');
                     _invoke_error(response, err);
                 },
                 url      : url,
