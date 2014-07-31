@@ -964,9 +964,16 @@ function PN_API(setup) {
                                'location' : r[0].location,
                                'update_at' : r[0].update_at
                             };
-                            remove && remove(cb_data);
+                            if (r[1] && r[1].action == 'update') {
+                                cb_data['update_at'] = cb_data['location'];
+                                set && set(cb_data);
+                            } else
+                                remove && remove(cb_data);
                         }
                     }
+                },
+                'error' : function(r) {
+                    error && error(r);
                 },
                 'connect'    : function(r) {
                     network_connect && network_connect(r);
