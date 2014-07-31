@@ -364,7 +364,6 @@ function PNmessage(args) {
             }
             var exclude1 = ['badge','alert'];
             for (var k in exclude1) {
-                //console.log(exclude[k]);
                 delete m['pn_apns'][exclude1[k]];
             }
         }
@@ -416,8 +415,8 @@ function PN_API(setup) {
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   NOLEAVE       = setup['noleave']       || 0
-    ,   PUBLISH_KEY   = setup['publish_key']   || 'demo'
-    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || 'demo'
+    ,   PUBLISH_KEY   = setup['publish_key']   || setup['write_key'] || demo
+    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || setup['read_key']  || demo
     ,   AUTH_KEY      = setup['auth_key']      || ''
     ,   SECRET_KEY    = setup['secret_key']    || ''
     ,   hmac_SHA256   = setup['hmac_SHA256']
@@ -613,10 +612,18 @@ function PN_API(setup) {
             for (var i = 0; i < depth; i++) path.shift();
         }
         var x = o.data;
+        var continue_update = true;
+        var update_at = null;
 
         for (p in path) {
             try {
-                if (!x[path[p]]) x[path[p]] = {};
+                if (!x[path[p]]) {
+                    x[path[p]] = {};
+                    if (update_at == null) update_at = parseInt(p);
+                } else if (typeof x[path[p]]  !== 'object' ) {
+                    x[path[p]] = {};
+                    if (update_at == null)  update_at = parseInt(p) + 1;   
+                }
             } catch (e) {
                 x[path[p]] = {};  
             }
@@ -624,6 +631,8 @@ function PN_API(setup) {
             pathNodes.push(x);
         }
 
+        if (update_at == null) update_at = pathNodes.length + 1;
+        
         if (update.action == 'update') {
             if (path_length - depth > 0) 
                 x[last] = update.value;
@@ -635,34 +644,42 @@ function PN_API(setup) {
 
             if (path_length - depth > 0) {
                 delete x[last]
+                update_at = pathNodes.length;
                 for (var i = pathNodes.length - 1; i >= 1; i--) {
                     if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
                         delete pathNodes[i-1][path[i]]
+                        update_at = i;
                     }
                 }
                 if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
                     delete o.data[path[0]];
+                    update_at = 0;
                 }
             } else {
                 o.data = {}
             }
         }
-
         o.pn_ds_meta.last_update = update.timetoken;
+
+        var x = update.location.split("pn_ds_")[1].split(".");
+
+        return x.slice(0, 1 + depth + update_at).join('.');   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
         var update = updates[trans_id];
+        var update_at;
         if (update && update.complete == true) {
             var actions_list = update.list;
             var callback_param_list = [];
 
             for (var i in actions_list) {
                 var action_event = actions_list[i];
-                apply_update(o, action_event, depth);
+                action_event.update_at = apply_update(o, action_event, depth);
                 action_event.location = action_event.location.split("pn_ds_")[1];
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
+            
             callback(actions_list);
             delete update;
         }
@@ -905,7 +922,6 @@ function PN_API(setup) {
                     }
                 },
                 error       : function(r) {
-                    console.log(JSON.stringify(r));
                     a.pn_ds_meta.stale = true;
                     err("Object could not be updated");
                 }
@@ -997,7 +1013,6 @@ function PN_API(setup) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
-                    console.log('ERROR');
                     _invoke_error(response, err);
                 },
                 url      : url,
@@ -1042,7 +1057,82 @@ function PN_API(setup) {
                 mode : 'DELETE'
             });
         },
+        'sync' : function(object_id) {
+            var ready, update, set, remove, change 
+            ,   network_connect, network_disconnect, network_reconnect;
+            var ds_object = {
+                'on' : {
+                    'change'  : function(callback) {
+                        ready = callback;
+                    },
+                    'ready'  : function(callback) {
+                        ready = callback;
+                    },
+                    'update'  : function(callback) {
+                        update = callback;
+                    },  
+                    'set'     : function(callback) {
+                        set = callback;
+                    },
+                    'remove'  : function(callback) {
+                        remove = callback;
+                    },
+                    'error'   : function(callback) {
+                        error = callback;
+                    }, 
+                    'network' : {
+                        'connect'       : function(callback) {
+                            network_connect = callback;
+                        },
+                        'disconnect'    : function(callback) {
+                            network_disconnect = callback;
+                        },
+                        'reconnect'     : function(callback) {
+                            network_reconnect = callback;
+                        }
+                    }
+                }
+            }
+            ,   object_id_split = object_id.split('.');
+            var obj_id          = object_id_split[0];
+            object_id_split.shift();
+            var path            = object_id_split.join('.');
 
+            ds_object.content = SELF['get_synced_object']({
+                'object_id'  : obj_id,
+                'path'       : path,
+                'callback'   : function(r) {
+                    if (r[0]) {
+                        change && change({'action' : r[0].action , 'location' : r[0].location});
+                        if (r[0].action === 'update') {
+                            var cb_data = {
+                               'location' : r[0].location,
+                               'update_at' : r[0].update_at
+                            };
+                            update && update(cb_data);
+                        } else if (r[0].action === 'delete') {
+                            var cb_data = {
+                               'location' : r[0].location,
+                               'update_at' : r[0].update_at
+                            };
+                            remove && remove(cb_data);
+                        }
+                    }
+                },
+                'connect'    : function(r) {
+                    network_connect && network_connect(r);
+                    ready && ready(r);
+                },
+                'reconnect'  : function(r) {
+                    network_reconnect && network_reconnect(r);
+                },
+                'disconnect' : function(r) {
+                    network_disconnect && network_disconnect(r)
+                }    
+                
+            });
+            return ds_object;
+        },
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',

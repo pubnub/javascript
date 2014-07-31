@@ -8,12 +8,12 @@
 var PUBNUB = require("../pubnub.js")
 
 var pubnub = PUBNUB({
-    write_key   : "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
-    read_key : "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
+    write_key     : "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
+    read_key      : "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
     origin        : "pubsub-beta.pubnub.com"
 });
 
-var ds = pubnub.sync("dp.a.b");
+var ds = pubnub.sync("dp");
 
 ds.on.ready(function(){
 	console.log('READY');

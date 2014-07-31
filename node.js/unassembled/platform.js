@@ -138,8 +138,8 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(){console.log('error');done(1, body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(){console.log('abort');done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );

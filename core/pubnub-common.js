@@ -213,7 +213,6 @@ function PNmessage(args) {
             }
             var exclude1 = ['badge','alert'];
             for (var k in exclude1) {
-                //console.log(exclude[k]);
                 delete m['pn_apns'][exclude1[k]];
             }
         }
@@ -453,9 +452,6 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        console.log('==UPDATE==');
-        console.log(update.location);
-        console.log(depth);
         var path = update.location.split(".");
         var path_length = path.length;
         var pathNodes = [];
@@ -466,14 +462,16 @@ function PN_API(setup) {
         }
         var x = o.data;
         var continue_update = true;
-        var update_at;
-        console.log(JSON.stringify(path));
-        for (p in path) {
+        var update_at = null;
 
+        for (p in path) {
             try {
-                if (!x[path[p]] || typeof x[path[p]]  !== 'object' ) {
+                if (!x[path[p]]) {
                     x[path[p]] = {};
-                    update_at = p
+                    if (update_at == null) update_at = parseInt(p);
+                } else if (typeof x[path[p]]  !== 'object' ) {
+                    x[path[p]] = {};
+                    if (update_at == null)  update_at = parseInt(p) + 1;   
                 }
             } catch (e) {
                 x[path[p]] = {};  
@@ -481,7 +479,8 @@ function PN_API(setup) {
             x = x[path[p]];
             pathNodes.push(x);
         }
-        //console.log(JSON.stringify(o, null, 2));
+
+        if (update_at == null) update_at = pathNodes.length + 1;
         
         if (update.action == 'update') {
             if (path_length - depth > 0) 
@@ -494,6 +493,7 @@ function PN_API(setup) {
 
             if (path_length - depth > 0) {
                 delete x[last]
+                update_at = pathNodes.length;
                 for (var i = pathNodes.length - 1; i >= 1; i--) {
                     if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
                         delete pathNodes[i-1][path[i]]
@@ -509,11 +509,10 @@ function PN_API(setup) {
             }
         }
         o.pn_ds_meta.last_update = update.timetoken;
-        console.log(update_at);
-        //update.location.split("pn_ds_")[1].split(".").slice(0,depth+).join('.'))
-        console.log(depth);
-        return update_at;
-        console.log('+++')
+
+        var x = update.location.split("pn_ds_")[1].split(".");
+
+        return x.slice(0, 1 + depth + update_at).join('.');   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
         var update = updates[trans_id];
@@ -524,11 +523,12 @@ function PN_API(setup) {
 
             for (var i in actions_list) {
                 var action_event = actions_list[i];
-                update_at = apply_update(o, action_event, depth);
+                action_event.update_at = apply_update(o, action_event, depth);
                 action_event.location = action_event.location.split("pn_ds_")[1];
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
+            
             callback(actions_list);
             delete update;
         }
@@ -771,7 +771,6 @@ function PN_API(setup) {
                     }
                 },
                 error       : function(r) {
-                    console.log(JSON.stringify(r));
                     a.pn_ds_meta.stale = true;
                     err("Object could not be updated");
                 }
@@ -863,7 +862,6 @@ function PN_API(setup) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
-                    console.log('ERROR');
                     _invoke_error(response, err);
                 },
                 url      : url,
@@ -948,8 +946,7 @@ function PN_API(setup) {
             var obj_id          = object_id_split[0];
             object_id_split.shift();
             var path            = object_id_split.join('.');
-            console.log(obj_id);
-            console.log(path);
+
             ds_object.content = SELF['get_synced_object']({
                 'object_id'  : obj_id,
                 'path'       : path,
@@ -958,12 +955,14 @@ function PN_API(setup) {
                         change && change({'action' : r[0].action , 'location' : r[0].location});
                         if (r[0].action === 'update') {
                             var cb_data = {
-                               'location' : r[0].location
+                               'location' : r[0].location,
+                               'update_at' : r[0].update_at
                             };
                             update && update(cb_data);
                         } else if (r[0].action === 'delete') {
                             var cb_data = {
-                               'location' : r[0].location
+                               'location' : r[0].location,
+                               'update_at' : r[0].update_at
                             };
                             remove && remove(cb_data);
                         }
