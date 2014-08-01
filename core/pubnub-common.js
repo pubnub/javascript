@@ -264,8 +264,8 @@ function PN_API(setup) {
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   NOLEAVE       = setup['noleave']       || 0
-    ,   PUBLISH_KEY   = setup['publish_key']   || setup['write_key'] || demo
-    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || setup['read_key']  || demo
+    ,   PUBLISH_KEY   = setup['publish_key']   || setup['write_key'] || 'demo'
+    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || setup['read_key']  || 'demo'
     ,   AUTH_KEY      = setup['auth_key']      || ''
     ,   SECRET_KEY    = setup['secret_key']    || ''
     ,   hmac_SHA256   = setup['hmac_SHA256']
@@ -772,7 +772,7 @@ function PN_API(setup) {
                 },
                 'error'       : function(r) {
                     a['pn_ds_meta']['stale'] = true;
-                    err("Object could not be updated");
+                    err({'message' : r['message']});
                 }
             });
             return a;
