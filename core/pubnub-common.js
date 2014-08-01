@@ -715,15 +715,15 @@ function PN_API(setup) {
             var updates = {};
             var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}, "data" : {}};
             if (path) {
-                var split_array = path.split(".");
-                depth = split_array.length;
+                var split_array = path['split'](".");
+                depth = split_array['length'];
             }
 
             SELF['subscribe']({
-                channel     :   'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
+                'channel'     :   'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
-                connect     : function(r, timetoken) {
+                'connect'     : function(r, timetoken) {
 
                     if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
                         function read(start_at, callback, error) {
@@ -733,18 +733,18 @@ function PN_API(setup) {
                                 'timetoken' : timetoken,
                                 'start_at'  : start_at,
                                 'callback'  : function(r) {
-                                    if (typeof r.payload === 'object') {
-                                        a.data = mergeAtOneLevel(a.data, r.payload);
+                                    if (typeof r['payload'] === 'object') {
+                                        a['data'] = mergeAtOneLevel(a['data'], r['payload']);
                                     } else {
-                                        a.data = r.payload;
+                                        a['data'] = r['payload'];
                                     }
-                                    if (!r.next_page || (r.next_page && r.next_page == "null")) {
-                                        a.pn_ds_meta.stale = false;
+                                    if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
+                                        a['pn_ds_meta']['stale'] = false;
                                         synced = true;
                                         apply_all_updates(a, updates, callback, depth);
                                         connect && connect(object_id);
                                     } else {
-                                        read(r.next_page, callback, error);
+                                        read(r['next_page'], callback, error);
                                     }
 
                                 },
@@ -756,22 +756,22 @@ function PN_API(setup) {
                         read();
                     } 
                 },
-                callback    : function(r) {
+                'callback'    : function(r) {
 
-                    if (r.action) {
-                        if (!updates[r.trans_id])
-                            updates[r.trans_id] = {'complete' : false, 'list' : []}
-                        updates[r.trans_id]['list'].push(r);
+                    if (r['action']) {
+                        if (!updates[r['trans_id']])
+                            updates[r['trans_id']] = {'complete' : false, 'list' : []}
+                        updates[r['trans_id']]['list']['push'](r);
 
-                    } else if (r.status) {
-                        if (r.status == 'complete' && updates[r.trans_id]) {
-                            updates[r.trans_id].complete = true;
-                            if (synced) apply_updates(a, updates, callback, r.trans_id, depth);
+                    } else if (r['status']) {
+                        if (r['status'] == 'complete' && updates[r['trans_id']]) {
+                            updates[r['trans_id']]['complete'] = true;
+                            if (synced) apply_updates(a, updates, callback, r['trans_id'], depth);
                         }
                     }
                 },
-                error       : function(r) {
-                    a.pn_ds_meta.stale = true;
+                'error'       : function(r) {
+                    a['pn_ds_meta']['stale'] = true;
                     err("Object could not be updated");
                 }
             });
@@ -803,15 +803,15 @@ function PN_API(setup) {
                     'start_at'  : start_at,
                     //'page_max_bytes' : 5,
                     'callback'  : function(r) {
-                        if (obj == null && typeof r.payload !== 'object') {
-                            callback && callback(r.payload);
+                        if (obj == null && typeof r['payload'] !== 'object') {
+                            callback && callback(r['payload']);
                             return;
                         }
-                        obj = mergeAtOneLevel(obj,r.payload); 
-                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                        obj = mergeAtOneLevel(obj,r['payload']); 
+                        if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
                             callback && callback(obj);
                         } else {
-                            read(r.next_page,callback, error);
+                            read(r['next_page'],callback, error);
                         }
                         
                     },
@@ -821,7 +821,7 @@ function PN_API(setup) {
             read(null,callback, error);
         },
         'set'   : function(args, callback) {
-            args.mode = 'PUT'
+            args['mode'] = 'PUT'
             SELF['merge'](args);
         },
         'merge' : function(args, callback) {
@@ -849,7 +849,7 @@ function PN_API(setup) {
             ];
 
             if (path) {
-                url.push(encode(path.split(".").join("/")));
+                url['push'](encode(path['split'](".")['join']("/")));
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -857,7 +857,7 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
-                body     : JSON.stringify(content),
+                body     : JSON['stringify'](content),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
@@ -888,7 +888,7 @@ function PN_API(setup) {
             ];
             
             if (path) {
-                url.push(encode(path.split(".").join("/")));
+                url['push'](encode(path['split'](".")['join']("/")));
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -942,29 +942,29 @@ function PN_API(setup) {
                     }
                 }
             }
-            ,   object_id_split = object_id.split('.');
+            ,   object_id_split = object_id['split']('.');
             var obj_id          = object_id_split[0];
-            object_id_split.shift();
-            var path            = object_id_split.join('.');
+            object_id_split['shift']();
+            var path            = object_id_split['join']('.');
 
-            ds_object.content = SELF['get_synced_object']({
+            ds_object['content'] = SELF['get_synced_object']({
                 'object_id'  : obj_id,
                 'path'       : path,
                 'callback'   : function(r) {
                     if (r[0]) {
-                        change && change({'action' : r[0].action , 'location' : r[0].location});
-                        if (r[0].action === 'update') {
+                        change && change({'action' : r[0]['action'] , 'location' : r[0]['location']});
+                        if (r[0]['action'] === 'update') {
                             var cb_data = {
-                               'location' : r[0].location,
-                               'update_at' : r[0].update_at
+                               'location' : r[0]['location'],
+                               'update_at' : r[0]['update_at']
                             };
                             update && update(cb_data);
-                        } else if (r[0].action === 'delete') {
+                        } else if (r[0]['action'] === 'delete') {
                             var cb_data = {
-                               'location' : r[0].location,
-                               'update_at' : r[0].update_at
+                               'location' : r[0]['location'],
+                               'update_at' : r[0]['update_at']
                             };
-                            if (r[1] && r[1].action == 'update') {
+                            if (r[1] && r[1]['action'] == 'update') {
                                 cb_data['update_at'] = cb_data['location'];
                                 set && set(cb_data);
                             } else
@@ -987,6 +987,20 @@ function PN_API(setup) {
                 }    
                 
             });
+            ds_object['get'] = function(path) {
+                if (!path) return ds_object['content']['data'];
+                var patha = path['split'](".");
+                var d = ds_object['content']['data'];
+                for (p in patha) {
+                    var key = patha[p];
+                    try {
+                        if (d[key]) d = d[key]
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return d;
+            };
             return ds_object;
         },
         /*

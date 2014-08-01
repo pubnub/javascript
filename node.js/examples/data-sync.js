@@ -17,7 +17,7 @@ var ds = pubnub.sync("dp");
 
 ds.on.ready(function(){
 	console.log('READY');
-	console.log(JSON.stringify(ds.content.data, null, 2));
+	console.log(JSON.stringify(ds.get(), null, 2));
 });
 
 
@@ -25,22 +25,25 @@ ds.on.ready(function(){
 ds.on.update(function(params) { 
     console.log('UPDATE');
 	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.content.data, null, 2));
+	console.log(JSON.stringify(ds.get(), null, 2));
 })
+
 ds.on.set(function(params){ 
     console.log('SET');
 	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.content.data, null, 2));
+	console.log(JSON.stringify(ds.get(), null, 2));
 })
+
 ds.on.remove(function(params){ 
     console.log('REMOVE');
 	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.content.data, null, 2));
+	console.log(JSON.stringify(ds.get(), null, 2));
 })
+
 ds.on.error(function(params){ 
     console.log('ERROR');
 	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.content.data, null, 2));
+	console.log(JSON.stringify(ds.get(), null, 2));
 })
 
 // Network Events
