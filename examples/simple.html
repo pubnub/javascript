@@ -1,0 +1,24 @@
+<div>Waiting For Data...</div>
+<div><a href="http://www.pubnub.com/console/?channel=simple_channel&origin=pubsub.pubnub.com&sub=demo&pub=demo&cipher=&ssl=false">
+    Send via Developer Console
+</a></div>
+
+<pre id="box"></pre>
+
+<script src="http://cdn.pubnub.com/pubnub.min.js"></script>
+<script>(function(){
+    var box     = PUBNUB.$('box')
+    ,   channel = 'simple_channel';
+
+    // HANDLE TEXT MESSAGE
+    function chat_receive(text) {
+        box.innerHTML = (''+text).replace( /[<>]/g, '' ) +
+            '<br>' + box.innerHTML;
+    }
+
+    // OPEN SOCKET TO RECEIVE TEXT MESSAGE
+    PUBNUB.subscribe({
+        channel : channel,
+        message : chat_receive
+    });
+})();</script>
