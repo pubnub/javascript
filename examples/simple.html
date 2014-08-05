@@ -8,18 +8,16 @@
 
 <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
 <script>(function(){
-    var box     = PUBNUB.$('box')
-    ,   channel = 'simple_channel';
-
-    // HANDLE MESSAGE
-    function chat_receive(text) {
-        box.innerHTML = (''+JSON.stringify(text)).replace( /[<>]/g, '' ) +
-            '<br>' + box.innerHTML;
+    
+    // MESSAGE RECEIVED!
+    function message(text) {
+        PUBNUB.$('box').innerHTML = (''+JSON.stringify(text)).replace( /[<>]/g, '' ) +
+            '<br>' + PUBNUB.$('box').innerHTML;
     }
 
     // OPEN SOCKET TO RECEIVE TEXT MESSAGE
     PUBNUB.subscribe({
-        channel : channel,
-        message : chat_receive
+        channel : 'simple_channel',
+        message : message
     });
 })();</script>
