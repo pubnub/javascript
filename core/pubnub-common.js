@@ -951,18 +951,30 @@ function PN_API(setup) {
                 'object_id'  : obj_id,
                 'path'       : path,
                 'callback'   : function(r) {
+                    var update_at = null;
+                    var locations = [];
+                    for (t in r) {
+                        locations.push(r[t]['location']);
+                        if (update_at == null) {
+                            update_at = r[t]['update_at'];
+                        }
+                        else if (r[t]['update_at'].length < update_at.length) {
+                            update_at = r[t]['update_at'];
+                        }
+                        
+                    }
                     if (r[0]) {
-                        change && change({'action' : r[0]['action'] , 'location' : r[0]['location']});
+                        change && change({'action' : r[0]['action'] , 'location' : locations});
                         if (r[0]['action'] === 'update') {
                             var cb_data = {
-                               'location' : r[0]['location'],
-                               'update_at' : r[0]['update_at']
+                               'location' : locations,
+                               'update_at' : update_at
                             };
                             update && update(cb_data);
                         } else if (r[0]['action'] === 'delete') {
                             var cb_data = {
-                               'location' : r[0]['location'],
-                               'update_at' : r[0]['update_at']
+                               'location' : locations,
+                               'update_at' : update_at
                             };
                             if (r[1] && r[1]['action'] == 'update') {
                                 cb_data['update_at'] = cb_data['location'];
