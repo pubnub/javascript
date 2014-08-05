@@ -1,6 +1,7 @@
 <div>Waiting For Data...</div>
+
 <div><a href="http://www.pubnub.com/console/?channel=simple_channel&origin=pubsub.pubnub.com&sub=demo&pub=demo&cipher=&ssl=false">
-    Send via Developer Console
+    Send via Developer Console!
 </a></div>
 
 <pre id="box"></pre>
@@ -10,9 +11,9 @@
     var box     = PUBNUB.$('box')
     ,   channel = 'simple_channel';
 
-    // HANDLE TEXT MESSAGE
+    // HANDLE MESSAGE
     function chat_receive(text) {
-        box.innerHTML = (''+text).replace( /[<>]/g, '' ) +
+        box.innerHTML = (''+JSON.stringify(text)).replace( /[<>]/g, '' ) +
             '<br>' + box.innerHTML;
     }
 
