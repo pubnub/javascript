@@ -666,6 +666,7 @@ function PN_API(setup) {
         return x.slice(0, 1 + depth + update_at).join('.');   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
+        //console.log(JSON.stringify(updates));
         var update = updates[trans_id];
         var update_at;
         if (update && update.complete == true) {
@@ -679,7 +680,7 @@ function PN_API(setup) {
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
-            
+            //console.log(JSON.stringify(actions_list));
             callback(actions_list);
             delete update;
         }
@@ -1104,6 +1105,7 @@ function PN_API(setup) {
                 'callback'   : function(r) {
                     var update_at = null;
                     var locations = [];
+                    //console.log(JSON.stringify(r));
                     for (t in r) {
                         locations.push(r[t]['location']);
                         if (update_at == null) {
@@ -1128,7 +1130,6 @@ function PN_API(setup) {
                                'update_at' : update_at
                             };
                             if (r[1] && r[1]['action'] == 'update') {
-                                cb_data['update_at'] = cb_data['location'];
                                 set && set(cb_data);
                             } else
                                 remove && remove(cb_data);
