@@ -4,8 +4,9 @@
     // INIT PubNub
     console.log(PUBNUB);
     var pubnub = PUBNUB.init({
-        publish_key   : 'demo',
-        subscribe_key : 'demo'
+        leave_on_unload : true,
+        publish_key     : 'demo',
+        subscribe_key   : 'demo'
     });
     pubnub.subscribe({
         callback : function(r){console.log(r);},
