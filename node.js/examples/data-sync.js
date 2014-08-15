@@ -8,13 +8,13 @@
 var PUBNUB = require("../pubnub.js")
 
 var pubnub = PUBNUB({
-    write_key     : "pub-c-952bded9-99f6-455f-b2c6-1e34cd2af6dd",
-    read_key      : "sub-c-ea59aa58-1739-11e4-a9f2-02ee2ddab7fe",
-    origin        : "pubsub-beta.pubnub.com",
+    write_key     : "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
+    read_key      : "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
+    origin        : "dara24.devbuild.pubnub.com",
     auth_key	  : 'abcd'
 });
 
-var ds = pubnub.sync("dp");
+var ds = pubnub.sync("dp1");
 
 ds.on.ready(function(){
 	console.log('READY');
