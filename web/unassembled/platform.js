@@ -425,7 +425,7 @@ else {
 var pdiv = PDIV || {};
 
 // CREATE A PUBNUB GLOBAL OBJECT
-PUBNUB = CREATE_PUBNUB({
+window.PUBNUB = CREATE_PUBNUB({
     'notest'        : 1,
     'publish_key'   : attr( pdiv, 'pub-key' ),
     'subscribe_key' : attr( pdiv, 'sub-key' ),
