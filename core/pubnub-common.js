@@ -462,16 +462,13 @@ function PN_API(setup) {
         }
         var x = o.data;
         var continue_update = true;
-        var update_at = null;
 
         for (p in path) {
             try {
                 if (!x[path[p]]) {
                     x[path[p]] = {};
-                    if (update_at == null) update_at = parseInt(p);
                 } else if (typeof x[path[p]]  !== 'object' ) {
                     x[path[p]] = {};
-                    if (update_at == null)  update_at = parseInt(p) + 1;   
                 }
             } catch (e) {
                 x[path[p]] = {};  
@@ -479,8 +476,6 @@ function PN_API(setup) {
             x = x[path[p]];
             pathNodes.push(x);
         }
-
-        if (update_at == null) update_at = pathNodes.length + 1;
         
         if (update.action == 'update') {
             if (path_length - depth > 0) 
@@ -493,16 +488,13 @@ function PN_API(setup) {
 
             if (path_length - depth > 0) {
                 delete x[last]
-                update_at = pathNodes.length;
                 for (var i = pathNodes.length - 1; i >= 1; i--) {
                     if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
                         delete pathNodes[i-1][path[i]]
-                        update_at = i;
                     }
                 }
                 if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
                     delete o.data[path[0]];
-                    update_at = 0;
                 }
             } else {
                 o.data = {}
@@ -510,12 +502,10 @@ function PN_API(setup) {
         }
         o.pn_ds_meta.last_update = update.timetoken;
 
-        var x = update.location.split("pn_ds_")[1].split(".");
-
-        return x.slice(0, 1 + depth + update_at).join('.');   
+        return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
-        //console.log(JSON.stringify(updates));
+        console.log('508 : ' + JSON.stringify(updates));
         var update = updates[trans_id];
         var update_at;
         if (update && update.complete == true) {
@@ -529,7 +519,7 @@ function PN_API(setup) {
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
-            //console.log(JSON.stringify(actions_list));
+            console.log('522 : ' + JSON.stringify(actions_list));
             callback(actions_list);
             delete update;
         }
@@ -954,14 +944,11 @@ function PN_API(setup) {
                 'callback'   : function(r) {
                     var update_at = null;
                     var locations = [];
-                    //console.log(JSON.stringify(r));
+                    console.log('947 : ' + JSON.stringify(r));
                     for (t in r) {
                         locations.push(r[t]['location']);
                         if (update_at == null) {
-                            update_at = r[t]['update_at'];
-                        }
-                        else if (r[t]['update_at'].length < update_at.length) {
-                            update_at = r[t]['update_at'];
+                            update_at = r[t]['updateAt'];
                         }
                         
                     }
@@ -978,10 +965,17 @@ function PN_API(setup) {
                                'location' : locations,
                                'update_at' : update_at
                             };
-                            if (r[1] && r[1]['action'] == 'update') {
+
+                            remove && remove(cb_data);
+                        }
+                        else if (r[0]['action'] === 'delete-set') {
+                            var cb_data = {
+                               'location' : locations,
+                               'update_at' : update_at
+                            };
+                            if (r[1] && r[1]['action'] == 'update-set') {
                                 set && set(cb_data);
-                            } else
-                                remove && remove(cb_data);
+                            }
                         }
                     }
                 },
