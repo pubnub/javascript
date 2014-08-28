@@ -1008,7 +1008,8 @@ function PN_API(setup) {
                     fail     : function(response) {
                         //SUB_RECEIVER = null;
                         SELF['time'](function(success){
-                            !success && ( _invoke_error(response, errcb) || _test_connection());
+                            !success && ( _invoke_error(response, errcb));
+                            _test_connection(success);
                         });
                     },
                     data     : _get_url_params(data),
