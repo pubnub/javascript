@@ -1,17 +1,22 @@
 <div id=pubnub></div>
-<script src="../pubnub.js"></script>
+<script src="http://rawgit.com/pubnub/javascript/DESK-7722/web/pubnub.js"></script>
+<!--<script src="../../../javascript/web/pubnub.js"></script>-->
+<!--<script src="../pubnub.js"></script>-->
 <script>(function(){
     // INIT PubNub
     console.log(PUBNUB);
     var pubnub = PUBNUB.init({
-        leave_on_unload : true, // Perform a Leave Explicitly on Page Unload Event
+        //leave_on_unload : true, // Perform a Leave Explicitly on Page Unload Event
         publish_key     : 'demo',
         subscribe_key   : 'demo'
     });
     pubnub.subscribe({
-        callback : function(r){console.log(r);},
-        error : function(r){ console.log(r);},
-        channel : "abcd"
+        callback : function(r){console.log(JSON.stringify(r));},
+        error : function(r){ console.log('ERROR : ' + JSON.stringify(r));},
+        channel : "a",
+        connect : function(r) {console.log("CONNECT");},
+        disconnect : function(r) {console.log("DISCONNECT");},
+        reconnect : function(r) {console.log("RECONNECT");}
     })
 
 

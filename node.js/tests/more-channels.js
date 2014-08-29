@@ -17,14 +17,14 @@ var channel_count = 0;
         message : message,
         connect : function() {
             console.log( 'connected to', ++channel_count, 'channels' );
-            setTimeout( function() { 
-            
+            setTimeout( function() {
+
                 // Send Message
                 pubnub(channel).publish({
                     channel : channel,
                     message : channel
                 });
-            
+
             }, 100 * a );
         }
     });

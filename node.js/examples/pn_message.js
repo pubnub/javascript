@@ -2,9 +2,9 @@
 var PNmessage = require("../pubnub.js").PNmessage
 var PUBNUB = require("../pubnub.js")
 var pubnub = PUBNUB({
-	publish_key   : "demo-36",
-	subscribe_key : "demo-36",
-	origin : "gcm-beta.pubnub.com"
+    publish_key   : "demo-36",
+    subscribe_key : "demo-36",
+    origin : "gcm-beta.pubnub.com"
 });
 
 // Create a pubnub message
@@ -13,7 +13,7 @@ var a = PNmessage()
 // set pubnub object for pubnub message
 a.pubnub = pubnub;
 
-// set callback method 
+// set callback method
 a.callback = console.log
 
 // set error callback method
@@ -54,7 +54,7 @@ c.gcm = {"message":"be sure not to send objects!", "foo":"bar" }
 c.apns.alert = "this is alert"
 c.apns.badge = 2
 c.apns.key = "hi am apns"
-c.mykey = "hi" 
+c.mykey = "hi"
 
 c.publish()
 
@@ -73,19 +73,19 @@ pubnub.publish({
 pubnub.publish({'message'  : c});
 
 
-// and this too 
+// and this too
 
 var d = PNmessage({
-	'callback' : console.log,
-	'error'    : console.log,
-	'channel'  : 'push',
-	'apns'     : {'alert' : "this is alert", 'badge' : 2, 'key' : "hi am apns"},
-	'gcm'      : {"message":"be sure not to send objects!", "foo":"bar" },
-	'mykey'    : "hi"
+    'callback' : console.log,
+    'error'    : console.log,
+    'channel'  : 'push',
+    'apns'     : {'alert' : "this is alert", 'badge' : 2, 'key' : "hi am apns"},
+    'gcm'      : {"message":"be sure not to send objects!", "foo":"bar" },
+    'mykey'    : "hi"
 });
 
 pubnub.publish({'message'  : d});
 
-// and this as well 
+// and this as well
 
 d.publish()
