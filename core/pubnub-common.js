@@ -189,6 +189,24 @@ function generate_channel_list(channels, nopresence) {
     return list.sort();
 }
 
+/**
+ * Generate Subscription Channel List
+ * ==================================
+ * generate_channel_list(channels_object);
+ */
+function generate_registries_list(channel_registries, nopresence) {
+    var list = [];
+    each(channel_registries, function( channel, status ) {
+        if (nopresence) {
+            if(channel.search('-pnpres') < 0) {
+                if (status.subscribed) list.push(channel);
+            }
+        } else {
+            if (status.subscribed) list.push(channel);
+        }
+    });
+    return list.sort();
+}
 
 // PUBNUB READY TO CONNECT
 function ready() { timeout( function() {
@@ -278,6 +296,7 @@ function PN_API(setup) {
     ,   TIMETOKEN     = 0
     ,   RESUMED       = false
     ,   CHANNELS      = {}
+    ,   CHANNEL_REGISTRIES   = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
@@ -577,7 +596,7 @@ function PN_API(setup) {
 
         'registry_channel' : function(args, callback) {
             var callback        = args['callback']      || callback
-            ,   err                 = args['error']         || error
+            ,   err             = args['error']         || error
             ,   registry_id     = args['registry_id']
             ,   add             = args['add']
             ,   remove          = args['remove']
@@ -880,7 +899,7 @@ function PN_API(setup) {
         */
         'subscribe' : function( args, callback ) {
             var channel       = args['channel']
-            ,   registry_id   = args['registry_id']
+            ,   registry      = args['registry']
             ,   callback      = callback            || args['callback']
             ,   callback      = callback            || args['message']
             ,   auth_key      = args['auth_key']    || AUTH_KEY
@@ -906,13 +925,10 @@ function PN_API(setup) {
             TIMETOKEN = timetoken;
 
             // Make sure we have a Channel
-            if (!channel) {
-                if (!registry_id)
-                    return error('Missing Channel');
-                else {
-                    channel = '.';
-                }
+            if (!channel && !registry) {
+                return error('Missing Channel');
             }
+
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
@@ -921,58 +937,110 @@ function PN_API(setup) {
             }
 
             // Setup Channel(s)
-            each( (channel.join ? channel.join(',') : ''+channel).split(','),
-            function(channel) {
-                var settings = CHANNELS[channel] || {};
+            if (channel) {
+                each( (channel.join ? channel.join(',') : ''+channel).split(','),
+                function(channel) {
+                    var settings = CHANNELS[channel] || {};
 
-                // Store Channel State
-                CHANNELS[SUB_CHANNEL = channel] = {
-                    name         : channel,
-                    connected    : settings.connected,
-                    disconnected : settings.disconnected,
-                    subscribed   : 1,
-                    callback     : SUB_CALLBACK = callback,
-                    'cipher_key' : args['cipher_key'],
-                    connect      : connect,
-                    disconnect   : disconnect,
-                    reconnect    : reconnect
-                };
-                if (state) {
-                    if (channel in state) {
-                        STATE[channel] = state[channel];
-                    } else {
-                        STATE[channel] = state;
+                    // Store Channel State
+                    CHANNELS[SUB_CHANNEL = channel] = {
+                        name         : channel,
+                        connected    : settings.connected,
+                        disconnected : settings.disconnected,
+                        subscribed   : 1,
+                        callback     : SUB_CALLBACK = callback,
+                        'cipher_key' : args['cipher_key'],
+                        connect      : connect,
+                        disconnect   : disconnect,
+                        reconnect    : reconnect
+                    };
+
+                    if (state) {
+                        if (channel in state) {
+                            STATE[channel] = state[channel];
+                        } else {
+                            STATE[channel] = state;
+                        }
                     }
-                }
 
-                // Presence Enabled?
-                if (!presence) return;
+                    // Presence Enabled?
+                    if (!presence) return;
 
-                // Subscribe Presence Channel
-                SELF['subscribe']({
-                    'channel'  : channel + PRESENCE_SUFFIX,
-                    'callback' : presence,
-                    'restore'  : restore
-                });
+                    // Subscribe Presence Channel
+                    SELF['subscribe']({
+                        'channel'  : channel + PRESENCE_SUFFIX,
+                        'callback' : presence,
+                        'restore'  : restore
+                    });
 
-                // Presence Subscribed?
-                if (settings.subscribed) return;
+                    // Presence Subscribed?
+                    if (settings.subscribed) return;
 
-                // See Who's Here Now?
-                if (noheresync) return;
-                SELF['here_now']({
-                    'channel'  : channel,
-                    'callback' : function(here) {
-                        each( 'uuids' in here ? here['uuids'] : [],
-                        function(uid) { presence( {
-                            'action'    : 'join',
-                            'uuid'      : uid,
-                            'timestamp' : Math.floor(rnow() / 1000),
-                            'occupancy' : here['occupancy'] || 1
-                        }, here, channel ); } );
-                    }
-                });
-            } );
+                    // See Who's Here Now?
+                    if (noheresync) return;
+                    SELF['here_now']({
+                        'channel'  : channel,
+                        'callback' : function(here) {
+                            each( 'uuids' in here ? here['uuids'] : [],
+                            function(uid) { presence( {
+                                'action'    : 'join',
+                                'uuid'      : uid,
+                                'timestamp' : Math.floor(rnow() / 1000),
+                                'occupancy' : here['occupancy'] || 1
+                            }, here, channel ); } );
+                        }
+                    });
+                } );
+            }
+
+            // Setup Channel Registries
+            if (registry) {
+                each( (registry.join ? registry.join(',') : ''+registry).split(','),
+                function(registry) {
+                    var settings = CHANNEL_REGISTRIES[registry] || {};
+
+                    CHANNEL_REGISTRIES[registry] = {
+                        name         : registry,
+                        connected    : settings.connected,
+                        disconnected : settings.disconnected,
+                        subscribed   : 1,
+                        callback     : SUB_CALLBACK = callback,
+                        'cipher_key' : args['cipher_key'],
+                        connect      : connect,
+                        disconnect   : disconnect,
+                        reconnect    : reconnect
+                    };
+
+                    // Presence Enabled?
+                    if (!presence) return;
+
+                    // Subscribe Presence Channel
+                    SELF['subscribe']({
+                        'registry'  : registry + PRESENCE_SUFFIX,
+                        'callback' : presence,
+                        'restore'  : restore
+                    });
+
+                    // Presence Subscribed?
+                    if (settings.subscribed) return;
+
+                    // See Who's Here Now?
+                    if (noheresync) return;
+                    SELF['here_now']({
+                        'channel-registry-id'  : registry,
+                        'callback' : function(here) {
+                            each( 'uuids' in here ? here['uuids'] : [],
+                            function(uid) { presence( {
+                                'action'    : 'join',
+                                'uuid'      : uid,
+                                'timestamp' : Math.floor(rnow() / 1000),
+                                'occupancy' : here['occupancy'] || 1
+                            }, here, registry ); } );
+                        }
+                    });
+                } );
+            }
+
 
             // Test Network Connection
             function _test_connection(success) {
@@ -1009,20 +1077,24 @@ function PN_API(setup) {
 
             // Evented Subscribe
             function _connect() {
-                var jsonp    = jsonp_cb()
-                ,   channels = generate_channel_list(CHANNELS).join(',');
+                var jsonp       = jsonp_cb()
+                ,   channels    = generate_channel_list(CHANNELS).join(',')
+                ,   registries  = generate_registries_list(CHANNEL_REGISTRIES).join(',');
 
                 // Stop Connection
-                if (!channels) return;
+                if (!channels && !registries) return;
+
+                if (!channels) channels = '.';
 
                 // Connect to PubNub Subscribe Servers
                 _reset_offline();
 
                 var data = _get_url_params({ 'uuid' : UUID, 'auth' : auth_key });
 
-                if (registry_id) {
-                    data['channel-registry-id'] = registry_id;
+                if (registries) {
+                    data['channel-registry-id'] = registries;
                 }
+
 
                 var st = JSON.stringify(STATE);
                 if (st.length > 2) data['state'] = JSON.stringify(STATE);
@@ -1093,12 +1165,21 @@ function PN_API(setup) {
 
                         // Route Channel <---> Callback for Message
                         var next_callback = (function() {
-                            var channels = (messages.length>2?messages[2]:map(
-                                generate_channel_list(CHANNELS), function(chan) { return map(
-                                    Array(messages[0].length)
-                                    .join(',').split(','),
-                                    function() { return chan; }
-                                ) }).join(','));
+                            var channels = '';
+
+                            if (messages.length > 3) {
+                                channels = messages[3];
+                            } else if (messages.length > 2) {
+                                channels = messages[2];
+                            } else {
+                                channels =  map(
+                                    generate_channel_list(CHANNELS), function(chan) { return map(
+                                        Array(messages[0].length)
+                                        .join(',').split(','),
+                                        function() { return chan; }
+                                    ) }).join(',')
+                            }
+
                             var list = channels.split(',');
 
                             return function() {
@@ -1116,7 +1197,7 @@ function PN_API(setup) {
                             var next = next_callback();
                             var decrypted_msg = decrypt(msg,
                                 (CHANNELS[next[1]])?CHANNELS[next[1]]['cipher_key']:null);
-                            next[0]( decrypted_msg, messages, next[1], latency);
+                            next[0]( decrypted_msg, messages, next[2] || next[1], latency);
                         });
 
                         timeout( _connect, windowing );
