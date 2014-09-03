@@ -3,13 +3,24 @@ var SUB_KEY = $("#sub_key").val();
 var SECRET_KEY = $("#secret_key").val();
 var UUID = $("#uuid").val();
 
+
+
+function stateInit() {
+    stateEnable = $("#stateEnable").prop('checked');
+    state = stateEnable && $("#state").val().length > 0 ? JSON.parse($("#state").val()) : false;
+}
+stateInit();
+$("#state, #stateEnable").bind("change", function () {
+    stateInit();
+});
+
 function namespaceInit() {
     namespaceEnable = $("#namespaceEnable").prop('checked');
     namespace = namespaceEnable && $("#namespace").val().length > 0 ? $("#namespace").val() : false;
 }
 
 namespaceInit();
-$("#namespace").bind("change", function () {
+$("#namespace, #namespaceEnable").bind("change", function () {
     namespaceInit()
 });
 
@@ -19,8 +30,8 @@ function channelGroupInit() {
 }
 
 channelGroupInit();
-$("#channelGroup").bind("change", function () {
-    channelGroupInit()
+$("#channelGroup, #channelGroupEnable").bind("change", function () {
+    channelGroupInit();
 });
 
 function channelInit() {
@@ -29,8 +40,8 @@ function channelInit() {
 }
 
 channelInit();
-$("#channel").bind("change", function () {
-    channelInit()
+$("#channel, #channelEnable").bind("change", function () {
+    channelInit();
 });
 
 function authInit() {
@@ -39,8 +50,8 @@ function authInit() {
 }
 
 authInit();
-$("#auth").bind("change", function () {
-    authInit()
+$("#auth, #authEnable").bind("change", function () {
+    authInit();
 });
 
 function messageInit() {
@@ -52,19 +63,27 @@ $("#message").bind("change", function () {
     messageInit();
 });
 
+function originInit() {
+    origin = $("#origin").val().length > 0 ? $("#origin").val() : null;
+}
+originInit();
+$("#origin").bind("change", function () {
+    originInit();
+});
+
 pubnub = PUBNUB.init({
     "subscribe_key": SUB_KEY,
     "publish_key": PUB_KEY,
     "secrect_key": SECRET_KEY,
-    "uuid": UUID
+    "uuid": UUID,
+    "origin": origin
 });
 
 
 function pnTime() {
     pubnub.time(
         function (time) {
-            console.log(time);
-            $("#output").html(time);
+            displayCallback(time);
         }
     );
 }
@@ -81,12 +100,14 @@ function pnPublish() {
 }
 
 function displayCallback(m, e, c) {
-    if (c) {
+    // Use first and last args
+
+    if (c && m) {
         console.log(JSON.stringify(c + ": " + m));
         $("#output").html(c + ":" + JSON.stringify(m) + "\n" + $("#output").html());
 
-
-    } else {
+        // Only one argument
+    } else if (m) {
         console.log(JSON.stringify(m));
         $("#output").html(JSON.stringify(m) + "\n" + $("#output").html());
 
@@ -110,6 +131,25 @@ function pnSubscribe() {
     }
 }
 
+function pnHistory() {
+    if (channel) {
+        pubnub.history({
+            channel: channel,
+            callback: displayCallback,
+            error: displayCallback,
+            count: 5
+        });
+    } else if (channelGroup) {
+        pubnub.history({
+            registry: channelGroup,
+            namespace: namespace,
+            callback: displayCallback,
+            error: displayCallback,
+            count: 5
+        });
+    }
+}
+
 function pnUnsubscribe() {
     if (channel) {
         pubnub.unsubscribe({
@@ -126,6 +166,140 @@ function pnUnsubscribe() {
         });
     }
 }
+
+function pnGetChannelGroups() {
+    pubnub.registry_id({
+        callback: displayCallback,
+        error: displayCallback,
+        namespace: namespace
+    });
+}
+
+function pnGetChannelsForChannelGroup() {
+    pubnub.registry_channel({
+        callback: displayCallback,
+        error: displayCallback,
+        registry_id: channelGroup,
+        namespace: namespace
+    });
+}
+
+function pnAddChannelToChannelGroup() {
+    pubnub.registry_channel({
+        callback: displayCallback,
+        error: displayCallback,
+        add: true,
+        channels: channel,
+        registry_id: channelGroup,
+        namespace: namespace
+    });
+}
+
+function pnRemoveChannelFromChannelGroup() {
+    pubnub.registry_channel({
+        callback: displayCallback,
+        error: displayCallback,
+        remove: true,
+        channels: channel,
+        registry_id: channelGroup,
+        namespace: namespace
+    });
+}
+
+function pnSetState() {
+    pubnub.state({
+        channel: channel,
+        state: state,
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
+function pnGetState() {
+    pubnub.state({
+        channel: channel,
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
+function pnHereNow(){
+    if (channel) {
+        pubnub.here_now({
+            channel: channel,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    } else if (!channelGroup) {
+        pubnub.here_now({
+            callback: displayCallback,
+            error: displayCallback
+        });
+    } else if (channelGroup) {
+        pubnub.here_now({
+            channel_group: channelGroup,
+            namespace: namespace,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    }
+}
+
+function pnWhereNow(){
+    if (channel) {
+        pubnub.where_now({
+            channel: channel,
+            callback: displayCallback,
+            error: displayCallback
+        });
+
+    } else if (channelGroup) {
+        pubnub.where_now({
+            channel_group: channelGroup,
+            namespace: namespace,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    }
+}
+
+pubnub.auth(auth);
+
+$("#whereNow").click(function () {
+    pnWhereNow();
+});
+
+$("#hereNow").click(function () {
+    pnHereNow();
+});
+
+$("#getState").click(function () {
+    pnGetState();
+});
+
+$("#setState").click(function () {
+    pnSetState();
+});
+
+$("#history").click(function () {
+    pnHistory();
+});
+
+$("#removeChannelFromChannelGroup").click(function () {
+    pnRemoveChannelFromChannelGroup();
+});
+
+$("#addChannelToChannelGroup").click(function () {
+    pnAddChannelToChannelGroup();
+});
+
+$("#getChannelsForChannelGroup").click(function () {
+    pnGetChannelsForChannelGroup();
+});
+
+$("#getAllChannelGroups").click(function () {
+    pnGetChannelGroups();
+});
 
 $("#publish").click(function () {
     pnPublish();

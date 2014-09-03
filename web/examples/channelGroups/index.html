@@ -13,11 +13,17 @@
 
 <script src=../../pubnub.js></script>
 <div class="output" id="errorOutputDiv">
-    <textarea id="output" rows=10 cols="75"></textarea>
+    <textarea id="output" rows=20 cols="85"></textarea>
 </div>
 
 
 <h3>Config (clear)</h3>
+
+<input type="checkbox" id="stateEnable" name="stateEnable" checked>
+State
+<input id="state" type="text" name="state" value='{"foo":"bar"}'>
+
+<br>
 
 <input type="checkbox" id="uuidEnable" name="uuidEnable" checked>
 UUID
@@ -27,12 +33,12 @@ UUID
 
 <input type="checkbox" id="namespaceEnable" name="namespaceEnable" checked>
 NameSpace
-<input type="text" id="namespace" name="namespace" value="tools">
+<input type="text" id="namespace" name="namespace" value="gec_ns">
 
 <br>
 <input type="checkbox" id="channelGroupEnable" name="channelGroupEnable" checked>
 ChannelGroup
-<input type="text" id="channelGroup" name="channelGroup" value="pubnub">
+<input type="text" id="channelGroup" name="channelGroup" value="gec_regid">
 
 <br>
 <input type="checkbox" id="channelEnable" name="channelEnable" checked>
@@ -50,11 +56,12 @@ AuthKey
 <h3>channelGroups</h3>
 
 <div class="indent20">
-    <input checked type="radio" name="executeOperation" value="default">get all channelGroups
-    <input type="radio" name="executeOperation" value="none">delete channelGroup
-    <input type="radio" name="executeOperation" value="none">get all channels in channelGroup
-    <input type="radio" name="executeOperation" value="none">add channel to channelGroup
-    <input type="radio" name="executeOperation" value="none">remove channel from channelGroup
+    <input id="getAllChannelGroups" checked type="radio" name="executeOperation" >get all channelGroups
+    <input type="radio" name="executeOperation">delete channelGroup
+    <br>
+    <input id="getChannelsForChannelGroup" type="radio" name="executeOperation" >get all channels in channelGroup
+    <input id="addChannelToChannelGroup" type="radio" name="executeOperation" >add channel to channelGroup
+    <input id="removeChannelFromChannelGroup" type="radio" name="executeOperation" >remove channel from channelGroup
 </div>
 
 <br>
@@ -65,17 +72,19 @@ AuthKey
     <input id="publish" checked type="radio" name="executeOperation" value="default">publish
     message<input id="message" type="text" size=15 name="subKey" value="my message is important">
 
-    <input id="subscribe" type="radio" name="executeOperation" value="none">subscribe
-    <input id="unsubscribe" type="radio" name="executeOperation" value="none">unsubscribe
+    <input id="subscribe" type="radio" name="executeOperation" >subscribe
+    <input id="unsubscribe" type="radio" name="executeOperation" >unsubscribe
 
-    <input id="history" type="radio" name="executeOperation" value="none">history
+    <input id="history" type="radio" name="executeOperation" >history
+    <br>
 
-    <input type="radio" name="executeOperation" value="none">set state
-    <input type="radio" name="executeOperation" value="none">get state
-    <input type="radio" name="executeOperation" value="none">set heartbeat
-    <input type="radio" name="executeOperation" value="none">here now
-    <input type="radio" name="executeOperation" value="none">where now
-    <input id="time" type="radio" name="executeOperation" value="none">time
+    <input id="setState" type="radio" name="executeOperation">set state
+    <input id="getState" type="radio" name="executeOperation" >get state
+
+    <br>
+    <input id="hereNow" type="radio" name="executeOperation" >here now
+    <input id="whereNow" type="radio" name="executeOperation" >where now
+    <input id="time" type="radio" name="executeOperation" >time
 
 </div>
 
@@ -84,24 +93,25 @@ AuthKey
 <h3>PAM Operations</h3>
 
 
-<input type="checkbox" name="channelOptions" value="none">read
-<input type="checkbox" name="channelOptions" value="none">write
-<input type="checkbox" name="channelOptions" value="none">manage
+<input type="checkbox" name="channelOptions" >read
+<input type="checkbox" name="channelOptions" >write
+<input type="checkbox" name="channelOptions" >manage
 TTL
 <input type="text" size=5 name="channelOptions" value=99>
 for AuthToken
 <input type="text" name="pamAuthToken" value="public-chat">
 
 <div class="indent20">
-    <input type="radio" name="executeOperation" value="none">grant
-    <input type="radio" name="executeOperation" value="none">revoke
-    <input type="radio" name="executeOperation" value="none">audit
-    <input type="radio" name="executeOperation" value="none">manage
+    <input type="radio" name="executeOperation" >grant
+    <input type="radio" name="executeOperation" >revoke
+    <input type="radio" name="executeOperation" >audit
+    <input type="radio" name="executeOperation" >manage
 </div>
 <br>
 
 <h3>App Settings</h3>
 
+origin<input id="origin" type="text" size=15 name="subKey" value="dara24.devbuild.pubnub.com">
 sub<input id="sub_key" type="text" size=15 name="subKey" value="demo-36">
 pub<input id="pub_key" type="text" size=15 name="pubKey" value="demo-36">
 sec<input id="secret_key" type="text" size=15 name="secKey" value="demo-36">
