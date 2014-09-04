@@ -123,7 +123,7 @@ function pnSubscribe() {
         });
     } else if (channelGroup) {
         pubnub.subscribe({
-            registry: channelGroup,
+            channel_group: channelGroup,
             namespace: namespace,
             callback: displayCallback,
             error: displayCallback
@@ -141,7 +141,7 @@ function pnHistory() {
         });
     } else if (channelGroup) {
         pubnub.history({
-            registry: channelGroup,
+            channel_group: channelGroup,
             namespace: namespace,
             callback: displayCallback,
             error: displayCallback,
@@ -159,7 +159,7 @@ function pnUnsubscribe() {
         });
     } else if (channelGroup) {
         pubnub.unsubscribe({
-            registry: channelGroup,
+            channel_group: channelGroup,
             namespace: namespace,
             callback: displayCallback,
             error: displayCallback
@@ -175,11 +175,22 @@ function pnGetChannelGroups() {
     });
 }
 
+function pnDeleteChannelGroups() {
+    pubnub.registry_id({
+        callback: displayCallback,
+        error: displayCallback,
+        namespace: namespace,
+        remove : true,
+        channel_group : channelGroup
+
+    });
+}
+
 function pnGetChannelsForChannelGroup() {
     pubnub.registry_channel({
         callback: displayCallback,
         error: displayCallback,
-        registry_id: channelGroup,
+        channel_group: channelGroup,
         namespace: namespace
     });
 }
@@ -190,7 +201,7 @@ function pnAddChannelToChannelGroup() {
         error: displayCallback,
         add: true,
         channels: channel,
-        registry_id: channelGroup,
+        channel_group: channelGroup,
         namespace: namespace
     });
 }
@@ -201,13 +212,14 @@ function pnRemoveChannelFromChannelGroup() {
         error: displayCallback,
         remove: true,
         channels: channel,
-        registry_id: channelGroup,
+        channel_group: channelGroup,
         namespace: namespace
     });
 }
 
 function pnSetState() {
     pubnub.state({
+        channel_group : channelGroup,
         channel: channel,
         state: state,
         callback: displayCallback,
@@ -217,6 +229,7 @@ function pnSetState() {
 
 function pnGetState() {
     pubnub.state({
+        channel_group : channelGroup,
         channel: channel,
         callback: displayCallback,
         error: displayCallback
@@ -295,6 +308,10 @@ $("#addChannelToChannelGroup").click(function () {
 
 $("#getChannelsForChannelGroup").click(function () {
     pnGetChannelsForChannelGroup();
+});
+
+$("#removeChannelGroup").click(function () {
+    pnDeleteChannelGroups();
 });
 
 $("#getAllChannelGroups").click(function () {

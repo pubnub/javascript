@@ -567,6 +567,7 @@ function PN_API(setup) {
             ,   err             = args['error']         || error
             ,   data            = args['data']
             ,   jsonp           = jsonp_cb()
+            ,   cloak           = args['cloak']
             ,   channel_group   = args['channel_group']
             ,   remove          = args['remove']
             ,   namespace       = args['namespace'];
@@ -578,7 +579,11 @@ function PN_API(setup) {
 
             namespace && url.push('namespace') && url.push(encode(namespace));
 
-            url.push('channel-registry');
+            if (!(namespace && remove)) {
+                url.push('channel-registry');
+            } else {
+                url.push('remove');
+            }
 
             if (channel_group && channel_group.length > 0) {
                 url.push(encode(channel_group));
@@ -589,6 +594,7 @@ function PN_API(setup) {
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
+            if (cloak) {data['cloak'] = cloak; }
 
             xdr({
                 callback : jsonp,
@@ -623,7 +629,7 @@ function PN_API(setup) {
             namespace && url.push('namespace') && url.push(encode(namespace));
 
             url.push('channel-registry');
-            url.push(encode(channel_group));
+            channel_group && url.push(encode(channel_group));
 
             if (channels ) {
 
@@ -669,6 +675,7 @@ function PN_API(setup) {
             ,   auth_key         = args['auth_key'] || AUTH_KEY
             ,   cipher_key       = args['cipher_key']
             ,   channel          = args['channel']
+            ,   channel_group    = args['channel_group']
             ,   start            = args['start']
             ,   end              = args['end']
             ,   include_token    = args['include_token']
@@ -676,7 +683,7 @@ function PN_API(setup) {
             ,   jsonp            = jsonp_cb();
 
             // Make sure we have a Channel
-            if (!channel)       return error('Missing Channel');
+            if (!channel && !channel_group) return error('Missing Channel');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
@@ -685,6 +692,12 @@ function PN_API(setup) {
             params['reverse']     = reverse;
             params['auth']        = auth_key;
 
+            if (channel_group) {
+                params['channel-registry-id'] = channel_group;
+                if (!channel) {
+                    channel = '.'; 
+                }
+            }
             if (jsonp) params['callback']              = jsonp;
             if (start) params['start']                 = start;
             if (end)   params['end']                   = end;
@@ -871,7 +884,7 @@ function PN_API(setup) {
         */
         'unsubscribe' : function(args, callback) {
             var channel       = args['channel']
-            ,   registry      = args['registry']
+            ,   channel_group = args['channel_group']
             ,   callback      = callback            || args['callback'] || function(){}
             ,   err           = args['error']       || function(){};
 
@@ -900,25 +913,25 @@ function PN_API(setup) {
                 } );
             }
 
-            if (registry) {
-                // Prepare registries(s)
-                registry = map( (
-                    registry.join ? registry.join(',') : ''+registry
-                ).split(','), function(registry) {
-                    if (!CHANNEL_REGISTRIES[registry]) return;
-                    return registry + ',' + registry + PRESENCE_SUFFIX;
+            if (channel_group) {
+                // Prepare channel group(s)
+                channel_group = map( (
+                    channel_group.join ? channel_group.join(',') : ''+channel_group
+                ).split(','), function(channel_group) {
+                    if (!CHANNEL_GROUPS[channel_group]) return;
+                    return channel_group + ',' + channel_group + PRESENCE_SUFFIX;
                 } ).join(',');
 
-                // Iterate over registries
-                each( registry.split(','), function(channel) {
+                // Iterate over channel groups
+                each( channel_group.split(','), function(channel) {
                     var CB_CALLED = true;
-                    if (!registry) return;
+                    if (!channel_group) return;
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE']( registry, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE']( channel_group, 0 , callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
-                    CHANNEL_REGISTRIES[registry] = 0;
-                    if (registry in STATE) delete STATE[registry];
+                    CHANNEL_GROUPS[channel_group] = 0;
+                    if (channel_group in STATE) delete STATE[channel_group];
                 } );
             }
 
@@ -1269,6 +1282,7 @@ function PN_API(setup) {
             ,   err      = args['error']    || function(){}
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
+            ,   channel_group = args['channel_group']
             ,   jsonp    = jsonp_cb()
             ,   uuids    = ('uuids' in args) ? args['uuids'] : true
             ,   state    = args['state']
@@ -1289,6 +1303,12 @@ function PN_API(setup) {
             channel && url.push('channel') && url.push(encode(channel));
 
             if (jsonp != '0') { data['callback'] = jsonp; }
+
+            if (channel_group) {
+                data['channel-registry-id'] = channel_group;
+                !channel && url.push('channel') && url.push('.'); 
+            }
+
 
             xdr({
                 callback : jsonp,
@@ -1345,17 +1365,21 @@ function PN_API(setup) {
             ,   state    = args['state']
             ,   uuid     = args['uuid'] || UUID
             ,   channel  = args['channel']
+            ,   channel_group = args['channel_group']
             ,   url
             ,   data     = _get_url_params({ 'auth' : auth_key });
 
             // Make sure we have a Channel
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!uuid) return error('Missing UUID');
-            if (!channel) return error('Missing Channel');
+            if (!channel && !channel_group) return error('Missing Channel');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
+            if (channel && CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
+            if (channel_group && CHANNELS[channel_group] && CHANNELS[channel_group].subscribed && state) {
+                STATE[channel] = state;
+            }
 
             data['state'] = JSON.stringify(state);
 
