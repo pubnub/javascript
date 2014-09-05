@@ -37,6 +37,9 @@ $("#channel, #channelEnable").bind("change", function () {
 function authInit() {
     authEnable = $("#authEnable").prop('checked');
     auth = authEnable && $("#auth").val().length > 0 ? $("#auth").val() : false;
+    if (auth && typeof pubnub != "undefined") {
+        pubnub.auth(auth);
+    }
 }
 
 authInit();
@@ -363,5 +366,5 @@ $("#setCloak").click(function () {
     pnCloak(true);
 });
 $("#unsetCloak").click(function () {
-    pnCloak(fals);
+    pnCloak(false);
 });
