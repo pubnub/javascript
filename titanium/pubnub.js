@@ -647,7 +647,8 @@ function PN_API(setup) {
             } else {
                 if (mode === 'remove') url.push('remove');
             }
-            if (cloak !== 'undefined') data['cloak'] = (cloak)?'true':'false';
+
+            if (typeof cloak != 'undefined') data['cloak'] = (cloak)?'true':'false';
 
             CR(args, callback, url, data);
         },
@@ -658,7 +659,7 @@ function PN_API(setup) {
         },
 
         'channel_group_cloak' : function(args, callback) {
-            if (args['cloak'] === 'undefined') {
+            if (typeof args['cloak'] == 'undefined') {
                 callback(CLOAK);
                 return;
             }
@@ -1382,7 +1383,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (channel !== 'undefined'
+            if (typeof channel != 'undefined'
                 && CHANNELS[channel] && CHANNELS[channel].subscribed 
                 && state) {
                 STATE[channel] = state;
@@ -1390,7 +1391,7 @@ function PN_API(setup) {
                 channel = ',';
             }
 
-            if (channel_group !== 'undefined'
+            if (typeof channel_group != 'undefined'
                 && CHANNEL_GROUPS[channel_group]
                 && CHANNEL_GROUPS[channel_group].subscribed
                 && state) {
@@ -1471,8 +1472,8 @@ function PN_API(setup) {
             if (args['manage']) {
                 data['m'] = m;
             }
-            if (channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
-            if (channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
+            if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
+            if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
                 data['channel-registry-id'] = channel_group;
             }
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -1540,8 +1541,8 @@ function PN_API(setup) {
 
             var data = {'timestamp' : timestamp };
             if (jsonp != '0') { data['callback'] = jsonp; }
-            if (channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
-            if (channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
+            if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
+            if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
                 data['channel-registry-id'] = channel_group;
             }
             if (auth_key) data['auth']    = auth_key;
