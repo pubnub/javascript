@@ -151,6 +151,7 @@ function pnUnsubscribe() {
 
 function pnGetChannelGroups() {
     pubnub.channel_group({
+        channel_group : channelGroup,
         callback: displayCallback,
         error: displayCallback,
     });
