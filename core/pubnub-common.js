@@ -190,19 +190,19 @@ function generate_channel_list(channels, nopresence) {
 }
 
 /**
- * Generate Subscription Channel List
+ * Generate Subscription Channel Groups List
  * ==================================
- * generate_channel_list(channels_object);
+ * generate_channel_groups_list(channels_groups object);
  */
-function generate_registries_list(channel_registries, nopresence) {
+function generate_channel_groups_list(channel_groups, nopresence) {
     var list = [];
-    each(channel_registries, function( channel, status ) {
+    each(channel_groups, function( channel_group, status ) {
         if (nopresence) {
             if(channel.search('-pnpres') < 0) {
-                if (status.subscribed) list.push(channel);
+                if (status.subscribed) list.push(channel_group);
             }
         } else {
-            if (status.subscribed) list.push(channel);
+            if (status.subscribed) list.push(channel_group);
         }
     });
     return list.sort();
@@ -287,6 +287,7 @@ function PN_API(setup) {
     ,   SUB_ORIGIN    = nextorigin(ORIGIN)
     ,   CONNECT       = function(){}
     ,   PUB_QUEUE     = []
+    ,   CLOAK         = true
     ,   TIME_DRIFT    = 0
     ,   SUB_CALLBACK  = 0
     ,   SUB_CHANNEL   = 0
@@ -460,6 +461,32 @@ function PN_API(setup) {
         } else err(response);
     }
 
+    function CR(args, callback, url1, data) {
+            var callback        = args['callback']      || callback
+            ,   err             = args['error']         || error
+            ,   jsonp           = jsonp_cb();
+
+            var url = [
+                    STD_ORIGIN, 'v1', 'channel-registration',
+                    'sub-key', SUBSCRIBE_KEY
+                ];
+
+            url.push.apply(url,url1);
+
+            xdr({
+                callback : jsonp,
+                data     : _get_url_params(data),
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
+                url      : url
+            });
+
+    }
+
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -562,102 +589,79 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-        'registry_id' : function(args, callback) {
-            var callback        = args['callback']      || callback
-            ,   err             = args['error']         || error
-            ,   data            = args['data']
-            ,   jsonp           = jsonp_cb()
-            ,   cloak           = args['cloak']
-            ,   channel_group   = args['channel_group']
-            ,   remove          = args['remove']
-            ,   namespace       = args['namespace'];
 
-            var url = [
-                    STD_ORIGIN, 'v1', 'channel-registration',
-                    'sub-key', SUBSCRIBE_KEY
-                ];
-
-            namespace && url.push('namespace') && url.push(encode(namespace));
-
-            if (!(namespace && remove)) {
-                url.push('channel-registry');
-            } else {
-                url.push('remove');
-            }
-
-            if (channel_group && channel_group.length > 0) {
-                url.push(encode(channel_group));
-
-                if (remove) {
-                    url.push('remove');
-                }
-            }
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
-            if (cloak) {data['cloak'] = cloak; }
-
-            xdr({
-                callback : jsonp,
-                data     : _get_url_params(data),
-                success  : function(response) {
-                    _invoke_callback(response, callback, err);
-                },
-                fail     : function(response) {
-                    _invoke_error(response, err);
-                },
-                url      : url
-            });
-
+        'namespace' : function(args, callback) {
+            var url = ['namespace'];
+            
+            CR(args,callback,url);
         },
 
-        'registry_channel' : function(args, callback) {
-            var callback        = args['callback']      || callback
-            ,   err             = args['error']         || error
-            ,   channel_group   = args['channel_group']
-            ,   add             = args['add']
-            ,   remove          = args['remove']
-            ,   channels        = args['channels'] || args['channel']
-            ,   data            = {}
-            ,   jsonp           = jsonp_cb()
-            ,   namespace       = args['namespace'];
+        'namespace_remove' : function(args, callback) {
+            var namespace = args['namespace'];
 
-            var url = [
-                    STD_ORIGIN, 'v1', 'channel-registration',
-                    'sub-key', SUBSCRIBE_KEY
-                ];
+            if (!namespace) return error("Missing Namespace");
+
+            var url = ['namespace', encode(namespace), 'remove'];
+
+            CR(args,callback,url);
+        },
+
+        'channel_group' : function(args, callback) {
+            var ns_ch       = args['channel_group']
+            ,   channels    = args['channels']
+            ,   cloak       = args['cloak']
+            ,   namespace
+            ,   channel_group
+            ,   url = []
+            ,   data = {}
+            ,   mode = args['mode'] || 'add';
+
+            if (ns_ch) {
+                var ns_ch_a = ns_ch.split(':');
+
+                if (ns_ch_a.length > 1) {
+                    namespace = (ns_ch_a[0] === '*')?null:ns_ch_a[0];
+
+                    channel_group = ns_ch_a[1];
+                } else {
+                    channel_group = ns_ch_a[0];
+                }
+            }
 
             namespace && url.push('namespace') && url.push(encode(namespace));
 
             url.push('channel-registry');
-            channel_group && url.push(encode(channel_group));
+
+            if (channel_group && channel_group !== '*') {
+                url.push(channel_group);
+            }
 
             if (channels ) {
-
                 if (isArray(channels)) {
                     channels = channels.join(',');
                 }
-
-                if (add) {
-                    data['add']     = channels;
-                } else if (remove) {
-                    data['remove']  = channels;
-                }
+                data[mode] = channels;
+                data['cloak'] = (CLOAK)?'true':'false';
+            } else {
+                if (mode === 'remove') url.push('remove');
             }
+            if (cloak !== 'undefined') data['cloak'] = (cloak)?'true':'false';
 
-            if (jsonp != '0') { data['callback'] = jsonp; }
+            CR(args, callback, url, data);
+        },
 
-            xdr({
-                callback : jsonp,
-                data     : _get_url_params(data),
-                success  : function(response) {
-                    _invoke_callback(response, callback, err);
-                },
-                fail     : function(response) {
-                    _invoke_error(response, err);
-                },
-                url      : url
-            });
+        'channel_group_remove' : function(args, callback) {
+            args['mode'] = 'remove';
+            SELF['channel_group'](args,callback);
+        },
 
+        'channel_group_cloak' : function(args, callback) {
+            if (args['cloak'] === 'undefined') {
+                callback(CLOAK);
+                return;
+            }
+            CLOAK = args['cloak'];
+            SELF['channel_group'](args,callback);
         },
 
         /*
@@ -695,7 +699,7 @@ function PN_API(setup) {
             if (channel_group) {
                 params['channel-registry-id'] = channel_group;
                 if (!channel) {
-                    channel = '.'; 
+                    channel = ','; 
                 }
             }
             if (jsonp) params['callback']              = jsonp;
@@ -1132,7 +1136,7 @@ function PN_API(setup) {
                 // Stop Connection
                 if (!channels && !channel_groups) return;
 
-                if (!channels) channels = '.';
+                if (!channels) channels = ',';
 
                 // Connect to PubNub Subscribe Servers
                 _reset_offline();
@@ -1306,7 +1310,7 @@ function PN_API(setup) {
 
             if (channel_group) {
                 data['channel-registry-id'] = channel_group;
-                !channel && url.push('channel') && url.push('.'); 
+                !channel && url.push('channel') && url.push(','); 
             }
 
 
@@ -1376,9 +1380,20 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            if (channel && CHANNELS[channel] && CHANNELS[channel].subscribed && state) STATE[channel] = state;
-            if (channel_group && CHANNELS[channel_group] && CHANNELS[channel_group].subscribed && state) {
+            if (channel !== 'undefined'
+                && CHANNELS[channel] && CHANNELS[channel].subscribed 
+                && state) {
                 STATE[channel] = state;
+            } else {
+                channel = ',';
+            }
+
+            if (channel_group !== 'undefined'
+                && CHANNEL_GROUPS[channel_group]
+                && CHANNEL_GROUPS[channel_group].subscribed
+                && state) {
+                STATE[channel_group] = state;
+                data['channel-registry-id'] = channel_group;
             }
 
             data['state'] = JSON.stringify(state);
@@ -1387,14 +1402,14 @@ function PN_API(setup) {
                 url      = [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
-                    'channel', encode(channel),
+                    'channel', channel,
                     'uuid', uuid, 'data'
                 ]
             } else {
                 url      = [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
-                    'channel', encode(channel),
+                    'channel', channel,
                     'uuid', encode(uuid)
                 ]
             }
@@ -1590,6 +1605,12 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
+            var channels        = encode(generate_channel_list(CHANNELS, true)['join'](','));
+            var channel_groups  = generate_channel_groups_list(CHANNEL_GROUPS, true)['join'](',');
+
+            if (!channels) channels = ',';
+            if (channel_groups) data['channel_registry-id'] = channel_groups;
+
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
@@ -1597,7 +1618,7 @@ function PN_API(setup) {
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
-                    'channel' , encode(generate_channel_list(CHANNELS, true)['join'](',')),
+                    'channel' , channels,
                     'heartbeat'
                 ],
                 success  : function(response) {

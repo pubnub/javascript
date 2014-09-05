@@ -11,7 +11,7 @@
 <body>
 <script src=http://code.jquery.com/jquery-1.11.0.min.js></script>
 
-<script src=../../pubnub.js></script>
+<script src=../../pubnub.min.js></script>
 <div class="output" id="errorOutputDiv">
     <textarea id="output" rows=20 cols="85"></textarea>
 </div>
@@ -28,13 +28,6 @@ State
 <input type="checkbox" id="uuidEnable" name="uuidEnable" checked>
 UUID
 <input id="uuid" type="text" name="uuid" value="myUUID">
-
-<br>
-
-<input type="checkbox" id="namespaceEnable" name="namespaceEnable" checked>
-NameSpace
-<input type="text" id="namespace" name="namespace" value="gec_ns">
-
 <br>
 <input type="checkbox" id="channelGroupEnable" name="channelGroupEnable" checked>
 ChannelGroup
@@ -56,12 +49,15 @@ AuthKey
 <h3>channelGroups</h3>
 
 <div class="indent20">
-    <input id="getAllChannelGroups" checked type="radio" name="executeOperation" >get all channelGroups
-    <input type="radio" id="removeChannelGroup" name="executeOperation">delete channelGroup
+    <input id="getAllChannelGroups" type="button" name="executeOperation" value="get all channelGroups">
+    <input type="button" id="removeChannelGroup" name="executeOperation" value="delete channelGroup">
     <br>
-    <input id="getChannelsForChannelGroup" type="radio" name="executeOperation" >get all channels in channelGroup
-    <input id="addChannelToChannelGroup" type="radio" name="executeOperation" >add channel to channelGroup
-    <input id="removeChannelFromChannelGroup" type="radio" name="executeOperation" >remove channel from channelGroup
+    <input id="getChannelsForChannelGroup" type="button" name="executeOperation" value="get all channels in channelGroup">
+    <input id="addChannelToChannelGroup" type="button" name="executeOperation" value="add channel to channelGroup">
+    <input id="removeChannelFromChannelGroup" type="button" name="executeOperation" value="remove channel from channelGroup">
+    <br>
+    <input id="setCloak" type="button" name="executeOperation" value="Set Cloak">
+    <input id="unsetCloak" type="button" name="executeOperation" value="Unset Cloak">
 </div>
 
 <br>
@@ -69,22 +65,22 @@ AuthKey
 <h3>Pub, Sub, History, Presence</h3>
 
 <div class="indent20">
-    <input id="publish" checked type="radio" name="executeOperation" value="default">publish
+    <input id="publish" checked type="button" name="executeOperation" value="publish">
     message<input id="message" type="text" size=15 name="subKey" value="my message is important">
 
-    <input id="subscribe" type="radio" name="executeOperation" >subscribe
-    <input id="unsubscribe" type="radio" name="executeOperation" >unsubscribe
+    <input id="subscribe" type="button" name="executeOperation" value="subscribe">
+    <input id="unsubscribe" type="button" name="executeOperation" value="unsubscribe">
 
-    <input id="history" type="radio" name="executeOperation" >history
+    <input id="history" type="button" name="executeOperation" value="history">
     <br>
 
-    <input id="setState" type="radio" name="executeOperation">set state
-    <input id="getState" type="radio" name="executeOperation" >get state
+    <input id="setState" type="button" name="executeOperation" value="set state">
+    <input id="getState" type="button" name="executeOperation" value="get state">
 
     <br>
-    <input id="hereNow" type="radio" name="executeOperation" >here now
-    <input id="whereNow" type="radio" name="executeOperation" >where now
-    <input id="time" type="radio" name="executeOperation" >time
+    <input id="hereNow" type="button" name="executeOperation" value="here now">
+    <input id="whereNow" type="button" name="executeOperation" value="where now">
+    <input id="time" type="button" name="executeOperation" value="time">
 
 </div>
 
@@ -93,19 +89,19 @@ AuthKey
 <h3>PAM Operations</h3>
 
 
-<input type="checkbox" name="channelOptions" >read
-<input type="checkbox" name="channelOptions" >write
-<input type="checkbox" name="channelOptions" >manage
+<input id="check_read" type="checkbox" name="channelOptions" >read
+<input id="check_write" type="checkbox" name="channelOptions" >write
+<input id="check_manage" type="checkbox" name="channelOptions" >manage
 TTL
 <input type="text" size=5 name="channelOptions" value=99>
 for AuthToken
 <input type="text" name="pamAuthToken" value="public-chat">
 
 <div class="indent20">
-    <input type="radio" name="executeOperation" >grant
-    <input type="radio" name="executeOperation" >revoke
-    <input type="radio" name="executeOperation" >audit
-    <input type="radio" name="executeOperation" >manage
+    <input id="grant" type="button" name="executeOperation" value="grant">
+    <input id="revoke" type="button" name="executeOperation" value="revoke">
+    <input id="audit" type="button" name="executeOperation" value="audit">
+    <!--<input id="manage" type="button" name="executeOperation" value="manage">-->
 </div>
 <br>
 

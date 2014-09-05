@@ -14,16 +14,6 @@ $("#state, #stateEnable").bind("change", function () {
     stateInit();
 });
 
-function namespaceInit() {
-    namespaceEnable = $("#namespaceEnable").prop('checked');
-    namespace = namespaceEnable && $("#namespace").val().length > 0 ? $("#namespace").val() : false;
-}
-
-namespaceInit();
-$("#namespace, #namespaceEnable").bind("change", function () {
-    namespaceInit()
-});
-
 function channelGroupInit() {
     channelGroupEnable = $("#channelGroupEnable").prop('checked');
     channelGroup = channelGroupEnable && $("#channelGroup").val().length > 0 ? $("#channelGroup").val() : false;
@@ -74,7 +64,7 @@ $("#origin").bind("change", function () {
 pubnub = PUBNUB.init({
     "subscribe_key": SUB_KEY,
     "publish_key": PUB_KEY,
-    "secrect_key": SECRET_KEY,
+    "secret_key": SECRET_KEY,
     "uuid": UUID,
     "origin": origin
 });
@@ -115,20 +105,14 @@ function displayCallback(m, e, c) {
 }
 
 function pnSubscribe() {
-    if (channel) {
-        pubnub.subscribe({
-            channel: channel,
-            callback: displayCallback,
-            error: displayCallback
-        });
-    } else if (channelGroup) {
-        pubnub.subscribe({
-            channel_group: channelGroup,
-            namespace: namespace,
-            callback: displayCallback,
-            error: displayCallback
-        });
-    }
+    console.log('pnSubscribe');    
+    pubnub.subscribe({
+        channel: channel,
+        channel_group : channelGroup,
+        callback: displayCallback,
+        error: displayCallback,
+        heartbeat : 15
+    });
 }
 
 function pnHistory() {
@@ -142,7 +126,6 @@ function pnHistory() {
     } else if (channelGroup) {
         pubnub.history({
             channel_group: channelGroup,
-            namespace: namespace,
             callback: displayCallback,
             error: displayCallback,
             count: 5
@@ -160,7 +143,6 @@ function pnUnsubscribe() {
     } else if (channelGroup) {
         pubnub.unsubscribe({
             channel_group: channelGroup,
-            namespace: namespace,
             callback: displayCallback,
             error: displayCallback
         });
@@ -168,52 +150,54 @@ function pnUnsubscribe() {
 }
 
 function pnGetChannelGroups() {
-    pubnub.registry_id({
+    pubnub.channel_group({
         callback: displayCallback,
         error: displayCallback,
-        namespace: namespace
     });
 }
 
 function pnDeleteChannelGroups() {
-    pubnub.registry_id({
+    pubnub.channel_group_remove({
         callback: displayCallback,
         error: displayCallback,
-        namespace: namespace,
-        remove : true,
         channel_group : channelGroup
 
     });
 }
 
 function pnGetChannelsForChannelGroup() {
-    pubnub.registry_channel({
+    pubnub.channel_group({
         callback: displayCallback,
         error: displayCallback,
         channel_group: channelGroup,
-        namespace: namespace
     });
 }
 
 function pnAddChannelToChannelGroup() {
-    pubnub.registry_channel({
+    pubnub.channel_group({
         callback: displayCallback,
         error: displayCallback,
-        add: true,
         channels: channel,
         channel_group: channelGroup,
-        namespace: namespace
     });
 }
 
 function pnRemoveChannelFromChannelGroup() {
-    pubnub.registry_channel({
+    pubnub.channel_group_remove({
         callback: displayCallback,
         error: displayCallback,
-        remove: true,
         channels: channel,
         channel_group: channelGroup,
-        namespace: namespace
+    });
+}
+
+function pnCloak(cloak) {
+    pubnub.channel_group_cloak({
+        channel_group : channelGroup,
+        channel: channel,
+        cloak: cloak,
+        callback: displayCallback,
+        error: displayCallback
     });
 }
 
@@ -236,6 +220,36 @@ function pnGetState() {
     });
 }
 
+function pnGrant() {    
+    pubnub.grant({
+        channel_group : channelGroup,
+        channel: channel,
+        read   : $("#check_read").prop('checked'),
+        write  : $("#check_write").prop('checked'),
+        manage : $("#check_manage").prop('checked'),
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
+function pnRevoke() {
+    pubnub.revoke({
+        channel_group : channelGroup,
+        channel: channel,
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
+function pnAudit() {
+    pubnub.audit({
+        channel_group : channelGroup,
+        channel: channel,
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
 function pnHereNow(){
     if (channel) {
         pubnub.here_now({
@@ -251,7 +265,6 @@ function pnHereNow(){
     } else if (channelGroup) {
         pubnub.here_now({
             channel_group: channelGroup,
-            namespace: namespace,
             callback: displayCallback,
             error: displayCallback
         });
@@ -269,7 +282,6 @@ function pnWhereNow(){
     } else if (channelGroup) {
         pubnub.where_now({
             channel_group: channelGroup,
-            namespace: namespace,
             callback: displayCallback,
             error: displayCallback
         });
@@ -332,4 +344,23 @@ $("#subscribe").click(function () {
 
 $("#unsubscribe").click(function () {
     pnUnsubscribe();
+});
+
+$("#grant").click(function () {
+    pnGrant();
+});
+
+$("#revoke").click(function () {
+    pnRevoke();
+});
+
+$("#audit").click(function () {
+    pnAudit();
+});
+
+$("#setCloak").click(function () {
+    pnCloak(true);
+});
+$("#unsetCloak").click(function () {
+    pnCloak(fals);
 });
