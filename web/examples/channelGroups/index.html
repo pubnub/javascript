@@ -6,16 +6,18 @@
         .indent20 {
             margin-left: 40px;
         }
+        .container {
+            display: inline-block;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
 <script src=http://code.jquery.com/jquery-1.11.0.min.js></script>
 
 <script src=../../pubnub.min.js></script>
-<div class="output" id="errorOutputDiv">
-    <textarea id="output" rows=20 cols="85"></textarea>
-</div>
 
+<div id="controls" class="container">
 
 <h3 id="clear" >Config (clear)</h3>
 
@@ -111,7 +113,11 @@ origin<input id="origin" type="text" size=15 name="subKey" value="dara24.devbuil
 sub<input id="sub_key" type="text" size=15 name="subKey" value="demo-36">
 pub<input id="pub_key" type="text" size=15 name="pubKey" value="demo-36">
 sec<input id="secret_key" type="text" size=15 name="secKey" value="demo-36">
+</div>
 
+<div class="container" id="errorOutputDiv">
+    <textarea id="output" rows=47 cols="85"></textarea>
+</div>
 
 <script src="main.js"></script>
 

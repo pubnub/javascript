@@ -246,12 +246,19 @@ function pnRevoke() {
 }
 
 function pnAudit() {
-    pubnub.audit({
-        channel_group : channelGroup,
-        channel: channel,
-        callback: displayCallback,
-        error: displayCallback
-    });
+    if (channel) {
+        pubnub.audit({
+            channel: channel,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    } else if (channelGroup) {
+        pubnub.audit({
+            channel_group : channelGroup,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    }
 }
 
 function pnHereNow(){
