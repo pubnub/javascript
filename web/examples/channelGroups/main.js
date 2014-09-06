@@ -368,3 +368,7 @@ $("#setCloak").click(function () {
 $("#unsetCloak").click(function () {
     pnCloak(false);
 });
+
+$("#clear").click(function () {
+    $("#output").html("");
+});
