@@ -1459,6 +1459,7 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
+,   keepAliveAgent      = new (keepAliveIsEmbedded() ? http.Agent : require('agentkeepalive'))({keepAlive: true, keepAliveMsecs: 300000})
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
@@ -1551,7 +1552,8 @@ function xdr( setup ) {
     options.path     = proxy ? "http://" + origin + url:url;
     options.headers  = proxy ? { 'Host': origin }:null;
     options.method   = mode;
-    options.agent    = false;
+    options.keepAlive= !!keepAliveAgent;
+    options.agent    = keepAliveAgent;
     options.body     = payload;
 
     require('http').globalAgent.maxSockets = Infinity;
@@ -1640,6 +1642,9 @@ function crypto_obj() {
     }
 }
 
+function keepAliveIsEmbedded() {
+  return 'EventEmitter' in http.Agent.super_;
+}
 
 
 var CREATE_PUBNUB = function(setup) {
@@ -1650,6 +1655,11 @@ var CREATE_PUBNUB = function(setup) {
     setup['hmac_SHA256'] = get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
     setup['params'] = {'pnsdk' : PNSDK};
+
+    if (setup['keepAlive'] === false) {
+      keepAliveAgent = undefined;
+    }
+
     SELF = function(setup) {
         return CREATE_PUBNUB(setup);
     }
