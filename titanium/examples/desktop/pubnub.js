@@ -1384,9 +1384,8 @@ function PN_API(setup) {
             if (jsonp != '0') { data['callback'] = jsonp; }
 
             if (typeof channel != 'undefined'
-                && CHANNELS[channel] && CHANNELS[channel].subscribed 
-                && state) {
-                STATE[channel] = state;
+                && CHANNELS[channel] && CHANNELS[channel].subscribed ) {
+                if (state) STATE[channel] = state;
             } else {
                 channel = ',';
             }
@@ -1394,8 +1393,8 @@ function PN_API(setup) {
             if (typeof channel_group != 'undefined'
                 && CHANNEL_GROUPS[channel_group]
                 && CHANNEL_GROUPS[channel_group].subscribed
-                && state) {
-                STATE[channel_group] = state;
+                ) {
+                if (state) STATE[channel_group] = state;
                 data['channel-registry-id'] = channel_group;
             }
 
