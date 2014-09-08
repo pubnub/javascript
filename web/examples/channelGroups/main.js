@@ -3,6 +3,27 @@ var SUB_KEY = $("#sub_key").val();
 var SECRET_KEY = $("#secret_key").val();
 var UUID = $("#uuid").val();
 
+function presenceInit() {
+    presenceEnable = $("#presenceEnable").prop('checked');
+    presence = presenceEnable;
+}
+
+presenceInit();
+$("#presenceEnable").bind("change", function () {
+    presenceInit();
+});
+
+
+function hbInit() {
+    hbEnable = $("#hbEnable").prop('checked');
+    hb = hbEnable && $("#hb").val().length > 0 ? JSON.parse($("#hb").val()) : false;
+}
+
+hbInit();
+$("#hb, #hbEnable").bind("change", function () {
+    hbInit();
+});
+
 
 function stateInit() {
     stateEnable = $("#stateEnable").prop('checked');
@@ -119,14 +140,62 @@ function displayCallback(m, e, c) {
 
 function pnSubscribe() {
     console.log('pnSubscribe');
-    pubnub.subscribe({
-        channel: channel,
-        channel_group: channelGroup,
-        callback: displayCallback,
-        error: displayCallback,
-        heartbeat: 15
-    });
+
+    if (presence) {
+
+        if (channel) {
+            pubnub.subscribe({
+                channel: channel,
+                callback: displayCallback,
+                error: displayCallback,
+                heartbeat: hb,
+                presence: displayCallback
+            });
+        } else if (channelGroup) {
+            pubnub.subscribe({
+                channel_group: channelGroup,
+                callback: displayCallback,
+                error: displayCallback,
+                heartbeat: hb,
+                presence: displayCallback
+            });
+        }
+    } else {
+
+        if (channel) {
+            pubnub.subscribe({
+                channel: channel,
+                callback: displayCallback,
+                error: displayCallback,
+                heartbeat: hb
+            });
+        } else if (channelGroup) {
+            pubnub.subscribe({
+                channel_group: channelGroup,
+                callback: displayCallback,
+                error: displayCallback,
+                heartbeat: hb
+            });
+        }
+    }
 }
+
+function pnUnsubscribe() {
+    if (channel) {
+        pubnub.unsubscribe({
+            channel: channel,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    } else if (channelGroup) {
+        pubnub.unsubscribe({
+            channel_group: channelGroup,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    }
+}
+
 
 function pnHistory() {
     if (channel) {
@@ -216,22 +285,38 @@ function pnCloak(cloak) {
 }
 
 function pnSetState() {
-    pubnub.state({
-        channel_group: channelGroup,
-        channel: channel,
-        state: state,
-        callback: displayCallback,
-        error: displayCallback
-    });
+    if (channel) {
+        pubnub.state({
+            channel: channel,
+            state: state,
+            callback: displayCallback,
+            error: displayCallback
+        });
+
+    } else if (channelGroup) {
+        pubnub.state({
+            channel_group: channelGroup,
+            state: state,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    }
 }
 
 function pnGetState() {
-    pubnub.state({
-        channel_group: channelGroup,
-        channel: channel,
-        callback: displayCallback,
-        error: displayCallback
-    });
+    if (channel) {
+        pubnub.state({
+            channel: channel,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    } else if (channelGroup) {
+        pubnub.state({
+            channel_group: channelGroup,
+            callback: displayCallback,
+            error: displayCallback
+        });
+    }
 }
 
 function pnGrant() {
@@ -343,6 +428,10 @@ function pnWhereNow() {
 }
 
 pubnub.auth(auth);
+
+$("#hb").click(function () {
+    pnHB();
+});
 
 $("#whereNow").click(function () {
     pnWhereNow();

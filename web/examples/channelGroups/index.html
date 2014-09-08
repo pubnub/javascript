@@ -19,102 +19,113 @@
 
 <div id="controls" class="container">
 
-<h3 class="clear" >Config (clear)</h3>
+    <h3 class="clear">Config (clear)</h3>
 
-<input type="checkbox" id="stateEnable" name="stateEnable" checked>
-State
-<input id="state" type="text" name="state" value='{"foo":"bar"}'>
+    <input type="checkbox" id="stateEnable" name="stateEnable" checked>
+    State
+    <input id="state" type="text" name="state" value='{"foo":"bar"}'>
 
-<br>
-
-<input type="checkbox" id="uuidEnable" name="uuidEnable" checked>
-UUID
-<input id="uuid" type="text" name="uuid" value="myUUID">
-<br>
-<input type="checkbox" id="channelGroupEnable" name="channelGroupEnable" checked>
-ChannelGroup
-<input type="text" id="channelGroup" name="channelGroup" value="gec_regid">
-
-<br>
-<input type="checkbox" id="channelEnable" name="channelEnable" checked>
-Channel
-<input type="text" id="channel" name="channel" value="bot">
-<br><br>
-Using Credentials (AuthToken) to issue the request
-<br>
-<input type="checkbox" id="authEnable" name="authEnable" >
-AuthKey
-<input type="text" id="auth" name="auth" value="public">
-
-<br>
-
-<h3>channelGroups</h3>
-
-<div class="indent20">
-    <input id="getAllChannelGroups" type="button" name="executeOperation" value="get all channelGroups">
-    <input type="button" id="removeChannelGroup" name="executeOperation" value="delete channelGroup">
-    <br>
-    <input id="getChannelsForChannelGroup" type="button" name="executeOperation" value="get all channels in channelGroup">
-    <input id="addChannelToChannelGroup" type="button" name="executeOperation" value="add channel to channelGroup">
-    <input id="removeChannelFromChannelGroup" type="button" name="executeOperation" value="remove channel from channelGroup">
-    <br>
-    <input id="setCloak" type="button" name="executeOperation" value="Set Cloak">
-    <input id="unsetCloak" type="button" name="executeOperation" value="Unset Cloak">
-</div>
-
-<br>
-
-<h3>Pub, Sub, History, Presence</h3>
-
-<div class="indent20">
-    <input id="publish" checked type="button" name="executeOperation" value="publish">
-    message<input id="message" type="text" size=15 name="subKey" value="my message is important">
-
-    <input id="subscribe" type="button" name="executeOperation" value="subscribe">
-    <input id="unsubscribe" type="button" name="executeOperation" value="unsubscribe">
-
-    <input id="history" type="button" name="executeOperation" value="history">
+    <input type="checkbox" id="presenceEnable" name="presenceEnable" checked>
+    Presence
     <br>
 
-    <input id="setState" type="button" name="executeOperation" value="set state">
-    <input id="getState" type="button" name="executeOperation" value="get state">
+    <input type="checkbox" id="uuidEnable" name="uuidEnable" checked>
+    UUID
+    <input id="uuid" type="text" name="uuid" value="myUUID">
+    <br>
+    <input type="checkbox" id="channelGroupEnable" name="channelGroupEnable" checked>
+    ChannelGroup
+    <input type="text" id="channelGroup" name="channelGroup" value="gec_regid">
 
     <br>
-    <input id="hereNow" type="button" name="executeOperation" value="here now">
-    <input id="whereNow" type="button" name="executeOperation" value="where now">
-    <input id="time" type="button" name="executeOperation" value="time">
+    <input type="checkbox" id="channelEnable" name="channelEnable" checked>
+    Channel
+    <input type="text" id="channel" name="channel" value="bot">
+    <br><br>
+    Using Credentials (AuthToken) to issue the request
+    <br>
+    <input type="checkbox" id="authEnable" name="authEnable">
+    AuthKey
+    <input type="text" id="auth" name="auth" value="public">
 
-</div>
+    <br>
+
+    <h3>channelGroups</h3>
+
+    <div class="indent20">
+        <input id="getAllChannelGroups" type="button" name="executeOperation" value="get all channelGroups">
+        <input type="button" id="removeChannelGroup" name="executeOperation" value="delete channelGroup">
+        <br>
+        <input id="getChannelsForChannelGroup" type="button" name="executeOperation"
+               value="get all channels in channelGroup">
+        <input id="addChannelToChannelGroup" type="button" name="executeOperation" value="add channel to channelGroup">
+        <input id="removeChannelFromChannelGroup" type="button" name="executeOperation"
+               value="remove channel from channelGroup">
+        <br>
+        <input id="setCloak" type="button" name="executeOperation" value="Set Cloak">
+        <input id="unsetCloak" type="button" name="executeOperation" value="Unset Cloak">
+    </div>
+
+    <br>
+
+    <h3>Pub, Sub, History, Presence</h3>
+
+    <div class="indent20">
+        <input id="publish" checked type="button" name="executeOperation" value="publish">
+        message<input id="message" type="text" size=15 name="subKey" value="my message is important">
+         <br>
+        <input id="subscribe" type="button" name="executeOperation" value="subscribe">
+        <input id="unsubscribe" type="button" name="executeOperation" value="unsubscribe">
 
 <br>
+        <input id="history" type="button" name="executeOperation" value="history">
+        <br>
 
-<h3>PAM Operations</h3>
+        <input id="setState" type="button" name="executeOperation" value="set state">
+        <input id="getState" type="button" name="executeOperation" value="get state">
+
+        <br>
+        <input id="hereNow" type="button" name="executeOperation" value="here now">
+        <input id="whereNow" type="button" name="executeOperation" value="where now">
+        <input id="time" type="button" name="executeOperation" value="time">
+
+    </div>
+
+    <br>
+
+    <h3>PAM Operations</h3>
 
 
-<input id="check_read" type="checkbox" name="channelOptions" >read
-<input id="check_write" type="checkbox" name="channelOptions" >write
-<input id="check_manage" type="checkbox" name="channelOptions" >manage
-TTL
-<input type="text" size=5 name="channelOptions" value=99>
-<br>
-for AuthToken
+    <input id="check_read" type="checkbox" name="channelOptions">read
+    <input id="check_write" type="checkbox" name="channelOptions">write
+    <input id="check_manage" type="checkbox" name="channelOptions">manage
+    TTL
+    <input type="text" size=5 name="channelOptions" value=99>
+    <br>
+    for AuthToken
     <input id="pamAuthEnable" type="checkbox" name="executeOperation" value="publish">
     <input id="pamAuth" type="text" name="pamAuthToken" value="public-chat">
 
-<div class="indent20">
-    <input id="grant" type="button" name="executeOperation" value="grant">
-    <input id="revoke" type="button" name="executeOperation" value="revoke">
-    <input id="audit" type="button" name="executeOperation" value="audit">
-    <!--<input id="manage" type="button" name="executeOperation" value="manage">-->
-</div>
-<br>
+    <div class="indent20">
+        <input id="grant" type="button" name="executeOperation" value="grant">
+        <input id="revoke" type="button" name="executeOperation" value="revoke">
+        <input id="audit" type="button" name="executeOperation" value="audit">
+        <!--<input id="manage" type="button" name="executeOperation" value="manage">-->
+    </div>
+    <br>
 
-<h3 class="clear">App Settings</h3>
+    <h3>Dynamic HB & State</h3>
+    <input id="hbEnable" type="checkbox" name="hbEnable">
+    HB Interval<input id="hb" type="text" size=5 name="hb">
+    <br>
 
-origin<input id="origin" type="text" size=15 name="subKey" value="dara24.devbuild.pubnub.com">
-sub<input id="sub_key" type="text" size=15 name="subKey" value="demo-36">
-pub<input id="pub_key" type="text" size=15 name="pubKey" value="demo-36">
-sec<input id="secret_key" type="text" size=15 name="secKey" value="demo-36">
+
+    <h3 class="clear">App Settings</h3>
+
+    origin<input id="origin" type="text" size=15 name="subKey" value="dara24.devbuild.pubnub.com">
+    sub<input id="sub_key" type="text" size=15 name="subKey" value="demo-36">
+    pub<input id="pub_key" type="text" size=15 name="pubKey" value="demo-36">
+    sec<input id="secret_key" type="text" size=15 name="secKey" value="demo-36">
 </div>
 
 <div class="container" id="errorOutputDiv">
