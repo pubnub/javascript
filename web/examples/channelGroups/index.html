@@ -19,7 +19,7 @@
 
 <div id="controls" class="container">
 
-<h3 id="clear" >Config (clear)</h3>
+<h3 class="clear" >Config (clear)</h3>
 
 <input type="checkbox" id="stateEnable" name="stateEnable" checked>
 State
@@ -96,8 +96,10 @@ AuthKey
 <input id="check_manage" type="checkbox" name="channelOptions" >manage
 TTL
 <input type="text" size=5 name="channelOptions" value=99>
+<br>
 for AuthToken
-<input type="text" name="pamAuthToken" value="public-chat">
+    <input id="pamAuthEnable" type="checkbox" name="executeOperation" value="publish">
+    <input id="pamAuth" type="text" name="pamAuthToken" value="public-chat">
 
 <div class="indent20">
     <input id="grant" type="button" name="executeOperation" value="grant">
@@ -107,7 +109,7 @@ for AuthToken
 </div>
 <br>
 
-<h3>App Settings</h3>
+<h3 class="clear">App Settings</h3>
 
 origin<input id="origin" type="text" size=15 name="subKey" value="dara24.devbuild.pubnub.com">
 sub<input id="sub_key" type="text" size=15 name="subKey" value="demo-36">

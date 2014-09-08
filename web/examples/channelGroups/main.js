@@ -4,7 +4,6 @@ var SECRET_KEY = $("#secret_key").val();
 var UUID = $("#uuid").val();
 
 
-
 function stateInit() {
     stateEnable = $("#stateEnable").prop('checked');
     state = stateEnable && $("#state").val().length > 0 ? JSON.parse($("#state").val()) : false;
@@ -46,6 +45,17 @@ authInit();
 $("#auth, #authEnable").bind("change", function () {
     authInit();
 });
+
+function pamAuthInit() {
+    pamAuthEnable = $("#pamAuthEnable").prop('checked');
+    pamAuth = pamAuthEnable && $("#pamAuth").val().length > 0 ? $("#pamAuth").val() : false;
+}
+
+pamAuthInit();
+$("#pamAuth, #pamAuthEnable").bind("change", function () {
+    pamAuthInit();
+});
+
 
 function messageInit() {
     message = $("#message").val().length > 0 ? $("#message").val() : null;
@@ -97,24 +107,24 @@ function displayCallback(m, e, c) {
 
     if (c && m) {
         console.log(JSON.stringify(c + ": " + m));
-        $("#output").html(c + ":" + JSON.stringify(m) + "\n" + $("#output").html());
+        $("#output").html(c + ":" + JSON.stringify(m, null, 4) + "\n\n" + $("#output").html());
 
         // Only one argument
     } else if (m) {
         console.log(JSON.stringify(m));
-        $("#output").html(JSON.stringify(m) + "\n" + $("#output").html());
+        $("#output").html(JSON.stringify(m, null, 4) + "\n\n" + $("#output").html());
 
     }
 }
 
 function pnSubscribe() {
-    console.log('pnSubscribe');    
+    console.log('pnSubscribe');
     pubnub.subscribe({
         channel: channel,
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         callback: displayCallback,
         error: displayCallback,
-        heartbeat : 15
+        heartbeat: 15
     });
 }
 
@@ -154,9 +164,9 @@ function pnUnsubscribe() {
 
 function pnGetChannelGroups() {
     pubnub.channel_group({
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         callback: displayCallback,
-        error: displayCallback,
+        error: displayCallback
     });
 }
 
@@ -164,7 +174,7 @@ function pnDeleteChannelGroups() {
     pubnub.channel_group_remove({
         callback: displayCallback,
         error: displayCallback,
-        channel_group : channelGroup
+        channel_group: channelGroup
 
     });
 }
@@ -173,7 +183,7 @@ function pnGetChannelsForChannelGroup() {
     pubnub.channel_group({
         callback: displayCallback,
         error: displayCallback,
-        channel_group: channelGroup,
+        channel_group: channelGroup
     });
 }
 
@@ -182,7 +192,7 @@ function pnAddChannelToChannelGroup() {
         callback: displayCallback,
         error: displayCallback,
         channels: channel,
-        channel_group: channelGroup,
+        channel_group: channelGroup
     });
 }
 
@@ -191,13 +201,13 @@ function pnRemoveChannelFromChannelGroup() {
         callback: displayCallback,
         error: displayCallback,
         channels: channel,
-        channel_group: channelGroup,
+        channel_group: channelGroup
     });
 }
 
 function pnCloak(cloak) {
     pubnub.channel_group_cloak({
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         channel: channel,
         cloak: cloak,
         callback: displayCallback,
@@ -207,7 +217,7 @@ function pnCloak(cloak) {
 
 function pnSetState() {
     pubnub.state({
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         channel: channel,
         state: state,
         callback: displayCallback,
@@ -217,20 +227,20 @@ function pnSetState() {
 
 function pnGetState() {
     pubnub.state({
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         channel: channel,
         callback: displayCallback,
         error: displayCallback
     });
 }
 
-function pnGrant() {    
+function pnGrant() {
     pubnub.grant({
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         channel: channel,
-        read   : $("#check_read").prop('checked'),
-        write  : $("#check_write").prop('checked'),
-        manage : $("#check_manage").prop('checked'),
+        read: $("#check_read").prop('checked'),
+        write: $("#check_write").prop('checked'),
+        manage: $("#check_manage").prop('checked'),
         callback: displayCallback,
         error: displayCallback
     });
@@ -238,7 +248,7 @@ function pnGrant() {
 
 function pnRevoke() {
     pubnub.revoke({
-        channel_group : channelGroup,
+        channel_group: channelGroup,
         channel: channel,
         callback: displayCallback,
         error: displayCallback
@@ -247,21 +257,54 @@ function pnRevoke() {
 
 function pnAudit() {
     if (channel) {
-        pubnub.audit({
-            channel: channel,
-            callback: displayCallback,
-            error: displayCallback
-        });
+        if (pamAuth) {
+            pubnub.audit({
+                channel: channel,
+                callback: displayCallback,
+                error: displayCallback,
+                auth_key: pamAuth
+            });
+        } else {
+            pubnub.audit({
+                channel: channel,
+                callback: displayCallback,
+                error: displayCallback
+            });
+        }
+
     } else if (channelGroup) {
-        pubnub.audit({
-            channel_group : channelGroup,
-            callback: displayCallback,
-            error: displayCallback
-        });
+        if (pamAuth) {
+            pubnub.audit({
+                channel_group: channelGroup,
+                callback: displayCallback,
+                error: displayCallback,
+                auth_key: pamAuth
+            });
+        } else {
+            pubnub.audit({
+                channel_group: channelGroup,
+                callback: displayCallback,
+                error: displayCallback
+            });
+        }
+    } else { // SubKey Level
+        if (pamAuth) {
+            pubnub.audit({
+                callback: displayCallback,
+                error: displayCallback,
+                auth_key: pamAuth
+            });
+        } else {
+            pubnub.audit({
+                channel_group: channelGroup,
+                callback: displayCallback,
+                error: displayCallback
+            });
+        }
     }
 }
 
-function pnHereNow(){
+function pnHereNow() {
     if (channel) {
         pubnub.here_now({
             channel: channel,
@@ -282,7 +325,7 @@ function pnHereNow(){
     }
 }
 
-function pnWhereNow(){
+function pnWhereNow() {
     if (channel) {
         pubnub.where_now({
             channel: channel,
@@ -376,6 +419,6 @@ $("#unsetCloak").click(function () {
     pnCloak(false);
 });
 
-$("#clear").click(function () {
+$(".clear").click(function () {
     $("#output").html("");
 });
