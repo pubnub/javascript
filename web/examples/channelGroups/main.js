@@ -138,46 +138,35 @@ function displayCallback(m, e, c) {
     }
 }
 
+function getDefaultCBConfig(){
+    return {
+        callback: displayCallback,
+        error: displayCallback
+    };
+}
+
 function pnSubscribe() {
     console.log('pnSubscribe');
 
+    var config = getDefaultCBConfig();
+    config["noheresync"] = true;
+
     if (presence) {
-
-        if (channel) {
-            pubnub.subscribe({
-                channel: channel,
-                callback: displayCallback,
-                error: displayCallback,
-                heartbeat: hb,
-                presence: displayCallback
-            });
-        } else if (channelGroup) {
-            pubnub.subscribe({
-                channel_group: channelGroup,
-                callback: displayCallback,
-                error: displayCallback,
-                heartbeat: hb,
-                presence: displayCallback
-            });
-        }
-    } else {
-
-        if (channel) {
-            pubnub.subscribe({
-                channel: channel,
-                callback: displayCallback,
-                error: displayCallback,
-                heartbeat: hb
-            });
-        } else if (channelGroup) {
-            pubnub.subscribe({
-                channel_group: channelGroup,
-                callback: displayCallback,
-                error: displayCallback,
-                heartbeat: hb
-            });
-        }
+        config["presence"] = displayCallback;
     }
+
+    if (hb) {
+        config["heartbeat"] = hb;
+    }
+
+    if (channel) {
+        config["channel"] = channel;
+    } else if (channelGroup) {
+        config["channel_group"] = channelGroup;
+    }
+
+    pubnub.subscribe(config);
+
 }
 
 function pnUnsubscribe() {
@@ -428,10 +417,6 @@ function pnWhereNow() {
 }
 
 pubnub.auth(auth);
-
-$("#hb").click(function () {
-    pnHB();
-});
 
 $("#whereNow").click(function () {
     pnWhereNow();
