@@ -286,7 +286,7 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   DS_UPDATE_DELAY = null
+    ,   DS_PATH_TTS   = {}
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -476,7 +476,7 @@ function PN_API(setup) {
             x = x[path[p]];
             pathNodes.push(x);
         }
-        
+        console.log(JSON.stringify(update));
         if (update.action == 'update') {
             if (path_length - depth > 0) 
                 x[last] = update.value;
@@ -531,12 +531,15 @@ function PN_API(setup) {
         }
     }
 
+    /*
+        Get to be used in Data sync
+    */
     function get(args, callback) {
         var callback         = args['callback'] || callback
         ,   err              = args['error']    || function(){}
         ,   object_id        = args['object_id']
         ,   path             = args['path']
-        ,   start_at         = args['start_at']
+        ,   next_page        = args['next_page']
         ,   obj_at           = args['obj_at']
         ,   page_max_bytes   = args['page_max_bytes']
         ,   jsonp            = jsonp_cb()
@@ -559,8 +562,8 @@ function PN_API(setup) {
 
         if (jsonp != '0') { data['callback'] = jsonp; }
 
-        if (start_at) { data['start_at'] = start_at; }
-        if (obj_at)   { data['obj_at']   = obj_at; }
+        //if (start_at) { data['start_at'] = start_at; }
+        //if (obj_at)   { data['obj_at']   = obj_at; }
         if (page_max_bytes)   { data['page_max_bytes']   = page_max_bytes; }
 
         xdr({
@@ -576,16 +579,30 @@ function PN_API(setup) {
         });
     }
 
+    /*
+        This method does merge at one level
+    */
     function mergeAtOneLevel(a, b) {
         if ( a == null ) {
             return b;
         }
+        console.log('A : ' + JSON.stringify(a));
+        console.log('B : ' + JSON.stringify(b));
         if (a && b) {
             for (var attrname in b) {
                 if (!a[attrname]) {
-                    a[attrname] = b[attrname];
+                    console.log(JSON.stringify(b[attrname]));
+                    if (b[attrname]['pn_val']) {
+                        a[attrname] = b[attrname]['pn_val'];
+                    } else {
+                        a[attrname] = b[attrname];
+                    }
                 } else {
-                    a[attrname] = mergeAtOneLevel(a[attrname], b[attrname]);
+                    if (b[attrname]['pn_val']) {
+                        a[attrname] = b[attrname]['pn_val'];
+                    } else {
+                        a[attrname] = mergeAtOneLevel(a[attrname], b[attrname]);
+                    }
                 }
             }
         }
@@ -710,25 +727,36 @@ function PN_API(setup) {
                 depth = split_array['length'];
             }
 
+            /* 
+                subscribe to 3 channels . for ex. if obj id is 'ab'
+                a. normal channel       pn_ds_ab
+                b. wildcard channel     pn_ds_ab.*
+                c. transaction channel  pn_dstr_ab
+            */
             SELF['subscribe']({
                 'channel'     :   'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
                 'connect'     : function(r, timetoken) {
 
+                    // if message received on wild card channel
+                    // this is just to take care of 3 invocations of connect
                     if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
-                        function read(start_at, callback, error) {
+
+                        // read initial copy of the data structure
+                        function read(next_page, callback, error) {
                             get({
                                 'object_id' : object_id,
                                 'path'      : path,
                                 'timetoken' : timetoken,
-                                'start_at'  : start_at,
+                                'next_page'  : next_page,
                                 'callback'  : function(r) {
                                     if (typeof r['payload'] === 'object') {
                                         a['data'] = mergeAtOneLevel(a['data'], r['payload']);
                                     } else {
                                         a['data'] = r['payload'];
                                     }
+                                    // till next_page is null in response keep reading recursively
                                     if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
                                         a['pn_ds_meta']['stale'] = false;
                                         synced = true;
@@ -749,19 +777,19 @@ function PN_API(setup) {
                 },
                 'callback'    : function(r) {
 
-                    if (r['action']) {
+                    if (r['action']) { // if action, store it in list with transaction id as key
                         if (!updates[r['trans_id']])
                             updates[r['trans_id']] = {'complete' : false, 'list' : []}
                         updates[r['trans_id']]['list']['push'](r);
 
-                    } else if (r['status']) {
+                    } else if (r['status']) { // if transaction complete , apply the updates
                         if (r['status'] == 'complete' && updates[r['trans_id']]) {
                             updates[r['trans_id']]['complete'] = true;
                             if (synced) apply_updates(a, updates, callback, r['trans_id'], depth);
                         }
                     }
                 },
-                'error'       : function(r) {
+                'error'       : function(r) { // set state to stale
                     a['pn_ds_meta']['stale'] = true;
                     err({'message' : r['message']});
                 }

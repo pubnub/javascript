@@ -287,7 +287,7 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   DS_UPDATE_DELAY = null
+    ,   DS_PATH_TTS   = {}
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -463,16 +463,13 @@ function PN_API(setup) {
         }
         var x = o.data;
         var continue_update = true;
-        var update_at = null;
 
         for (p in path) {
             try {
                 if (!x[path[p]]) {
                     x[path[p]] = {};
-                    if (update_at == null) update_at = parseInt(p);
                 } else if (typeof x[path[p]]  !== 'object' ) {
                     x[path[p]] = {};
-                    if (update_at == null)  update_at = parseInt(p) + 1;   
                 }
             } catch (e) {
                 x[path[p]] = {};  
@@ -480,9 +477,7 @@ function PN_API(setup) {
             x = x[path[p]];
             pathNodes.push(x);
         }
-
-        if (update_at == null) update_at = pathNodes.length + 1;
-        
+        console.log(JSON.stringify(update));
         if (update.action == 'update') {
             if (path_length - depth > 0) 
                 x[last] = update.value;
@@ -494,16 +489,13 @@ function PN_API(setup) {
 
             if (path_length - depth > 0) {
                 delete x[last]
-                update_at = pathNodes.length;
                 for (var i = pathNodes.length - 1; i >= 1; i--) {
                     if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
                         delete pathNodes[i-1][path[i]]
-                        update_at = i;
                     }
                 }
                 if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
                     delete o.data[path[0]];
-                    update_at = 0;
                 }
             } else {
                 o.data = {}
@@ -511,12 +503,10 @@ function PN_API(setup) {
         }
         o.pn_ds_meta.last_update = update.timetoken;
 
-        var x = update.location.split("pn_ds_")[1].split(".");
-
-        return x.slice(0, 1 + depth + update_at).join('.');   
+        return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
-        //console.log(JSON.stringify(updates));
+        console.log('508 : ' + JSON.stringify(updates));
         var update = updates[trans_id];
         var update_at;
         if (update && update.complete == true) {
@@ -530,7 +520,7 @@ function PN_API(setup) {
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
-            //console.log(JSON.stringify(actions_list));
+            console.log('522 : ' + JSON.stringify(actions_list));
             callback(actions_list);
             delete update;
         }
@@ -542,12 +532,15 @@ function PN_API(setup) {
         }
     }
 
+    /*
+        Get to be used in Data sync
+    */
     function get(args, callback) {
         var callback         = args['callback'] || callback
         ,   err              = args['error']    || function(){}
         ,   object_id        = args['object_id']
         ,   path             = args['path']
-        ,   start_at         = args['start_at']
+        ,   next_page        = args['next_page']
         ,   obj_at           = args['obj_at']
         ,   page_max_bytes   = args['page_max_bytes']
         ,   jsonp            = jsonp_cb()
@@ -570,8 +563,8 @@ function PN_API(setup) {
 
         if (jsonp != '0') { data['callback'] = jsonp; }
 
-        if (start_at) { data['start_at'] = start_at; }
-        if (obj_at)   { data['obj_at']   = obj_at; }
+        //if (start_at) { data['start_at'] = start_at; }
+        //if (obj_at)   { data['obj_at']   = obj_at; }
         if (page_max_bytes)   { data['page_max_bytes']   = page_max_bytes; }
 
         xdr({
@@ -587,16 +580,30 @@ function PN_API(setup) {
         });
     }
 
+    /*
+        This method does merge at one level
+    */
     function mergeAtOneLevel(a, b) {
         if ( a == null ) {
             return b;
         }
+        console.log('A : ' + JSON.stringify(a));
+        console.log('B : ' + JSON.stringify(b));
         if (a && b) {
             for (var attrname in b) {
                 if (!a[attrname]) {
-                    a[attrname] = b[attrname];
+                    console.log(JSON.stringify(b[attrname]));
+                    if (b[attrname]['pn_val']) {
+                        a[attrname] = b[attrname]['pn_val'];
+                    } else {
+                        a[attrname] = b[attrname];
+                    }
                 } else {
-                    a[attrname] = mergeAtOneLevel(a[attrname], b[attrname]);
+                    if (b[attrname]['pn_val']) {
+                        a[attrname] = b[attrname]['pn_val'];
+                    } else {
+                        a[attrname] = mergeAtOneLevel(a[attrname], b[attrname]);
+                    }
                 }
             }
         }
@@ -721,25 +728,36 @@ function PN_API(setup) {
                 depth = split_array['length'];
             }
 
+            /* 
+                subscribe to 3 channels . for ex. if obj id is 'ab'
+                a. normal channel       pn_ds_ab
+                b. wildcard channel     pn_ds_ab.*
+                c. transaction channel  pn_dstr_ab
+            */
             SELF['subscribe']({
                 'channel'     :   'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
                 'connect'     : function(r, timetoken) {
 
+                    // if message received on wild card channel
+                    // this is just to take care of 3 invocations of connect
                     if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
-                        function read(start_at, callback, error) {
+
+                        // read initial copy of the data structure
+                        function read(next_page, callback, error) {
                             get({
                                 'object_id' : object_id,
                                 'path'      : path,
                                 'timetoken' : timetoken,
-                                'start_at'  : start_at,
+                                'next_page'  : next_page,
                                 'callback'  : function(r) {
                                     if (typeof r['payload'] === 'object') {
                                         a['data'] = mergeAtOneLevel(a['data'], r['payload']);
                                     } else {
                                         a['data'] = r['payload'];
                                     }
+                                    // till next_page is null in response keep reading recursively
                                     if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
                                         a['pn_ds_meta']['stale'] = false;
                                         synced = true;
@@ -760,19 +778,19 @@ function PN_API(setup) {
                 },
                 'callback'    : function(r) {
 
-                    if (r['action']) {
+                    if (r['action']) { // if action, store it in list with transaction id as key
                         if (!updates[r['trans_id']])
                             updates[r['trans_id']] = {'complete' : false, 'list' : []}
                         updates[r['trans_id']]['list']['push'](r);
 
-                    } else if (r['status']) {
+                    } else if (r['status']) { // if transaction complete , apply the updates
                         if (r['status'] == 'complete' && updates[r['trans_id']]) {
                             updates[r['trans_id']]['complete'] = true;
                             if (synced) apply_updates(a, updates, callback, r['trans_id'], depth);
                         }
                     }
                 },
-                'error'       : function(r) {
+                'error'       : function(r) { // set state to stale
                     a['pn_ds_meta']['stale'] = true;
                     err({'message' : r['message']});
                 }
@@ -955,14 +973,11 @@ function PN_API(setup) {
                 'callback'   : function(r) {
                     var update_at = null;
                     var locations = [];
-                    //console.log(JSON.stringify(r));
+                    console.log('947 : ' + JSON.stringify(r));
                     for (t in r) {
                         locations.push(r[t]['location']);
                         if (update_at == null) {
-                            update_at = r[t]['update_at'];
-                        }
-                        else if (r[t]['update_at'].length < update_at.length) {
-                            update_at = r[t]['update_at'];
+                            update_at = r[t]['updateAt'];
                         }
                         
                     }
@@ -979,10 +994,17 @@ function PN_API(setup) {
                                'location' : locations,
                                'update_at' : update_at
                             };
-                            if (r[1] && r[1]['action'] == 'update') {
+
+                            remove && remove(cb_data);
+                        }
+                        else if (r[0]['action'] === 'delete-set') {
+                            var cb_data = {
+                               'location' : locations,
+                               'update_at' : update_at
+                            };
+                            if (r[1] && r[1]['action'] == 'update-set') {
                                 set && set(cb_data);
-                            } else
-                                remove && remove(cb_data);
+                            }
                         }
                     }
                 },
@@ -2013,9 +2035,9 @@ function xdr( setup ) {
             clearTimeout(timer);
 
             if (request) {
-                request.on('error', function(){});
-                request.on('data', function(){});
-                request.on('end', function(){});
+                request.on('error', function(r){console.log(JSON.stringify(r))});
+                request.on('data', function(r){console.log(JSON.stringify(r))});
+                request.on('end', function(r){console.log(JSON.stringify(r))});
                 request.abort && request.abort();
                 request = null;
             }
@@ -2055,8 +2077,8 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(r){ done(1, r || body || { "error" : "Network Connection Error"})});
+            response.on( 'abort', function(r){ done(1, r || body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );
