@@ -35,7 +35,11 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
-,   keepAliveAgent      = new (keepAliveIsEmbedded() ? http.Agent : require('agentkeepalive'))({keepAlive: true, keepAliveMsecs: 300000})
+,   keepAliveAgent      = new (keepAliveIsEmbedded() ? http.Agent : require('agentkeepalive'))({
+                            keepAlive: true,
+                            keepAliveMsecs: 300000,
+                            maxSockets: 5
+                          })
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
