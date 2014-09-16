@@ -632,7 +632,7 @@ function PN_API(setup) {
 
             namespace && url.push('namespace') && url.push(encode(namespace));
 
-            url.push('channel-registry');
+            url.push('channel-group');
 
             if (channel_group && channel_group !== '*') {
                 url.push(channel_group);
@@ -700,7 +700,7 @@ function PN_API(setup) {
             params['auth']        = auth_key;
 
             if (channel_group) {
-                params['channel-registry-id'] = channel_group;
+                params['channel-group'] = channel_group;
                 if (!channel) {
                     channel = ','; 
                 }
@@ -1147,7 +1147,7 @@ function PN_API(setup) {
                 var data = _get_url_params({ 'uuid' : UUID, 'auth' : auth_key });
 
                 if (channel_groups) {
-                    data['channel-registry-id'] = channel_groups;
+                    data['channel-group'] = channel_groups;
                 }
 
 
@@ -1312,7 +1312,7 @@ function PN_API(setup) {
             if (jsonp != '0') { data['callback'] = jsonp; }
 
             if (channel_group) {
-                data['channel-registry-id'] = channel_group;
+                data['channel-group'] = channel_group;
                 !channel && url.push('channel') && url.push(','); 
             }
 
@@ -1395,7 +1395,7 @@ function PN_API(setup) {
                 && CHANNEL_GROUPS[channel_group].subscribed
                 ) {
                 if (state) STATE[channel_group] = state;
-                data['channel-registry-id'] = channel_group;
+                data['channel-group'] = channel_group;
             }
 
             data['state'] = JSON.stringify(state);
@@ -1473,7 +1473,7 @@ function PN_API(setup) {
             }
             if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
             if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
-                data['channel-registry-id'] = channel_group;
+                data['channel-group'] = channel_group;
             }
             if (jsonp != '0') { data['callback'] = jsonp; }
             if (ttl || ttl === 0) data['ttl'] = ttl;
@@ -1542,7 +1542,7 @@ function PN_API(setup) {
             if (jsonp != '0') { data['callback'] = jsonp; }
             if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
             if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
-                data['channel-registry-id'] = channel_group;
+                data['channel-group'] = channel_group;
             }
             if (auth_key) data['auth']    = auth_key;
 
