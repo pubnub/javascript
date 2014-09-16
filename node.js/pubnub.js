@@ -1369,27 +1369,32 @@ function PN_API(setup) {
         'updater'       : updater
     };
 
+    var _poll_timer = null;
     function _poll_online() {
         _is_online() || _reset_offline( 1, {
             "error" : "Offline. Please check your network settings. "
         });
-        timeout( _poll_online, SECOND );
+        _poll_timer = timeout( _poll_online, SECOND );
     }
 
+    var _poll_timer2 = null;
     function _poll_online2() {
         SELF['time'](function(success){
             detect_time_detla( function(){}, success );
             success || _reset_offline( 1, {
                 "error" : "Heartbeat failed to connect to Pubnub Servers." +
                     "Please check your network settings."
-                });
-            timeout( _poll_online2, KEEPALIVE );
+            });
+            _poll_timer2 = timeout( _poll_online2, KEEPALIVE );
         });
     }
 
     function _reset_offline(err, msg) {
         SUB_RECEIVER && SUB_RECEIVER(err, msg);
         SUB_RECEIVER = null;
+
+        clearTimeout(_poll_timer);
+        clearTimeout(_poll_timer2);
     }
 
     if (!UUID) UUID = SELF['uuid']();
