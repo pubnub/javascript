@@ -28,7 +28,9 @@
     "real-time",
     "messaging"
   ],
-  "dependencies" : { },
+  "dependencies" : {
+    "agentkeepalive": "~0.2"
+  },
   "noAnalyze": false,
   "devDependencies": {},
   "bundleDependencies": [],
