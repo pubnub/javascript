@@ -1,0 +1,142 @@
+.footer {
+    border-top: 1px solid #eee;
+    margin-top: 40px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+.jumbotron {
+    text-shadow: 2px 2px 1px #fff;
+    text-align: center;
+    background: radial-gradient(rgba(217,237,247,.9) 15%, transparent 16%) 0 0;
+    background-color: rgba(217,237,247,0.5);
+    background-size: 16px 16px;
+}
+.jumbotron .btn {
+    text-shadow: 0px 0px 0px transparent;
+    font-size: 21px;
+    padding: 14px 24px;
+}
+.featurebg {
+    color: #dfdfee;
+    font-weight: 200;
+    text-shadow: 2px 2px 1px rgba(0,0,0,0.3);
+    background: radial-gradient(rgba(66,139,202,.5) 15%, transparent 16%) 0 0;
+    background-color: rgba(66,139,202,0.8);
+    background-size: 16px 16px;
+    border-top: 28px solid rgba(255,255,255,0.1);
+    border-bottom: 28px solid rgba(255,255,255,0.1);
+}
+.featurebg h2 {
+    color: #efefee;
+    font-weight: 200;
+}
+.featurebg a {
+    color: #b23858;
+    text-shadow: 0px 0px 2px #fff;
+    font-weight: 500;
+}
+.featurebg2 {
+    color: #dfdfee;
+    font-weight: 200;
+    text-shadow: 2px 2px 1px rgba(0,0,0,0.3);
+    background: radial-gradient(rgba(66,19,202,.5) 15%, transparent 16%) 0 0;
+    background-color: rgba(66,19,202,0.8);
+    background-size: 16px 16px;
+    border-top: 28px solid rgba(255,255,255,0.1);
+    border-bottom: 28px solid rgba(255,255,255,0.1);
+}
+.featurebg2-padding {
+    margin: 60px 0px;
+    padding: 60px 0px;
+}
+.publish-bottom {
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+small {
+    color: #888885;
+}
+
+h2 {
+    font-weight: 200;
+}
+
+#push-edit-panel {
+    display: none;
+}
+
+.lead-icon-heading-right,
+.lead-icon-heading {
+    margin: 0;
+    margin-top: 100px;
+    font-size: 300px;
+    line-height: 0px;
+}
+.lead-icon-heading-right {
+    text-align: right;
+}
+
+#embed-code {
+    display : none;
+}
+
+/* Featurettes
+------------------------- */
+
+.featurette-divider {
+    margin: 80px 0; /* Space out the Bootstrap <hr> more */
+}
+
+/* Thin out the marketing headings */
+.featurette-heading {
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+/* RESPONSIVE CSS
+-------------------------------------------------- */
+
+@media (min-width: 768px) {
+
+  /* Remove the edge padding needed for mobile */
+  .marketing {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Navbar positioning foo */
+  .navbar-wrapper {
+    margin-top: 20px;
+  }
+  .navbar-wrapper .container {
+    padding-left:  15px;
+    padding-right: 15px;
+  }
+  .navbar-wrapper .navbar {
+    padding-left:  0;
+    padding-right: 0;
+  }
+
+  /* The navbar becomes detached from the top, so we round the corners */
+  .navbar-wrapper .navbar {
+    border-radius: 4px;
+  }
+
+  /* Bump up size of carousel content */
+  .carousel-caption p {
+    margin-bottom: 20px;
+    font-size: 21px;
+    line-height: 1.4;
+  }
+
+  .featurette-heading {
+    font-size: 50px;
+  }
+
+}
+
+@media (min-width: 992px) {
+  .featurette-heading {
+    margin-top: 120px;
+  }
+}

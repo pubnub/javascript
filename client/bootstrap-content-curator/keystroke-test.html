@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>PubNub DataSync Keystroke Test</title>
+    <link href="dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="dist/css/styles.css" rel="stylesheet">
+</head><body>
+
+<div class="container">
+    <h1>PubNub DataSync Keystroke Test</h1>
+    <textarea id="content"></textarea>
+    <p>Output Details:</p>
+    <pre id="logs"></pre>
+</div>
+
+<script src="https://pubnub.a.ssl.fastly.net/pubnub.min.js"></script>
+<script src="https://pubnub.a.ssl.fastly.net/pubnub-crypto.min.js"></script>
+<script src="dist/js/pubnub-sync.js"></script>
+<script>(function(){
+    var ITEM_ID  = 'keystroke_room_2';
+    var settings = {
+        publish_key   : 'pub-5ad63a7a-0c72-4b86-978d-960dcdb971e1'
+    ,   subscribe_key : 'sub-459a5e4a-9de6-11e0-982f-efe715a9b6b8'
+    ,   secret_key    : 'sec-fa847381-dcdb-4bcf-a8aa-7b812c390441'
+    ,   cipher_key    : 'ODgwNDsmIzczMDustKOiJiM4NzM0O7aqSDNh2mig'
+    ,   ssl           : true
+    };
+
+    // CONNECT TO DATABASE
+    var db = PUBNUB.sync( 'db_name', settings );
+
+    // BIND KEYUP ON TEXTAREA
+    var textarea = PUBNUB.$('content');
+    PUBNUB.bind( 'keyup', textarea, textUpdated );
+
+    // db.on( 'update', function( item ) { } )
+    db.on.change( function( updatedItem ) {
+        log( 'item updated', JSON.stringify( updatedItem ) );
+
+        // Had to work this out myself. Nothing in the bootstrap docs shows this.
+        var data = updatedItem.data;
+        log( 'item data', JSON.stringify( data ) );
+
+        if( data && data.content ) {
+            textarea.value = data.content;
+        }
+    } );
+
+    var item = null;
+    // As below, you don't seem to get real item objects here, just object literals
+    // maybe db.read has to be used?
+    var items = db.find( { id: ITEM_ID } );
+    if( items.length === 0 ) {
+        log( 'item not found. Creating new item' );
+
+        // it seems you can override the GUID ID creation here
+        item = db.create( { id : ITEM_ID }, ITEM_ID );
+    }
+    else {
+        item = items[ 0 ];
+        log( 'item found', JSON.stringify( item ) );
+        // This item isn't a real item object with the allowed helper methods
+        // e.g. update
+    }
+    log( 'item.update', typeof item.update ); // Only exists if item is via db.create
+
+    if( item.content ) {
+        textarea.value = item.content;
+    }
+    // Took me a while to work out that item.id won't always be my ID;
+    // item object v object liternal problem.
+    log('item id:', item.id);
+
+    function textUpdated( ev ) {
+        var text = textarea.value;
+        log( text );
+
+        // can't always do this as I only get a real item
+        // if I've created it. Otherwise I just have an object literal
+        // item.update( { content: text } ); 
+
+        db.update( item.id, { content: text } );
+    }
+
+    function log( msg ) {
+        var args = Array.prototype.slice.call( arguments, 0 );
+        console.log.apply( console, args );
+        var el = document.createElement( 'div' );
+        el.appendChild( document.createTextNode( args.join( ' ' ) ) );
+        document.getElementById( 'logs' ).appendChild( el );
+    }
+
+})();</script>
+
+</body>
+</html>

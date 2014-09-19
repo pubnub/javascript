@@ -1,0 +1,80 @@
+<html>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+<script>
+var model = {};
+function recurse(current, path) {
+    for (key in current) {
+        if (current.hasOwnProperty(key)) {
+            if (typeof current[key]  === 'object') {
+                recurse(current[key], path);
+            } else {
+                console.log('line', key, current[key]);
+            }
+        }
+    }
+} 
+
+function update(path, data) {
+    var current = model;
+    var last = model;
+    var split = path.split('.');
+    for (var i = 0; i < split.length; i++) {
+        last = current;
+        current = current[split[i]];
+    }
+
+    var pathType = Object.prototype.toString.apply(current);
+    last[split[split.length - 1]] = data;
+}
+
+function test(path, data) {
+    model = _.cloneDeep(origModel);
+    update(path, data);
+}
+
+var origModel = {
+    player1 : {
+        first : 'dara',
+        last : 'kong',
+        weapons : {
+            left : 'pistol',
+            age : 10,
+            isnull : null
+        }
+    }
+};
+
+test('player1.weapons.left', 'change1');
+console.assert(model.player1.weapons.left === 'change1');
+console.log(model);
+
+test('player1.weapons.left', { sub : 'dub1' });
+console.assert(_.isEqual(model.player1.weapons.left, { sub : 'dub1' }));
+console.log(model);
+
+test('player1.weapons.mid', 'change2');
+console.assert(model.player1.weapons.mid === 'change2');
+console.log(model);
+
+test('player1.weapons.mid', { sub : 'dub2' });
+console.assert(_.isEqual(model.player1.weapons.mid, { sub : 'dub2' }));
+console.log(model);
+
+test('player1.weapons', { sub : 'dub2' });
+console.assert(_.isEqual(model.player1.weapons, { sub : 'dub2' }));
+console.log(model);
+
+/*
+string (exist) - intrinstic
+string (exist) - object
+string (not exist) - intrinsic
+string (not exist) - object
+object (exist) - intrinsic
+object (exist) - object
+object (not exist) - intrinsic
+object (not exist) - object
+ */
+
+//recurse(model, path);
+</script>
+</html>
