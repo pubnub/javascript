@@ -15,7 +15,7 @@ https://vimeo.com/57166260
 ### Init
 
 ```javascript
-Ti.include('pubnub.js');
+PUBNUB = require('pubnub.js');
 
 var pubnub = PUBNUB({
     publish_key       : 'demo',
