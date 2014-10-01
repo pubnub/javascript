@@ -1,6 +1,8 @@
-6-25-14 * 3.6.6 * 6f788e
-. Moving restore setting back to initializer from subscriber
-. Fixed stack overflow issue on IE 11
+
+7-8-14 * 3.6.7 * 1fa0b
+. GCM envelope support
+. APNS envelope support
+. PNMessage structure introduced for supporting OO GCM/APNS message sending
 
 6-16-14 * 3.6.5 * c9f52629bd06d4259f0e33617a9c988be033849f
 . fix for subscribing to presence only channel
