@@ -14,31 +14,31 @@ var pubnub = PUBNUB({
     auth_key	  : 'abcd'
 });
 
-var ds = pubnub.sync("dp1");
+var ds = pubnub.sync("dp3");
 
 ds.on.ready(function(){
 	console.log('READY');
-	console.log(JSON.stringify(ds.get(), null, 2));
+	console.log(JSON.stringify(ds.value(), null, 2));
 });
 
 
 // Data Events
 ds.on.update(function(params) { 
     console.log('UPDATE');
-	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.get(), null, 2));
+	console.log(JSON.stringify(params.value(), null, 2));
+	//console.log(JSON.stringify(ds.get(), null, 2));
 })
 
 ds.on.set(function(params){ 
     console.log('SET');
-	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.get(), null, 2));
+	//console.log(JSON.stringify(params));
+	console.log(JSON.stringify(params.value(), null, 2));
 })
 
 ds.on.remove(function(params){ 
     console.log('REMOVE');
-	console.log(JSON.stringify(params));
-	console.log(JSON.stringify(ds.get(), null, 2));
+	//console.log(JSON.stringify(params));
+	console.log(JSON.stringify(params.value(), null, 2));
 })
 
 ds.on.error(function(params){ 
@@ -50,3 +50,41 @@ ds.on.error(function(params){
 ds.on.network.connect(function(params)      { console.log(JSON.stringify(params)); })
 ds.on.network.disconnect(function(params)   { console.log(JSON.stringify(params)); })
 ds.on.network.reconnect(function(params)    { console.log(JSON.stringify(params)); })
+
+
+ds1 = ds.get('a').get('a');
+
+ds1.on.ready(function(){
+    console.log('READY');
+    console.log(JSON.stringify(ds1.value(), null, 2));
+});
+
+
+// Data Events
+ds1.on.update(function(params) { 
+    console.log('UPDATE 1');
+    console.log(JSON.stringify(params.value(), null, 2));
+    //console.log(JSON.stringify(ds.get(), null, 2));
+})
+
+ds1.on.set(function(params){ 
+    console.log('SET 1');
+    //console.log(JSON.stringify(params));
+    console.log(JSON.stringify(params.value(), null, 2));
+})
+
+ds1.on.remove(function(params){ 
+    console.log('REMOVE 1');
+    //console.log(JSON.stringify(params));
+    console.log(JSON.stringify(params.value(), null, 2));
+})
+
+ds1.on.error(function(params){ 
+    console.log('ERROR 1');
+    console.log(JSON.stringify(params.value()));
+})
+
+// Network Events
+ds1.on.network.connect(function(params)      { console.log(JSON.stringify(params)); })
+ds1.on.network.disconnect(function(params)   { console.log(JSON.stringify(params)); })
+ds1.on.network.reconnect(function(params)    { console.log(JSON.stringify(params)); })
