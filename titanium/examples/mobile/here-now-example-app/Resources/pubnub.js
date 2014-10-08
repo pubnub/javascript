@@ -592,13 +592,13 @@ function PN_API(setup) {
         },
 
 
-        'namespace' : function(args, callback) {
+        'channel_group_list_namespaces' : function(args, callback) {
             var url = ['namespace'];
             
             CR(args,callback,url);
         },
 
-        'namespace_remove' : function(args, callback) {
+        'channel_group_remove_namespace' : function(args, callback) {
             var namespace = args['namespace'];
 
             if (!namespace) return error("Missing Namespace");
@@ -610,7 +610,7 @@ function PN_API(setup) {
 
         'channel_group' : function(args, callback) {
             var ns_ch       = args['channel_group']
-            ,   channels    = args['channels']
+            ,   channels    = args['channels'] || args['channel']
             ,   cloak       = args['cloak']
             ,   namespace
             ,   channel_group
@@ -653,8 +653,40 @@ function PN_API(setup) {
             CR(args, callback, url, data);
         },
 
-        'channel_group_remove' : function(args, callback) {
+        'channel_group_list_groups' : function(args, callback) {
+            var namespace;
+
+            namespace = args['namespace'] || args['ns'] || args['channel_group'] || null;
+            if (namespace) {
+                args["channel_group"] = namespace + ":*";
+            }
+            SELF['channel_group'](args, callback);
+        },
+
+        'channel_group_list_channels' : function(args, callback) {
+            if (!args['channel_group']) return error('Missing Channel Group');
+            SELF['channel_group'](args, callback);
+        },
+
+        'channel_group_remove_channel' : function(args, callback) {
+            if (!args['channel_group']) return error('Missing Channel Group');
+            if (!args['channel'] && !args['channels'] ) return error('Missing Channel');
+
             args['mode'] = 'remove';
+            SELF['channel_group'](args,callback);
+        },
+
+        'channel_group_remove_group' : function(args, callback) {
+            if (!args['channel_group']) return error('Missing Channel Group');
+            if (args['channel']) return error('Use channel_group_remove_channel if you want to remove a channel from a group.');
+
+            args['mode'] = 'remove';
+            SELF['channel_group'](args,callback);
+        },
+
+        'channel_group_add_channel' : function(args, callback) {
+           if (!args['channel_group']) return error('Missing Channel Group');
+           if (!args['channel'] && !args['channels'] ) return error('Missing Channel');
             SELF['channel_group'](args,callback);
         },
 
@@ -1634,7 +1666,7 @@ function PN_API(setup) {
             var channel_groups  = generate_channel_groups_list(CHANNEL_GROUPS, true)['join'](',');
 
             if (!channels) channels = ',';
-            if (channel_groups) data['channel_registry-id'] = channel_groups;
+            if (channel_groups) data['channel-group'] = channel_groups;
 
             xdr({
                 callback : jsonp,

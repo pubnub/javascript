@@ -220,41 +220,41 @@ function pnUnsubscribe() {
     }
 }
 
-function pnGetChannelGroups() {
-    pubnub.channel_group_list_groups({
+function pnListChannels() {
+    pubnub.channel_group_list_channels({
         channel_group: channelGroup,
         callback: displayCallback,
         error: displayCallback
     });
 }
 
-function pnDeleteChannelGroups() {
+function pnListGroups() {
+    pubnub.channel_group_list_groups({
+        namespace: channelGroup,
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
+
+function pnRemoveGroup() {
     pubnub.channel_group_remove_group({
         callback: displayCallback,
         error: displayCallback,
         channel_group: channelGroup
-
     });
 }
 
-function pnGetChannelsForChannelGroup() {
-    pubnub.channel_group_list_channels({
-        callback: displayCallback,
-        error: displayCallback,
-        channel_group: channelGroup
-    });
-}
-
-function pnAddChannelToChannelGroup() {
+function pnAddChannel() {
     pubnub.channel_group_add_channel({
         callback: displayCallback,
         error: displayCallback,
-        channels: channel,
+        channel: channel,
         channel_group: channelGroup
     });
 }
 
-function pnRemoveChannelFromChannelGroup() {
+function pnRemoveChannel() {
     pubnub.channel_group_remove_channel({
         callback: displayCallback,
         error: displayCallback,
@@ -306,6 +306,21 @@ function pnGetState() {
             error: displayCallback
         });
     }
+}
+
+function pnListNamespaces() {
+    pubnub.channel_group_list_namespaces({
+        callback: displayCallback,
+        error: displayCallback
+    });
+}
+
+function pnRemoveNamespace() {
+    pubnub.channel_group_remove_namespace({
+        namespace: channelGroup,
+        callback: displayCallback,
+        error: displayCallback
+    });
 }
 
 function pnGrant() {
@@ -438,24 +453,24 @@ $("#history").click(function () {
     pnHistory();
 });
 
-$("#removeChannelFromChannelGroup").click(function () {
-    pnRemoveChannelFromChannelGroup();
+$("#removeChannel").click(function () {
+    pnRemoveChannel();
 });
 
-$("#addChannelToChannelGroup").click(function () {
-    pnAddChannelToChannelGroup();
+$("#addChannel").click(function () {
+    pnAddChannel();
 });
 
-$("#getChannelsForChannelGroup").click(function () {
-    pnGetChannelsForChannelGroup();
+$("#listGroups").click(function () {
+    pnListGroups();
 });
 
-$("#removeChannelGroup").click(function () {
-    pnDeleteChannelGroups();
+$("#listChannels").click(function () {
+    pnListChannels();
 });
 
-$("#getAllChannelGroups").click(function () {
-    pnGetChannelGroups();
+$("#removeGroup").click(function () {
+    pnRemoveGroup();
 });
 
 $("#publish").click(function () {
@@ -472,6 +487,14 @@ $("#subscribe").click(function () {
 
 $("#unsubscribe").click(function () {
     pnUnsubscribe();
+});
+
+$("#listNamespaces").click(function () {
+    pnListNamespaces();
+});
+
+$("#removeNamespace").click(function () {
+    pnRemoveNamespace();
 });
 
 $("#grant").click(function () {

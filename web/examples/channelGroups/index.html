@@ -15,7 +15,7 @@
 <body>
 <script src=http://code.jquery.com/jquery-1.11.0.min.js></script>
 
-<script src=../../pubnub.min.js></script>
+<script src=../../pubnub.js></script>
 
 <div id="controls" class="container">
 
@@ -34,13 +34,13 @@
     <input id="uuid" type="text" name="uuid" value="myUUID">
     <br>
     <input type="checkbox" id="channelGroupEnable" name="channelGroupEnable" checked>
-    ChannelGroup
-    <input type="text" id="channelGroup" name="channelGroup" value="gec_regid">
+    ChannelGroup / Namespace
+    <input type="text" id="channelGroup" name="channelGroup" value="myCG">
 
     <br>
     <input type="checkbox" id="channelEnable" name="channelEnable" checked>
     Channel
-    <input type="text" id="channel" name="channel" value="bot">
+    <input type="text" id="channel" name="channel" value="myCh">
     <br><br>
     Using Credentials (AuthToken) to issue the request
     <br>
@@ -53,14 +53,17 @@
     <h3>channelGroups</h3>
 
     <div class="indent20">
-        <input id="getAllChannelGroups" type="button" name="executeOperation" value="get all channelGroups">
-        <input type="button" id="removeChannelGroup" name="executeOperation" value="delete channelGroup">
+        <input id="listNamespaces" type="button" name="executeOperation" value="list_namespaces()">
+        <input id="removeNamespace" type="button" name="executeOperation" value="remove_namespace(namespace)">
         <br>
-        <input id="getChannelsForChannelGroup" type="button" name="executeOperation"
-               value="get all channels in channelGroup">
-        <input id="addChannelToChannelGroup" type="button" name="executeOperation" value="add channel to channelGroup">
-        <input id="removeChannelFromChannelGroup" type="button" name="executeOperation"
-               value="remove channel from channelGroup">
+
+        <input id="listGroups"  type="button" name="executeOperation" value="list_groups([namespace])">
+        <input id="removeGroup" type="button"  name="executeOperation" value="remove_group(group)">
+        <br>
+
+        <input id="listChannels" type="button" name="executeOperation"   value="list_channels(ChannelGroup) ">
+        <input id="addChannel" type="button" name="executeOperation"     value="add_channel(channel,channel_group)">
+        <input id="removeChannel" type="button" name="executeOperation"  value="remove_channel(channel,channel_group)">
         <br>
         <input id="setCloak" type="button" name="executeOperation" value="Set Cloak">
         <input id="unsetCloak" type="button" name="executeOperation" value="Unset Cloak">
