@@ -221,7 +221,7 @@ function pnUnsubscribe() {
 }
 
 function pnGetChannelGroups() {
-    pubnub.channel_group({
+    pubnub.channel_group_list_groups({
         channel_group: channelGroup,
         callback: displayCallback,
         error: displayCallback
@@ -229,7 +229,7 @@ function pnGetChannelGroups() {
 }
 
 function pnDeleteChannelGroups() {
-    pubnub.channel_group_remove({
+    pubnub.channel_group_remove_group({
         callback: displayCallback,
         error: displayCallback,
         channel_group: channelGroup
@@ -238,7 +238,7 @@ function pnDeleteChannelGroups() {
 }
 
 function pnGetChannelsForChannelGroup() {
-    pubnub.channel_group({
+    pubnub.channel_group_list_channels({
         callback: displayCallback,
         error: displayCallback,
         channel_group: channelGroup
@@ -246,7 +246,7 @@ function pnGetChannelsForChannelGroup() {
 }
 
 function pnAddChannelToChannelGroup() {
-    pubnub.channel_group({
+    pubnub.channel_group_add_channel({
         callback: displayCallback,
         error: displayCallback,
         channels: channel,
@@ -255,7 +255,7 @@ function pnAddChannelToChannelGroup() {
 }
 
 function pnRemoveChannelFromChannelGroup() {
-    pubnub.channel_group_remove({
+    pubnub.channel_group_remove_channel({
         callback: displayCallback,
         error: displayCallback,
         channels: channel,

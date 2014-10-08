@@ -667,6 +667,29 @@ function PN_API(setup) {
             SELF['channel_group'](args,callback);
         },
 
+        'channel_group_list_groups' : function(args, callback) {
+            SELF['channel_group'](args, callback);
+        },
+
+        'channel_group_list_channels' : function(args, callback) {
+            SELF['channel_group'](args, callback);
+        },
+        'channel_group_list_namespaces' : function(args, callback) {
+            SELF['channel_group'](args, callback);
+        },
+        'channel_group_remove_namespace' : function(args, callback) {
+            SELF['channel_group'](args, callback);
+        },
+        'channel_group_add_channel' : function(args, callback) {
+            SELF['channel_group'](args, callback);
+        },
+        'channel_group_remove_channel' : function(args, callback) {
+            SELF['channel_group_remove'](args, callback);
+        },
+        'channel_group_remove_group' : function(args, callback) {
+            SELF['channel_group_remove'](args, callback);
+        },
+
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',
