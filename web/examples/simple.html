@@ -9,9 +9,9 @@
         subscribe_key   : 'demo'
     });
     pubnub.subscribe({
-        callback : function(r){console.log(r);},
-        error : function(r){ console.log(r);},
-        channel : "abcd"
+        callback : function(r){ console.log(JSON.stringify(r)) ;},
+        error : function(r){ console.log(JSON.stringify(r)) ;},
+        channel : "z"
     })
 
 
