@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>DataSync</title>
+    <link href="dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="dist/css/styles.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="wrap"><div class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <a
+                class="navbar-brand"
+                target="pubnubwebsite"
+                href="http://www.pubnub.com/"
+            >DataSync by PubNub</a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+            <li><a href="#get-started">
+                Get Started
+            </a></li>
+            <li><a href="#datasync-docs">
+                DataSync Docs
+                &nbsp;<span class="glyphicon glyphicon-book"></span>
+            </a></li>
+            <li><a href="https://github.com/pubnub/bootstrap-content-curator">
+                View on GitHub
+            </a></li>
+            <li><a
+            target="bugreport"
+            href="https://github.com/pubnub/bootstrap-content-curator/issues/new"
+            >
+                Bug Report
+                &nbsp;<span class="glyphicon glyphicon-user"></span>
+            </a>
+            </li>
+        </ul>
+    </div>
+    </div></div>
+
+    <div class="jumbotron">
+        <h1>DataSync</h1>
+        <div class="container">
+            <p class="lead">
+                A real-time feed management system that enables the rapid
+                broadcasting of headlines 
+                <br>
+                for applications in
+                <strong>social news</strong>,
+                TV,
+                music,
+                sports,
+                commerce and
+                finance.
+            </p>
+        </div>
+    </div>
+
+    <!--
+    <div class="container">
+        <p> SOCIAL WIDGETS </p>
+        <p> SOCIAL WIDGETS </p>
+    </div>
+    -->
+
+
+    <div id="embed-code" class="container">
+        <div class="row">
+            <div class="col-lg-12">
+<pre>
+&lt;!-- EMBED CODE FOR VIEWER --&gt;
+&lt;script src="http://cdn.pubnub.com/pubnub.min.js"&gt;&lt;/script&gt;
+&lt;script src="http://cdn.pubnub.com/pubnub-crypto.min.js"&gt;&lt;/script&gt;
+&lt;script src="http://pubnub.github.io/bootstrap-content-curator/dist/js/pubnub-sync.js"&gt;&lt;/script&gt;
+&lt;script&gt;(function(){
+    var settings = {
+        subscribe_key : 'sub-459a5e4a-9de6-11e0-982f-efe715a9b6b8'
+    ,   cipher_key    : 'ODgwNDsmIzczMDustKOiJiM4NzM0O7aqSDNh2mig'
+    ,   ssl           : true
+    };
+
+    var db = PUBNUB.sync( 'db-public', settings );
+
+    db.all(function(item){       /* -- render all items -- */ });
+    db.on.create(function(item){ /* -- render new item  -- */ });
+    db.on.update(function(item){ /* -- update item      -- */ });
+    db.on.delete(function(item){ /* -- remove item      -- */ });
+})();&lt;/script&gt;
+</pre>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="get-started"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <h2>
+                    1. Reporter
+                    &nbsp;<span class="glyphicon glyphicon-pencil"></span>
+                    <!--
+                    &nbsp;<button
+                        type="button"
+                        class="btn btn-default btn-sm"
+                    >
+                        DB Settings
+                        &nbsp;<span
+                        class="glyphicon glyphicon-cog"></span>
+                    </button>
+                    -->
+                </h2>
+                <div class="panel panel-primary"></div>
+
+                <!-- UI INPUT -->
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button
+                            id="push-submit"
+                            class="btn btn-default"
+                            type="button"
+                        >Submit</button>
+                    </span>
+                    <input 
+                        id="push-text-area"
+                        type="text"
+                        class="form-control"
+                    >
+                </div>
+
+                <!-- UI INPUT DESCRIPTION -->
+                <p><br><small>
+                    Write a text headline then press
+                    <strong>"Submit"</strong>
+                    or press <strong>Enter</strong>.
+                    This will send your headlines
+                    to the editor for
+                    <strong>Publishing and Editing</strong>.
+                </small></p>
+
+            <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    How DataSync Works in the Source Code
+                </h3>
+            </div>
+            <div class="panel-body">
+                <p><small>
+                    By pressing <strong>submit</strong>, you've just done
+                    something very powerful.
+                    Many synchronous steps execute,
+                    placing an amazing new DataSync capability
+                    at your fingertips faster than ever before.
+                    When you press the <strong>submit</strong> button,
+                    the code will execute as follows:
+                </small></p><p><small>
+                    <code>var item = db.create({ headline : "..." })</code>
+                </small></p><p><small>
+                    and therefore write a new db row entry
+                    onto the <strong>Editor Database</strong>.
+                    Next the editor will update the entry as needed:
+                </small></p><p><small>
+                    <code>item.update({ headline : "..." })</code>
+                </small></p><p><small>
+                    Both <code>db.create()</code> and <code>item.update()</code>
+                    will save the changes in <strong>memory</strong>,
+                    on your <strong>local disk</strong> and to the
+                    <strong>cloud</strong> all at the same time.
+                    Once you re-connect to the database, any untransmitted changes
+                    are sent to the device to <strong>sync data</strong>
+                    in real-time.
+                </small></p><p><small>
+                    Finally to publish simply write to a second DB,
+                    a public facing DB, that can be used for read-only updates.
+                </small></p><p><small>
+                    <code>db2.create({ headline : item.headline })</code>
+                </small></p><p><small>
+                    That's it for now with the intro tutorial.
+                    To learn more continue down this document
+                    for further reading.
+                </small></p>
+            </div></div>
+
+            </div>
+            <div class="col-lg-4">
+                <h2>
+                    2. Editor
+                    &nbsp;
+                    <span class="glyphicon glyphicon-cloud-upload"></span>
+                </h2>
+                <div class="panel panel-primary"></div>
+                <div id="push-edit-panel" class="panel panel-primary"></div>
+                <div id="new-headline-area"><div></div></div>
+            </div>
+            <div class="col-lg-4">
+                <h2>
+                    3. Viewer
+                    &nbsp;<span class="glyphicon glyphicon-eye-open"></span>
+
+                    &nbsp;<button
+                        id="embed-code-button"
+                        type="button"
+                        class="btn btn-default btn-sm"
+                    >
+                        Embed Code Viewer
+                        &nbsp;<span
+                        class="glyphicon glyphicon-eye-open"></span>
+                    </button>
+                </h2>
+                <div class="panel panel-primary"></div>
+                <div id="live-posts"><div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="featurebg"><div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <h2>
+                    <span class="glyphicon glyphicon-cloud-download"></span>
+                    &nbsp;DataSync
+                </h2>
+                <p>
+                    <strong>Dropbox for your apps data</strong>
+                    powered by <a href="http://www.pubnub.com/">PubNub</a>
+                    the worlds largest global Real-time Network.
+                    All changes are pushed directly to the app
+                    via an always-on Socket Connection
+                    in real-time as changes are made.
+                </p><p>
+                    <strong>DataSync</strong>
+                    is the ability to have apps always be
+                    at the same-state regardless of point-of-load.
+                    Upon reconnect, all data is re-synced with
+                    the client app.
+                    Your data is replicated to all data centers
+                    and optionally encrypted.
+                </p>
+            </div>
+            <div class="col-lg-4">
+                <h2>
+                    <span class="glyphicon glyphicon-globe"></span>
+                    &nbsp;Real-time Network
+                </h2>
+                <p>
+                    <strong>Highly Available</strong>
+                    Global Real-time Network
+                    is mandatory for distributed consumers
+                    in order to provide a fast and reliable
+                    user experience.
+                    You can only get that fast "Snappy" feel
+                    with a Global Real-time Network.
+                </p><p>
+                    Every event is replicated more than 500 times;
+                    <strong>extreme global reliability</strong>
+                    via a Real-time Network.
+                </p>
+            </div>
+            <div class="col-lg-4">
+                <h2>
+                    <span class="glyphicon glyphicon-lock"></span>
+                    &nbsp;Highly Secure
+                </h2>
+                <p>
+                    Security is a complex and widely growing requirement
+                    especially for Real-time Mobile and Web Messaging
+                    Systems like PubNub.
+                    <strong>SSL</strong> TLS Sockets,
+                    <strong>SHA256 Message Signing</strong>,
+                    <strong>PAM ACL Access Management</strong> and
+                    <strong>AES256 Symmetric Crypto</strong>
+                    are industry standard methods for providing
+                    High Levels of security for your application.
+                </p><p>
+                    PubNub provides a default baseline level of security,
+                    with optional <strong>High Security</strong>
+                    with industry standard solutions for Signaling
+                    and DataSync applications.
+                </p>
+            </div>
+        </div>
+    </div></div>
+
+
+    <div class="container">
+      <div class="row featurette">
+        <div class="col-md-7">
+          <h2 class="featurette-heading">
+            Real-time DataSync, for real.
+            <span class="text-muted">See for yourself.</span>
+          </h2>
+          <p class="lead">
+              Guaranteed DataSync to Mobile and Web Clients
+              Dramatically simplifies app development.
+              <strong>Schema-less NoSQL</strong>
+              offers easy data entry
+              without hindering productivity.
+          </p>
+        </div>
+        <div class="col-md-5">
+          <p class="lead-icon-heading-right">
+            <span class="glyphicon glyphicon-cloud-download"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row featurette">
+        <div class="col-md-5">
+          <p class="lead-icon-heading">
+            <span class="glyphicon glyphicon-dashboard"></span>
+          </p>
+        </div>
+        <div class="col-md-7">
+          <h2 class="featurette-heading">
+            Fastest Global Sync Delivery Speed.
+            <span class="text-muted">It'll blow your socks off.</span>
+          </h2>
+          <p class="lead">
+            <strong>Up to 15ms Sync Delivery Speeds.</strong>
+            PubNub announces JavaScript DataSync SDK.
+            Many customers are using
+            <strong>DataSync</strong> today
+            on the PubNub Real-time Network.
+            We made it even easier
+            by offering an SDK enabling
+            true DataSync powered by the worlds largest
+            Global Real-time Network.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row featurette">
+        <div class="col-md-7">
+          <h2 class="featurette-heading">
+            Auto Catch-up after Dropped Connection.
+            <span class="text-muted">Zero Loss.</span>
+          </h2>
+          <p class="lead">
+            High speed reconnection times allow recovery
+            of lost data in a snap.
+            After a successful reconnect all pending
+            read/write events are sync'ed.
+          </p>
+        </div>
+        <div class="col-md-5">
+          <p class="lead-icon-heading-right">
+            <span class="glyphicon glyphicon-signal"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTATION PART 1 -->
+    <div id="datasync-docs"></div>
+    <div class="featurebg2 featurebg2-padding"><div class="container">
+        <h2>Documentation for Real-time DataSync SDK</h2>
+            The following is documentation for a Real-time Network
+            DataSync System built for optimal performance on mobile
+            connections and unreliable environments.
+            Because of the full resiliency and high availability of
+            the network, you can always have certainty your data is sync'ed.
+            This SDK docs will describe API usage and considerations
+            when invoking each method provided.
+    </div></div>
+    <div class="container">
+
+        <!-- INIT (SYNC) -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-primary"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-signal"></span> &nbsp;
+                        Initiate DB Connection &nbsp;
+                        <code>PUBNUB.sync()</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+var settings = {
+    publish_key   : 'pub-5ad63a7a-0c72-4b86-978d-960dcdb971e1'
+,   subscribe_key : 'sub-459a5e4a-9de6-11e0-982f-efe715a9b6b8'
+,   secret_key    : 'sec-fa847381-dcdb-4bcf-a8aa-7b812c390441'
+,   cipher_key    : 'ODgwNDsmIzczMDustKOiJiM4NzM0O7aqSDNh2mig'
+,   ssl           : true
+};
+
+var db = PUBNUB.sync( 'db_name', settings );
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-signal"></span> &nbsp;
+                        DataSync starts with an always-on Socket Connection
+                    </h3></div>
+                    <div class="panel-body">
+                        <p>
+                            You'll need some API Keys to play with.
+                            Start by following these easy steps:
+                        </p>
+
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>Action to Take</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>1</td><td>
+                                    Signup For PubNub - 
+                                    <a href="https://admin.pubnub.com/">
+                                        Signup/Login to 
+                                        PubNub Admin Portal
+                                    </a>
+                                    <p><small>
+                                        Optionally Watch PubNub Basic Video 1 -
+                                        <a href="https://vimeo.com/78274848">
+                                            Registering for PubNub API Keys
+                                        </a>
+                                        <br>
+                                        The video also describes what
+                                        each key purpose.
+                                    </small></p>
+                                </td></tr>
+                                <tr><td>2</td><td>
+                                    Paste in your API Keys
+                                    and run <code>PUBNUB.sync(...)</code>
+                                </td></tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATE (WRITE) -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-success"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-plus"></span> &nbsp;
+                        Insert New Item &nbsp; 
+                        <code>db.create({})</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+var item = db.create({ headline : "my header text" });
+console.log(item.id);
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-plus"></span> &nbsp;
+                        Write Data Now you are connected to a DataSync DB
+                    </h3></div>
+                    <div class="panel-body">
+                        This code step is simple and allows you to
+                        create a new row in the Sync DB.
+                        This process will simultaneously write a new entry
+                        in three paths: 
+                        <strong>Local Memory</strong>,
+                        <strong>Local Disk</strong> and
+                        <strong>Cloud</strong>.
+                        The Cloud path will replicate each write event
+                        over 500 times for extreme reliability
+                        on a Global Real-time Network.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- READ (FIND) -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-info"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-play"></span> &nbsp;
+                        Read/Find Items in DB &nbsp;
+                        <code>db.read(id)</code>,
+                        <code>db.find({})</code> and
+                        <code>db.all()</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+// option 1 - get one item in DB
+var item = db.read(id);
+console.log(item);
+
+// option 2 - find items in DB
+var items = db.find({ headline : "match" });
+console.log(items);
+
+// option 3 - print all items in DB
+var items = db.all(function(item){
+    console.log(item);
+});
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-play"></span> &nbsp;
+                        Read Data from a DataSync Database
+                    </h3></div>
+                    <div class="panel-body">
+                        To read an item, you can specify the ID
+                        or search for rows that matchs a key entry
+                        in the row.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPDATE (CHANGE) -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-warning"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-pencil"></span> &nbsp;
+                        Update and Replace Items &nbsp;
+                        <code>item.update({})</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+// option 1
+item.update({ headline : "some updated value" });
+console.log(item);
+
+// option 2
+db.update( item.id, { headline : "some updated value" } );
+console.log(item);
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-pencil"></span> &nbsp;
+                        Make Changes to Rows or Append new Colomns
+                    </h3></div>
+                    <div class="panel-body">
+                        You have two options to make it easy to change
+                        items by executing an instance method on the
+                        item directly via <code>item.update({})</code> or
+                        if you know the <strong>ID</strong> of the item
+                        then you can execute <code>db.update( id, {} )</code>
+                        via the DataSync DB instance.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DELETE (REMOVE) -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-danger"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-minus"></span> &nbsp;
+                        Delete Items Forever &nbsp;
+                        <code>item.delete()</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+// option 1
+item.delete();
+
+// option 2
+db.delete(item.id);
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-minus"></span> &nbsp;
+                        Delete Items
+                    </h3></div>
+                    <div class="panel-body">
+                        You have two options to delete
+                        items by executing an instance method on the
+                        item directly via <code>item.delete()</code> with
+                        no arguments specified, or
+                        if you know the <strong>ID</strong> of the item
+                        then you can execute <code>db.delete(id)</code>
+                        via the DataSync DB instance.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DOCUMENTATION PART 2 -->
+    <div class="container">
+        <h2 id="datasync-docs">Listen for Real-time DataSync Events</h2>
+        <div class="well well-g">
+            You'll need a way to monitor and act upon changes that occur
+            remotely or on catch-up phases.
+            The best way to do this is by registering an event
+            listener on the events in which you find the most interesting
+            to monitor in real-time.
+        </div>
+
+        <!-- ON CREATE -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-success"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-plus"></span> &nbsp;
+                        OnCreate
+                        <code>db.on.create()</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+db.on.create(function(item){
+    console.log(item);
+});
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-plus"></span> &nbsp;
+                        Create Event
+                    </h3></div>
+                    <div class="panel-body">
+                        When a new inster event is triggered,
+                        whether locally or remotely,
+                        this callback will be fired for you.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ON UPDATE -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-warning"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-pencil"></span> &nbsp;
+                        OnUpdate
+                        <code>db.on.update()</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+db.on.update(function(item){
+    console.log(item);
+});
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-pencil"></span> &nbsp;
+                        Update Event
+                    </h3></div>
+                    <div class="panel-body">
+                        When an item changes,
+                        whether locally or remotely,
+                        you can catch the changes
+                        by supplying your callback for the db.on.update()
+                        callback register.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ON DELETE -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-danger"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-minus"></span> &nbsp;
+                        OnDelete
+                        <code>db.on.delete()</code>
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+db.on.delete(function(item){
+    console.log(item);
+});
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        <span class="glyphicon glyphicon-minus"></span> &nbsp;
+                        Delete Event
+                    </h3></div>
+                    <div class="panel-body">
+                        The Delete Event is fired and executes the
+                        callback function you provide.
+                        The <strong>item</strong> argument is the full
+                        item row that has been deleted.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+    <!-- DOCUMENTATION PART 3 -->
+    <div class="container">
+        <h2 id="datasync-docs">
+            Server-side APIs for Real-time DataSync
+        </h2>
+        <div class="well well-g">
+            Due to the difficulty to cope with
+            the kind of volumes of data we
+            need to broadcast real-time while
+            keeping a reliable service,
+            using the services of PubNub Real-time Network
+            to stream real-time data is needed.
+
+            PubNub Real-time Nework provides SDKs in various languages:
+            <a href="http://www.pubnub.com/developers">
+            http://www.pubnub.com/developers</a>.
+        </div>
+    </div>
+
+
+
+
+
+    <!-- PYTHON -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-danger"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        Python Usage
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+from Pubnub import Pubnub
+import uuid
+
+## Initiate Class
+pubnub = Pubnub(
+    publish_key=publish_key,
+    subscribe_key=subscribe_key,
+    secret_key=secret_key,
+    cipher_key=cipher_key,
+    ssl_on=ssl_on
+)
+
+## Create
+item_id = str(uuid.uuid4())
+info = pubnub.publish({
+    'channel' : 'db-public',
+    'message' : {
+        'id'      : item_id,
+        'domain'  : 'server',
+        'command' : 'create',
+        'data'    : {'headline':'sample'}
+    }
+})
+print(info)
+
+## Update
+info = pubnub.publish({
+    'channel' : 'db-public',
+    'message' : {
+        'id'      : item_id,
+        'domain'  : 'server',
+        'command' : 'update',
+        'data'    : {'headline':'updated!'}
+    }
+})
+print(info)
+
+## Delete
+info = pubnub.publish({
+    'channel' : 'db-public',
+    'message' : {
+        'id'      : item_id,
+        'domain'  : 'server',
+        'command' : 'delete'
+    }
+})
+print(info)
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        Python Setup
+                    </h3></div>
+                    <div class="panel-body">
+                        sudo pip install pubnub
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHP -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="panel panel-danger"><div class="panel-heading">
+                    <h3 class="panel-title">
+                        PHP Usage
+                    </h3>
+                </div>
+                <div class="panel-body">
+<pre>
+
+&lt;?php
+require_once('Pubnub.php');
+
+$pubnub = new Pubnub(
+    $publish_key,
+    $subscribe_key,
+    $secret_key,
+    $cipher_key,
+    $ssl_on
+);
+
+## Create Row
+$item_id = uuid();
+$pubnub-&gt;publish(array(
+    'channel' =&gt; 'testChannel',
+    'message' =&gt; array(
+        'id'      =&gt; $item_id,
+        'domain'  =&gt; 'server',
+        'command' =&gt; 'create',
+        'data'    =&gt; array( 'headline' =&gt; 'sample' )
+    )
+));
+
+## Update Row
+$pubnub-&gt;publish(array(
+    'channel' =&gt; 'testChannel',
+    'message' =&gt; array(
+        'id'      =&gt; $item_id,
+        'domain'  =&gt; 'server',
+        'command' =&gt; 'update',
+        'data'    =&gt; array( 'headline' =&gt; 'updated!' )
+    )
+));
+
+## Delete Row
+$pubnub-&gt;publish(array(
+    'channel' =&gt; 'testChannel',
+    'message' =&gt; array(
+        'id'      =&gt; $item_id,
+        'domain'  =&gt; 'server',
+        'command' =&gt; 'delete'
+    )
+));
+
+function uuid() {
+    if (function_exists('com_create_guid') === true) {
+        return trim(com_create_guid(), '{}');
+    }
+    return sprintf( '%04X%04X-%04X-%04X-%04X-%04X%04X%04X',
+        mt_rand(0, 65535),
+        mt_rand(0, 65535),
+        mt_rand(0, 65535),
+        mt_rand(16384, 20479),
+        mt_rand(32768, 49151),
+        mt_rand(0, 65535),
+        mt_rand(0, 65535),
+        mt_rand(0, 65535)
+    );
+}
+?&gt;
+</pre>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3 class="panel-title">
+                        PHP Setup
+                    </h3></div>
+                    <div class="panel-body">
+                        <p>
+                            Grab the files from GitHub:
+                            <a href="https://github.com/pubnub/php/">
+                                PubNub PHP Libraries
+                            </a>
+                        </p>
+                        <small>
+                        curl https://raw.github.com/pubnub/php/master/3.4/PubnubAES.php &gt; PubnubAES.php
+                        <br>
+                        curl https://raw.github.com/pubnub/php/master/3.4/Pubnub.php &gt; Pubnub.php
+                        </small>
+                        <br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- FOOTER -->
+<div class="footer"><div class="container"><div class="row">
+    <div class="col-lg-7">
+        <h3 class="footer-title">
+            More with <a href="http://pubnub.com"> PubNub Real-Time Network </a>
+        </h3>
+        <p>
+            Do you like this solution kit?
+            Want to get more stuff like this?<br>
+            Subscribe to
+            <a
+                target="pntwitter"
+                href="http://twitter.com/PubNub">@PubNub</a>
+            news and updates!<br><BR>
+        </p>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="footer-banner">
+            <h3 class="footer-title">
+                <a href="http://pubnub.com"><div class="pubnub-logo-footer"></div></A>
+                Real-Time Network
+            </h3>
+            <div class=row-margin-small>
+            <a class="btn btn-info btn-lg btn-block"
+            alt="PubNub Real-Time Network"
+            target=freetrial
+            href="http://www.pubnub.com/free-trial">
+            Try PubNub Today!</a></div>
+        </div>
+    </div>
+</div>
+    <h4><a target="signup" href="http://www.pubnub.com/free-trial">PubNub Real-Time Network Sign-up</a></h4>
+</div></div>
+
+
+    <div class="container">
+        <p class="text-muted credit">
+            This app: created and maintained by 
+            <a href="http://twitter.com/pubnub">PubNub</a>
+            and
+            <a href="http://twitter.com/stephenlb">Stephen Blum</a>.
+        </p>
+    </div>
+
+
+
+<!-- TEMPLATES OF ALL KINDS -->
+<script id="published-template" type="text/template">
+    <p id="published-{id}" class="lead publish-bottom">{headline}</p>
+</script>
+
+<script id="publish-edit-template" type="text/template">
+    <blockquote>
+        <p id="{id}" class="publish-bottom">{headline}</p>
+        <p>
+            <button
+                data-action="publish"
+                data-data="{id}"
+                type="button"
+                class="btn btn-default btn-success btn-xs"
+            >
+                <span class="glyphicon glyphicon-cloud-upload"></span>
+                Publish
+            </button>
+            <button
+                data-action="edit"
+                data-data="{id}"
+                type="button"
+                class="btn btn-warning btn-xs"
+            >
+                <span class="glyphicon glyphicon-edit"></span>
+                Edit
+            </button>
+            <button
+                data-action="hide"
+                data-data="{id}"
+                type="button"
+                class="btn btn-default btn-xs"
+            >
+                <span class="glyphicon glyphicon-off"></span>
+                Hide
+            </button>
+            <button
+                data-action="delete"
+                data-data="{id}"
+                type="button"
+                class="btn btn-danger btn-xs"
+            >
+                <span class="glyphicon glyphicon-trash"></span>
+                Forever Delete
+            </button>
+        </p>
+    </blockquote>
+</script>
+
+<script id="curator-editor-template" type="text/template">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <span class="glyphicon glyphicon-edit"></span>
+            Edit
+        </h3>
+    </div>
+    <div class="panel-body">
+        <p>
+            <input 
+                id="push-text-edit-area"
+                type="text"
+                class="form-control"
+            >
+        </p><p>
+            <button
+                data-action="save"
+                data-data="{id}"
+                type="button"
+                class="btn btn-info btn-xs"
+            >
+                <span
+                    class="glyphicon glyphicon-save"
+                ></span>
+                <strong>Save</strong> (Not Publish)
+            </button>
+            <button
+                data-action="cancel"
+                data-data="{id}"
+                type="button"
+                class="btn btn-danger btn-xs"
+            >
+                <span
+                    class="glyphicon glyphicon-remove"
+                ></span>
+                <strong>Cancel</strong>
+            </button>
+        </p>
+    </div>
+</script>
+
+<script src="http://cdn.pubnub.com/pubnub.js"></script>
+<script src="dist/js/animate.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.3/zepto.min.js"></script>
+<script src="dist/js/pubnub-datasync.js"></script>
+<script src="dist/js/bootstrap-content-curator.js"></script>
+
+<script>
+piAId='29622';
+piCId='23596';
+(function(){
+function async_load(){
+var s=document.createElement('script');s.type='text/javascript';
+s.src=('https:'==document.location.protocol?'https://pi':'http://cdn')
++'.pardot.com/pd.js';
+var c=document.getElementsByTagName('script')[0];
+c.parentNode.insertBefore(s,c);
+}
+if(window.attachEvent){window.attachEvent('onload',async_load);}
+else{window.addEventListener('load',async_load,false);}
+})();
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create','UA-16927549-1');
+ga('send','pageview');
+</script>
+
+</body>
+</html>
