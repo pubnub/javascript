@@ -442,7 +442,9 @@ function PN_API(setup) {
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
     ,   CIPHER_KEY    = setup['cipher_key']
-    ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '');
+    ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
+    ,   _poll_timer
+    ,   _poll_timer2;
 
     var crypto_obj    = setup['crypto_obj'] ||
         {
@@ -1502,6 +1504,10 @@ function PN_API(setup) {
                 fail     : function(response) { _invoke_error(response, err); }
             });
         },
+        'stop_timers': function () {
+            clearTimeout(_poll_timer);
+            clearTimeout(_poll_timer2);
+        },
 
         // Expose PUBNUB Functions
         'xdr'           : xdr,
@@ -1523,7 +1529,8 @@ function PN_API(setup) {
         _is_online() || _reset_offline( 1, {
             "error" : "Offline. Please check your network settings. "
         });
-        timeout( _poll_online, SECOND );
+        _poll_timer && clearTimeout(_poll_timer);
+        _poll_timer = timeout( _poll_online, SECOND );
     }
 
     function _poll_online2() {
@@ -1533,20 +1540,24 @@ function PN_API(setup) {
                 "error" : "Heartbeat failed to connect to Pubnub Servers." +
                     "Please check your network settings."
                 });
-            timeout( _poll_online2, KEEPALIVE );
+            _poll_timer2 && clearTimeout(_poll_timer2);
+            _poll_timer2 = timeout( _poll_online2, KEEPALIVE );
         });
     }
 
     function _reset_offline(err, msg) {
         SUB_RECEIVER && SUB_RECEIVER(err, msg);
         SUB_RECEIVER = null;
+
+        clearTimeout(_poll_timer);
+        clearTimeout(_poll_timer2);
     }
 
     if (!UUID) UUID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
 
-    timeout( _poll_online,  SECOND    );
-    timeout( _poll_online2, KEEPALIVE );
+    _poll_timer = timeout( _poll_online,  SECOND    );
+    _poll_timer2 = timeout( _poll_online2, KEEPALIVE );
     PRESENCE_HB_TIMEOUT = timeout( start_presence_heartbeat, ( PRESENCE_HB_INTERVAL - 3 ) * SECOND ) ;
 
     // Detect Age of Message
