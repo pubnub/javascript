@@ -879,10 +879,9 @@ function PN_API(setup) {
                         updates[trans_id]['list']['push'](r);
 
                     } else if (status) { // if transaction complete , apply the updates
-
                         if (status == 'complete' && updates[trans_id]) {
                             updates[trans_id]['complete'] = true;
-                            if (synced) apply_updates(a, updates, callback, trans_id, depth);
+                            if (synced) apply_updates(internal, updates, callback, trans_id, depth);
                         }
                     }
                 },
@@ -1055,11 +1054,11 @@ function PN_API(setup) {
                     'ready'  : function(callback) {
                         ready = callback;
                     },
-                    'update'  : function(callback) {
-                        update = callback;
+                    'merge'  : function(callback) {
+                        merge = callback;
                     },  
-                    'set'     : function(callback) {
-                        set = callback;
+                    'replace'     : function(callback) {
+                        replace = callback;
                     },
                     'remove'  : function(callback) {
                         remove = callback;
@@ -1089,23 +1088,24 @@ function PN_API(setup) {
                 'object_id'  : split_o['object_id'],
                 'path'       : split_o['path'],
                 'callback'   : function(r) {
-
+                    console.log('GSO CALLBACK');    
+                    console.log(JSON.stringify(r));
                     if (r[0]) {
                         var action = r[0]['action'];
 
                         change && change({'action' : action});
 
-                        if (action === 'update') {              // update event
+                        if (action === 'merge') {              // update event
 
-                            update && update(ds_object);
+                            merge && merge(ref);
 
                         } else if (action === 'delete') {       // delete event
 
                             remove && remove(ds_object);
                         }
-                        else if (action === 'delete-set') {     // set event
-                            if (r[1] && r[1]['action'] == 'update-set') { // set event confirmation
-                                set && set(ds_object);
+                        else if (action === 'replace-delete') {     // set event
+                            if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
+                                replace && replace(ref);
                             }
                         }
                     }
