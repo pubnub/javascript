@@ -214,7 +214,6 @@ function PNmessage(args) {
             }
             var exclude1 = ['badge','alert'];
             for (var k in exclude1) {
-                //console.log(exclude[k]);
                 delete m['pn_apns'][exclude1[k]];
             }
         }
@@ -266,8 +265,8 @@ function PN_API(setup) {
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   NOLEAVE       = setup['noleave']       || 0
-    ,   PUBLISH_KEY   = setup['publish_key']   || 'demo'
-    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || 'demo'
+    ,   PUBLISH_KEY   = setup['publish_key']   || setup['write_key'] || 'demo'
+    ,   SUBSCRIBE_KEY = setup['subscribe_key'] || setup['read_key']  || 'demo'
     ,   AUTH_KEY      = setup['auth_key']      || ''
     ,   SECRET_KEY    = setup['secret_key']    || ''
     ,   hmac_SHA256   = setup['hmac_SHA256']
@@ -288,7 +287,7 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   DS_UPDATE_DELAY = null
+    ,   DS_PATH_TTS   = {}
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -454,86 +453,172 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        var path = update.location.split(".");
+        console.log(JSON.stringify(o));
+        console.log(JSON.stringify(update));
+
+        // get update path from response
+        var path    = update.location.split(".");
+        var action  = update.action;
+        
         var path_length = path.length;
+        
+        // references to nodes in the path
         var pathNodes = [];
+
+        // last node name
         var last = path.pop();
         path.shift();
+
+
         if (depth) {
             for (var i = 0; i < depth; i++) path.shift();
         }
+        
+        // x is the place where data exists
         var x = o.data;
 
+
+        //   ????
+        var continue_update = true;
+
+        // iterate over path elements
+        console.log(JSON.stringify(path));
+        console.log(last);
         for (p in path) {
             try {
-                if (!x[path[p]]) x[path[p]] = {};
+
+                // if x does not contain a node with path reached till now
+                // create the node . even if what x contains is not an object
+                // create a new node at the location
+                if (!x[path[p]] || typeof x[path[p]]  !== 'object') {
+                    x[path[p]] = {};
+                }
             } catch (e) {
+                // add new object at the path, this is to create the same
+                // tree structure in our internal object
                 x[path[p]] = {};  
             }
+            // x to next node in the path
             x = x[path[p]];
+
+            // push node to nodes array
             pathNodes.push(x);
         }
 
-        if (update.action == 'update') {
-            if (path_length - depth > 0) 
-                x[last] = update.value;
-            else
-                o.data  = update.value;
-
-        }
-        else if (update.action == 'delete') {
+        // handle updation
+        if (action == 'merge' || action == 'insert') {
 
             if (path_length - depth > 0) {
+                try {
+                    if (x[last]['pn_tt'] <= update.timetoken) {
+                        x[last]['pn_val'] = update.value;
+                        x[last]['pn_tt'] = update.timetoken;
+                    }
+                } catch (e) {
+                    x[last] = {}
+                    x[last]['pn_val'] = update.value;
+                    x[last]['pn_tt'] = update.timetoken;   
+                }
+            } else {
+                try {
+                    if (o.data['pn_tt'] <= update.timetoken) {
+                        o.data['pn_val'] = update.value;
+                        o.data['pn_tt'] = update.timetoken;
+                    }
+                } catch (e) {
+                    o.data = {}
+                    o.data['pn_val'] = update.value;
+                    o.data['pn_tt'] = update.timetoken;   
+                }
+            }
+
+        }
+        // handle deletion 
+        else if (action == 'delete') {
+
+            if (path_length - depth > 0) {
+
+                // delete the last node
                 delete x[last]
+
+                // now return back to root while examining each node on path
+                // if some node has become childless delete that node.
+
                 for (var i = pathNodes.length - 1; i >= 1; i--) {
                     if (pathNodes[i] && Object.keys(pathNodes[i]).length == 0) {
                         delete pathNodes[i-1][path[i]]
                     }
                 }
+
                 if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
                     delete o.data[path[0]];
                 }
             } else {
+                // complete tree empty now due to no non leaf node existence
                 o.data = {}
             }
         }
 
-        o.pn_ds_meta.last_update = update.timetoken;
+        // return update at , need to reconsider
+        return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
+
         var update = updates[trans_id];
+
+        var update_at;
+
+        // apply update if update is complete
         if (update && update.complete == true) {
             var actions_list = update.list;
             var callback_param_list = [];
 
+            // traverse actions list and apply each action
             for (var i in actions_list) {
+                // action event
                 var action_event = actions_list[i];
-                apply_update(o, action_event, depth);
+
+                // apply event, update at value will be returned
+                action_event.update_at = apply_update(o, action_event, depth);
+
+                // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
+
+                // cleanup
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
+
+            // invoke callback with actions_list as argument
             callback(actions_list);
+
+            // delete update 
+
             delete update;
         }
     }
 
     function apply_all_updates(o, updates, callback, depth) {
+        // iterate trhough all updates and apply
         for (var t in updates) {
             apply_updates(o, updates, callback, t, depth);
         }
     }
 
+    /*
+        Get to be used in Data sync
+    */
     function get(args, callback) {
         var callback         = args['callback'] || callback
         ,   err              = args['error']    || function(){}
         ,   object_id        = args['object_id']
         ,   path             = args['path']
-        ,   start_at         = args['start_at']
+        ,   next_page        = args['next_page']
         ,   obj_at           = args['obj_at']
         ,   page_max_bytes   = args['page_max_bytes']
         ,   jsonp            = jsonp_cb()
-        ,   data             = {};
+        ,   auth_key         = args['auth_key'] || AUTH_KEY
+        ,   data             = { 'uuid' : UUID, 'auth' : auth_key };
 
         // Make sure we have a Channel
         if (!object_id)     return error('Missing Object Id');
@@ -551,8 +636,8 @@ function PN_API(setup) {
 
         if (jsonp != '0') { data['callback'] = jsonp; }
 
-        if (start_at) { data['start_at'] = start_at; }
-        if (obj_at)   { data['obj_at']   = obj_at; }
+        //if (start_at) { data['start_at'] = start_at; }
+        //if (obj_at)   { data['obj_at']   = obj_at; }
         if (page_max_bytes)   { data['page_max_bytes']   = page_max_bytes; }
 
         xdr({
@@ -568,20 +653,73 @@ function PN_API(setup) {
         });
     }
 
+    /*
+        This method does merge at one level
+    */
     function mergeAtOneLevel(a, b) {
+
+        // if a is null , return b
+
         if ( a == null ) {
             return b;
         }
+        // if both a and b exist, then 
         if (a && b) {
-            for (var attrname in b) {
-                if (!a[attrname]) {
-                    a[attrname] = b[attrname];
-                } else {
-                    a[attrname] = mergeAtOneLevel(a[attrname], b[attrname]);
+
+            // iterate over keys in b
+            for (var key in b) {
+
+                // if key does not exist in a, then add add 
+                // key to a
+                if (!a[key]) {
+                        a[key] = b[key];
+                    
+                }
+
+                // if key exists in a, then do a recursive merge at
+                // next level 
+                else {
+                
+                    a[key] = mergeAtOneLevel(a[key], b[key]);
+                
                 }
             }
         }
+
+        // returned reference to merged node
         return a;
+    }
+
+    function objectToSortedArray(obj) {
+        var keys = [];
+        var arr = [];
+        for(var key in obj){
+            if(obj.hasOwnProperty(key)){
+                keys.push(key); 
+            }
+        }
+        keys.sort();
+        for (var k in keys) {
+            var v = obj[keys[k]]['pn_val'];
+            if (typeof v !== 'undefined') {
+                arr.push(v);
+            } else if (isPnList(obj[keys[k]])) {
+                arr.push(objectToSortedArray(obj[keys[k]]));
+            } else {
+                arr.push(obj[keys[k]]);
+            }
+        }
+        return arr;
+    }
+
+    function isPnList(l) {
+        for(var key in l){
+            if(l.hasOwnProperty(key)){
+                if (key.indexOf("-!") == 0)
+                    return true;
+            }
+        }
+        return false;
     }
 
     // Announce Leave Event
@@ -693,73 +831,124 @@ function PN_API(setup) {
             ,   object_id        = args['object_id']
             ,   path             = args['path'] || '';
 
+            // Is object sync complete ?
             var synced = false;
+            
+            // depth at which we are listening 
             var depth = 0;
+
             var updates = {};
-            var a = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}, "data" : {}};
+            
+
+            // internal object
+            var internal = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}, "data" : {}};
+
+
+            // prepare the path argument
             if (path) {
-                var split_array = path.split(".");
-                depth = split_array.length;
+                var split_array = path['split'](".");
+                depth = split_array['length'];
             }
 
+            /* 
+                subscribe to 3 channels . for ex. if obj id is 'ab'
+                a. normal channel       pn_ds_ab
+                b. wildcard channel     pn_ds_ab.*
+                c. transaction channel  pn_dstr_ab
+            */
             SELF['subscribe']({
-                channel     :   'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
+
+                'channel'     : 'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
-                connect     : function(r, timetoken) {
 
+
+                'connect'     : function(r, timetoken) {
+
+                    // if message received on wild card channel
+                    // this is just to take care of 3 invocations of connect
                     if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
-                        function read(start_at, callback, error) {
+
+                        // read initial copy of the data structure (recursive in case large object)
+                        function read(next_page, callback, error) {
                             get({
                                 'object_id' : object_id,
                                 'path'      : path,
                                 'timetoken' : timetoken,
-                                'start_at'  : start_at,
+                                'next_page'  : next_page,
                                 'callback'  : function(r) {
-                                    if (typeof r.payload === 'object') {
-                                        a.data = mergeAtOneLevel(a.data, r.payload);
+                                    
+                                    var next_page = r['next_page'];
+
+                                    var payload = r['payload'];
+
+
+                                    // if payload is object, merge else assign
+                                    if (typeof payload === 'object') {
+                                        internal['data'] = mergeAtOneLevel(internal['data'], payload);
                                     } else {
-                                        a.data = r.payload;
+                                        internal['data'] = payload;
                                     }
-                                    if (!r.next_page || (r.next_page && r.next_page == "null")) {
-                                        a.pn_ds_meta.stale = false;
+
+                                    // till next_page is null in response keep reading recursively
+                                    if (!next_page || (next_page && next_page == "null")) {
+
+                                        // all updates recieved , now apply
+                                        apply_all_updates(internal, updates, callback, depth);
+
+                                        // sync complete
                                         synced = true;
-                                        apply_all_updates(a, updates, callback, depth);
+
+                                        // invoke connect callback
                                         connect && connect(object_id);
                                     } else {
-                                        read(r.next_page, callback, error);
+                                        // sync incomplete
+                                        synced = false;
+
+                                        // read more data
+                                        read(next_page, callback, error);
                                     }
 
                                 },
                                 'error'     : function(r) {
+
+                                   // error  
                                    error && error(r);
                                 }
                             })
                         }
+
+                        // start reading initial copy of object and populate internal copy
                         read();
                     } 
                 },
-                callback    : function(r) {
+                'callback'    : function(r) {
 
-                    if (r.action) {
-                        if (!updates[r.trans_id])
-                            updates[r.trans_id] = {'complete' : false, 'list' : []}
-                        updates[r.trans_id]['list'].push(r);
+                    var trans_id    = r['trans_id'];
+                    var action      = r['action'];
+                    var status      = r['status'];
 
-                    } else if (r.status) {
-                        if (r.status == 'complete' && updates[r.trans_id]) {
-                            updates[r.trans_id].complete = true;
-                            if (synced) apply_updates(a, updates, callback, r.trans_id, depth);
+                    if (action) { // if action, store it in list with transaction id as key
+
+                        if (!updates[trans_id])
+                            updates[trans_id] = {'complete' : false, 'list' : []}
+                        updates[trans_id]['list']['push'](r);
+
+                    } else if (status) { // if transaction complete , apply the updates
+                        if (status == 'complete' && updates[trans_id]) {
+                            updates[trans_id]['complete'] = true;
+                            if (synced) apply_updates(internal, updates, callback, trans_id, depth);
                         }
                     }
                 },
-                error       : function(r) {
-                    console.log(JSON.stringify(r));
-                    a.pn_ds_meta.stale = true;
-                    err("Object could not be updated");
+                'error'       : function(r) { 
+
+                    //error
+                    err({'message' : r['message']});
+
                 }
             });
-            return a;
+            return internal;
         },
 
         'get' : function(args, callback) {
@@ -771,7 +960,8 @@ function PN_API(setup) {
             ,   obj_at           = args['obj_at']
             ,   page_max_bytes   = args['page_max_bytes']
             ,   jsonp            = jsonp_cb()
-            ,   data             = {};
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key };
 
             // Make sure we have a Channel
             if (!object_id)     return error('Missing Object Id');
@@ -786,15 +976,15 @@ function PN_API(setup) {
                     'start_at'  : start_at,
                     //'page_max_bytes' : 5,
                     'callback'  : function(r) {
-                        if (obj == null && typeof r.payload !== 'object') {
-                            callback && callback(r.payload);
+                        if (obj == null && typeof r['payload'] !== 'object') {
+                            callback && callback(r['payload']);
                             return;
                         }
-                        obj = mergeAtOneLevel(obj,r.payload); 
-                        if (!r.next_page || (r.next_page && r.next_page == "null")) {
+                        obj = mergeAtOneLevel(obj,r['payload']); 
+                        if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
                             callback && callback(obj);
                         } else {
-                            read(r.next_page,callback, error);
+                            read(r['next_page'],callback, error);
                         }
                         
                     },
@@ -804,7 +994,7 @@ function PN_API(setup) {
             read(null,callback, error);
         },
         'set'   : function(args, callback) {
-            args.mode = 'PUT'
+            args['mode'] = 'PUT'
             SELF['merge'](args);
         },
         'merge' : function(args, callback) {
@@ -813,7 +1003,8 @@ function PN_API(setup) {
             ,   object_id        = args['object_id']
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
-            ,   data             = {}
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
 
@@ -831,7 +1022,7 @@ function PN_API(setup) {
             ];
 
             if (path) {
-                url.push(encode(path.split(".").join("/")));
+                url['push'](encode(path['split'](".")['join']("/")));
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -839,12 +1030,11 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
-                body     : JSON.stringify(content),
+                body     : JSON['stringify'](content),
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
-                    console.log('ERROR');
                     _invoke_error(response, err);
                 },
                 url      : url,
@@ -855,7 +1045,8 @@ function PN_API(setup) {
             var callback         = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   jsonp            = jsonp_cb()
-            ,   data             = {}
+            ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   object_id        = args['object_id']
             ,   path             = args['path'];
 
@@ -870,7 +1061,7 @@ function PN_API(setup) {
             ];
             
             if (path) {
-                url.push(encode(path.split(".").join("/")));
+                url['push'](encode(path['split'](".")['join']("/")));
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -888,7 +1079,137 @@ function PN_API(setup) {
                 mode : 'DELETE'
             });
         },
+        'sync' : function(object_id) {
+            console.log("SYNC  : " + object_id);
+            function split_object_id_path(s) {
+                var r = {};
+                var object_id_split = s['split']('.');
 
+                // prepare object
+
+                r['object_id']          = object_id_split[0];
+                object_id_split['shift']();
+                r['path']            = object_id_split['join']('.');
+                return r;
+            }
+
+            var ready, update, set, remove, change 
+            ,   network_connect, network_disconnect, network_reconnect;
+
+            // internal object that will reprepsent data
+            var internal = {};
+
+            // ref is the object reference that will be returned
+            var ref = {
+
+                // callbacks like change, ready etc can be set here
+                'on' : {
+                    'change'  : function(callback) {
+                        change = callback;
+                    },
+                    'ready'  : function(callback) {
+                        ready = callback;
+                    },
+                    'merge'  : function(callback) {
+                        merge = callback;
+                    },  
+                    'replace'     : function(callback) {
+                        replace = callback;
+                    },
+                    'remove'  : function(callback) {
+                        remove = callback;
+                    },
+                    'error'   : function(callback) {
+                        error = callback;
+                    }, 
+                    // network events
+                    'network' : {
+                        'connect'       : function(callback) {
+                            network_connect = callback;
+                        },
+                        'disconnect'    : function(callback) {
+                            network_disconnect = callback;
+                        },
+                        'reconnect'     : function(callback) {
+                            network_reconnect = callback;
+                        }
+                    }
+                }
+            }
+
+            var split_o = split_object_id_path(object_id);
+
+            // prepare internal object 
+            internal = SELF['get_synced_object']({
+                'object_id'  : split_o['object_id'],
+                'path'       : split_o['path'],
+                'callback'   : function(r) {
+                    console.log('GSO CALLBACK');    
+                    console.log(JSON.stringify(r));
+                    if (r[0]) {
+                        var action = r[0]['action'];
+
+                        change && change({'action' : action});
+
+                        if (action === 'merge' || action === 'insert') {              // update event
+
+                            merge && merge(ref);
+
+                        } else if (action === 'delete') {       // delete event
+
+                            remove && remove(ref);
+                        }
+                        else if (action === 'replace-delete') {     // set event
+                            if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
+                                replace && replace(ref);
+                            }
+                        }
+                    }
+                },
+                'error' : function(r) {
+                    error && error(r);
+                },
+                'connect'    : function(r) {
+                    network_connect && network_connect(r);
+                    ready && ready(r);
+                },
+                'reconnect'  : function(r) {
+                    network_reconnect && network_reconnect(r);
+                },
+                'disconnect' : function(r) {
+                    network_disconnect && network_disconnect(r)
+                }    
+                
+            });
+
+            ref['value'] = function(path) {
+                if (!path) return internal['data'];
+                var patha = path['split'](".");
+                var d = internal['data'];
+
+                for (p in patha) {
+                    var key = patha[p];
+                    try {
+                        if (d[key]) d = d[key]
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                if (d['pn_val']) {
+                    return d['pn_val'];
+                } else if (isPnList(d)) { // array
+                    return objectToSortedArray(d);
+                } else { // object
+                    return d;
+                }
+            };
+
+            ref['get'] = function(path) {
+                return SELF['sync'](object_id + '.' + path);
+            };
+
+            return ref;
+        },
         /*
             PUBNUB.history({
                 channel  : 'my_chat_channel',
@@ -1023,7 +1344,7 @@ function PN_API(setup) {
             PUBNUB.time(function(time){ });
         */
         'time' : function(callback) {
-            /*
+            
             var jsonp = jsonp_cb();
             xdr({
                 callback : jsonp,
@@ -1033,7 +1354,7 @@ function PN_API(setup) {
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
             });
-            */
+            
         },
 
         /*

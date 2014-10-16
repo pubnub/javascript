@@ -21,6 +21,7 @@ ds.on.ready(function(){
 	console.log(JSON.stringify(ds.value(), null, 2));
     console.log(JSON.stringify(ds.value('a.a.b.c')));
     console.log(JSON.stringify(ds.value('a.b')));
+    console.log(JSON.stringify(ds.value('a.c')));
 });
 
 
@@ -28,6 +29,9 @@ ds.on.ready(function(){
 ds.on.merge(function(params) { 
     console.log('UPDATE');
 	console.log(JSON.stringify(params.value(), null, 2));
+    console.log(JSON.stringify(ds.value('a.a.b.c')));
+    console.log(JSON.stringify(ds.value('a.b')));
+    console.log(JSON.stringify(ds.value('a.c')));
 	//console.log(JSON.stringify(ds.get(), null, 2));
 })
 
@@ -35,12 +39,17 @@ ds.on.replace(function(params){
     console.log('REPLACE');
 	//console.log(JSON.stringify(params));
 	console.log(JSON.stringify(params.value(), null, 2));
+    console.log(JSON.stringify(ds.value('a.a.b.c')));
+    console.log(JSON.stringify(ds.value('a.b')));
+    console.log(JSON.stringify(ds.value('a.c')));
 })
 
 ds.on.remove(function(params){ 
     console.log('REMOVE');
 	//console.log(JSON.stringify(params));
 	console.log(JSON.stringify(params.value(), null, 2));
+    console.log(JSON.stringify(ds.value('a.a.b.c')));
+    console.log(JSON.stringify(ds.value('a.b')));
 })
 
 ds.on.error(function(params){ 

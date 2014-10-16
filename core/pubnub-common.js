@@ -700,12 +700,12 @@ function PN_API(setup) {
         keys.sort();
         for (var k in keys) {
             var v = obj[keys[k]]['pn_val'];
-            if (v) {
+            if (typeof v !== 'undefined') {
                 arr.push(v);
             } else if (isPnList(obj[keys[k]])) {
                 arr.push(objectToSortedArray(obj[keys[k]]));
             } else {
-                arr.push(obj[keys][k]);
+                arr.push(obj[keys[k]]);
             }
         }
         return arr;
