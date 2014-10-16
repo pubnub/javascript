@@ -14,11 +14,13 @@ var pubnub = PUBNUB({
     auth_key	  : 'abcd'
 });
 
-var ds = pubnub.sync("dp3");
+var ds = pubnub.sync("dp7");
 
 ds.on.ready(function(){
 	console.log('READY');
 	console.log(JSON.stringify(ds.value(), null, 2));
+    console.log(JSON.stringify(ds.value('a.a.b.c')));
+    console.log(JSON.stringify(ds.value('a.b')));
 });
 
 

@@ -453,6 +453,8 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
+        console.log(JSON.stringify(o));
+        console.log(JSON.stringify(update));
 
         // get update path from response
         var path    = update.location.split(".");
@@ -480,10 +482,12 @@ function PN_API(setup) {
         var continue_update = true;
 
         // iterate over path elements
+        console.log(JSON.stringify(path));
+        console.log(last);
         for (p in path) {
             try {
 
-                // if x does not containt a node with path reached till now
+                // if x does not contain a node with path reached till now
                 // create the node . even if what x contains is not an object
                 // create a new node at the location
                 if (!x[path[p]] || typeof x[path[p]]  !== 'object') {
@@ -502,11 +506,31 @@ function PN_API(setup) {
         }
 
         // handle updation
-        if (action == 'update') {
-            if (path_length - depth > 0) 
-                x[last] = update.value;
-            else
-                o.data  = update.value;
+        if (action == 'merge' || action == 'insert') {
+
+            if (path_length - depth > 0) {
+                try {
+                    if (x[last]['pn_tt'] <= update.timetoken) {
+                        x[last]['pn_val'] = update.value;
+                        x[last]['pn_tt'] = update.timetoken;
+                    }
+                } catch (e) {
+                    x[last] = {}
+                    x[last]['pn_val'] = update.value;
+                    x[last]['pn_tt'] = update.timetoken;   
+                }
+            } else {
+                try {
+                    if (o.data['pn_tt'] <= update.timetoken) {
+                        o.data['pn_val'] = update.value;
+                        o.data['pn_tt'] = update.timetoken;
+                    }
+                } catch (e) {
+                    o.data = {}
+                    o.data['pn_val'] = update.value;
+                    o.data['pn_tt'] = update.timetoken;   
+                }
+            }
 
         }
         // handle deletion 
@@ -666,6 +690,38 @@ function PN_API(setup) {
         return a;
     }
 
+    function objectToSortedArray(obj) {
+        var keys = [];
+        var arr = [];
+        for(var key in obj){
+            if(obj.hasOwnProperty(key)){
+                keys.push(key); 
+            }
+        }
+        keys.sort();
+        for (var k in keys) {
+            var v = obj[keys[k]]['pn_val'];
+            if (v) {
+                arr.push(v);
+            } else if (isPnList(obj[keys[k]])) {
+                arr.push(objectToSortedArray(obj[keys[k]]));
+            } else {
+                arr.push(obj[keys][k]);
+            }
+        }
+        return arr;
+    }
+
+    function isPnList(l) {
+        for(var key in l){
+            if(l.hasOwnProperty(key)){
+                if (key.indexOf("-!") == 0)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -802,7 +858,7 @@ function PN_API(setup) {
             */
             SELF['subscribe']({
 
-                'channel'     :   'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
+                'channel'     : 'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
                                 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
                                 'pn_dstr_' + object_id,
 
@@ -1095,13 +1151,13 @@ function PN_API(setup) {
 
                         change && change({'action' : action});
 
-                        if (action === 'merge') {              // update event
+                        if (action === 'merge' || action === 'insert') {              // update event
 
                             merge && merge(ref);
 
                         } else if (action === 'delete') {       // delete event
 
-                            remove && remove(ds_object);
+                            remove && remove(ref);
                         }
                         else if (action === 'replace-delete') {     // set event
                             if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
@@ -1127,9 +1183,9 @@ function PN_API(setup) {
             });
 
             ref['value'] = function(path) {
-                if (!path) return internal;
+                if (!path) return internal['data'];
                 var patha = path['split'](".");
-                var d = internal;
+                var d = internal['data'];
 
                 for (p in patha) {
                     var key = patha[p];
@@ -1139,8 +1195,13 @@ function PN_API(setup) {
                         return null;
                     }
                 }
-
-                return d;
+                if (d['pn_val']) {
+                    return d['pn_val'];
+                } else if (isPnList(d)) { // array
+                    return objectToSortedArray(d);
+                } else { // object
+                    return d;
+                }
             };
 
             ref['get'] = function(path) {
@@ -2133,7 +2194,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
-            console.log('BODY : ' + body);
+            //console.log('BODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
@@ -2164,7 +2225,7 @@ function xdr( setup ) {
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
     var url = build_url( setup.url, data );
-    console.log(mode + ' ' + url); 
+    //console.log(mode + ' ' + url); 
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 
