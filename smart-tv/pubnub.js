@@ -1,4 +1,4 @@
-// Version: 3.6.8
+// Version: 3.7.0
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -162,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.6.8'
+,   SDK_VER         = '3.7.0'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -3079,7 +3079,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.6.8'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.0'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
