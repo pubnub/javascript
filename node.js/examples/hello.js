@@ -14,7 +14,7 @@ var pubnub = PUBNUB({
 });
 
 pubnub.publish({
-	post: false,
+    post: false,
 channel : 'PubNubTest_RX',
 message : { 'test' : 'f?ds' },
 callback : function(details) {

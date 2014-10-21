@@ -29,5 +29,5 @@ function retry() { console.log('retry?') }
 
 
 for (var i = 1; i < 2; i++) {
-	publish('dsm-test',i);
+    publish('dsm-test',i);
 }

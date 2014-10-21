@@ -2,8 +2,8 @@ var PUBNUB   = require('../pubnub.js')
 var pubnubs  = {};
 var received = 0;
 
-function subscribe(channel) { 
-    
+function subscribe(channel) {
+
     /*
         create container
     */

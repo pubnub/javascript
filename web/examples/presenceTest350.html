@@ -1,10 +1,10 @@
 <html>
 <head>
-<style> 
+<style>
 
-  .pass{background-color: green;} 
+  .pass{background-color: green;}
 
-  .fail{background-color: red;} 
+  .fail{background-color: red;}
 
 </style>
 <script>
@@ -1136,13 +1136,13 @@ function makeTable(){
     // add it to the page
     document.getElementsByTagName("body")[0].appendChild(tableContainer);
 
-    
+
     var tableElement = document.createElement("table");
 
     // add it to the page
     tableContainer.appendChild(tableElement);
 
-    
+
     var numberOfListItems = tests.length;
 
     for( var i =  0 ; i < numberOfListItems ; ++i){
@@ -1159,20 +1159,20 @@ function makeTable(){
         createButton(column2,"Run", function(id) {
             startTestById(id.split('-')[1]);
         }, 'button-' + i);
-        
+
         var column3 = document.createElement("td");
-        
+
         createCheckbox(column3,'check-' + i);
-        
+
         row.appendChild(column);
         row.appendChild(column2);
         row.appendChild(column3);
         tableElement.appendChild(row);
     }
 
- 
+
     var row = document.createElement("tr");
-    
+
 
     var column1 = document.createElement("td");
 
@@ -1180,7 +1180,7 @@ function makeTable(){
 
 
     var column2 = document.createElement("td");
-    
+
     createButton(column2,"Run Selected", function(){
         for (var i = 0; i < tests.length; ++i) {
             var check = document.getElementById('check-' + i);
@@ -1193,7 +1193,7 @@ function makeTable(){
 
 
     var column3 = document.createElement("td");
-    
+
     createCheckbox(column3,'checkalltoggle', function(id){
         var checkalltoggle = document.getElementById('checkalltoggle');
         for (var i = 0; i < tests.length; ++i) {
@@ -1210,7 +1210,7 @@ function makeTable(){
 
 }
 
-                        
+
 
 
 </script>
