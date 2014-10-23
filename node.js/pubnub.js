@@ -59,6 +59,7 @@ function build_url( url_components, url_params ) {
     } );
     url += "?" + params.join(PARAMSBIT);
 
+    console.log(url);
     return url;
 }
 
@@ -453,8 +454,8 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        console.log(JSON.stringify(o));
-        console.log(JSON.stringify(update));
+        //console.log(JSON.stringify(o));
+        //console.log(JSON.stringify(update));
 
         // get update path from response
         var path    = update.location.split(".");
@@ -482,8 +483,8 @@ function PN_API(setup) {
         var continue_update = true;
 
         // iterate over path elements
-        console.log(JSON.stringify(path));
-        console.log(last);
+        //console.log(JSON.stringify(path));
+        //console.log(last);
         for (p in path) {
             try {
 
@@ -720,6 +721,24 @@ function PN_API(setup) {
             }
         }
         return false;
+    }
+
+    function split_object_id_path(s) {
+        var r = {};
+        var object_id_split = s['split']('.');
+
+        // prepare object
+
+        r['object_id']          = object_id_split[0];
+        object_id_split['shift']();
+        r['path']            = object_id_split['join']('.');
+        return r;
+    }
+
+    function _get_ref(r, path) {
+
+        r['path'] = path;
+        return r;
     }
 
     // Announce Leave Event
@@ -998,7 +1017,7 @@ function PN_API(setup) {
             SELF['merge'](args);
         },
         'merge' : function(args, callback) {
-            var callback         = args['callback'] || callback
+            var callback         = args['callback'] || callback || function(){}
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   content          = args['data']
@@ -1081,17 +1100,15 @@ function PN_API(setup) {
         },
         'sync' : function(object_id) {
             console.log("SYNC  : " + object_id);
-            function split_object_id_path(s) {
-                var r = {};
-                var object_id_split = s['split']('.');
 
-                // prepare object
 
-                r['object_id']          = object_id_split[0];
-                object_id_split['shift']();
-                r['path']            = object_id_split['join']('.');
-                return r;
-            }
+            var split_o = split_object_id_path(object_id);
+
+
+            var obj_id  = split_o['object_id'];
+            var path    = split_o['path'];
+
+
 
             var ready, update, set, remove, change 
             ,   network_connect, network_disconnect, network_reconnect;
@@ -1134,18 +1151,57 @@ function PN_API(setup) {
                             network_reconnect = callback;
                         }
                     }
+                },
+
+                'merge'  : function(data, success, error) {
+
+                    console.log('UPDATE');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error
+                    });
+
+                },
+
+                'replace' : function(data, success, error) {
+
+                    console.log('REPLACE');
+                    SELF['replace']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error
+                    });
+                },
+
+                'remove'  : function(success, error) {
+
+                    console.log('REMOVE');
+                    SELF['remove']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'callback'  : success,
+                        'error'     : error
+                    });
+                },
+
+                'push'    : function(data, success, error) {
+
+                    console.log('PUSH');
                 }
             }
-
-            var split_o = split_object_id_path(object_id);
 
             // prepare internal object 
             internal = SELF['get_synced_object']({
                 'object_id'  : split_o['object_id'],
                 'path'       : split_o['path'],
                 'callback'   : function(r) {
-                    console.log('GSO CALLBACK');    
-                    console.log(JSON.stringify(r));
+                    //console.log('GSO CALLBACK');    
+                    //console.log(JSON.stringify(r));
                     if (r[0]) {
                         var action = r[0]['action'];
 
@@ -1153,15 +1209,18 @@ function PN_API(setup) {
 
                         if (action === 'merge' || action === 'insert') {              // update event
 
-                            merge && merge(ref);
+                            merge && merge({
+                                'path' : r[0]['updateAt'],
+                                'data' : ref
+                            });
 
                         } else if (action === 'delete') {       // delete event
 
-                            remove && remove(ref);
+                            remove && remove(_get_ref(ref));
                         }
                         else if (action === 'replace-delete') {     // set event
                             if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
-                                replace && replace(ref);
+                                replace && replace(_get_ref(ref));
                             }
                         }
                     }
@@ -1171,7 +1230,7 @@ function PN_API(setup) {
                 },
                 'connect'    : function(r) {
                     network_connect && network_connect(r);
-                    ready && ready(r);
+                    ready && ready(_get_ref(ref));
                 },
                 'reconnect'  : function(r) {
                     network_reconnect && network_reconnect(r);
@@ -1183,8 +1242,16 @@ function PN_API(setup) {
             });
 
             ref['value'] = function(path) {
-                if (!path) return internal['data'];
-                var patha = path['split'](".");
+
+                if (!path &&
+                    !internal['data']['pn_val'] &&
+                    !isPnList(internal['data'])
+                    ) 
+                    return internal['data'];
+
+
+                var patha = (path)?path['split']("."):[];
+
                 var d = internal['data'];
 
                 for (p in patha) {
@@ -2206,9 +2273,11 @@ function xdr( setup ) {
             clearTimeout(timer);
 
             if (request) {
+                /*
                 request.on('error', function(r){console.log(JSON.stringify(r))});
                 request.on('data', function(r){console.log(JSON.stringify(r))});
                 request.on('end', function(r){console.log(JSON.stringify(r))});
+                */
                 request.abort && request.abort();
                 request = null;
             }
@@ -2248,8 +2317,8 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(r){ done(1, r || body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(r){ done(1, r || body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(r){ console.log('ERROR');done(1, r || body || { "error" : "Network Connection Error"})});
+            response.on( 'abort', function(r){ console.log('ABORT');done(1, r || body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );

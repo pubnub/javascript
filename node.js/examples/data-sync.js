@@ -14,47 +14,56 @@ var pubnub = PUBNUB({
     auth_key	  : 'abcd'
 });
 
-var ds = pubnub.sync("dp7");
+var ds1 = pubnub.sync("dp7");
 
-ds.on.ready(function(){
+var ds = ds1.get('a.c');
+
+ds.on.ready(function(ref){
 	console.log('READY');
-	console.log(JSON.stringify(ds.value(), null, 2));
-    console.log(JSON.stringify(ds.value('a.a.b.c')));
-    console.log(JSON.stringify(ds.value('a.b')));
-    console.log(JSON.stringify(ds.value('a.c')));
+
+	console.log(JSON.stringify(ref.value(), null, 2));
+    /*
+    console.log(JSON.stringify(ref.value('a.a.b.c')));
+    console.log(JSON.stringify(ref.value('a.b')));
+    console.log(JSON.stringify(ref.value('a.c')));
+
+    */
+
 });
 
 
+
 // Data Events
-ds.on.merge(function(params) { 
+ds.on.merge(function(ref) { 
     console.log('UPDATE');
-	console.log(JSON.stringify(params.value(), null, 2));
-    console.log(JSON.stringify(ds.value('a.a.b.c')));
-    console.log(JSON.stringify(ds.value('a.b')));
-    console.log(JSON.stringify(ds.value('a.c')));
+    console.log(ref.path);
+	console.log(JSON.stringify(ref.data.value(), null, 2));
+    //console.log(JSON.stringify(ref.data.value('a.a.b.c')));
+    //console.log(JSON.stringify(ref.data.value('a.b')));
+    //console.log(JSON.stringify(ref.data.value('a.c')));
 	//console.log(JSON.stringify(ds.get(), null, 2));
 })
 
-ds.on.replace(function(params){ 
+ds.on.replace(function(ref){ 
     console.log('REPLACE');
 	//console.log(JSON.stringify(params));
-	console.log(JSON.stringify(params.value(), null, 2));
-    console.log(JSON.stringify(ds.value('a.a.b.c')));
-    console.log(JSON.stringify(ds.value('a.b')));
-    console.log(JSON.stringify(ds.value('a.c')));
+	console.log(JSON.stringify(ref.value(), null, 2));
+    console.log(JSON.stringify(ref.value('a.a.b.c')));
+    console.log(JSON.stringify(ref.value('a.b')));
+    console.log(JSON.stringify(ref.value('a.c')));
 })
 
-ds.on.remove(function(params){ 
+ds.on.remove(function(ref){ 
     console.log('REMOVE');
 	//console.log(JSON.stringify(params));
-	console.log(JSON.stringify(params.value(), null, 2));
-    console.log(JSON.stringify(ds.value('a.a.b.c')));
-    console.log(JSON.stringify(ds.value('a.b')));
+	console.log(JSON.stringify(ref.value(), null, 2));
+    console.log(JSON.stringify(ref.value('a.a.b.c')));
+    console.log(JSON.stringify(ref.value('a.b')));
 })
 
-ds.on.error(function(params){ 
+ds.on.error(function(ref){ 
     console.log('ERROR');
-	console.log(JSON.stringify(params));
+	console.log(JSON.stringify(ref));
 })
 
 // Network Events
@@ -62,9 +71,8 @@ ds.on.network.connect(function(params)      { console.log(JSON.stringify(params)
 ds.on.network.disconnect(function(params)   { console.log(JSON.stringify(params)); })
 ds.on.network.reconnect(function(params)    { console.log(JSON.stringify(params)); })
 
-/*
-ds1 = ds.get('a').get('a');
 
+/*
 ds1.on.ready(function(){
     console.log('READY');
     console.log(JSON.stringify(ds1.value(), null, 2));

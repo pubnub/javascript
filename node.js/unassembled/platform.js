@@ -97,9 +97,11 @@ function xdr( setup ) {
             clearTimeout(timer);
 
             if (request) {
+                /*
                 request.on('error', function(r){console.log(JSON.stringify(r))});
                 request.on('data', function(r){console.log(JSON.stringify(r))});
                 request.on('end', function(r){console.log(JSON.stringify(r))});
+                */
                 request.abort && request.abort();
                 request = null;
             }
@@ -139,8 +141,8 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(r){ done(1, r || body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(r){ done(1, r || body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(r){ console.log('ERROR');done(1, r || body || { "error" : "Network Connection Error"})});
+            response.on( 'abort', function(r){ console.log('ABORT');done(1, r || body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );
