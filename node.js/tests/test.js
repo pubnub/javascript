@@ -2,14 +2,14 @@ var assert = require('assert');
 var PUBNUB = require('../pubnub.js');
 
 var pubnub = PUBNUB.init({
-    publish_key     : 'demo',
-    subscribe_key     : 'demo',
+    publish_key     : 'pub-c-c077418d-f83c-4860-b213-2f6c77bde29a',
+    subscribe_key   : 'sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe',
     origin : 'pubsub.pubnub.com'
 });
 
 var pubnub_enc = PUBNUB({
-    publish_key     : 'demo',
-    subscribe_key   : 'demo',
+    publish_key     : 'pub-c-c077418d-f83c-4860-b213-2f6c77bde29a',
+    subscribe_key   : 'sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe',
     cipher_key      : 'enigma',
     origin : 'pubsub.pubnub.com'
 });
@@ -365,7 +365,7 @@ describe('Pubnub', function() {
 
             })
         })
-        /*
+        
         it('should store in history when store is not there or store is true', function(done){
             var ch = channel + '-' + ++count;
             var messages = [1,2,3]
@@ -424,10 +424,10 @@ describe('Pubnub', function() {
                 }
             });
         })
-        */
+        
 
     })
-    /*
+    
     describe('#history()', function(){
         var history_channel = channel + '-history';
 
@@ -530,7 +530,7 @@ describe('Pubnub', function() {
             },5000);
         })
     })
-    */
+    
     describe('#history() with encryption', function(){
         var history_channel = channel + '-history-enc';
 
@@ -1423,7 +1423,7 @@ describe('Pubnub', function() {
                 }
             })
         })
-        /*it('should be able to delete state for uuid', function(done){
+        it('should be able to delete state for uuid', function(done){
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
             var state = { 'name' : 'name-' + uuid, "age" : "50"};
@@ -1444,7 +1444,8 @@ describe('Pubnub', function() {
                                 uuid     : uuid,
                                 state : { "age" : null},
                                 callback : function(response) {
-                                    assert.deepEqual(response,state);
+                                    assert.deepEqual(response,{ "age" : null});
+                                    setTimeout(function(){
                                     pubnub.state({
                                         channel  : ch ,
                                         uuid     : uuid,
@@ -1457,6 +1458,7 @@ describe('Pubnub', function() {
                                             done();
                                         }
                                      });
+                                    },2000);
                                 },
                                 error : function(error) {
                                     assert.ok(false, "Error occurred in state " + JSON.stringify(error));
@@ -1475,7 +1477,7 @@ describe('Pubnub', function() {
                     done();
                 }
             })
-        }) */
+        }) 
     }),
     describe('#subscribe()', function(){
         var uuid  = Date.now()
@@ -1489,13 +1491,15 @@ describe('Pubnub', function() {
             subscribe_key     : 'demo',
             uuid              : uuid
         });
-        /*
-        it("should not generate spurious presence events when adding new channels to subscribe list", function() {
+        
+        it("should not generate spurious presence events when adding new channels to subscribe in_list", function() {
             var ch1 = channel + '-subscribe-' + Date.now();
             var ch2 = ch1 + '-2';
             var events_count = 0;
-            pubnub_pres.subscribe({ channel : ch1,
+            pubnub_pres.subscribe({ 
+                channel : ch1,
                 connect : function(response)  {
+                    
                     setTimeout(function(){
                         pubnub_pres.subscribe({
                             channel  : ch2,
@@ -1512,13 +1516,14 @@ describe('Pubnub', function() {
                                 events_count++;
                                 assert.deepEqual(response.action,"join");
                                 assert.deepEqual(response.uuid, JSON.stringify(pubnub_pres.get_uuid()));
-                                //setTimeout(function(){
+                                setTimeout(function(){
                                     assert.deepEqual(events_count,2);
                                     done();
-                                //}, 5000);
+                                }, 5000);
                             }
                         });
                     },5000);
+
                 },
                 presence : function(response) {
                     events_count++;
@@ -1526,18 +1531,18 @@ describe('Pubnub', function() {
                     assert.deepEqual(response.uuid + '', JSON.stringify(pubnub_pres.get_uuid()));
                 },
                 callback : function(response) {
-
+                    
                 },
                 error : function(response) {
                     assert.ok(false, "Error occurred in subscribe 1");
                     done();
                 }
             });
-        })*/
+        })
     }),
 
 
-    /*
+    
     describe('#here_now()', function(){
         var uuid  = Date.now()
         ,   uuid1 = uuid + '-1'
@@ -1662,7 +1667,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1675,7 +1683,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid1
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1688,7 +1699,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid2
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1701,7 +1715,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid3
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1798,7 +1815,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1811,7 +1831,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid1
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1824,7 +1847,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid2
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1837,7 +1863,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid3
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1930,7 +1959,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1943,7 +1975,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid1
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1956,7 +1991,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid2
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1969,7 +2007,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid3
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -2047,7 +2088,7 @@ describe('Pubnub', function() {
         })
 
     })
-    */
+    
     describe('Channel Group',function(){
         var pubnub = PUBNUB.init({
             origin        : 'pubsub.pubnub.com',
