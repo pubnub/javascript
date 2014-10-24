@@ -13,46 +13,58 @@ var pubnub = PUBNUB({
 });
 
 
-var home   = pubnub.sync('home');
+//var home   = pubnub.sync('home');
 
 // Sync to 'home.bedroom1.light1' Reference
 
+
+
+var home = pubnub.sync('home');
+
 /*
-
-var light1 = pubnub.sync('home.bedroom1.light1');
-
-
 light1.on.merge(function(r){
 	var data = r.data;
-	log(data.value('status'));
+	log(light1.value('status'));
 });
 
 
-light1.on.ready(function(light1){
-    console.log(light1.value());
+light1.on.ready(function(){
+    console.log(light1.value('status'));
     light1.merge({ status : 'on' });
 });
-
 */
+
 
 // Home object has finished downloading and is ready to use
 home.on.ready(function(ref) {
-
+    console.log('HOME READY');
+    console.log(JSON.stringify(home.value(), null, 2));
+    
     // Full Home Status
-    log(ref.value());
+    //log(ref.value());
 
 
     // Bedroom 1
     var bedroom1 = home.get('bedroom1');
-    setTimeout(function(){
-        console.log('BEDROOM1')
-        log(bedroom1);
-    },5000);
+    bedroom1.on.merge(function(r){
+        console.log('MERGE on HOME.BEDROOM1');
+        console.log(JSON.stringify(bedroom1.value(),null,2))
+    });
 
-/*
+    var office = pubnub.sync('office');
+    var light1 = bedroom1.get('light1');
+
+    light1.on.merge(function(r){
+        console.log('MERGE on HOME.BEDROOM1.light1');
+        console.log(JSON.stringify(light1.value('status'),null,2));
+    });
+
+    
+    log(bedroom1.value('light1.status'));
+
 
     // Light 1
-    var b1light1 = bedroom1.get('light1');
+    var b1light1 = home.get('bedroom1.light1');
 
     var b1light2 = bedroom1.get('light2');
 
@@ -60,13 +72,28 @@ home.on.ready(function(ref) {
     // Light 1 Dedicated Event Listeners
     b1light1.on.merge(function(ref) {
     	log('Bedroom 1 Light 1 UPDATED');
-    	log(ref);
+        //log(bedroom1.value());
+    	log(b1light1.value('status'));
     });
 
-
+    
     // Write Data
-    bedroom1.merge({ 'light1' : { status : 'on' }});
+    setTimeout(function(){
+        home.merge({'bedroom1' :{ 'light1' : { status : 'on' }}});
+    },3000);
 
+    
+    // Write Data
+    setTimeout(function(){
+        b1light1.merge({'status' : 'off'});
+    },6000);
+
+            // Write Data
+    setTimeout(function(){
+        b1light1.merge({'status' : 'on'});
+    },9000);
+    
+    /*
 
     console.log(b1light2.value().status == 'on');
 
@@ -80,7 +107,7 @@ home.on.ready(function(ref) {
         console.log('B1 Light 2 : ' + b1light2.value().status == 'on'); 
     });
     
-*/
+    */
     
 })
 
@@ -102,9 +129,14 @@ home.on.remove(function(ref) {
 })
 
 */
+
+home.on.merge(function(r){
+    console.log('MERGE on HOME');
+    console.log(JSON.stringify(home.value(), null, 2));
+});
 home.on.error(function(info) { console.log(info) })
 
 // Network Events
 home.on.network.connect(function(info)    { /* network active   */ })
-home.on.network.disconnect(function(info) { /* network inactive */ })
-home.on.network.reconnect(function(info)  { /* network restored */ })
+//home.on.network.disconnect(function(info) { /* network inactive */ })
+//home.on.network.reconnect(function(info)  { /* network restored */ })

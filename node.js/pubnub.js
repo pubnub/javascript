@@ -15,6 +15,12 @@ var NOW             = 1
 ,   SDK_VER         = '3.6.7'
 ,   REPL            = /{([\w\-]+)}/g;
 
+DEBUG = 0;
+
+function pnlog(r) {
+    DEBUG && console.log(r);
+}
+
 /**
  * UTILITIES
  */
@@ -59,7 +65,7 @@ function build_url( url_components, url_params ) {
     } );
     url += "?" + params.join(PARAMSBIT);
 
-    console.log(url);
+    pnlog(url);
     return url;
 }
 
@@ -288,7 +294,10 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
+    ,   OBJECTS       = {}
     ,   DS_PATH_TTS   = {}
+    ,   DS_CALLBACKS  = {}
+    ,   DS_CHANNELS   = {}
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -454,8 +463,8 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        //console.log(JSON.stringify(o));
-        //console.log(JSON.stringify(update));
+        //pnlog(JSON.stringify(o));
+        //pnlog(JSON.stringify(update));
 
         // get update path from response
         var path    = update.location.split(".");
@@ -476,15 +485,15 @@ function PN_API(setup) {
         }
         
         // x is the place where data exists
-        var x = o.data;
+        var x = o;
 
 
         //   ????
         var continue_update = true;
 
         // iterate over path elements
-        //console.log(JSON.stringify(path));
-        //console.log(last);
+        //pnlog(JSON.stringify(path));
+        //pnlog(last);
         for (p in path) {
             try {
 
@@ -508,6 +517,8 @@ function PN_API(setup) {
 
         // handle updation
         if (action == 'merge' || action == 'insert') {
+            pnlog(JSON.stringify(o,null,2));
+            pnlog('MERGE OR INSERT')
 
             if (path_length - depth > 0) {
                 try {
@@ -522,17 +533,17 @@ function PN_API(setup) {
                 }
             } else {
                 try {
-                    if (o.data['pn_tt'] <= update.timetoken) {
-                        o.data['pn_val'] = update.value;
-                        o.data['pn_tt'] = update.timetoken;
+                    if (o['pn_tt'] <= update.timetoken) {
+                        o['pn_val'] = update.value;
+                        o['pn_tt'] = update.timetoken;
                     }
                 } catch (e) {
-                    o.data = {}
-                    o.data['pn_val'] = update.value;
-                    o.data['pn_tt'] = update.timetoken;   
+                    o = {}
+                    o['pn_val'] = update.value;
+                    o['pn_tt'] = update.timetoken;   
                 }
             }
-
+            pnlog(JSON.stringify(o,null,2));  
         }
         // handle deletion 
         else if (action == 'delete') {
@@ -551,12 +562,12 @@ function PN_API(setup) {
                     }
                 }
 
-                if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
-                    delete o.data[path[0]];
+                if ( o[path[0]] && Object.keys(o[path[0]]).length == 0) {
+                    delete o[path[0]];
                 }
             } else {
                 // complete tree empty now due to no non leaf node existence
-                o.data = {}
+                o = {}
             }
         }
 
@@ -564,7 +575,7 @@ function PN_API(setup) {
         return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
-
+        pnlog(JSON.stringify(updates, null, 2));
         var update = updates[trans_id];
 
         var update_at;
@@ -741,6 +752,73 @@ function PN_API(setup) {
         return r;
     }
 
+    function _get_object_by_path(obj, path) {
+        var split = path.split('.');
+        var o = obj;
+        for (var s in split) {
+            try {
+                o = o[split[s]];
+            } catch (e) {
+                return null;
+            }
+        }
+        return o;
+    }
+
+    function _get_parent_by_path(obj, path) {
+        var split = path.split('.');
+        split.pop()
+        var o = obj;
+        for (var s in split) {
+            try {
+                o = o[split[s]];
+            } catch (e) {
+                return null;
+            }
+        }
+        return o;
+    }
+
+    function _get_object_by_path_with_create(obj, path) {
+        var split = path.split('.');
+        var o = obj;
+        for (var s in split) {
+            if (o[split[s]]) {
+                o = o[split[s]];
+            } else {
+                o[split[s]] = {};
+                o = o[split[s]];
+            }
+
+        }
+        return o;
+    }
+
+    function _get_parent_by_path_with_create(obj, path) {
+
+        var split = path.split('.');
+        
+        if (split[split.length - 1] == '') split.pop();
+        split.pop()
+
+        if (split.length == 0) {
+            pnlog('return OBJECTS');
+            return obj;
+        }
+        var o = obj;
+        for (var s in split) {
+
+            if (o[split[s]]) {
+                o = o[split[s]];
+            } else {
+                o[split[s]] = {};
+                o = o[split[s]];
+            }
+
+        }
+        return o;
+    }
+
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -843,132 +921,6 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-        'get_synced_object' : function(args) {
-            var callback         = args['callback']
-            ,   err              = args['error']    || function(){}
-            ,   connect          = args['connect']
-            ,   object_id        = args['object_id']
-            ,   path             = args['path'] || '';
-
-            // Is object sync complete ?
-            var synced = false;
-            
-            // depth at which we are listening 
-            var depth = 0;
-
-            var updates = {};
-            
-
-            // internal object
-            var internal = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}, "data" : {}};
-
-
-            // prepare the path argument
-            if (path) {
-                var split_array = path['split'](".");
-                depth = split_array['length'];
-            }
-
-            /* 
-                subscribe to 3 channels . for ex. if obj id is 'ab'
-                a. normal channel       pn_ds_ab
-                b. wildcard channel     pn_ds_ab.*
-                c. transaction channel  pn_dstr_ab
-            */
-            SELF['subscribe']({
-
-                'channel'     : 'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
-                                'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
-                                'pn_dstr_' + object_id,
-
-
-                'connect'     : function(r, timetoken) {
-
-                    // if message received on wild card channel
-                    // this is just to take care of 3 invocations of connect
-                    if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
-
-                        // read initial copy of the data structure (recursive in case large object)
-                        function read(next_page, callback, error) {
-                            get({
-                                'object_id' : object_id,
-                                'path'      : path,
-                                'timetoken' : timetoken,
-                                'next_page'  : next_page,
-                                'callback'  : function(r) {
-                                    
-                                    var next_page = r['next_page'];
-
-                                    var payload = r['payload'];
-
-
-                                    // if payload is object, merge else assign
-                                    if (typeof payload === 'object') {
-                                        internal['data'] = mergeAtOneLevel(internal['data'], payload);
-                                    } else {
-                                        internal['data'] = payload;
-                                    }
-
-                                    // till next_page is null in response keep reading recursively
-                                    if (!next_page || (next_page && next_page == "null")) {
-
-                                        // all updates recieved , now apply
-                                        apply_all_updates(internal, updates, callback, depth);
-
-                                        // sync complete
-                                        synced = true;
-
-                                        // invoke connect callback
-                                        connect && connect(object_id);
-                                    } else {
-                                        // sync incomplete
-                                        synced = false;
-
-                                        // read more data
-                                        read(next_page, callback, error);
-                                    }
-
-                                },
-                                'error'     : function(r) {
-
-                                   // error  
-                                   error && error(r);
-                                }
-                            })
-                        }
-
-                        // start reading initial copy of object and populate internal copy
-                        read();
-                    } 
-                },
-                'callback'    : function(r) {
-
-                    var trans_id    = r['trans_id'];
-                    var action      = r['action'];
-                    var status      = r['status'];
-
-                    if (action) { // if action, store it in list with transaction id as key
-
-                        if (!updates[trans_id])
-                            updates[trans_id] = {'complete' : false, 'list' : []}
-                        updates[trans_id]['list']['push'](r);
-
-                    } else if (status) { // if transaction complete , apply the updates
-                        if (status == 'complete' && updates[trans_id]) {
-                            updates[trans_id]['complete'] = true;
-                            if (synced) apply_updates(internal, updates, callback, trans_id, depth);
-                        }
-                    }
-                },
-                'error'       : function(r) { 
-
-                    //error
-                    err({'message' : r['message']});
-
-                }
-            });
-            return internal;
-        },
 
         'get' : function(args, callback) {
              var callback         = args['callback'] || callback
@@ -1098,9 +1050,263 @@ function PN_API(setup) {
                 mode : 'DELETE'
             });
         },
-        'sync' : function(object_id) {
-            console.log("SYNC  : " + object_id);
 
+
+        // Follwing methods will handle sync call in data sync
+
+        'get_synced_object' : function(args) {
+            var callback         = args['callback']
+            ,   err              = args['error']    || function(){}
+            ,   connect          = args['connect']
+            ,   object_id        = args['object_id']
+            ,   path             = args['path'] || '';
+
+            var complete_object_id = object_id + '.' + path;
+            var split_path         = path.split('.');
+            var last_node_key = split_path[split_path.length -1];
+
+            if (!last_node_key || last_node_key.length == 0) last_node_key = object_id;
+
+
+            function _get_channels_for_subscribe() {
+                var channels = "";
+                 for (var dsc in DS_CHANNELS) {
+                    if (DS_CHANNELS[dsc]) {
+                        if (channels.length > 0) channels += ',';
+                        var channel = dsc;
+                        channels +=  'pn_ds_' + channel + ','   +
+                                     'pn_ds_'  + channel + '.*,' +
+                                     'pn_dstr_' + channel;
+                    }
+                 }
+                 pnlog(channels);
+                 return channels;
+            }
+
+            function _prepare_new_ds_channel_list(object_id) {
+                if (DS_CHANNELS[object_id]) {
+                    return true;
+                }
+                var objid_check = object_id + '.';
+                var parent_channel_present = false;
+                for (var cb in DS_CALLBACKS) {
+                    parent_channel_present = (objid_check.indexOf(cb) == 0)?true:false;
+                }
+                if (!parent_channel_present) DS_CHANNELS[object_id] = true;
+
+                pnlog(object_id + ' : ' + parent_channel_present);
+                
+                if (parent_channel_present) return true;
+            }
+
+            pnlog(JSON.stringify(OBJECTS, null, 2));
+            pnlog(object_id); 
+
+            if (_prepare_new_ds_channel_list(object_id)) {
+                var o = OBJECTS[object_id];
+                pnlog(JSON.stringify(o, null, 2));
+
+                //var split_array = path['split'](".");
+                
+                for (var p in split_path) {
+                    o = o[split_path[p]];
+                }
+                
+                pnlog('o');
+                pnlog(JSON.stringify(o, null, 2));
+                return o;
+            }
+
+
+
+            // Is object sync complete ?
+            var synced = false;
+            
+            // depth at which we are listening 
+            var depth = 0;
+
+            var updates = {};
+            //var internal;
+            
+
+            // prepare the path argument
+            if (path) {
+                var split_array = path['split'](".");
+                depth = split_array['length'];
+            }
+
+
+            /*
+            if (!OBJECTS[object_id]) {
+                internal = OBJECTS[object_id] = {};
+            } else {
+                internal = OBJECTS[object_id];
+            }
+
+            */
+
+            var parent = _get_parent_by_path_with_create(OBJECTS,complete_object_id);
+
+            pnlog('PARENT : ' + JSON.stringify(parent,null,2));
+            pnlog('last : ' + last_node_key);
+
+            if (!parent[last_node_key]) parent[last_node_key] = {};
+
+            function start_sub(o, p) {
+                var complete_object_id = o + '.' + p;
+                pnlog('start_sub object_id : ' + o);
+
+                /* 
+                    subscribe to 3 channels . for ex. if obj id is 'ab'
+                    a. normal channel       pn_ds_ab
+                    b. wildcard channel     pn_ds_ab.*
+                    c. transaction channel  pn_dstr_ab
+                */
+                SELF['subscribe']({
+
+                    'channel'     : _get_channels_for_subscribe(),
+
+
+                    'connect'     : function(r, timetoken) {
+
+                        // if message received on wild card channel
+                        // this is just to take care of 3 invocations of connect
+
+                        if (r.indexOf('dstr') > 0) {
+
+                            // read initial copy of the data structure (recursive in case large object)
+                            function read(next_page, callback, error) {
+                                get({
+                                    'object_id' : o,
+                                    'path'      : p,
+                                    'timetoken' : timetoken,
+                                    'next_page'  : next_page,
+                                    'callback'  : function(r) {
+                                        
+                                        var next_page = r['next_page'];
+
+                                        var payload = r['payload'];
+
+
+                                        // if payload is object, merge else assign
+                                        if (typeof payload === 'object') {
+                                            parent[last_node_key] = mergeAtOneLevel(parent[last_node_key], payload);
+                                        } else {
+                                            parent[last_node_key] = payload;
+                                        }
+
+                                        // till next_page is null in response keep reading recursively
+                                        if (!next_page || (next_page && next_page == "null")) {
+
+                                            // all updates recieved , now apply
+                                            apply_all_updates(parent[last_node_key], updates, callback, depth);
+
+                                            // sync complete
+                                            synced = true;
+
+                                            // invoke connect callback
+                                            connect && connect(o);
+                                            pnlog('OBJECTS hash');
+                                            pnlog(JSON.stringify(OBJECTS, null, 2));
+                                        } else {
+                                            // sync incomplete
+                                            synced = false;
+
+                                            // read more data
+                                            read(next_page, callback, error);
+                                        }
+
+                                    },
+                                    'error'     : function(r) {
+
+                                       // error  
+                                       error && error(r);
+                                    }
+                                })
+                            }
+
+                            // start reading initial copy of object and populate internal copy
+                            read();
+                        } 
+                    },
+                    'callback'    : function(r,c) {
+                        pnlog('R : ' + JSON.stringify(r));
+                        pnlog('C : ' + JSON.stringify(c));
+
+                        var trans_id    = r['trans_id'];
+                        var action      = r['action'];
+                        var status      = r['status'];
+
+                        if (action) { // if action, store it in list with transaction id as key
+
+                            if (!updates[trans_id])
+                                updates[trans_id] = {'complete' : false, 'list' : []}
+                            updates[trans_id]['list']['push'](r);
+
+                        } else if (status) { // if transaction complete , apply the updates
+                            if (status == 'complete' && updates[trans_id]) {
+                                updates[trans_id]['complete'] = true;
+                                pnlog('STATUS synced : ' + synced);
+                                pnlog('last_node_key : ' + last_node_key);
+                                var location = updates[trans_id].list[0].location;
+                                pnlog('location : ' + JSON.stringify(location));
+                                var objid = (location.split('.')[0]).split('pn_ds_')[1];
+                                pnlog('OBJID : ' + objid);
+                                //pnlog('OBJECT_ID_2 : ' + updates[0].location.split('.')[0]);
+
+                                pnlog('before update' + JSON.stringify(OBJECTS, null, 2));
+                                if (!OBJECTS[objid]) OBJECTS[objid] = {};
+
+                                if (synced) apply_updates(OBJECTS[objid], updates, callback, trans_id, depth);
+                                pnlog('after udpate' + JSON.stringify(OBJECTS, null, 2));
+                            }
+                        }
+                    },
+                    'error'       : function(r) { 
+
+                        //error
+                        err({'message' : r['message']});
+
+                    }
+                });
+            }
+            start_sub(object_id, path);
+            pnlog(JSON.stringify(parent[last_node_key], null, 2));
+            return parent[last_node_key];
+        },
+
+
+        'sync' : function(object_id) {
+            pnlog("SYNC  : " + object_id);
+
+            function set_callback(object_id, callback, type) {
+
+                object_id = object_id + '.';
+
+                if (!DS_CALLBACKS[object_id]) DS_CALLBACKS[object_id] = {};
+                DS_CALLBACKS[object_id][type] = callback;
+
+            }
+
+            function get_callback(object_id, type) {
+                object_id = object_id + '.';
+                try {
+                    return DS_CALLBACKS[object_id][type];
+                } catch (e)  {
+                    return null;
+                }
+            }
+            function _get_callbacks(location, type) {
+                var callbacks = [];
+                for (var c in DS_CALLBACKS) {
+                    if (location.indexOf(c) == 0) {
+                        pnlog(JSON.stringify(DS_CALLBACKS));
+                        DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
+                    }
+                }
+
+                return callbacks;
+            }
 
             var split_o = split_object_id_path(object_id);
 
@@ -1108,13 +1314,10 @@ function PN_API(setup) {
             var obj_id  = split_o['object_id'];
             var path    = split_o['path'];
 
-
-
-            var ready, update, set, remove, change 
-            ,   network_connect, network_disconnect, network_reconnect;
-
             // internal object that will reprepsent data
-            var internal = {};
+
+
+            var internal;
 
             // ref is the object reference that will be returned
             var ref = {
@@ -1122,40 +1325,40 @@ function PN_API(setup) {
                 // callbacks like change, ready etc can be set here
                 'on' : {
                     'change'  : function(callback) {
-                        change = callback;
+                        set_callback(object_id, callback,'change');
                     },
                     'ready'  : function(callback) {
-                        ready = callback;
+                        set_callback(object_id ,callback,'ready');
                     },
                     'merge'  : function(callback) {
-                        merge = callback;
+                        set_callback(object_id, callback,'merge');
                     },  
                     'replace'     : function(callback) {
-                        replace = callback;
+                        set_callback(object_id, callback,'replace');
                     },
                     'remove'  : function(callback) {
-                        remove = callback;
+                        set_callback(object_id, callback,'remove');
                     },
                     'error'   : function(callback) {
-                        error = callback;
+                        set_callback(object_id, callback,'error');
                     }, 
                     // network events
                     'network' : {
                         'connect'       : function(callback) {
-                            network_connect = callback;
+                            set_callback(object_id, callback,'network.connect');
                         },
                         'disconnect'    : function(callback) {
-                            network_disconnect = callback;
+                            set_callback(object_id, callback,'network.disconnect');
                         },
                         'reconnect'     : function(callback) {
-                            network_reconnect = callback;
+                            set_callback(object_id, callback,'network.reconnect');
                         }
                     }
                 },
 
                 'merge'  : function(data, success, error) {
 
-                    console.log('UPDATE');
+                    pnlog('UPDATE');
                     SELF['merge']({
                         'object_id' : obj_id,
                         'path'      : path,
@@ -1168,7 +1371,7 @@ function PN_API(setup) {
 
                 'replace' : function(data, success, error) {
 
-                    console.log('REPLACE');
+                    pnlog('REPLACE');
                     SELF['replace']({
                         'object_id' : obj_id,
                         'path'      : path,
@@ -1180,7 +1383,7 @@ function PN_API(setup) {
 
                 'remove'  : function(success, error) {
 
-                    console.log('REMOVE');
+                    pnlog('REMOVE');
                     SELF['remove']({
                         'object_id' : obj_id,
                         'path'      : path,
@@ -1191,7 +1394,7 @@ function PN_API(setup) {
 
                 'push'    : function(data, success, error) {
 
-                    console.log('PUSH');
+                    pnlog('PUSH');
                 }
             }
 
@@ -1200,42 +1403,68 @@ function PN_API(setup) {
                 'object_id'  : split_o['object_id'],
                 'path'       : split_o['path'],
                 'callback'   : function(r) {
-                    //console.log('GSO CALLBACK');    
-                    //console.log(JSON.stringify(r));
+                    pnlog('GSO CALLBACK');    
+                    pnlog(JSON.stringify(r));
                     if (r[0]) {
                         var action = r[0]['action'];
-
+                        var change = get_callback(object_id, 'change');
                         change && change({'action' : action});
 
                         if (action === 'merge' || action === 'insert') {              // update event
-
-                            merge && merge({
-                                'path' : r[0]['updateAt'],
-                                'data' : ref
-                            });
+                            var callbacks = _get_callbacks(r[0].location, 'merge');
+                            pnlog('OBJECTS' + JSON.stringify(OBJECTS, null, 2));
+                            
+                            for (var i in callbacks) {
+                                var merge = callbacks[i];
+                                merge && merge({
+                                    'path' : r[0]['updateAt'],
+                                    'data' : ref
+                                });
+                            }
 
                         } else if (action === 'delete') {       // delete event
 
-                            remove && remove(_get_ref(ref));
+                            var callbacks = _get_callbacks(r[0].location, 'remove');
+                            for (var i in callbacks) {
+                                var remove = callbacks[i];
+                                remove && remove({
+                                    'path' : r[0]['updateAt'],
+                                    'data' : ref
+                                });
+                            }
                         }
                         else if (action === 'replace-delete') {     // set event
+
                             if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
-                                replace && replace(_get_ref(ref));
+                                var callbacks = _get_callbacks(r[0].location, 'replace');
+                                for (var i in callbacks) {
+                                    var replace = callbacks[i];
+                                    replace && replace({
+                                        'path' : r[0]['updateAt'],
+                                        'data' : ref
+                                    });
+                                }
                             }
                         }
                     }
                 },
                 'error' : function(r) {
+                    var error = get_callback(obj_id,path,'error');
                     error && error(r);
                 },
                 'connect'    : function(r) {
+                    var network_connect = get_callback(object_id, 'network.connect');
                     network_connect && network_connect(r);
+
+                    var ready = get_callback(object_id, 'ready');
                     ready && ready(_get_ref(ref));
                 },
                 'reconnect'  : function(r) {
+                    var network_reconnect = get_callback(object_id, 'network.reconnect');
                     network_reconnect && network_reconnect(r);
                 },
                 'disconnect' : function(r) {
+                    var network_disconnect = get_callback(object_id, 'network.disconnect');
                     network_disconnect && network_disconnect(r)
                 }    
                 
@@ -1244,15 +1473,15 @@ function PN_API(setup) {
             ref['value'] = function(path) {
 
                 if (!path &&
-                    !internal['data']['pn_val'] &&
-                    !isPnList(internal['data'])
+                    !internal['pn_val'] &&
+                    !isPnList(internal)
                     ) 
-                    return internal['data'];
+                    return internal;
 
 
                 var patha = (path)?path['split']("."):[];
 
-                var d = internal['data'];
+                var d = internal;
 
                 for (p in patha) {
                     var key = patha[p];
@@ -2261,7 +2490,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
-            //console.log('BODY : ' + body);
+            pnlog('BODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
