@@ -974,6 +974,7 @@ function PN_API(setup) {
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   sort_key         = args['sort_key']
             ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
@@ -996,6 +997,8 @@ function PN_API(setup) {
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
+
+            if (sort_key && sort_key.length > 0) data['sort_key'] = sort_key;
 
             xdr({
                 callback : jsonp,
@@ -1060,11 +1063,13 @@ function PN_API(setup) {
             ,   object_id        = args['object_id']
             ,   path             = args['path'] || '';
 
-            var complete_object_id = object_id + '.' + path;
-            var split_path         = path.split('.');
-            var last_node_key = split_path[split_path.length -1];
+            var complete_object_id  = object_id + '.' + path;
+            var split_path          = path.split('.');
+            var last_node_key       = split_path[split_path.length -1];
 
-            if (!last_node_key || last_node_key.length == 0) last_node_key = object_id;
+            if (!last_node_key || last_node_key.length == 0) {
+                last_node_key = object_id;
+            }
 
 
             function _get_channels_for_subscribe() {
@@ -1095,7 +1100,8 @@ function PN_API(setup) {
 
                 pnlog(object_id + ' : ' + parent_channel_present);
                 
-                if (parent_channel_present) return true;
+                // return true if parent channel already there 
+                return parent_channel_present;
             }
 
             pnlog(JSON.stringify(OBJECTS, null, 2));
@@ -1104,8 +1110,6 @@ function PN_API(setup) {
             if (_prepare_new_ds_channel_list(object_id)) {
                 var o = OBJECTS[object_id];
                 pnlog(JSON.stringify(o, null, 2));
-
-                //var split_array = path['split'](".");
                 
                 for (var p in split_path) {
                     o = o[split_path[p]];
@@ -1401,6 +1405,18 @@ function PN_API(setup) {
                         'error'     : error,
                         'mode'      : 'POST'
                     });
+                },
+                'push_with_sort_key'    : function(data, sort_key, success, error) {
+                    pnlog('PUSH SORT KEY');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'sort_key'  : sort_key,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
                 }
             }
 
@@ -1439,8 +1455,7 @@ function PN_API(setup) {
                                 });
                             }
                         }
-                        else if (action === 'replace-delete') {     // set event
-
+                        else if (action === 'replace-delete') {     // set events
                             if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
                                 var callbacks = _get_callbacks(r[0].location, 'replace');
                                 for (var i in callbacks) {
