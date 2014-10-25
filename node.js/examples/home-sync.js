@@ -36,8 +36,6 @@ home.on.ready(function(ref) {
         console.log(JSON.stringify(light1.value('status'),null,2));
     });
 
-    
-    log(bedroom1.value('light1.status'));
 
 
     // Light 1
@@ -53,7 +51,18 @@ home.on.ready(function(ref) {
     	log(b1light1.value('status'));
     });
 
-    
+    // Light 1 Dedicated Event Listeners
+    b1light2.on.merge(function(ref) {
+        log('Bedroom 1 Light 2 UPDATED');
+        //log(bedroom1.value());
+        log(b1light2.value('status'));
+    });
+
+    // Write Data
+    setTimeout(function(){
+        home.merge({'bedroom1' :{ 'light1' : { status : 'off' }}});
+    },1000);
+
     // Write Data
     setTimeout(function(){
         home.merge({'bedroom1' :{ 'light1' : { status : 'on' }}});
@@ -69,6 +78,27 @@ home.on.ready(function(ref) {
     setTimeout(function(){
         b1light1.merge({'status' : 'on'});
     },9000);
+
+    // Write Data
+    setTimeout(function(){
+        home.merge({'bedroom1' :{ 'light2' : { status : 'off' }}});
+    },10000);
+    
+    // Write Data
+    setTimeout(function(){
+        home.merge({'bedroom1' :{ 'light2' : { status : 'on' }}});
+    },18000);
+
+    
+    // Write Data
+    setTimeout(function(){
+        b1light2.merge({'status' : 'off'});
+    },27000);
+
+    // Write Data
+    setTimeout(function(){
+        b1light2.merge({'status' : 'on'});
+    },36000);
     
 
     
