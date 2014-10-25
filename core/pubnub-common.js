@@ -64,7 +64,7 @@ function build_url( url_components, url_params ) {
     } );
     url += "?" + params.join(PARAMSBIT);
 
-    pnlog(url);
+    //pnlog(url);
     return url;
 }
 
@@ -601,7 +601,7 @@ function PN_API(setup) {
             }
 
             // invoke callback with actions_list as argument
-            callback(actions_list);
+            callback && callback(actions_list);
 
             // delete update 
 
@@ -1392,8 +1392,15 @@ function PN_API(setup) {
                 },
 
                 'push'    : function(data, success, error) {
-
                     pnlog('PUSH');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
                 }
             }
 
