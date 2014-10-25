@@ -108,6 +108,6 @@ home.on.ready(function(ref) {
 home.on.error(function(info) { console.log(info) })
 
 // Network Events
-home.on.network.connect(function(info)    { /* network active   */ })
-home.on.network.disconnect(function(info) { /* network inactive */ })
-home.on.network.reconnect(function(info)  { /* network restored */ })
+home.on.network.connect(function(info)    { console.log("Connected to Home!"); })
+home.on.network.disconnect(function(info) { console.log("Disconnected to Home!"); })
+home.on.network.reconnect(function(info)  { console.log("Reconnected to Home!"); })
