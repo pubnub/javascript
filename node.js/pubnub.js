@@ -65,7 +65,7 @@ function build_url( url_components, url_params ) {
     } );
     url += "?" + params.join(PARAMSBIT);
 
-    pnlog(url);
+    //pnlog(url);
     return url;
 }
 
@@ -463,8 +463,12 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        //pnlog(JSON.stringify(o));
-        //pnlog(JSON.stringify(update));
+        //console.log(JSON.stringify(o, null, 2));
+        //console.log(JSON.stringify(update));
+        //console.log(depth);
+        
+        // !!!! depth not required any more due to design change . needs review ?
+        depth = 0;
 
         // get update path from response
         var path    = update.location.split(".");
@@ -494,7 +498,10 @@ function PN_API(setup) {
         // iterate over path elements
         //pnlog(JSON.stringify(path));
         //pnlog(last);
+
         for (p in path) {
+            //console.log(JSON.stringify(x, null,2));
+            //console.log(path[p]);
             try {
 
                 // if x does not contain a node with path reached till now
@@ -570,7 +577,7 @@ function PN_API(setup) {
                 o = {}
             }
         }
-
+        //console.log(JSON.stringify(o, null, 2));
         // return update at , need to reconsider
         return update['updateAt'];   
     }
@@ -602,7 +609,7 @@ function PN_API(setup) {
             }
 
             // invoke callback with actions_list as argument
-            callback(actions_list);
+            callback && callback(actions_list);
 
             // delete update 
 
@@ -724,6 +731,18 @@ function PN_API(setup) {
         return arr;
     }
 
+    function getObjectKeysSorted(obj) {
+        var keys = [];
+        var arr = [];
+        for(var key in obj){
+            if(obj.hasOwnProperty(key)){
+                keys.push(key); 
+            }
+        }
+        keys.sort();
+        return keys;
+    }
+
     function isPnList(l) {
         for(var key in l){
             if(l.hasOwnProperty(key)){
@@ -753,13 +772,17 @@ function PN_API(setup) {
     }
 
     function _get_object_by_path(obj, path) {
+
         var split = path.split('.');
-        var o = obj;
+
+        var o = OBJECTS[obj];
         for (var s in split) {
-            try {
-                o = o[split[s]];
-            } catch (e) {
-                return null;
+            if (split[s] && split[s].length > 0) {
+                try {
+                    o = o[split[s]];
+                } catch (e) {
+                    return null;
+                }
             }
         }
         return o;
@@ -768,7 +791,7 @@ function PN_API(setup) {
     function _get_parent_by_path(obj, path) {
         var split = path.split('.');
         split.pop()
-        var o = obj;
+        var o = OBJECTS[obj];
         for (var s in split) {
             try {
                 o = o[split[s]];
@@ -975,6 +998,7 @@ function PN_API(setup) {
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   sort_key         = args['sort_key']
             ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
@@ -998,6 +1022,8 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
+            if (sort_key && sort_key.length > 0) data['sort_key'] = sort_key;
+
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
@@ -1013,7 +1039,7 @@ function PN_API(setup) {
             });
         },
         'remove' : function(args, callback) {
-            var callback         = args['callback'] || callback
+            var callback         = args['callback'] || callback || function(){}
             ,   err              = args['error']    || function(){}
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
@@ -1026,13 +1052,19 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
+            var oid_split = object_id.split('.');
+            object_id = oid_split.shift();
+            if (!path) {
+                path = oid_split.join('.');
+            }
+
             var url = [
                 STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
                  'pub-key', PUBLISH_KEY, 'obj-id', encode(object_id)
             ];
             
             if (path) {
-                url['push'](encode(path['split'](".")['join']("/")));
+                url['push'](encodeURI(path['split'](".")['join']("/")));
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -1061,11 +1093,13 @@ function PN_API(setup) {
             ,   object_id        = args['object_id']
             ,   path             = args['path'] || '';
 
-            var complete_object_id = object_id + '.' + path;
-            var split_path         = path.split('.');
-            var last_node_key = split_path[split_path.length -1];
+            var complete_object_id  = object_id + '.' + path;
+            var split_path          = path.split('.');
+            var last_node_key       = split_path[split_path.length -1];
 
-            if (!last_node_key || last_node_key.length == 0) last_node_key = object_id;
+            if (!last_node_key || last_node_key.length == 0) {
+                last_node_key = object_id;
+            }
 
 
             function _get_channels_for_subscribe() {
@@ -1096,7 +1130,8 @@ function PN_API(setup) {
 
                 pnlog(object_id + ' : ' + parent_channel_present);
                 
-                if (parent_channel_present) return true;
+                // return true if parent channel already there 
+                return parent_channel_present;
             }
 
             pnlog(JSON.stringify(OBJECTS, null, 2));
@@ -1105,11 +1140,13 @@ function PN_API(setup) {
             if (_prepare_new_ds_channel_list(object_id)) {
                 var o = OBJECTS[object_id];
                 pnlog(JSON.stringify(o, null, 2));
-
-                //var split_array = path['split'](".");
                 
                 for (var p in split_path) {
-                    o = o[split_path[p]];
+                    var sp = split_path[p];
+                    if (sp && sp.length > 0) {
+                        if (!o[sp]) o[sp] = {};
+                        o = o[sp];
+                    }
                 }
                 
                 pnlog('o');
@@ -1308,6 +1345,31 @@ function PN_API(setup) {
                 return callbacks;
             }
 
+            function _get_callbacks_with_location(location, type) {
+                var callbacks = {};
+                for (var c in DS_CALLBACKS) {
+                    if (location.indexOf(c) == 0) {
+                        pnlog(JSON.stringify(DS_CALLBACKS));
+                        if(DS_CALLBACKS[c][type]) {
+                            callbacks[c] = DS_CALLBACKS[c][type];
+                        }
+                    }
+                }
+                
+                return callbacks;
+            }
+
+            function _get_all_callbacks(type) {
+                var callbacks = [];
+                for (var c in DS_CALLBACKS) {
+                    if(DS_CALLBACKS[c][type]) {
+                        DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
+                    }
+                }
+                //console.log(callbacks.length);
+                return callbacks;
+            }
+
             var split_o = split_object_id_path(object_id);
 
 
@@ -1393,82 +1455,160 @@ function PN_API(setup) {
                 },
 
                 'push'    : function(data, success, error) {
-
                     pnlog('PUSH');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
+                },
+                'push_with_sort_key'    : function(data, sort_key, success, error) {
+                    pnlog('PUSH SORT KEY');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'sort_key'  : sort_key,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
+                }
+
+            }
+            function value(object, path) {
+
+                if (!path &&
+                    !object['pn_val'] &&
+                    !isPnList(object)
+                    ) 
+                    return object;
+
+
+                var patha = (path)?path['split']("."):[];
+
+                var d = object;
+
+                for (p in patha) {
+                    var key = patha[p];
+                    try {
+                        if (d[key]) d = d[key]
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                if (d['pn_val']) {
+                    return d['pn_val'];
+                } else if (isPnList(d)) { // array
+                    return objectToSortedArray(d);
+                } else { // object
+                    return d;
                 }
             }
 
+
             // prepare internal object 
-            internal = SELF['get_synced_object']({
-                'object_id'  : split_o['object_id'],
-                'path'       : split_o['path'],
-                'callback'   : function(r) {
-                    pnlog('GSO CALLBACK');    
-                    pnlog(JSON.stringify(r));
-                    if (r[0]) {
-                        var action = r[0]['action'];
-                        var change = get_callback(object_id, 'change');
-                        change && change({'action' : action});
 
-                        if (action === 'merge' || action === 'insert') {              // update event
-                            var callbacks = _get_callbacks(r[0].location, 'merge');
-                            pnlog('OBJECTS' + JSON.stringify(OBJECTS, null, 2));
-                            
-                            for (var i in callbacks) {
-                                var merge = callbacks[i];
-                                merge && merge({
-                                    'path' : r[0]['updateAt'],
-                                    'data' : ref
-                                });
-                            }
+            function synced_object(object_id, path) {
+                //console.log(object_id + ' : ' + path);
+                var i = (function(object_id, path) {
 
-                        } else if (action === 'delete') {       // delete event
+                        return SELF['get_synced_object']({
+                            'object_id'  : object_id,
+                            'path'       : path,
+                            'callback'   : function(r) {
+                                pnlog('GSO CALLBACK');    
+                                //console.log(JSON.stringify(r));
+                                if (r[0]) {
+                                    var action = r[0]['action'];
+                                    var change = get_callback(object_id, 'change');
+                                    change && change({'action' : action});
 
-                            var callbacks = _get_callbacks(r[0].location, 'remove');
-                            for (var i in callbacks) {
-                                var remove = callbacks[i];
-                                remove && remove({
-                                    'path' : r[0]['updateAt'],
-                                    'data' : ref
-                                });
-                            }
-                        }
-                        else if (action === 'replace-delete') {     // set event
+                                    if (action === 'merge' || action === 'insert') {              // update event
 
-                            if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
-                                var callbacks = _get_callbacks(r[0].location, 'replace');
-                                for (var i in callbacks) {
-                                    var replace = callbacks[i];
-                                    replace && replace({
-                                        'path' : r[0]['updateAt'],
-                                        'data' : ref
-                                    });
+                                        var callbacks = _get_callbacks_with_location(r[0].location, 'merge');
+                                        pnlog('OBJECTS' + JSON.stringify(OBJECTS, null, 2));
+                                        
+                                        for (var i in callbacks) {
+                                            var merge = callbacks[i];
+                                            var isplit = i.split(".");
+                                            var oid = isplit.shift();
+                                            isplit.pop();
+                                            var p = isplit.join('.');
+
+                                            var callback_data = {};
+
+                                            callback_data['data'] = _get_object_by_path(oid, p);
+                                            callback_data['value'] = function(path) {
+                                                return value(callback_data['data'], path);
+                                            }
+                                            callback_data['path'] = r[0]['updateAt'];
+                                            merge && merge(callback_data);
+                                        }
+
+                                    } else if (action === 'delete') {       // delete event
+
+                                        var callbacks = _get_callbacks(r[0].location, 'remove');
+                                        for (var i in callbacks) {
+                                            var remove = callbacks[i];
+                                            remove && remove({
+                                                'path' : r[0]['updateAt'],
+                                                'data' : ref
+                                            });
+                                        }
+                                    }
+                                    else if (action === 'replace-delete') {     // set events
+                                        internal = _get_object_by_path(object_id,path);
+                                        if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
+                                            var callbacks = _get_callbacks(r[0].location, 'replace');
+                                            for (var i in callbacks) {
+                                                var replace = callbacks[i];
+                                                replace && replace({
+                                                    'path' : r[0]['updateAt'],
+                                                    'data' : ref
+                                                });
+                                            }
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                    }
-                },
-                'error' : function(r) {
-                    var error = get_callback(obj_id,path,'error');
-                    error && error(r);
-                },
-                'connect'    : function(r) {
-                    var network_connect = get_callback(object_id, 'network.connect');
-                    network_connect && network_connect(r);
+                            },
+                            'error' : function(r) {
+                                var error = get_callback(obj_id,path,'error');
+                                error && error(r);
+                            },
+                            'connect'    : function(r) {
+                                var network_connect = get_callback(object_id, 'network.connect');
+                                network_connect && network_connect(r);
 
-                    var ready = get_callback(object_id, 'ready');
-                    ready && ready(_get_ref(ref));
-                },
-                'reconnect'  : function(r) {
-                    var network_reconnect = get_callback(object_id, 'network.reconnect');
-                    network_reconnect && network_reconnect(r);
-                },
-                'disconnect' : function(r) {
-                    var network_disconnect = get_callback(object_id, 'network.disconnect');
-                    network_disconnect && network_disconnect(r)
-                }    
-                
-            });
+                                var callbacks = _get_all_callbacks('ready');
+                                for (var i in callbacks) {
+                                    var ready = callbacks[i];
+                                    ready && ready();
+                                }
+                                //var ready = get_callback(object_id, 'ready');
+                                //ready && ready(_get_ref(ref));
+                            },
+                            'reconnect'  : function(r) {
+                                var network_reconnect = get_callback(object_id, 'network.reconnect');
+                                network_reconnect && network_reconnect(r);
+                            },
+                            'disconnect' : function(r) {
+                                var network_disconnect = get_callback(object_id, 'network.disconnect');
+                                network_disconnect && network_disconnect(r)
+                            }    
+                            
+                        })
+                    }
+                )(object_id,path);
+                return i;
+            }
+
+            internal = synced_object(obj_id,path);
+            //console.log('INTERNAL : ' + internal);
+
 
             ref['value'] = function(path) {
 
@@ -1504,6 +1644,48 @@ function PN_API(setup) {
                 return SELF['sync'](object_id + '.' + path);
             };
 
+            ref['pop'] = function() {
+
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                var last_key = keys.pop();
+
+                SELF['remove']({
+                    'object_id' : object_id + '.' + last_key
+                });
+                return value(internal[last_key]);
+            };
+            ref['removeByIndex'] = function(index) {
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    SELF['remove']({
+                        'object_id' : object_id + '.' + key
+                    });
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
+            ref['getByIndex'] = function(index) {
+
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
+            //console.log(JSON.stringify(OBJECTS, null, 2));
             return ref;
         },
         /*
@@ -2521,9 +2703,10 @@ function xdr( setup ) {
     var payload = '';
 
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
-
+    
     var url = build_url( setup.url, data );
-    //console.log(mode + ' ' + url); 
+    pnlog(mode + ' ' + url); 
+    payload && pnlog(JSON.stringify(payload));
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 
