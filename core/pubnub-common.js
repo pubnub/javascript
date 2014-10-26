@@ -462,8 +462,12 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        //pnlog(JSON.stringify(o));
-        //pnlog(JSON.stringify(update));
+        //console.log(JSON.stringify(o, null, 2));
+        //console.log(JSON.stringify(update));
+        //console.log(depth);
+        
+        // !!!! depth not required any more due to design change . needs review ?
+        depth = 0;
 
         // get update path from response
         var path    = update.location.split(".");
@@ -493,7 +497,10 @@ function PN_API(setup) {
         // iterate over path elements
         //pnlog(JSON.stringify(path));
         //pnlog(last);
+
         for (p in path) {
+            //console.log(JSON.stringify(x, null,2));
+            //console.log(path[p]);
             try {
 
                 // if x does not contain a node with path reached till now
@@ -569,7 +576,7 @@ function PN_API(setup) {
                 o = {}
             }
         }
-
+        //console.log(JSON.stringify(o, null, 2));
         // return update at , need to reconsider
         return update['updateAt'];   
     }
@@ -764,10 +771,9 @@ function PN_API(setup) {
     }
 
     function _get_object_by_path(obj, path) {
-        console.log(obj);
-        console.log(path);
+
         var split = path.split('.');
-        console.log(split);
+
         var o = OBJECTS[obj];
         for (var s in split) {
             if (split[s] && split[s].length > 0) {
@@ -1135,7 +1141,11 @@ function PN_API(setup) {
                 pnlog(JSON.stringify(o, null, 2));
                 
                 for (var p in split_path) {
-                    o = o[split_path[p]];
+                    var sp = split_path[p];
+                    if (sp && sp.length > 0) {
+                        if (!o[sp]) o[sp] = {};
+                        o = o[sp];
+                    }
                 }
                 
                 pnlog('o');
@@ -1348,6 +1358,17 @@ function PN_API(setup) {
                 return callbacks;
             }
 
+            function _get_all_callbacks(type) {
+                var callbacks = [];
+                for (var c in DS_CALLBACKS) {
+                    if(DS_CALLBACKS[c][type]) {
+                        DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
+                    }
+                }
+                console.log(callbacks.length);
+                return callbacks;
+            }
+
             var split_o = split_object_id_path(object_id);
 
 
@@ -1491,7 +1512,7 @@ function PN_API(setup) {
             // prepare internal object 
 
             function synced_object(object_id, path) {
-                console.log(object_id + ' : ' + path);
+                //console.log(object_id + ' : ' + path);
                 var i = (function(object_id, path) {
 
                         return SELF['get_synced_object']({
@@ -1499,7 +1520,7 @@ function PN_API(setup) {
                             'path'       : path,
                             'callback'   : function(r) {
                                 pnlog('GSO CALLBACK');    
-                                console.log(JSON.stringify(r));
+                                //console.log(JSON.stringify(r));
                                 if (r[0]) {
                                     var action = r[0]['action'];
                                     var change = get_callback(object_id, 'change');
@@ -1516,7 +1537,6 @@ function PN_API(setup) {
                                             var oid = isplit.shift();
                                             isplit.pop();
                                             var p = isplit.join('.');
-                                            //console.log(oid + ' - ' + p); 
 
                                             var callback_data = {};
 
@@ -1562,8 +1582,13 @@ function PN_API(setup) {
                                 var network_connect = get_callback(object_id, 'network.connect');
                                 network_connect && network_connect(r);
 
-                                var ready = get_callback(object_id, 'ready');
-                                ready && ready(_get_ref(ref));
+                                var callbacks = _get_all_callbacks('ready');
+                                for (var i in callbacks) {
+                                    var ready = callbacks[i];
+                                    ready && ready();
+                                }
+                                //var ready = get_callback(object_id, 'ready');
+                                //ready && ready(_get_ref(ref));
                             },
                             'reconnect'  : function(r) {
                                 var network_reconnect = get_callback(object_id, 'network.reconnect');
@@ -1581,6 +1606,7 @@ function PN_API(setup) {
             }
 
             internal = synced_object(obj_id,path);
+            console.log('INTERNAL : ' + internal);
 
 
             ref['value'] = function(path) {
@@ -1616,63 +1642,49 @@ function PN_API(setup) {
             ref['get'] = function(path) {
                 return SELF['sync'](object_id + '.' + path);
             };
+
             ref['pop'] = function() {
-                    console.log('POP');
-                    //console.log(JSON.stringify(internal));
-                    //console.log(isPnList(internal));
-                    if(!isPnList(internal)) {
-                        return null;
-                    }
-                    var keys = getObjectKeysSorted(internal);
-                    var last_key = keys.pop();
-                    //console.log(object_id + ' ; ' + path);
-                    //console.log(last_key);
-                    SELF['remove']({
-                        'object_id' : object_id + '.' + last_key
-                    });
-                    return value(internal[last_key]);
-                };
+
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                var last_key = keys.pop();
+
+                SELF['remove']({
+                    'object_id' : object_id + '.' + last_key
+                });
+                return value(internal[last_key]);
+            };
             ref['removeByIndex'] = function(index) {
-                    console.log('Remove By Index');
-                    //console.log(JSON.stringify(internal));
-                    //console.log(isPnList(internal));
-                    if(!isPnList(internal)) {
-                        return null;
-                    }
-                    var keys = getObjectKeysSorted(internal);
-                    try {
-                        var key = keys[index];
-
-                        //console.log(object_id + ' ; ' + path);
-                        //console.log(last_key);
-                        SELF['remove']({
-                            'object_id' : object_id + '.' + key
-                        });
-                        return value(internal[key]);
-                    } catch (e) {
-                        return null;
-                    }
-                };
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    SELF['remove']({
+                        'object_id' : object_id + '.' + key
+                    });
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
             ref['getByIndex'] = function(index) {
-                    console.log('Get By Index');
-                    //console.log(JSON.stringify(internal));
-                    //console.log(isPnList(internal));
-                    if(!isPnList(internal)) {
-                        return null;
-                    }
-                    var keys = getObjectKeysSorted(internal);
-                    try {
-                        var key = keys[index];
 
-                        //console.log(object_id + ' ; ' + path);
-                        //console.log(last_key);
-
-                        return value(internal[key]);
-                    } catch (e) {
-                        return null;
-                    }
-                };
-
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
+            console.log(JSON.stringify(OBJECTS, null, 2));
             return ref;
         },
         /*
