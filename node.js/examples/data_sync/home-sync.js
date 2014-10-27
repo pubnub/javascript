@@ -20,24 +20,74 @@ var home = pubnub.sync('home');
 // Home object has finished downloading and is ready to use
 home.on.ready(function(ref) {
     console.log('HOME READY');
-    console.log(JSON.stringify(home.value(), null, 2));
+    //console.log(JSON.stringify(home.value(), null, 2));
     
     // Bedroom 1
     var bedroom1 = home.get('bedroom1');
-
+    
     var office = pubnub.sync('office');
 
+    //office.merge({'lights5' : [1,2,3,4,5,6,7,8,9,10]});
+    
+    office.on.ready(function(){
+        console.log('OFFICE READY');
+        var office_lights = office.get('lights5');
+        var office_lights0 = office.get('light0');
+
+        console.log(JSON.stringify(office.value('lights5')));
+        setInterval(function(){
+            console.log((office_lights.removeByIndex(0)));
+        },5000);
+         office_lights0.pop();
+        office.on.merge(function(){
+            console.log('OFFICE MERGE');
+            //console.log(office.value());
+            console.log(JSON.stringify(office.value('lights5')));
+        });
+                office.on.remove(function(){
+            console.log('OFFICE REMOVE');
+            //console.log(office.value());
+            console.log(JSON.stringify(office.value('lights5')));
+        });
+
+    });
+
+
+    /*
+    office_lights.push_with_sort_key('test7','z');
+
+    setTimeout(function(){
+        office_lights.push_with_sort_key("test-" + Date.now(),'z');
+    }, 2000);
+*/
+    
 
 
     var light1 = bedroom1.get('light1');
 
     light1.on.merge(function(r){
         console.log('MERGE on HOME.BEDROOM1.light1');
+        console.log(JSON.stringify(bedroom1.value('status'),null,2));
+        console.log(JSON.stringify(r,null,2));
+        console.log(JSON.stringify(r.value('status'),null,2));
+
+    });
+
+    light1.on.remove(function(r){
+        console.log('REMOVE on HOME.BEDROOM1.light1');
+        console.log(JSON.stringify(bedroom1.value('status'),null,2));
         console.log(JSON.stringify(light1.value('status'),null,2));
     });
 
+    light1.on.replace(function(r){
+        console.log('REPLACE on HOME.BEDROOM1.light1');
+        console.log(JSON.stringify(bedroom1.value('status'),null,2));
+        console.log(JSON.stringify(light1.value('status'),null,2));
+    });
+    
 
-
+/*
+    
     // Light 1
     var b1light1 = home.get('bedroom1.light1');
 
@@ -100,7 +150,7 @@ home.on.ready(function(ref) {
         b1light2.merge({'status' : 'on'});
     },36000);
     
-
+    */
     
 })
 
@@ -108,6 +158,6 @@ home.on.ready(function(ref) {
 home.on.error(function(info) { console.log(info) })
 
 // Network Events
-home.on.network.connect(function(info)    { console.log("Connected to Home!"); })
-home.on.network.disconnect(function(info) { console.log("Disconnected to Home!"); })
-home.on.network.reconnect(function(info)  { console.log("Reconnected to Home!"); })
+home.on.network.connect(function(info)    { /* network active   */ })
+home.on.network.disconnect(function(info) { /* network inactive */ })
+home.on.network.reconnect(function(info)  { /* network restored */ })

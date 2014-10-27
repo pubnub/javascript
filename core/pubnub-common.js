@@ -1365,7 +1365,7 @@ function PN_API(setup) {
                         DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
                     }
                 }
-                console.log(callbacks.length);
+                //console.log(callbacks.length);
                 return callbacks;
             }
 
@@ -1606,7 +1606,7 @@ function PN_API(setup) {
             }
 
             internal = synced_object(obj_id,path);
-            console.log('INTERNAL : ' + internal);
+            //console.log('INTERNAL : ' + internal);
 
 
             ref['value'] = function(path) {
@@ -1684,7 +1684,7 @@ function PN_API(setup) {
                     return null;
                 }
             };
-            console.log(JSON.stringify(OBJECTS, null, 2));
+            //console.log(JSON.stringify(OBJECTS, null, 2));
             return ref;
         },
         /*
