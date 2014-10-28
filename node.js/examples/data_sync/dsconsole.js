@@ -14,9 +14,12 @@ var pubnub = PUBNUB({
 
 });
 
+function log2(r) {
+    console.log(JSON.stringify(r, null, 2));
+}
 
 function log(r) {
-    console.log(JSON.stringify(r, null, 2));
+    console.log(JSON.stringify(r));
 }
 
 
@@ -168,27 +171,30 @@ function createSyncObject() {
         var obj = OBJECTS[object_id];
 
         // ready callback
-        obj.on.ready(function(r){
+        obj.on.ready(function(ref){
             log(object_id + ' : ' + 'READY EVENT');
-            log(obj.value());
+            log2(ref);
+            log2(obj.value());
         })
         
         // Merge callback
-        obj.on.merge(function(r){
+        obj.on.merge(function(ref){
             log(object_id + ' : ' + 'MERGE EVENT');
-            log(obj.value());
+            log2(ref);
+            log2(ref.value());
         })
         
         // Replace callback
-        obj.on.replace(function(r){
+        obj.on.replace(function(ref){
             log(object_id + ' : ' + 'REPLACE EVENT');
-            log(obj.value());
+            log2(ref);
+            log2(ref.value());
         })
         
         // Remove callback
-        obj.on.remove(function(r){
+        obj.on.remove(function(ref){
             log(object_id + ' : ' + 'REMOVE EVENT');
-            log(obj.value());
+            log2(ref);
         })
     });
 }

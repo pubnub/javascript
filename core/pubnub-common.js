@@ -597,7 +597,8 @@ function PN_API(setup) {
                 var action_event = actions_list[i];
 
                 // apply event, update at value will be returned
-                action_event.update_at = apply_update(o, action_event, depth);
+                //action_event.update_at = 
+                apply_update(o, action_event, depth);
 
                 // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
@@ -788,6 +789,7 @@ function PN_API(setup) {
     }
 
     function _get_parent_by_path(obj, path) {
+        if (!path || path.length == 0) return null;
         var split = path.split('.');
         split.pop()
         var o = OBJECTS[obj];
@@ -1133,7 +1135,7 @@ function PN_API(setup) {
 
                 pnlog(object_id + ' : ' + parent_channel_present);
                 
-                // return true if parent channel already there 
+                // return true if parent channel already there
                 return parent_channel_present;
             }
 
@@ -1524,7 +1526,7 @@ function PN_API(setup) {
                             'path'       : path,
                             'callback'   : function(r) {
                                 pnlog('GSO CALLBACK');    
-                                //console.log(JSON.stringify(r));
+                                pnlog(JSON.stringify(r));
                                 if (r[0]) {
                                     var action = r[0]['action'];
                                     var change = get_callback(object_id, 'change');
@@ -1543,8 +1545,12 @@ function PN_API(setup) {
                                             var p = isplit.join('.');
 
                                             var callback_data = {};
+                                            callback_data['delta'] = {};
+                                            callback_data['delta']['changes'] = r;
 
+                                            callback_data['type'] = 'merge';
                                             callback_data['data'] = _get_object_by_path(oid, p);
+                                            callback_data['parent'] = _get_parent_by_path(oid, p);
                                             callback_data['value'] = function(path) {
                                                 return value(callback_data['data'], path);
                                             }
@@ -1557,10 +1563,16 @@ function PN_API(setup) {
                                         var callbacks = _get_callbacks(r[0].location, 'remove');
                                         for (var i in callbacks) {
                                             var remove = callbacks[i];
-                                            remove && remove({
-                                                'path' : r[0]['updateAt'],
-                                                'data' : ref
-                                            });
+
+
+                                            var callback_data = {};
+                                            callback_data['delta'] = {};
+                                            callback_data['delta']['changes'] = r;
+                                            callback_data['type'] = 'remove';
+                                            callback_data['parent'] = _get_parent_by_path(oid, p);
+
+                                            callback_data['path'] = r[0]['updateAt'];
+                                            remove && remove(callback_data);
                                         }
                                     }
                                     else if (action === 'replace-delete') {     // set events
@@ -1569,10 +1581,17 @@ function PN_API(setup) {
                                             var callbacks = _get_callbacks(r[0].location, 'replace');
                                             for (var i in callbacks) {
                                                 var replace = callbacks[i];
-                                                replace && replace({
-                                                    'path' : r[0]['updateAt'],
-                                                    'data' : ref
-                                                });
+                                                var callback_data = {};
+                                                callback_data['delta'] = {};
+                                                callback_data['delta']['changes'] = r;
+                                                callback_data['type'] = 'replace';
+                                                callback_data['data'] = _get_object_by_path(oid, p);
+                                                callback_data['parent'] = _get_parent_by_path(oid, p);
+                                                callback_data['value'] = function(path) {
+                                                    return value(callback_data['data'], path);
+                                                }
+                                                callback_data['path'] = r[0]['updateAt'];
+                                                replace && replace(callback_data);
                                             }
                                         }
                                     }
@@ -1589,7 +1608,12 @@ function PN_API(setup) {
                                 var callbacks = _get_all_callbacks('ready');
                                 for (var i in callbacks) {
                                     var ready = callbacks[i];
-                                    ready && ready();
+                                    var callback_data = {};
+                                    callback_data['type'] = 'ready';
+                                    callback_data['value'] = function(path) {
+                                        return value(callback_data['data'], path);
+                                    }
+                                    ready && ready(callback_data);
                                 }
                                 //var ready = get_callback(object_id, 'ready');
                                 //ready && ready(_get_ref(ref));
