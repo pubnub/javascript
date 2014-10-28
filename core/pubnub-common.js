@@ -986,7 +986,7 @@ function PN_API(setup) {
             }
             read(null,callback, error);
         },
-        'set'   : function(args, callback) {
+        'replace'   : function(args, callback) {
             args['mode'] = 'PUT'
             SELF['merge'](args);
         },
