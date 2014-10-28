@@ -990,6 +990,10 @@ function PN_API(setup) {
             args['mode'] = 'PUT'
             SELF['merge'](args);
         },
+        'push'   : function(args, callback) {
+            args['mode'] = 'POST'
+            SELF['merge'](args);
+        },
         'merge' : function(args, callback) {
             var callback         = args['callback'] || callback || function(){}
             ,   err              = args['error']    || function(){}

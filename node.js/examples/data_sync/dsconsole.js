@@ -46,19 +46,20 @@ var readline = require('readline'),
 rl.setPrompt(
         '1: Create new local sync object\n' +
         '2: Merge\n' +
-        '3: Replace\n' +
-        '4: Remove\n'
+        '3: Push\n' +
+        '4: Replace\n' +
+        '5: Remove\n'
 );
 rl.prompt();
 
 var OBJECTS = {};
 
 function merge() {
-    rl.question('Object Id (Ex. home  or home.bedroom.light )?', function(object_id) {
+    rl.question('Object Id (Ex. home  or home.bedroom.light )? ', function(object_id) {
         var obj = OBJECTS[object_id];
 
         if (obj) { // object already synced, we can call methods on object
-            rl.question('Enter JSON value to be merged :', function(jso){
+            rl.question('Enter JSON value to be merged : ', function(jso){
                 obj.merge(jso, log, log);
             });
 
@@ -67,7 +68,7 @@ function merge() {
             var obj_id = split_o.shift();
 
             var path = split_o.join(".");
-            rl.question('Enter JSON value to be merged :', function(jso){
+            rl.question('Enter JSON value to be merged : ', function(jso){
                 pubnub.merge({
                     object_id : obj_id,
                     path : path,
@@ -81,12 +82,40 @@ function merge() {
     });
 }
 
-function replace() {
-    rl.question('Object Id (Ex. home  or home.bedroom.light )?', function(object_id) {
+function push() {
+    rl.question('Object Id (Ex. home  or home.bedroom.light )? ', function(object_id) {
         var obj = OBJECTS[object_id];
 
         if (obj) { // object already synced, we can call methods on object
-            rl.question('Enter JSON value to be replaced :', function(jso){
+            rl.question('Enter JSON value to be pushed : ', function(jso){
+                obj.push(jso, log, log);
+            });
+
+        } else { // object not already synced, use pubnub methods. 
+            var split_o = object_id.split('.');
+            var obj_id = split_o.shift();
+
+            var path = split_o.join(".");
+            rl.question('Enter JSON value to be pushed : ', function(jso){
+                pubnub.push({
+                    object_id : obj_id,
+                    path : path,
+                    data : jso,
+                    success: log, 
+                    error : log
+                });
+            });
+
+        }
+    });
+}
+
+function replace() {
+    rl.question('Object Id (Ex. home  or home.bedroom.light )? ', function(object_id) {
+        var obj = OBJECTS[object_id];
+
+        if (obj) { // object already synced, we can call methods on object
+            rl.question('Enter JSON value to be replaced : ', function(jso){
                 obj.replace(jso, log, log);
             });
 
@@ -95,7 +124,7 @@ function replace() {
             var obj_id = split_o.shift();
 
             var path = split_o.join(".");
-            rl.question('Enter JSON value to be replaced :', function(jso){
+            rl.question('Enter JSON value to be replaced : ', function(jso){
                 pubnub.replace({
                     object_id : obj_id,
                     path : path,
@@ -110,7 +139,7 @@ function replace() {
 }
 
 function remove() {
-    rl.question('Object Id (Ex. home  or home.bedroom.light )?', function(object_id) {
+    rl.question('Object Id (Ex. home  or home.bedroom.light )? ', function(object_id) {
         var obj = OBJECTS[object_id];
 
         if (obj) { // object already synced, we can call methods on object
@@ -133,7 +162,7 @@ function remove() {
 
 
 function createSyncObject() {
-    rl.question('Object Id (Ex. home  or home.bedroom.light )?', function(object_id) {
+    rl.question('Object Id (Ex. home  or home.bedroom.light )? ', function(object_id) {
         OBJECTS[object_id] = pubnub.sync(object_id);
         
         var obj = OBJECTS[object_id];
@@ -173,9 +202,12 @@ rl.on('line',function (line) {
             merge();
             break;
         case '3':
-            replace();
+            push();
             break;
         case '4':
+            replace();
+            break;
+        case '5':
             remove();
             break;
         default:
