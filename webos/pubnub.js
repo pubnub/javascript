@@ -1667,7 +1667,7 @@ function PN_API(setup) {
                                             change && change(callback_data);
                                         }
                                     }
-                                    else if (action === 'replace-delete') {     // set events
+                                    else if (action === 'replace-delete' || action === 'replace-delete') {     // set events
                                         internal = _get_object_by_path(object_id,path);
                                         if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
                                             pnlog(r[0].location);
