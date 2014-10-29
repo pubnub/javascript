@@ -673,7 +673,7 @@ function PN_API(setup) {
         }
 
         // handle updation
-        if (action == 'merge' || action == 'insert') {
+        if (action == 'merge' || action == 'push') {
             pnlog(JSON.stringify(o,null,2));
             pnlog('MERGE OR INSERT')
 
@@ -1726,7 +1726,7 @@ function PN_API(setup) {
                                     var change = get_callback(object_id, 'change');
                                     
 
-                                    if (action === 'merge' || action === 'put') {              // update event
+                                    if (action === 'merge' || action === 'push') {              // update event
 
                                         var callbacks = _get_callbacks_with_location(r[0].location, 'merge');
                                         var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
