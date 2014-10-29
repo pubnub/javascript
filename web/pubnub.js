@@ -1097,6 +1097,9 @@ function PN_API(setup) {
             params[key] = val;
         },
 
+        'snapshot' : function(args, callback) {
+            SELF['get'](args, callback);
+        },
 
         'get' : function(args, callback) {
              var callback         = args['callback'] || callback
@@ -1753,6 +1756,27 @@ function PN_API(setup) {
                                             }
                                             callback_data['path'] = r[0]['updateAt'];
                                             merge && merge(callback_data);
+
+                                        }
+
+                                        for (var i in callbacks_change) {
+                                            var change = callbacks_change[i];
+                                            var isplit = i.split(".");
+                                            var oid = isplit.shift();
+                                            isplit.pop();
+                                            var p = isplit.join('.');
+
+                                            var callback_data = {};
+                                            callback_data['delta'] = {};
+                                            callback_data['delta']['changes'] = r;
+
+                                            callback_data['type'] = 'merge';
+                                            callback_data['data'] = _get_object_by_path(oid, p);
+                                            callback_data['parent'] = _get_parent_by_path(oid, p);
+                                            callback_data['value'] = function(path) {
+                                                return value(callback_data['data'], path);
+                                            }
+                                            callback_data['path'] = r[0]['updateAt'];
                                             change && change(callback_data);
                                         }
 
@@ -1762,7 +1786,6 @@ function PN_API(setup) {
                                         var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
                                         for (var i in callbacks) {
                                             var remove = callbacks[i];
-                                            var change = callbacks_change[i];
                                             var isplit = i.split(".");
                                             var oid = isplit.shift();
                                             isplit.pop();
@@ -1776,6 +1799,21 @@ function PN_API(setup) {
 
                                             callback_data['path'] = r[0]['updateAt'];
                                             remove && remove(callback_data);
+                                        }
+                                        for (var i in callbacks_change) {
+                                            var change = callbacks_change[i];
+                                            var isplit = i.split(".");
+                                            var oid = isplit.shift();
+                                            isplit.pop();
+                                            var p = isplit.join('.');
+
+                                            var callback_data = {};
+                                            callback_data['delta'] = {};
+                                            callback_data['delta']['changes'] = r;
+                                            callback_data['type'] = 'remove';
+                                            callback_data['parent'] = _get_parent_by_path(oid, p);
+
+                                            callback_data['path'] = r[0]['updateAt'];
                                             change && change(callback_data);
                                         }
                                     }
@@ -1785,10 +1823,9 @@ function PN_API(setup) {
                                             pnlog(r[0].location);
                                             var callbacks = _get_callbacks_with_location(r[0].location, 'replace');
                                             var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
-                                            pnlog(JSON.stringify(r));
+
                                             for (var i in callbacks) {
                                                 var replace = callbacks[i];
-                                                var change = callbacks_change[i];
                                                 var isplit = i.split(".");
                                                 var oid = isplit.shift();
                                                 isplit.pop();
@@ -1806,8 +1843,30 @@ function PN_API(setup) {
                                                 }
                                                 callback_data['path'] = r[0]['updateAt'];
                                                 replace && replace(callback_data);
-                                                change && change(callback_data);
+
                                             }
+                                            for (var i in callbacks_change) {
+                                                var change = callbacks_change[i];
+                                                var isplit = i.split(".");
+                                                var oid = isplit.shift();
+                                                isplit.pop();
+                                                var p = isplit.join('.');
+                                                var callback_data = {};
+                                                callback_data['delta'] = {};
+                                                callback_data['delta']['changes'] = r;
+                                                callback_data['type'] = 'replace';
+                                                callback_data['data'] = _get_object_by_path(oid, p);
+                                                callback_data['parent'] = _get_parent_by_path(oid, p);
+                                                pnlog(oid + ' : ' + p);
+                                                pnlog(JSON.stringify(callback_data['data'], null, 2));
+                                                callback_data['value'] = function(path) {
+                                                    return value(callback_data['data'], path);
+                                                }
+                                                callback_data['path'] = r[0]['updateAt'];
+                                                change && change(callback_data);
+
+                                            }
+
                                         }
                                     }
                                 }
