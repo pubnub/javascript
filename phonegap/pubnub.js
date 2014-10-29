@@ -1667,9 +1667,10 @@ function PN_API(setup) {
                                             change && change(callback_data);
                                         }
                                     }
-                                    else if (action === 'replace-delete' || action === 'replace-delete') {     // set events
+                                    else if (action === 'replace-delete' || action === 'replace') {     // set events
                                         internal = _get_object_by_path(object_id,path);
-                                        if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
+                                        if ((r[0] && r[0]['action'] == 'replace') || 
+                                            (r[1] && r[1]['action'] == 'replace')) { // set event confirmation
                                             pnlog(r[0].location);
                                             var callbacks = _get_callbacks_with_location(r[0].location, 'replace');
                                             var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
