@@ -673,7 +673,7 @@ function PN_API(setup) {
         }
 
         // handle updation
-        if (action == 'merge' || action == 'insert') {
+        if (action == 'merge' || action == 'push') {
             pnlog(JSON.stringify(o,null,2));
             pnlog('MERGE OR INSERT')
 
@@ -1307,6 +1307,9 @@ function PN_API(setup) {
                 
                 pnlog('o');
                 pnlog(JSON.stringify(o, null, 2));
+                console.log(complete_object_id);
+                console.log(JSON.stringify(DS_CALLBACKS, null, 2));
+                if (DS_CALLBACKS[complete_object_id]) DS_CALLBACKS[complete_object_id]['is_ready'] = true;
                 return o;
             }
 
@@ -1472,13 +1475,47 @@ function PN_API(setup) {
         'sync' : function(object_id) {
             pnlog("SYNC  : " + object_id);
 
+
+            function invoke_ready_callbacks() {
+
+                for (var c in DS_CALLBACKS) {
+
+                    var cbo = DS_CALLBACKS[c];
+                    var ready_cb = cbo['ready'];
+
+                    var c = c.substring(0, c.length - 1);
+
+                    var split_c = c.split(".");
+                    var oid = split_c.shift();
+                    var path = split_c.join('.');
+                    if (cbo['is_ready'] && 
+                        !cbo['ready_called'] &&
+                        ready_cb) {
+                        var callback_data = {};
+                        callback_data['type'] = 'ready';
+                        callback_data['data'] = _get_object_by_path(oid, path);
+                        callback_data['value'] = function(path) {
+                            return value(callback_data['data'], path);
+                        }
+                        ready_cb(callback_data);
+                        cbo['ready_called'] = true;
+                    }
+
+
+                }
+
+            }
+
             function set_callback(object_id, callback, type) {
 
-                object_id = object_id + '.';
-
-                if (!DS_CALLBACKS[object_id]) DS_CALLBACKS[object_id] = {};
+                if (!DS_CALLBACKS[object_id]) {
+                    DS_CALLBACKS[object_id] = {
+                        'ready_called' : false,
+                        'is_ready' : false
+                    };
+                }
                 DS_CALLBACKS[object_id][type] = callback;
-
+                invoke_ready_callbacks();
             }
 
             function get_callback(object_id, type) {
@@ -1534,6 +1571,14 @@ function PN_API(setup) {
 
             // internal object that will reprepsent data
 
+            object_id = object_id + '.';
+
+            if (!DS_CALLBACKS[object_id]) {
+                DS_CALLBACKS[object_id] = {
+                    'ready_called' : false,
+                    'is_ready' : false
+                };
+            }
 
             var internal;
 
@@ -1681,15 +1726,17 @@ function PN_API(setup) {
                                 if (r[0]) {
                                     var action = r[0]['action'];
                                     var change = get_callback(object_id, 'change');
-                                    change && change({'action' : action});
+                                    
 
-                                    if (action === 'merge' || action === 'insert') {              // update event
+                                    if (action === 'merge' || action === 'push') {              // update event
 
                                         var callbacks = _get_callbacks_with_location(r[0].location, 'merge');
+                                        var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
                                         pnlog('OBJECTS' + JSON.stringify(OBJECTS, null, 2));
                                         
                                         for (var i in callbacks) {
                                             var merge = callbacks[i];
+                                            var change = callbacks_change[i];
                                             var isplit = i.split(".");
                                             var oid = isplit.shift();
                                             isplit.pop();
@@ -1707,13 +1754,16 @@ function PN_API(setup) {
                                             }
                                             callback_data['path'] = r[0]['updateAt'];
                                             merge && merge(callback_data);
+                                            change && change(callback_data);
                                         }
 
                                     } else if (action === 'delete') {       // delete event
 
                                         var callbacks = _get_callbacks(r[0].location, 'remove');
+                                        var callbacks_change = _get_callbacks(r[0].location, 'change');
                                         for (var i in callbacks) {
                                             var remove = callbacks[i];
+                                            var change = callbacks_change[i];
 
 
                                             var callback_data = {};
@@ -1724,14 +1774,17 @@ function PN_API(setup) {
 
                                             callback_data['path'] = r[0]['updateAt'];
                                             remove && remove(callback_data);
+                                            change && change(callback_data);
                                         }
                                     }
                                     else if (action === 'replace-delete') {     // set events
                                         internal = _get_object_by_path(object_id,path);
                                         if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
                                             var callbacks = _get_callbacks(r[0].location, 'replace');
+                                            var callbacks_change = _get_callbacks(r[0].location, 'change');
                                             for (var i in callbacks) {
                                                 var replace = callbacks[i];
+                                                var change = callbacks_change[i];
                                                 var callback_data = {};
                                                 callback_data['delta'] = {};
                                                 callback_data['delta']['changes'] = r;
@@ -1743,6 +1796,7 @@ function PN_API(setup) {
                                                 }
                                                 callback_data['path'] = r[0]['updateAt'];
                                                 replace && replace(callback_data);
+                                                change && change(callback_data);
                                             }
                                         }
                                     }
@@ -1756,16 +1810,22 @@ function PN_API(setup) {
                                 var network_connect = get_callback(object_id, 'network.connect');
                                 network_connect && network_connect(r);
 
-                                var callbacks = _get_all_callbacks('ready');
-                                for (var i in callbacks) {
-                                    var ready = callbacks[i];
+                                for (var c in DS_CALLBACKS) {
+                                    var cbo = DS_CALLBACKS[c];
+                                    cbo['is_ready'] = true;
+                                    /*
                                     var callback_data = {};
                                     callback_data['type'] = 'ready';
+                                    callback_data['data'] = _get_object_by_path(object_id, path);
                                     callback_data['value'] = function(path) {
                                         return value(callback_data['data'], path);
                                     }
                                     ready && ready(callback_data);
+
+                                    */
+
                                 }
+                                invoke_ready_callbacks();
                                 //var ready = get_callback(object_id, 'ready');
                                 //ready && ready(_get_ref(ref));
                             },

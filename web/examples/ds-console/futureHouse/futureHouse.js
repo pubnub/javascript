@@ -3,11 +3,13 @@ function log(m) {
     return JSON.stringify(m, null, 4);
 }
 function onError(m) {
-    console.log("Error: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
+    //console.log("Error: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
+    console.log("Error");
 }
 
 function onSuccess(m) {
-    console.log("Success: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
+    //console.log("Success: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
+    console.log("Success");
 }
 
 var pubnub = PUBNUB.init({
@@ -42,7 +44,8 @@ home.on.remove(function(ref) {
 
 
 home.on.ready(function (ref) {
-    console.log("Home is Ready. Value: " + log(home.value()));
+    log(ref);
+    //console.log("Home is Ready. Value: " + log(home.value()));
 
     occupants = pubnub.sync('home.occupants');
     garage = pubnub.sync('home.garage');
@@ -56,6 +59,7 @@ home.on.ready(function (ref) {
     // https://www.pivotaltracker.com/story/show/81637286
 
     light1.on.ready(function (ref) {
+        log(ref);
 
         // TODO: Make ref() work, then replace light1 references with ref below
         // Dependent on https://www.pivotaltracker.com/story/show/81638512

@@ -773,8 +773,9 @@ function PN_API(setup) {
     }
 
     function _get_object_by_path(obj, path) {
+        var split = [];
 
-        var split = path.split('.');
+        if (path) split = path.split('.');
 
         var o = OBJECTS[obj];
         for (var s in split) {
@@ -1157,7 +1158,9 @@ function PN_API(setup) {
                 
                 pnlog('o');
                 pnlog(JSON.stringify(o, null, 2));
-                DS_CALLBACKS[complete_object_id + '.']['is_ready'] = true;
+                pnlog(complete_object_id);
+                console.log(JSON.stringify(DS_CALLBACKS, null, 2));
+                if (DS_CALLBACKS[complete_object_id]) DS_CALLBACKS[complete_object_id]['is_ready'] = true;
                 return o;
             }
 
@@ -1345,8 +1348,8 @@ function PN_API(setup) {
                         callback_data['value'] = function(path) {
                             return value(callback_data['data'], path);
                         }
-                        ready_cb(callback_data);
                         cbo['ready_called'] = true;
+                        ready_cb(callback_data);
                     }
 
 
@@ -1573,8 +1576,6 @@ function PN_API(setup) {
                                 pnlog(JSON.stringify(r));
                                 if (r[0]) {
                                     var action = r[0]['action'];
-                                    var change = get_callback(object_id, 'change');
-                                    
 
                                     if (action === 'merge' || action === 'push') {              // update event
 
@@ -1607,12 +1608,15 @@ function PN_API(setup) {
 
                                     } else if (action === 'delete') {       // delete event
 
-                                        var callbacks = _get_callbacks(r[0].location, 'remove');
-                                        var callbacks_change = _get_callbacks(r[0].location, 'change');
+                                        var callbacks = _get_callbacks_with_location(r[0].location, 'remove');
+                                        var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
                                         for (var i in callbacks) {
                                             var remove = callbacks[i];
                                             var change = callbacks_change[i];
-
+                                            var isplit = i.split(".");
+                                            var oid = isplit.shift();
+                                            isplit.pop();
+                                            var p = isplit.join('.');
 
                                             var callback_data = {};
                                             callback_data['delta'] = {};
@@ -1628,17 +1632,25 @@ function PN_API(setup) {
                                     else if (action === 'replace-delete') {     // set events
                                         internal = _get_object_by_path(object_id,path);
                                         if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
-                                            var callbacks = _get_callbacks(r[0].location, 'replace');
-                                            var callbacks_change = _get_callbacks(r[0].location, 'change');
+                                            pnlog(r[0].location);
+                                            var callbacks = _get_callbacks_with_location(r[0].location, 'replace');
+                                            var callbacks_change = _get_callbacks_with_location(r[0].location, 'change');
+                                            pnlog(JSON.stringify(r));
                                             for (var i in callbacks) {
                                                 var replace = callbacks[i];
                                                 var change = callbacks_change[i];
+                                                var isplit = i.split(".");
+                                                var oid = isplit.shift();
+                                                isplit.pop();
+                                                var p = isplit.join('.');
                                                 var callback_data = {};
                                                 callback_data['delta'] = {};
                                                 callback_data['delta']['changes'] = r;
                                                 callback_data['type'] = 'replace';
                                                 callback_data['data'] = _get_object_by_path(oid, p);
                                                 callback_data['parent'] = _get_parent_by_path(oid, p);
+                                                pnlog(oid + ' : ' + p);
+                                                pnlog(JSON.stringify(callback_data['data'], null, 2));
                                                 callback_data['value'] = function(path) {
                                                     return value(callback_data['data'], path);
                                                 }
