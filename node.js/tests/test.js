@@ -2,14 +2,14 @@ var assert = require('assert');
 var PUBNUB = require('../pubnub.js');
 
 var pubnub = PUBNUB.init({
-    publish_key     : 'demo',
-    subscribe_key     : 'demo',
+    publish_key     : 'pub-c-c077418d-f83c-4860-b213-2f6c77bde29a',
+    subscribe_key     : 'sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe',
     origin : 'pubsub.pubnub.com'
 });
 
 var pubnub_enc = PUBNUB({
-    publish_key     : 'demo',
-    subscribe_key   : 'demo',
+    publish_key     : 'pub-c-c077418d-f83c-4860-b213-2f6c77bde29a',
+    subscribe_key   : 'sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe',
     cipher_key      : 'enigma',
     origin : 'pubsub.pubnub.com'
 });
@@ -364,6 +364,7 @@ describe('Pubnub', function() {
 
             })
         })
+       /*
         it('should store in history when store is not there or store is true', function(done){
             var ch = channel + '-' + ++count;
             var messages = [1,2,3]
@@ -421,7 +422,7 @@ describe('Pubnub', function() {
                     });
                 }
             });
-        })
+        })*/
 
     })
 
@@ -442,6 +443,7 @@ describe('Pubnub', function() {
                             pubnub_enc.publish({channel: history_channel,
                                 message : message_string + '-1',
                                 callback : function(response){
+                                    console.log(JSON.stringify(response));
                                     assert.deepEqual(response[0], 1);
                                     pubnub_enc.publish({channel: history_channel,
                                         message : message_string + '-2',

@@ -1156,6 +1156,7 @@ function PN_API(setup) {
                 
                 pnlog('o');
                 pnlog(JSON.stringify(o, null, 2));
+                DS_CALLBACKS[complete_object_id + '.']['is_ready'] = true;
                 return o;
             }
 
@@ -1321,13 +1322,47 @@ function PN_API(setup) {
         'sync' : function(object_id) {
             pnlog("SYNC  : " + object_id);
 
+
+            function invoke_ready_callbacks() {
+
+                for (var c in DS_CALLBACKS) {
+
+                    var cbo = DS_CALLBACKS[c];
+                    var ready_cb = cbo['ready'];
+
+                    var c = c.substring(0, c.length - 1);
+
+                    var split_c = c.split(".");
+                    var oid = split_c.shift();
+                    var path = split_c.join('.');
+                    if (cbo['is_ready'] && 
+                        !cbo['ready_called'] &&
+                        ready_cb) {
+                        var callback_data = {};
+                        callback_data['type'] = 'ready';
+                        callback_data['data'] = _get_object_by_path(oid, path);
+                        callback_data['value'] = function(path) {
+                            return value(callback_data['data'], path);
+                        }
+                        ready_cb(callback_data);
+                        cbo['ready_called'] = true;
+                    }
+
+
+                }
+
+            }
+
             function set_callback(object_id, callback, type) {
 
-                object_id = object_id + '.';
-
-                if (!DS_CALLBACKS[object_id]) DS_CALLBACKS[object_id] = {};
+                if (!DS_CALLBACKS[object_id]) {
+                    DS_CALLBACKS[object_id] = {
+                        'ready_called' : false,
+                        'is_ready' : false
+                    };
+                }
                 DS_CALLBACKS[object_id][type] = callback;
-
+                invoke_ready_callbacks();
             }
 
             function get_callback(object_id, type) {
@@ -1383,6 +1418,14 @@ function PN_API(setup) {
 
             // internal object that will reprepsent data
 
+            object_id = object_id + '.';
+
+            if (!DS_CALLBACKS[object_id]) {
+                DS_CALLBACKS[object_id] = {
+                    'ready_called' : false,
+                    'is_ready' : false
+                };
+            }
 
             var internal;
 
@@ -1605,16 +1648,22 @@ function PN_API(setup) {
                                 var network_connect = get_callback(object_id, 'network.connect');
                                 network_connect && network_connect(r);
 
-                                var callbacks = _get_all_callbacks('ready');
-                                for (var i in callbacks) {
-                                    var ready = callbacks[i];
+                                for (var c in DS_CALLBACKS) {
+                                    var cbo = DS_CALLBACKS[c];
+                                    cbo['is_ready'] = true;
+                                    /*
                                     var callback_data = {};
                                     callback_data['type'] = 'ready';
+                                    callback_data['data'] = _get_object_by_path(object_id, path);
                                     callback_data['value'] = function(path) {
                                         return value(callback_data['data'], path);
                                     }
                                     ready && ready(callback_data);
+
+                                    */
+
                                 }
+                                invoke_ready_callbacks();
                                 //var ready = get_callback(object_id, 'ready');
                                 //ready && ready(_get_ref(ref));
                             },

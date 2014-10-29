@@ -15,6 +15,12 @@ var NOW             = 1
 ,   SDK_VER         = '3.6.7'
 ,   REPL            = /{([\w\-]+)}/g;
 
+DEBUG = 0;
+
+function pnlog(r) {
+    DEBUG && console.log(r);
+}
+
 /**
  * UTILITIES
  */
@@ -59,6 +65,7 @@ function build_url( url_components, url_params ) {
     } );
     url += "?" + params.join(PARAMSBIT);
 
+    //pnlog(url);
     return url;
 }
 
@@ -287,7 +294,10 @@ function PN_API(setup) {
     ,   CHANNELS      = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
+    ,   OBJECTS       = {}
     ,   DS_PATH_TTS   = {}
+    ,   DS_CALLBACKS  = {}
+    ,   DS_CHANNELS   = {}
     ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
@@ -453,8 +463,12 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        console.log(JSON.stringify(o));
-        console.log(JSON.stringify(update));
+        //console.log(JSON.stringify(o, null, 2));
+        //console.log(JSON.stringify(update));
+        //console.log(depth);
+        
+        // !!!! depth not required any more due to design change . needs review ?
+        depth = 0;
 
         // get update path from response
         var path    = update.location.split(".");
@@ -475,16 +489,19 @@ function PN_API(setup) {
         }
         
         // x is the place where data exists
-        var x = o.data;
+        var x = o;
 
 
         //   ????
         var continue_update = true;
 
         // iterate over path elements
-        console.log(JSON.stringify(path));
-        console.log(last);
+        //pnlog(JSON.stringify(path));
+        //pnlog(last);
+
         for (p in path) {
+            //console.log(JSON.stringify(x, null,2));
+            //console.log(path[p]);
             try {
 
                 // if x does not contain a node with path reached till now
@@ -507,6 +524,8 @@ function PN_API(setup) {
 
         // handle updation
         if (action == 'merge' || action == 'insert') {
+            pnlog(JSON.stringify(o,null,2));
+            pnlog('MERGE OR INSERT')
 
             if (path_length - depth > 0) {
                 try {
@@ -521,17 +540,17 @@ function PN_API(setup) {
                 }
             } else {
                 try {
-                    if (o.data['pn_tt'] <= update.timetoken) {
-                        o.data['pn_val'] = update.value;
-                        o.data['pn_tt'] = update.timetoken;
+                    if (o['pn_tt'] <= update.timetoken) {
+                        o['pn_val'] = update.value;
+                        o['pn_tt'] = update.timetoken;
                     }
                 } catch (e) {
-                    o.data = {}
-                    o.data['pn_val'] = update.value;
-                    o.data['pn_tt'] = update.timetoken;   
+                    o = {}
+                    o['pn_val'] = update.value;
+                    o['pn_tt'] = update.timetoken;   
                 }
             }
-
+            pnlog(JSON.stringify(o,null,2));  
         }
         // handle deletion 
         else if (action == 'delete') {
@@ -550,20 +569,20 @@ function PN_API(setup) {
                     }
                 }
 
-                if ( o.data[path[0]] && Object.keys(o.data[path[0]]).length == 0) {
-                    delete o.data[path[0]];
+                if ( o[path[0]] && Object.keys(o[path[0]]).length == 0) {
+                    delete o[path[0]];
                 }
             } else {
                 // complete tree empty now due to no non leaf node existence
-                o.data = {}
+                o = {}
             }
         }
-
+        //console.log(JSON.stringify(o, null, 2));
         // return update at , need to reconsider
         return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
-
+        pnlog(JSON.stringify(updates, null, 2));
         var update = updates[trans_id];
 
         var update_at;
@@ -579,7 +598,8 @@ function PN_API(setup) {
                 var action_event = actions_list[i];
 
                 // apply event, update at value will be returned
-                action_event.update_at = apply_update(o, action_event, depth);
+                //action_event.update_at = 
+                apply_update(o, action_event, depth);
 
                 // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
@@ -590,7 +610,7 @@ function PN_API(setup) {
             }
 
             // invoke callback with actions_list as argument
-            callback(actions_list);
+            callback && callback(actions_list);
 
             // delete update 
 
@@ -712,6 +732,18 @@ function PN_API(setup) {
         return arr;
     }
 
+    function getObjectKeysSorted(obj) {
+        var keys = [];
+        var arr = [];
+        for(var key in obj){
+            if(obj.hasOwnProperty(key)){
+                keys.push(key); 
+            }
+        }
+        keys.sort();
+        return keys;
+    }
+
     function isPnList(l) {
         for(var key in l){
             if(l.hasOwnProperty(key)){
@@ -720,6 +752,96 @@ function PN_API(setup) {
             }
         }
         return false;
+    }
+
+    function split_object_id_path(s) {
+        var r = {};
+        var object_id_split = s['split']('.');
+
+        // prepare object
+
+        r['object_id']          = object_id_split[0];
+        object_id_split['shift']();
+        r['path']            = object_id_split['join']('.');
+        return r;
+    }
+
+    function _get_ref(r, path) {
+
+        r['path'] = path;
+        return r;
+    }
+
+    function _get_object_by_path(obj, path) {
+
+        var split = path.split('.');
+
+        var o = OBJECTS[obj];
+        for (var s in split) {
+            if (split[s] && split[s].length > 0) {
+                try {
+                    o = o[split[s]];
+                } catch (e) {
+                    return null;
+                }
+            }
+        }
+        return o;
+    }
+
+    function _get_parent_by_path(obj, path) {
+        if (!path || path.length == 0) return null;
+        var split = path.split('.');
+        split.pop()
+        var o = OBJECTS[obj];
+        for (var s in split) {
+            try {
+                o = o[split[s]];
+            } catch (e) {
+                return null;
+            }
+        }
+        return o;
+    }
+
+    function _get_object_by_path_with_create(obj, path) {
+        var split = path.split('.');
+        var o = obj;
+        for (var s in split) {
+            if (o[split[s]]) {
+                o = o[split[s]];
+            } else {
+                o[split[s]] = {};
+                o = o[split[s]];
+            }
+
+        }
+        return o;
+    }
+
+    function _get_parent_by_path_with_create(obj, path) {
+
+        var split = path.split('.');
+        
+        if (split[split.length - 1] == '') split.pop();
+        split.pop()
+
+        if (split.length == 0) {
+            pnlog('return OBJECTS');
+            return obj;
+        }
+        var o = obj;
+        for (var s in split) {
+
+            if (o[split[s]]) {
+                o = o[split[s]];
+            } else {
+                o[split[s]] = {};
+                o = o[split[s]];
+            }
+
+        }
+        return o;
     }
 
     // Announce Leave Event
@@ -824,132 +946,6 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-        'get_synced_object' : function(args) {
-            var callback         = args['callback']
-            ,   err              = args['error']    || function(){}
-            ,   connect          = args['connect']
-            ,   object_id        = args['object_id']
-            ,   path             = args['path'] || '';
-
-            // Is object sync complete ?
-            var synced = false;
-            
-            // depth at which we are listening 
-            var depth = 0;
-
-            var updates = {};
-            
-
-            // internal object
-            var internal = {'pn_ds_meta' : {'stale' : true, 'last_update' : 0}, "data" : {}};
-
-
-            // prepare the path argument
-            if (path) {
-                var split_array = path['split'](".");
-                depth = split_array['length'];
-            }
-
-            /* 
-                subscribe to 3 channels . for ex. if obj id is 'ab'
-                a. normal channel       pn_ds_ab
-                b. wildcard channel     pn_ds_ab.*
-                c. transaction channel  pn_dstr_ab
-            */
-            SELF['subscribe']({
-
-                'channel'     : 'pn_ds_' + object_id + ((path)?"." + path:'') + ','   +
-                                'pn_ds_' + object_id + ((path)?"." + path:'') + '.*,' +
-                                'pn_dstr_' + object_id,
-
-
-                'connect'     : function(r, timetoken) {
-
-                    // if message received on wild card channel
-                    // this is just to take care of 3 invocations of connect
-                    if (r == 'pn_ds_' + object_id + ((path)?"." + path:'') + '.*') {
-
-                        // read initial copy of the data structure (recursive in case large object)
-                        function read(next_page, callback, error) {
-                            get({
-                                'object_id' : object_id,
-                                'path'      : path,
-                                'timetoken' : timetoken,
-                                'next_page'  : next_page,
-                                'callback'  : function(r) {
-                                    
-                                    var next_page = r['next_page'];
-
-                                    var payload = r['payload'];
-
-
-                                    // if payload is object, merge else assign
-                                    if (typeof payload === 'object') {
-                                        internal['data'] = mergeAtOneLevel(internal['data'], payload);
-                                    } else {
-                                        internal['data'] = payload;
-                                    }
-
-                                    // till next_page is null in response keep reading recursively
-                                    if (!next_page || (next_page && next_page == "null")) {
-
-                                        // all updates recieved , now apply
-                                        apply_all_updates(internal, updates, callback, depth);
-
-                                        // sync complete
-                                        synced = true;
-
-                                        // invoke connect callback
-                                        connect && connect(object_id);
-                                    } else {
-                                        // sync incomplete
-                                        synced = false;
-
-                                        // read more data
-                                        read(next_page, callback, error);
-                                    }
-
-                                },
-                                'error'     : function(r) {
-
-                                   // error  
-                                   error && error(r);
-                                }
-                            })
-                        }
-
-                        // start reading initial copy of object and populate internal copy
-                        read();
-                    } 
-                },
-                'callback'    : function(r) {
-
-                    var trans_id    = r['trans_id'];
-                    var action      = r['action'];
-                    var status      = r['status'];
-
-                    if (action) { // if action, store it in list with transaction id as key
-
-                        if (!updates[trans_id])
-                            updates[trans_id] = {'complete' : false, 'list' : []}
-                        updates[trans_id]['list']['push'](r);
-
-                    } else if (status) { // if transaction complete , apply the updates
-                        if (status == 'complete' && updates[trans_id]) {
-                            updates[trans_id]['complete'] = true;
-                            if (synced) apply_updates(internal, updates, callback, trans_id, depth);
-                        }
-                    }
-                },
-                'error'       : function(r) { 
-
-                    //error
-                    err({'message' : r['message']});
-
-                }
-            });
-            return internal;
-        },
 
         'get' : function(args, callback) {
              var callback         = args['callback'] || callback
@@ -993,17 +989,22 @@ function PN_API(setup) {
             }
             read(null,callback, error);
         },
-        'set'   : function(args, callback) {
+        'replace'   : function(args, callback) {
             args['mode'] = 'PUT'
             SELF['merge'](args);
         },
+        'push'   : function(args, callback) {
+            args['mode'] = 'POST'
+            SELF['merge'](args);
+        },
         'merge' : function(args, callback) {
-            var callback         = args['callback'] || callback
+            var callback         = args['callback'] || callback || function(){}
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   content          = args['data']
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
+            ,   sort_key         = args['sort_key']
             ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
@@ -1027,6 +1028,8 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
+            if (sort_key && sort_key.length > 0) data['sort_key'] = sort_key;
+
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
@@ -1042,7 +1045,7 @@ function PN_API(setup) {
             });
         },
         'remove' : function(args, callback) {
-            var callback         = args['callback'] || callback
+            var callback         = args['callback'] || callback || function(){}
             ,   err              = args['error']    || function(){}
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
@@ -1055,13 +1058,19 @@ function PN_API(setup) {
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
+            var oid_split = object_id.split('.');
+            object_id = oid_split.shift();
+            if (!path) {
+                path = oid_split.join('.');
+            }
+
             var url = [
                 STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
                  'pub-key', PUBLISH_KEY, 'obj-id', encode(object_id)
             ];
             
             if (path) {
-                url['push'](encode(path['split'](".")['join']("/")));
+                url['push'](encodeURI(path['split'](".")['join']("/")));
             }
 
             if (jsonp != '0') { data['callback'] = jsonp; }
@@ -1079,25 +1088,347 @@ function PN_API(setup) {
                 mode : 'DELETE'
             });
         },
-        'sync' : function(object_id) {
-            console.log("SYNC  : " + object_id);
-            function split_object_id_path(s) {
-                var r = {};
-                var object_id_split = s['split']('.');
 
-                // prepare object
 
-                r['object_id']          = object_id_split[0];
-                object_id_split['shift']();
-                r['path']            = object_id_split['join']('.');
-                return r;
+        // Follwing methods will handle sync call in data sync
+
+        'get_synced_object' : function(args) {
+            var callback         = args['callback']
+            ,   err              = args['error']    || function(){}
+            ,   connect          = args['connect']
+            ,   object_id        = args['object_id']
+            ,   path             = args['path'] || '';
+
+            var complete_object_id  = object_id + '.' + path;
+            var split_path          = path.split('.');
+            var last_node_key       = split_path[split_path.length -1];
+
+            if (!last_node_key || last_node_key.length == 0) {
+                last_node_key = object_id;
             }
 
-            var ready, update, set, remove, change 
-            ,   network_connect, network_disconnect, network_reconnect;
+
+            function _get_channels_for_subscribe() {
+                var channels = "";
+                 for (var dsc in DS_CHANNELS) {
+                    if (DS_CHANNELS[dsc]) {
+                        if (channels.length > 0) channels += ',';
+                        var channel = dsc;
+                        channels +=  'pn_ds_' + channel + ','   +
+                                     'pn_ds_'  + channel + '.*,' +
+                                     'pn_dstr_' + channel;
+                    }
+                 }
+                 pnlog(channels);
+                 return channels;
+            }
+
+            function _prepare_new_ds_channel_list(object_id) {
+                if (DS_CHANNELS[object_id]) {
+                    return true;
+                }
+                var objid_check = object_id + '.';
+                var parent_channel_present = false;
+                for (var cb in DS_CALLBACKS) {
+                    parent_channel_present = (objid_check.indexOf(cb) == 0)?true:false;
+                }
+                if (!parent_channel_present) DS_CHANNELS[object_id] = true;
+
+                pnlog(object_id + ' : ' + parent_channel_present);
+                
+                // return true if parent channel already there
+                return parent_channel_present;
+            }
+
+            pnlog(JSON.stringify(OBJECTS, null, 2));
+            pnlog(object_id); 
+
+            if (_prepare_new_ds_channel_list(object_id)) {
+                var o = OBJECTS[object_id];
+                pnlog(JSON.stringify(o, null, 2));
+                
+                for (var p in split_path) {
+                    var sp = split_path[p];
+                    if (sp && sp.length > 0) {
+                        if (!o[sp]) o[sp] = {};
+                        o = o[sp];
+                    }
+                }
+                
+                pnlog('o');
+                pnlog(JSON.stringify(o, null, 2));
+                DS_CALLBACKS[complete_object_id + '.']['is_ready'] = true;
+                return o;
+            }
+
+
+
+            // Is object sync complete ?
+            var synced = false;
+            
+            // depth at which we are listening 
+            var depth = 0;
+
+            var updates = {};
+            //var internal;
+            
+
+            // prepare the path argument
+            if (path) {
+                var split_array = path['split'](".");
+                depth = split_array['length'];
+            }
+
+
+            /*
+            if (!OBJECTS[object_id]) {
+                internal = OBJECTS[object_id] = {};
+            } else {
+                internal = OBJECTS[object_id];
+            }
+
+            */
+
+            var parent = _get_parent_by_path_with_create(OBJECTS,complete_object_id);
+
+            pnlog('PARENT : ' + JSON.stringify(parent,null,2));
+            pnlog('last : ' + last_node_key);
+
+            if (!parent[last_node_key]) parent[last_node_key] = {};
+
+            function start_sub(o, p) {
+                var complete_object_id = o + '.' + p;
+                pnlog('start_sub object_id : ' + o);
+
+                /* 
+                    subscribe to 3 channels . for ex. if obj id is 'ab'
+                    a. normal channel       pn_ds_ab
+                    b. wildcard channel     pn_ds_ab.*
+                    c. transaction channel  pn_dstr_ab
+                */
+                SELF['subscribe']({
+
+                    'channel'     : _get_channels_for_subscribe(),
+
+
+                    'connect'     : function(r, timetoken) {
+
+                        // if message received on wild card channel
+                        // this is just to take care of 3 invocations of connect
+
+                        if (r.indexOf('dstr') > 0) {
+
+                            // read initial copy of the data structure (recursive in case large object)
+                            function read(next_page, callback, error) {
+                                get({
+                                    'object_id' : o,
+                                    'path'      : p,
+                                    'timetoken' : timetoken,
+                                    'next_page'  : next_page,
+                                    'callback'  : function(r) {
+                                        
+                                        var next_page = r['next_page'];
+
+                                        var payload = r['payload'];
+
+
+                                        // if payload is object, merge else assign
+                                        if (typeof payload === 'object') {
+                                            parent[last_node_key] = mergeAtOneLevel(parent[last_node_key], payload);
+                                        } else {
+                                            parent[last_node_key] = payload;
+                                        }
+
+                                        // till next_page is null in response keep reading recursively
+                                        if (!next_page || (next_page && next_page == "null")) {
+
+                                            // all updates recieved , now apply
+                                            apply_all_updates(parent[last_node_key], updates, callback, depth);
+
+                                            // sync complete
+                                            synced = true;
+
+                                            // invoke connect callback
+                                            connect && connect(o);
+                                            pnlog('OBJECTS hash');
+                                            pnlog(JSON.stringify(OBJECTS, null, 2));
+                                        } else {
+                                            // sync incomplete
+                                            synced = false;
+
+                                            // read more data
+                                            read(next_page, callback, error);
+                                        }
+
+                                    },
+                                    'error'     : function(r) {
+
+                                       // error  
+                                       error && error(r);
+                                    }
+                                })
+                            }
+
+                            // start reading initial copy of object and populate internal copy
+                            read();
+                        } 
+                    },
+                    'callback'    : function(r,c) {
+                        pnlog('R : ' + JSON.stringify(r));
+                        pnlog('C : ' + JSON.stringify(c));
+
+                        var trans_id    = r['trans_id'];
+                        var action      = r['action'];
+                        var status      = r['status'];
+
+                        if (action) { // if action, store it in list with transaction id as key
+
+                            if (!updates[trans_id])
+                                updates[trans_id] = {'complete' : false, 'list' : []}
+                            updates[trans_id]['list']['push'](r);
+
+                        } else if (status) { // if transaction complete , apply the updates
+                            if (status == 'complete' && updates[trans_id]) {
+                                updates[trans_id]['complete'] = true;
+                                pnlog('STATUS synced : ' + synced);
+                                pnlog('last_node_key : ' + last_node_key);
+                                var location = updates[trans_id].list[0].location;
+                                pnlog('location : ' + JSON.stringify(location));
+                                var objid = (location.split('.')[0]).split('pn_ds_')[1];
+                                pnlog('OBJID : ' + objid);
+                                //pnlog('OBJECT_ID_2 : ' + updates[0].location.split('.')[0]);
+
+                                pnlog('before update' + JSON.stringify(OBJECTS, null, 2));
+                                if (!OBJECTS[objid]) OBJECTS[objid] = {};
+
+                                if (synced) apply_updates(OBJECTS[objid], updates, callback, trans_id, depth);
+                                pnlog('after udpate' + JSON.stringify(OBJECTS, null, 2));
+                            }
+                        }
+                    },
+                    'error'       : function(r) { 
+
+                        //error
+                        err({'message' : r['message']});
+
+                    }
+                });
+            }
+            start_sub(object_id, path);
+            pnlog(JSON.stringify(parent[last_node_key], null, 2));
+            return parent[last_node_key];
+        },
+
+
+        'sync' : function(object_id) {
+            pnlog("SYNC  : " + object_id);
+
+
+            function invoke_ready_callbacks() {
+
+                for (var c in DS_CALLBACKS) {
+
+                    var cbo = DS_CALLBACKS[c];
+                    var ready_cb = cbo['ready'];
+
+                    var c = c.substring(0, c.length - 1);
+
+                    var split_c = c.split(".");
+                    var oid = split_c.shift();
+                    var path = split_c.join('.');
+                    if (cbo['is_ready'] && 
+                        !cbo['ready_called'] &&
+                        ready_cb) {
+                        var callback_data = {};
+                        callback_data['type'] = 'ready';
+                        callback_data['data'] = _get_object_by_path(oid, path);
+                        callback_data['value'] = function(path) {
+                            return value(callback_data['data'], path);
+                        }
+                        ready_cb(callback_data);
+                        cbo['ready_called'] = true;
+                    }
+
+
+                }
+
+            }
+
+            function set_callback(object_id, callback, type) {
+
+                if (!DS_CALLBACKS[object_id]) {
+                    DS_CALLBACKS[object_id] = {
+                        'ready_called' : false,
+                        'is_ready' : false
+                    };
+                }
+                DS_CALLBACKS[object_id][type] = callback;
+                invoke_ready_callbacks();
+            }
+
+            function get_callback(object_id, type) {
+                object_id = object_id + '.';
+                try {
+                    return DS_CALLBACKS[object_id][type];
+                } catch (e)  {
+                    return null;
+                }
+            }
+            function _get_callbacks(location, type) {
+                var callbacks = [];
+                for (var c in DS_CALLBACKS) {
+                    if (location.indexOf(c) == 0) {
+                        pnlog(JSON.stringify(DS_CALLBACKS));
+                        DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
+                    }
+                }
+
+                return callbacks;
+            }
+
+            function _get_callbacks_with_location(location, type) {
+                var callbacks = {};
+                for (var c in DS_CALLBACKS) {
+                    if (location.indexOf(c) == 0) {
+                        pnlog(JSON.stringify(DS_CALLBACKS));
+                        if(DS_CALLBACKS[c][type]) {
+                            callbacks[c] = DS_CALLBACKS[c][type];
+                        }
+                    }
+                }
+                
+                return callbacks;
+            }
+
+            function _get_all_callbacks(type) {
+                var callbacks = [];
+                for (var c in DS_CALLBACKS) {
+                    if(DS_CALLBACKS[c][type]) {
+                        DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
+                    }
+                }
+                //console.log(callbacks.length);
+                return callbacks;
+            }
+
+            var split_o = split_object_id_path(object_id);
+
+
+            var obj_id  = split_o['object_id'];
+            var path    = split_o['path'];
 
             // internal object that will reprepsent data
-            var internal = {};
+
+            object_id = object_id + '.';
+
+            if (!DS_CALLBACKS[object_id]) {
+                DS_CALLBACKS[object_id] = {
+                    'ready_called' : false,
+                    'is_ready' : false
+                };
+            }
+
+            var internal;
 
             // ref is the object reference that will be returned
             var ref = {
@@ -1105,87 +1436,269 @@ function PN_API(setup) {
                 // callbacks like change, ready etc can be set here
                 'on' : {
                     'change'  : function(callback) {
-                        change = callback;
+                        set_callback(object_id, callback,'change');
                     },
                     'ready'  : function(callback) {
-                        ready = callback;
+                        set_callback(object_id ,callback,'ready');
                     },
                     'merge'  : function(callback) {
-                        merge = callback;
+                        set_callback(object_id, callback,'merge');
                     },  
                     'replace'     : function(callback) {
-                        replace = callback;
+                        set_callback(object_id, callback,'replace');
                     },
                     'remove'  : function(callback) {
-                        remove = callback;
+                        set_callback(object_id, callback,'remove');
                     },
                     'error'   : function(callback) {
-                        error = callback;
+                        set_callback(object_id, callback,'error');
                     }, 
                     // network events
                     'network' : {
                         'connect'       : function(callback) {
-                            network_connect = callback;
+                            set_callback(object_id, callback,'network.connect');
                         },
                         'disconnect'    : function(callback) {
-                            network_disconnect = callback;
+                            set_callback(object_id, callback,'network.disconnect');
                         },
                         'reconnect'     : function(callback) {
-                            network_reconnect = callback;
+                            set_callback(object_id, callback,'network.reconnect');
                         }
                     }
+                },
+
+                'merge'  : function(data, success, error) {
+
+                    pnlog('UPDATE');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error
+                    });
+
+                },
+
+                'replace' : function(data, success, error) {
+
+                    pnlog('REPLACE');
+                    SELF['replace']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error
+                    });
+                },
+
+                'remove'  : function(success, error) {
+
+                    pnlog('REMOVE');
+                    SELF['remove']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'callback'  : success,
+                        'error'     : error
+                    });
+                },
+
+                'push'    : function(data, success, error) {
+                    pnlog('PUSH');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
+                },
+                'push_with_sort_key'    : function(data, sort_key, success, error) {
+                    pnlog('PUSH SORT KEY');
+                    SELF['merge']({
+                        'object_id' : obj_id,
+                        'path'      : path,
+                        'sort_key'  : sort_key,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
+                }
+
+            }
+            function value(object, path) {
+
+                if (!path &&
+                    !object['pn_val'] &&
+                    !isPnList(object)
+                    ) 
+                    return object;
+
+
+                var patha = (path)?path['split']("."):[];
+
+                var d = object;
+
+                for (p in patha) {
+                    var key = patha[p];
+                    try {
+                        if (d[key]) d = d[key]
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                if (d['pn_val']) {
+                    return d['pn_val'];
+                } else if (isPnList(d)) { // array
+                    return objectToSortedArray(d);
+                } else { // object
+                    return d;
                 }
             }
 
-            var split_o = split_object_id_path(object_id);
 
             // prepare internal object 
-            internal = SELF['get_synced_object']({
-                'object_id'  : split_o['object_id'],
-                'path'       : split_o['path'],
-                'callback'   : function(r) {
-                    console.log('GSO CALLBACK');    
-                    console.log(JSON.stringify(r));
-                    if (r[0]) {
-                        var action = r[0]['action'];
 
-                        change && change({'action' : action});
+            function synced_object(object_id, path) {
+                //console.log(object_id + ' : ' + path);
+                var i = (function(object_id, path) {
 
-                        if (action === 'merge' || action === 'insert') {              // update event
+                        return SELF['get_synced_object']({
+                            'object_id'  : object_id,
+                            'path'       : path,
+                            'callback'   : function(r) {
+                                pnlog('GSO CALLBACK');    
+                                pnlog(JSON.stringify(r));
+                                if (r[0]) {
+                                    var action = r[0]['action'];
+                                    var change = get_callback(object_id, 'change');
+                                    change && change({'action' : action});
 
-                            merge && merge(ref);
+                                    if (action === 'merge' || action === 'insert') {              // update event
 
-                        } else if (action === 'delete') {       // delete event
+                                        var callbacks = _get_callbacks_with_location(r[0].location, 'merge');
+                                        pnlog('OBJECTS' + JSON.stringify(OBJECTS, null, 2));
+                                        
+                                        for (var i in callbacks) {
+                                            var merge = callbacks[i];
+                                            var isplit = i.split(".");
+                                            var oid = isplit.shift();
+                                            isplit.pop();
+                                            var p = isplit.join('.');
 
-                            remove && remove(ref);
-                        }
-                        else if (action === 'replace-delete') {     // set event
-                            if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
-                                replace && replace(ref);
-                            }
-                        }
+                                            var callback_data = {};
+                                            callback_data['delta'] = {};
+                                            callback_data['delta']['changes'] = r;
+
+                                            callback_data['type'] = 'merge';
+                                            callback_data['data'] = _get_object_by_path(oid, p);
+                                            callback_data['parent'] = _get_parent_by_path(oid, p);
+                                            callback_data['value'] = function(path) {
+                                                return value(callback_data['data'], path);
+                                            }
+                                            callback_data['path'] = r[0]['updateAt'];
+                                            merge && merge(callback_data);
+                                        }
+
+                                    } else if (action === 'delete') {       // delete event
+
+                                        var callbacks = _get_callbacks(r[0].location, 'remove');
+                                        for (var i in callbacks) {
+                                            var remove = callbacks[i];
+
+
+                                            var callback_data = {};
+                                            callback_data['delta'] = {};
+                                            callback_data['delta']['changes'] = r;
+                                            callback_data['type'] = 'remove';
+                                            callback_data['parent'] = _get_parent_by_path(oid, p);
+
+                                            callback_data['path'] = r[0]['updateAt'];
+                                            remove && remove(callback_data);
+                                        }
+                                    }
+                                    else if (action === 'replace-delete') {     // set events
+                                        internal = _get_object_by_path(object_id,path);
+                                        if (r[1] && r[1]['action'] == 'replace') { // set event confirmation
+                                            var callbacks = _get_callbacks(r[0].location, 'replace');
+                                            for (var i in callbacks) {
+                                                var replace = callbacks[i];
+                                                var callback_data = {};
+                                                callback_data['delta'] = {};
+                                                callback_data['delta']['changes'] = r;
+                                                callback_data['type'] = 'replace';
+                                                callback_data['data'] = _get_object_by_path(oid, p);
+                                                callback_data['parent'] = _get_parent_by_path(oid, p);
+                                                callback_data['value'] = function(path) {
+                                                    return value(callback_data['data'], path);
+                                                }
+                                                callback_data['path'] = r[0]['updateAt'];
+                                                replace && replace(callback_data);
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            'error' : function(r) {
+                                var error = get_callback(obj_id,path,'error');
+                                error && error(r);
+                            },
+                            'connect'    : function(r) {
+                                var network_connect = get_callback(object_id, 'network.connect');
+                                network_connect && network_connect(r);
+
+                                for (var c in DS_CALLBACKS) {
+                                    var cbo = DS_CALLBACKS[c];
+                                    cbo['is_ready'] = true;
+                                    /*
+                                    var callback_data = {};
+                                    callback_data['type'] = 'ready';
+                                    callback_data['data'] = _get_object_by_path(object_id, path);
+                                    callback_data['value'] = function(path) {
+                                        return value(callback_data['data'], path);
+                                    }
+                                    ready && ready(callback_data);
+
+                                    */
+
+                                }
+                                invoke_ready_callbacks();
+                                //var ready = get_callback(object_id, 'ready');
+                                //ready && ready(_get_ref(ref));
+                            },
+                            'reconnect'  : function(r) {
+                                var network_reconnect = get_callback(object_id, 'network.reconnect');
+                                network_reconnect && network_reconnect(r);
+                            },
+                            'disconnect' : function(r) {
+                                var network_disconnect = get_callback(object_id, 'network.disconnect');
+                                network_disconnect && network_disconnect(r)
+                            }    
+                            
+                        })
                     }
-                },
-                'error' : function(r) {
-                    error && error(r);
-                },
-                'connect'    : function(r) {
-                    network_connect && network_connect(r);
-                    ready && ready(r);
-                },
-                'reconnect'  : function(r) {
-                    network_reconnect && network_reconnect(r);
-                },
-                'disconnect' : function(r) {
-                    network_disconnect && network_disconnect(r)
-                }    
-                
-            });
+                )(object_id,path);
+                return i;
+            }
+
+            internal = synced_object(obj_id,path);
+            //console.log('INTERNAL : ' + internal);
+
 
             ref['value'] = function(path) {
-                if (!path) return internal['data'];
-                var patha = path['split'](".");
-                var d = internal['data'];
+
+                if (!path &&
+                    !internal['pn_val'] &&
+                    !isPnList(internal)
+                    ) 
+                    return internal;
+
+
+                var patha = (path)?path['split']("."):[];
+
+                var d = internal;
 
                 for (p in patha) {
                     var key = patha[p];
@@ -1208,6 +1721,48 @@ function PN_API(setup) {
                 return SELF['sync'](object_id + '.' + path);
             };
 
+            ref['pop'] = function() {
+
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                var last_key = keys.pop();
+
+                SELF['remove']({
+                    'object_id' : object_id + '.' + last_key
+                });
+                return value(internal[last_key]);
+            };
+            ref['removeByIndex'] = function(index) {
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    SELF['remove']({
+                        'object_id' : object_id + '.' + key
+                    });
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
+            ref['getByIndex'] = function(index) {
+
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
+            //console.log(JSON.stringify(OBJECTS, null, 2));
             return ref;
         },
         /*

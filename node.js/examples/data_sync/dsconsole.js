@@ -174,7 +174,7 @@ function createSyncObject() {
         obj.on.ready(function(ref){
             log(object_id + ' : ' + 'READY EVENT');
             log2(ref);
-            log2(obj.value());
+            log2(ref.value());
         })
         
         // Merge callback
