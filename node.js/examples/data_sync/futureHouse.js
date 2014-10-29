@@ -1,4 +1,3 @@
-
 var PUBNUB = require("../../pubnub.js")
 
 function log(m) {
@@ -30,21 +29,26 @@ var occupants = {};
 
 var home = pubnub.sync('home');
 
+home.on.change(function(ref){
+    console.log("Something changed in the home!");
+    console.log("It was a " + ref.type + " kinda change.");
+});
+
 home.on.merge(function(ref) {
     console.log("A new value was merged to the home at node " + ref.path + ".");
     console.log("The changed data is " + log(ref.delta.changes[0].value));
-    console.log("The new object looks like: " + log(ref.data[ref.path]));
+    console.log("The new raw object looks like: " + log(ref.data[ref.path]));
 });
 
 home.on.replace(function(ref) {
     console.log("REPLACE");
-    //console.log(log(ref));
     console.log(ref.value('occupants'));
     console.log("A new value was replaced in the home.");
 });
 
 home.on.remove(function(ref) {
     console.log("A value was removed in the home.");
+    console.log("The changed data is " + log(ref.delta.changes));
 });
 
 
@@ -89,4 +93,3 @@ home.on.ready(function (ref) {
     })
 
 });
-
