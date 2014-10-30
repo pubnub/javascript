@@ -30,7 +30,11 @@ console.log    || (
  * LOCAL STORAGE OR COOKIE
  */
 var db = (function(){
-    var ls = window['localStorage'];
+    var store = {};
+    var ls = false;
+    try {
+        ls = window['localStorage'];
+    } catch (e) { }
     return {
         'get' : function(key) {
             try {
@@ -39,14 +43,18 @@ var db = (function(){
                 return ((document.cookie||'').match(
                     RegExp(key+'=([^;]+)')
                 )||[])[1] || null;
-            } catch(e) { return }
+            } catch(e) {
+                return store[key];
+            }
         },
         'set' : function( key, value ) {
             try {
                 if (ls) return ls.setItem( key, value ) && 0;
                 document.cookie = key + '=' + value +
                     '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
-            } catch(e) { return }
+            } catch(e) {
+                store[key] = value;
+            }
         }
     };
 })();

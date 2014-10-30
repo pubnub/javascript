@@ -1,9 +1,9 @@
 {
   "name": "pubnub",
-  "version": "3.7.0",
-  "main": "web/pubnub-3.7.0.min.js",
+  "version": "3.7.1",
+  "main": "web/pubnub-3.7.1.min.js",
   "license": "https://github.com/pubnub/javascript/blob/master/LICENSE",
-  "ignore" : [ "**/*", "web/pubnub.js", "web/pubnub.min.js"],
+  "ignore" : [ "**/*", "web/pubnub-3.7.1.js", "web/pubnub-3.7.1.min.js"],
   "keywords": [
     "pubnub",
     "javascript",
