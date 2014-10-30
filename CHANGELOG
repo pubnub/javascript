@@ -1,3 +1,7 @@
+10-30-14 * 3.7.1 * 708e0
+. Channel Groups Support
+. Exception handling when local-storage has been disabled on the web browser
+. bower now pointing to versioned files
 
 7-8-14 * 3.6.7 * 1fa0b
 . GCM envelope support
