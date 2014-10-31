@@ -195,6 +195,7 @@ function createSyncObject() {
         obj.on.remove(function(ref){
             log(object_id + ' : ' + 'REMOVE EVENT');
             log2(ref);
+            log2(ref.value());
         })
     });
 }
