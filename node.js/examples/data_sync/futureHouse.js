@@ -13,6 +13,14 @@ function onSuccess(m) {
     console.log('Success');
 }
 
+function refLog(ref) {
+    console.log("Action at node " + ref.path + ".");
+    console.log("It was a " + ref.type + " kinda change.");
+    console.log("The changed data is " + log(ref.delta.changes));
+    console.log("The changed data is " + log(ref.delta.changes[0].value));
+    console.log("The new raw object looks like: " + log(ref.value()));
+}
+
 var pubnub = PUBNUB.init({
     write_key: "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
     read_key: "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
@@ -30,25 +38,23 @@ var occupants = {};
 var home = pubnub.sync('home');
 
 home.on.change(function(ref){
-    console.log("Something changed in the home!");
-    console.log("It was a " + ref.type + " kinda change.");
+    console.log("CHANGE");
+    refLog(ref);
 });
 
 home.on.merge(function(ref) {
-    console.log("A new value was merged to the home at node " + ref.path + ".");
-    console.log("The changed data is " + log(ref.delta.changes[0].value));
-    console.log("The new raw object looks like: " + log(ref.data[ref.path]));
+    console.log("MERGE");
+    refLog(ref);
 });
 
 home.on.replace(function(ref) {
     console.log("REPLACE");
-    console.log(ref.value('occupants'));
-    console.log("A new value was replaced in the home.");
+    refLog(ref);
 });
 
 home.on.remove(function(ref) {
-    console.log("A value was removed in the home.");
-    console.log("The changed data is " + log(ref.delta.changes));
+    console.log("REMOVE");
+    refLog(ref);
 });
 
 
@@ -75,7 +81,7 @@ home.on.ready(function (ref) {
         //console.log("light1 Ready. Value: " + ref.value());
 
         setTimeout(function(){
-            console.log("light1 Ready. Value: " + log(light1.value()));
+            console.log("light1 Ready. Value: " + log(ref.value()));
             console.log("Now turning light1 on...");
             light1.replace({ status: 'on' }, onSuccess, onError);
             light1.replace({ config: {intensity: "low"} }, onSuccess, onError);
