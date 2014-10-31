@@ -1601,8 +1601,8 @@ function PN_API(setup) {
                                     }
 
 
-                                    var callbacks = _get_callbacks_with_location(location, event_type);
-                                    var callbacks_change = _get_callbacks_with_location(location, 'change');
+                                    var callbacks           = _get_callbacks_with_location(location, event_type);
+                                    var callbacks_change    = _get_callbacks_with_location(location, 'change');
                                         
                                     for (var callback_location in callbacks) {
                                         
@@ -1612,7 +1612,7 @@ function PN_API(setup) {
 
                                     }
                                     for (var callback_location in callbacks_change) {
-                                        var change = callbacks_change[i];
+                                        var change = callbacks_change[callback_location];
 
                                         change && change(_get_callback_data('change', r, callback_location, path,update_at));
                                     }
