@@ -173,28 +173,28 @@ function createSyncObject() {
         // ready callback
         obj.on.ready(function(ref){
             log(object_id + ' : ' + 'READY EVENT');
-            log2(ref);
+            //log2(ref);
             log2(ref.value());
         })
         
         // Merge callback
         obj.on.merge(function(ref){
             log(object_id + ' : ' + 'MERGE EVENT');
-            log2(ref);
+            //log2(ref);
             log2(ref.value());
         })
         
         // Replace callback
         obj.on.replace(function(ref){
             log(object_id + ' : ' + 'REPLACE EVENT');
-            log2(ref);
+            //log2(ref);
             log2(ref.value());
         })
         
         // Remove callback
         obj.on.remove(function(ref){
             log(object_id + ' : ' + 'REMOVE EVENT');
-            log2(ref);
+            //log2(ref);
             log2(ref.value());
         })
     });

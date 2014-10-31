@@ -65,7 +65,6 @@ function build_url( url_components, url_params ) {
     } );
     url += "?" + params.join(PARAMSBIT);
 
-    //pnlog(url);
     return url;
 }
 
@@ -197,7 +196,7 @@ function generate_channel_list(channels, nopresence) {
 }
 
 function isEmpty(val){
-    return (typeof val == 'undefined' || val == null);
+    return (typeof val === 'undefined' || val === null || val.length == 0);
 }
 
 
@@ -482,9 +481,6 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        //console.log(JSON.stringify(o, null, 2));
-        //console.log(JSON.stringify(update));
-        //console.log(depth);
         
         // !!!! depth not required any more due to design change . needs review ?
         depth = 0;
@@ -515,12 +511,8 @@ function PN_API(setup) {
         var continue_update = true;
 
         // iterate over path elements
-        //console.log(JSON.stringify(path));
-        //console.log(last);
 
         for (p in path) {
-            //console.log(JSON.stringify(x, null,2));
-            //console.log(path[p]);
             try {
 
                 // if x does not contain a node with path reached till now
@@ -543,8 +535,6 @@ function PN_API(setup) {
 
         // handle updation
         if (action == 'merge' || action == 'push') {
-            pnlog(JSON.stringify(o,null,2));
-            pnlog('MERGE OR INSERT')
 
             if (path_length - depth > 0) {
                 try {
@@ -569,7 +559,6 @@ function PN_API(setup) {
                     o['pn_tt'] = update.timetoken;   
                 }
             }
-            //console.log(JSON.stringify(o,null,2));  
         }
         // handle deletion 
         else if (action == 'delete') {
@@ -596,12 +585,10 @@ function PN_API(setup) {
                 o = {}
             }
         }
-        //console.log(JSON.stringify(o, null, 2));
         // return update at , need to reconsider
         return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
-        //console.log(JSON.stringify(updates, null, 2));
         var update = updates[trans_id];
 
         var update_at;
@@ -627,7 +614,6 @@ function PN_API(setup) {
                 delete action_event.trans_id;
                 delete action_event.timetoken;
             }
-            //console.log('INVOKE CALLBAK');
             // invoke callback with actions_list as argument
             callback && callback(actions_list);
 
@@ -847,7 +833,6 @@ function PN_API(setup) {
         split.pop()
 
         if (split.length == 0) {
-            pnlog('return OBJECTS');
             return obj;
         }
         var o = obj;
@@ -1120,13 +1105,13 @@ function PN_API(setup) {
             ,   err              = args['error']    || function(){}
             ,   connect          = args['connect']
             ,   object_id        = args['object_id']
-            ,   path             = args['path'] || '';
+            ,   path             = args['path'];
 
-            console.log('get_synced_object ' + object_id + ' : ' + path);
 
-            var location            = object_id + '.' + path;
+            var location            = (!isEmpty(path))?object_id + '.' + path:object_id;
             var split_path          = path.split('.');
             var last_node_key       = split_path[split_path.length -1];
+
 
             if (!last_node_key || last_node_key.length == 0) {
                 last_node_key = object_id;
@@ -1141,10 +1126,9 @@ function PN_API(setup) {
                         var channel = dsc;
                         channels +=  'pn_ds_' + channel + ','   +
                                      'pn_ds_'  + channel + '.*,' +
-                                     'pn_dstr_' + channel;
+                                     'pn_dstr_' + channel.split('.')[0];
                     }
                  }
-                 pnlog(channels);
                  return channels;
             }
 
@@ -1163,9 +1147,8 @@ function PN_API(setup) {
                     parent_location_present = (location.indexOf(channel + '.') == 0 )?true:false;
                 
                 }
-                if (!parent_location_present) DS_CHANNELS[location] = true;
 
-                console.log(object_id + ' : parent present ? ' + parent_location_present);
+                if (!parent_location_present) DS_CHANNELS[location] = true;
                 
                 // return true if we are already listening to parent location
                 return parent_location_present;
@@ -1211,7 +1194,7 @@ function PN_API(setup) {
             if (!parent[last_node_key]) parent[last_node_key] = {};
 
             function start_sub(o, p) {
-                var location = o + '.' + p;
+                var location = (!isEmpty(p))?o + '.' + p:o;
 
                 /* 
                     subscribe to 3 channels . for ex. if obj id is 'ab'
@@ -1286,7 +1269,6 @@ function PN_API(setup) {
                         } 
                     },
                     'callback'    : function(r,c) {
-                        //console.log(JSON.stringify(r));
                         var trans_id    = r['trans_id'];
                         var action      = r['action'];
                         var status      = r['status'];
@@ -1329,11 +1311,9 @@ function PN_API(setup) {
 
 
         'sync' : function(location) {
-            console.log("SYNC  : " + location);
 
 
             function invoke_ready_callbacks() {
-                //console.log('INVOKE READY');
                 for (var callback_location in DS_CALLBACKS) {
 
                     var callback_object         = DS_CALLBACKS[callback_location];
@@ -1347,8 +1327,6 @@ function PN_API(setup) {
                     var oid                     = callback_location_split['id'];
                     var path                    = callback_location_split['path'];
 
-                    //console.log(oid + ' : ' + path);
-                    //console.log(JSON.stringify(callback_object));
                     if (callback_object['is_ready'] && 
                         !callback_object['ready_called'] &&
                         ready_callback) {
@@ -1390,7 +1368,6 @@ function PN_API(setup) {
                 var callbacks = [];
                 for (var c in DS_CALLBACKS) {
                     if (location.indexOf(c) == 0) {
-                        pnlog(JSON.stringify(DS_CALLBACKS));
                         DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
                     }
                 }
@@ -1403,7 +1380,6 @@ function PN_API(setup) {
                 var callbacks = {};
                 for (var c in DS_CALLBACKS) {
                     if (location.indexOf(c) == 0) {
-                        pnlog(JSON.stringify(DS_CALLBACKS));
                         if(DS_CALLBACKS[c][type]) {
                             callbacks[c] = DS_CALLBACKS[c][type];
                         }
@@ -1420,7 +1396,6 @@ function PN_API(setup) {
                         DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
                     }
                 }
-                //console.log(callbacks.length);
                 return callbacks;
             }
 
@@ -1480,7 +1455,6 @@ function PN_API(setup) {
 
                 'merge'  : function(data, success, error) {
 
-                    pnlog('UPDATE');
                     SELF['merge']({
                         'object_id' : object_id,
                         'path'      : path,
@@ -1493,7 +1467,6 @@ function PN_API(setup) {
 
                 'replace' : function(data, success, error) {
 
-                    pnlog('REPLACE');
                     SELF['replace']({
                         'object_id' : object_id,
                         'path'      : path,
@@ -1505,7 +1478,6 @@ function PN_API(setup) {
 
                 'remove'  : function(success, error) {
 
-                    pnlog('REMOVE');
                     SELF['remove']({
                         'object_id' : object_id,
                         'path'      : path,
@@ -1515,7 +1487,6 @@ function PN_API(setup) {
                 },
 
                 'push'    : function(data, success, error) {
-                    pnlog('PUSH');
                     SELF['merge']({
                         'object_id' : object_id,
                         'path'      : path,
@@ -1526,7 +1497,6 @@ function PN_API(setup) {
                     });
                 },
                 'push_with_sort_key'    : function(data, sort_key, success, error) {
-                    pnlog('PUSH SORT KEY');
                     SELF['merge']({
                         'object_id' : object_id,
                         'path'      : path,
@@ -1575,10 +1545,9 @@ function PN_API(setup) {
             }
 
             function _get_callback_data(event_type, changes, callback_location, path, update_at) {
-
                 var isplit = callback_location.split(".");
-                var oid = isplit.shift();
-                isplit.pop();
+                var object_id = isplit.shift();
+
                 var p = isplit.join('.');
 
                 var callback_data = {};
@@ -1586,8 +1555,8 @@ function PN_API(setup) {
                 callback_data['delta']['changes'] = changes;
 
                 callback_data['type'] = 'merge';
-                callback_data['data'] = _get_object_by_path(oid, p);
-                callback_data['parent'] = _get_parent_by_path(oid, p);
+                callback_data['data'] = _get_object_by_path(object_id, p);
+                callback_data['parent'] = _get_parent_by_path(object_id, p);
                 callback_data['value'] = function(path) {
                     return value(callback_data['data'], path) || {};
                 }
@@ -1598,14 +1567,12 @@ function PN_API(setup) {
             // prepare internal object 
 
             function synced_object(object_id, path) {
-                console.log(object_id + ' : ' + path);
                 var i = (function(object_id, path) {
 
                         return SELF['get_synced_object']({
                             'object_id'  : object_id,
                             'path'       : path,
                             'callback'   : function(r) {
-                                //console.log('UPDATE RECIEVED : ' + JSON.stringify(r));
                                 if (r[0]) {
                                     var action      = r[0]['action'];
                                     var location    = r[0]['location'];
@@ -1761,7 +1728,6 @@ function PN_API(setup) {
                     return null;
                 }
             };
-            //console.log(JSON.stringify(OBJECTS, null, 2));
             return ref;
         },
         /*
@@ -2748,7 +2714,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
-            console.log('BODY : ' + body);
+            //console.log('BODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
@@ -2781,7 +2747,7 @@ function xdr( setup ) {
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
     var url = build_url( setup.url, data );
-    console.log(mode + ' ' + url); 
+    //console.log(mode + ' ' + url); 
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 
