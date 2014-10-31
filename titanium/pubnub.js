@@ -975,6 +975,13 @@ function PN_API(setup) {
         },
 
         /*
+            PUBNUB.listChannels();
+        */
+        'listChannels': function() {
+            return Object.keys(CHANNELS);
+        },
+
+        /*
             PUBNUB.subscribe({
                 channel  : 'my_chat'
                 callback : function(message) { }
