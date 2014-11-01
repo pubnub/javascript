@@ -800,6 +800,12 @@ function PN_API(setup) {
         if (!callback)      return error('Missing Callback');
         if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
+        if (!path || path.length == 0) {
+            object_id_split = object_id.split('.');
+            object_id       = object_id_split.shift();
+            path            = object_id_split.join('.');
+        }
+
         var url = [
             STD_ORIGIN, 'v1', 'datasync',
             'sub-key', SUBSCRIBE_KEY, 'obj-id', encode(object_id)
