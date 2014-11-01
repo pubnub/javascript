@@ -123,12 +123,14 @@ describe('Pubnub', function() {
                 })
 
             })
+
         })
         
         describe('#on.replace()', function(){
-            var seed = Date.now() + '-replace-';
+            
 
             it('should get invoked when replace happens', function(done){
+                var seed = Date.now() + '-replace-1-';
                 var ref = pubnub.sync(seed + 'a.b.c.d');
                 ref.on.replace(function(r){
                     assert.deepEqual(r.value(),seed + 2);
@@ -138,6 +140,35 @@ describe('Pubnub', function() {
                 });
                 ref.on.ready(function(r){
                     ref.replace(seed + 2);
+                })
+
+            })
+            it('should get invoked when replace happens after remove', function(done){
+                var seed = Date.now() + '-replace-2-';
+                var ref = pubnub.sync(seed + 'a.b.c.d');
+                ref.on.replace(function(r){
+                    assert.deepEqual(r.value(),seed + 3);
+                    assert.ok(true,"replace should be called");
+                    ref.on.replace();
+                    done();
+                });
+
+                ref.on.merge(function(r){
+                    assert.deepEqual(r.value(),seed + 2);
+                    assert.ok(true,"merge should be called");
+                    ref.remove();
+                    ref.on.merge();
+                });
+
+                ref.on.remove(function(r){
+                    assert.deepEqual(r.value(),{});
+                    assert.ok(true,"remove should be called");
+                    ref.replace(seed + 3);
+                    ref.on.remove();
+                });
+
+                ref.on.ready(function(r){
+                    ref.merge(seed + 2);
                 })
 
             })
