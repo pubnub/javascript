@@ -479,9 +479,7 @@ function PN_API(setup) {
         return r;
     }
 
-    function apply_update(o, update, depth) {
-        // !!!! depth not required any more due to design change . needs review ?
-        depth = 0;
+    function apply_update(o, update) {
 
         // get update path from response
         var path    = update.location.split(".");
@@ -495,11 +493,6 @@ function PN_API(setup) {
         // last node name
         var last = path.pop();
         path.shift();
-
-
-        if (depth) {
-            for (var i = 0; i < depth; i++) path.shift();
-        }
         
         // x is the place where data exists
         var x = o;
@@ -534,7 +527,7 @@ function PN_API(setup) {
         // handle updation
         if (action == 'merge' || action == 'push'  || action == 'replace') {
 
-            if (path_length - depth > 0) {
+            if (path_length > 0) {
                 try {
 
                     if (!x[last]['pn_tt'] || x[last]['pn_tt'] <= update.timetoken) {
@@ -562,7 +555,7 @@ function PN_API(setup) {
         // handle deletion 
         else if (action == 'delete') {
 
-            if (path_length - depth > 0) {
+            if (path_length  > 0) {
 
                 // delete the last node
                 delete x[last]
