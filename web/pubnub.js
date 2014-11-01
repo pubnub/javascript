@@ -631,7 +631,6 @@ function PN_API(setup) {
     }
 
     function apply_update(o, update, depth) {
-        
         // !!!! depth not required any more due to design change . needs review ?
         depth = 0;
 
@@ -662,7 +661,7 @@ function PN_API(setup) {
 
         // iterate over path elements
 
-        for (p in path) {
+        for (var p in path) {
             try {
 
                 // if x does not contain a node with path reached till now
@@ -684,11 +683,12 @@ function PN_API(setup) {
         }
 
         // handle updation
-        if (action == 'merge' || action == 'push') {
+        if (action == 'merge' || action == 'push'  || action == 'replace') {
 
             if (path_length - depth > 0) {
                 try {
-                    if (x[last]['pn_tt'] <= update.timetoken) {
+
+                    if (!x[last]['pn_tt'] || x[last]['pn_tt'] <= update.timetoken) {
                         x[last]['pn_val'] = update.value;
                         x[last]['pn_tt'] = update.timetoken;
                     }
@@ -933,12 +933,13 @@ function PN_API(setup) {
         return r;
     }
 
-    function _get_object_by_path(obj, path) {
+    function _get_object_by_path(object_id, path) {
         var split = [];
 
         if (path) split = path.split('.');
 
-        var o = OBJECTS[obj];
+        var o = OBJECTS[object_id];
+
         for (var s in split) {
             if (split[s] && split[s].length > 0) {
                 try {
@@ -1679,7 +1680,7 @@ function PN_API(setup) {
 
                 var d = object;
 
-                for (p in patha) {
+                for (var p in patha) {
                     var key = patha[p];
                     try {
                         if (!isEmpty(d[key])) d = d[key]
@@ -1713,7 +1714,7 @@ function PN_API(setup) {
 
                 var d = object;
 
-                for (p in patha) {
+                for (var p in patha) {
                     var key = patha[p];
                     try {
                         if (!isEmpty(d[key])) d = d[key]
@@ -1857,7 +1858,7 @@ function PN_API(setup) {
 
                 var d = internal;
 
-                for (p in patha) {
+                for (var p in patha) {
                     var key = patha[p];
                     try {
                         if (d[key]) d = d[key]
