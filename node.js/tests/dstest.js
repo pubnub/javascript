@@ -53,10 +53,12 @@ describe('Pubnub', function() {
                 });
             })
         })
+        
         describe('#on.merge()', function(){
-            var seed = Date.now() + '-merge-';
-
+            
+            
             it('should get invoked when merge happens', function(done){
+                var seed = Date.now() + '-merge-1-';
                 var ref = pubnub.sync(seed + 'a.b.c.d');
                 ref.on.merge(function(r){
                     assert.deepEqual(r.value(),seed);
@@ -70,8 +72,59 @@ describe('Pubnub', function() {
                 })
 
             })
-        })
+            
+            it('should get invoked when merge happens on child node', function(done){
+                var seed = Date.now() + '-merge-2-';
+                var ref = pubnub.sync(seed + 'a.b');
+                ref.on.merge(function(r){
+                    assert.deepEqual(r.value('c.d'),seed);
+                    assert.ok(true,"Merge should be called");
+                    ref.on.merge();
+                    done();
+                });
+                
+                ref.on.ready(function(r){
+                    pubnub.merge({
+                        'object_id' : seed + 'a.b.c.d',
+                        'data'      : seed,
+                        'callback'  : function(r) {
+                            assert.ok(true, 'Merge success')
+                        },  
+                        'error'     : function(r) {
+                            assert.ok(false, 'Error occurred in merge');
+                            done();
+                        }
+                    })
+                })
 
+            })
+            it('should get invoked when merge happens on child node, when listening to root', function(done){
+                var seed = Date.now() + '-merge-3';
+                var ref = pubnub.sync(seed);
+                ref.on.merge(function(r){
+                    assert.deepEqual(r.value('a.b.c.d'),seed);
+                    assert.ok(true,"Merge should be called");
+                    ref.on.merge();
+                    done();
+                });
+                
+                ref.on.ready(function(r){
+                    pubnub.merge({
+                        'object_id' : seed + '.a.b.c.d',
+                        'data'      : seed,
+                        'callback'  : function(r) {
+                            assert.ok(true, 'Merge success')
+                        },  
+                        'error'     : function(r) {
+                            assert.ok(false, 'Error occurred in merge');
+                            done();
+                        }
+                    })
+                })
+
+            })
+        })
+        
         describe('#on.replace()', function(){
             var seed = Date.now() + '-replace-';
 
