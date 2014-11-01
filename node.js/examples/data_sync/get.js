@@ -22,8 +22,6 @@ function log(r) {
     console.log(JSON.stringify(r));
 }
 
-pubnub.snapshot({
-    'object_id' : 'a.b.c.d',
-    'callback'  : log2,
-    'error'     : log2
-});
+pubnub.snapshot({"object_id":"home", "path":"occupants", "callback":console.log, "error":console.log});
+
+pubnub.snapshot({"object_id":"home.occupants", "callback":console.log, "error":console.log});
