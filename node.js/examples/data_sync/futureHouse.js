@@ -59,7 +59,6 @@ home.on.remove(function(ref) {
 
 
 home.on.ready(function (ref) {
-    log(ref);
     //console.log("Home is Ready. Value: " + log(home.value()));
 
     occupants = pubnub.sync('home.occupants');
@@ -70,15 +69,8 @@ home.on.ready(function (ref) {
     light2 = pubnub.sync('home.bedroom1.light2');
     light1 = pubnub.sync('home.bedroom1.light1');
 
-    // TODO: This will not work until this is fixed:
-    // https://www.pivotaltracker.com/story/show/81637286
 
     light1.on.ready(function (ref) {
-        log(ref);
-
-        // TODO: Make ref() work, then replace light1 references with ref below
-        // Dependent on https://www.pivotaltracker.com/story/show/81638512
-        //console.log("light1 Ready. Value: " + ref.value());
 
         setTimeout(function(){
             console.log("light1 Ready. Value: " + log(ref.value()));
@@ -89,13 +81,11 @@ home.on.ready(function (ref) {
         }, 2000);
     });
 
-    // Whenever someone leaves or exits, I want to know!
-
-    // TODO: https://www.pivotaltracker.com/story/show/81645662
-    // This should be rendering a pretty array, but its not
-
     occupants.on.change(function(ref) {
         console.log("Occupancy change: " + log(occupants.value()));
     })
+
+    pubnub.snapshot({"object_id":"home", "path":"occupants", "callback":console.log, "error":console.log});
+    pubnub.snapshot({"object_id":"home.occupants", "callback":console.log, "error":console.log});
 
 });
