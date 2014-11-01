@@ -644,7 +644,7 @@ function PN_API(setup) {
         if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
         if (!path || path.length == 0) {
-            object_id_split = object_id.split('.');
+            var object_id_split = object_id.split('.');
             object_id       = object_id_split.shift();
             path            = object_id_split.join('.');
         }
@@ -1234,7 +1234,7 @@ function PN_API(setup) {
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
 
             if (!path || path.length == 0) {
-                object_id_split = object_id.split('.');
+                var object_id_split = object_id.split('.');
                 object_id       = object_id_split.shift();
                 path            = object_id_split.join('.');
             }
@@ -1625,12 +1625,8 @@ function PN_API(setup) {
 
                                     else if (action === 'replace-delete' || action === 'replace') {     // set events
                                         internal = _get_object_by_path(object_id,path);
-                                        if ((r[0] && r[0]['action'] == 'replace') || 
-                                            (r[1] && r[1]['action'] == 'replace')) { // set event confirmation
 
-                                            event_type = 'replace';
-
-                                        }
+                                        event_type = 'replace';
                                     }
 
 

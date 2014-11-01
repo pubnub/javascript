@@ -630,9 +630,7 @@ function PN_API(setup) {
         return r;
     }
 
-    function apply_update(o, update, depth) {
-        // !!!! depth not required any more due to design change . needs review ?
-        depth = 0;
+    function apply_update(o, update) {
 
         // get update path from response
         var path    = update.location.split(".");
@@ -646,11 +644,6 @@ function PN_API(setup) {
         // last node name
         var last = path.pop();
         path.shift();
-
-
-        if (depth) {
-            for (var i = 0; i < depth; i++) path.shift();
-        }
         
         // x is the place where data exists
         var x = o;
@@ -685,7 +678,7 @@ function PN_API(setup) {
         // handle updation
         if (action == 'merge' || action == 'push'  || action == 'replace') {
 
-            if (path_length - depth > 0) {
+            if (path_length > 0) {
                 try {
 
                     if (!x[last]['pn_tt'] || x[last]['pn_tt'] <= update.timetoken) {
@@ -713,7 +706,7 @@ function PN_API(setup) {
         // handle deletion 
         else if (action == 'delete') {
 
-            if (path_length - depth > 0) {
+            if (path_length  > 0) {
 
                 // delete the last node
                 delete x[last]
@@ -801,7 +794,7 @@ function PN_API(setup) {
         if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
         if (!path || path.length == 0) {
-            object_id_split = object_id.split('.');
+            var object_id_split = object_id.split('.');
             object_id       = object_id_split.shift();
             path            = object_id_split.join('.');
         }
@@ -1391,7 +1384,7 @@ function PN_API(setup) {
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
 
             if (!path || path.length == 0) {
-                object_id_split = object_id.split('.');
+                var object_id_split = object_id.split('.');
                 object_id       = object_id_split.shift();
                 path            = object_id_split.join('.');
             }
@@ -1476,9 +1469,6 @@ function PN_API(setup) {
 
                     var callback_object         = DS_CALLBACKS[callback_location];
                     var ready_callback          = callback_object['ready'];
-
-                    // callback location is a.b.c. , remove last dot
-                    //var callback_location       = callback_location.substring(0, callback_location.length - 1);
 
                     var callback_location_split = _get_id_and_path_from_full_id(callback_location);
 
@@ -1785,12 +1775,8 @@ function PN_API(setup) {
 
                                     else if (action === 'replace-delete' || action === 'replace') {     // set events
                                         internal = _get_object_by_path(object_id,path);
-                                        if ((r[0] && r[0]['action'] == 'replace') || 
-                                            (r[1] && r[1]['action'] == 'replace')) { // set event confirmation
 
-                                            event_type = 'replace';
-
-                                        }
+                                        event_type = 'replace';
                                     }
 
 
