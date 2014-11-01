@@ -1319,9 +1319,6 @@ function PN_API(setup) {
                     var callback_object         = DS_CALLBACKS[callback_location];
                     var ready_callback          = callback_object['ready'];
 
-                    // callback location is a.b.c. , remove last dot
-                    //var callback_location       = callback_location.substring(0, callback_location.length - 1);
-
                     var callback_location_split = _get_id_and_path_from_full_id(callback_location);
 
                     var oid                     = callback_location_split['id'];

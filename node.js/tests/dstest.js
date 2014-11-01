@@ -33,7 +33,7 @@ describe('Pubnub', function() {
     describe('#sync()', function(){
         
         describe('#on.ready()', function(){
-            var seed = Date.now() + '-';
+            var seed = Date.now() + '-ready-';
 
             it('should get invoked when sync reference ready', function(done){
                 var ref = pubnub.sync(seed + 'a.b');
@@ -54,7 +54,7 @@ describe('Pubnub', function() {
             })
         })
         describe('#on.merge()', function(){
-            var seed = Date.now() + '-';
+            var seed = Date.now() + '-merge-';
 
             it('should get invoked when merge happens', function(done){
                 var ref = pubnub.sync(seed + 'a.b.c.d');
@@ -71,11 +71,54 @@ describe('Pubnub', function() {
 
             })
         })
+
+        describe('#on.replace()', function(){
+            var seed = Date.now() + '-replace-';
+
+            it('should get invoked when replace happens', function(done){
+                var ref = pubnub.sync(seed + 'a.b.c.d');
+                ref.on.replace(function(r){
+                    assert.deepEqual(r.value(),seed + 2);
+                    assert.ok(true,"replace should be called");
+                    ref.on.replace();
+                    done();
+                });
+                ref.on.ready(function(r){
+                    ref.replace(seed + 2);
+                })
+
+            })
+        })
+        
+        describe('#on.remove()', function(){
+            var seed = Date.now() + '-remove-';
+
+            it('should get invoked when remove happens', function(done){
+                var ref = pubnub.sync(seed + 'a.b.c.d');
+                ref.on.merge(function(r){
+                    assert.deepEqual(r.value(), seed + 3);
+                    assert.ok(true,"Merge should be called");
+                    ref.on.merge();
+                    ref.on.remove(function(r){
+                        assert.deepEqual(r.value(),{});
+                        assert.ok(true,"Remove should be called");
+                        ref.on.remove();
+                        done();
+                    });
+                    ref.remove();
+                });
+
+                ref.on.ready(function(r){
+                    ref.merge(seed + 3)
+                })
+
+            })
+        })
         
         describe('#on.change()', function(){
             
             it('should get invoked when merge happens', function(done){
-                var seed = Date.now() + '-';
+                var seed = Date.now() + '-change-1';
                 var ref = pubnub.sync(seed + 'a.b.c.d');
 
                 ref.on.change(function(r){
@@ -90,7 +133,7 @@ describe('Pubnub', function() {
             })
             
             it('should get invoked when replace happens', function(done){
-                var seed = Date.now() + '-';
+                var seed = Date.now() + '-change-2';
                 var ref = pubnub.sync(seed + 'a.b.c.d');
 
                 ref.on.change(function(r){
@@ -107,12 +150,12 @@ describe('Pubnub', function() {
             
             
             it('should get invoked when remove happens', function(done){
-                var seed = Date.now() + '-';
+                var seed = Date.now() + '-change-3';
                 var ref = pubnub.sync(seed + 'a.b.c.d');
 
                 ref.on.merge(function(r){
                     assert.deepEqual(r.value(), seed + 3);
-                    assert.ok(true,"Change should be called");
+                    assert.ok(true,"Merge should be called");
                     ref.on.merge();
                     ref.on.change(function(r){
                         assert.deepEqual(r.value(),{});
