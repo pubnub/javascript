@@ -23,7 +23,7 @@ function log(r) {
 }
 
 pubnub.snapshot({
-	'object_id' : 'a.b.c.d',
+    'object_id' : 'a.b.c.d',
     'callback'  : log2,
     'error'     : log2
 });
