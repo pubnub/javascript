@@ -1585,18 +1585,18 @@ function PN_API(setup) {
                         set_callback(location, callback,'remove');
                     },
                     'error'   : function(callback) {
-                        set_callback(object_id, callback,'error');
+                        set_callback(location, callback,'error');
                     }, 
                     // network events
                     'network' : {
                         'connect'       : function(callback) {
-                            set_callback(object_id, callback,'network.connect');
+                            set_callback(location, callback,'network.connect');
                         },
                         'disconnect'    : function(callback) {
-                            set_callback(object_id, callback,'network.disconnect');
+                            set_callback(location, callback,'network.disconnect');
                         },
                         'reconnect'     : function(callback) {
-                            set_callback(object_id, callback,'network.reconnect');
+                            set_callback(location, callback,'network.reconnect');
                         }
                     }
                 },
@@ -1750,7 +1750,7 @@ function PN_API(setup) {
 
             function synced_object(object_id, path) {
                 var i = (function(object_id, path) {
-
+						var location = (path && path.length)?object_id + '.' + path : object_id;
                         return get_synced_object({
                             'object_id'  : object_id,
                             'path'       : path,
@@ -1798,11 +1798,11 @@ function PN_API(setup) {
                                 }
                             },
                             'error' : function(r) {
-                                var error = get_callback(obj_id,path,'error');
+                                var error = get_callback(location,'error');
                                 error && error(r);
                             },
                             'connect'    : function(r) {
-                                var network_connect = get_callback(object_id, 'network.connect');
+                                var network_connect = get_callback(location, 'network.connect');
                                 network_connect && network_connect(r);
 
                                 for (var c in DS_CALLBACKS) {
@@ -1815,11 +1815,11 @@ function PN_API(setup) {
 
                             },
                             'reconnect'  : function(r) {
-                                var network_reconnect = get_callback(object_id, 'network.reconnect');
+                                var network_reconnect = get_callback(location, 'network.reconnect');
                                 network_reconnect && network_reconnect(r);
                             },
                             'disconnect' : function(r) {
-                                var network_disconnect = get_callback(object_id, 'network.disconnect');
+                                var network_disconnect = get_callback(location, 'network.disconnect');
                                 network_disconnect && network_disconnect(r)
                             }    
                             
