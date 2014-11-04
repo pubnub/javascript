@@ -687,6 +687,7 @@ function PN_API(setup) {
         if ( a == null ) {
             return b;
         }
+
         // if both a and b exist, then 
         if (a && b) {
 
@@ -695,9 +696,8 @@ function PN_API(setup) {
 
                 // if key does not exist in a, then add add 
                 // key to a
-                if (!a[key]) {
-                        a[key] = b[key];
-                    
+                if (!a[key] || typeof b[key] !== 'object') {
+                    a[key] = b[key];
                 }
 
                 // if key exists in a, then do a recursive merge at
@@ -942,6 +942,63 @@ function PN_API(setup) {
 
         if (!parent[last_node_key]) parent[last_node_key] = {};
 
+        // read initial copy of the data structure (recursive in case large object)
+        function read(o, p, callback, error, next_page, timetoken) {
+
+            get({
+                'object_id' : o,
+                'path'      : p,
+                'timetoken' : timetoken,
+                'next_page'  : next_page,
+                'callback'  : function(r) {
+                    
+                    var next_page = r['next_page'];
+
+                    var payload = r['payload'];
+
+                    // if payload is object, merge else assign
+                    if (typeof payload === 'object') {
+                        parent[last_node_key] = mergeAtOneLevel(parent[last_node_key], payload);
+                    } else {
+                        parent[last_node_key] = payload;
+                    }
+
+                    // till next_page is null in response keep reading recursively
+                    if (!next_page || (next_page && next_page == "null")) {
+
+                        // all updates recieved , now apply
+                        apply_all_updates(parent[last_node_key], updates, callback, depth);
+
+                        // sync complete
+                        synced = true;
+
+                        // invoke connect callback
+                        connect && connect(o);
+
+                    } else {
+                        // sync incomplete
+                        synced = false;
+
+                        // read more data
+                        read(o, p , callback, error,next_page);
+                    }
+
+                },
+                'error'     : function(r) {
+
+                   // error  
+                   error && error(r);
+                }
+            })
+        }
+
+        function resync() {
+            var i = (function(o, p, callback, error) {
+                read(o, p, callback, error);
+            })(object_id, path, callback, error);
+            return i;
+        }
+
         function start_sub(o, p) {
             var location = (!isEmpty(p))?o + '.' + p:o;
 
@@ -963,58 +1020,9 @@ function PN_API(setup) {
 
                     if (r.indexOf('dstr') > 0) {
 
-                        // read initial copy of the data structure (recursive in case large object)
-                        function read(next_page, callback, error) {
-                            get({
-                                'object_id' : o,
-                                'path'      : p,
-                                'timetoken' : timetoken,
-                                'next_page'  : next_page,
-                                'callback'  : function(r) {
-                                    
-                                    var next_page = r['next_page'];
-
-                                    var payload = r['payload'];
-
-
-                                    // if payload is object, merge else assign
-                                    if (typeof payload === 'object') {
-                                        parent[last_node_key] = mergeAtOneLevel(parent[last_node_key], payload);
-                                    } else {
-                                        parent[last_node_key] = payload;
-                                    }
-
-                                    // till next_page is null in response keep reading recursively
-                                    if (!next_page || (next_page && next_page == "null")) {
-
-                                        // all updates recieved , now apply
-                                        apply_all_updates(parent[last_node_key], updates, callback, depth);
-
-                                        // sync complete
-                                        synced = true;
-
-                                        // invoke connect callback
-                                        connect && connect(o);
-
-                                    } else {
-                                        // sync incomplete
-                                        synced = false;
-
-                                        // read more data
-                                        read(next_page, callback, error);
-                                    }
-
-                                },
-                                'error'     : function(r) {
-
-                                   // error  
-                                   error && error(r);
-                                }
-                            })
-                        }
-
+                        
                         // start reading initial copy of object and populate internal copy
-                        read();
+                        read(o, p, callback, error, null, timetoken);
                     } 
                 },
                 'callback'    : function(r,c) {
@@ -1055,7 +1063,7 @@ function PN_API(setup) {
         }
         start_sub(object_id, path);
 
-        return parent[last_node_key];
+        return [parent[last_node_key], resync];
     }
 
     // Announce Leave Event
@@ -1679,7 +1687,14 @@ function PN_API(setup) {
                 return i;
             }
 
-            internal = synced_object(object_id,path);
+            var so      = synced_object(object_id,path);
+            var resync  = so[1];
+            internal    = so[0];
+            /*
+            ref['resync'] = function() {
+                resync();
+            };
+            */
 
             ref['value'] = function(path) {
 
@@ -1742,6 +1757,43 @@ function PN_API(setup) {
                 } catch (e) {
                     return null;
                 }
+            };
+
+            ref['replaceByIndex'] = function(index) {
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = getObjectKeysSorted(internal);
+                try {
+                    var key = keys[index];
+                    SELF['replace']({
+                        'object_id' : object_id + '.' + key
+                    });
+                    return value(internal[key]);
+                } catch (e) {
+                    return null;
+                }
+            };
+
+            ref['removeByKey'] = function(key) {
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                SELF['remove']({
+                    'object_id' : object_id + '.' + key
+                });
+                return value(internal[key]);
+
+            };
+            ref['replaceByKey'] = function(key) {
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                SELF['replace']({
+                    'object_id' : object_id + '.' + key
+                });
+                return value(internal[key]);
+
             };
             ref['getByIndex'] = function(index) {
 
