@@ -582,6 +582,7 @@ function PN_API(setup) {
         return update['updateAt'];   
     }
     function apply_updates(o, updates, callback, trans_id, depth) {
+
         var update = updates[trans_id];
 
         var update_at;
@@ -612,11 +613,12 @@ function PN_API(setup) {
 
             // delete update 
 
-            delete update;
+            delete updates[trans_id];
         }
     }
 
     function apply_all_updates(o, updates, callback, depth) {
+
         // iterate trhough all updates and apply
         for (var t in updates) {
             apply_updates(o, updates, callback, t, depth);
@@ -889,22 +891,25 @@ function PN_API(setup) {
             }
 
 
-            var parent_location_present = false;
+            var parent_location = false;
 
             for (var channel in DS_CHANNELS) {
 
-                parent_location_present = (location.indexOf(channel + '.') == 0 )?true:false;
-            
+                if (location.indexOf(channel + '.') == 0 ) {
+                    return channel;
+                }
+                
             }
 
-            if (!parent_location_present) DS_CHANNELS[location] = true;
+            if (!parent_location) DS_CHANNELS[location] = true;
             
-            // return true if we are already listening to parent location
-            return parent_location_present;
+            // return parent location if we are already listening to parent location
+            return parent_location;
         }
 
+        var parent_location = _prepare_new_ds_channel_list(location);
 
-        if (_prepare_new_ds_channel_list(location)) {
+        if (parent_location) {
             var o = OBJECTS[object_id];
             
             for (var p in split_path) {
@@ -915,7 +920,9 @@ function PN_API(setup) {
                 }
             }
 
-            if (DS_CALLBACKS[location]) DS_CALLBACKS[location]['is_ready'] = true;
+            if (DS_CALLBACKS[location] && DS_CALLBACKS[parent_location]['is_ready']) {
+                DS_CALLBACKS[location]['is_ready'] = true;
+            }
             return o;
         }
 
@@ -945,51 +952,61 @@ function PN_API(setup) {
         // read initial copy of the data structure (recursive in case large object)
         function read(o, p, callback, error, next_page, timetoken) {
 
-            get({
-                'object_id' : o,
-                'path'      : p,
-                'timetoken' : timetoken,
-                'next_page'  : next_page,
-                'callback'  : function(r) {
-                    
-                    var next_page = r['next_page'];
+            (function(o, p, callback, error, next_page, timetoken) {
+                get({
+                    'object_id' : o,
+                    'path'      : p,
+                    'timetoken' : timetoken,
+                    'next_page'  : next_page,
+                    'callback'  : function(r) {
+                        var location = o;
+                        var last_node_key = o;
+                        if (p && p.length) {
+                            location = location + '.' + p;
+                            last_node_key = p.split('.').pop();
+                        }
+                         
+                        var next_page = r['next_page'];
 
-                    var payload = r['payload'];
+                        var payload = r['payload'];
 
-                    // if payload is object, merge else assign
-                    if (typeof payload === 'object') {
-                        parent[last_node_key] = mergeAtOneLevel(parent[last_node_key], payload);
-                    } else {
-                        parent[last_node_key] = payload;
+                        var parent = _get_parent_by_path_with_create(OBJECTS,location);
+
+                        // if payload is object, merge else assign
+                        if (typeof payload === 'object') {
+                            parent[last_node_key] = mergeAtOneLevel(parent[last_node_key], payload);
+                        } else {
+                            parent[last_node_key] = payload;
+                        }
+
+                        // till next_page is null in response keep reading recursively
+                        if (!next_page || (next_page && next_page == "null")) {
+
+                            // all updates recieved , now apply
+                            apply_all_updates(parent[last_node_key], updates, callback, depth);
+
+                            // sync complete
+                            synced = true;
+
+                            // invoke connect callback
+                            connect && connect(location);
+
+                        } else {
+                            // sync incomplete
+                            synced = false;
+
+                            // read more data
+                            read(o, p , callback, error,next_page);
+                        }
+
+                    },
+                    'error'     : function(r) {
+
+                       // error  
+                       error && error(r);
                     }
-
-                    // till next_page is null in response keep reading recursively
-                    if (!next_page || (next_page && next_page == "null")) {
-
-                        // all updates recieved , now apply
-                        apply_all_updates(parent[last_node_key], updates, callback, depth);
-
-                        // sync complete
-                        synced = true;
-
-                        // invoke connect callback
-                        connect && connect(o);
-
-                    } else {
-                        // sync incomplete
-                        synced = false;
-
-                        // read more data
-                        read(o, p , callback, error,next_page);
-                    }
-
-                },
-                'error'     : function(r) {
-
-                   // error  
-                   error && error(r);
-                }
-            })
+                })
+            })(o, p, callback, error, next_page, timetoken);
         }
 
         function resync() {
@@ -999,68 +1016,94 @@ function PN_API(setup) {
             return i;
         }
 
-        function start_sub(o, p) {
-            var location = (!isEmpty(p))?o + '.' + p:o;
+        function start_sub(ob, pa) {
 
-            /* 
-                subscribe to 3 channels . for ex. if obj id is 'ab'
-                a. normal channel       pn_ds_ab
-                b. wildcard channel     pn_ds_ab.*
-                c. transaction channel  pn_dstr_ab
-            */
-            SELF['subscribe']({
+            (function(o,p){
+                var location = (!isEmpty(p))?o + '.' + p:o;
 
-                'channel'     : _get_channels_for_subscribe(),
+                /* 
+                    subscribe to 3 channels . for ex. if obj id is 'ab'
+                    a. normal channel       pn_ds_ab
+                    b. wildcard channel     pn_ds_ab.*
+                    c. transaction channel  pn_dstr_ab
+                */
+                SELF['subscribe']({
 
+                    'channel'     : _get_channels_for_subscribe(),
 
-                'connect'     : function(r, timetoken) {
-
-                    // if message received on wild card channel
-                    // this is just to take care of 3 invocations of connect
-
-                    if (r.indexOf('dstr') > 0) {
-
+                    'connect'     : function(r, timetoken) {
                         
-                        // start reading initial copy of object and populate internal copy
-                        read(o, p, callback, error, null, timetoken);
-                    } 
-                },
-                'callback'    : function(r,c) {
-                    var trans_id    = r['trans_id'];
-                    var action      = r['action'];
-                    var status      = r['status'];
+                        if (r.indexOf('dstr') < 0 && r.indexOf('*') < 0) {
+                            // start reading initial copy of object and populate internal copy
 
-                    if (action) { // if action, store it in list with transaction id as key
+                            var obs = r.split('pn_ds_')[1].split('.');
+                            var o = obs.shift(); var p = obs.join('.');
 
-                        if (!updates[trans_id])
-                            updates[trans_id] = {'complete' : false, 'list' : []}
-                        updates[trans_id]['list']['push'](r);
+                            read(o, p, callback, error, null, timetoken);
+                        } 
+                    },
+                    'callback'    : function(r,c) {
 
-                    } else if (status) { // if transaction complete , apply the updates
+                        var trans_id    = r['trans_id'];
+                        var action      = r['action'];
+                        var status      = r['status'];
 
-                        if (status == 'complete' && updates[trans_id]) {
-                        
-                            updates[trans_id]['complete'] = true;
+                        if (action) { // if action, store it in list with transaction id as key
 
-                            var location = updates[trans_id].list[0].location;
+                            if (!updates[trans_id])
+                                updates[trans_id] = {'complete' : false, 'list' : []}
+                            updates[trans_id]['list']['push'](r);
+
+                        } else if (status) { // if transaction complete , apply the updates
+
+                            if (status == 'complete' && updates[trans_id]) {
                             
-                            var objid = (location.split('.')[0]).split('pn_ds_')[1];
-                            
-                            if (!OBJECTS[objid]) OBJECTS[objid] = {};
+                                
 
-                            if (synced) apply_updates(OBJECTS[objid], updates, callback, trans_id, depth);
+                                var location = updates[trans_id].list[0].location;
+                                
+                                var objid = (location.split('.')[0]).split('pn_ds_')[1];
 
+
+                                /* 
+                                    check here if we should do a resync 
+                                    
+                                
+                                if (1 || !location) {
+                                    console.log('FORCE RESYNC 1');
+                                    console.log(c[2]);
+                                    objid = c[2].split('pn_dstr_')[1];
+                                    if (objid) {
+                                        var update = updates[trans_id];
+                                        if (1 || !update) {
+                                            resync(read, objid);
+                                            console.log('FORCE RESYNC 2');
+                                            return;
+                                        }
+                                    }
+                                }
+                                */
+
+                                updates[trans_id]['complete'] = true;
+                                
+                                if (!OBJECTS[objid]) OBJECTS[objid] = {};
+
+                                if (synced) apply_updates(OBJECTS[objid], updates, callback, trans_id, depth);
+
+                            }
                         }
+                    },
+                    'error'       : function(r) { 
+
+                        //error
+                        err({'message' : r['message']});
+
                     }
-                },
-                'error'       : function(r) { 
-
-                    //error
-                    err({'message' : r['message']});
-
-                }
-            });
+                });
+            })(ob,pa);
         }
+
+
         start_sub(object_id, path);
 
         return [parent[last_node_key], resync];
@@ -1385,7 +1428,7 @@ function PN_API(setup) {
 
                 var callbacks = {};
                 for (var c in DS_CALLBACKS) {
-                    if (location.indexOf(c) == 0) {
+                    if (location && location.indexOf(c) == 0) {
                         if(DS_CALLBACKS[c][type]) {
                             callbacks[c] = DS_CALLBACKS[c][type];
                         }
@@ -1606,12 +1649,16 @@ function PN_API(setup) {
 
             // prepare internal object 
 
+
             function synced_object(object_id, path) {
                 var i = (function(object_id, path) {
 						var location = (path && path.length)?object_id + '.' + path : object_id;
                         return get_synced_object({
                             'object_id'  : object_id,
                             'path'       : path,
+                            'resync'     : function(resync_func, obj_id) {
+                                internal = resync_func(obj_id, path);
+                            },
                             'callback'   : function(r) {
                                 if (r[0]) {
                                     var action      = r[0]['action'];
@@ -1662,12 +1709,12 @@ function PN_API(setup) {
                             'connect'    : function(r) {
                                 var network_connect = get_callback(location, 'network.connect');
                                 network_connect && network_connect(r);
-
+                                
                                 for (var c in DS_CALLBACKS) {
-
-                                    var cbo = DS_CALLBACKS[c];
-                                    cbo['is_ready'] = true;
-
+                                    if (c.indexOf(r + '.') == 0 || c === r) {
+                                        var cbo = DS_CALLBACKS[c];
+                                        cbo['is_ready'] = true;
+                                    }
                                 }
                                 invoke_ready_callbacks();
 
@@ -1690,11 +1737,11 @@ function PN_API(setup) {
             var so      = synced_object(object_id,path);
             var resync  = so[1];
             internal    = so[0];
-            /*
+            
             ref['resync'] = function() {
                 resync();
             };
-            */
+
 
             ref['value'] = function(path) {
 
@@ -2789,12 +2836,13 @@ function xdr( setup ) {
     ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
     ,   body = ''
+    ,   url
     ,   finished = function() {
             if (loaded) return;
                 loaded = 1;
 
             clearTimeout(timer);
-            //console.log('BODY : ' + body);
+            //console.log('URL : ' + url +'\nBODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
@@ -2826,7 +2874,7 @@ function xdr( setup ) {
 
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
-    var url = build_url( setup.url, data );
+    url = build_url( setup.url, data );
     //console.log(mode + ' ' + url); 
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
