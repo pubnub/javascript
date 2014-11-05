@@ -1,11 +1,36 @@
 <link rel="stylesheet" type="text/css" href="futureHouse.css">
 <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css">
+<script src="//code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
 <script src="pubnub.js"></script>
 <script src="futureHouse.js"></script>
 
+<body class="yui3-skin-sam">
 
+Local Thermostat Control
 <div id="thermostat">Thermostat!
     Status:<div id="status"></div>
     Temp:<div id="temperature"></div>
+
 </div>
 
+<div id="thermostatDial"></div>
+
+
+<fieldset>
+    <div data-role="fieldcontain">
+        <label for="thermostatMode">Mode:</label>
+        <select id="thermostatMode" data-role="flipswitch">
+            <option value="heat">Heat</option>
+            <option value="cool">Cool</option>
+        </select>
+    </div>
+</fieldset>
+
+
+Remote Thermostat Output
+<div id="thermostatOutput"></div>
+
+
+</body>

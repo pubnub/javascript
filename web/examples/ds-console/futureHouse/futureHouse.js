@@ -37,11 +37,14 @@ function refLog(ref) {
 
 var home = {}
 var thermostat = {};
-var temperature = {};
 var occupants = {};
 var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
+
+var thermostatTemp = 0;
+var thermostatStatus = "on";
+var thermostatMode = "heat";
 
 $( document ).ready(function() {
 
@@ -58,11 +61,46 @@ $( document ).ready(function() {
         $("#thermostat").css("background-color", "green");
 
         var status = ref.value("status");
-        var temp = ref.value("temperature");
+        var temp = ref.value("thermostatTemp");
 
         $("#thermostat #status").html(status);
-        $("#thermostat #temperature").html(temp);
+        $("#thermostat #thermostatTemp").html(temp);
     });
+
+
+    YUI().use('dial', function(Y) {
+
+        var dial = new Y.Dial({
+            min:0,
+            max:120,
+            stepsPerRevolution:5,
+            value: 30
+        });
+
+        dial.render('#thermostatDial');
+
+        dial.on( "valueChange", function(e){
+            if (e.newVal == thermostatTemp) {
+                return;
+            }
+            thermostat.replace({"temperature": e.newVal, "status":thermostatStatus, "mode":thermostatMode}, log, log);
+        });
+    });
+
+    $("#thermostatMode").on('change', function(e){
+        if (this.value == thermostatMode) {
+            return;
+        }
+        thermostatMode = this.value;
+        thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":thermostatMode}, log, log);
+
+    });
+
+    thermostat.on.replace(function(ref){
+        thermostatTemp = ref.value("temperature");
+        $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+    });
+
 });
 
 
