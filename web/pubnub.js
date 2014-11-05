@@ -349,6 +349,10 @@ function isEmpty(val){
     return (typeof val === 'undefined' || val === null || val.length == 0);
 }
 
+function isNullOrUndef(val) {
+    return (typeof val === 'undefined' || val == null);
+}
+
 
 // PUBNUB READY TO CONNECT
 function ready() { timeout( function() {
@@ -1429,7 +1433,7 @@ function PN_API(setup) {
 
             // Make sure we have a Channel
             if (!object_id)     return error('Missing Object Id');
-            if (!content)       return error('Missing Data');
+            if (isNullOrUndef(content))       return error('Missing Data');
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
