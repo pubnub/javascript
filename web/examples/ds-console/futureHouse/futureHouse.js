@@ -42,9 +42,11 @@ var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
 
-var thermostatTemp = 0;
+var thermostatTemp = 10;
 var thermostatStatus = "on";
 var thermostatMode = "heat";
+
+var dial = {};
 
 $( document ).ready(function() {
 
@@ -60,32 +62,40 @@ $( document ).ready(function() {
     thermostat.on.ready(function(ref) {
         $("#thermostat").css("background-color", "green");
 
-        var status = ref.value("status");
-        var temp = ref.value("thermostatTemp");
+        thermostatStatus = ref.value("status");
+        thermostatTemp = ref.value("temperature");
 
-        $("#thermostat #status").html(status);
-        $("#thermostat #thermostatTemp").html(temp);
-    });
+        console.log(thermostatTemp);
 
+        $("#thermostat #status").html(thermostatStatus);
+        $("#thermostat #temperature").html(thermostatTemp);
 
-    YUI().use('dial', function(Y) {
+        YUI().use('dial', function(Y) {
 
-        var dial = new Y.Dial({
-            min:0,
-            max:120,
-            stepsPerRevolution:5,
-            value: 30
+            dial = new Y.Dial({
+                min:0,
+                max:120,
+                stepsPerRevolution:5,
+                value: 30,
+                strings: {"label":"Thermostat Control"}
+
+            });
+
+            dial.render('#thermostatDial');
+
+            dial.on( "valueChange", function(e){
+                if (e.newVal == thermostatTemp) {
+                    return;
+                }
+                thermostat.replace({"temperature": e.newVal, "status":thermostatStatus, "mode":thermostatMode}, log, log);
+            });
+
+            dial.set('value', thermostatTemp);
+
         });
 
-        dial.render('#thermostatDial');
-
-        dial.on( "valueChange", function(e){
-            if (e.newVal == thermostatTemp) {
-                return;
-            }
-            thermostat.replace({"temperature": e.newVal, "status":thermostatStatus, "mode":thermostatMode}, log, log);
-        });
     });
+
 
     $("#thermostatMode").on('change', function(e){
         if (this.value == thermostatMode) {
