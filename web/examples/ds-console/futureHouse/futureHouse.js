@@ -67,6 +67,13 @@ function thermostatSetter(ref) {
     thermostatStatus = ref.value("status");
 }
 
+function refreshPresenceObject(ref) {
+    $.each(ref.data, function (index, value) {
+        presenceObject[value.pn_val] = index;
+    });
+    $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+}
+
 $( document ).ready(function() {
 
     home = pubnub.sync('home');
@@ -77,18 +84,6 @@ $( document ).ready(function() {
     porch_light2 = pubnub.sync('home.porch.light2');
 
 // Acknowledge when the thermostat has registered by turning it green
-
-    occupants.on.ready(function(ref){
-        $.each(ref.data, function(index, value) {
-            presenceObject[value.pn_val] = index;
-        });
-
-        $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
-    });
-
-    occupants.on.merge(function(ref){
-       a=1;
-    });
 
     thermostat.on.ready(function(ref) {
         $("#thermostat").css("background-color", "green");
@@ -118,23 +113,13 @@ $( document ).ready(function() {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
-                thermostat.replace({"temperature": e.newVal, "status":thermostatStatus, "mode":thermostatMode}, log, log);
+                thermostat.replace({"temperature": e.newVal, "status":"thermostatStatus", "mode":thermostatMode}, log, log);
             });
 
             dial.set('value', thermostatTemp);
 
         });
 
-    });
-
-    $("#mom").on("click", function(e){
-       if (presenceObject['mom']) {
-           // here we show examples of manually storing the key to remove a list item
-           // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
-           occupants.remove(presenceObject["mom"], log, log);
-       } else {
-           occupants.push("mom");
-       }
     });
 
     $("#thermostatMode").on('change', function(e){
@@ -150,6 +135,31 @@ $( document ).ready(function() {
     thermostat.on.replace(function(ref){
         thermostatSetter(ref);
     });
+
+
+    // Occupants Logic
+
+
+    $("#mom").on("click", function(e){
+       if (presenceObject['mom']) {
+           // here we show examples of manually storing the key to remove a list item
+           // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
+           occupants.remove(presenceObject["mom"], log, log);
+       } else {
+           occupants.push("mom");
+       }
+    });
+
+    occupants.on.ready(function(ref){
+        refreshPresenceObject(ref);
+    });
+
+    occupants.on.merge(function(ref){
+        refreshPresenceObject(ref);
+    });
+
+
+
 
 });
 
