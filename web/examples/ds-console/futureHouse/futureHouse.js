@@ -42,11 +42,18 @@ var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
 
-var thermostatTemp = 10;
+var thermostatTemp = -1;
 var thermostatStatus = "on";
 var thermostatMode = "heat";
 
 var dial = {};
+
+function thermostatSetter(ref) {
+    $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+    thermostatTemp = ref.value("temperature");
+    thermostatMode = ref.value("mode");
+    thermostatStatus = ref.value("status");
+}
 
 $( document ).ready(function() {
 
@@ -98,17 +105,17 @@ $( document ).ready(function() {
 
 
     $("#thermostatMode").on('change', function(e){
-        if (this.value == thermostatMode) {
-            return;
+        // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
+        if (thermostatMode == "heat") {
+            thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":"cold"}, log, log);
+        } else {
+            thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":"heat"}, log, log);
         }
-        thermostatMode = this.value;
-        thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":thermostatMode}, log, log);
 
     });
 
     thermostat.on.replace(function(ref){
-        thermostatTemp = ref.value("temperature");
-        $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+        thermostatSetter(ref);
     });
 
 });
