@@ -33,6 +33,8 @@ function refLog(ref) {
     console.log("The new raw object looks like: " + log(ref.value()));
 }
 
+var dial = {};
+
 // We have many devices in a house. This house is organized by rooms.
 
 var home = {}
@@ -42,11 +44,21 @@ var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
 
+// These are populated by callbacks on home.thermostat
 var thermostatTemp = -1;
 var thermostatStatus = "on";
 var thermostatMode = "heat";
 
-var dial = {};
+// These are populated by callbacks from home.occupants
+var momHome = "";
+var dadHome = "";
+var sisterHome = "";
+var brotherHome = "";
+var dogHome = "";
+var pizzaHome = "";
+var presenceObject = {};
+
+
 
 function thermostatSetter(ref) {
     $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
@@ -65,6 +77,18 @@ $( document ).ready(function() {
     porch_light2 = pubnub.sync('home.porch.light2');
 
 // Acknowledge when the thermostat has registered by turning it green
+
+    occupants.on.ready(function(ref){
+        $.each(ref.data, function(index, value) {
+            presenceObject[value.pn_val] = index;
+        });
+
+        $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+    });
+
+    occupants.on.merge(function(ref){
+       a=1;
+    });
 
     thermostat.on.ready(function(ref) {
         $("#thermostat").css("background-color", "green");
@@ -103,6 +127,15 @@ $( document ).ready(function() {
 
     });
 
+    $("#mom").on("click", function(e){
+       if (presenceObject['mom']) {
+           // here we show examples of manually storing the key to remove a list item
+           // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
+           occupants.remove(presenceObject["mom"], log, log);
+       } else {
+           occupants.push("mom");
+       }
+    });
 
     $("#thermostatMode").on('change', function(e){
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
