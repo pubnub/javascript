@@ -1913,6 +1913,15 @@ function PN_API(setup) {
                 return value(internal[key]);
 
             };
+            ref['getListElementIDFor'] = function(val) {
+
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                return getKeyByValue(internal, val);
+
+            };
+            
             ref['replaceByValue'] = function(val) {
 
                 if(!isPnList(internal)) {
