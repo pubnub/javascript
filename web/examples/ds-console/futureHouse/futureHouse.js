@@ -33,6 +33,8 @@ function refLog(ref) {
     console.log("The new raw object looks like: " + log(ref.value()));
 }
 
+var dial = {};
+
 // We have many devices in a house. This house is organized by rooms.
 
 var home = {}
@@ -42,9 +44,28 @@ var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
 
-var thermostatTemp = 0;
+// These are populated by callbacks on home.thermostat
+var thermostatTemp = -1;
 var thermostatStatus = "on";
 var thermostatMode = "heat";
+
+// These are populated by callbacks from home.occupants
+var momHome = "";
+var dadHome = "";
+var sisterHome = "";
+var brotherHome = "";
+var dogHome = "";
+var pizzaHome = "";
+var presenceObject = {};
+
+
+
+function thermostatSetter(ref) {
+    $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+    thermostatTemp = ref.value("temperature");
+    thermostatMode = ref.value("mode");
+    thermostatStatus = ref.value("status");
+}
 
 $( document ).ready(function() {
 
@@ -57,48 +78,77 @@ $( document ).ready(function() {
 
 // Acknowledge when the thermostat has registered by turning it green
 
+    occupants.on.ready(function(ref){
+        $.each(ref.data, function(index, value) {
+            presenceObject[value.pn_val] = index;
+        });
+
+        $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+    });
+
+    occupants.on.merge(function(ref){
+       a=1;
+    });
+
     thermostat.on.ready(function(ref) {
         $("#thermostat").css("background-color", "green");
 
-        var status = ref.value("status");
-        var temp = ref.value("thermostatTemp");
+        thermostatStatus = ref.value("status");
+        thermostatTemp = ref.value("temperature");
 
-        $("#thermostat #status").html(status);
-        $("#thermostat #thermostatTemp").html(temp);
+        console.log(thermostatTemp);
+
+        $("#thermostat #status").html(thermostatStatus);
+        $("#thermostat #temperature").html(thermostatTemp);
+
+        YUI().use('dial', function(Y) {
+
+            dial = new Y.Dial({
+                min:0,
+                max:120,
+                stepsPerRevolution:5,
+                value: 30,
+                strings: {"label":"Thermostat Control"}
+
+            });
+
+            dial.render('#thermostatDial');
+
+            dial.on( "valueChange", function(e){
+                if (e.newVal == thermostatTemp) {
+                    return;
+                }
+                thermostat.replace({"temperature": e.newVal, "status":thermostatStatus, "mode":thermostatMode}, log, log);
+            });
+
+            dial.set('value', thermostatTemp);
+
+        });
+
     });
 
-
-    YUI().use('dial', function(Y) {
-
-        var dial = new Y.Dial({
-            min:0,
-            max:120,
-            stepsPerRevolution:5,
-            value: 30
-        });
-
-        dial.render('#thermostatDial');
-
-        dial.on( "valueChange", function(e){
-            if (e.newVal == thermostatTemp) {
-                return;
-            }
-            thermostat.replace({"temperature": e.newVal, "status":thermostatStatus, "mode":thermostatMode}, log, log);
-        });
+    $("#mom").on("click", function(e){
+       if (presenceObject['mom']) {
+           // here we show examples of manually storing the key to remove a list item
+           // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
+           occupants.remove(presenceObject["mom"], log, log);
+       } else {
+           occupants.push("mom");
+       }
     });
 
     $("#thermostatMode").on('change', function(e){
-        if (this.value == thermostatMode) {
-            return;
+        // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
+        if (thermostatMode == "heat") {
+            thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":"cold"}, log, log);
+        } else {
+            thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":"heat"}, log, log);
         }
-        thermostatMode = this.value;
-        thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":thermostatMode}, log, log);
 
     });
 
     thermostat.on.replace(function(ref){
-        thermostatTemp = ref.value("temperature");
-        $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+        thermostatSetter(ref);
     });
 
 });
