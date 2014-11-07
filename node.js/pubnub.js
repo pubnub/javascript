@@ -564,6 +564,9 @@ function PN_API(setup) {
             if (path_length  > 0) {
 
                 // delete the last node
+
+                if (!isEmpty(x[last])) update.value = x[last]['pn_val'];
+                
                 delete x[last]
 
                 // now return back to root while examining each node on path
@@ -584,7 +587,7 @@ function PN_API(setup) {
             }
         }
         // return update at , need to reconsider
-        return update['updateAt'];   
+        return update.value;   
     }
     function apply_updates(o, callback, trans_id) {
 
@@ -604,7 +607,7 @@ function PN_API(setup) {
 
                 // apply event, update at value will be returned
                 //action_event.update_at = 
-                apply_update(o, action_event);
+                action_event.value = apply_update(o, action_event);
 
                 // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
@@ -783,6 +786,9 @@ function PN_API(setup) {
         return r;
     }
 
+
+
+
     function _get_object_by_path(object_id, path) {
         var split = [];
 
@@ -800,6 +806,37 @@ function PN_API(setup) {
             }
         }
         return o;
+    }
+
+    function _get_object_by_location(location) {
+        var split = [];
+        split = location.split('.');
+
+        var object_id = split.shift();
+        if (!object_id) return null;
+
+        var path = split.join('.');
+        console.log(object_id + ' : ' + path);
+        return _get_object_by_path(object_id, path);
+
+    }
+
+    function _get_object_pnval_by_location(location) {
+        var split = [];
+        split = location.split('.');
+
+        var object_id = split.shift();
+        if (!object_id) return null;
+
+        var path = split.join('.');
+
+        var o = _get_object_by_location(location);
+
+        if (!isEmpty(o))
+            return o['pn_val'];
+        else
+            return null;
+        
     }
 
     function _get_parent_by_path(obj, path) {
@@ -827,10 +864,11 @@ function PN_API(setup) {
                 o[split[s]] = {};
                 o = o[split[s]];
             }
-
         }
         return o;
     }
+
+
 
     function _get_parent_by_path_with_create(obj, path) {
 
@@ -1319,18 +1357,10 @@ function PN_API(setup) {
 
     function getKeyByValue(data, value) {
         if (!data) return null;
-        
-        //console.log(JSON.stringify(data));
-        //console.log(value);
 
         var keys = _object_to_key_list(data);
-        //console.log(JSON.stringify(keys));
 
         for (var i in keys) {
-            //console.log(i);
-            //console.log(data[keys[i]]);
-
-            //console.log(data[keys[i]] + ' : ' + value + ' , ' + data[keys[i]] === value);
             if (data[keys[i]]['pn_val'] === value) return keys[i];
         }
         return null;
@@ -1720,6 +1750,7 @@ function PN_API(setup) {
                         internal = resync_func(obj_id, path);
                     },
                     'callback'   : function(r) {
+                        internal = _get_object_by_path(object_id,path);
                         if (r[0]) {
                             var action      = r[0]['action'];
                             var location    = r[0]['location'];
@@ -1739,9 +1770,10 @@ function PN_API(setup) {
                             }
 
                             else if (action === 'replace-delete' || action === 'replace') {     // set events
-                                internal = _get_object_by_path(object_id,path);
+                                
 
                                 event_type = 'replace';
+
                             }
 
 
@@ -1799,16 +1831,16 @@ function PN_API(setup) {
             };
 
 
-            ref['value'] = function(path) {
-
-                if (!path &&
+            ref['value'] = function(path1) {
+                internal = _get_object_by_path(object_id,path);
+                if (!path1 &&
                     typeof internal['pn_val'] !== 'undefined'  &&
                     !isPnList(internal)
                     ) 
                     return internal;
 
 
-                var patha = (path)?path['split']("."):[];
+                var patha = (path1)?path1['split']("."):[];
 
                 var d = internal;
 
@@ -1833,8 +1865,8 @@ function PN_API(setup) {
                 return SELF['sync'](location + '.' + path);
             };
 
-            ref['pop'] = function() {
-
+            ref['pop'] = function(success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
@@ -1842,11 +1874,14 @@ function PN_API(setup) {
                 var last_key = keys.pop();
 
                 SELF['remove']({
-                    'object_id' : location + '.' + last_key
+                    'object_id' : location + '.' + key,
+                    'callback'  : success,
+                    'error'     : error
                 });
                 return value(internal[last_key]);
             };
-            ref['removeByIndex'] = function(index) {
+            ref['removeByIndex'] = function(index, success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
@@ -1854,7 +1889,9 @@ function PN_API(setup) {
                 try {
                     var key = keys[index];
                     SELF['remove']({
-                        'object_id' : location + '.' + key
+                        'object_id' : location + '.' + key,
+                        'callback'  : success,
+                        'error'     : error
                     });
                     return value(internal[key]);
                 } catch (e) {
@@ -1862,7 +1899,8 @@ function PN_API(setup) {
                 }
             };
 
-            ref['replaceByIndex'] = function(index) {
+            ref['replaceByIndex'] = function(index, success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
@@ -1870,7 +1908,9 @@ function PN_API(setup) {
                 try {
                     var key = keys[index];
                     SELF['replace']({
-                        'object_id' : location + '.' + key
+                        'object_id' : location + '.' + key,
+                        'callback'  : success,
+                        'error'     : error
                     });
                     return value(internal[key]);
                 } catch (e) {
@@ -1878,28 +1918,34 @@ function PN_API(setup) {
                 }
             };
 
-            ref['removeByKey'] = function(key) {
+            ref['removeByKey'] = function(key, success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
                 SELF['remove']({
-                    'object_id' : location + '.' + key
+                    'object_id' : location + '.' + key,
+                    'callback'  : success,
+                    'error'     : error
                 });
                 return value(internal[key]);
 
             };
-            ref['replaceByKey'] = function(key) {
+            ref['replaceByKey'] = function(key, success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
                 SELF['replace']({
-                    'object_id' : location + '.' + key
+                    'object_id' : location + '.' + key,
+                    'callback'  : success,
+                    'error'     : error
                 });
                 return value(internal[key]);
 
             };
-            ref['removeByValue'] = function(val) {
-
+            ref['removeByValue'] = function(val, success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
@@ -1909,13 +1955,15 @@ function PN_API(setup) {
                 if (!key) return null;
                 
                 SELF['remove']({
-                    'object_id' : location + '.' + key
+                    'object_id' : location + '.' + key,
+                    'callback'  : success,
+                    'error'     : error
                 });
                 return value(internal[key]);
 
             };
             ref['getListElementIDFor'] = function(val) {
-
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
@@ -1923,8 +1971,8 @@ function PN_API(setup) {
 
             };
             
-            ref['replaceByValue'] = function(val) {
-
+            ref['replaceByValue'] = function(val, success, error) {
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
@@ -1933,13 +1981,15 @@ function PN_API(setup) {
                 if (!key) return null;
 
                 SELF['remove']({
-                    'object_id' : location + '.' + key
+                    'object_id' : location + '.' + key,
+                    'callback'  : success,
+                    'error'     : error
                 });
                 return value(internal[key]);
 
             };
             ref['getByIndex'] = function(index) {
-
+                internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
