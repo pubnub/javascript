@@ -3,7 +3,7 @@
 var pubnub = PUBNUB.init({
     write_key: "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
     read_key: "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
-    origin: "dara24.devbuild.pubnub.com"
+    origin: "dara25.devbuild.pubnub.com"
 });
 
 // Define some generic callbacks
@@ -68,6 +68,11 @@ function thermostatSetter(ref) {
 }
 
 function refreshPresenceObject(ref) {
+    if (!ref.data) {
+        console.log("tree is empty!")
+        return;
+    }
+    console.log(log(ref.data));
     $.each(ref.data, function (index, value) {
         presenceObject[value.pn_val] = index;
     });
@@ -90,8 +95,6 @@ $( document ).ready(function() {
 
         thermostatStatus = ref.value("status");
         thermostatTemp = ref.value("temperature");
-
-        console.log(thermostatTemp);
 
         $("#thermostat #status").html(thermostatStatus);
         $("#thermostat #temperature").html(thermostatTemp);
@@ -125,9 +128,9 @@ $( document ).ready(function() {
     $("#thermostatMode").on('change', function(e){
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
-            thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":"cold"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "status":"thermostatStatus", "mode":"cold"}, log, log);
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "status":thermostatStatus, "mode":"heat"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "status":"thermostatStatus", "mode":"heat"}, log, log);
         }
 
     });
@@ -140,27 +143,57 @@ $( document ).ready(function() {
     // Occupants Logic
 
 
-    $("#mom").on("click", function(e){
-       if (presenceObject['mom']) {
+    $(".family").on("click", function(e){
+        var person = this.id;
+        if (!person) {
+            console.log("No ID found on clicked person.");
+            return;
+        }
+
+       if (presenceObject[person]) {
            // here we show examples of manually storing the key to remove a list item
            // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
-           occupants.remove(presenceObject["mom"], log, log);
+
+           //occupants.remove(presenceObject["mom"], log, log);
+           occupants.removeByKey(presenceObject[person], log, log);
+           // occupants.removeByValue('mom', log, log); // alternatively, if we knew this was a unique value
+           // occupants.removeByIndex(0); // only if performing queue-like operations
+
        } else {
-           occupants.push("mom");
+           occupants.push(person);
        }
     });
 
+    // When occupants is ready, lets add all members to our presenceObject.
     occupants.on.ready(function(ref){
         refreshPresenceObject(ref);
     });
 
-    occupants.on.merge(function(ref){
+    // On each change, just delete and recreate the presence object.
+    // This is lazy, but easy.
+
+    occupants.on.change(function(ref){
+        presenceObject = {};
         refreshPresenceObject(ref);
     });
 
+    // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
+    occupants.on.remove(function(ref){
+        // Until this is fixed, we wont be able to pull the exact changed value out
+        // https://www.pivotaltracker.com/story/show/82248658
+        //console.log(ref);
+    })
 
 
 
+    home.on.ready(function(ref){
+
+        home.on.remove(function(ref) {
+            console.log("REMOVE");
+            //refLog(ref);
+});
+
+    });
 });
 
 
