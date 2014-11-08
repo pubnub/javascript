@@ -3,14 +3,10 @@
 var pubnub = PUBNUB.init({
     write_key: "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
     read_key: "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
-    origin: "dara25.devbuild.pubnub.com"
+    origin: "pubsub.pubnub.com"
 });
 
 // Define some generic callbacks
-
-function log2(m,e,z) {
-    return JSON.stringify(m, null, 4);
-}
 
 function log(m) {
     return JSON.stringify(m, null, 4);
@@ -59,7 +55,6 @@ var pizzaHome = "";
 var presenceObject = {};
 
 
-
 function thermostatSetter(ref) {
     $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
     thermostatTemp = ref.value("temperature");
@@ -67,19 +62,24 @@ function thermostatSetter(ref) {
     thermostatStatus = ref.value("status");
 }
 
+function logOccupants() {
+    $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+}
 function refreshPresenceObject(ref) {
+    // If !ref.data then our reference is now empty
     if (!ref.data) {
-        console.log("tree is empty!")
+        //console.log("tree is empty!");
+        logOccupants();
         return;
     }
-    console.log(log(ref.data));
+    //console.log(log(ref.data));
     $.each(ref.data, function (index, value) {
         presenceObject[value.pn_val] = index;
     });
-    $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+    logOccupants();
 }
 
-$( document ).ready(function() {
+$(document).ready(function () {
 
     home = pubnub.sync('home');
     thermostat = pubnub.sync('home.living_room.thermostat');
@@ -90,7 +90,7 @@ $( document ).ready(function() {
 
 // Acknowledge when the thermostat has registered by turning it green
 
-    thermostat.on.ready(function(ref) {
+    thermostat.on.ready(function (ref) {
         $("#thermostat").css("background-color", "green");
 
         thermostatStatus = ref.value("status");
@@ -99,24 +99,24 @@ $( document ).ready(function() {
         $("#thermostat #status").html(thermostatStatus);
         $("#thermostat #temperature").html(thermostatTemp);
 
-        YUI().use('dial', function(Y) {
+        YUI().use('dial', function (Y) {
 
             dial = new Y.Dial({
-                min:0,
-                max:120,
-                stepsPerRevolution:5,
+                min: 0,
+                max: 120,
+                stepsPerRevolution: 5,
                 value: 30,
-                strings: {"label":"Thermostat Control"}
+                strings: {"label": "Thermostat Control"}
 
             });
 
             dial.render('#thermostatDial');
 
-            dial.on( "valueChange", function(e){
+            dial.on("valueChange", function (e) {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
-                thermostat.replace({"temperature": e.newVal, "status":"thermostatStatus", "mode":thermostatMode}, log, log);
+                thermostat.replace({"temperature": e.newVal, "status": "thermostatStatus", "mode": thermostatMode}, log, log);
             });
 
             dial.set('value', thermostatTemp);
@@ -125,17 +125,17 @@ $( document ).ready(function() {
 
     });
 
-    $("#thermostatMode").on('change', function(e){
+    $("#thermostatMode").on('change', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
-            thermostat.replace({"temperature": thermostatTemp, "status":"thermostatStatus", "mode":"cold"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "status": "thermostatStatus", "mode": "cold"}, log, log);
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "status":"thermostatStatus", "mode":"heat"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "status": "thermostatStatus", "mode": "heat"}, log, log);
         }
 
     });
 
-    thermostat.on.replace(function(ref){
+    thermostat.on.replace(function (ref) {
         thermostatSetter(ref);
     });
 
@@ -143,59 +143,74 @@ $( document ).ready(function() {
     // Occupants Logic
 
 
-    $(".family").on("click", function(e){
+    $(".family").on("click", function (e) {
         var person = this.id;
         if (!person) {
             console.log("No ID found on clicked person.");
             return;
         }
 
-       if (presenceObject[person]) {
-           // here we show examples of manually storing the key to remove a list item
-           // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
+        if (presenceObject[person]) {
+            // here we show examples of manually storing the key to remove a list item
+            // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
 
-           //occupants.remove(presenceObject["mom"], log, log);
-           occupants.removeByKey(presenceObject[person], log, log);
-           // occupants.removeByValue('mom', log, log); // alternatively, if we knew this was a unique value
-           // occupants.removeByIndex(0); // only if performing queue-like operations
+            //occupants.remove(presenceObject["mom"], log, log);
+            occupants.removeByKey(presenceObject[person], log, log);
+            // occupants.removeByValue('mom', log, log); // alternatively, if we knew this was a unique value
+            // occupants.removeByIndex(0); // only if performing queue-like operations
 
-       } else {
-           occupants.push(person);
-       }
+        } else {
+            occupants.push(person);
+        }
     });
 
     // When occupants is ready, lets add all members to our presenceObject.
-    occupants.on.ready(function(ref){
+    occupants.on.ready(function (ref) {
         refreshPresenceObject(ref);
     });
 
     // On each change, just delete and recreate the presence object.
     // This is lazy, but easy.
 
-    occupants.on.change(function(ref){
-        presenceObject = {};
-        refreshPresenceObject(ref);
+    occupants.on.change(function (ref) {
+//        presenceObject = {};
+//        refreshPresenceObject(ref);
     });
+
 
     // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
-    occupants.on.remove(function(ref){
-        // Until this is fixed, we wont be able to pull the exact changed value out
-        // https://www.pivotaltracker.com/story/show/82248658
-        //console.log(ref);
-    })
+    // When an occupant is removed
+    occupants.on.remove(function (ref) {
+        var removedUser = ref.delta.changes[0].value;
+        var removedKey = ref.delta.changes[0].key;
+
+        console.log("Occupant Removed: " + removedUser + " at " + removedKey);
+        delete presenceObject[removedUser];
+        logOccupants();
+    });
 
 
+    // When an occupant is added
+    occupants.on.merge(function (ref) {
+        var addedUser = ref.delta.changes[0].value;
+        var addedKey = ref.delta.changes[0].key;
 
-    home.on.ready(function(ref){
+        console.log("Occupant Added: " + addedUser + " at " + addedKey);
+        presenceObject[addedUser] = addedKey;
+        logOccupants();
 
-        home.on.remove(function(ref) {
-            console.log("REMOVE");
+    });
+
+
+    home.on.ready(function (ref) {
+
+        home.on.remove(function (ref) {
+            //console.log("REMOVE");
             //refLog(ref);
-});
+        });
 
     });
 });
-
 
 
 //
