@@ -761,7 +761,7 @@ function PN_API(setup) {
 
                 // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
-
+                action_event.key = action_event.location.split(".")[action_event.location.split(".").length-1];
                 // cleanup
                 delete action_event.trans_id;
                 delete action_event.timetoken;
