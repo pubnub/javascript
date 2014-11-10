@@ -1171,9 +1171,12 @@ function PN_API(setup) {
                 }
             },
             'error'       : function(r) { 
+                var errobj = {'message' : 'Data Sync Error'};
 
                 //error
-                err({'message' : r['message']});
+                if (r && r['message']) errobj['message'] = r['message'];
+
+                err(errobj);
 
             }
         });
@@ -1231,7 +1234,11 @@ function PN_API(setup) {
         for (var p in patha) {
             var key = patha[p];
             try {
-                if (!isEmpty(d[key])) d = d[key]
+                if (!isEmpty(d[key])) {
+                    d = d[key];
+                } else {
+                    return null;
+                }
             } catch (e) {
                 return null;
             }
@@ -1621,22 +1628,25 @@ function PN_API(setup) {
         /*
             user facing sync method. returns a reference which can be used for 
             setting callbacks . also provides wrappers for merge, remvoe, replace
+
+            This method takes location as input, location is a fully qualified name
+            with object_id and path .   location = object_id + '.' + path
         */
         'sync' : function(location) {
 
 
-            var split_o = _get_object_id_and_path_from_location(location);
+            var split_o     = _get_object_id_and_path_from_location(location);
 
 
-            var object_id  = split_o['object_id'];
-            var path    = split_o['path'];
+            var object_id   = split_o['object_id'];
+            var path        = split_o['path'];
 
-            // internal object that will reprepsent data
+            // DS_CALLBACKS keeps track of callbacks registered at various locations
 
             if (!DS_CALLBACKS[location]) {
                 DS_CALLBACKS[location] = {
-                    'ready_called' : false,
-                    'is_ready' : false
+                    'ready_called'  : false,
+                    'is_ready'      : false
                 };
             }
 
@@ -1833,32 +1843,7 @@ function PN_API(setup) {
 
             ref['value'] = function(path1) {
                 internal = _get_object_by_path(object_id,path);
-                if (!path1 &&
-                    typeof internal['pn_val'] !== 'undefined'  &&
-                    !isPnList(internal)
-                    ) 
-                    return internal;
-
-
-                var patha = (path1)?path1['split']("."):[];
-
-                var d = internal;
-
-                for (var p in patha) {
-                    var key = patha[p];
-                    try {
-                        if (d[key]) d = d[key]
-                    } catch (e) {
-                        return null;
-                    }
-                }
-                if (d['pn_val']) {
-                    return d['pn_val'];
-                } else if (isPnList(d)) { // array
-                    return objectToSortedArray(d);
-                } else { // object
-                    return d;
-                }
+                return value(internal,path1);
             };
 
             ref['get'] = function(path) {
