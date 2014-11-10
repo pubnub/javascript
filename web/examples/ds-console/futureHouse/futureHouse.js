@@ -40,10 +40,12 @@ var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
 
+var connectionStatusIcon = "disconnect.png";
+
 // These are populated by callbacks on home.thermostat
 var thermostatTemp = -1;
-var thermostatStatus = "on";
-var thermostatMode = "heat";
+var thermostatStatus = "unknown";
+var thermostatMode = "unknown";
 
 // These are populated by callbacks from home.occupants
 var momHome = "";
@@ -56,10 +58,21 @@ var presenceObject = {};
 
 
 function thermostatSetter(ref) {
+
+    if (ref.value("temperature")) {
+        thermostatTemp = ref.value("temperature");
+    }
+
+    if (ref.value("mode")) {
+        thermostatMode = ref.value("mode");
+    }
+
+    if (ref.value("status")) {
+        thermostatStatus = ref.value("status");
+    }
+
     $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
-    thermostatTemp = ref.value("temperature");
-    thermostatMode = ref.value("mode");
-    thermostatStatus = ref.value("status");
+
 }
 
 function logOccupants() {
@@ -79,6 +92,10 @@ function refreshPresenceObject(ref) {
     logOccupants();
 }
 
+function roofSelector(person){
+    return $('#' + person + 'Roof');
+}
+
 $(document).ready(function () {
 
     home = pubnub.sync('home');
@@ -91,13 +108,10 @@ $(document).ready(function () {
 // Acknowledge when the thermostat has registered by turning it green
 
     thermostat.on.ready(function (ref) {
+        $("#connectStatus").attr("src", "img/connect.png");
         $("#thermostat").css("background-color", "green");
 
-        thermostatStatus = ref.value("status");
-        thermostatTemp = ref.value("temperature");
-
-        $("#thermostat #status").html(thermostatStatus);
-        $("#thermostat #temperature").html(thermostatTemp);
+        thermostatSetter(ref);
 
         YUI().use('dial', function (Y) {
 
@@ -120,17 +134,15 @@ $(document).ready(function () {
             });
 
             dial.set('value', thermostatTemp);
-
         });
-
     });
 
     $("#thermostatMode").on('change', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
-            thermostat.replace({"temperature": thermostatTemp, "status": "thermostatStatus", "mode": "cold"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "status": thermostatStatus, "mode": "cold"}, log, log);
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "status": "thermostatStatus", "mode": "heat"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "status": thermostatStatus, "mode": "heat"}, log, log);
         }
 
     });
@@ -139,9 +151,7 @@ $(document).ready(function () {
         thermostatSetter(ref);
     });
 
-
     // Occupants Logic
-
 
     $(".family").on("click", function (e) {
         var person = this.id;
@@ -177,7 +187,6 @@ $(document).ready(function () {
 //        refreshPresenceObject(ref);
     });
 
-
     // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
     // When an occupant is removed
     occupants.on.remove(function (ref) {
@@ -186,17 +195,23 @@ $(document).ready(function () {
 
         console.log("Occupant Removed: " + removedUser + " at " + removedKey);
         delete presenceObject[removedUser];
+
+        roofSelector(removedUser).toggle();
+
         logOccupants();
     });
 
 
-    // When an occupant is added
+    // When an occupant is merged. For lists, this will be called on push()
     occupants.on.merge(function (ref) {
         var addedUser = ref.delta.changes[0].value;
         var addedKey = ref.delta.changes[0].key;
 
         console.log("Occupant Added: " + addedUser + " at " + addedKey);
         presenceObject[addedUser] = addedKey;
+
+        roofSelector(addedUser).toggle();
+
         logOccupants();
 
     });
