@@ -87,7 +87,14 @@ function refreshPresenceObject(ref) {
     }
     //console.log(log(ref.data));
     $.each(ref.data, function (index, value) {
-        presenceObject[value.pn_val] = index;
+
+        //TODO: Verify best practice of using pn_val
+
+        var person = value.pn_val;
+        presenceObject[ person] = index;
+        console.log(person);
+        roofSelector(person).toggle();
+
     });
     logOccupants();
 }

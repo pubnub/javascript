@@ -4,42 +4,10 @@
     margin: 1px;
 }
 
-
-
-#momRoof {
-    margin-left: 30px;
-    vertical-align: bottom;
-    width: 100px;
+td {
+    text-align: center;
 }
-
-#dadRoof {
-    margin-left: 50px;
+#roofs img{
     width: 100px;
-}
-
-#sisterRoof {
-    margin-left: 35px;
-    width: 100px;
-}
-
-#brotherRoof {
-    margin-left: 60px;
-    width: 100px;
-}
-
-#dogRoof {
-    margin-left: 50px;
-    width: 100px;
-}
-
-#pizzaRoof {
-    margin-left: 30px;
-    width: 100px;
-}
-
-.family{
-    margin-bottom: 100px;
-    margin-left: 20px;
-
-
+    display: none;
 }
