@@ -11,3 +11,11 @@ td {
     width: 100px;
     display: none;
 }
+
+.thermostatValue button {
+    width: 100px;
+}
+
+.yui3-dial-value-string {
+    display: none;
+}

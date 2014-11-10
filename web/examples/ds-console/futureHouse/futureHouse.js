@@ -44,7 +44,7 @@ var connectionStatusIcon = "disconnect.png";
 
 // These are populated by callbacks on home.thermostat
 var thermostatTemp = -1;
-var thermostatStatus = "unknown";
+var thermostatPower = "unknown";
 var thermostatMode = "unknown";
 
 // These are populated by callbacks from home.occupants
@@ -61,14 +61,17 @@ function thermostatSetter(ref) {
 
     if (ref.value("temperature")) {
         thermostatTemp = ref.value("temperature");
+        $("#currentTemp").html(thermostatTemp);
     }
 
     if (ref.value("mode")) {
         thermostatMode = ref.value("mode");
+        $("#thermostatMode").html(thermostatMode);
     }
 
-    if (ref.value("status")) {
-        thermostatStatus = ref.value("status");
+    if (ref.value("power")) {
+        thermostatPower = ref.value("power");
+        $("#thermostatPower").html(thermostatPower);
     }
 
     $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
@@ -127,7 +130,7 @@ $(document).ready(function () {
                 max: 120,
                 stepsPerRevolution: 5,
                 value: 30,
-                strings: {"label": "Thermostat Control"}
+                strings: {"label": ""}
 
             });
 
@@ -137,19 +140,29 @@ $(document).ready(function () {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
-                thermostat.replace({"temperature": e.newVal, "status": "thermostatStatus", "mode": thermostatMode}, log, log);
+                thermostat.replace({"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, log, log);
             });
 
             dial.set('value', thermostatTemp);
         });
     });
 
-    $("#thermostatMode").on('change', function (e) {
+    $("#thermostatMode").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
-            thermostat.replace({"temperature": thermostatTemp, "status": thermostatStatus, "mode": "cold"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, log, log);
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "status": thermostatStatus, "mode": "heat"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, log, log);
+        }
+
+    });
+
+    $("#thermostatPower").on('click', function (e) {
+        // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
+        if (thermostatPower == "on") {
+            thermostat.replace({"temperature": thermostatTemp, "power": "off", "mode": thermostatMode}, log, log);
+        } else {
+            thermostat.replace({"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, log, log);
         }
 
     });

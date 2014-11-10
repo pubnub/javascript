@@ -1,34 +1,34 @@
 <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script src="http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js"></script>
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css">
-<script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
 <link rel="stylesheet" type="text/css" href="futureHouse.css">
 <script src="pubnub.js"></script>
 <script src="futureHouse.js"></script>
 
 <body class="yui3-skin-sam">
 
+<table id="connectionTable">
+    <tr><td>Connection Status</td></tr>
+    <tr><td><img id="connectStatus" src="img/disconnect.png"></td></tr>
+</table>
 
-<div id="thermostat">Connection Status!<img id="connectStatus" src="img/disconnect.png"></div>
 
-Remote Thermostat Output
+
 <div  style="float: right" id="thermostatOutput"></div>
-Occupancy Status
 <div  style="float: right" id="occupancyOutput"></div>
 
+<table id="thermostatTable">
+    <tr>
+        <th>Thermostat Settings</th>
+        <td><div id="thermostatDial"></div></td>
+        <th>Mode</th><td><button id="thermostatMode"></button></td>
+        <th>Power</th><td><button id="thermostatPower"></button></td>
+        <th>Temperature</th><td><textfield id="currentTemp"></textfield></td>
+    </tr>
 
-<div id="thermostatDial"></div>
+</table>
 
 
-<fieldset>
-    <div data-role="fieldcontain">
-        <label for="thermostatMode">Mode:</label>
-        <select id="thermostatMode" data-role="flipswitch">
-            <option value="heat">Heat</option>
-            <option value="cool">Cool</option>
-        </select>
-    </div>
-</fieldset>
+
 
 <table id="familyMembers">
     <tr id="roofs">
