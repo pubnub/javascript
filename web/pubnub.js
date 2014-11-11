@@ -1620,17 +1620,23 @@ function PN_API(setup) {
         },
 
         'snapshot' : function(args, callback) {
-            SELF['get'](args, function(response){
+            var snapshot_callback         = args['callback'] || callback
+            ,   err              = args['error']    || function(){};
+
+            args['callback'] = function(response){
                 var callback_data = {};
                 callback_data['data'] = response;
                 callback_data['value'] = function(path) {
                     return value(callback_data['data'], path);
                 }
-            });
+                snapshot_callback && snapshot_callback(callback_data);
+            };
+
+            SELF['get'](args);
         },
 
         'get' : function(args, callback) {
-             var callback         = args['callback'] || callback
+             var callback        = args['callback'] || callback
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   path             = args['path']
