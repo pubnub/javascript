@@ -147,12 +147,12 @@ function roofSelector(person) {
 
 $(document).ready(function () {
 
-    home = pubnub.sync('home');
-    thermostat = pubnub.sync('home.living_room.thermostat');
-    occupants = pubnub.sync('home.occupants');
-    garage_light1 = pubnub.sync('home.garage.light1');
-    porch_light1 = pubnub.sync('home.porch.light1');
-    porch_light2 = pubnub.sync('home.porch.light2');
+    home = pubnub.sync({"object_id":'home'});
+    thermostat = pubnub.sync({"object_id":'home.living_room.thermostat'});
+    occupants = pubnub.sync({"object_id":'home.occupants'});
+    garage_light1 = pubnub.sync({"object_id":'home.garage.light1'});
+    porch_light1 = pubnub.sync({"object_id":'home.porch.light1'});
+    porch_light2 = pubnub.sync({"object_id":'home.porch.light2'});
 
     // onclick() handling for getLogfile
     // We pull a log snapshot to display on demand
