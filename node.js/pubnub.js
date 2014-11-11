@@ -1704,22 +1704,39 @@ function PN_API(setup) {
                 },
 
                 'merge'  : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
                     SELF['merge'](args);
+
                 },
 
                 'replace' : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
                     SELF['replace'](args);
                 },
 
-                'remove'  : function(success, error) {
+                'remove'  : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
                     SELF['remove'](args);
                 },
 
                 'push'    : function(args) {
-                    args.mode = 'POST';
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                        args['mode']        = 'POST';
+                    }
+
                     SELF['merge'](args);
                 }
-
             }
 
 
@@ -2947,7 +2964,6 @@ function xdr( setup ) {
     ,   failed   = 0
     ,   complete = 0
     ,   loaded   = 0
-    ,   url
     ,   mode     = setup['mode'] || 'GET'
     ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
@@ -2957,7 +2973,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
-            //console.log('URL : ' + url + '\n' + 'BODY : ' + body);
+            //console.log('BODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
@@ -2989,8 +3005,8 @@ function xdr( setup ) {
 
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
-    url = build_url( setup.url, data );
-    //  console.log(mode + ' ' + url); 
+    var url = build_url( setup.url, data );
+    //console.log(mode + ' ' + url); 
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 

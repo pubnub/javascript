@@ -1854,22 +1854,39 @@ function PN_API(setup) {
                 },
 
                 'merge'  : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
                     SELF['merge'](args);
+
                 },
 
                 'replace' : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
                     SELF['replace'](args);
                 },
 
-                'remove'  : function(success, error) {
+                'remove'  : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
                     SELF['remove'](args);
                 },
 
                 'push'    : function(args) {
-                    args.mode = 'POST';
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                        args['mode']        = 'POST';
+                    }
+
                     SELF['merge'](args);
                 }
-
             }
 
 
