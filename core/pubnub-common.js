@@ -1130,39 +1130,25 @@ function PN_API(setup) {
 
                 } else if (status) { // if transaction complete , apply the updates
 
-                    if (status == 'complete' && UPDATES[trans_id]) {
+                    if ( status == 'complete' ) {
+                        if (UPDATES[trans_id]) {
                     
-                        
-
-                        var location = UPDATES[trans_id].list[0].location;
-                        
-                        var object_id = (location.split('.')[0]).split('pn_ds_')[1];
-
-
-                        
-                        // check here if we should do a resync 
+                    
+                            var location = UPDATES[trans_id].list[0].location;
                             
-                        /*
-                        if (1 || !location) {
+                            var object_id = (location.split('.')[0]).split('pn_ds_')[1];
+
+
+                            UPDATES[trans_id]['complete'] = true;
                             
-                            objid = c[2].split('pn_dstr_')[1];
-                            if (objid) {
-                                var update = UPDATES[trans_id];
-                                if (1 || !update) {
-                                    resync();
-                                    return;
-                                }
-                            }
+                            if (!OBJECTS[object_id]) OBJECTS[object_id] = {};
+
+                            if (synced) apply_updates(OBJECTS[object_id], callback, trans_id);
+
+                        } else {
+                            resync();
+                            return;
                         }
-                        */
-                        
-
-                        UPDATES[trans_id]['complete'] = true;
-                        
-                        if (!OBJECTS[object_id]) OBJECTS[object_id] = {};
-
-                        if (synced) apply_updates(OBJECTS[object_id], callback, trans_id);
-
                     }
                 }
             },
@@ -1483,7 +1469,13 @@ function PN_API(setup) {
         },
 
         'snapshot' : function(args, callback) {
-            SELF['get'](args, callback);
+            SELF['get'](args, function(response){
+                var callback_data = {};
+                callback_data['data'] = response;
+                callback_data['value'] = function(path) {
+                    return value(callback_data['data'], path);
+                }
+            });
         },
 
         'get' : function(args, callback) {
@@ -1544,7 +1536,8 @@ function PN_API(setup) {
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
             ,   sort_key         = args['sort_key']
-            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
+            //,   data             = { 'uuid' : UUID, 'auth' : auth_key, 'test_tr_only' : 1}
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key}
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
 
