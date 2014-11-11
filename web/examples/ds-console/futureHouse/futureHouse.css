@@ -4,42 +4,30 @@
     margin: 1px;
 }
 
+td {
+    text-align: center;
+}
+#roofs img{
+    width: 100px;
+    display: none;
+}
 
-
-#momRoof {
-    margin-left: 30px;
-    vertical-align: bottom;
+.thermostatValue button {
     width: 100px;
 }
 
-#dadRoof {
-    margin-left: 50px;
-    width: 100px;
+.yui3-dial-value-string {
+    display: none;
 }
 
-#sisterRoof {
-    margin-left: 35px;
-    width: 100px;
+#logfileTable {
+    vertical-align: middle;
+    text-align: center;
 }
 
-#brotherRoof {
-    margin-left: 60px;
-    width: 100px;
+#logfileTable td {
 }
 
-#dogRoof {
-    margin-left: 50px;
-    width: 100px;
-}
-
-#pizzaRoof {
-    margin-left: 30px;
-    width: 100px;
-}
-
-.family{
-    margin-bottom: 100px;
-    margin-left: 20px;
-
-
+#houseScene {
+    width: 500px;
 }
