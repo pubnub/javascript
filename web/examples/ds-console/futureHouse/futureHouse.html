@@ -7,14 +7,16 @@
 <body class="yui3-skin-sam">
 
 <table id="connectionTable">
-    <tr><td>Connection Status</td></tr>
-    <tr><td><img id="connectStatus" src="img/disconnect.png"></td></tr>
+    <tr>
+        <td>Connection Status</td>
+        <td>Get Transaction Log</td>
+    </tr>
+    <tr>
+        <td><img id="connectStatus" src="img/disconnect.png"></td>
+        <td><img id="getLogfile" src="img/log.png"></td>
+    </tr>
 </table>
 
-
-
-<div  style="float: right" id="thermostatOutput"></div>
-<div  style="float: right" id="occupancyOutput"></div>
 
 <table id="thermostatTable">
     <tr>
@@ -26,9 +28,6 @@
     </tr>
 
 </table>
-
-
-
 
 <table id="familyMembers">
     <tr id="roofs">
@@ -46,6 +45,14 @@
         <td><img class="family" id="brother" src="img/brother.png"></td>
         <td><img class="family" id="dog" src="img/dog.png"></td>
         <td><img class="family" id="pizza" src="img/pizza.png"></td>
+    </tr>
+</table>
+
+<table id="logfileTable">
+    <tr>
+        <td id="occupancyLogs"></td>
+        <td id="thermostatLogs"></td>
+        <td id="fullLog"></td>
     </tr>
 </table>
 

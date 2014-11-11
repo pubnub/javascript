@@ -19,3 +19,8 @@ td {
 .yui3-dial-value-string {
     display: none;
 }
+
+#logfileTable td {
+    width: 80%;
+    text-wrap: normal;
+}

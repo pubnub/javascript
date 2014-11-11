@@ -16,6 +16,18 @@ function onError(m) {
     console.log('Error');
 }
 
+function logLogfile(m) {
+
+    // TODO: Fixed in https://www.pivotaltracker.com/story/show/82444520
+
+    var prettyData = [];
+    $.each(m, function (index, value) {
+        prettyData.push(value.pn_val);
+    });
+
+    $("#fullLog").html(prettyData.slice(0,5));
+}
+
 function onSuccess(m) {
     //console.log("Success: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
     console.log('Success');
@@ -35,6 +47,7 @@ var dial = {};
 
 var home = {}
 var thermostat = {};
+var logfile = {};
 var occupants = {};
 var garage_light1 = {};
 var porch_light1 = {};
@@ -48,12 +61,6 @@ var thermostatPower = "unknown";
 var thermostatMode = "unknown";
 
 // These are populated by callbacks from home.occupants
-var momHome = "";
-var dadHome = "";
-var sisterHome = "";
-var brotherHome = "";
-var dogHome = "";
-var pizzaHome = "";
 var presenceObject = {};
 
 
@@ -74,12 +81,12 @@ function thermostatSetter(ref) {
         $("#thermostatPower").html(thermostatPower);
     }
 
-    $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+    $("#thermostatLogs").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
 
 }
 
 function logOccupants() {
-    $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+    $("#occupancyLogs").html("<pre>" + log(presenceObject) + "</pre>");
 }
 function refreshPresenceObject(ref) {
     // If !ref.data then our reference is now empty
@@ -88,7 +95,7 @@ function refreshPresenceObject(ref) {
         logOccupants();
         return;
     }
-    //console.log(log(ref.data));
+
     $.each(ref.data, function (index, value) {
 
         //TODO: Verify best practice of using pn_val
@@ -102,7 +109,7 @@ function refreshPresenceObject(ref) {
     logOccupants();
 }
 
-function roofSelector(person){
+function roofSelector(person) {
     return $('#' + person + 'Roof');
 }
 
@@ -115,7 +122,12 @@ $(document).ready(function () {
     porch_light1 = pubnub.sync('home.porch.light1');
     porch_light2 = pubnub.sync('home.porch.light2');
 
-// Acknowledge when the thermostat has registered by turning it green
+    // onclick() handling for getLogfile
+    $("#getLogfile").on('click', function (e) {
+        pubnub.snapshot({"object_id": "home", path: "logfile", callback: logLogfile, error: logLogfile});
+    });
+
+    // Acknowledge when the thermostat has registered by turning it green
 
     thermostat.on.ready(function (ref) {
         $("#connectStatus").attr("src", "img/connect.png");
@@ -203,8 +215,6 @@ $(document).ready(function () {
     // This is lazy, but easy.
 
     occupants.on.change(function (ref) {
-//        presenceObject = {};
-//        refreshPresenceObject(ref);
     });
 
     // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
@@ -239,9 +249,19 @@ $(document).ready(function () {
 
     home.on.ready(function (ref) {
 
-        home.on.remove(function (ref) {
-            //console.log("REMOVE");
-            //refLog(ref);
+        home.on.change(function (ref) {
+            var theChange = ref.delta.changes[0];
+            if (theChange.updateAt.indexOf("logfile") != -1) {
+                return;
+            } else {
+
+                //pubnub.push(new Date() + ": action: " + theChange.action + " at " + theChange.location);
+                pubnub.push({
+                    object_id:
+                })
+
+            }
+
         });
 
     });
