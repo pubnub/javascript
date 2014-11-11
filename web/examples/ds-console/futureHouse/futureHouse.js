@@ -94,7 +94,7 @@ function logOccupants() {
         thermostatPower = "on";
         thermostatMode = "heat";
         thermostatTemp = 65;
-        thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, log, log);
+        thermostat.replace({"data":{"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, "success":log, "error":log});
 
         if (dial.set) {
         dial.set('value', thermostatTemp);
