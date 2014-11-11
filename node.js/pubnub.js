@@ -2966,7 +2966,6 @@ function xdr( setup ) {
     ,   failed   = 0
     ,   complete = 0
     ,   loaded   = 0
-    ,   url
     ,   mode     = setup['mode'] || 'GET'
     ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
@@ -2976,7 +2975,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
-            //console.log('URL : ' + url + '\n' + 'BODY : ' + body);
+            //console.log('BODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
@@ -3008,8 +3007,8 @@ function xdr( setup ) {
 
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
-    url = build_url( setup.url, data );
-    //  console.log(mode + ' ' + url); 
+    var url = build_url( setup.url, data );
+    //console.log(mode + ' ' + url); 
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 
