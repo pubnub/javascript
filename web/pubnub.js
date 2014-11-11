@@ -761,7 +761,7 @@ function PN_API(setup) {
 
                 // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
-
+                action_event.key = action_event.location.split(".")[action_event.location.split(".").length-1];
                 // cleanup
                 delete action_event.trans_id;
                 delete action_event.timetoken;
@@ -966,7 +966,6 @@ function PN_API(setup) {
         if (!object_id) return null;
 
         var path = split.join('.');
-        console.log(object_id + ' : ' + path);
         return _get_object_by_path(object_id, path);
 
     }
@@ -1114,23 +1113,14 @@ function PN_API(setup) {
                 if (!next_page || (next_page && next_page == "null")) {
 
                     done && done(location);
-                    /*
-                    // all updates recieved , now apply
-                    apply_all_updates(parent[last_node_key], callback, depth);
-
-                    // sync complete
-                    synced = true;
-
-                    // invoke connect callback
-                    connect && connect(location);
-                    */
+                    
 
                 } else {
                     // sync incomplete
                     synced = false;
 
                     // read more data
-                    read(object_id, path , callback, error,next_page);
+                    read_recursive(object_id, path , callback, error,next_page);
                 }
 
             },
@@ -1142,22 +1132,33 @@ function PN_API(setup) {
         })
     }
 
-    function resync1(object_id, path) {
-        var i = (function(o, p, callback, error) {
-            console.log('RESYNC ' + o + ' : ' + p);
-            read(o, p, callback, error);
-            console.log("RESYNC DONE");
-            console.log(JSON.stringify(OBJECTS, null, 2));
-        })(object_id, path, callback, error);
-        return i;
-    }
+    function resync() {
 
-    function resync2(o, p, callback, error) {
-        console.log('RESYNC ' + o + ' : ' + p);
-        read(o, p, callback, error);
-        console.log("RESYNC DONE");
-        console.log(JSON.stringify(OBJECTS, null, 2));
-    }    
+        for (var c in OBJECTS) {
+            read_recursive(c, null, null, null, null, null, function(location){
+                //console.log('LOCATION : ' + location);
+                var callbacks = _get_all_callbacks_by_object_id(location, 'resync');
+                //console.log(JSON.stringify(callbacks,null,2));
+                for (var id in callbacks) {
+                    var resync_callback     = callbacks[id];
+                    //console.log(id);
+                    var object              = _get_object_by_location(id);
+                    var callback_data       = {};
+
+                    callback_data['data']   = object;
+                    callback_data['value']  = function(path) {
+                        return value(callback_data['data'], path);
+                    }
+                    //console.log(JSON.stringify(OBJECTS, null, 2));
+                    resync_callback(callback_data);
+                }
+            });
+        }
+
+
+        //console.log("RESYNC DONE");
+        //console.log(JSON.stringify(OBJECTS, null, 2));
+    }
 
     /*
         This is the method which does hardwork in data sync.
@@ -1171,7 +1172,6 @@ function PN_API(setup) {
         ,   err              = args['error']    || function(){}
         ,   connect          = args['connect']
         ,   object_id        = args['object_id']
-        ,   resync           = args['resync']
         ,   path             = args['path'];
 
 
@@ -1281,42 +1281,25 @@ function PN_API(setup) {
 
                 } else if (status) { // if transaction complete , apply the updates
 
-                    if (status == 'complete' && UPDATES[trans_id]) {
+                    if ( status == 'complete' ) {
+                        if (UPDATES[trans_id]) {
                     
-                        
-
-                        var location = UPDATES[trans_id].list[0].location;
-                        
-                        var object_id = (location.split('.')[0]).split('pn_ds_')[1];
-
-
-                        
-                        // check here if we should do a resync 
+                    
+                            var location = UPDATES[trans_id].list[0].location;
                             
-                        /*
-                        if (1 || !location) {
+                            var object_id = (location.split('.')[0]).split('pn_ds_')[1];
+
+
+                            UPDATES[trans_id]['complete'] = true;
                             
-                            console.log(c[2]);
-                            objid = c[2].split('pn_dstr_')[1];
-                            console.log('FORCE RESYNC 1 ' + objid);
-                            if (objid) {
-                                var update = UPDATES[trans_id];
-                                if (1 || !update) {
-                                    resync(resync1, objid);
-                                    console.log('FORCE RESYNC 2 ' + objid);
-                                    return;
-                                }
-                            }
+                            if (!OBJECTS[object_id]) OBJECTS[object_id] = {};
+
+                            if (synced) apply_updates(OBJECTS[object_id], callback, trans_id);
+
+                        } else {
+                            resync();
+                            return;
                         }
-                        */
-                        
-
-                        UPDATES[trans_id]['complete'] = true;
-                        
-                        if (!OBJECTS[object_id]) OBJECTS[object_id] = {};
-
-                        if (synced) apply_updates(OBJECTS[object_id], callback, trans_id);
-
                     }
                 }
             },
@@ -1331,7 +1314,7 @@ function PN_API(setup) {
             }
         });
 
-        return [parent[last_node_key], resync1];
+        return [parent[last_node_key], resync];
     }
 
     function get_list_element_ids(object) {
@@ -1414,8 +1397,7 @@ function PN_API(setup) {
         var p = isplit.join('.');
 
         var callback_data = {};
-        callback_data['delta'] = {};
-        callback_data['delta']['changes'] = changes;
+        callback_data['delta'] = changes;
 
         callback_data['type'] = 'merge';
         callback_data['data'] = _get_object_by_path(object_id, p);
@@ -1477,6 +1459,28 @@ function PN_API(setup) {
             return null;
         }
     }
+
+    function _get_all_callbacks(type) {
+        var callbacks = {};
+
+        for (var c in DS_CALLBACKS) {
+            if (DS_CALLBACKS[c][type]) {
+                callbacks[c] = DS_CALLBACKS[c][type];
+            }
+        }
+        return callbacks;
+    }
+
+    function _get_all_callbacks_by_object_id(object_id, type) {
+        var callbacks = {};
+        for (var c in DS_CALLBACKS) {
+            if (c.indexOf(object_id + '.') == 0 &&  DS_CALLBACKS[c][type]) {
+                callbacks[c] = DS_CALLBACKS[c][type];
+            }
+        }
+        return callbacks;
+    }
+
     function _get_callbacks(location, type) {
         var callbacks = [];
         for (var c in DS_CALLBACKS) {
@@ -1484,7 +1488,6 @@ function PN_API(setup) {
                 DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
             }
         }
-
         return callbacks;
     }
 
@@ -1502,15 +1505,6 @@ function PN_API(setup) {
         return callbacks;
     }
 
-    function _get_all_callbacks(type) {
-        var callbacks = [];
-        for (var c in DS_CALLBACKS) {
-            if(DS_CALLBACKS[c][type]) {
-                DS_CALLBACKS[c][type] && callbacks.push(DS_CALLBACKS[c][type]);
-            }
-        }
-        return callbacks;
-    }
 
     function getKeyByValue(data, value) {
         if (!data) return null;
@@ -1626,7 +1620,13 @@ function PN_API(setup) {
         },
 
         'snapshot' : function(args, callback) {
-            SELF['get'](args, callback);
+            SELF['get'](args, function(response){
+                var callback_data = {};
+                callback_data['data'] = response;
+                callback_data['value'] = function(path) {
+                    return value(callback_data['data'], path);
+                }
+            });
         },
 
         'get' : function(args, callback) {
@@ -1687,7 +1687,8 @@ function PN_API(setup) {
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
             ,   sort_key         = args['sort_key']
-            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
+            //,   data             = { 'uuid' : UUID, 'auth' : auth_key, 'test_tr_only' : 1}
+            ,   data             = { 'uuid' : UUID, 'auth' : auth_key}
             ,   mode             = args['mode'] || 'PATCH'
             ,   path             = args['path'];
 
@@ -1905,10 +1906,6 @@ function PN_API(setup) {
         var so =  get_synced_object({
                     'object_id'  : object_id,
                     'path'       : path,
-                    'resync'     : function(resync_func, obj_id) {
-                        console.log('SYNCED OBJECT RESYNC OBJID : ' + obj_id);
-                        internal = resync_func(obj_id, path);
-                    },
                     'callback'   : function(r) {
                         internal = _get_object_by_path(object_id,path);
                         if (r[0]) {
