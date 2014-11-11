@@ -11,9 +11,14 @@ var pubnub = PUBNUB.init({
 function log(m) {
     return JSON.stringify(m, null, 4);
 }
+
 function onError(m) {
-    //console.log("Error: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
-    console.log('Error');
+    console.log('Error: ' + JSON.stringify(m));
+}
+
+function logLogfile(m) {
+    var prettyData = m.value();
+    $("#fullLog").html(log(prettyData.slice(0,5)));
 }
 
 function onSuccess(m) {
@@ -24,8 +29,8 @@ function onSuccess(m) {
 function refLog(ref) {
     console.log("Action at node " + ref.path + ".");
     console.log("It was a " + ref.type + " kinda change.");
-    console.log("The changed data is " + log(ref.delta.changes));
-    console.log("The changed data is " + log(ref.delta.changes[0].value));
+    console.log("The changed data is " + log(ref.delta));
+    console.log("The changed data is " + log(ref.delta[0].value));
     console.log("The new raw object looks like: " + log(ref.value()));
 }
 
@@ -35,48 +40,109 @@ var dial = {};
 
 var home = {}
 var thermostat = {};
+var logfile = {};
 var occupants = {};
 var garage_light1 = {};
 var porch_light1 = {};
 var porch_light2 = {};
 
+var connectionStatusIcon = "disconnect.png";
+
 // These are populated by callbacks on home.thermostat
 var thermostatTemp = -1;
-var thermostatStatus = "on";
-var thermostatMode = "heat";
+var thermostatPower = "unknown";
+var thermostatMode = "unknown";
 
 // These are populated by callbacks from home.occupants
-var momHome = "";
-var dadHome = "";
-var sisterHome = "";
-var brotherHome = "";
-var dogHome = "";
-var pizzaHome = "";
 var presenceObject = {};
 
 
 function thermostatSetter(ref) {
-    $("#thermostatOutput").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
-    thermostatTemp = ref.value("temperature");
-    thermostatMode = ref.value("mode");
-    thermostatStatus = ref.value("status");
+
+    if (ref.value("temperature")) {
+        thermostatTemp = ref.value("temperature");
+        $("#currentTemp").html(thermostatTemp);
+    }
+
+    if (ref.value("mode")) {
+        thermostatMode = ref.value("mode");
+        $("#thermostatMode").html(thermostatMode);
+    }
+
+    if (ref.value("power")) {
+        thermostatPower = ref.value("power");
+        $("#thermostatPower").html(thermostatPower);
+    }
+
+    $("#thermostatLogs").html("<pre>" + log(ref.value()) + "</pre>");
+
 }
 
 function logOccupants() {
-    $("#occupancyOutput").html("<pre>" + log(presenceObject) + "</pre>");
+
+    var presenceCount = Object.keys(presenceObject).length;
+    console.log(presenceCount);
+
+    $("#occupancyLogs").html("<pre>" + log(presenceObject) + "</pre>");
+
+    // if nobody is home
+    if (presenceCount == 0) {
+
+        // turn off all but the porch lights
+        $("#houseScene").attr("src", "img/house_at_night_porch_on.jpg");
+        // set the thermostat to heat at 65
+        thermostatPower = "on";
+        thermostatMode = "heat";
+        thermostatTemp = 65;
+        thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, log, log);
+
+        if (dial.set) {
+        dial.set('value', thermostatTemp);
+        }
+
+
+    }
+    else if (presenceCount == 1 && (presenceObject["dog"] || presenceObject["pizza"])) {
+        // if there is only one person home, and its the dog or pizza delivery
+        // then don't turn the lights on
+        return;
+
+    }
+    else if (presenceCount == 2 && (presenceObject["dog"] && presenceObject["pizza"])) {
+        // if there are two people home, and its the dog and pizza delivery
+        // then don't turn the lights on
+        return;
+    } else {
+
+        $("#houseScene").attr("src", "img/house_at_night_all_on.jpg");
+    }
 }
+
 function refreshPresenceObject(ref) {
+
+
     // If !ref.data then our reference is now empty
     if (!ref.data) {
         //console.log("tree is empty!");
         logOccupants();
         return;
     }
-    //console.log(log(ref.data));
+
     $.each(ref.data, function (index, value) {
-        presenceObject[value.pn_val] = index;
+
+        //TODO: Verify best practice of using pn_val
+
+        var person = value.pn_val;
+        presenceObject[ person] = index;
+        console.log(person);
+        roofSelector(person).toggle();
+
     });
     logOccupants();
+}
+
+function roofSelector(person) {
+    return $('#' + person + 'Roof');
 }
 
 $(document).ready(function () {
@@ -88,16 +154,21 @@ $(document).ready(function () {
     porch_light1 = pubnub.sync('home.porch.light1');
     porch_light2 = pubnub.sync('home.porch.light2');
 
-// Acknowledge when the thermostat has registered by turning it green
+    // onclick() handling for getLogfile
+    // We pull a log snapshot to display on demand
+    // Its a lot of data, so we don't want it always syncing
+
+    $("#getLogfile").on('click', function (e) {
+        pubnub.snapshot({"object_id": "home", path: "logfile", callback: logLogfile, error: logLogfile});
+    });
+
+    // Acknowledge when the thermostat has registered by turning it green
 
     thermostat.on.ready(function (ref) {
+        $("#connectStatus").attr("src", "img/connect.png");
         $("#thermostat").css("background-color", "green");
 
-        thermostatStatus = ref.value("status");
-        thermostatTemp = ref.value("temperature");
-
-        $("#thermostat #status").html(thermostatStatus);
-        $("#thermostat #temperature").html(thermostatTemp);
+        thermostatSetter(ref);
 
         YUI().use('dial', function (Y) {
 
@@ -106,7 +177,7 @@ $(document).ready(function () {
                 max: 120,
                 stepsPerRevolution: 5,
                 value: 30,
-                strings: {"label": "Thermostat Control"}
+                strings: {"label": ""}
 
             });
 
@@ -116,21 +187,29 @@ $(document).ready(function () {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
-                thermostat.replace({"temperature": e.newVal, "status": "thermostatStatus", "mode": thermostatMode}, log, log);
+                thermostat.replace({"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, log, log);
             });
 
             dial.set('value', thermostatTemp);
-
         });
+    });
+
+    $("#thermostatMode").on('click', function (e) {
+        // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
+        if (thermostatMode == "heat") {
+            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, log, log);
+        } else {
+            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, log, log);
+        }
 
     });
 
-    $("#thermostatMode").on('change', function (e) {
+    $("#thermostatPower").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
-        if (thermostatMode == "heat") {
-            thermostat.replace({"temperature": thermostatTemp, "status": "thermostatStatus", "mode": "cold"}, log, log);
+        if (thermostatPower == "on") {
+            thermostat.replace({"temperature": thermostatTemp, "power": "off", "mode": thermostatMode}, log, log);
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "status": "thermostatStatus", "mode": "heat"}, log, log);
+            thermostat.replace({"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, log, log);
         }
 
     });
@@ -139,9 +218,7 @@ $(document).ready(function () {
         thermostatSetter(ref);
     });
 
-
     // Occupants Logic
-
 
     $(".family").on("click", function (e) {
         var person = this.id;
@@ -173,30 +250,33 @@ $(document).ready(function () {
     // This is lazy, but easy.
 
     occupants.on.change(function (ref) {
-//        presenceObject = {};
-//        refreshPresenceObject(ref);
     });
-
 
     // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
     // When an occupant is removed
     occupants.on.remove(function (ref) {
-        var removedUser = ref.delta.changes[0].value;
-        var removedKey = ref.delta.changes[0].key;
+        var removedUser = ref.delta[0].value;
+        var removedKey = ref.delta[0].key;
 
         console.log("Occupant Removed: " + removedUser + " at " + removedKey);
         delete presenceObject[removedUser];
+
+        roofSelector(removedUser).toggle();
+
         logOccupants();
     });
 
 
-    // When an occupant is added
+    // When an occupant is merged. For lists, this will be called on push()
     occupants.on.merge(function (ref) {
-        var addedUser = ref.delta.changes[0].value;
-        var addedKey = ref.delta.changes[0].key;
+        var addedUser = ref.delta[0].value;
+        var addedKey = ref.delta[0].key;
 
         console.log("Occupant Added: " + addedUser + " at " + addedKey);
         presenceObject[addedUser] = addedKey;
+
+        roofSelector(addedUser).toggle();
+
         logOccupants();
 
     });
@@ -204,9 +284,26 @@ $(document).ready(function () {
 
     home.on.ready(function (ref) {
 
-        home.on.remove(function (ref) {
-            //console.log("REMOVE");
-            //refLog(ref);
+        home.on.change(function (ref) {
+            // TODO: add logging via detached push
+            // https://www.pivotaltracker.com/story/show/82447750
+
+//            var theChange = ref.delta[0];
+//            if (theChange.updateAt.indexOf("logfile") != -1) {
+//                return;
+//            } else {
+//
+//
+//                pubnub.push({
+//                    object_id: "home.logfile",
+//                    //data:(new Date() + ": action: " + theChange.action + " at " + theChange.location),
+//                    data: "hi",
+//                    callback: console.log,
+//                    error: console.log
+//                });
+//
+//            }
+
         });
 
     });

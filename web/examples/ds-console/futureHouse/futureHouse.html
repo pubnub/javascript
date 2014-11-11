@@ -1,57 +1,60 @@
 <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script src="http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js"></script>
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css">
-<script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
 <link rel="stylesheet" type="text/css" href="futureHouse.css">
 <script src="pubnub.js"></script>
 <script src="futureHouse.js"></script>
 
 <body class="yui3-skin-sam">
 
-Local Thermostat Control
-<div id="thermostat">Thermostat!
-    Status:<div id="status"></div>
-    Temp:<div id="temperature"></div>
-</div>
-
-Remote Thermostat Output
-<div  style="float: right" id="thermostatOutput"></div>
-Occupancy Status
-<div  style="float: right" id="occupancyOutput"></div>
-
-
-<div id="thermostatDial"></div>
+<table id="connectionTable">
+    <tr>
+        <td>Connection Status</td>
+        <td>Get Transaction Log</td>
+    </tr>
+    <tr>
+        <td><img id="connectStatus" src="img/disconnect.png"></td>
+        <td><img id="getLogfile" src="img/log.png"></td>
+        <td><img id="houseScene" src="img/house_at_night_dimmed_porch.jpg"></td>
+    </tr>
+</table>
 
 
-<fieldset>
-    <div data-role="fieldcontain">
-        <label for="thermostatMode">Mode:</label>
-        <select id="thermostatMode" data-role="flipswitch">
-            <option value="heat">Heat</option>
-            <option value="cool">Cool</option>
-        </select>
-    </div>
-</fieldset>
+<table id="thermostatTable">
+    <tr>
+        <th>Thermostat Settings</th>
+        <td><div id="thermostatDial"></div></td>
+        <th>Mode</th><td><button id="thermostatMode"></button></td>
+        <th>Power</th><td><button id="thermostatPower"></button></td>
+        <th>Temperature</th><td><textfield id="currentTemp"></textfield></td>
+    </tr>
 
-<div id="familyMembers">
-    <div id="roofs">
-        <img id="momRoof" src="img/roof.png">
-        <img id="dadRoof" src="img/roof.png">
-        <img id="sisterRoof" src="img/roof.png">
-        <img id="brotherRoof" src="img/roof.png">
-        <img id="dogRoof" src="img/roof.png">
-        <img id="pizzaRoof" src="img/roof.png">
-    </div>
-    <div id="family">
-        <img class="family" id="mom" src="img/mom.png">
-        <img class="family" id="dad" src="img/dad.png">
-        <img class="family" id="sister" src="img/sister.png">
-        <img class="family" id="brother" src="img/brother.png">
-        <img class="family" id="dog" src="img/dog.png">
-        <img class="family" id="pizza" src="img/pizza.png">
-    </div>
+</table>
 
-</div>
+<table id="familyMembers">
+    <tr id="roofs">
+        <td><img id="momRoof" src="img/roof.png"></td>
+        <td><img id="dadRoof" src="img/roof.png"></td>
+        <td><img id="sisterRoof" src="img/roof.png"></td>
+        <td><img id="brotherRoof" src="img/roof.png"></td>
+        <td><img id="dogRoof" src="img/roof.png"></td>
+        <td><img id="pizzaRoof" src="img/roof.png"></td>
+    </tr>
+    <tr id="family">
+        <td><img class="family" id="mom" src="img/mom.png"></td>
+        <td><img class="family" id="dad" src="img/dad.png"></td>
+        <td><img class="family" id="sister" src="img/sister.png"></td>
+        <td><img class="family" id="brother" src="img/brother.png"></td>
+        <td><img class="family" id="dog" src="img/dog.png"></td>
+        <td><img class="family" id="pizza" src="img/pizza.png"></td>
+    </tr>
+</table>
 
+<table id="logfileTable">
+    <tr>
+        <td id="occupancyLogs"></td>
+        <td id="thermostatLogs"></td>
+        <td id="fullLog"></td>
+    </tr>
+</table>
 
 </body>

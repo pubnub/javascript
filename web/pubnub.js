@@ -1880,6 +1880,13 @@ function PN_API(setup) {
                     'path'       : path,
                     'callback'   : function(r) {
                         internal = _get_object_by_path(object_id,path);
+
+                        // resync if more than or equal to 100 messages
+                        if (r.length >= 100) {
+                            resync();
+                            return;
+                        }
+
                         if (r[0]) {
                             var action      = r[0]['action'];
                             var location    = r[0]['location'];
@@ -1925,6 +1932,7 @@ function PN_API(setup) {
                     },
                     'error' : function(r) {
                         var error = get_callback(location,'error');
+                        resync();
                         error && error(r);
                     },
                     'connect'    : function(r) {
@@ -1942,10 +1950,12 @@ function PN_API(setup) {
                     },
                     'reconnect'  : function(r) {
                         var network_reconnect = get_callback(location, 'network.reconnect');
+                        resync();
                         network_reconnect && network_reconnect(r);
                     },
                     'disconnect' : function(r) {
                         var network_disconnect = get_callback(location, 'network.disconnect');
+                        resync();
                         network_disconnect && network_disconnect(r)
                     }    
                     
