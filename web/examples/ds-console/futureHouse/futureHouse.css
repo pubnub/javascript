@@ -20,7 +20,14 @@ td {
     display: none;
 }
 
+#logfileTable {
+    vertical-align: middle;
+    text-align: center;
+}
+
 #logfileTable td {
-    width: 80%;
-    text-wrap: normal;
+}
+
+#houseScene {
+    width: 500px;
 }

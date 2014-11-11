@@ -17,15 +17,8 @@ function onError(m) {
 }
 
 function logLogfile(m) {
-
-    // TODO: Fixed in https://www.pivotaltracker.com/story/show/82444520
-
-    var prettyData = [];
-    $.each(m, function (index, value) {
-        prettyData.push(value.pn_val);
-    });
-
-    $("#fullLog").html(prettyData.slice(0,5));
+    var prettyData = m.value();
+    $("#fullLog").html(log(prettyData.slice(0,5)));
 }
 
 function onSuccess(m) {
@@ -36,8 +29,8 @@ function onSuccess(m) {
 function refLog(ref) {
     console.log("Action at node " + ref.path + ".");
     console.log("It was a " + ref.type + " kinda change.");
-    console.log("The changed data is " + log(ref.delta.changes));
-    console.log("The changed data is " + log(ref.delta.changes[0].value));
+    console.log("The changed data is " + log(ref.delta));
+    console.log("The changed data is " + log(ref.delta[0].value));
     console.log("The new raw object looks like: " + log(ref.value()));
 }
 
@@ -81,14 +74,38 @@ function thermostatSetter(ref) {
         $("#thermostatPower").html(thermostatPower);
     }
 
-    $("#thermostatLogs").html("<pre>" + JSON.stringify(ref.value(), null, 4) + "</pre>");
+    $("#thermostatLogs").html("<pre>" + log(ref.value()) + "</pre>");
 
 }
 
 function logOccupants() {
+
+    var presenceCount = Object.keys(presenceObject).length;
+    console.log(presenceCount);
+
     $("#occupancyLogs").html("<pre>" + log(presenceObject) + "</pre>");
+
+    // if nobody is home
+    if (presenceCount == 0) {
+
+        // turn off all but the porch lights
+        $("#houseScene").attr("src", "img/house_at_night_porch_on.jpg");
+        // set the thermostat to heat at 65
+        thermostatPower = "on";
+        thermostatMode = "heat";
+        thermostatTemp = 65;
+        thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, log, log);
+        dial.set('value', thermostatTemp);
+
+
+    } else {
+        $("#houseScene").attr("src", "img/house_at_night_all_on.jpg");
+    }
 }
+
 function refreshPresenceObject(ref) {
+
+
     // If !ref.data then our reference is now empty
     if (!ref.data) {
         //console.log("tree is empty!");
@@ -123,6 +140,9 @@ $(document).ready(function () {
     porch_light2 = pubnub.sync('home.porch.light2');
 
     // onclick() handling for getLogfile
+    // We pull a log snapshot to display on demand
+    // Its a lot of data, so we don't want it always syncing
+
     $("#getLogfile").on('click', function (e) {
         pubnub.snapshot({"object_id": "home", path: "logfile", callback: logLogfile, error: logLogfile});
     });
@@ -220,8 +240,8 @@ $(document).ready(function () {
     // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
     // When an occupant is removed
     occupants.on.remove(function (ref) {
-        var removedUser = ref.delta.changes[0].value;
-        var removedKey = ref.delta.changes[0].key;
+        var removedUser = ref.delta[0].value;
+        var removedKey = ref.delta[0].key;
 
         console.log("Occupant Removed: " + removedUser + " at " + removedKey);
         delete presenceObject[removedUser];
@@ -234,8 +254,8 @@ $(document).ready(function () {
 
     // When an occupant is merged. For lists, this will be called on push()
     occupants.on.merge(function (ref) {
-        var addedUser = ref.delta.changes[0].value;
-        var addedKey = ref.delta.changes[0].key;
+        var addedUser = ref.delta[0].value;
+        var addedKey = ref.delta[0].key;
 
         console.log("Occupant Added: " + addedUser + " at " + addedKey);
         presenceObject[addedUser] = addedKey;
@@ -250,17 +270,24 @@ $(document).ready(function () {
     home.on.ready(function (ref) {
 
         home.on.change(function (ref) {
-            var theChange = ref.delta.changes[0];
-            if (theChange.updateAt.indexOf("logfile") != -1) {
-                return;
-            } else {
+            // TODO: add logging via detached push
+            // https://www.pivotaltracker.com/story/show/82447750
 
-                //pubnub.push(new Date() + ": action: " + theChange.action + " at " + theChange.location);
-                pubnub.push({
-                    object_id:
-                })
-
-            }
+//            var theChange = ref.delta[0];
+//            if (theChange.updateAt.indexOf("logfile") != -1) {
+//                return;
+//            } else {
+//
+//
+//                pubnub.push({
+//                    object_id: "home.logfile",
+//                    //data:(new Date() + ": action: " + theChange.action + " at " + theChange.location),
+//                    data: "hi",
+//                    callback: console.log,
+//                    error: console.log
+//                });
+//
+//            }
 
         });
 
