@@ -11,9 +11,9 @@ var pubnub = PUBNUB.init({
 function log(m) {
     return JSON.stringify(m, null, 4);
 }
+
 function onError(m) {
-    //console.log("Error: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
-    console.log('Error');
+    console.log('Error: ' + JSON.stringify(m));
 }
 
 function logLogfile(m) {
@@ -95,10 +95,25 @@ function logOccupants() {
         thermostatMode = "heat";
         thermostatTemp = 65;
         thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, log, log);
+
+        if (dial.set) {
         dial.set('value', thermostatTemp);
+        }
 
 
+    }
+    else if (presenceCount == 1 && (presenceObject["dog"] || presenceObject["pizza"])) {
+        // if there is only one person home, and its the dog or pizza delivery
+        // then don't turn the lights on
+        return;
+
+    }
+    else if (presenceCount == 2 && (presenceObject["dog"] && presenceObject["pizza"])) {
+        // if there are two people home, and its the dog and pizza delivery
+        // then don't turn the lights on
+        return;
     } else {
+
         $("#houseScene").attr("src", "img/house_at_night_all_on.jpg");
     }
 }
