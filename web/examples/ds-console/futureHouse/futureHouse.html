@@ -16,6 +16,8 @@
         <th>Manually add log file entry (push)</th>
         <th>Manually add log custom entry (merge)</th>
         <th>Remove from the Queue (pop)</th>
+        <th>Evacuate the House!</th>
+
     </tr>
 
     <tr>
@@ -34,6 +36,8 @@
         </td>
         <td><input id="addLogMerge" type="text"></td>
         <td><img id="popLog" src="img/pop.png"></td>
+        <td><img id="evacuateHouse" src="img/evacuate.png"></td>
+
 
     </tr>
 
@@ -47,9 +51,21 @@
         <th>Mode</th><td><button id="thermostatMode"></button></td>
         <th>Power</th><td><button id="thermostatPower"></button></td>
         <th>Temperature</th><td><textfield id="currentTemp"></textfield></td>
+        <th>Away Mode</th><td><button id="thermostatAwayMode">Away</button></td>
+        <th>Resync Thermostat</th><td><img src="img/resync.png" id="manualThermoResync"></td>
+
     </tr>
 
 </table>
+
+
+<table id="familyOperations">
+    <tr id="ops">
+        <th>Pop the Q</th><td><img id="ejectPerson" src="img/eject.png"></td>
+    </tr>
+</table>
+
+
 
 <table id="familyMembers">
     <tr id="roofs">

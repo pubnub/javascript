@@ -257,14 +257,32 @@ $(document).ready(function () {
         } else {
             thermostat.replace({"data": {"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, "success": log, "error": log});
         }
-
     });
+
+    $("#thermostatAwayMode").on('click', function (e) {
+        // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
+            thermostat.merge({"data": {"temperature": 65, "power": "on", "mode": "heat"}, "success": log, "error": log});
+    });
+
 
     thermostat.on.replace(function (ref) {
         thermostatSetter(ref);
     });
 
+    thermostat.on.merge(function (ref) {
+        thermostatSetter(ref);
+    });
+
     // Occupants Logic
+
+    $("#ejectPerson").on("click", function(e){
+        occupants.pop({"success":onSuccess, "error":onError});
+    });
+
+    $("#evacuateHouse").on('click', function (e) {
+        console.log("Removing at home.occupants");
+        pubnub.remove({"object_id": "home.occupants", "success": onSuccess, "error": onError});
+    });
 
     $(".family").on("click", function (e) {
         var person = this.id;
@@ -301,13 +319,13 @@ $(document).ready(function () {
     // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
     // When an occupant is removed
     occupants.on.remove(function (ref) {
-        var removedUser = ref.delta[0].value;
-        var removedKey = ref.delta[0].key;
 
-        console.log("Occupant Removed: " + removedUser + " at " + removedKey);
-        delete presenceObject[removedUser];
+        $.each(ref.delta, function (index, person){
 
-        roofSelector(removedUser).toggle();
+            console.log("Occupant Removed: " + person.value + " at " + person.index);
+            delete presenceObject[person.value];
+            roofSelector(person.value).toggle();
+        });
 
         logOccupants();
     });
