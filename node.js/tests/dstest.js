@@ -239,7 +239,9 @@ describe('Pubnub', function() {
                     done();
                 });
                 ref.on.ready(function(r){
-                    ref.replace(seed + 2);
+                    ref.replace({
+                        'data' : seed + 2
+                    });
                 })
 
             })
