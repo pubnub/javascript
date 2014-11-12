@@ -13,17 +13,21 @@ function log(m) {
 }
 
 function onError(m) {
-    console.log('Error: ' + JSON.stringify(m));
+    console.log('Error: ' + log(m));
+}
+
+function onSuccess(m) {
+    console.log('Success: ' + log(m));
 }
 
 function logLogfile(m) {
     var prettyData = m.value();
-    $("#fullLog").html(log(prettyData.slice(0,5)));
-}
+    if (prettyData.length > 0) {
+        $("#fullLog").html(log(prettyData.slice(0, 5)));
+    } else {
+        $("#fullLog").html("No log data to show!");
+    }
 
-function onSuccess(m) {
-    //console.log("Success: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
-    console.log('Success');
 }
 
 function refLog(ref) {
@@ -94,10 +98,10 @@ function logOccupants() {
         thermostatPower = "on";
         thermostatMode = "heat";
         thermostatTemp = 65;
-        thermostat.replace({"data":{"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, "success":log, "error":log});
+        thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, "success": onSuccess, "error": onError});
 
         if (dial.set) {
-        dial.set('value', thermostatTemp);
+            dial.set('value', thermostatTemp);
         }
 
 
@@ -147,19 +151,61 @@ function roofSelector(person) {
 
 $(document).ready(function () {
 
-    home = pubnub.sync({"object_id":'home'});
-    thermostat = pubnub.sync({"object_id":'home.living_room.thermostat'});
-    occupants = pubnub.sync({"object_id":'home.occupants'});
-    garage_light1 = pubnub.sync({"object_id":'home.garage.light1'});
-    porch_light1 = pubnub.sync({"object_id":'home.porch.light1'});
-    porch_light2 = pubnub.sync({"object_id":'home.porch.light2'});
+    home = pubnub.sync({"object_id": 'home'});
+    thermostat = pubnub.sync({"object_id": 'home.living_room.thermostat'});
+    occupants = pubnub.sync({"object_id": 'home.occupants'});
+    garage_light1 = pubnub.sync({"object_id": 'home.garage.light1'});
+    porch_light1 = pubnub.sync({"object_id": 'home.porch.light1'});
+    porch_light2 = pubnub.sync({"object_id": 'home.porch.light2'});
 
     // onclick() handling for getLogfile
     // We pull a log snapshot to display on demand
     // Its a lot of data, so we don't want it always syncing
 
+    $("#popLog").on('click', function (e) {
+        pubnub.pop({"object_id": "home.log.entries", "success": onSuccess, "error": onError});
+    });
+
+    $("#addLogMerge").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            console.log("Log Merging!");
+            pubnub.merge({"object_id": "home.log.custom", "data": this.value, "success": onSuccess, "error": onError});
+        }
+    });
+
+    $("#addLogPushValue").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+
+            var sortKey = $("#addLogPushSortKey").val();
+            var pushArg = {"object_id": "home.log.entries", "data": this.value, "success": onSuccess, "error": onError};
+
+            if (sortKey && sortKey.length > 0) {
+                console.log("Adding Custom Sort Key: " + sortKey + " !");
+                pushArg['sort_key'] = sortKey;
+            }
+
+            console.log("Log Pushing!");
+            pubnub.push(pushArg);
+
+        }
+    });
+
+    $("#deleteLog").on('click', function (e) {
+        console.log("Removing at home.log");
+        pubnub.remove({"object_id": "home.log", "success": onSuccess, "error": onError});
+    });
+
+    $("#truncateLog").on('click', function (e) {
+        console.log("Truncating at home.log");
+        pubnub.replace({"object_id": "home.log", "data": {}, "success": onSuccess, "error": onError});
+    });
+
     $("#getLogfile").on('click', function (e) {
-        pubnub.snapshot({"object_id": "home", path: "logfile", callback: logLogfile, error: logLogfile});
+        // Using callback instead of success
+        // Should be ok in general, but bad form :)
+        // https://www.pivotaltracker.com/story/show/82518702
+
+        pubnub.snapshot({"object_id": "home.log.entries", "callback": logLogfile, "error": logLogfile});
     });
 
     // Acknowledge when the thermostat has registered by turning it green
@@ -187,7 +233,7 @@ $(document).ready(function () {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
-                thermostat.replace({"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, log, log);
+                thermostat.replace({"data": {"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, "success": log, "error": log});
             });
 
             dial.set('value', thermostatTemp);
@@ -197,9 +243,9 @@ $(document).ready(function () {
     $("#thermostatMode").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
-            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, log, log);
+            thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, "success": log, "error": log});
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, log, log);
+            thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, "success": log, "error": log});
         }
 
     });
@@ -207,9 +253,9 @@ $(document).ready(function () {
     $("#thermostatPower").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatPower == "on") {
-            thermostat.replace({"temperature": thermostatTemp, "power": "off", "mode": thermostatMode}, log, log);
+            thermostat.replace({"data": {"temperature": thermostatTemp, "power": "off", "mode": thermostatMode}, "success": log, "error": log});
         } else {
-            thermostat.replace({"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, log, log);
+            thermostat.replace({"data": {"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, "success": log, "error": log});
         }
 
     });
@@ -237,7 +283,7 @@ $(document).ready(function () {
             // occupants.removeByIndex(0); // only if performing queue-like operations
 
         } else {
-            occupants.push(person);
+            occupants.push({"data": person, "success": onSuccess, "error": onError });
         }
     });
 
@@ -284,100 +330,56 @@ $(document).ready(function () {
 
     home.on.ready(function (ref) {
 
+        // The on.ready() callback fires when the reference point (in this case, home) is synced
+
         home.on.change(function (ref) {
-            // TODO: add logging via detached push
-            // https://www.pivotaltracker.com/story/show/82447750
 
-//            var theChange = ref.delta[0];
-//            if (theChange.updateAt.indexOf("logfile") != -1) {
-//                return;
-//            } else {
-//
-//
-//                pubnub.push({
-//                    object_id: "home.logfile",
-//                    //data:(new Date() + ": action: " + theChange.action + " at " + theChange.location),
-//                    data: "hi",
-//                    callback: console.log,
-//                    error: console.log
-//                });
-//
-//            }
+            // on.change() is any mutation -- useful for general catchalls
 
+            // In this example, we'll use it as a logger interface
+            // We'll log everything that happens
+            // Unless its happening for log stuff
+
+            var theChange = ref.delta[0];
+            if (theChange.updateAt.indexOf("log") != -1) {
+                return;
+            } else {
+                pubnub.push({
+                    object_id: "home.log.entries",
+                    data: (new Date() + ": action: " + theChange.action + " at " + theChange.location),
+                    success: onSuccess,
+                    error: onError
+                });
+            }
+        });
+
+        home.on.merge(function (ref) {
+            console.log("MERGE");
+        });
+
+        home.on.replace(function (ref) {
+            console.log("REPLACE");
+        });
+
+        home.on.remove(function (ref) {
+            console.log("REMOVE");
+        });
+
+        home.on.error(function (ref) {
+            // In the event of error!
+            // This includes PAM access denied
+            // Passes the standard error object
+
+            console.log("ERROR");
+        });
+
+        home.on.resync(function (ref) {
+            // In the event the object has lost sync with the server
+            // And is attempting recovery, this will fire
+
+            console.log("RESYNC");
         });
 
     });
 });
 
-
-//
-//
-//
-//
-//
-//
-//home.on.change(function(ref){
-//    console.log("CHANGE");
-//    refLog(ref);
-//});
-//
-//home.on.merge(function(ref) {
-//    console.log("MERGE");
-//    refLog(ref);
-//});
-//
-//home.on.replace(function(ref) {
-//    console.log("REPLACE");
-//    refLog(ref);
-//});
-//
-//home.on.remove(function(ref) {
-//    console.log("REMOVE");
-//    refLog(ref);
-//});
-//
-//
-//home.on.ready(function (ref) {
-//    //console.log("Home is Ready. Value: " + log(home.value()));
-//
-//    occupants = pubnub.sync('home.occupants');
-//    porch_light1 = pubnub.sync('home.porch_light1');
-//    porch_light2 = pubnub.sync('home.porch_light2');
-//    light2 = pubnub.sync('home.bedroom1.light2');
-//    garage_light1 = pubnub.sync('home.bedroom1.light1');
-//
-//
-//    garage_light1.on.ready(function (ref) {
-//
-//        setTimeout(function(){
-//            console.log("garage_light1 Ready. Value: " + log(ref.value()));
-//            console.log("Now turning garage_light1 on...");
-//            garage_light1.replace({ status: 'on' }, onSuccess, onError);
-//            garage_light1.replace({ config: {intensity: "low"} }, onSuccess, onError);
-//            garage_light1.replace({ config: {color: "mauve"} }, onSuccess, onError);
-//        }, 2000);
-//    });
-//
-//    occupants.on.change(function(ref) {
-//        console.log("Occupancy change: " + log(occupants.value()));
-//    });
-//
-//    // pubnub.snapshot({"object_id":"home", "path":"occupants", "callback":log2, "error":log2});
-//    // pubnub.snapshot({"object_id":"home.occupants", "callback":console.log, "error":console.log});
-//
-//    //garage_light1.merge({ status: 'dontknow' }, log2, log2);
-//
-//    pubnub.merge({
-//        object_id : "home.z",
-//        data      : {
-//            "name" : {
-//                "first" : "John"
-//            },
-//            "age" : 20
-//        },
-//        callback  : log2,
-//        error     : log2
-//    })
-//
-//
-//});

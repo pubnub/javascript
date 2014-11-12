@@ -6,16 +6,37 @@
 
 <body class="yui3-skin-sam">
 
-<table id="connectionTable">
+<table id="actionTable">
     <tr>
-        <td>Connection Status</td>
-        <td>Get Transaction Log</td>
+        <th>Connection Status</th>
+        <th>Get Transaction Log</th>
+        <th>Fake House</th>
+        <th>Delete Log (remove)</th>
+        <th>Truncate Log (replace)</th>
+        <th>Manually add log file entry (push)</th>
+        <th>Manually add log custom entry (merge)</th>
+        <th>Remove from the Queue (pop)</th>
     </tr>
+
     <tr>
         <td><img id="connectStatus" src="img/disconnect.png"></td>
         <td><img id="getLogfile" src="img/log.png"></td>
         <td><img id="houseScene" src="img/house_at_night_dimmed_porch.jpg"></td>
+
+        <td><img id="deleteLog" src="img/delete_log.png"></td>
+        <td><img id="truncateLog" src="img/truncate_log.png"></td>
+        <td>
+            <table>
+                <tr><td><input id="addLogPushValue" type="text"></td></tr>
+                <tr><td>Sort Key (optional)<br><input id="addLogPushSortKey" type="text"></td></tr>
+            </table>
+
+        </td>
+        <td><input id="addLogMerge" type="text"></td>
+        <td><img id="popLog" src="img/pop.png"></td>
+
     </tr>
+
 </table>
 
 
