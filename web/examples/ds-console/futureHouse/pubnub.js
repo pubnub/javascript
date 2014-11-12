@@ -1789,8 +1789,12 @@ function PN_API(setup) {
             This method takes location as input, location is a fully qualified name
             with object_id and path .   location = object_id + '.' + path
         */
-        'sync' : function(location) {
+        'sync' : function(args) {
 
+            var location    = args['object_id'];
+
+            // Make sure we have a Channel
+            if (!location)     return error('Missing Object Id');    
 
             var split_o     = _get_object_id_and_path_from_location(location);
 
@@ -1849,61 +1853,40 @@ function PN_API(setup) {
                     }
                 },
 
-                'merge'  : function(data, success, error) {
-
-                    SELF['merge']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error
-                    });
+                'merge'  : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
+                    SELF['merge'](args);
 
                 },
 
-                'replace' : function(data, success, error) {
-
-                    SELF['replace']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error
-                    });
+                'replace' : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
+                    SELF['replace'](args);
                 },
 
-                'remove'  : function(success, error) {
-
-                    SELF['remove']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'callback'  : success,
-                        'error'     : error
-                    });
+                'remove'  : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                    }
+                    SELF['remove'](args);
                 },
 
-                'push'    : function(data, success, error) {
-                    SELF['merge']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error,
-                        'mode'      : 'POST'
-                    });
-                },
-                'push_with_sort_key'    : function(data, sort_key, success, error) {
-                    SELF['merge']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'sort_key'  : sort_key,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error,
-                        'mode'      : 'POST'
-                    });
+                'push'    : function(args) {
+                    if (args) {
+                        args['object_id']   = object_id;
+                        args['path']        = path;
+                        args['mode']        = 'POST';
+                    }
+
+                    SELF['merge'](args);
                 }
-
             }
 
 
@@ -1914,6 +1897,13 @@ function PN_API(setup) {
                     'path'       : path,
                     'callback'   : function(r) {
                         internal = _get_object_by_path(object_id,path);
+
+                        // resync if more than or equal to 100 messages
+                        if (r.length >= 100) {
+                            resync();
+                            return;
+                        }
+
                         if (r[0]) {
                             var action      = r[0]['action'];
                             var location    = r[0]['location'];
@@ -1959,6 +1949,7 @@ function PN_API(setup) {
                     },
                     'error' : function(r) {
                         var error = get_callback(location,'error');
+                        resync();
                         error && error(r);
                     },
                     'connect'    : function(r) {
@@ -1976,10 +1967,12 @@ function PN_API(setup) {
                     },
                     'reconnect'  : function(r) {
                         var network_reconnect = get_callback(location, 'network.reconnect');
+                        resync();
                         network_reconnect && network_reconnect(r);
                     },
                     'disconnect' : function(r) {
                         var network_disconnect = get_callback(location, 'network.disconnect');
+                        resync();
                         network_disconnect && network_disconnect(r)
                     }    
                     
@@ -1994,16 +1987,21 @@ function PN_API(setup) {
             };
 
 
-            ref['value'] = function(path1) {
+            ref['value'] = function(args) {
+                var path = args['path']
                 internal = _get_object_by_path(object_id,path);
-                return value(internal,path1);
+                return value(internal,path);
             };
 
-            ref['get'] = function(path) {
+            ref['get'] = function(args) {
+                var path = args['path']
                 return SELF['sync'](location + '.' + path);
             };
 
-            ref['pop'] = function(success, error) {
+            ref['pop'] = function(args) {
+                var success = args['success'] || args['callback'] || function(){}
+                ,   err     = args['error']   ||  function(){};
+
                 internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
@@ -2014,7 +2012,7 @@ function PN_API(setup) {
                 SELF['remove']({
                     'object_id' : location + '.' + key,
                     'callback'  : success,
-                    'error'     : error
+                    'error'     : err
                 });
                 return value(internal[last_key]);
             };
