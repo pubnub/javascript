@@ -158,14 +158,6 @@ $(document).ready(function () {
     porch_light1 = pubnub.sync({"object_id": 'home.porch.light1'});
     porch_light2 = pubnub.sync({"object_id": 'home.porch.light2'});
 
-    // onclick() handling for getLogfile
-    // We pull a log snapshot to display on demand
-    // Its a lot of data, so we don't want it always syncing
-
-    $("#popLog").on('click', function (e) {
-        pubnub.pop({"object_id": "home.log.entries", "success": onSuccess, "error": onError});
-    });
-
     $("#addLogMerge").on('keydown', function (e) {
         if (e.keyCode == 13) {
             console.log("Log Merging!");
@@ -273,9 +265,63 @@ $(document).ready(function () {
         thermostatSetter(ref);
     });
 
-    // Occupants Logic
+    // Occupants
+
+    // RemoveBy* Logic
+
+    $("#removeByIndex").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            console.log("Removing by Index!");
+            occupants.removeByIndex(this.value, onSuccess, onError);
+        }
+    });
+
+    $("#removeByKey").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            console.log("Removing by Key!");
+            occupants.removeByKey(this.value, onSuccess, onError);
+        }
+    });
+
+    $("#removeByValue").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            console.log("Removing by Value!");
+            occupants.removeByValue(this.value, onSuccess, onError);
+        }
+    });
+
+    // ReplaceBy* Logic
+
+    $("#replaceByIndex").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            var replaceData = $("#replaceData").val();
+            console.log("Replacing by Index!");
+            occupants.replaceByIndex(this.value, replaceData, onSuccess, onError);
+        }
+    });
+
+    $("#replaceByKey").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            var replaceData = $("#replaceData").val();
+            console.log("Replacing by Key!");
+            occupants.replaceByKey(this.value, replaceData, onSuccess, onError);
+        }
+    });
+
+    $("#replaceByValue").on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            var replaceData = $("#replaceData").val();
+            console.log("Replacing by Value!");
+            occupants.replaceByValue(this.value, replaceData, onSuccess, onError);
+        }
+    });
+
+    // pop example
 
     $("#ejectPerson").on("click", function(e){
+        // TODO: Fix
+        // https://www.pivotaltracker.com/story/show/82536362
+
         occupants.pop({"success":onSuccess, "error":onError});
     });
 
