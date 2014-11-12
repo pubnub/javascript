@@ -302,6 +302,7 @@ function PN_API(setup) {
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
     ,   OBJECTS       = {}
+    ,   OBJECTS_SYNC_PENDING = {}
     ,   DS_PATH_TTS   = {}
     ,   DS_CALLBACKS  = {}
     ,   DS_CHANNELS   = {}
@@ -536,7 +537,7 @@ function PN_API(setup) {
             if (path_length > 0) {
                 try {
 
-                    if (!x[last]['pn_tt'] || x[last]['pn_tt'] <= update.timetoken) {
+                    if (!x[last]['pn_tt'] || x[last]['pn_tt'] < update.timetoken) {
                         x[last]['pn_val'] = update.value;
                         x[last]['pn_tt'] = update.timetoken;
                     }
@@ -547,7 +548,7 @@ function PN_API(setup) {
                 }
             } else {
                 try {
-                    if (o['pn_tt'] <= update.timetoken) {
+                    if (o['pn_tt'] < update.timetoken) {
                         o['pn_val'] = update.value;
                         o['pn_tt'] = update.timetoken;
                     }
@@ -982,16 +983,18 @@ function PN_API(setup) {
         })
     }
 
-    function resync() {
-
+    function resync_all() {
+        
+        UPDATES = {};
         for (var c in OBJECTS) {
+
             read_recursive(c, null, null, null, null, null, function(location){
-                //console.log('LOCATION : ' + location);
+
                 var callbacks = _get_all_callbacks_by_object_id(location, 'resync');
-                //console.log(JSON.stringify(callbacks,null,2));
+
                 for (var id in callbacks) {
                     var resync_callback     = callbacks[id];
-                    //console.log(id);
+
                     var object              = _get_object_by_location(id);
                     var callback_data       = {};
 
@@ -999,15 +1002,38 @@ function PN_API(setup) {
                     callback_data['value']  = function(path) {
                         return value(callback_data['data'], path);
                     }
-                    //console.log(JSON.stringify(OBJECTS, null, 2));
+
                     resync_callback(callback_data);
                 }
+
             });
         }
 
+    }
 
-        //console.log("RESYNC DONE");
-        //console.log(JSON.stringify(OBJECTS, null, 2));
+    function resync(object_id, callback) {
+
+        read_recursive(object_id, null, null, null, null, null, function(location){
+
+            var callbacks = _get_all_callbacks_by_object_id(location, 'resync');
+
+            callback && callback();
+            for (var id in callbacks) {
+                var resync_callback     = callbacks[id];
+
+                var object              = _get_object_by_location(id);
+                var callback_data       = {};
+
+                callback_data['data']   = object;
+                callback_data['value']  = function(path) {
+                    return value(callback_data['data'], path);
+                }
+
+                resync_callback(callback_data);
+
+
+            }
+        });
     }
 
     /*
@@ -1119,6 +1145,11 @@ function PN_API(setup) {
             },
             'callback'    : function(r,c) {
 
+                if (c[0].length >= 100 && r.location) {
+                    var object_id = r.location.split('.')[0].split('pn_ds_')[1];
+                    OBJECTS_SYNC_PENDING[object_id] = true;
+                }
+
                 var trans_id    = r['trans_id'];
                 var action      = r['action'];
                 var status      = r['status'];
@@ -1139,16 +1170,22 @@ function PN_API(setup) {
                             
                             var object_id = (location.split('.')[0]).split('pn_ds_')[1];
 
+                            if (OBJECTS_SYNC_PENDING[object_id]) {
+                                resync(object_id, function(){
+                                    delete UPDATES[trans_id];
+                                    delete OBJECTS_SYNC_PENDING[object_id];
+                                });
+                            } else {
+                                UPDATES[trans_id]['complete'] = true;
+                                
+                                if (!OBJECTS[object_id]) OBJECTS[object_id] = {};
 
-                            UPDATES[trans_id]['complete'] = true;
-                            
-                            if (!OBJECTS[object_id]) OBJECTS[object_id] = {};
+                                if (synced) apply_updates(OBJECTS[object_id], callback, trans_id);                                
+                            }
 
-                            if (synced) apply_updates(OBJECTS[object_id], callback, trans_id);
 
                         } else {
-                            resync();
-                            return;
+                            resync_all();
                         }
                     }
                 }
@@ -1486,7 +1523,7 @@ function PN_API(setup) {
         },
 
         'get' : function(args, callback) {
-             var callback        = args['callback'] || callback
+             var callback        = args['callback'] || args['success'] || callback
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   path             = args['path']
@@ -1536,7 +1573,7 @@ function PN_API(setup) {
             SELF['merge'](args);
         },
         'merge' : function(args, callback) {
-            var callback         = args['callback'] || callback || function(){}
+            var callback        = args['callback'] || args['success'] || callback
             ,   err              = args['error']    || function(){}
             ,   object_id        = args['object_id']
             ,   content          = args['data']
@@ -1589,7 +1626,7 @@ function PN_API(setup) {
             });
         },
         'remove' : function(args, callback) {
-            var callback         = args['callback'] || callback || function(){}
+            var callback         = args['callback'] || args['success'] || callback
             ,   err              = args['error']    || function(){}
             ,   jsonp            = jsonp_cb()
             ,   auth_key         = args['auth_key'] || AUTH_KEY
@@ -1639,8 +1676,12 @@ function PN_API(setup) {
             This method takes location as input, location is a fully qualified name
             with object_id and path .   location = object_id + '.' + path
         */
-        'sync' : function(location) {
+        'sync' : function(args) {
 
+            var location    = args['object_id'];
+
+            // Make sure we have a Channel
+            if (!location)     return error('Missing Object Id');    
 
             var split_o     = _get_object_id_and_path_from_location(location);
 
@@ -1699,59 +1740,21 @@ function PN_API(setup) {
                     }
                 },
 
-                'merge'  : function(data, success, error) {
-
-                    SELF['merge']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error
-                    });
-
+                'merge'  : function(args) {
+                    SELF['merge'](args);
                 },
 
-                'replace' : function(data, success, error) {
-
-                    SELF['replace']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error
-                    });
+                'replace' : function(args) {
+                    SELF['replace'](args);
                 },
 
                 'remove'  : function(success, error) {
-
-                    SELF['remove']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'callback'  : success,
-                        'error'     : error
-                    });
+                    SELF['remove'](args);
                 },
 
-                'push'    : function(data, success, error) {
-                    SELF['merge']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error,
-                        'mode'      : 'POST'
-                    });
-                },
-                'push_with_sort_key'    : function(data, sort_key, success, error) {
-                    SELF['merge']({
-                        'object_id' : object_id,
-                        'path'      : path,
-                        'sort_key'  : sort_key,
-                        'data'      : data,
-                        'callback'  : success,
-                        'error'     : error,
-                        'mode'      : 'POST'
-                    });
+                'push'    : function(args) {
+                    args.mode = 'POST';
+                    SELF['merge'](args);
                 }
 
             }
@@ -1764,12 +1767,6 @@ function PN_API(setup) {
                     'path'       : path,
                     'callback'   : function(r) {
                         internal = _get_object_by_path(object_id,path);
-
-                        // resync if more than or equal to 100 messages
-                        if (r.length >= 100) {
-                            resync();
-                            return;
-                        }
 
                         if (r[0]) {
                             var action      = r[0]['action'];
@@ -1816,7 +1813,7 @@ function PN_API(setup) {
                     },
                     'error' : function(r) {
                         var error = get_callback(location,'error');
-                        resync();
+                        resync_all();
                         error && error(r);
                     },
                     'connect'    : function(r) {
@@ -1834,12 +1831,12 @@ function PN_API(setup) {
                     },
                     'reconnect'  : function(r) {
                         var network_reconnect = get_callback(location, 'network.reconnect');
-                        resync();
+                        resync_all();
                         network_reconnect && network_reconnect(r);
                     },
                     'disconnect' : function(r) {
                         var network_disconnect = get_callback(location, 'network.disconnect');
-                        resync();
+                        resync_all();
                         network_disconnect && network_disconnect(r)
                     }    
                     
@@ -1854,16 +1851,21 @@ function PN_API(setup) {
             };
 
 
-            ref['value'] = function(path1) {
+            ref['value'] = function(args) {
+                var path = args['path']
                 internal = _get_object_by_path(object_id,path);
-                return value(internal,path1);
+                return value(internal,path);
             };
 
-            ref['get'] = function(path) {
+            ref['get'] = function(args) {
+                var path = args['path']
                 return SELF['sync'](location + '.' + path);
             };
 
-            ref['pop'] = function(success, error) {
+            ref['pop'] = function(args) {
+                var success = args['success'] || args['callback'] || function(){}
+                ,   err     = args['error']   ||  function(){};
+
                 internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
@@ -1874,7 +1876,7 @@ function PN_API(setup) {
                 SELF['remove']({
                     'object_id' : location + '.' + key,
                     'callback'  : success,
-                    'error'     : error
+                    'error'     : err
                 });
                 return value(internal[last_key]);
             };
@@ -2976,7 +2978,6 @@ function xdr( setup ) {
     ,   failed   = 0
     ,   complete = 0
     ,   loaded   = 0
-    ,   url
     ,   mode     = setup['mode'] || 'GET'
     ,   data     = setup['data'] || {}
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
@@ -2986,7 +2987,7 @@ function xdr( setup ) {
                 loaded = 1;
 
             clearTimeout(timer);
-            //console.log('URL : ' + url + '\n' + 'BODY : ' + body);
+            //console.log('BODY : ' + body);
             try       { response = JSON['parse'](body); }
             catch (r) { return done(1); }
             success(response);
@@ -3018,8 +3019,8 @@ function xdr( setup ) {
 
     if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) payload = setup['body'];
 
-    url = build_url( setup.url, data );
-    //  console.log(mode + ' ' + url); 
+    var url = build_url( setup.url, data );
+    //console.log(mode + ' ' + url); 
 
     if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
 
