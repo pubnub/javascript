@@ -8,9 +8,9 @@
 var PUBNUB = require("../../pubnub.js")
 
 var pubnub = PUBNUB({
-    write_key     : "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
-    read_key      : "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
-    origin: "dara24.devbuild.pubnub.com"
+    write_key       : "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
+    read_key        : "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
+    origin          : "dara25.devbuild.pubnub.com"
 
 });
 
@@ -63,21 +63,21 @@ function merge() {
 
         if (obj) { // object already synced, we can call methods on object
             rl.question('Enter JSON value to be merged : ', function(jso){
-                obj.merge(jso, log, log);
+                obj.merge({
+                    data        : jso,
+                    success     : log, 
+                    error       : log
+                });
             });
 
         } else { // object not already synced, use pubnub methods. 
-            var split_o = object_id.split('.');
-            var obj_id = split_o.shift();
 
-            var path = split_o.join(".");
             rl.question('Enter JSON value to be merged : ', function(jso){
                 pubnub.merge({
-                    object_id : obj_id,
-                    path : path,
-                    data : jso,
-                    success: log, 
-                    error : log
+                    object_id   : object_id,
+                    data        : jso,
+                    success     : log, 
+                    error       : log
                 });
             });
 
@@ -91,21 +91,21 @@ function push() {
 
         if (obj) { // object already synced, we can call methods on object
             rl.question('Enter JSON value to be pushed : ', function(jso){
-                obj.push(jso, log, log);
+                obj.push({
+                    data        : jso,
+                    success     : log, 
+                    error       : log
+                });
             });
 
         } else { // object not already synced, use pubnub methods. 
-            var split_o = object_id.split('.');
-            var obj_id = split_o.shift();
 
-            var path = split_o.join(".");
             rl.question('Enter JSON value to be pushed : ', function(jso){
                 pubnub.push({
-                    object_id : obj_id,
-                    path : path,
-                    data : jso,
-                    success: log, 
-                    error : log
+                    object_id   : object_id,
+                    data        : jso,
+                    success     : log, 
+                    error       : log
                 });
             });
 
@@ -119,21 +119,21 @@ function replace() {
 
         if (obj) { // object already synced, we can call methods on object
             rl.question('Enter JSON value to be replaced : ', function(jso){
-                obj.replace(jso, log, log);
+                obj.replace({
+                    data        : jso,
+                    success     : log, 
+                    error       : log
+                });
             });
 
         } else { // object not already synced, use pubnub methods. 
-            var split_o = object_id.split('.');
-            var obj_id = split_o.shift();
 
-            var path = split_o.join(".");
             rl.question('Enter JSON value to be replaced : ', function(jso){
                 pubnub.replace({
-                    object_id : obj_id,
-                    path : path,
-                    data : jso,
-                    success: log, 
-                    error : log
+                    object_id   : object_id,
+                    data        : jso,
+                    success     : log, 
+                    error       : log
                 });
             });
 
@@ -146,18 +146,17 @@ function remove() {
         var obj = OBJECTS[object_id];
 
         if (obj) { // object already synced, we can call methods on object
-            obj.remove(log, log);
+            obj.remove({
+                success     : log, 
+                error       : log
+            });
 
         } else { // object not already synced, use pubnub methods. 
-            var split_o = object_id.split('.');
-            var obj_id = split_o.shift();
 
-            var path = split_o.join(".");
             pubnub.remove({
-                object_id : obj_id,
-                path : path,
-                success: log, 
-                error : log
+                object_id       : object_id,
+                success         : log, 
+                error           : log
             });
         }
     });
@@ -166,7 +165,7 @@ function remove() {
 
 function createSyncObject() {
     rl.question('Object Id (Ex. home  or home.bedroom.light )? ', function(object_id) {
-        OBJECTS[object_id] = pubnub.sync(object_id);
+        OBJECTS[object_id] = pubnub.sync({'object_id' : object_id});
         
         var obj = OBJECTS[object_id];
 
