@@ -1658,8 +1658,8 @@ function PN_API(setup) {
         },
 
         'snapshot' : function(args, callback) {
-            var snapshot_callback         = args['callback'] || callback
-            ,   err              = args['error']    || function(){};
+            var snapshot_callback   = args['callback'] || args['success'] || callback
+            ,   err                 = args['error']    || function(){};
 
             args['callback'] = function(response){
                 var callback_data = {};
