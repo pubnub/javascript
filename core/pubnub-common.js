@@ -1893,7 +1893,7 @@ function PN_API(setup) {
                 var last_key = keys.pop();
 
                 SELF['remove']({
-                    'object_id' : location + '.' + key,
+                    'object_id' : location + '.' + last_key,
                     'callback'  : success,
                     'error'     : err
                 });
