@@ -11,9 +11,9 @@ var pubnub = PUBNUB.init({
 function log(m) {
     return JSON.stringify(m, null, 4);
 }
+
 function onError(m) {
-    //console.log("Error: - " + m.op + " at " + m.path + " - onSuccess: " + JSON.stringify(m));
-    console.log('Error');
+    console.log('Error: ' + JSON.stringify(m));
 }
 
 function logLogfile(m) {
@@ -94,11 +94,26 @@ function logOccupants() {
         thermostatPower = "on";
         thermostatMode = "heat";
         thermostatTemp = 65;
-        thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, log, log);
+        thermostat.replace({"data":{"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, "success":log, "error":log});
+
+        if (dial.set) {
         dial.set('value', thermostatTemp);
+        }
 
 
+    }
+    else if (presenceCount == 1 && (presenceObject["dog"] || presenceObject["pizza"])) {
+        // if there is only one person home, and its the dog or pizza delivery
+        // then don't turn the lights on
+        return;
+
+    }
+    else if (presenceCount == 2 && (presenceObject["dog"] && presenceObject["pizza"])) {
+        // if there are two people home, and its the dog and pizza delivery
+        // then don't turn the lights on
+        return;
     } else {
+
         $("#houseScene").attr("src", "img/house_at_night_all_on.jpg");
     }
 }
@@ -132,12 +147,12 @@ function roofSelector(person) {
 
 $(document).ready(function () {
 
-    home = pubnub.sync('home');
-    thermostat = pubnub.sync('home.living_room.thermostat');
-    occupants = pubnub.sync('home.occupants');
-    garage_light1 = pubnub.sync('home.garage.light1');
-    porch_light1 = pubnub.sync('home.porch.light1');
-    porch_light2 = pubnub.sync('home.porch.light2');
+    home = pubnub.sync({"object_id":'home'});
+    thermostat = pubnub.sync({"object_id":'home.living_room.thermostat'});
+    occupants = pubnub.sync({"object_id":'home.occupants'});
+    garage_light1 = pubnub.sync({"object_id":'home.garage.light1'});
+    porch_light1 = pubnub.sync({"object_id":'home.porch.light1'});
+    porch_light2 = pubnub.sync({"object_id":'home.porch.light2'});
 
     // onclick() handling for getLogfile
     // We pull a log snapshot to display on demand
