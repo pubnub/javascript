@@ -2069,7 +2069,7 @@ function PN_API(setup) {
                 }
             };
 
-            ref['replaceByIndex'] = function(index, success, error) {
+            ref['replaceByIndex'] = function(index, data, success, error) {
                 internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
@@ -2079,6 +2079,7 @@ function PN_API(setup) {
                     var key = keys[index];
                     SELF['replace']({
                         'object_id' : location + '.' + key,
+                        'data'      : data,
                         'callback'  : success,
                         'error'     : error
                     });
@@ -2101,13 +2102,14 @@ function PN_API(setup) {
                 return value(internal[key]);
 
             };
-            ref['replaceByKey'] = function(key, success, error) {
+            ref['replaceByKey'] = function(key, data, success, error) {
                 internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
                 }
                 SELF['replace']({
                     'object_id' : location + '.' + key,
+                    'data'      : data,
                     'callback'  : success,
                     'error'     : error
                 });
@@ -2141,7 +2143,7 @@ function PN_API(setup) {
 
             };
             
-            ref['replaceByValue'] = function(val, success, error) {
+            ref['replaceByValue'] = function(val, data, success, error) {
                 internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
@@ -2152,6 +2154,7 @@ function PN_API(setup) {
 
                 SELF['remove']({
                     'object_id' : location + '.' + key,
+                    'data'      : data,
                     'callback'  : success,
                     'error'     : error
                 });
