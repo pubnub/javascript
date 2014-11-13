@@ -1294,7 +1294,11 @@ function PN_API(setup) {
                     });
                 } 
             },
-            'callback'    : function(r,c) {
+            'callback'    : function(r,c,ch) {
+                
+                if (!r['location']) {
+                    r['location'] = ch;
+                }
 
                 if (c[0].length >= 100 && r.location) {
                     var object_id = r.location.split('.')[0].split('pn_ds_')[1];
@@ -1824,12 +1828,8 @@ function PN_API(setup) {
             This method takes location as input, location is a fully qualified name
             with object_id and path .   location = object_id + '.' + path
         */
-        'sync' : function(args) {
+        'sync' : function(location) {
 
-            var location    = args['object_id'];
-
-            // Make sure we have a Channel
-            if (!location)     return error('Missing Object Id');    
 
             var split_o     = _get_object_id_and_path_from_location(location);
 
@@ -1888,45 +1888,61 @@ function PN_API(setup) {
                     }
                 },
 
-                'merge'  : function(args) {
-                    if (!args) {
-                        args = {};
-                    }
-                    args['object_id']   = object_id;
-                    args['path']        = path;
-                    SELF['merge'](args);
+                'merge'  : function(data, success, error) {
+
+                    SELF['merge']({
+                        'object_id' : object_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error
+                    });
 
                 },
 
-                'replace' : function(args) {
-                    if (!args) {
-                        args = {};
-                    }
+                'replace' : function(data, success, error) {
 
-                    args['object_id']   = object_id;
-                    args['path']        = path;
-
-                    SELF['replace'](args);
+                    SELF['replace']({
+                        'object_id' : object_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error
+                    });
                 },
 
-                'remove'  : function(args) {
-                    if (!args) {
-                        args = {};
-                    }
-                    args['object_id']   = object_id;
-                    args['path']        = path;
-                    SELF['remove'](args);
+                'remove'  : function(success, error) {
+
+                    SELF['remove']({
+                        'object_id' : object_id,
+                        'path'      : path,
+                        'callback'  : success,
+                        'error'     : error
+                    });
                 },
 
-                'push'    : function(args) {
-                    if (!args) {
-                        args = {};
-                    }
-                    args['object_id']   = object_id;
-                    args['path']        = path;
-                    args['mode']        = 'POST';
-                    SELF['merge'](args);
+                'push'    : function(data, success, error) {
+                    SELF['merge']({
+                        'object_id' : object_id,
+                        'path'      : path,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
+                },
+                'push_with_sort_key'    : function(data, sort_key, success, error) {
+                    SELF['merge']({
+                        'object_id' : object_id,
+                        'path'      : path,
+                        'sort_key'  : sort_key,
+                        'data'      : data,
+                        'callback'  : success,
+                        'error'     : error,
+                        'mode'      : 'POST'
+                    });
                 }
+
             }
 
 
@@ -2021,21 +2037,16 @@ function PN_API(setup) {
             };
 
 
-            ref['value'] = function(args) {
-                var path = args['path']
+            ref['value'] = function(path1) {
                 internal = _get_object_by_path(object_id,path);
-                return value(internal,path);
+                return value(internal,path1);
             };
 
-            ref['get'] = function(args) {
-                var path = args['path']
+            ref['get'] = function(path) {
                 return SELF['sync'](location + '.' + path);
             };
 
-            ref['pop'] = function(args) {
-                var success = args['success'] || args['callback'] || function(){}
-                ,   err     = args['error']   ||  function(){};
-
+            ref['pop'] = function(success, error) {
                 internal = _get_object_by_path(object_id,path);
                 if(!isPnList(internal)) {
                     return null;
@@ -2044,9 +2055,9 @@ function PN_API(setup) {
                 var last_key = keys.pop();
 
                 SELF['remove']({
-                    'object_id' : location + '.' + last_key,
+                    'object_id' : location + '.' + key,
                     'callback'  : success,
-                    'error'     : err
+                    'error'     : error
                 });
                 return value(internal[last_key]);
             };

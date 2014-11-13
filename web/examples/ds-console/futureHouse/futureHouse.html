@@ -9,34 +9,12 @@
 <table id="actionTable">
     <tr>
         <th>Connection Status</th>
-        <th>Get Transaction Log</th>
         <th>Fake House</th>
-        <th>Delete Log (remove)</th>
-        <th>Truncate Log (replace)</th>
-        <th>Manually add log file entry (push)</th>
-        <th>Manually add log custom entry (merge)</th>
-        <th>Evacuate the House! (remove)</th>
-
     </tr>
 
     <tr>
         <td><img id="connectStatus" src="img/disconnect.png"></td>
-        <td><img id="getLogfile" src="img/log.png"></td>
         <td><img id="houseScene" src="img/house_at_night_dimmed_porch.jpg"></td>
-
-        <td><img id="deleteLog" src="img/delete_log.png"></td>
-        <td><img id="truncateLog" src="img/truncate_log.png"></td>
-        <td>
-            <table>
-                <tr><td><input id="addLogPushValue" type="text"></td></tr>
-                <tr><td>Sort Key (optional)<br><input id="addLogPushSortKey" type="text"></td></tr>
-            </table>
-
-        </td>
-        <td><input id="addLogMerge" type="text"></td>
-        <td><img id="evacuateHouse" src="img/evacuate.png"></td>
-
-
     </tr>
 
 </table>
@@ -81,20 +59,6 @@
         <td><img class="family" id="brother" src="img/brother.png"></td>
         <td><img class="family" id="dog" src="img/dog.png"></td>
         <td><img class="family" id="pizza" src="img/pizza.png"></td>
-    </tr>
-</table>
-
-<table>
-    <tr id="removeUtils">
-        <th>removeByIndex</th><td><input type="text" id="removeByIndex"></input></td>
-        <th>removeByKey</th><td><input type="text" id="removeByKey"></input></td>
-        <th>removeByValue</th><td><input type="text" id="removeByValue"></input></td>
-    </tr>
-    <tr id="replaceUtils">
-        <th>replaceByIndex</th><td><input type="text" id="replaceByIndex"></input></td>
-        <th>replaceByKey</th><td><input type="text" id="replaceByKey"></input></td>
-        <th>replaceByValue</th><td><input type="text" id="replaceByValue"></input></td>
-        <th>Replace Data</th><td><input type="text" id="replaceData"></input></td>
     </tr>
 </table>
 
