@@ -1169,7 +1169,6 @@ function PN_API(setup) {
             var callbacks = _get_all_callbacks_by_object_id(location, 'resync');
 
             callback && callback();
-            console.log(JSON.stringify(callbacks));
             for (var id in callbacks) {
                 var resync_callback     = callbacks[id];
 
@@ -1393,7 +1392,7 @@ function PN_API(setup) {
         }
     }
     function value(object, path) {
-        
+
         object = JSON.parse(JSON.stringify(object));
 
         if (isEmpty(object)) return {};
@@ -1442,7 +1441,7 @@ function PN_API(setup) {
         var callback_data = {};
         callback_data['delta'] = changes;
         callback_data['type'] = 'merge';
-        callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(object_id, p)));
+        callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(object_id, p)) || null);
 
         if (isPnList(callback_data['data'])) {
             callback_data['each'] =  function(callback) {
@@ -1480,7 +1479,7 @@ function PN_API(setup) {
                 ready_callback) {
                 var callback_data = {};
                 callback_data['type'] = 'ready';
-                callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(oid, path)));
+                callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(oid, path)) || null);
                 if (isPnList(callback_data['data'])) {
                     callback_data['each'] =  function(callback) {
                         var data = callback_data['data'];
