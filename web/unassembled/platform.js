@@ -278,8 +278,7 @@ function ajax( setup ) {
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
-    ,   mode     = setup.mode  || 'GET'
-    ,   method   = mode
+    ,   method   = setup.mode  || 'GET'
     ,   async    = !(setup.blocking)
     ,   done     = function(failed,response) {
             if (complete) return;
@@ -295,11 +294,6 @@ function ajax( setup ) {
 
             failed && fail(response);
         };
-
-    if (['POST', 'PATCH', 'PUT'].indexOf(mode) > -1) {
-        method = 'POST';
-        data['method'] = mode;
-    }
 
     // Send
     try {
