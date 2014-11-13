@@ -1196,6 +1196,8 @@ function PN_API(setup) {
         var callback         = args['callback']
         ,   err              = args['error']    || function(){}
         ,   connect          = args['connect']
+        ,   disconnect       = args['disconnect']
+        ,   reconnect        = args['reconnect']
         ,   object_id        = args['object_id']
         ,   path             = args['path'];
 
@@ -1351,6 +1353,16 @@ function PN_API(setup) {
 
                 err(errobj);
 
+            },
+            'disconnect'       : function(r) {
+                if (r && r.indexOf('pn_dstr_') == 0) {
+                    disconnect && disconnect();
+                }
+            },
+            'reconnect'       : function(r) {
+                if (r && r.indexOf('pn_dstr_') == 0) {
+                    reconnect && reconnect();
+                }
             }
         });
 
@@ -2023,7 +2035,7 @@ function PN_API(setup) {
                     },
                     'error' : function(r) {
                         var error = get_callback(location,'error');
-                        resync_all();
+                        //resync_all();
                         error && error(r);
                     },
                     'connect'    : function(r) {
@@ -2046,7 +2058,6 @@ function PN_API(setup) {
                     },
                     'disconnect' : function(r) {
                         var network_disconnect = get_callback(location, 'network.disconnect');
-                        resync_all();
                         network_disconnect && network_disconnect(r)
                     }
 

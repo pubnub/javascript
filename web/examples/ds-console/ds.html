@@ -7,31 +7,50 @@
 var pubnub = PUBNUB.init({
     write_key: "pub-c-bf446f9e-dd7f-43fe-8736-d6e5dce3fe67",
     read_key: "sub-c-d1c2cc5a-1102-11e4-8880-02ee2ddab7fe",
-    origin: "dara24.devbuild.pubnub.com"
+    origin: "dara25.devbuild.pubnub.com"
 });
 
 function sync(location) {
-	var x = pubnub.sync(location);
+    var x = pubnub.sync(location);
 
-	x.on.ready(function(ref){
-		console.log('READY ' + location);
-		console.log(JSON.stringify(ref.value(), null, 2));
-	});
+    x.on.ready(function(ref){
+        console.log('READY ' + location);
+        console.log(JSON.stringify(ref.value(), null, 2));
+    });
 
-	x.on.merge(function(ref){
-		console.log('MERGE ' + location);
-		console.log(JSON.stringify(ref.value(), null, 2));
-	});
+    x.on.merge(function(ref){
+        console.log('MERGE ' + location);
+        console.log(JSON.stringify(ref.value(), null, 2));
+    });
 
-	x.on.replace(function(ref){
-		console.log('REPLACE ' + location);
-		console.log(JSON.stringify(ref.value(), null, 2));
-	});
+    x.on.replace(function(ref){
+        console.log('REPLACE ' + location);
+        console.log(JSON.stringify(ref.value(), null, 2));
+    });
 
-	x.on.remove(function(ref){
-		console.log('REMOVE ' + location);
-		console.log(JSON.stringify(x.value(), null, 2));
-	});
-	return x;
+    x.on.remove(function(ref){
+        console.log('REMOVE ' + location);
+        console.log(JSON.stringify(x.value(), null, 2));
+    });
+
+    x.on.resync(function(ref){
+        console.log('RESYNC ' + location);
+        console.log(JSON.stringify(x.value(), null, 2));
+    });
+
+    x.on.network.connect(function(ref){
+        console.log('CONNECT ' + location);
+    });
+
+    x.on.network.reconnect(function(ref){
+        console.log('RECONNECT ' + location);
+    });
+
+    x.on.network.disconnect(function(ref){
+        console.log('DISCONNECT ' + location);
+    });
+    return x;
 }
+
+
 </script>
