@@ -1886,6 +1886,16 @@ function PN_API(setup) {
                 resync();
             };
 
+            ref['each'] = function(callback) {
+                internal = _get_object_by_path(object_id,path);
+                if(!isPnList(internal)) {
+                    return null;
+                }
+                var keys = Object.keys(internal);
+                for (var key in keys) {
+                    callback && callback(SELF['sync'](location + '.' + keys[key]));
+                }
+            };
 
             ref['value'] = function(path1) {
                 internal = _get_object_by_path(object_id,path);

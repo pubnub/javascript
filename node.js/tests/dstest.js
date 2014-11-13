@@ -52,6 +52,16 @@ describe('Pubnub', function() {
                     done();
                 });
             })
+            it('should get invoked on sync reference ready, when we are already listening to parent location and child references were created using get', function(done){
+                var ref1 = pubnub.sync(seed + 'x.y.z');
+                var ref2 = ref1.get('x1.y1.z1');
+
+                ref2.on.ready(function(r){
+                    assert.ok(true,"Ready should be called");
+                    ref2.on.ready();
+                    done();
+                });
+            })
         })
         
         describe('#on.merge()', function(){
