@@ -30,14 +30,6 @@ function logLogfile(m) {
 
 }
 
-function refLog(ref) {
-    console.log("Action at node " + ref.path + ".");
-    console.log("It was a " + ref.type + " kinda change.");
-    console.log("The changed data is " + log(ref.delta));
-    console.log("The changed data is " + log(ref.delta[0].value));
-    console.log("The new raw object looks like: " + log(ref.value()));
-}
-
 var dial = {};
 
 // We have many devices in a house. This house is organized by rooms.
@@ -95,7 +87,7 @@ function logOccupants() {
         thermostatPower = "on";
         thermostatMode = "heat";
         thermostatTemp = 65;
-        thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, "success": onSuccess, "error": onError});
+        thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": thermostatMode}, onSuccess, onError);
 
         if (dial.set) {
             dial.set('value', thermostatTemp);
@@ -145,59 +137,9 @@ function roofSelector(person) {
 
 $(document).ready(function () {
 
-    // TODO: Change everything to positional
-
-    home = pubnub.sync({"object_id": 'home'});
-    thermostat = pubnub.sync({"object_id": 'home.living_room.thermostat'});
-    occupants = pubnub.sync({"object_id": 'home.occupants'});
-
-    $("#addLogMerge").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            console.log("Log Merging!");
-
-            // TODO: Do not document detached methods
-
-            pubnub.merge({"object_id": "home.log.custom", "data": this.value, "success": onSuccess, "error": onError});
-        }
-    });
-
-    $("#addLogPushValue").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-
-            var sortKey = $("#addLogPushSortKey").val();
-            var pushArg = {"object_id": "home.log.entries", "data": this.value, "success": onSuccess, "error": onError};
-
-            if (sortKey && sortKey.length > 0) {
-                console.log("Adding Custom Sort Key: " + sortKey + " !");
-                pushArg['sort_key'] = sortKey;
-            }
-            console.log("Log Pushing!");
-            pubnub.push(pushArg);
-        }
-    });
-
-
-    $("#deleteLog").on('click', function (e) {
-        console.log("Removing at home.log");
-        pubnub.remove({"object_id": "home.log", "success": onSuccess, "error": onError});
-    });
-
-    $("#truncateLog").on('click', function (e) {
-        console.log("Truncating at home.log");
-        pubnub.replace({"object_id": "home.log", "data": {}, "success": onSuccess, "error": onError});
-    });
-
-    $("#getLogfile").on('click', function (e) {
-        // Using callback instead of success
-        // Should be ok in general, but bad form :)
-        // https://www.pivotaltracker.com/story/show/82518702
-
-        // TODO: Hide snapshot from this version or strip pn_* data
-        // If we keep it, make it parameterized
-
-        pubnub.snapshot({"object_id": "home.log.entries", "callback": logLogfile, "error": logLogfile});
-
-    });
+    home = pubnub.sync('home');
+    thermostat = pubnub.sync('home.living_room.thermostat');
+    occupants = pubnub.sync('home.occupants');
 
     // Acknowledge when the thermostat has registered by turning it green
 
@@ -224,8 +166,7 @@ $(document).ready(function () {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
-                // TODO: Make it parameterized
-                thermostat.replace({"data": {"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, "success": log, "error": log});
+                thermostat.replace({"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, log, log);
             });
 
             dial.set('value', thermostatTemp);
@@ -236,9 +177,9 @@ $(document).ready(function () {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
 
-            thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, "success": log, "error": log});
+            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, log, log);
         } else {
-            thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, "success": log, "error": log});
+            thermostat.replace({"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, log, log);
         }
 
     });
@@ -246,15 +187,15 @@ $(document).ready(function () {
     $("#thermostatPower").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatPower == "on") {
-            thermostat.replace({"data": {"temperature": thermostatTemp, "power": "off", "mode": thermostatMode}, "success": log, "error": log});
+            thermostat.replace({"temperature": thermostatTemp, "power": "off", "mode": thermostatMode}, log, log);
         } else {
-            thermostat.replace({"data": {"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, "success": log, "error": log});
+            thermostat.replace({"temperature": thermostatTemp, "power": "on", "mode": thermostatMode}, log, log);
         }
     });
 
     $("#thermostatAwayMode").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
-            thermostat.merge({"data": {"temperature": 65, "power": "on", "mode": "heat"}, "success": log, "error": log});
+            thermostat.merge({"temperature": 65, "power": "on", "mode": "heat"}, log, log);
     });
 
 
@@ -268,65 +209,10 @@ $(document).ready(function () {
 
     // Occupants
 
-    // TODO: remove all removeBy* and replaceBy*
-    // RemoveBy* Logic
-
-    $("#removeByIndex").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            console.log("Removing by Index!");
-            occupants.removeByIndex(this.value, onSuccess, onError);
-        }
-    });
-
-    $("#removeByKey").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            console.log("Removing by Key!");
-            occupants.removeByKey(this.value, onSuccess, onError);
-        }
-    });
-
-    $("#removeByValue").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            console.log("Removing by Value!");
-            occupants.removeByValue(this.value, onSuccess, onError);
-        }
-    });
-
-    // ReplaceBy* Logic
-
-    $("#replaceByIndex").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            var replaceData = $("#replaceData").val();
-            console.log("Replacing by Index!");
-            occupants.replaceByIndex(this.value, replaceData, onSuccess, onError);
-        }
-    });
-
-    $("#replaceByKey").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            var replaceData = $("#replaceData").val();
-            console.log("Replacing by Key!");
-            occupants.replaceByKey(this.value, replaceData, onSuccess, onError);
-        }
-    });
-
-    $("#replaceByValue").on('keydown', function (e) {
-        if (e.keyCode == 13) {
-            var replaceData = $("#replaceData").val();
-            console.log("Replacing by Value!");
-            occupants.replaceByValue(this.value, replaceData, onSuccess, onError);
-        }
-    });
-
     // pop example
 
     $("#ejectPerson").on("click", function(e){
-        occupants.pop({"success":onSuccess, "error":onError});
-    });
-
-    $("#evacuateHouse").on('click', function (e) {
-        console.log("Removing at home.occupants");
-        pubnub.remove({"object_id": "home.occupants", "success": onSuccess, "error": onError});
+        occupants.pop(onSuccess, onError);
     });
 
     $(".family").on("click", function (e) {
@@ -341,14 +227,12 @@ $(document).ready(function () {
             // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
 
             // TODO: occupants.remove() takes 0 or 2 arguments
+            // TODO: Need iterator to work
 
-            //occupants.remove(presenceObject["mom"], log, log);
             occupants.removeByKey(presenceObject[person], log, log);
-            // occupants.removeByValue('mom', log, log); // alternatively, if we knew this was a unique value
-            // occupants.removeByIndex(0); // only if performing queue-like operations
 
         } else {
-            occupants.push({"data": person, "success": onSuccess, "error": onError });
+            occupants.push(person, onSuccess, onError );
         }
     });
 
@@ -357,14 +241,9 @@ $(document).ready(function () {
         refreshPresenceObject(ref);
     });
 
-    // On each change, just delete and recreate the presence object.
-    // This is lazy, but easy.
-
     occupants.on.change(function (ref) {
     });
 
-    // Alternatively, we have the fine-grained control to easily handle remove operations on the occupants
-    // When an occupant is removed
     occupants.on.remove(function (ref) {
 
         $.each(ref.delta, function (index, person){
@@ -389,7 +268,6 @@ $(document).ready(function () {
         roofSelector(addedUser).toggle();
 
         logOccupants();
-
     });
 
 
@@ -406,16 +284,8 @@ $(document).ready(function () {
             // Unless its happening for log stuff
 
             var theChange = ref.delta[0];
-            if (theChange.updateAt.indexOf("log") != -1) {
-                return;
-            } else {
-                pubnub.push({
-                    object_id: "home.log.entries",
-                    data: (new Date() + ": action: " + theChange.action + " at " + theChange.location),
-                    success: onSuccess,
-                    error: onError
-                });
-            }
+            //console.log("The change to house was: " + log(theChange));
+
         });
 
         home.on.merge(function (ref) {
