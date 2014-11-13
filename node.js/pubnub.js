@@ -1013,12 +1013,13 @@ function PN_API(setup) {
     }
 
     function resync(object_id, callback) {
-
+        console.log('START RESYNC');
         read_recursive(object_id, null, null, null, null, null, function(location){
-
+            console.log('READ DONE');
             var callbacks = _get_all_callbacks_by_object_id(location, 'resync');
 
             callback && callback();
+            console.log(JSON.stringify(callbacks));
             for (var id in callbacks) {
                 var resync_callback     = callbacks[id];
 
@@ -1031,8 +1032,6 @@ function PN_API(setup) {
                 }
 
                 resync_callback(callback_data);
-
-
             }
         });
     }
@@ -1244,6 +1243,8 @@ function PN_API(setup) {
         }
     }
     function value(object, path) {
+        
+        object = JSON.parse(JSON.stringify(object));
 
         if (isEmpty(object)) return {};
 
@@ -1290,9 +1291,21 @@ function PN_API(setup) {
 
         var callback_data = {};
         callback_data['delta'] = changes;
-
         callback_data['type'] = 'merge';
-        callback_data['data'] = _get_object_by_path(object_id, p);
+        callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(object_id, p)));
+
+        if (isPnList(callback_data['data'])) {
+            callback_data['each'] =  function(callback) {
+                var data = callback_data['data'];
+                if(!isPnList(data)) {
+                    return null;
+                }
+                var keys = Object.keys(data);
+                for (var key in keys) {
+                    callback && callback(SELF['sync'](location + '.' + keys[key]));
+                }
+            }
+        }
         callback_data['parent'] = _get_parent_by_path(object_id, p);
         callback_data['value'] = function(path) {
             return value(callback_data['data'], path);
@@ -1317,7 +1330,19 @@ function PN_API(setup) {
                 ready_callback) {
                 var callback_data = {};
                 callback_data['type'] = 'ready';
-                callback_data['data'] = _get_object_by_path(oid, path);
+                callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(oid, path)));
+                if (isPnList(callback_data['data'])) {
+                    callback_data['each'] =  function(callback) {
+                        var data = callback_data['data'];
+                        if(!isPnList(data)) {
+                            return null;
+                        }
+                        var keys = Object.keys(data);
+                        for (var key in keys) {
+                            callback && callback(SELF['sync'](callback_location + '.' + keys[key]));
+                        }
+                    }
+                }
                 callback_data['value'] = function(path) {
                     return value(callback_data['data'], path);
                 }
@@ -1880,22 +1905,24 @@ function PN_API(setup) {
 
 
             var resync  = so[1];
-            internal    = so[0];
+            internal    = _get_object_by_path(object_id,path);
 
             ref['resync'] = function() {
                 resync();
             };
 
-            ref['each'] = function(callback) {
-                internal = _get_object_by_path(object_id,path);
-                if(!isPnList(internal)) {
-                    return null;
-                }
-                var keys = Object.keys(internal);
-                for (var key in keys) {
-                    callback && callback(SELF['sync'](location + '.' + keys[key]));
-                }
-            };
+            if (isPnList(internal)) {
+                ref['each'] = function(callback) {
+                    internal = _get_object_by_path(object_id,path);
+                    if(!isPnList(internal)) {
+                        return null;
+                    }
+                    var keys = Object.keys(internal);
+                    for (var key in keys) {
+                        callback && callback(SELF['sync'](location + '.' + keys[key]));
+                    }
+                };
+            }
 
             ref['value'] = function(path1) {
                 internal = _get_object_by_path(object_id,path);
