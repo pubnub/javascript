@@ -1144,7 +1144,11 @@ function PN_API(setup) {
                     });
                 } 
             },
-            'callback'    : function(r,c) {
+            'callback'    : function(r,c,ch) {
+                
+                if (!r['location']) {
+                    r['location'] = ch;
+                }
 
                 if (c[0].length >= 100 && r.location) {
                     var object_id = r.location.split('.')[0].split('pn_ds_')[1];
