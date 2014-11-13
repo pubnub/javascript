@@ -44,11 +44,8 @@ var dial = {};
 
 var home = {}
 var thermostat = {};
-var logfile = {};
 var occupants = {};
-var garage_light1 = {};
-var porch_light1 = {};
-var porch_light2 = {};
+
 
 var connectionStatusIcon = "disconnect.png";
 
@@ -133,15 +130,12 @@ function refreshPresenceObject(ref) {
     }
 
     $.each(ref.data, function (index, value) {
-
-        //TODO: Verify best practice of using pn_val
-
         var person = value.pn_val;
         presenceObject[ person] = index;
         console.log(person);
         roofSelector(person).toggle();
-
     });
+
     logOccupants();
 }
 
@@ -151,16 +145,18 @@ function roofSelector(person) {
 
 $(document).ready(function () {
 
+    // TODO: Change everything to positional
+
     home = pubnub.sync({"object_id": 'home'});
     thermostat = pubnub.sync({"object_id": 'home.living_room.thermostat'});
     occupants = pubnub.sync({"object_id": 'home.occupants'});
-    garage_light1 = pubnub.sync({"object_id": 'home.garage.light1'});
-    porch_light1 = pubnub.sync({"object_id": 'home.porch.light1'});
-    porch_light2 = pubnub.sync({"object_id": 'home.porch.light2'});
 
     $("#addLogMerge").on('keydown', function (e) {
         if (e.keyCode == 13) {
             console.log("Log Merging!");
+
+            // TODO: Do not document detached methods
+
             pubnub.merge({"object_id": "home.log.custom", "data": this.value, "success": onSuccess, "error": onError});
         }
     });
@@ -175,12 +171,11 @@ $(document).ready(function () {
                 console.log("Adding Custom Sort Key: " + sortKey + " !");
                 pushArg['sort_key'] = sortKey;
             }
-
             console.log("Log Pushing!");
             pubnub.push(pushArg);
-
         }
     });
+
 
     $("#deleteLog").on('click', function (e) {
         console.log("Removing at home.log");
@@ -197,7 +192,11 @@ $(document).ready(function () {
         // Should be ok in general, but bad form :)
         // https://www.pivotaltracker.com/story/show/82518702
 
+        // TODO: Hide snapshot from this version or strip pn_* data
+        // If we keep it, make it parameterized
+
         pubnub.snapshot({"object_id": "home.log.entries", "callback": logLogfile, "error": logLogfile});
+
     });
 
     // Acknowledge when the thermostat has registered by turning it green
@@ -225,6 +224,7 @@ $(document).ready(function () {
                 if (e.newVal == thermostatTemp) {
                     return;
                 }
+                // TODO: Make it parameterized
                 thermostat.replace({"data": {"temperature": e.newVal, "power": thermostatPower, "mode": thermostatMode}, "success": log, "error": log});
             });
 
@@ -235,6 +235,7 @@ $(document).ready(function () {
     $("#thermostatMode").on('click', function (e) {
         // Note, we're not setting the mode here. We'll set that at the on.replace callback below.
         if (thermostatMode == "heat") {
+
             thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": "cold"}, "success": log, "error": log});
         } else {
             thermostat.replace({"data": {"temperature": thermostatTemp, "power": thermostatPower, "mode": "heat"}, "success": log, "error": log});
@@ -267,6 +268,7 @@ $(document).ready(function () {
 
     // Occupants
 
+    // TODO: remove all removeBy* and replaceBy*
     // RemoveBy* Logic
 
     $("#removeByIndex").on('keydown', function (e) {
@@ -319,9 +321,6 @@ $(document).ready(function () {
     // pop example
 
     $("#ejectPerson").on("click", function(e){
-        // TODO: Fix
-        // https://www.pivotaltracker.com/story/show/82536362
-
         occupants.pop({"success":onSuccess, "error":onError});
     });
 
@@ -340,6 +339,8 @@ $(document).ready(function () {
         if (presenceObject[person]) {
             // here we show examples of manually storing the key to remove a list item
             // vs removing a list item by name (only safe when in a "Set" / no dup name paradigm)
+
+            // TODO: occupants.remove() takes 0 or 2 arguments
 
             //occupants.remove(presenceObject["mom"], log, log);
             occupants.removeByKey(presenceObject[person], log, log);
