@@ -585,7 +585,7 @@ function PN_API(setup) {
                 }
             } else {
                 // complete tree empty now due to no non leaf node existence
-                o = {}
+                o = null;
             }
         }
         // return update at , need to reconsider
@@ -1294,7 +1294,7 @@ function PN_API(setup) {
         callback_data['data'] = _get_object_by_path(object_id, p);
         callback_data['parent'] = _get_parent_by_path(object_id, p);
         callback_data['value'] = function(path) {
-            return value(callback_data['data'], path) || {};
+            return value(callback_data['data'], path);
         }
         callback_data['path'] = update_at;
         return callback_data;

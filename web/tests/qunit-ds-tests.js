@@ -69,3 +69,551 @@ test("each() should be able to iterate over a list", function() {
 
 
 });
+
+
+test("on.ready() should be invoked properly when listening at multiple locations in same tree", function() {
+    expect(6);
+    stop(6);
+    var seed = pn_random() + '-ready-';
+    var r1 = pubnub.sync(seed + 'a.b.c');
+
+    var r2 = pubnub.sync(seed + 'a.b');
+
+    var r3 = r2.get('c.d');
+
+    var r4 = r3.get('e').get('f');
+
+    var r5 = r4.get('i.j.k');
+
+    var r6 = pubnub.sync(seed + 'a.b.c.d.e.f.g.h.i.j.k.l');
+
+    function ready(r) {
+    	ok(true, "Ready should be called");
+    	start();
+    }
+
+    r1.on.ready(ready);
+    r2.on.ready(ready);
+    r3.on.ready(ready);
+    r4.on.ready(ready);
+    r5.on.ready(ready);
+    r6.on.ready(ready);
+
+});
+
+
+test("on.ready() should be invoked only when data object is ready", function() {
+    expect(6);
+    stop(6);
+    var seed = pn_random() + '-ready-';
+
+    var data = {
+    	"a" : {
+    		"b" : {
+    			"c" : {
+    				"d" : {
+    					"e" : {
+    						"f" : {
+    							"g" : {
+    								"h" : {
+	    								"i" : {
+	    									"j" : {
+	    										"k" : {
+	    											"l" : 'data' + seed
+	    										}
+	    									}
+
+	    								}
+	    							}
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+
+    };
+
+    pubnub.merge({
+    	'object_id' : seed,
+    	'data'		: data,
+    	'success'	: function(r) {
+
+		    var r1 = pubnub.sync(seed + '.a.b.c');
+
+		    r1.on.ready(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), 'data' + seed);
+		    	start();
+		    });
+		    
+		    var r2 = pubnub.sync(seed + '.a.b');
+
+		   	r2.on.ready(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), 'data' + seed);
+		    	start();
+		    });
+
+		    var r3 = r2.get('c.d');
+
+		    r3.on.ready(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), 'data' + seed);
+		    	start();
+		    });
+
+		    var r4 = r3.get('e').get('f');
+		    
+		    r4.on.ready(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), 'data' + seed);
+		    	start();
+		    });
+
+		    var r5 = r4.get('g.h.i.j.k');
+		    
+		    r5.on.ready(function(ref){
+		    	deepEqual(ref.value('l'), 'data' + seed);
+		    	start();
+		    });
+
+		    var r6 = pubnub.sync(seed + '.a.b.c.d.e.f.g.h.i.j.k.l');
+
+		   	r6.on.ready(function(ref){
+		    	deepEqual(ref.value(), 'data' + seed);
+		    	start();
+		    });
+		    
+
+    	},
+    	'error'		: function(r) {
+    		ok(false);
+    		start();
+    	}
+    })
+
+});
+
+test("on.merge() should be work propertly when listening to various locations in a tree", function() {
+    expect(12);
+    stop(12);
+    var seed 	= pn_random() + '-ready-';
+
+    var val1  	= 'data-1' + pn_random();
+    var val2    = 'data-2' + pn_random(); 
+
+    var data = {
+    	"a" : {
+    		"b" : {
+    			"c" : {
+    				"d" : {
+    					"e" : {
+    						"f" : {
+    							"g" : {
+    								"h" : {
+	    								"i" : {
+	    									"j" : {
+	    										"k" : {
+	    											"l" : val1
+	    										}
+	    									}
+
+	    								}
+	    							}
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+
+    };
+
+    pubnub.merge({
+    	'object_id' : seed,
+    	'data'		: data,
+    	'success'	: function(r) {
+
+		    var r1 = pubnub.sync(seed + '.a.b.c');
+
+		    r1.on.ready(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    
+		    r1.on.merge(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+
+
+		    var r2 = pubnub.sync(seed + '.a.b');
+
+		   	r2.on.ready(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r2.on.merge(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+
+		    var r3 = r2.get('c.d');
+
+		    r3.on.ready(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r3.on.merge(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+
+		    var r4 = r3.get('e').get('f');
+		    
+		    r4.on.ready(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r4.on.merge(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+
+
+		    var r5 = r4.get('g.h.i.j.k');
+		    
+		    r5.on.ready(function(ref){
+		    	deepEqual(ref.value('l'), val1);
+		    	start();
+		    });
+		    r5.on.merge(function(ref){
+		    	deepEqual(ref.value('l'), val2);
+		    	start();
+		    });
+
+		    var r6 = pubnub.sync(seed + '.a.b.c.d.e.f.g.h.i.j.k.l');
+
+		   	r6.on.ready(function(ref){
+		    	deepEqual(ref.value(), val1);
+		    	r6.merge(val2);
+		    	start();
+		    });
+		    r6.on.merge(function(ref){
+		    	deepEqual(ref.value(), val2);
+		    	start();
+		    });
+		    
+
+    	},
+    	'error'		: function(r) {
+    		ok(false);
+    		start();
+    	}
+    })
+
+});
+
+test("on.replace() should be work propertly when listening to various locations in a tree", function() {
+    expect(18);
+    stop(18);
+    var seed 	= pn_random() + '-ready-';
+
+    var val1  	= 'data-1' + pn_random();
+    var val2    = 'data-2' + pn_random();
+    var val3    = 'data-3' + pn_random(); 
+
+    var data = {
+    	"a" : {
+    		"b" : {
+    			"c" : {
+    				"d" : {
+    					"e" : {
+    						"f" : {
+    							"g" : {
+    								"h" : {
+	    								"i" : {
+	    									"j" : {
+	    										"k" : {
+	    											"l" : val1,
+	    											"l1" : val1 + val2
+	    										}
+	    									}
+
+	    								}
+	    							}
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+
+    };
+
+    pubnub.merge({
+    	'object_id' : seed,
+    	'data'		: data,
+    	'success'	: function(r) {
+
+		    var r1 = pubnub.sync(seed + '.a.b.c');
+
+		    r1.on.ready(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    
+		    r1.on.merge(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+
+		    r1.on.replace(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+
+		    var r2 = pubnub.sync(seed + '.a.b');
+
+		   	r2.on.ready(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r2.on.merge(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+		    r2.on.replace(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+		    var r3 = r2.get('c.d');
+
+		    r3.on.ready(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r3.on.merge(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+		    r3.on.replace(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+		    var r4 = r3.get('e').get('f');
+		    
+		    r4.on.ready(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r4.on.merge(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+		    r4.on.replace(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+
+		    var r5 = r4.get('g.h.i.j.k');
+		    
+		    r5.on.ready(function(ref){
+		    	deepEqual(ref.value('l'), val1);
+		    	start();
+		    });
+		    r5.on.merge(function(ref){
+		    	deepEqual(ref.value('l'), val2);
+		    	start();
+		    });
+		    r5.on.replace(function(ref){
+		    	deepEqual(ref.value('l'), val3);
+		    	start();
+		    });
+
+		    var r6 = pubnub.sync(seed + '.a.b.c.d.e.f.g.h.i.j.k.l');
+
+		   	r6.on.ready(function(ref){
+		    	deepEqual(ref.value(), val1);
+		    	r6.merge(val2);
+		    	start();
+		    });
+		    r6.on.merge(function(ref){
+		    	deepEqual(ref.value(), val2);
+		    	r6.replace(val3);
+		    	start();
+		    });
+		    r6.on.replace(function(ref){
+		    	deepEqual(ref.value(), val3);
+		    	start();
+		    });
+
+    	},
+    	'error'		: function(r) {
+    		ok(false);
+    		start();
+    	}
+    })
+
+});
+
+test("on.remove() should be work properly when listening to various locations in a tree", function() {
+    expect(20);
+    stop(19);
+    var seed 	= pn_random() + '-ready-';
+
+    var val1  	= 'data-1' + pn_random();
+    var val2    = 'data-2' + pn_random();
+    var val3    = 'data-3' + pn_random(); 
+
+    var data = {
+    	"a" : {
+    		"b" : {
+    			"c" : {
+    				"d" : {
+    					"e" : {
+    						"f" : {
+    							"g" : {
+    								"h" : {
+	    								"i" : {
+	    									"j" : {
+	    										"k" : {
+	    											"l" : val1,
+	    											"l1" : val1 + val2
+	    										}
+	    									}
+
+	    								}
+	    							}
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+
+    };
+
+    pubnub.merge({
+    	'object_id' : seed,
+    	'data'		: data,
+    	'success'	: function(r) {
+
+		    var r1 = pubnub.sync(seed + '.a.b.c');
+
+		    r1.on.ready(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    
+		    r1.on.merge(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+
+		    r1.on.replace(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val3);
+		    	pubnub.remove({
+		    		'object_id' : seed + '.a.b.c.d.e.f.g.h.i.j.k.l1'
+		    	})
+		    	start();
+		    });
+
+		    r1.on.remove(function(ref){
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val3);
+		    	deepEqual(ref.value('d.e.f.g.h.i.j.k.l1'), null);
+		    	start();
+		    });
+
+
+		    var r2 = pubnub.sync(seed + '.a.b');
+
+		   	r2.on.ready(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r2.on.merge(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+		    r2.on.replace(function(ref){
+		    	deepEqual(ref.value('c.d.e.f.g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+		    var r3 = r2.get('c.d');
+
+		    r3.on.ready(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r3.on.merge(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+		    r3.on.replace(function(ref){
+		    	deepEqual(ref.value('e.f.g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+		    var r4 = r3.get('e').get('f');
+		    
+		    r4.on.ready(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val1);
+		    	start();
+		    });
+		    r4.on.merge(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val2);
+		    	start();
+		    });
+		    r4.on.replace(function(ref){
+		    	deepEqual(ref.value('g.h.i.j.k.l'), val3);
+		    	start();
+		    });
+
+
+		    var r5 = r4.get('g.h.i.j.k');
+		    
+		    r5.on.ready(function(ref){
+		    	deepEqual(ref.value('l'), val1);
+		    	start();
+		    });
+		    r5.on.merge(function(ref){
+		    	deepEqual(ref.value('l'), val2);
+		    	start();
+		    });
+		    r5.on.replace(function(ref){
+		    	deepEqual(ref.value('l'), val3);
+		    	start();
+		    });
+
+		    var r6 = pubnub.sync(seed + '.a.b.c.d.e.f.g.h.i.j.k.l');
+
+		   	r6.on.ready(function(ref){
+		    	deepEqual(ref.value(), val1);
+		    	r6.merge(val2);
+		    	start();
+		    });
+		    r6.on.merge(function(ref){
+		    	deepEqual(ref.value(), val2);
+		    	r6.replace(val3);
+		    	start();
+		    });
+		    r6.on.replace(function(ref){
+		    	deepEqual(ref.value(), val3);
+		    	start();
+		    });
+
+    	},
+    	'error'		: function(r) {
+    		ok(false);
+    		start();
+    	}
+    })
+
+});
