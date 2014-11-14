@@ -1987,7 +1987,7 @@ function PN_API(setup) {
             internal    = _get_object_by_path(object_id,path);
 
             ref['resync'] = function() {
-                resync();
+                resync_all();
             };
 
             if (isPnList(internal)) {
