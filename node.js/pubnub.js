@@ -1724,6 +1724,7 @@ function PN_API(setup) {
                 }
                 snapshot_callback && snapshot_callback(callback_data);
             };
+            args['object_id'] = object_id;
 
             get_wrapper(args);
         },
