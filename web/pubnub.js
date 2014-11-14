@@ -1610,6 +1610,155 @@ function PN_API(setup) {
         return null;
     }
 
+    function merge(args, callback) {
+        var callback        = args['callback'] || args['success'] || callback
+        ,   err              = args['error']    || function(){}
+        ,   object_id        = args['object_id']
+        ,   content          = args['data']
+        ,   jsonp            = jsonp_cb()
+        ,   auth_key         = args['auth_key'] || AUTH_KEY
+        ,   sort_key         = args['sort_key']
+        //,   data             = { 'uuid' : UUID, 'auth' : auth_key, 'test_tr_only' : 1}
+        ,   data             = { 'uuid' : UUID, 'auth' : auth_key}
+        ,   mode             = args['mode'] || 'PATCH'
+        ,   path             = args['path'];
+
+        // Make sure we have a Channel
+        if (!object_id)             return error('Missing Object Id');
+        if (isNullOrUndef(content)) return error('Missing Data');
+        if (!SUBSCRIBE_KEY)         return error('Missing Subscribe Key');
+        if (!PUBLISH_KEY)           return error('Missing Publish Key');
+
+        if (!path || path.length == 0) {
+            var object_id_split = object_id.split('.');
+            object_id       = object_id_split.shift();
+            path            = object_id_split.join('.');
+        }
+
+        var url = [
+            STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
+             'pub-key', PUBLISH_KEY,'obj-id', encode(object_id)
+        ];
+
+        if (path) {
+            url['push'](encode(path['split'](".")['join']("/")));
+        }
+
+        if (jsonp != '0') { data['callback'] = jsonp; }
+
+        if (sort_key && sort_key.length > 0) data['sort_key'] = sort_key;
+
+        xdr({
+            callback : jsonp,
+            data     : _get_url_params(data),
+            body     : JSON['stringify'](content),
+            success  : function(response) {
+                _invoke_callback(response, callback, err);
+            },
+            fail     : function(response) {
+                _invoke_error(response, err);
+            },
+            url      : url,
+            mode  : mode
+        });
+    }
+    function remove(args, callback) {
+        var callback         = args['callback'] || args['success'] || callback
+        ,   err              = args['error']    || function(){}
+        ,   jsonp            = jsonp_cb()
+        ,   auth_key         = args['auth_key'] || AUTH_KEY
+        ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
+        ,   object_id        = args['object_id']
+        ,   path             = args['path'];
+
+        // Make sure we have a Channel
+        if (!object_id)     return error('Missing Object Id');
+        if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+        var oid_split = object_id.split('.');
+        object_id = oid_split.shift();
+        if (!path) {
+            path = oid_split.join('.');
+        }
+
+        var url = [
+            STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
+             'pub-key', PUBLISH_KEY, 'obj-id', encode(object_id)
+        ];
+
+        if (path) {
+            url['push'](encodeURI(path['split'](".")['join']("/")));
+        }
+
+        if (jsonp != '0') { data['callback'] = jsonp; }
+
+        xdr({
+            callback : jsonp,
+            data     : _get_url_params(data),
+            success  : function(response) {
+                _invoke_callback(response, callback, err);
+            },
+            fail     : function(response) {
+                _invoke_error(response, err);
+            },
+            url      : url,
+            mode : 'DELETE'
+        });
+    }
+
+
+
+    function replace(args, callback) {
+        args['mode'] = 'PUT'
+        merge(args, callback);
+    }
+    function push(args, callback) {
+        args['mode'] = 'POST'
+        merge(args, callback);
+    }
+
+    function get_wrapper(args, callback) {
+         var callback        = args['callback'] || args['success'] || callback
+        ,   err              = args['error']    || function(){}
+        ,   object_id        = args['object_id']
+        ,   path             = args['path']
+        ,   start_at         = args['start_at']
+        ,   obj_at           = args['obj_at']
+        ,   page_max_bytes   = args['page_max_bytes']
+        ,   jsonp            = jsonp_cb()
+        ,   auth_key         = args['auth_key'] || AUTH_KEY
+        ,   data             = { 'uuid' : UUID, 'auth' : auth_key };
+
+        // Make sure we have a Channel
+        if (!object_id)     return error('Missing Object Id');
+        if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+        var obj = null;
+        function read(start_at,callback, error) {
+            get({
+                'object_id' : object_id,
+                'path'      : path,
+                'start_at'  : start_at,
+                //'page_max_bytes' : 5,
+                'callback'  : function(r) {
+                    if (obj == null && typeof r['payload'] !== 'object') {
+                        callback && callback(r['payload']);
+                        return;
+                    }
+                    obj = mergeAtOneLevel(obj,r['payload']);
+                    if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
+                        callback && callback(obj);
+                    } else {
+                        read(r['next_page'],callback, error);
+                    }
+
+                },
+                'error'     : error
+            })
+        }
+        read(null,callback, error);
+    }
+
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, callback, error ) {
@@ -1712,9 +1861,10 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-        'snapshot' : function(args, callback) {
-            var snapshot_callback   = args['callback'] || args['success'] || callback
-            ,   err                 = args['error']    || function(){};
+        'snapshot' : function(object_id, success, error) {
+            var args = {'error' : error || function(){}};
+
+            var snapshot_callback   = success;
 
             args['callback'] = function(response){
                 var callback_data = {};
@@ -1725,153 +1875,58 @@ function PN_API(setup) {
                 snapshot_callback && snapshot_callback(callback_data);
             };
 
-            SELF['get'](args);
+            get_wrapper(args);
         },
 
-        'get' : function(args, callback) {
-             var callback        = args['callback'] || args['success'] || callback
-            ,   err              = args['error']    || function(){}
-            ,   object_id        = args['object_id']
-            ,   path             = args['path']
-            ,   start_at         = args['start_at']
-            ,   obj_at           = args['obj_at']
-            ,   page_max_bytes   = args['page_max_bytes']
-            ,   jsonp            = jsonp_cb()
-            ,   auth_key         = args['auth_key'] || AUTH_KEY
-            ,   data             = { 'uuid' : UUID, 'auth' : auth_key };
+        'merge'  : function(object_id, data, success, error) {
 
-            // Make sure we have a Channel
-            if (!object_id)     return error('Missing Object Id');
-            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+            merge({
+                'object_id' : object_id,
+                'data'      : data,
+                'callback'  : success,
+                'error'     : error
+            });
 
-            var obj = null;
-            function read(start_at,callback, error) {
-                get({
-                    'object_id' : object_id,
-                    'path'      : path,
-                    'start_at'  : start_at,
-                    //'page_max_bytes' : 5,
-                    'callback'  : function(r) {
-                        if (obj == null && typeof r['payload'] !== 'object') {
-                            callback && callback(r['payload']);
-                            return;
-                        }
-                        obj = mergeAtOneLevel(obj,r['payload']);
-                        if (!r['next_page'] || (r['next_page'] && r['next_page'] == "null")) {
-                            callback && callback(obj);
-                        } else {
-                            read(r['next_page'],callback, error);
-                        }
-
-                    },
-                    'error'     : error
-                })
-            }
-            read(null,callback, error);
         },
-        'replace'   : function(args, callback) {
-            args['mode'] = 'PUT'
-            SELF['merge'](args);
-        },
-        'push'   : function(args, callback) {
-            args['mode'] = 'POST'
-            SELF['merge'](args);
-        },
-        'merge' : function(args, callback) {
-            var callback        = args['callback'] || args['success'] || callback
-            ,   err              = args['error']    || function(){}
-            ,   object_id        = args['object_id']
-            ,   content          = args['data']
-            ,   jsonp            = jsonp_cb()
-            ,   auth_key         = args['auth_key'] || AUTH_KEY
-            ,   sort_key         = args['sort_key']
-            //,   data             = { 'uuid' : UUID, 'auth' : auth_key, 'test_tr_only' : 1}
-            ,   data             = { 'uuid' : UUID, 'auth' : auth_key}
-            ,   mode             = args['mode'] || 'PATCH'
-            ,   path             = args['path'];
 
-            // Make sure we have a Channel
-            if (!object_id)             return error('Missing Object Id');
-            if (isNullOrUndef(content)) return error('Missing Data');
-            if (!SUBSCRIBE_KEY)         return error('Missing Subscribe Key');
-            if (!PUBLISH_KEY)           return error('Missing Publish Key');
+        'replace' : function(object_id, data, success, error) {
 
-            if (!path || path.length == 0) {
-                var object_id_split = object_id.split('.');
-                object_id       = object_id_split.shift();
-                path            = object_id_split.join('.');
-            }
-
-            var url = [
-                STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
-                 'pub-key', PUBLISH_KEY,'obj-id', encode(object_id)
-            ];
-
-            if (path) {
-                url['push'](encode(path['split'](".")['join']("/")));
-            }
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
-
-            if (sort_key && sort_key.length > 0) data['sort_key'] = sort_key;
-
-            xdr({
-                callback : jsonp,
-                data     : _get_url_params(data),
-                body     : JSON['stringify'](content),
-                success  : function(response) {
-                    _invoke_callback(response, callback, err);
-                },
-                fail     : function(response) {
-                    _invoke_error(response, err);
-                },
-                url      : url,
-                mode  : mode
+            replace({
+                'object_id' : object_id,
+                'data'      : data,
+                'callback'  : success,
+                'error'     : error
             });
         },
-        'remove' : function(args, callback) {
-            var callback         = args['callback'] || args['success'] || callback
-            ,   err              = args['error']    || function(){}
-            ,   jsonp            = jsonp_cb()
-            ,   auth_key         = args['auth_key'] || AUTH_KEY
-            ,   data             = { 'uuid' : UUID, 'auth' : auth_key }
-            ,   object_id        = args['object_id']
-            ,   path             = args['path'];
 
-            // Make sure we have a Channel
-            if (!object_id)     return error('Missing Object Id');
-            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-
-            var oid_split = object_id.split('.');
-            object_id = oid_split.shift();
-            if (!path) {
-                path = oid_split.join('.');
-            }
-
-            var url = [
-                STD_ORIGIN, 'v1', 'datasync','sub-key', SUBSCRIBE_KEY,
-                 'pub-key', PUBLISH_KEY, 'obj-id', encode(object_id)
-            ];
-
-            if (path) {
-                url['push'](encodeURI(path['split'](".")['join']("/")));
-            }
-
-            if (jsonp != '0') { data['callback'] = jsonp; }
-
-            xdr({
-                callback : jsonp,
-                data     : _get_url_params(data),
-                success  : function(response) {
-                    _invoke_callback(response, callback, err);
-                },
-                fail     : function(response) {
-                    _invoke_error(response, err);
-                },
-                url      : url,
-                mode : 'DELETE'
+        'remove'  : function(object_id, success, error) {
+            remove({
+                'object_id' : object_id,
+                'callback'  : success,
+                'error'     : error
             });
         },
+
+        'push'    : function(object_id, data, success, error) {
+            merge({
+                'object_id' : object_id,
+                'data'      : data,
+                'callback'  : success,
+                'error'     : error,
+                'mode'      : 'POST'
+            });
+        },
+        'push_with_sort_key'    : function(object_id, data, sort_key, success, error) {
+            merge({
+                'object_id' : object_id,
+                'sort_key'  : sort_key,
+                'data'      : data,
+                'callback'  : success,
+                'error'     : error,
+                'mode'      : 'POST'
+            });
+        },
+
         /*
             user facing sync method. returns a reference which can be used for
             setting callbacks . also provides wrappers for merge, remvoe, replace
@@ -1941,7 +1996,7 @@ function PN_API(setup) {
 
                 'merge'  : function(data, success, error) {
 
-                    SELF['merge']({
+                    merge({
                         'object_id' : object_id,
                         'path'      : path,
                         'data'      : data,
@@ -1953,7 +2008,7 @@ function PN_API(setup) {
 
                 'replace' : function(data, success, error) {
 
-                    SELF['replace']({
+                    replace({
                         'object_id' : object_id,
                         'path'      : path,
                         'data'      : data,
@@ -1963,8 +2018,7 @@ function PN_API(setup) {
                 },
 
                 'remove'  : function(success, error) {
-
-                    SELF['remove']({
+                    remove({
                         'object_id' : object_id,
                         'path'      : path,
                         'callback'  : success,
@@ -1973,7 +2027,7 @@ function PN_API(setup) {
                 },
 
                 'push'    : function(data, success, error) {
-                    SELF['merge']({
+                    merge({
                         'object_id' : object_id,
                         'path'      : path,
                         'data'      : data,
@@ -1983,7 +2037,7 @@ function PN_API(setup) {
                     });
                 },
                 'push_with_sort_key'    : function(data, sort_key, success, error) {
-                    SELF['merge']({
+                    merge({
                         'object_id' : object_id,
                         'path'      : path,
                         'sort_key'  : sort_key,
@@ -2116,7 +2170,7 @@ function PN_API(setup) {
                 var keys = getObjectKeysSorted(internal);
                 var last_key = keys.pop();
 
-                SELF['remove']({
+                remove({
                     'object_id' : location + '.' + last_key,
                     'callback'  : success,
                     'error'     : error
@@ -2131,7 +2185,7 @@ function PN_API(setup) {
                 var keys = getObjectKeysSorted(internal);
                 try {
                     var key = keys[index];
-                    SELF['remove']({
+                    remove({
                         'object_id' : location + '.' + key,
                         'callback'  : success,
                         'error'     : error
@@ -2167,7 +2221,7 @@ function PN_API(setup) {
                 if(!isPnList(internal)) {
                     return null;
                 }
-                SELF['remove']({
+                remove({
                     'object_id' : location + '.' + key,
                     'callback'  : success,
                     'error'     : error
@@ -2199,7 +2253,7 @@ function PN_API(setup) {
 
                 if (!key) return null;
 
-                SELF['remove']({
+                remove({
                     'object_id' : location + '.' + key,
                     'callback'  : success,
                     'error'     : error
@@ -2225,7 +2279,7 @@ function PN_API(setup) {
 
                 if (!key) return null;
 
-                SELF['remove']({
+                remove({
                     'object_id' : location + '.' + key,
                     'data'      : data,
                     'callback'  : success,

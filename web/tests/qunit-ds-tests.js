@@ -44,10 +44,8 @@ test("each() should be able to iterate over a list", function() {
     var location             = seed + 'office.occupants';
     var occupants_list         = ["a", "b", "c", "d"];
 
-    pubnub.merge({
-        'object_id' : location,
-        'data'        : occupants_list,
-        'success'    : function(r) {
+    pubnub.merge(location, occupants_list,
+        function(r) {
             start();
             var occupants = pubnub.sync(location);
             occupants.on.ready(function(r){
@@ -61,11 +59,11 @@ test("each() should be able to iterate over a list", function() {
                 start();
             });
         },
-        'error'        : function(r) {
+        function(r) {
             ok(false, "error occurred");
             start();
         }
-    })
+    )
 
 
 });
@@ -135,10 +133,10 @@ test("on.ready() should be invoked only when data object is ready", function() {
 
     };
 
-    pubnub.merge({
-        'object_id' : seed,
-        'data'        : data,
-        'success'    : function(r) {
+    pubnub.merge(
+        seed,
+        data,
+        function(r) {
 
             var r1 = pubnub.sync(seed + '.a.b.c');
 
@@ -184,11 +182,11 @@ test("on.ready() should be invoked only when data object is ready", function() {
 
 
         },
-        'error'        : function(r) {
+        function(r) {
             ok(false);
             start();
         }
-    })
+    )
 
 });
 
@@ -228,10 +226,10 @@ test("on.merge() should be work propertly when listening to various locations in
 
     };
 
-    pubnub.merge({
-        'object_id' : seed,
-        'data'        : data,
-        'success'    : function(r) {
+    pubnub.merge(
+        seed,
+        data,
+        function(r) {
 
             var r1 = pubnub.sync(seed + '.a.b.c');
 
@@ -305,11 +303,11 @@ test("on.merge() should be work propertly when listening to various locations in
 
 
         },
-        'error'        : function(r) {
+        function(r) {
             ok(false);
             start();
         }
-    })
+    )
 
 });
 
@@ -351,10 +349,10 @@ test("on.replace() should be work propertly when listening to various locations 
 
     };
 
-    pubnub.merge({
-        'object_id' : seed,
-        'data'        : data,
-        'success'    : function(r) {
+    pubnub.merge(
+        seed,
+        data,
+        function(r) {
 
             var r1 = pubnub.sync(seed + '.a.b.c');
 
@@ -453,17 +451,17 @@ test("on.replace() should be work propertly when listening to various locations 
             });
 
         },
-        'error'        : function(r) {
+        function(r) {
             ok(false);
             start();
         }
-    })
+    )
 
 });
 
 test("on.remove() should be work properly when listening to various locations in a tree", function() {
-    expect(20);
-    stop(19);
+    expect(21);
+    stop(20);
     var seed     = pn_random() + '-ready-';
 
     var val1      = 'data-1' + pn_random();
@@ -499,10 +497,15 @@ test("on.remove() should be work properly when listening to various locations in
 
     };
 
-    pubnub.merge({
-        'object_id' : seed,
-        'data'        : data,
-        'success'    : function(r) {
+    pubnub.merge(
+        seed,
+        data,
+        function(r) {
+            var s = pubnub.sync(seed);
+            s.on.ready(function(ref){
+                deepEqual(ref.value(), data);
+                start();
+            });
 
             var r1 = pubnub.sync(seed + '.a.b.c');
 
@@ -518,9 +521,7 @@ test("on.remove() should be work properly when listening to various locations in
 
             r1.on.replace(function(ref){
                 deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val3);
-                pubnub.remove({
-                    'object_id' : seed + '.a.b.c.d.e.f.g.h.i.j.k.l1'
-                })
+                pubnub.remove(seed + '.a.b.c.d.e.f.g.h.i.j.k.l1');
                 start();
             });
 
@@ -614,10 +615,9 @@ test("on.remove() should be work properly when listening to various locations in
             });
 
         },
-        'error'        : function(r) {
+        function(r) {
             ok(false);
             start();
         }
-    })
-
+    )
 });
