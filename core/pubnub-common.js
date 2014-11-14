@@ -762,7 +762,7 @@ function PN_API(setup) {
     function isPnList(l) {
         for(var key in l){
             if(l.hasOwnProperty(key)){
-                if (key.indexOf("-!") == 0)
+                if (key.indexOf("-") == 0 && key.indexOf("!") > 0)
                     return true;
             }
         }

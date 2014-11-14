@@ -65,6 +65,58 @@ test("each() should be able to iterate over a list", function() {
         }
     )
 
+});
+
+test("push() test", function() {
+    expect(4);
+    stop(5);
+    var seed             = pn_random() + '-ready-';
+    var location         = seed + 'office.occupants';
+    var students_list    = ["a", "b", "c", "d"];
+
+    var students         = pubnub.sync(seed + '.students');
+
+    students.on.ready(function(ref){
+        start();
+        students.push("a", function(){
+            students.push("b", function(){
+                students.push("c", function(){
+                    students.push("d");
+                });
+            });
+        });
+        
+    })
+    students.on.merge(function(ref){
+        deepEqual(ref.value(), students_list.slice(0,ref.value().length));
+        start();
+    })
+
+});
+
+test("push_with_sort_key() test", function() {
+    expect(4);
+    stop(5);
+    var seed             = pn_random() + '-ready-';
+    var location         = seed + 'office.occupants';
+    var students_list    = ["a", "b", "c", "d"];
+
+    var students         = pubnub.sync(seed + '.students');
+
+    students.on.ready(function(ref){
+        start();
+        students.push_with_sort_key("d", "z", function(){
+            students.push_with_sort_key("c", "s", function(){
+                students.push_with_sort_key("b", "d", function(){
+                    students.push_with_sort_key("a", "b");
+                });
+            });
+        });
+    })
+    students.on.merge(function(ref){
+        deepEqual(ref.value().sort(), ref.value());
+        start();
+    })
 
 });
 
