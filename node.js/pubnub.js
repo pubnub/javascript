@@ -1013,9 +1013,9 @@ function PN_API(setup) {
     }
 
     function resync(object_id, callback) {
-        console.log('START RESYNC');
+
         read_recursive(object_id, null, null, null, null, null, function(location){
-            console.log('READ DONE');
+
             var callbacks = _get_all_callbacks_by_object_id(location, 'resync');
 
             callback && callback();
@@ -1255,8 +1255,6 @@ function PN_API(setup) {
     }
     function value(object, path) {
 
-        //object = JSON.parse(JSON.stringify(object));
-
         if (isEmpty(object)) return {};
 
         if (!path && isEmpty(object['pn_val']) && !isPnList(object) ){
@@ -1280,6 +1278,7 @@ function PN_API(setup) {
                 return null;
             }
         }
+
         if (!isEmpty(d['pn_val'])) {
             return d['pn_val'];
 
@@ -1288,7 +1287,7 @@ function PN_API(setup) {
             return objectToSortedArray(d);
 
         } else { // object
-
+            
             return d;
 
         }
@@ -1333,9 +1332,13 @@ function PN_API(setup) {
             }
         }
         callback_data['parent'] = _get_parent_by_path(object_id, p);
-        callback_data['value'] = function(path) {
-            return value(callback_data['data'], path);
-        }
+        callback_data['value'] = 
+            (function(local_data){
+                return function(path) {
+                    return value(local_data, path);
+                }
+            })(callback_data['data']);
+
         callback_data['path'] = update_at;
         return callback_data;
     }
@@ -1369,9 +1372,13 @@ function PN_API(setup) {
                         }
                     }
                 }
-                callback_data['value'] = function(path) {
-                    return value(callback_data['data'], path);
-                }
+                callback_data['value'] = 
+                (function(local_data){
+                    return function(path) {
+                        return value(local_data, path);
+                    }
+                })(callback_data['data']);
+
                 callback_object['ready_called'] = true;
                 ready_callback(callback_data);
             }

@@ -512,8 +512,8 @@ test("on.replace() should be work propertly when listening to various locations 
 });
 
 test("on.remove() should be work properly when listening to various locations in a tree", function() {
-    expect(21);
-    stop(20);
+    expect(23);
+    stop(22);
     var seed     = pn_random() + '-ready-';
 
     var val1      = 'data-1' + pn_random();
@@ -555,7 +555,12 @@ test("on.remove() should be work properly when listening to various locations in
         function(r) {
             var s = pubnub.sync(seed);
             s.on.ready(function(ref){
+
                 deepEqual(ref.value(), data);
+                pubnub.snapshot(seed, function(r){
+                    deepEqual(ref.value(), r.value());
+                    start();
+                });
                 start();
             });
 
@@ -573,6 +578,12 @@ test("on.remove() should be work properly when listening to various locations in
 
             r1.on.replace(function(ref){
                 deepEqual(ref.value('d.e.f.g.h.i.j.k.l'), val3);
+                s.on.remove(function(r){
+                    pubnub.snapshot(seed, function(r1){
+                        deepEqual(r1.value(), r.value());
+                        start();
+                    });
+                });
                 pubnub.remove(seed + '.a.b.c.d.e.f.g.h.i.j.k.l1');
                 start();
             });
