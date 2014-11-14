@@ -1717,7 +1717,7 @@ function PN_API(setup) {
 
             args['callback'] = function(response){
                 var callback_data = {};
-                callback_data['data'] = response;
+                callback_data['data'] = JSON.parse(JSON.stringify(response),transform);
                 callback_data['value'] = function(path) {
                     return value(callback_data['data'], path);
                 }
