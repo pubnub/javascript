@@ -1254,7 +1254,7 @@ function PN_API(setup) {
     }
     function value(object, path) {
 
-        object = JSON.parse(JSON.stringify(object));
+        //object = JSON.parse(JSON.stringify(object));
 
         if (isEmpty(object)) return {};
 
@@ -1293,20 +1293,35 @@ function PN_API(setup) {
         }
     }
 
-    function _get_callback_data(event_type, changes, callback_location, path, update_at) {
-        var isplit = callback_location.split(".");
-        var object_id = isplit.shift();
+    function transform(k,v) {
 
-        var p = isplit.join('.');
+        if (v && !isEmpty(v['pn_val'])) {
+            return v['pn_val'];
+
+        } else if (isPnList(v)) { // array
+
+            return objectToSortedArray(v);
+
+        } else { // object
+
+            return v;
+        }
+    }
+
+    function _get_callback_data(event_type, changes, callback_location, path, update_at) {
+        var isplit      = callback_location.split(".");
+        var object_id   = isplit.shift();
+
+        var p           = isplit.join('.');
+        var data        = _get_object_by_path(object_id, p);
 
         var callback_data = {};
         callback_data['delta'] = changes;
         callback_data['type'] = 'merge';
-        callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(object_id, p)) || null);
+        callback_data['data'] = JSON.parse(JSON.stringify(data, transform) || null);
 
-        if (isPnList(callback_data['data'])) {
+        if (isPnList(data)) {
             callback_data['each'] =  function(callback) {
-                var data = callback_data['data'];
                 if(!isPnList(data)) {
                     return null;
                 }
@@ -1338,12 +1353,12 @@ function PN_API(setup) {
             if (callback_object['is_ready'] &&
                 !callback_object['ready_called'] &&
                 ready_callback) {
-                var callback_data = {};
+                var callback_data       = {};
+                var data                = _get_object_by_path(oid, path);
                 callback_data['type'] = 'ready';
-                callback_data['data'] = JSON.parse(JSON.stringify(_get_object_by_path(oid, path)) || null);
-                if (isPnList(callback_data['data'])) {
+                callback_data['data'] = JSON.parse(JSON.stringify(data, transform) || null);
+                if (isPnList(data)) {
                     callback_data['each'] =  function(callback) {
-                        var data = callback_data['data'];
                         if(!isPnList(data)) {
                             return null;
                         }
