@@ -978,7 +978,7 @@ function PN_API(setup) {
             PUBNUB.listChannels();
         */
         'listChannels': function() {
-            return Object.keys(CHANNELS);
+            return generate_channel_list(CHANNELS, true);
         },
 
         /*
