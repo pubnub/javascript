@@ -315,6 +315,7 @@ function PN_API(setup) {
     ,   params        = setup['params'] || {}
     ,   error         = setup['error']      || function() {}
     ,   _is_online    = setup['_is_online'] || function() { return 1 }
+    ,   _build_u      = setup['build_u']
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
     ,   CIPHER_KEY    = setup['cipher_key']
@@ -328,6 +329,7 @@ function PN_API(setup) {
 
     function _get_url_params(data) {
         if (!data) data = {};
+        if (_build_u) data['pnr'] = '' + Math.floor((Math.random() * 100000000000000000000) + 1);
         each( params , function( key, value ) {
             if (!(key in data)) data[key] = value;
         });
