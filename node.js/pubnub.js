@@ -544,6 +544,8 @@ function PN_API(setup) {
                     if (!x[last]['pn_tt'] || x[last]['pn_tt'] < update.timetoken) {
                         x[last]['pn_val'] = update.value;
                         x[last]['pn_tt'] = update.timetoken;
+                    } else {
+                        return null;
                     }
                 } catch (e) {
                     x[last] = {}
@@ -595,7 +597,7 @@ function PN_API(setup) {
         return update.value;
     }
     function apply_updates(o, callback, trans_id) {
-
+        var applied = false;
         var update = UPDATES[trans_id];
 
         var update_at;
@@ -614,6 +616,10 @@ function PN_API(setup) {
                 //action_event.update_at =
                 action_event.value = apply_update(o, action_event);
 
+                if (action_event.value) {
+                    applied = true;
+                }
+
                 // parse location and set for callback parameter data
                 action_event.location = action_event.location.split("pn_ds_")[1];
                 action_event.key = action_event.location.split(".")[action_event.location.split(".").length-1];
@@ -622,7 +628,7 @@ function PN_API(setup) {
                 delete action_event.timetoken;
             }
             // invoke callback with actions_list as argument
-            callback && callback(actions_list);
+            applied && callback && callback(actions_list);
 
             // delete update
 
@@ -1135,8 +1141,9 @@ function PN_API(setup) {
                     read_recursive(object_id, path, callback, error, null, timetoken, function(location){
 
                         // all updates recieved , now apply
-                        apply_all_updates(parent[last_node_key], callback);
-
+                        //apply_all_updates(parent[last_node_key], callback);
+                        apply_all_updates(OBJECTS[object_id], callback);
+                        
                         // sync complete
                         synced = true;
 
