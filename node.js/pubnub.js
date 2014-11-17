@@ -1375,7 +1375,7 @@ function PN_API(setup) {
                         if(!isPnList(data)) {
                             return null;
                         }
-                        var keys = Object.keys(data);
+                        var keys = getObjectKeysSorted(data);
                         for (var key in keys) {
                             callback && callback(SELF['sync'](callback_location + '.' + keys[key]));
                         }
@@ -2013,7 +2013,7 @@ function PN_API(setup) {
                     if(!isPnList(internal)) {
                         return null;
                     }
-                    var keys = Object.keys(internal);
+                    var keys = getObjectKeysSorted(internal);
                     for (var key in keys) {
                         callback && callback(SELF['sync'](location + '.' + keys[key]));
                     }
