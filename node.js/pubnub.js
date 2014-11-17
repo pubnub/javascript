@@ -1929,7 +1929,7 @@ function PN_API(setup) {
                         if (r[0]) {
                             var action      = r[0]['action'];
                             var location    = r[0]['location'];
-                            var update_at   = r[0]['update_at'];
+                            var update_at   = r[0]['updateAt'];
                             var event_type  = '';
 
 
