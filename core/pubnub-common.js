@@ -2025,7 +2025,7 @@ function PN_API(setup) {
             };
 
             ref['get'] = function(path) {
-                return SELF['sync'](location + '.' + path);
+                return SELF['sync'](path ? (location + '.' + path) : location);
             };
 
             ref['pop'] = function(success, error) {
