@@ -1335,7 +1335,7 @@ function PN_API(setup) {
                 }
                 var keys = Object.keys(data);
                 for (var key in keys) {
-                    callback && callback(SELF['sync'](location + '.' + keys[key]));
+                    callback && callback(SELF['sync'](location + '.' + keys[key]), location + '.' + keys[key]);
                 }
             }
         }
@@ -1376,7 +1376,7 @@ function PN_API(setup) {
                         }
                         var keys = getObjectKeysSorted(data);
                         for (var key in keys) {
-                            callback && callback(SELF['sync'](callback_location + '.' + keys[key]));
+                            callback && callback(SELF['sync'](callback_location + '.' + keys[key]), location + '.' + keys[key]);
                         }
                     }
                 }
@@ -2014,7 +2014,7 @@ function PN_API(setup) {
                     }
                     var keys = getObjectKeysSorted(internal);
                     for (var key in keys) {
-                        callback && callback(SELF['sync'](location + '.' + keys[key]));
+                        callback && callback(SELF['sync'](location + '.' + keys[key]), location + '.' + keys[key]);
                     }
                 };
             }
