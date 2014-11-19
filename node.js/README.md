@@ -18,7 +18,8 @@ npm install pubnub
 #### Example Usage
 
 ```javascript
-var pubnub = require("pubnub").init({
+var pubnub = require("pubnub")({
+    ssl           : true,  // <- enable TLS Tunneling over TCP
     publish_key   : "demo",
     subscribe_key : "demo"
 });
