@@ -217,10 +217,10 @@ JavaScript SDK using the **web** build.  It's as easy as `copy/paste`.
 
 ## CAPTURING ERRORS FOR DEBUGGING ON PUBLISH
 
-Sometimes, for several reasons, the `publish` method will
-relay an unsuccessful relay.
-You can detect this in order to begin considering a re-publish
-decisions in your code.
+Sometimes, for several reasons, the `publish` method will relay an unsuccessful relay.
+
+Your `callback` function is passed an Array of response 'details'; the first element of the Array is a response code.
+If the response code is false-y, you may wish to consider re-publishing the message.
 
 ```javascript
 PUBNUB.publish({
@@ -236,12 +236,20 @@ PUBNUB.publish({
 })
 ```
 
->Note: We are using the `callback` paramater and passing a function
-as the value with a single param `details`.
+> **Note:** We are using the `callback` parameter and passing a function as the value with a single param `details`.
+In the case of an unsuccessful relay, the function provided by the `error` parameter is *not* called.
 
 ## CAPTURING ERRORS FOR DEBUGGING ON SUBSCRIBE
 
 Sometimes an error will occur and you may wish to log it.
+You can provide an `error` callback function as a parameter.
+
+When an error occurs, the `error` callback will be invoked and passed whatever response data was received.
+If nothing was received, the response data will be `undefined`.
+Since the `error` callback is not an "Error-First Callback" --
+eg. the Node.js [Continuation-Passing Style](http://en.wikipedia.org/wiki/Continuation-passing_style) convention --
+it is not passed an Error object.
+
 Note that the PubNub JavaScript SDK auto-recovers connections
 upon error so it is not necessary to act upon errors
 when **receiving messages**.
@@ -259,7 +267,7 @@ when **receiving messages**.
 </script>
 ```
 
-> **Note:** the `error` callback is being used.
+> **Note:** the `error` callback is being used, and it receives response data in the single param `data`.
 
 
 ## FULL MULTIPLEXING (Single TCP Socket)
@@ -931,6 +939,7 @@ One method includes *High Windowing Length* which provides slight improvements.
 We recommend following a few best practices to achieve high frequency of message delivery.
 First ensure you are checking the publish response code and re-sending 
 the publish if an error code is returned.
+The response code is the first argument of the Array passed to your `callback` function.
 
 There is an easy way to make sure you do not run into undelivered
 messages due to high frequency of published.
