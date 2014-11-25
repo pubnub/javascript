@@ -1567,6 +1567,53 @@ function PN_API(setup) {
         },
 
         /*
+         PUBNUB.gcm_add_channel ({
+         gcm_regid: 'fun',
+         channel  : 'my_chat',
+         callback : fun,
+         error    : fun,
+         });
+         */
+
+        'gcm_add_channel' : function( args ) {
+
+            var callback = args['callback'] || function(){}
+                ,   auth_key       = args['auth_key'] || AUTH_KEY
+                ,   err            = args['error'] || function() {}
+                ,   jsonp          = jsonp_cb()
+                ,   channel        = args['channel']
+                ,   gcm_regid      = args['gcm_regid']
+                ,   url;
+
+            if (!gcm_regid) return error('Missing GCM Registration ID (gcm_regid)');
+            if (!channel)       return error('Missing GCM destination Channel (channel)');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
+            // Create URL
+            url = [
+                STD_ORIGIN, 'v1/push/sub-key',
+                SUBSCRIBE_KEY, 'devices', gcm_regid
+            ];
+
+            params = { 'uuid' : UUID, 'auth' : auth_key, 'type': 'gcm', 'add': channel  }
+
+            xdr({
+                callback : jsonp,
+                data     : params,
+                success  : function(response) {
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    _invoke_error(response, err);
+                },
+                url      : url
+            });
+
+        },
+
+
+        /*
             PUBNUB.audit({
                 channel  : 'my_chat',
                 callback : fun,
