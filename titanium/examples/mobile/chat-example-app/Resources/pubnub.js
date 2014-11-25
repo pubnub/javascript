@@ -132,8 +132,8 @@ function uuid(callback) {
 }
 
 function isArray(arg) {
+  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
   //return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
-  return !!arg && (Array.isArray && Array.isArray(arg))
 }
 
 /**
@@ -1701,6 +1701,12 @@ function PN_API(setup) {
         },
         'get_uuid' : function() {
             return UUID;
+        },
+        'isArray'  : function(arg) {
+            return isArray(arg);
+        },
+        'get_subscibed_channels' : function() {
+            return generate_channel_list(CHANNELS, true);
         },
         'presence_heartbeat' : function(args) {
             var callback = args['callback'] || function() {}
