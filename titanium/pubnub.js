@@ -470,6 +470,10 @@ function PN_API(setup) {
             ,   err             = args['error']         || error
             ,   jsonp           = jsonp_cb();
 
+            if (!data['auth']) {
+                data['auth'] = args['auth_key'] || AUTH_KEY;
+            }
+            
             var url = [
                     STD_ORIGIN, 'v1', 'channel-registration',
                     'sub-key', SUBSCRIBE_KEY
