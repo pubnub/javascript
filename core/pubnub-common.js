@@ -394,7 +394,9 @@ function PN_API(setup) {
 
         clearTimeout(PRESENCE_HB_TIMEOUT);
 
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS,true).length){
+        var has_channels = 0 < (generate_channel_groups_list(CHANNEL_GROUPS, true).length + generate_channel_list(CHANNELS,true).length);
+          
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !has_channels){
             PRESENCE_HB_RUNNING = false;
             return;
         }
