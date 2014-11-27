@@ -198,7 +198,7 @@ function generate_channel_groups_list(channel_groups, nopresence) {
     var list = [];
     each(channel_groups, function( channel_group, status ) {
         if (nopresence) {
-            if(channel.search('-pnpres') < 0) {
+            if(channel_group.search('-pnpres') < 0) {
                 if (status.subscribed) list.push(channel_group);
             }
         } else {
