@@ -173,7 +173,7 @@ function encode(path) { return encodeURIComponent(path) }
 /**
  * Generate Subscription Channel List
  * ==================================
- * generate_channel_list(channels_object);
+ * unsubcr(channels_object);
  */
 function generate_channel_list(channels, nopresence) {
     var list = [];
@@ -934,15 +934,15 @@ function PN_API(setup) {
                 } ).join(',');
 
                 // Iterate over Channels
-                each( channel.split(','), function(channel) {
+                each( channel.split(','), function(chan) {
                     var CB_CALLED = true;
-                    if (!channel) return;
+                    if (!chan) return;
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE']( chan, 0 , callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
-                    CHANNELS[channel] = 0;
-                    if (channel in STATE) delete STATE[channel];
+                    CHANNELS[chan] = 0;
+                    if (chan in STATE) delete STATE[chan];
                 } );
             }
 
@@ -958,13 +958,13 @@ function PN_API(setup) {
                 // Iterate over channel groups
                 each( channel_group.split(','), function(channel) {
                     var CB_CALLED = true;
-                    if (!channel_group) return;
+                    if (!channel) return;
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE']( channel_group, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
-                    CHANNEL_GROUPS[channel_group] = 0;
-                    if (channel_group in STATE) delete STATE[channel_group];
+                    CHANNEL_GROUPS[channel] = 0;
+                    if (channel in STATE) delete STATE[channel];
                 } );
             }
 
@@ -1635,7 +1635,7 @@ function PN_API(setup) {
 
             if (jsonp != '0') { data['callback'] = jsonp; }
 
-            var channels        = encode(generate_channel_list(CHANNELS, true)['join'](','));
+            var channels        = encode(unsubcr(CHANNELS, true)['join'](','));
             var channel_groups  = generate_channel_groups_list(CHANNEL_GROUPS, true)['join'](',');
 
             if (!channels) channels = ',';
