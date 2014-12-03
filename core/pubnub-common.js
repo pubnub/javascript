@@ -512,7 +512,7 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             xdr({
-                blocking : blocking || SSL,
+                blocking : blocking,
                 timeout  : 2000,
                 callback : jsonp,
                 data     : _get_url_params(data),
