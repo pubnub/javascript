@@ -200,7 +200,7 @@ function generate_channel_groups_list(channel_groups, nopresence) {
     var list = [];
     each(channel_groups, function( channel_group, status ) {
         if (nopresence) {
-            if(channel.search('-pnpres') < 0) {
+            if(channel_group.search('-pnpres') < 0) {
                 if (status.subscribed) list.push(channel_group);
             }
         } else {
@@ -396,7 +396,10 @@ function PN_API(setup) {
 
         clearTimeout(PRESENCE_HB_TIMEOUT);
 
-        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS,true).length){
+        if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 ||
+            PRESENCE_HB_INTERVAL < 1 ||
+            (!generate_channel_list(CHANNELS,true).length  && !generate_channel_groups_list(CHANNEL_GROUPS, true).length ) )
+        {
             PRESENCE_HB_RUNNING = false;
             return;
         }
