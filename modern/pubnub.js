@@ -1,4 +1,4 @@
-// Version: 3.7.0
+// Version: 3.7.2
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.0'
+,   SDK_VER         = '3.7.2'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -596,23 +596,6 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-
-        'channel_group_list_namespaces' : function(args, callback) {
-            var url = ['namespace'];
-            
-            CR(args,callback,url);
-        },
-
-        'channel_group_remove_namespace' : function(args, callback) {
-            var namespace = args['namespace'];
-
-            if (!namespace) return error("Missing Namespace");
-
-            var url = ['namespace', encode(namespace), 'remove'];
-
-            CR(args,callback,url);
-        },
-
         'channel_group' : function(args, callback) {
             var ns_ch       = args['channel_group']
             ,   channels    = args['channels'] || args['channel']
@@ -622,6 +605,7 @@ function PN_API(setup) {
             ,   url = []
             ,   data = {}
             ,   mode = args['mode'] || 'add';
+
 
             if (ns_ch) {
                 var ns_ch_a = ns_ch.split(':');
@@ -665,6 +649,7 @@ function PN_API(setup) {
             if (namespace) {
                 args["channel_group"] = namespace + ":*";
             }
+
             SELF['channel_group'](args, callback);
         },
 
@@ -704,27 +689,13 @@ function PN_API(setup) {
             SELF['channel_group'](args,callback);
         },
 
-        'channel_group_list_groups' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
-
-        'channel_group_list_channels' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
         'channel_group_list_namespaces' : function(args, callback) {
-            SELF['channel_group'](args, callback);
+            var url = ['namespace'];
+            CR(args, callback, url);
         },
         'channel_group_remove_namespace' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
-        'channel_group_add_channel' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
-        'channel_group_remove_channel' : function(args, callback) {
-            SELF['channel_group_remove'](args, callback);
-        },
-        'channel_group_remove_group' : function(args, callback) {
-            SELF['channel_group_remove'](args, callback);
+            var url = ['namespace',args['namespace'],'remove'];
+            CR(args, callback, url);
         },
 
         /*
@@ -1446,8 +1417,6 @@ function PN_API(setup) {
             if (typeof channel != 'undefined'
                 && CHANNELS[channel] && CHANNELS[channel].subscribed ) {
                 if (state) STATE[channel] = state;
-            } else {
-                channel = ',';
             }
 
             if (typeof channel_group != 'undefined'
@@ -1456,6 +1425,10 @@ function PN_API(setup) {
                 ) {
                 if (state) STATE[channel_group] = state;
                 data['channel-group'] = channel_group;
+
+                if (!channel) {
+                    channel = ',';
+                }
             }
 
             data['state'] = JSON.stringify(state);
@@ -3006,7 +2979,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.7.0'
+,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.7.2'
 ,   XHRTME     = 310000;
 
 

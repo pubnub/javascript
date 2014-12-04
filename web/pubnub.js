@@ -1,4 +1,4 @@
-// Version: 3.7.0
+// Version: 3.7.2
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -162,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.0'
+,   SDK_VER         = '3.7.2'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -746,23 +746,6 @@ function PN_API(setup) {
             params[key] = val;
         },
 
-
-        'channel_group_list_namespaces' : function(args, callback) {
-            var url = ['namespace'];
-            
-            CR(args,callback,url);
-        },
-
-        'channel_group_remove_namespace' : function(args, callback) {
-            var namespace = args['namespace'];
-
-            if (!namespace) return error("Missing Namespace");
-
-            var url = ['namespace', encode(namespace), 'remove'];
-
-            CR(args,callback,url);
-        },
-
         'channel_group' : function(args, callback) {
             var ns_ch       = args['channel_group']
             ,   channels    = args['channels'] || args['channel']
@@ -772,6 +755,7 @@ function PN_API(setup) {
             ,   url = []
             ,   data = {}
             ,   mode = args['mode'] || 'add';
+
 
             if (ns_ch) {
                 var ns_ch_a = ns_ch.split(':');
@@ -815,6 +799,7 @@ function PN_API(setup) {
             if (namespace) {
                 args["channel_group"] = namespace + ":*";
             }
+
             SELF['channel_group'](args, callback);
         },
 
@@ -854,27 +839,13 @@ function PN_API(setup) {
             SELF['channel_group'](args,callback);
         },
 
-        'channel_group_list_groups' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
-
-        'channel_group_list_channels' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
         'channel_group_list_namespaces' : function(args, callback) {
-            SELF['channel_group'](args, callback);
+            var url = ['namespace'];
+            CR(args, callback, url);
         },
         'channel_group_remove_namespace' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
-        'channel_group_add_channel' : function(args, callback) {
-            SELF['channel_group'](args, callback);
-        },
-        'channel_group_remove_channel' : function(args, callback) {
-            SELF['channel_group_remove'](args, callback);
-        },
-        'channel_group_remove_group' : function(args, callback) {
-            SELF['channel_group_remove'](args, callback);
+            var url = ['namespace',args['namespace'],'remove'];
+            CR(args, callback, url);
         },
 
         /*
@@ -1596,8 +1567,6 @@ function PN_API(setup) {
             if (typeof channel != 'undefined'
                 && CHANNELS[channel] && CHANNELS[channel].subscribed ) {
                 if (state) STATE[channel] = state;
-            } else {
-                channel = ',';
             }
 
             if (typeof channel_group != 'undefined'
@@ -1606,6 +1575,10 @@ function PN_API(setup) {
                 ) {
                 if (state) STATE[channel_group] = state;
                 data['channel-group'] = channel_group;
+
+                if (!channel) {
+                    channel = ',';
+                }
             }
 
             data['state'] = JSON.stringify(state);
@@ -3136,7 +3109,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.0'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.2'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -3153,23 +3126,47 @@ console.log    || (
  * LOCAL STORAGE OR COOKIE
  */
 var db = (function(){
-    var ls = window['localStorage'];
+    var store = {};
+    var ls = false;
+    try {
+        ls = window['localStorage'];
+    } catch (e) { }
+    var cookieGet = function(key) {
+        if (document.cookie.indexOf(key) == -1) return null;
+        return ((document.cookie||'').match(
+            RegExp(key+'=([^;]+)')
+        )||[])[1] || null;
+    };
+    var cookieSet = function( key, value ) {
+        document.cookie = key + '=' + value +
+            '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
+    };
+    var cookieTest = (function() {
+        try {
+            cookieSet('pnctest', '1');
+            return cookieGet('pnctest') === '1';
+        } catch (e) {
+            return false;
+        }
+    }());
     return {
         'get' : function(key) {
             try {
                 if (ls) return ls.getItem(key);
-                if (document.cookie.indexOf(key) == -1) return null;
-                return ((document.cookie||'').match(
-                    RegExp(key+'=([^;]+)')
-                )||[])[1] || null;
-            } catch(e) { return }
+                if (cookieTest) return cookieGet(key);
+                return store[key];
+            } catch(e) {
+                return store[key];
+            }
         },
         'set' : function( key, value ) {
             try {
                 if (ls) return ls.setItem( key, value ) && 0;
-                document.cookie = key + '=' + value +
-                    '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
-            } catch(e) { return }
+                if (cookieTest) cookieSet( key, value );
+                store[key] = value;
+            } catch(e) {
+                store[key] = value;
+            }
         }
     };
 })();

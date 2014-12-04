@@ -2,14 +2,14 @@ var assert = require('assert');
 var PUBNUB = require('../pubnub.js');
 
 var pubnub = PUBNUB.init({
-    publish_key     : 'demo',
-    subscribe_key     : 'demo',
+    publish_key     : 'pub-c-c077418d-f83c-4860-b213-2f6c77bde29a',
+    subscribe_key   : 'sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe',
     origin : 'pubsub.pubnub.com'
 });
 
 var pubnub_enc = PUBNUB({
-    publish_key     : 'demo',
-    subscribe_key   : 'demo',
+    publish_key     : 'pub-c-c077418d-f83c-4860-b213-2f6c77bde29a',
+    subscribe_key   : 'sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe',
     cipher_key      : 'enigma',
     origin : 'pubsub.pubnub.com'
 });
@@ -55,6 +55,7 @@ describe('Pubnub', function() {
                             assert.deepEqual(response[0],1);
                         }
                     });
+
                 },
                 callback : function(response) {
                     assert.deepEqual(response,message_string);
@@ -364,6 +365,7 @@ describe('Pubnub', function() {
 
             })
         })
+        
         it('should store in history when store is not there or store is true', function(done){
             var ch = channel + '-' + ++count;
             var messages = [1,2,3]
@@ -422,9 +424,10 @@ describe('Pubnub', function() {
                 }
             });
         })
+        
 
     })
-
+    
     describe('#history()', function(){
         var history_channel = channel + '-history';
 
@@ -527,6 +530,7 @@ describe('Pubnub', function() {
             },5000);
         })
     })
+    
     describe('#history() with encryption', function(){
         var history_channel = channel + '-history-enc';
 
@@ -1419,7 +1423,7 @@ describe('Pubnub', function() {
                 }
             })
         })
-        /*it('should be able to delete state for uuid', function(done){
+        it('should be able to delete state for uuid', function(done){
             var ch = channel + '-' + 'setstate' ;
             var uuid = pubnub.uuid();
             var state = { 'name' : 'name-' + uuid, "age" : "50"};
@@ -1440,7 +1444,8 @@ describe('Pubnub', function() {
                                 uuid     : uuid,
                                 state : { "age" : null},
                                 callback : function(response) {
-                                    assert.deepEqual(response,state);
+                                    assert.deepEqual(response,{ "age" : null});
+                                    setTimeout(function(){
                                     pubnub.state({
                                         channel  : ch ,
                                         uuid     : uuid,
@@ -1453,6 +1458,7 @@ describe('Pubnub', function() {
                                             done();
                                         }
                                      });
+                                    },2000);
                                 },
                                 error : function(error) {
                                     assert.ok(false, "Error occurred in state " + JSON.stringify(error));
@@ -1471,7 +1477,7 @@ describe('Pubnub', function() {
                     done();
                 }
             })
-        }) */
+        }) 
     }),
     describe('#subscribe()', function(){
         var uuid  = Date.now()
@@ -1485,12 +1491,15 @@ describe('Pubnub', function() {
             subscribe_key     : 'demo',
             uuid              : uuid
         });
-        it("should not generate spurious presence events when adding new channels to subscribe list", function() {
+        
+        it("should not generate spurious presence events when adding new channels to subscribe in_list", function() {
             var ch1 = channel + '-subscribe-' + Date.now();
             var ch2 = ch1 + '-2';
             var events_count = 0;
-            pubnub_pres.subscribe({ channel : ch1,
+            pubnub_pres.subscribe({ 
+                channel : ch1,
                 connect : function(response)  {
+                    
                     setTimeout(function(){
                         pubnub_pres.subscribe({
                             channel  : ch2,
@@ -1508,12 +1517,13 @@ describe('Pubnub', function() {
                                 assert.deepEqual(response.action,"join");
                                 assert.deepEqual(response.uuid, JSON.stringify(pubnub_pres.get_uuid()));
                                 setTimeout(function(){
-                                    asser.deepEqual(events_count,2);
+                                    assert.deepEqual(events_count,2);
                                     done();
                                 }, 5000);
                             }
                         });
                     },5000);
+
                 },
                 presence : function(response) {
                     events_count++;
@@ -1521,7 +1531,7 @@ describe('Pubnub', function() {
                     assert.deepEqual(response.uuid + '', JSON.stringify(pubnub_pres.get_uuid()));
                 },
                 callback : function(response) {
-
+                    
                 },
                 error : function(response) {
                     assert.ok(false, "Error occurred in subscribe 1");
@@ -1532,7 +1542,7 @@ describe('Pubnub', function() {
     }),
 
 
-
+    
     describe('#here_now()', function(){
         var uuid  = Date.now()
         ,   uuid1 = uuid + '-1'
@@ -1642,7 +1652,7 @@ describe('Pubnub', function() {
                 }
             })
         })
-
+        
         it("should return channel channel list with occupancy details and uuids + state for a subscribe key", function() {
 
             var ch = channel + '-' + 'here-now-' + Date.now();
@@ -1657,7 +1667,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1670,7 +1683,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid1
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1683,7 +1699,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid2
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1696,7 +1715,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid3
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1778,6 +1800,7 @@ describe('Pubnub', function() {
                 })
             },5000);
         })
+
         it("should return correct state for uuid in different channels", function() {
 
             var ch = channel + '-' + 'here-now-' + Date.now();
@@ -1792,7 +1815,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1805,7 +1831,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid1
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1818,7 +1847,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid2
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in state")
@@ -1831,7 +1863,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-                    assert.deepEqual(r.status,200);
+                    assert.deepEqual(r, {
+                            name : 'name-' + uuid3
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1924,7 +1959,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1937,7 +1975,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid1
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid1
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1950,7 +1991,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid2
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid2
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -1963,7 +2007,10 @@ describe('Pubnub', function() {
                     name : 'name-' + uuid3
                 },
                 callback : function(r) {
-
+                    assert.deepEqual(r,{
+                            name : 'name-' + uuid3
+                        }
+                    );
                 },
                 error : function(e) {
                     assert.ok(false,"Error in setstate")
@@ -2041,25 +2088,26 @@ describe('Pubnub', function() {
         })
 
     })
-    describe('Channel Registry',function(){
+    
+    describe('Channel Group',function(){
         var pubnub = PUBNUB.init({
-            origin        : 'dara24.devbuild.pubnub.com',
-            publish_key   : "demo",
-            ssl : false,
-            subscribe_key : "demo"
+            origin        : 'pubsub.pubnub.com',
+            publish_key   : "pub-c-c077418d-f83c-4860-b213-2f6c77bde29a",
+            ssl           : false,
+            subscribe_key : "sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe"
         });
-        describe('#registry_channel()', function(){
+        describe('#channel_group_add_channel()', function(){
 
-            it('should be able to add channels to registration id', function(done){
+            it('should be able to add channels to channel group', function(done){
                 var channels = 'a,b,c';
                 var channel_group = 'r1' + Date.now();
 
-                pubnub.registry_channel({
+                pubnub.channel_group_add_channel({
                     callback : function(r) {
-                        pubnub.registry_channel({
+                        pubnub.channel_group_list_channels({
                             channel_group : channel_group,
                             callback : function(r) {
-                                assert.deepEqual(channels.split(','), r);
+                                assert.deepEqual(channels.split(','), r.channels);
                                 done();
                             },
                             error    : function(r) {
@@ -2072,25 +2120,25 @@ describe('Pubnub', function() {
                         assert.ok(false, "Error occurred in adding channel to registry");
                         done();
                     },
-                    add      : true,
                     channels : channels,
                     channel_group : channel_group
                 });
 
             })
-            it('should be able to add channels to registration id with namespace', function(done){
+            it('should be able to add channels to channel group with namespace', function(done){
                 var unique_suffix   = Date.now();
                 var channels        = 'a,b,c';
-                var channel_group   = 'r1' + unique_suffix;
                 var namespace       = 'ns' + unique_suffix;
 
-                pubnub.registry_channel({
+                var channel_group   = namespace + ':' + 'r1' + unique_suffix;
+
+                pubnub.channel_group_add_channel({
                     callback : function(r) {
-                        pubnub.registry_channel({
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_list_channels({
                             channel_group : channel_group,
-                            namespace : namespace,
                             callback : function(r) {
-                                assert.deepEqual(channels.split(','), r);
+                                assert.deepEqual(channels.split(','), r.channels);
                                 done();
                             },
                             error    : function(r) {
@@ -2105,195 +2153,192 @@ describe('Pubnub', function() {
                     },
                     add      : true,
                     channels : channels,
-                    namespace   : namespace,
-                    channel_group : channel_group
-                });
-
-            })
-            it('should be able to remove channels to registration id', function(done){
-                var channels = 'a,b,c';
-                var channel_group = 'r1' + Date.now();
-
-                pubnub.registry_channel({
-                    callback : function(r) {
-                        pubnub.registry_channel({
-                            channel_group : channel_group,
-                            callback : function(r) {
-                                assert.deepEqual(channels.split(','), r);
-                                pubnub.registry_channel({
-                                    callback : function(r) {
-                                        pubnub.registry_channel({
-                                            channel_group : channel_group,
-                                            callback : function(r) {
-                                                assert.deepEqual([], r);
-                                                done();
-                                            },
-                                            error    : function(r) {
-                                                assert.ok(false, "Error occurred in getting registry");
-                                                done();
-                                            } 
-                                        });
-                                    },
-                                    error    : function(r) {
-                                        assert.ok(false, "Error occurred in adding channel to registry");
-                                        done();
-                                    },
-                                    remove      : true,
-                                    channels : channels,
-                                    channel_group : channel_group
-                                });
-                            },
-                            error    : function(r) {
-                                assert.ok(false, "Error occurred in getting registry");
-                                done();
-                            } 
-                        });
-                    },
-                    error    : function(r) {
-                        assert.ok(false, "Error occurred in adding channel to registry");
-                        done();
-                    },
-                    add      : true,
-                    channels : channels,
-                    channel_group : channel_group
-                });
-
-            })
-            it('should be able to remove channels to registration id with namespace', function(done){
-                var unique_suffix   = Date.now();
-                var channels        = 'a,b,c';
-                var channel_group   = 'r1' + unique_suffix;
-                var namespace       = 'ns' + unique_suffix;
-
-                pubnub.registry_channel({
-                    callback : function(r) {
-                        pubnub.registry_channel({
-                            channel_group : channel_group,
-                            namespace : namespace,
-                            callback : function(r) {
-                                assert.deepEqual(channels.split(','), r);
-                                pubnub.registry_channel({
-                                    callback : function(r) {
-                                        pubnub.registry_channel({
-                                            channel_group : channel_group,
-                                            namespace : namespace,
-                                            callback : function(r) {
-                                                assert.deepEqual([], r);
-                                                done();
-                                            },
-                                            error    : function(r) {
-                                                assert.ok(false, "Error occurred in getting registry");
-                                                done();
-                                            } 
-                                        });
-                                    },
-                                    error    : function(r) {
-                                        assert.ok(false, "Error occurred in adding channel to registry");
-                                        done();
-                                    },
-                                    remove      : true,
-                                    channels : channels,
-                                    namespace   : namespace,
-                                    channel_group : channel_group
-                                });
-
-                            },
-                            error    : function(r) {
-                                assert.ok(false, "Error occurred in getting registry");
-                                done();
-                            } 
-                        });
-                    },
-                    error    : function(r) {
-                        assert.ok(false, "Error occurred in adding channel to registry");
-                        done();
-                    },
-                    add      : true,
-                    channels : channels,
-                    namespace   : namespace,
                     channel_group : channel_group
                 });
 
             })
         })
-        describe('#registration_id()', function(){
-
-            it('should be able to get all registrations without namespace', function(done){
+        describe('#channel_group_remove_channel()', function(){
+            it('should be able to remove channels from channel group', function(done){
                 var channels = 'a,b,c';
                 var channel_group = 'r1' + Date.now();
 
-                pubnub.registry_channel({
+                pubnub.channel_group_add_channel({
                     callback : function(r) {
-                        pubnub.registry_id({
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_list_channels({
+                            channel_group : channel_group,
                             callback : function(r) {
-                                assert.ok(in_list_deep(r, channel_group), "registry not created");
-                                done();
+                                assert.deepEqual(channels.split(','), r.channels);
+                                pubnub.channel_group_remove_channel({
+                                    callback : function(r) {
+                                        pubnub.channel_group_list_channels({
+                                            channel_group : channel_group,
+                                            callback : function(r) {
+                                                assert.deepEqual([], r.channels);
+                                                done();
+                                            },
+                                            error    : function(r) {
+                                                assert.ok(false, "Error occurred in getting group");
+                                                done();
+                                            } 
+                                        });
+                                    },
+                                    error    : function(r) {
+                                        assert.ok(false, "Error occurred in adding channel to group");
+                                        done();
+                                    },
+                                    channels : channels,
+                                    channel_group : channel_group
+                                });
                             },
                             error    : function(r) {
-                                assert.ok(false, "Error occurred in getting all registry");
+                                assert.ok(false, "Error occurred in getting group");
                                 done();
                             } 
                         });
                     },
                     error    : function(r) {
-                        assert.ok(false, "Error occurred in adding channel to registry");
+                        assert.ok(false, "Error occurred in adding channel to group");
                         done();
                     },
-                    add      : true,
                     channels : channels,
                     channel_group : channel_group
                 });
 
             })
-            it('should be able to get all registrations with namespace', function(done){
+            it('should be able to remove channels to channel group with namespace', function(done){
                 var unique_suffix   = Date.now();
                 var channels        = 'a,b,c';
-                var channel_group   = 'r1' + unique_suffix;
                 var namespace       = 'ns' + unique_suffix;
+                var channel_group   = namespace + ':' + 'r1' + unique_suffix;
 
-                pubnub.registry_channel({
+
+                pubnub.channel_group_add_channel({
                     callback : function(r) {
-                        pubnub.registry_id({
-                            namespace : namespace,
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_list_channels({
+                            channel_group : channel_group,
                             callback : function(r) {
-                                assert.ok(in_list_deep(r, channel_group), "registry not created");
-                                done();
+                                assert.deepEqual(channels.split(','), r.channels);
+                                pubnub.channel_group_remove_channel({
+                                    callback : function(r) {
+                                        pubnub.channel_group_list_channels({
+                                            channel_group : channel_group,
+                                            callback : function(r) {
+                                                assert.deepEqual([], r.channels);
+                                                done();
+                                            },
+                                            error    : function(r) {
+                                                assert.ok(false, "Error occurred in getting group");
+                                                done();
+                                            } 
+                                        });
+                                    },
+                                    error    : function(r) {
+                                        assert.ok(false, "Error occurred in adding channel to group");
+                                        done();
+                                    },
+                                    channels : channels,
+                                    channel_group : channel_group
+                                });
+
                             },
                             error    : function(r) {
-                                assert.ok(false, "Error occurred in getting all registry");
+                                assert.ok(false, "Error occurred in getting group");
                                 done();
                             } 
                         });
                     },
                     error    : function(r) {
-                        assert.ok(false, "Error occurred in adding channel to registry");
+                        assert.ok(false, "Error occurred in adding channel to group");
                         done();
                     },
-                    add      : true,
                     channels : channels,
-                    namespace   : namespace,
                     channel_group : channel_group
                 });
 
             })
+        })
+        describe('#channel_group_list_groups()', function(){
+
+            it('should be able to get all channel groups without namespace', function(done){
+                var channels = 'a,b,c';
+                var channel_group = 'r1' + Date.now();
+
+                pubnub.channel_group_add_channel({
+                    callback : function(r) {
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_list_groups({
+                            callback : function(r) {
+                                assert.ok(in_list_deep(r.groups, channel_group), "group not created");
+                                done();
+                            },
+                            error    : function(r) {
+                                assert.ok(false, "Error occurred in getting all group");
+                                done();
+                            } 
+                        });
+                    },
+                    error    : function(r) {
+                        assert.ok(false, "Error occurred in adding channel to group");
+                        done();
+                    },
+                    channels : channels,
+                    channel_group : channel_group
+                });
+
+            })
+            it('should be able to get all channel groups with namespace', function(done){
+                var unique_suffix   = Date.now();
+                var channels        = 'a,b,c';
+                var namespace       = 'ns' + unique_suffix;
+                var channel_group   = namespace + ':' + 'r1' + unique_suffix ;
+
+
+                pubnub.channel_group_add_channel({
+                    callback : function(r) {
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_list_groups({
+                            namespace : namespace,
+                            callback : function(r) {
+                                assert.ok(in_list_deep(r.groups, channel_group.split(':')[1]), "group not created");
+                                done();
+                            },
+                            error    : function(r) {
+                                assert.ok(false, "Error occurred in getting all group");
+                                done();
+                            } 
+                        });
+                    },
+                    error    : function(r) {
+                        assert.ok(false, "Error occurred in adding channel to group");
+                        done();
+                    },
+                    channels : channels,
+                    channel_group : channel_group
+                });
+
+            })
+        })
+        describe('#channel_group_remove_group()', function(){
             it('should be able to remove channel group', function(done){
                 var unique_suffix   = Date.now();
                 var channels        = 'a,b,c';
-                var channel_group   = 'r1' + unique_suffix;
                 var namespace       = 'ns' + unique_suffix;
+                var channel_group   = namespace + ':' + 'r1' + unique_suffix;
 
-                pubnub.registry_channel({
+
+                pubnub.channel_group_add_channel({
                     callback : function(r) {
-                        assert.ok(!in_list_deep(r, channel_group), "channel group not deleted");
-                        pubnub.registry_id({
-                            namespace : namespace,
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_remove_group({
                             channel_group : channel_group,
-                            remove   : true,
                             callback : function(r) {
-                                pubnub.registry_id({
+                                pubnub.channel_group_list_groups({
                                     namespace : namespace,
                                     callback : function(r) {
-                                        assert.ok(!in_list_deep(r, channel_group), "channel group not deleted");
+                                        assert.ok(!in_list_deep(r.groups, channel_group), "channel group not deleted");
                                         done();
                                     },
                                     error    : function(r) {
@@ -2312,9 +2357,58 @@ describe('Pubnub', function() {
                         assert.ok(false, "Error occurred in adding channel to registry");
                         done();
                     },
-                    add      : true,
                     channels : channels,
-                    namespace   : namespace,
+                    channel_group : channel_group
+                });
+
+            })
+        })
+        describe('#channel_group_remove_namespace()', function(){
+            it('should be able to remove namespace', function(done){
+                var unique_suffix   = Date.now();
+                var channels        = 'a,b,c';
+                var namespace       = 'ns' + unique_suffix;
+                var channel_group   = namespace + ':' + 'r1' + unique_suffix;
+
+
+                pubnub.channel_group_add_channel({
+                    callback : function(r) {
+                        assert.deepEqual(r.status,200);
+                        pubnub.channel_group_list_namespaces({
+                            callback : function(r) {
+                                assert.ok(in_list_deep(r.namespaces, namespace), "namespace not created");
+                                pubnub.channel_group_remove_namespace({
+                                    namespace : namespace,
+                                    callback : function(r) {
+                                        pubnub.channel_group_list_namespaces({
+                                            callback : function(r) {
+                                                assert.ok(!in_list_deep(r.namespaces, namespace), "namespace not deleted");
+                                                done();
+                                            },
+                                            error    : function(r) {
+                                                assert.ok(false, "Error occurred in getting all registry");
+                                                done();
+                                            } 
+                                        });
+                                    },
+                                    error    : function(r) {
+                                        assert.ok(false, "Error occurred in getting all registry");
+                                        done();
+                                    } 
+                                });
+                            },
+                            error    : function(r) {
+                                assert.ok(false, "Error occurred in getting all registry");
+                                done();
+                            } 
+                        });
+
+                    },
+                    error    : function(r) {
+                        assert.ok(false, "Error occurred in adding channel to registry");
+                        done();
+                    },
+                    channels : channels,
                     channel_group : channel_group
                 });
 

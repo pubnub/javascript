@@ -1,4 +1,154 @@
-// Version: 3.7.2
+// Version: 3.7.1
+/* =-====================================================================-= */
+/* =-====================================================================-= */
+/* =-=========================     JSON     =============================-= */
+/* =-====================================================================-= */
+/* =-====================================================================-= */
+
+(window['JSON'] && window['JSON']['stringify']) || (function () {
+    window['JSON'] || (window['JSON'] = {});
+
+    function toJSON(key) {
+        try      { return this.valueOf() }
+        catch(e) { return null }
+    }
+
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        gap,
+        indent,
+        meta = {    // table of character substitutions
+            '\b': '\\b',
+            '\t': '\\t',
+            '\n': '\\n',
+            '\f': '\\f',
+            '\r': '\\r',
+            '"' : '\\"',
+            '\\': '\\\\'
+        },
+        rep;
+
+    function quote(string) {
+        escapable.lastIndex = 0;
+        return escapable.test(string) ?
+            '"' + string.replace(escapable, function (a) {
+                var c = meta[a];
+                return typeof c === 'string' ? c :
+                    '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+            }) + '"' :
+            '"' + string + '"';
+    }
+
+    function str(key, holder) {
+        var i,          // The loop counter.
+            k,          // The member key.
+            v,          // The member value.
+            length,
+            partial,
+            mind  = gap,
+            value = holder[key];
+
+        if (value && typeof value === 'object') {
+            value = toJSON.call( value, key );
+        }
+
+        if (typeof rep === 'function') {
+            value = rep.call(holder, key, value);
+        }
+
+        switch (typeof value) {
+        case 'string':
+            return quote(value);
+
+        case 'number':
+            return isFinite(value) ? String(value) : 'null';
+
+        case 'boolean':
+        case 'null':
+            return String(value);
+
+        case 'object':
+
+            if (!value) {
+                return 'null';
+            }
+
+            gap += indent;
+            partial = [];
+
+            if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+                length = value.length;
+                for (i = 0; i < length; i += 1) {
+                    partial[i] = str(i, value) || 'null';
+                }
+
+                v = partial.length === 0 ? '[]' :
+                    gap ? '[\n' + gap +
+                            partial.join(',\n' + gap) + '\n' +
+                                mind + ']' :
+                          '[' + partial.join(',') + ']';
+                gap = mind;
+                return v;
+            }
+            if (rep && typeof rep === 'object') {
+                length = rep.length;
+                for (i = 0; i < length; i += 1) {
+                    k = rep[i];
+                    if (typeof k === 'string') {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            } else {
+                for (k in value) {
+                    if (Object.hasOwnProperty.call(value, k)) {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            }
+
+            v = partial.length === 0 ? '{}' :
+                gap ? '{\n' + gap + partial.join(',\n' + gap) + '\n' +
+                        mind + '}' : '{' + partial.join(',') + '}';
+            gap = mind;
+            return v;
+        }
+    }
+
+    if (typeof JSON['stringify'] !== 'function') {
+        JSON['stringify'] = function (value, replacer, space) {
+            var i;
+            gap = '';
+            indent = '';
+
+            if (typeof space === 'number') {
+                for (i = 0; i < space; i += 1) {
+                    indent += ' ';
+                }
+            } else if (typeof space === 'string') {
+                indent = space;
+            }
+            rep = replacer;
+            if (replacer && typeof replacer !== 'function' &&
+                    (typeof replacer !== 'object' ||
+                     typeof replacer.length !== 'number')) {
+                throw new Error('JSON.stringify');
+            }
+            return str('', {'': value});
+        };
+    }
+
+    if (typeof JSON['parse'] !== 'function') {
+        // JSON is parsed on the server for security.
+        JSON['parse'] = function (text) {return eval('('+text+')')};
+    }
+}());
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.2'
+,   SDK_VER         = '3.7.1'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -131,8 +281,8 @@ function uuid(callback) {
 }
 
 function isArray(arg) {
-  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
   //return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
+  return !!arg && (Array.isArray && Array.isArray(arg))
 }
 
 /**
@@ -469,10 +619,6 @@ function PN_API(setup) {
             ,   err             = args['error']         || error
             ,   jsonp           = jsonp_cb();
 
-            if (!data['auth']) {
-                data['auth'] = args['auth_key'] || AUTH_KEY;
-            }
-            
             var url = [
                     STD_ORIGIN, 'v1', 'channel-registration',
                     'sub-key', SUBSCRIBE_KEY
@@ -1543,53 +1689,6 @@ function PN_API(setup) {
         },
 
         /*
-         PUBNUB.gcm_add_channel ({
-         gcm_regid: 'fun',
-         channel  : 'my_chat',
-         callback : fun,
-         error    : fun,
-         });
-         */
-
-        'gcm_add_channel' : function( args ) {
-
-            var callback = args['callback'] || function(){}
-                ,   auth_key       = args['auth_key'] || AUTH_KEY
-                ,   err            = args['error'] || function() {}
-                ,   jsonp          = jsonp_cb()
-                ,   channel        = args['channel']
-                ,   gcm_regid      = args['gcm_regid']
-                ,   url;
-
-            if (!gcm_regid) return error('Missing GCM Registration ID (gcm_regid)');
-            if (!channel)       return error('Missing GCM destination Channel (channel)');
-            if (!PUBLISH_KEY)   return error('Missing Publish Key');
-            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-
-            // Create URL
-            url = [
-                STD_ORIGIN, 'v1/push/sub-key',
-                SUBSCRIBE_KEY, 'devices', gcm_regid
-            ];
-
-            params = { 'uuid' : UUID, 'auth' : auth_key, 'type': 'gcm', 'add': channel  }
-
-            xdr({
-                callback : jsonp,
-                data     : params,
-                success  : function(response) {
-                    _invoke_callback(response, callback, err);
-                },
-                fail     : function(response) {
-                    _invoke_error(response, err);
-                },
-                url      : url
-            });
-
-        },
-
-
-        /*
             PUBNUB.audit({
                 channel  : 'my_chat',
                 callback : fun,
@@ -1673,12 +1772,6 @@ function PN_API(setup) {
         },
         'get_uuid' : function() {
             return UUID;
-        },
-        'isArray'  : function(arg) {
-            return isArray(arg);
-        },
-        'get_subscibed_channels' : function() {
-            return generate_channel_list(CHANNELS, true);
         },
         'presence_heartbeat' : function(args) {
             var callback = args['callback'] || function() {}
@@ -2944,154 +3037,115 @@ function SHA256(s) {
         }
     };
 }
-/* ---------------------------------------------------------------------------
---------------------------------------------------------------------------- */
+/* =-====================================================================-= */
+/* =-====================================================================-= */
+/* =-=========================     UTIL     =============================-= */
+/* =-====================================================================-= */
+/* =-====================================================================-= */
 
-/* ---------------------------------------------------------------------------
-PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
-Copyright (c) 2011 PubNub Inc.
-http://www.pubnub.com/
-http://www.pubnub.com/terms
---------------------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------------------
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
---------------------------------------------------------------------------- */
-(function(){
+window['PUBNUB'] || (function() {
 
 /**
  * UTIL LOCALS
  */
-var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.7.2'
-,   XHRTME     = 310000;
 
-
+var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
+,   ASYNC           = 'async'
+,   UA              = navigator.userAgent
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.1'
+,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
- * LOCAL STORAGE
+ * CONSOLE COMPATIBILITY
+ */
+window.console || (window.console=window.console||{});
+console.log    || (
+    console.log   =
+    console.error =
+    ((window.opera||{}).postError||function(){})
+);
+
+/**
+ * LOCAL STORAGE OR COOKIE
  */
 var db = (function(){
-    var ls = typeof localStorage != 'undefined' && localStorage;
+    var store = {};
+    var ls = false;
+    try {
+        ls = window['localStorage'];
+    } catch (e) { }
+    var cookieGet = function(key) {
+        if (document.cookie.indexOf(key) == -1) return null;
+        return ((document.cookie||'').match(
+            RegExp(key+'=([^;]+)')
+        )||[])[1] || null;
+    };
+    var cookieSet = function( key, value ) {
+        document.cookie = key + '=' + value +
+            '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
+    };
+    var cookieTest = (function() {
+        try {
+            cookieSet('pnctest', '1');
+            return cookieGet('pnctest') === '1';
+        } catch (e) {
+            return false;
+        }
+    }());
     return {
-        get : function(key) {
+        'get' : function(key) {
             try {
                 if (ls) return ls.getItem(key);
-                if (document.cookie.indexOf(key) == -1) return null;
-                return ((document.cookie||'').match(
-                    RegExp(key+'=([^;]+)')
-                )||[])[1] || null;
-            } catch(e) { return }
+                if (cookieTest) return cookieGet(key);
+                return store[key];
+            } catch(e) {
+                return store[key];
+            }
         },
-        set : function( key, value ) {
+        'set' : function( key, value ) {
             try {
                 if (ls) return ls.setItem( key, value ) && 0;
-                document.cookie = key + '=' + value +
-                    '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
-            } catch(e) { return }
+                if (cookieTest) cookieSet( key, value );
+                store[key] = value;
+            } catch(e) {
+                store[key] = value;
+            }
         }
     };
 })();
 
+function get_hmac_SHA256(data,key) {
+    var hash = CryptoJS['HmacSHA256'](data, key);
+    return hash.toString(CryptoJS['enc']['Base64']);
+}
 
 /**
- * CORS XHR Request
- * ================
- *  xdr({
- *     url     : ['http://www.blah.com/url'],
- *     success : function(response) {},
- *     fail    : function() {}
- *  });
+ * $
+ * =
+ * var div = $('divid');
  */
-function xdr( setup ) {
-    var xhr
-    ,   finished = function() {
-            if (loaded) return;
-                loaded = 1;
+function $(id) { return document.getElementById(id) }
 
-            clearTimeout(timer);
+/**
+ * ERROR
+ * =====
+ * error('message');
+ */
+function error(message) { console['error'](message) }
 
-            try       { response = JSON['parse'](xhr.responseText); }
-            catch (r) { return done(1); }
-
-            success(response);
-        }
-    ,   complete = 0
-    ,   loaded   = 0
-    ,   timer    = timeout( function(){done(1)}, XHRTME )
-    ,   data     = setup.data || {}
-    ,   fail     = setup.fail    || function(){}
-    ,   success  = setup.success || function(){}
-    ,   async    = ( typeof(setup.blocking) === 'undefined' )
-    ,   done     = function(failed, response) {
-            if (complete) return;
-                complete = 1;
-
-            clearTimeout(timer);
-
-            if (xhr) {
-                xhr.onerror = xhr.onload = null;
-                xhr.abort && xhr.abort();
-                xhr = null;
-            }
-
-            failed && fail(response);
-        };
-
-    // Send
-    try {
-        xhr = typeof XDomainRequest !== 'undefined' &&
-              new XDomainRequest()  ||
-              new XMLHttpRequest();
-
-        xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
-        xhr.onload  = xhr.onloadend = finished;
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4) {
-                switch(xhr.status) {
-                    case 401:
-                    case 402:
-                    case 403:
-                        try {
-                            response = JSON['parse'](xhr.responseText);
-                            done(1,response);
-                        }
-                        catch (r) { return done(1, xhr.responseText); }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        data['pnsdk'] = PNSDK;
-        url = build_url(setup.url, data);
-        xhr.open( 'GET', url, async);
-        if (async) xhr.timeout = XHRTME;
-        xhr.send();
-    }
-    catch(eee) {
-        done(0);
-        return xdr(setup);
-    }
-
-    // Return 'done'
-    return done;
+/**
+ * SEARCH
+ * ======
+ * var elements = search('a div span');
+ */
+function search( elements, start) {
+    var list = [];
+    each( elements.split(/\s+/), function(el) {
+        each( (start || document).getElementsByTagName(el), function(node) {
+            list.push(node);
+        } );
+    });
+    return list;
 }
 
 /**
@@ -3107,8 +3161,7 @@ function bind( type, el, fun ) {
             if (!e) e = window.event;
             if (!fun(e)) {
                 e.cancelBubble = true;
-                e.returnValue  = false;
-                e.preventDefault && e.preventDefault();
+                e.preventDefault  && e.preventDefault();
                 e.stopPropagation && e.stopPropagation();
             }
         };
@@ -3131,11 +3184,52 @@ function unbind( type, el, fun ) {
 }
 
 /**
- * ERROR
- * ===
- * error('message');
+ * HEAD
+ * ====
+ * head().appendChild(elm);
  */
-function error(message) { console['error'](message) }
+function head() { return search('head')[0] }
+
+/**
+ * ATTR
+ * ====
+ * var attribute = attr( node, 'attribute' );
+ */
+function attr( node, attribute, value ) {
+    if (value) node.setAttribute( attribute, value );
+    else return node && node.getAttribute && node.getAttribute(attribute);
+}
+
+/**
+ * CSS
+ * ===
+ * var obj = create('div');
+ */
+function css( element, styles ) {
+    for (var style in styles) if (styles.hasOwnProperty(style))
+        try {element.style[style] = styles[style] + (
+            '|width|height|top|left|'.indexOf(style) > 0 &&
+            typeof styles[style] == 'number'
+            ? 'px' : ''
+        )}catch(e){}
+}
+
+/**
+ * CREATE
+ * ======
+ * var obj = create('div');
+ */
+function create(element) { return document.createElement(element) }
+
+
+/**
+ * jsonp_cb
+ * ========
+ * var callback = jsonp_cb();
+ */
+function jsonp_cb() { return XORIGN || FDomainRequest() ? 0 : unique() }
+
+
 
 /**
  * EVENTS
@@ -3164,63 +3258,155 @@ var events = {
 };
 
 /**
- * ATTR
- * ====
- * var attribute = attr( node, 'attribute' );
+ * XDR Cross Domain Request
+ * ========================
+ *  xdr({
+ *     url     : ['http://www.blah.com/url'],
+ *     success : function(response) {},
+ *     fail    : function() {}
+ *  });
  */
-function attr( node, attribute, value ) {
-    if (value) node.setAttribute( attribute, value );
-    else return node && node.getAttribute && node.getAttribute(attribute);
+function xdr( setup ) {
+    if (XORIGN || FDomainRequest()) return ajax(setup);
+
+    var script    = create('script')
+    ,   callback  = setup.callback
+    ,   id        = unique()
+    ,   finished  = 0
+    ,   xhrtme    = setup.timeout || DEF_TIMEOUT
+    ,   timer     = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
+    ,   fail      = setup.fail    || function(){}
+    ,   data      = setup.data    || {}
+    ,   success   = setup.success || function(){}
+    ,   append    = function() { head().appendChild(script) }
+    ,   done      = function( failed, response ) {
+            if (finished) return;
+            finished = 1;
+
+            script.onerror = null;
+            clearTimeout(timer);
+
+            (failed || !response) || success(response);
+
+            timeout( function() {
+                failed && fail();
+                var s = $(id)
+                ,   p = s && s.parentNode;
+                p && p.removeChild(s);
+            }, SECOND );
+        };
+
+    window[callback] = function(response) {
+        done( 0, response );
+    };
+
+    if (!setup.blocking) script[ASYNC] = ASYNC;
+
+    script.onerror = function() { done(1) };
+    script.src     = build_url( setup.url, data );
+
+    attr( script, 'id', id );
+
+    append();
+    return done;
 }
 
 /**
- * $
- * =
- * var div = $('divid');
+ * CORS XHR Request
+ * ================
+ *  xdr({
+ *     url     : ['http://www.blah.com/url'],
+ *     success : function(response) {},
+ *     fail    : function() {}
+ *  });
  */
-function $(id) { return document.getElementById(id) }
+function ajax( setup ) {
+    var xhr, response
+    ,   finished = function() {
+            if (loaded) return;
+            loaded = 1;
+
+            clearTimeout(timer);
+
+            try       { response = JSON['parse'](xhr.responseText); }
+            catch (r) { return done(1); }
+
+            complete = 1;
+            success(response);
+        }
+    ,   complete = 0
+    ,   loaded   = 0
+    ,   xhrtme   = setup.timeout || DEF_TIMEOUT
+    ,   timer    = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
+    ,   fail     = setup.fail    || function(){}
+    ,   data     = setup.data    || {}
+    ,   success  = setup.success || function(){}
+    ,   async    = !(setup.blocking)
+    ,   done     = function(failed,response) {
+            if (complete) return;
+            complete = 1;
+
+            clearTimeout(timer);
+
+            if (xhr) {
+                xhr.onerror = xhr.onload = null;
+                xhr.abort && xhr.abort();
+                xhr = null;
+            }
+
+            failed && fail(response);
+        };
+
+    // Send
+    try {
+        xhr = FDomainRequest()      ||
+              window.XDomainRequest &&
+              new XDomainRequest()  ||
+              new XMLHttpRequest();
+
+        xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
+        xhr.onload  = xhr.onloadend = finished;
+        xhr.onreadystatechange = function() {
+            if (xhr && xhr.readyState == 4) {
+                switch(xhr.status) {
+                    case 401:
+                    case 402:
+                    case 403:
+                        try {
+                            response = JSON['parse'](xhr.responseText);
+                            done(1,response);
+                        }
+                        catch (r) { return done(1, xhr.responseText); }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
 
 
-/**
- * SEARCH
- * ======
- * var elements = search('a div span');
- */
-function search( elements, start ) {
-    var list = [];
-    each( elements.split(/\s+/), function(el) {
-        each( (start || document).getElementsByTagName(el), function(node) {
-            list.push(node);
-        } );
-    } );
-    return list;
+        var url = build_url(setup.url,data);
+
+        xhr.open( 'GET', url, async );
+        if (async) xhr.timeout = xhrtme;
+        xhr.send();
+    }
+    catch(eee) {
+        done(0);
+        XORIGN = 0;
+        return xdr(setup);
+    }
+
+    // Return 'done'
+    return done;
 }
 
-/**
- * CSS
- * ===
- * var obj = create('div');
- */
-function css( element, styles ) {
-    for (var style in styles) if (styles.hasOwnProperty(style))
-        try {element.style[style] = styles[style] + (
-            '|width|height|top|left|'.indexOf(style) > 0 &&
-            typeof styles[style] == 'number'
-            ? 'px' : ''
-        )}catch(e){}
-}
-
-/**
- * CREATE
- * ======
- * var obj = create('div');
- */
-function create(element) { return document.createElement(element) }
 
 
-function get_hmac_SHA256(data,key) {
-    var hash = CryptoJS['HmacSHA256'](data, key);
-    return hash.toString(CryptoJS['enc']['Base64']);
+ // Test Connection State
+function _is_online() {
+    if (!('onLine' in navigator)) return 1;
+    return navigator['onLine'];
 }
 
 /* =-====================================================================-= */
@@ -3229,60 +3415,131 @@ function get_hmac_SHA256(data,key) {
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 
-function CREATE_PUBNUB(setup) {
+var PDIV          = $('pubnub') || 0
+,   CREATE_PUBNUB = function(setup) {
 
+    // Force JSONP if requested from user.
+    if (setup['jsonp']) XORIGN = 0;
 
-    setup['db'] = db;
-    setup['xdr'] = xdr;
-    setup['error'] = setup['error'] || error;
+    var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
+    ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
+    ,   UUID          = setup['uuid'] || db['get'](SUBSCRIBE_KEY+'uuid')||'';
+
+    var leave_on_unload = setup['leave_on_unload'] || 0;
+
+    setup['xdr']        = xdr;
+    setup['db']         = db;
+    setup['error']      = setup['error'] || error;
+    setup['_is_online'] = _is_online;
+    setup['jsonp_cb']   = jsonp_cb;
     setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
-    setup['params']      = { 'pnsdk' : PNSDK }
+    setup['params']     = { 'pnsdk' : PNSDK }
 
-    SELF = function(setup) {
+    var SELF = function(setup) {
         return CREATE_PUBNUB(setup);
-    }
+    };
+
     var PN = PN_API(setup);
+
     for (var prop in PN) {
         if (PN.hasOwnProperty(prop)) {
             SELF[prop] = PN[prop];
         }
     }
+    SELF['css']         = css;
+    SELF['$']           = $;
+    SELF['create']      = create;
+    SELF['bind']        = bind;
+    SELF['head']        = head;
+    SELF['search']      = search;
+    SELF['attr']        = attr;
+    SELF['events']      = events;
+    SELF['init']        = SELF;
+    SELF['secure']      = SELF;
 
-    SELF['init'] = SELF;
-    SELF['$'] = $;
-    SELF['attr'] = attr;
-    SELF['search'] = search;
-    SELF['bind'] = bind;
-    SELF['css'] = css;
-    SELF['create'] = create;
 
-    if (typeof(window) !== 'undefined'){
-        bind( 'beforeunload', window, function() {
-            SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 1 ) });
-            return true;
-        });
-    }
+    // Add Leave Functions
+    bind( 'beforeunload', window, function() {
+        if (leave_on_unload) SELF['each-channel'](function(ch){ SELF['LEAVE']( ch.name, 0 ) });
+        return true;
+    } );
 
     // Return without Testing
     if (setup['notest']) return SELF;
 
-    if (typeof(window) !== 'undefined'){
-        bind( 'offline', window,   SELF['_reset_offline'] );
-    }
+    bind( 'offline', window,   SELF['offline'] );
+    bind( 'offline', document, SELF['offline'] );
 
-    if (typeof(document) !== 'undefined'){
-        bind( 'offline', document, SELF['_reset_offline'] );
-    }
-
-    SELF['ready']();
+    // Return PUBNUB Socket Object
     return SELF;
+};
+CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+CREATE_PUBNUB['secure'] = CREATE_PUBNUB;
+
+// Bind for PUBNUB Readiness to Subscribe
+if (document.readyState === 'complete') {
+    timeout( ready, 0 );
 }
-CREATE_PUBNUB['init'] = CREATE_PUBNUB
-CREATE_PUBNUB['secure'] = CREATE_PUBNUB
-PUBNUB = CREATE_PUBNUB({})
-typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
-typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);
+else {
+    bind( 'load', window, function(){ timeout( ready, 0 ) } );
+}
+
+var pdiv = PDIV || {};
+
+// CREATE A PUBNUB GLOBAL OBJECT
+PUBNUB = CREATE_PUBNUB({
+    'notest'        : 1,
+    'publish_key'   : attr( pdiv, 'pub-key' ),
+    'subscribe_key' : attr( pdiv, 'sub-key' ),
+    'ssl'           : !document.location.href.indexOf('https') ||
+                      attr( pdiv, 'ssl' ) == 'on',
+    'origin'        : attr( pdiv, 'origin' ),
+    'uuid'          : attr( pdiv, 'uuid' )
+});
+
+// jQuery Interface
+window['jQuery'] && (window['jQuery']['PUBNUB'] = CREATE_PUBNUB);
+
+// For Modern JS + Testling.js - http://testling.com/
+typeof(module) !== 'undefined' && (module['exports'] = PUBNUB) && ready();
+
+var pubnubs = $('pubnubs') || 0;
+
+// LEAVE NOW IF NO PDIV.
+if (!PDIV) return;
+
+// PUBNUB Flash Socket
+css( PDIV, { 'position' : 'absolute', 'top' : -SECOND } );
+
+if ('opera' in window || attr( PDIV, 'flash' )) PDIV['innerHTML'] =
+    '<object id=pubnubs data='  + SWF +
+    '><param name=movie value=' + SWF +
+    '><param name=allowscriptaccess value=always></object>';
+
+// Create Interface for Opera Flash
+PUBNUB['rdx'] = function( id, data ) {
+    if (!data) return FDomainRequest[id]['onerror']();
+    FDomainRequest[id]['responseText'] = unescape(data);
+    FDomainRequest[id]['onload']();
+};
+
+function FDomainRequest() {
+    if (!pubnubs || !pubnubs['get']) return 0;
+
+    var fdomainrequest = {
+        'id'    : FDomainRequest['id']++,
+        'send'  : function() {},
+        'abort' : function() { fdomainrequest['id'] = {} },
+        'open'  : function( method, url ) {
+            FDomainRequest[fdomainrequest['id']] = fdomainrequest;
+            pubnubs['get']( fdomainrequest['id'], url );
+        }
+    };
+
+    return fdomainrequest;
+}
+FDomainRequest['id'] = SECOND;
 
 })();
 (function(){
@@ -3396,3 +3653,29 @@ WS.prototype.close = function() {
 };
 
 })();
+/*
+CryptoJS v3.1.2
+code.google.com/p/crypto-js
+(c) 2009-2013 by Jeff Mott. All rights reserved.
+code.google.com/p/crypto-js/wiki/License
+*/
+var CryptoJS=CryptoJS||function(h,s){var f={},g=f.lib={},q=function(){},m=g.Base={extend:function(a){q.prototype=this;var c=new q;a&&c.mixIn(a);c.hasOwnProperty("init")||(c.init=function(){c.$super.init.apply(this,arguments)});c.init.prototype=c;c.$super=this;return c},create:function(){var a=this.extend();a.init.apply(a,arguments);return a},init:function(){},mixIn:function(a){for(var c in a)a.hasOwnProperty(c)&&(this[c]=a[c]);a.hasOwnProperty("toString")&&(this.toString=a.toString)},clone:function(){return this.init.prototype.extend(this)}},
+r=g.WordArray=m.extend({init:function(a,c){a=this.words=a||[];this.sigBytes=c!=s?c:4*a.length},toString:function(a){return(a||k).stringify(this)},concat:function(a){var c=this.words,d=a.words,b=this.sigBytes;a=a.sigBytes;this.clamp();if(b%4)for(var e=0;e<a;e++)c[b+e>>>2]|=(d[e>>>2]>>>24-8*(e%4)&255)<<24-8*((b+e)%4);else if(65535<d.length)for(e=0;e<a;e+=4)c[b+e>>>2]=d[e>>>2];else c.push.apply(c,d);this.sigBytes+=a;return this},clamp:function(){var a=this.words,c=this.sigBytes;a[c>>>2]&=4294967295<<
+32-8*(c%4);a.length=h.ceil(c/4)},clone:function(){var a=m.clone.call(this);a.words=this.words.slice(0);return a},random:function(a){for(var c=[],d=0;d<a;d+=4)c.push(4294967296*h.random()|0);return new r.init(c,a)}}),l=f.enc={},k=l.Hex={stringify:function(a){var c=a.words;a=a.sigBytes;for(var d=[],b=0;b<a;b++){var e=c[b>>>2]>>>24-8*(b%4)&255;d.push((e>>>4).toString(16));d.push((e&15).toString(16))}return d.join("")},parse:function(a){for(var c=a.length,d=[],b=0;b<c;b+=2)d[b>>>3]|=parseInt(a.substr(b,
+2),16)<<24-4*(b%8);return new r.init(d,c/2)}},n=l.Latin1={stringify:function(a){var c=a.words;a=a.sigBytes;for(var d=[],b=0;b<a;b++)d.push(String.fromCharCode(c[b>>>2]>>>24-8*(b%4)&255));return d.join("")},parse:function(a){for(var c=a.length,d=[],b=0;b<c;b++)d[b>>>2]|=(a.charCodeAt(b)&255)<<24-8*(b%4);return new r.init(d,c)}},j=l.Utf8={stringify:function(a){try{return decodeURIComponent(escape(n.stringify(a)))}catch(c){throw Error("Malformed UTF-8 data");}},parse:function(a){return n.parse(unescape(encodeURIComponent(a)))}},
+u=g.BufferedBlockAlgorithm=m.extend({reset:function(){this._data=new r.init;this._nDataBytes=0},_append:function(a){"string"==typeof a&&(a=j.parse(a));this._data.concat(a);this._nDataBytes+=a.sigBytes},_process:function(a){var c=this._data,d=c.words,b=c.sigBytes,e=this.blockSize,f=b/(4*e),f=a?h.ceil(f):h.max((f|0)-this._minBufferSize,0);a=f*e;b=h.min(4*a,b);if(a){for(var g=0;g<a;g+=e)this._doProcessBlock(d,g);g=d.splice(0,a);c.sigBytes-=b}return new r.init(g,b)},clone:function(){var a=m.clone.call(this);
+a._data=this._data.clone();return a},_minBufferSize:0});g.Hasher=u.extend({cfg:m.extend(),init:function(a){this.cfg=this.cfg.extend(a);this.reset()},reset:function(){u.reset.call(this);this._doReset()},update:function(a){this._append(a);this._process();return this},finalize:function(a){a&&this._append(a);return this._doFinalize()},blockSize:16,_createHelper:function(a){return function(c,d){return(new a.init(d)).finalize(c)}},_createHmacHelper:function(a){return function(c,d){return(new t.HMAC.init(a,
+d)).finalize(c)}}});var t=f.algo={};return f}(Math);
+(function(h){for(var s=CryptoJS,f=s.lib,g=f.WordArray,q=f.Hasher,f=s.algo,m=[],r=[],l=function(a){return 4294967296*(a-(a|0))|0},k=2,n=0;64>n;){var j;a:{j=k;for(var u=h.sqrt(j),t=2;t<=u;t++)if(!(j%t)){j=!1;break a}j=!0}j&&(8>n&&(m[n]=l(h.pow(k,0.5))),r[n]=l(h.pow(k,1/3)),n++);k++}var a=[],f=f.SHA256=q.extend({_doReset:function(){this._hash=new g.init(m.slice(0))},_doProcessBlock:function(c,d){for(var b=this._hash.words,e=b[0],f=b[1],g=b[2],j=b[3],h=b[4],m=b[5],n=b[6],q=b[7],p=0;64>p;p++){if(16>p)a[p]=
+c[d+p]|0;else{var k=a[p-15],l=a[p-2];a[p]=((k<<25|k>>>7)^(k<<14|k>>>18)^k>>>3)+a[p-7]+((l<<15|l>>>17)^(l<<13|l>>>19)^l>>>10)+a[p-16]}k=q+((h<<26|h>>>6)^(h<<21|h>>>11)^(h<<7|h>>>25))+(h&m^~h&n)+r[p]+a[p];l=((e<<30|e>>>2)^(e<<19|e>>>13)^(e<<10|e>>>22))+(e&f^e&g^f&g);q=n;n=m;m=h;h=j+k|0;j=g;g=f;f=e;e=k+l|0}b[0]=b[0]+e|0;b[1]=b[1]+f|0;b[2]=b[2]+g|0;b[3]=b[3]+j|0;b[4]=b[4]+h|0;b[5]=b[5]+m|0;b[6]=b[6]+n|0;b[7]=b[7]+q|0},_doFinalize:function(){var a=this._data,d=a.words,b=8*this._nDataBytes,e=8*a.sigBytes;
+d[e>>>5]|=128<<24-e%32;d[(e+64>>>9<<4)+14]=h.floor(b/4294967296);d[(e+64>>>9<<4)+15]=b;a.sigBytes=4*d.length;this._process();return this._hash},clone:function(){var a=q.clone.call(this);a._hash=this._hash.clone();return a}});s.SHA256=q._createHelper(f);s.HmacSHA256=q._createHmacHelper(f)})(Math);
+(function(){var h=CryptoJS,s=h.enc.Utf8;h.algo.HMAC=h.lib.Base.extend({init:function(f,g){f=this._hasher=new f.init;"string"==typeof g&&(g=s.parse(g));var h=f.blockSize,m=4*h;g.sigBytes>m&&(g=f.finalize(g));g.clamp();for(var r=this._oKey=g.clone(),l=this._iKey=g.clone(),k=r.words,n=l.words,j=0;j<h;j++)k[j]^=1549556828,n[j]^=909522486;r.sigBytes=l.sigBytes=m;this.reset()},reset:function(){var f=this._hasher;f.reset();f.update(this._iKey)},update:function(f){this._hasher.update(f);return this},finalize:function(f){var g=
+this._hasher;f=g.finalize(f);g.reset();return g.finalize(this._oKey.clone().concat(f))}})})();
+/*
+CryptoJS v3.1.2
+code.google.com/p/crypto-js
+(c) 2009-2013 by Jeff Mott. All rights reserved.
+code.google.com/p/crypto-js/wiki/License
+*/
+(function(){var h=CryptoJS,j=h.lib.WordArray;h.enc.Base64={stringify:function(b){var e=b.words,f=b.sigBytes,c=this._map;b.clamp();b=[];for(var a=0;a<f;a+=3)for(var d=(e[a>>>2]>>>24-8*(a%4)&255)<<16|(e[a+1>>>2]>>>24-8*((a+1)%4)&255)<<8|e[a+2>>>2]>>>24-8*((a+2)%4)&255,g=0;4>g&&a+0.75*g<f;g++)b.push(c.charAt(d>>>6*(3-g)&63));if(e=c.charAt(64))for(;b.length%4;)b.push(e);return b.join("")},parse:function(b){var e=b.length,f=this._map,c=f.charAt(64);c&&(c=b.indexOf(c),-1!=c&&(e=c));for(var c=[],a=0,d=0;d<
+e;d++)if(d%4){var g=f.indexOf(b.charAt(d-1))<<2*(d%4),h=f.indexOf(b.charAt(d))>>>6-2*(d%4);c[a>>>2]|=(g|h)<<24-8*(a%4);a++}return j.create(c,a)},_map:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="}})();
