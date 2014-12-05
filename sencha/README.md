@@ -1,3 +1,3 @@
 PubNub for Sencha
 
-Please see usage in examples directory, and email support at pubnub or file an issue if there are any questions.
+PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
