@@ -1,6 +1,6 @@
-## Get your very own registration keys at http://www.pubnub.com/account
+# PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
 
-### PubNub 3.6 Real-time Cloud Push API for Titanium
+### PubNub Real-time Cloud Push API for Titanium
 
 PubNub is a Massively Scalable Real-time Service for Web and Mobile Games.
 This is a cloud-based service for broadcasting Real-time messages
@@ -90,6 +90,4 @@ Get real time occupancy stats for a channel. Used complimentarily with Presence
             }
         });
 ```
-
-
-
+PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html

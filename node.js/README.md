@@ -1,6 +1,6 @@
 # PubNub Node.JS SDK and NPM 
 
-Full documentation availabe - https://github.com/pubnub/javascript/blob/master/README.md
+PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
 
 ## PubNub Node.js Quick Usage
 
