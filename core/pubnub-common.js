@@ -1194,9 +1194,11 @@ function PN_API(setup) {
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function(response) {
-                        _invoke_error(response, errcb);
                         //SUB_RECEIVER = null;
-                        SELF['time'](_test_connection);
+                        SELF['time'](function(success){
+                            !success && ( _invoke_error(response, errcb));
+                            _test_connection(success);
+                        });
                     },
                     data     : _get_url_params(data),
                     url      : [
