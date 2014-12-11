@@ -1,4 +1,4 @@
-// Version: 3.7.3
+// Version: 3.7.4
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.3'
+,   SDK_VER         = '3.7.4'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1855,7 +1855,7 @@ var NOW                 = 1
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.3'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.4'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1;
