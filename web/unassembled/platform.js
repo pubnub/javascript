@@ -149,7 +149,7 @@ function unbind( type, el, fun ) {
  * ====
  * head().appendChild(elm);
  */
-function head() { return search('head')[0] }
+function head() { return document.getElementsByTagName('head')[0] }
 
 /**
  * ATTR
