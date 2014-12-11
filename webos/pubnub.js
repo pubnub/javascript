@@ -1,4 +1,4 @@
-// Version: 3.7.3
+// Version: 3.7.4
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.3'
+,   SDK_VER         = '3.7.4'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1548,36 +1548,48 @@ function PN_API(setup) {
         },
 
         /*
-         PUBNUB.gcm_add_channel ({
-         gcm_regid: 'fun',
+         PUBNUB.mobile_gw_provision ({
+         device_id: 'A655FBA9931AB',
+         op       : 'add' | 'remove',
+         gw_type  : 'apns' | 'gcm',
          channel  : 'my_chat',
          callback : fun,
          error    : fun,
          });
          */
 
-        'gcm_add_channel' : function( args ) {
+        'mobile_gw_provision' : function( args ) {
 
             var callback = args['callback'] || function(){}
                 ,   auth_key       = args['auth_key'] || AUTH_KEY
                 ,   err            = args['error'] || function() {}
                 ,   jsonp          = jsonp_cb()
                 ,   channel        = args['channel']
-                ,   gcm_regid      = args['gcm_regid']
+                ,   op             = args['op']
+                ,   gw_type        = args['gw_type']
+                ,   device_id      = args['device_id']
                 ,   url;
 
-            if (!gcm_regid) return error('Missing GCM Registration ID (gcm_regid)');
-            if (!channel)       return error('Missing GCM destination Channel (channel)');
+            if (!device_id)     return error('Missing Device ID (device_id)');
+            if (!gw_type)       return error('Missing GW Type (gw_type: gcm or apns)');
+            if (!op)            return error('Missing GW Operation (op: add or remove)');
+            if (!channel)       return error('Missing gw destination Channel (channel)');
             if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             // Create URL
             url = [
                 STD_ORIGIN, 'v1/push/sub-key',
-                SUBSCRIBE_KEY, 'devices', gcm_regid
+                SUBSCRIBE_KEY, 'devices', device_id
             ];
 
-            params = { 'uuid' : UUID, 'auth' : auth_key, 'type': 'gcm', 'add': channel  }
+            params = { 'uuid' : UUID, 'auth' : auth_key, 'type': gw_type};
+
+            if (op == "add") {
+                params['add'] = channel;
+            } else if (op == "remove") {
+                params['remove'] = channel;
+            }
 
             xdr({
                 callback : jsonp,
@@ -1592,7 +1604,6 @@ function PN_API(setup) {
             });
 
         },
-
 
         /*
             PUBNUB.audit({
@@ -2984,7 +2995,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.3'
+,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.4'
 ,   XHRTME     = 310000;
 
 
