@@ -1265,9 +1265,11 @@ function PN_API(setup) {
                         // Route Channel <---> Callback for Message
                         var next_callback = (function() {
                             var channels = '';
+                            var channels2 = '';
 
                             if (messages.length > 3) {
-                                channels = messages[3];
+                                channels  = messages[3];
+                                channels2 = messages[2];
                             } else if (messages.length > 2) {
                                 channels = messages[2];
                             } else {
@@ -1279,15 +1281,19 @@ function PN_API(setup) {
                                     ) }).join(',')
                             }
 
-                            var list = channels.split(',');
+                            var list  = channels.split(',');
+                            var list2 = (channels2)?channels2.split(','):[];
 
                             return function() {
-                                var channel = list.shift()||SUB_CHANNEL;
-                                return [
+                                var channel  = list.shift()||SUB_CHANNEL;
+                                var channel2 = list2.shift();
+                                var r = [
                                     (CHANNELS[channel]||{})
                                     .callback||SUB_CALLBACK,
                                     channel.split(PRESENCE_SUFFIX)[0]
                                 ];
+                                channel2 && r.push(channel2.split(PRESENCE_SUFFIX)[0]);
+                                return r;
                             };
                         })();
 
@@ -1296,7 +1302,7 @@ function PN_API(setup) {
                             var next = next_callback();
                             var decrypted_msg = decrypt(msg,
                                 (CHANNELS[next[1]])?CHANNELS[next[1]]['cipher_key']:null);
-                            next[0]( decrypted_msg, messages, next[2] || next[1], latency);
+                            next[0]( decrypted_msg, messages, next[2] || next[1], latency, next[1]);
                         });
 
                         timeout( _connect, windowing );
