@@ -598,25 +598,51 @@ function PN_API(setup) {
     }
     function _invoke_callback(response, callback, err) {
         if (typeof response == 'object') {
-            if (response['error'] && response['message'] && response['payload']) {
-                err({'message' : response['message'], 'payload' : response['payload']});
+            if (response['error']) {
+                var callback_data = {};
+
+                if (response['message']) {
+                    callback_data['message'] = response['message'];
+                }
+
+                if (response['payload']) {
+                    callback_data['payload'] = response['payload'];
+                }
+
+                err && err(callback_data);
                 return;
+
             }
             if (response['payload']) {
-                callback(response['payload']);
+                if (response['next_page'])
+                    callback && callback(response['payload'], response['next_page']);
+                else
+                    callback && callback(response['payload']);
                 return;
             }
         }
-        callback(response);
+        callback && callback(response);
     }
 
     function _invoke_error(response,err) {
-        if (typeof response == 'object' && response['error'] &&
-            response['message'] && response['payload']) {
-            err({'message' : response['message'], 'payload' : response['payload']});
-        } else err(response);
-    }
 
+        if (typeof response == 'object' && response['error']) {
+                var callback_data = {};
+
+                if (response['message']) {
+                    callback_data['message'] = response['message'];
+                }
+
+                if (response['payload']) {
+                    callback_data['payload'] = response['payload'];
+                }
+                
+                err && err(callback_data);
+                return;
+        } else {
+            err && err(response);
+        }
+    }
     function CR(args, callback, url1, data) {
             var callback        = args['callback']      || callback
             ,   err             = args['error']         || error
