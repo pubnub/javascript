@@ -1314,8 +1314,9 @@ function PN_API(setup) {
                             return function() {
                                 var channel  = list.shift()||SUB_CHANNEL;
                                 var channel2 = list2.shift();
+
                                 var r = [
-                                    (CHANNELS[channel]||{})
+                                    (CHANNELS[channel2 || channel]||{})
                                     .callback||SUB_CALLBACK,
                                     channel.split(PRESENCE_SUFFIX)[0]
                                 ];
