@@ -72,7 +72,12 @@ function pubnub_test_all(test_name, test_func) {
     pubnub_test(test_name, test_func);
     pubnub_test(test_name, test_func, {jsonp : true});
     pubnub_test(test_name, test_func, {ssl : true});
-    pubnub_test(test_name, test_func, {presence : function(r){console.log(JSON.stringify(r));ok(false)}});
+    pubnub_test(test_name, test_func, {
+        presence : function(r){
+            console.log(JSON.stringify(r));
+            if (!r.action) ok(false);
+        }
+    });
     pubnub_test(test_name, test_func, {jsonp : true, ssl : true});
 }
 
@@ -401,7 +406,7 @@ pubnub_test_all("publish() should publish strings without error (Encryption Enab
     }, config);
 });
 
-pubnub_test_all("both encrypted and unencrypted messages should be received on a channel with cipher key", function(config) {
+pubnub_test_all("encrypted and unencrypted messages should be received on a channel with cipher key", function(config) {
 
     var pubnub = _pubnub({
         publish_key: test_publish_key,
@@ -418,7 +423,7 @@ pubnub_test_all("both encrypted and unencrypted messages should be received on a
     expect(3);
     stop(2);
     var count = 0;
-    var ch = channel + '-both-' + ++count;
+    var ch = channel + '-both-' + ++count + Math.random();
 
     _pubnub_subscribe(pubnub_enc, { channel : ch,
         connect : function(response)  {
@@ -461,7 +466,7 @@ pubnub_test_all("test global cipher key", function(config) {
     expect(3);
     stop(2);
     var count = 0;
-    var ch = channel + '-global-' + ++count;
+    var ch = channel + '-global-' + ++count + Math.random();
     _pubnub_subscribe(pubnub_enc, { channel : ch,
         cipher_key : 'local_cipher_key',
         connect : function(response)  {
@@ -907,7 +912,7 @@ pubnub_test_all("#here_now() should show occupancy 1 when 1 user subscribed to c
 
     expect(3);
     stop(1);
-    var ch = channel + '-' + 'here-now' ;
+    var ch = channel + '-' + 'here-now' + Math.random();
     _pubnub_subscribe(pubnub, {channel : ch ,
         connect : function(response) {
             setTimeout(function() {
@@ -939,7 +944,7 @@ pubnub_test_all("#here_now() should show occupancy 1 when 1 user subscribed to c
 
     expect(5);
     stop(1);
-    var ch = channel + '-' + 'here-now' ;
+    var ch = channel + '-' + 'here-now'  + Math.random();
     _pubnub_subscribe(pubnub, {channel : ch ,
         connect : function(response) {
             setTimeout(function() {
@@ -1196,23 +1201,23 @@ pubnub_test_all('Encryption tests', function(config) {
     //ok(aes.raw_encrypt(test_plain_unicode_1) == test_cipher_unicode_1, "AES Unicode Encryption Test 1");
     ok(pubnub_enc.raw_decrypt(test_cipher_string_1) == test_plain_string_1, "AES String Decryption Test 1");
     ok(pubnub_enc.raw_decrypt(test_cipher_string_2) == test_plain_string_2, "AES String Decryption Test 2");
-    ok(JSON.stringify(aes.raw_decrypt(test_cipher_object_1)) == JSON.stringify(test_plain_object_1), "AES Object Decryption Test 1");
-    ok(JSON.stringify(aes.raw_decrypt(test_cipher_object_2)) == JSON.stringify(test_plain_object_2), "AES Object Decryption Test 2");
+    ok(JSON.stringify(pubnub_enc.raw_decrypt(test_cipher_object_1)) == JSON.stringify(test_plain_object_1), "AES Object Decryption Test 1");
+    ok(JSON.stringify(pubnub_enc.raw_decrypt(test_cipher_object_2)) == JSON.stringify(test_plain_object_2), "AES Object Decryption Test 2");
     ok(pubnub_enc.raw_decrypt(test_cipher_unicode_1) == test_plain_unicode_1, "AES Unicode Decryption Test 1");
 
-    aes_channel = channel + "aes-channel";
+    aes_channel = channel + "aes-channel" + Math.random();
     _pubnub_subscribe(pubnub_enc, {
         channel: aes_channel,
         connect: function() {
             setTimeout(function() {
-                aes.publish({
+                pubnub_enc.publish({
                     channel: aes_channel,
                     message: { test: "test" },
                     callback: function (response) {
                         ok(response[0], 'AES Successful Publish ' + response[0]);
                         ok(response[1], 'AES Success With Demo ' + response[1]);
                         setTimeout(function() {
-                            aes.history({
+                            pubnub_enc.history({
                                 limit: 1,
                                 reverse: false,
                                 channel: aes_channel,
