@@ -1202,6 +1202,21 @@ function PN_API(setup) {
                         channel.disconnect(channel.name);
                     }
                 });
+                
+                // Disconnect & Reconnect for channel groups
+                each_channel_group(function(channel_group){
+                    // Reconnect
+                    if (success && channel_group.disconnected) {
+                        channel_group.disconnected = 0;
+                        return channel_group.reconnect(channel_group.name);
+                    }
+
+                    // Disconnect
+                    if (!success && !channel_group.disconnected) {
+                        channel_group.disconnected = 1;
+                        channel_group.disconnect(channel_group.name);
+                    }
+                });
             }
 
             // Evented Subscribe

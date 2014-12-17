@@ -1,4 +1,4 @@
-// Version: 3.7.4
+// Version: 3.7.5
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.4'
+,   SDK_VER         = '3.7.5'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1201,6 +1201,21 @@ function PN_API(setup) {
                     if (!success && !channel.disconnected) {
                         channel.disconnected = 1;
                         channel.disconnect(channel.name);
+                    }
+                });
+                
+                // Disconnect & Reconnect for channel groups
+                each_channel_group(function(channel_group){
+                    // Reconnect
+                    if (success && channel_group.disconnected) {
+                        channel_group.disconnected = 0;
+                        return channel_group.reconnect(channel_group.name);
+                    }
+
+                    // Disconnect
+                    if (!success && !channel_group.disconnected) {
+                        channel_group.disconnected = 1;
+                        channel_group.disconnect(channel_group.name);
                     }
                 });
             }
@@ -3059,7 +3074,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.4'
+,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.5'
 ,   XHRTME     = 310000;
 
 
