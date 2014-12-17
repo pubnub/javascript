@@ -192,9 +192,9 @@ function generate_channel_list(channels, nopresence) {
 /**
  * Generate Subscription Channel Groups List
  * ==================================
- * generate_channel_groups_list(channels_groups object);
+ * generate_channel_group_list(channels_groups object);
  */
-function generate_channel_groups_list(channel_groups, nopresence) {
+function generate_channel_group_list(channel_groups, nopresence) {
     var list = [];
     each(channel_groups, function( channel_group, status ) {
         if (nopresence) {
@@ -232,7 +232,6 @@ function PNmessage(args) {
             }
             var exclude1 = ['badge','alert'];
             for (var k in exclude1) {
-                //console.log(exclude[k]);
                 delete m['pn_apns'][exclude1[k]];
             }
         }
@@ -396,7 +395,7 @@ function PN_API(setup) {
 
         if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 ||
             PRESENCE_HB_INTERVAL < 1 ||
-            (!generate_channel_list(CHANNELS,true).length  && !generate_channel_groups_list(CHANNEL_GROUPS, true).length ) )
+            (!generate_channel_list(CHANNELS,true).length  && !generate_channel_group_list(CHANNEL_GROUPS, true).length ) )
         {
             PRESENCE_HB_RUNNING = false;
             return;
@@ -429,6 +428,20 @@ function PN_API(setup) {
         }
 
         xdr(PUB_QUEUE.shift());
+    }
+    function each_channel_group(callback) {
+        var count = 0;
+
+        each( generate_channel_group_list(CHANNEL_GROUPS), function(channel_group) {
+            var chang = CHANNEL_GROUPS[channel_group];
+
+            if (!chang) return;
+
+            count++;
+            (callback||function(){})(chang);
+        } );
+
+        return count;
     }
 
     function each_channel(callback) {
@@ -507,7 +520,9 @@ function PN_API(setup) {
                 ];
 
             url.push.apply(url,url1);
-
+            
+            if (jsonp) data['callback']              = jsonp;
+            
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
@@ -1193,7 +1208,7 @@ function PN_API(setup) {
             function _connect() {
                 var jsonp           = jsonp_cb()
                 ,   channels        = generate_channel_list(CHANNELS).join(',')
-                ,   channel_groups  = generate_channel_groups_list(CHANNEL_GROUPS).join(',');
+                ,   channel_groups  = generate_channel_group_list(CHANNEL_GROUPS).join(',');
 
                 // Stop Connection
                 if (!channels && !channel_groups) return;
@@ -1269,6 +1284,13 @@ function PN_API(setup) {
                             channel.connect(channel.name);
                         });
 
+                        // Connect for channel groups
+                        each_channel_group(function(channel_group){
+                            if (channel_group.connected) return;
+                            channel_group.connected = 1;
+                            channel_group.connect(channel_group.name);
+                        });
+
                         if (RESUMED && !SUB_RESTORE) {
                                 TIMETOKEN = 0;
                                 RESUMED = false;
@@ -1314,8 +1336,17 @@ function PN_API(setup) {
                                 var channel  = list.shift()||SUB_CHANNEL;
                                 var channel2 = list2.shift();
 
+                                var chobj = {};
+
+                                if (channel2) {
+                                    chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2];
+
+                                } else {
+                                    chobj = CHANNELS[channel];
+                                }
+
                                 var r = [
-                                    (CHANNELS[channel2 || channel]||{})
+                                    chobj
                                     .callback||SUB_CALLBACK,
                                     channel.split(PRESENCE_SUFFIX)[0]
                                 ];
@@ -1742,7 +1773,7 @@ function PN_API(setup) {
             if (jsonp != '0') { data['callback'] = jsonp; }
 
             var channels        = encode(generate_channel_list(CHANNELS, true)['join'](','));
-            var channel_groups  = generate_channel_groups_list(CHANNEL_GROUPS, true)['join'](',');
+            var channel_groups  = generate_channel_group_list(CHANNEL_GROUPS, true)['join'](',');
 
             if (!channels) channels = ',';
             if (channel_groups) data['channel-group'] = channel_groups;

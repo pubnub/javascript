@@ -14,7 +14,7 @@ var pubnub_enc = PUBNUB({
     cipher_key: "enigma"
 });
 
-var channel = 'javascript-test-channel-' + Math.random();
+var channel = 'javascript-test-channel-' + Math.floor((Math.random() * 10) + 1);
 var count = 0;
 
 var message_string = 'Hi from Javascript';
@@ -22,7 +22,9 @@ var message_jsono = {"message": "Hi Hi from Javascript"};
 var message_jsona = ["message" , "Hi Hi from javascript"];
 
 
-
+function get_random(){
+    return Math.floor((Math.random() * 100000000000) + 1);
+}
 function _pubnub_init(args, config, pn){
     if (config) {
         args.ssl = config.ssl;
@@ -74,8 +76,7 @@ function pubnub_test_all(test_name, test_func) {
     pubnub_test(test_name, test_func, {ssl : true});
     pubnub_test(test_name, test_func, {
         presence : function(r){
-            console.log(JSON.stringify(r));
-            if (!r.action) ok(false);
+            if (!r.action) { ok(false, "presence called"); start()};
         }
     });
     pubnub_test(test_name, test_func, {jsonp : true, ssl : true});
@@ -375,6 +376,48 @@ pubnub_test_all("publish() should publish strings without error", function(confi
             start();
         }
     }, config);
+});
+
+pubnub_test_all("publish() should publish strings when using channel groups without error", function(config) {
+    var pubnub = _pubnub_init({
+        publish_key: test_publish_key,
+        subscribe_key: test_subscribe_key
+    }, config);
+
+    var channel_group = 'cg' + get_random();
+    var ch = channel + '-' + ++count;
+
+    expect(2);
+    stop(2);
+
+    pubnub.channel_group_add_channel({
+        'channel_group' : channel_group,
+        'channel'       : ch,
+        'callback'      : function(r) {
+            setTimeout(function(){
+                _pubnub_subscribe(pubnub, { channel_group : channel_group,
+                    connect : function(response)  {
+                        pubnub.publish({channel: ch, message: message_string,
+                            callback : function(response) {
+                                equal(response[0],1);
+                                start();
+                            }
+                        });
+                    },
+                    callback : function(response) {
+                        deepEqual(response, message_string);
+                        pubnub.unsubscribe({channel : ch});
+                        start();
+                    }
+                }, config);
+            }, 2000);
+        },
+        'error'         : function(r) {
+            ok(false);
+            start();
+        }
+    });
+
 });
 
 
@@ -1807,7 +1850,6 @@ test("#where_now() should return channel x in result for uuid y, when uuid y sub
                 pubnub_pres.where_now({
                     uuid: uuid,
                     callback : function(data) {
-                        console.log(JSON.stringify(data));
                         ok(in_list(data.channels,ch), "subscribed Channel should be there in where now list");
                         pubnub_pres.unsubscribe({channel : ch});
                         start();
