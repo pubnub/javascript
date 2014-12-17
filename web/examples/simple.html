@@ -5,37 +5,30 @@
 // INIT PubNub
 
 var pubnub = PUBNUB.init({
-    publish_key     : 'demo',
-    subscribe_key   : 'demo',
-    heartbeat       : 10,
-    heartbeat_interval : 5
+    publish_key     : 'ds',
+    subscribe_key   : 'ds'
 });
 
-/*
-
-pubnub.channel_group_add_channel({
-    'channel_group' : 'cg1',
-    'channel'       : 'ch1',
-    'callback'       : function(r) {
-        console.log(JSON.stringify(r));
-    },
-    'error'         : function(r) {
-        console.log(JSON.stringify(r));  
-    }
-});
-
-*/
 
 pubnub.subscribe({
-    'channel_group' : 'cg1',
+    'channel' :  Math.floor((Math.random() * 1000) + 1) +   'a.*',
     'callback'       : function(r) {
         console.log(JSON.stringify(r));
     },
+    'presence'         : function(r) {
+        console.log(JSON.stringify(r));  
+    },    
     'error'         : function(r) {
         console.log(JSON.stringify(r));  
     },    
+    'disconnect'       : function(r) {
+        console.log('DISCONNECT ' + JSON.stringify(r));
+    },    
+    'reconnect'       : function(r) {
+        console.log('RECONNECT ' +JSON.stringify(r));
+    },    
     'connect'       : function(r) {
-        console.log(JSON.stringify(r));
+        console.log('CONNECT ' +JSON.stringify(r));
     }
 })
 

@@ -380,7 +380,10 @@ var PDIV          = $('pubnub') || 0
 ,   CREATE_PUBNUB = function(setup) {
 
     // Force JSONP if requested from user.
-    if (setup['jsonp']) XORIGN = 0;
+    if (setup['jsonp']) 
+        XORIGN = 0;
+    else 
+        XORIGN = UA.indexOf('MSIE 6') == -1;
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND

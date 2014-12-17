@@ -1505,8 +1505,10 @@ function PN_API(setup) {
                                 var chobj = {};
 
                                 if (channel2) {
-                                    chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2];
-
+                                    if (channel && channel.indexOf('-pnpres') >= 0) {
+                                        channel2 += '-pnpres';
+                                    }
+                                    chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || {'callback' : function(){}};
                                 } else {
                                     chobj = CHANNELS[channel];
                                 }
@@ -1526,7 +1528,7 @@ function PN_API(setup) {
                             var next = next_callback();
                             var decrypted_msg = decrypt(msg,
                                 (CHANNELS[next[1]])?CHANNELS[next[1]]['cipher_key']:null);
-                            next[0]( decrypted_msg, messages, next[2] || next[1], latency, next[1]);
+                            next[0] && next[0]( decrypted_msg, messages, next[2] || next[1], latency, next[1]);
                         });
 
                         timeout( _connect, windowing );
@@ -3571,7 +3573,10 @@ var PDIV          = $('pubnub') || 0
 ,   CREATE_PUBNUB = function(setup) {
 
     // Force JSONP if requested from user.
-    if (setup['jsonp']) XORIGN = 0;
+    if (setup['jsonp']) 
+        XORIGN = 0;
+    else 
+        XORIGN = UA.indexOf('MSIE 6') == -1;
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
