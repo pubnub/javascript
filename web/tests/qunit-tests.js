@@ -1,17 +1,18 @@
-var test_publish_key = 'pub-c-7746cd93-2024-41be-8125-38d44109921e';
-var test_subscribe_key = 'sub-c-950648c6-8549-11e4-8663-02ee2ddab7fe';
-var test_secret_key = 'sec-c-Y2E0MjRkMjEtMTIxYS00MmQyLWJkMGEtYmE1MjdiMjA1NDJh';
-
+var test_publish_key = 'ds';
+var test_subscribe_key = 'ds';
+var test_secret_key = 'ds';
 
 var pubnub = PUBNUB.init({
     publish_key   : test_publish_key,
-    subscribe_key : test_subscribe_key
+    subscribe_key : test_subscribe_key,
+    build_u       : true
 });
 
 var pubnub_enc = PUBNUB({
     publish_key: test_publish_key,
     subscribe_key: test_subscribe_key,
-    cipher_key: "enigma"
+    cipher_key: "enigma",
+    build_u   : true
 });
 
 var channel = 'javascript-test-channel-' + Math.floor((Math.random() * 10) + 1);
@@ -1288,9 +1289,10 @@ var auth_key = "abcd";
 var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';
 var pubnub_pam = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
-    publish_key       : 'pub-c-a2650a22-deb1-44f5-aa87-1517049411d5',
-    subscribe_key     : 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe',
-    secret_key        : 'sec-c-YjFmNzYzMGMtYmI3NC00NzJkLTlkYzYtY2MwMzI4YTJhNDVh'
+    publish_key       : 'ds-pam',
+    subscribe_key     : 'ds-pam',
+    secret_key        : 'ds-pam',
+    build_u           : true
 });
 test("#grant() should be able to grant read write access", function(done) {
     var grant_channel_1 = grant_channel + '-1';

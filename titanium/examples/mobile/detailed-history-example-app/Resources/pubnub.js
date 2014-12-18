@@ -512,6 +512,8 @@ function PN_API(setup) {
             ,   err             = args['error']         || error
             ,   jsonp           = jsonp_cb();
 
+            data = data || {};
+            
             if (!data['auth']) {
                 data['auth'] = args['auth_key'] || AUTH_KEY;
             }
