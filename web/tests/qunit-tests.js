@@ -1286,7 +1286,7 @@ pubnub_test_all('Encryption tests', function(config) {
 })
 var grant_channel = channel + '-grant';
 var auth_key = "abcd";
-var sub_key = 'sub-c-a478dd2a-c33d-11e2-883f-02ee2ddab7fe';
+var sub_key = 'ds-pam';
 var pubnub_pam = PUBNUB.init({
     origin            : 'pubsub.pubnub.com',
     publish_key       : 'ds-pam',
