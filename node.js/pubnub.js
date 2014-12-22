@@ -1,4 +1,4 @@
-// Version: 3.7.5
+// Version: 3.7.6
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.5'
+,   SDK_VER         = '3.7.6'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1357,7 +1357,8 @@ function PN_API(setup) {
                                 var chobj = {};
 
                                 if (channel2) {
-                                    if (channel && channel.indexOf('-pnpres') >= 0) {
+                                    if (channel && channel.indexOf('-pnpres') >= 0 
+                                        && channel2.indexOf('-pnpres') < 0) {
                                         channel2 += '-pnpres';
                                     }
                                     chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || {'callback' : function(){}};
@@ -1938,7 +1939,7 @@ var NOW                 = 1
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.5'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.6'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1;

@@ -1,4 +1,4 @@
-// Version: 3.7.5
+// Version: 3.7.6
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -162,7 +162,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.5'
+,   SDK_VER         = '3.7.6'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1507,7 +1507,8 @@ function PN_API(setup) {
                                 var chobj = {};
 
                                 if (channel2) {
-                                    if (channel && channel.indexOf('-pnpres') >= 0) {
+                                    if (channel && channel.indexOf('-pnpres') >= 0 
+                                        && channel2.indexOf('-pnpres') < 0) {
                                         channel2 += '-pnpres';
                                     }
                                     chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || {'callback' : function(){}};
@@ -3208,7 +3209,7 @@ window['PUBNUB'] || (function() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.5'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.6'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**

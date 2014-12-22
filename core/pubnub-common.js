@@ -1356,7 +1356,8 @@ function PN_API(setup) {
                                 var chobj = {};
 
                                 if (channel2) {
-                                    if (channel && channel.indexOf('-pnpres') >= 0) {
+                                    if (channel && channel.indexOf('-pnpres') >= 0 
+                                        && channel2.indexOf('-pnpres') < 0) {
                                         channel2 += '-pnpres';
                                     }
                                     chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || {'callback' : function(){}};
