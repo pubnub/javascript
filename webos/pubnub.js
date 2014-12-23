@@ -985,15 +985,15 @@ function PN_API(setup) {
                 } ).join(',');
 
                 // Iterate over Channels
-                each( channel.split(','), function(channel) {
+                each( channel.split(','), function(ch) {
                     var CB_CALLED = true;
-                    if (!channel) return;
+                    if (!ch) return;
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE']( channel, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE']( ch, 0 , callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
-                    CHANNELS[channel] = 0;
-                    if (channel in STATE) delete STATE[channel];
+                    CHANNELS[ch] = 0;
+                    if (ch in STATE) delete STATE[ch];
                 } );
             }
 
@@ -1007,15 +1007,15 @@ function PN_API(setup) {
                 } ).join(',');
 
                 // Iterate over channel groups
-                each( channel_group.split(','), function(channel) {
+                each( channel_group.split(','), function(chg) {
                     var CB_CALLED = true;
-                    if (!channel_group) return;
+                    if (!chg) return;
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE']( channel_group, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE']( chg, 0 , callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
-                    CHANNEL_GROUPS[channel_group] = 0;
-                    if (channel_group in STATE) delete STATE[channel_group];
+                    CHANNEL_GROUPS[chg] = 0;
+                    if (chg in STATE) delete STATE[chg];
                 } );
             }
 
