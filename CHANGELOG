@@ -1,3 +1,15 @@
+12-24-14 * 3.7.6
+. crypto calls are now available in min and non-versioned builds
+. heartbeats not being sent correctly with channel groups
+. exposing isArray, getSubscribedChannels public methods
+. adding auth (PAM) support for channel groups
+. added GCM/APNS provisioning (Mobile Gateway) calls
+. fixed issue where client may not recconet when waking from sleep on Mac on Chrome
+. handling of presence events when they arrive in via wildcard subscribes
+. added disconnect and reconnect callback functionality for channel groups
+. unsubscribe callback was not always called fix
+. double pnpres channel name append fix
+
 10-30-14 * 3.7.2
 . Only bower.json changes, same as 3.7.1 logic-wise
 
