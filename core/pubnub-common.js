@@ -5,7 +5,7 @@ var NOW             = 1
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
 ,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
-,   DEF_KEEPALIVE   = 60     // SECONDS (FOR TIMESYNC).
+,   DEF_KEEPALIVE   = 3      // SECONDS (FOR TIMESYNC).
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
 ,   URLBIT          = '/'
 ,   PARAMSBIT       = '&'
@@ -274,6 +274,7 @@ function PN_API(setup) {
     var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
+    ,   TIME_CHECK    = setup['timecheck']     || 0
     ,   NOLEAVE       = setup['noleave']       || 0
     ,   PUBLISH_KEY   = setup['publish_key']   || 'demo'
     ,   SUBSCRIBE_KEY = setup['subscribe_key'] || 'demo'
@@ -299,7 +300,9 @@ function PN_API(setup) {
     ,   CHANNEL_GROUPS       = {}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    ,   PRESENCE_HB          = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error'])
+    ,   PRESENCE_HB          = validate_presence_heartbeat(
+        setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']
+    )
     ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
@@ -1828,7 +1831,9 @@ function PN_API(setup) {
         'each'          : each,
         'each-channel'  : each_channel,
         'grep'          : grep,
-        'offline'       : function(){_reset_offline(1, { "message":"Offline. Please check your network settings." })},
+        'offline'       : function(){ _reset_offline(
+            1, { "message" : "Offline. Please check your network settings." })
+        },
         'supplant'      : supplant,
         'now'           : rnow,
         'unique'        : unique,
@@ -1844,6 +1849,7 @@ function PN_API(setup) {
     }
 
     function _poll_online2() {
+        if (!TIME_CHECK) return;
         SELF['time'](function(success){
             detect_time_detla( function(){}, success );
             success || _reset_offline( 1, {
@@ -1866,9 +1872,12 @@ function PN_API(setup) {
     if (!UUID) UUID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
 
-    _poll_timer = timeout( _poll_online,  SECOND    );
+    _poll_timer  = timeout( _poll_online,  SECOND    );
     _poll_timer2 = timeout( _poll_online2, KEEPALIVE );
-    PRESENCE_HB_TIMEOUT = timeout( start_presence_heartbeat, ( PRESENCE_HB_INTERVAL - 3 ) * SECOND ) ;
+    PRESENCE_HB_TIMEOUT = timeout(
+        start_presence_heartbeat,
+        ( PRESENCE_HB_INTERVAL - 3 ) * SECOND
+    );
 
     // Detect Age of Message
     function detect_latency(tt) {

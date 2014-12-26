@@ -325,7 +325,9 @@ function ajax( setup ) {
               new XDomainRequest()  ||
               new XMLHttpRequest();
 
-        xhr.onerror = xhr.onabort   = function(){ done(1, xhr.responseText || { "error" : "Network Connection Error"}) };
+        xhr.onerror = xhr.onabort   = function(){ done(
+            1, xhr.responseText || { "error" : "Network Connection Error"}
+        ) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.onreadystatechange = function() {
             if (xhr && xhr.readyState == 4) {
@@ -345,7 +347,6 @@ function ajax( setup ) {
             }
         }
 
-
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
@@ -362,12 +363,11 @@ function ajax( setup ) {
     return done;
 }
 
-
-
- // Test Connection State
+// Test Connection State
 function _is_online() {
     if (!('onLine' in navigator)) return 1;
-    return navigator['onLine'];
+    try       { return navigator['onLine'] }
+    catch (e) { return true }
 }
 
 /* =-====================================================================-= */
@@ -380,10 +380,8 @@ var PDIV          = $('pubnub') || 0
 ,   CREATE_PUBNUB = function(setup) {
 
     // Force JSONP if requested from user.
-    if (setup['jsonp']) 
-        XORIGN = 0;
-    else 
-        XORIGN = UA.indexOf('MSIE 6') == -1;
+    if (setup['jsonp'])  XORIGN = 0;
+    else                 XORIGN = UA.indexOf('MSIE 6') == -1;
 
     var SUBSCRIBE_KEY = setup['subscribe_key'] || ''
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
@@ -438,7 +436,7 @@ var PDIV          = $('pubnub') || 0
     // Return PUBNUB Socket Object
     return SELF;
 };
-CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+CREATE_PUBNUB['init']   = CREATE_PUBNUB;
 CREATE_PUBNUB['secure'] = CREATE_PUBNUB;
 
 // Bind for PUBNUB Readiness to Subscribe
