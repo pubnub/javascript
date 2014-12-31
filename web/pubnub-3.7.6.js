@@ -755,18 +755,15 @@ function PN_API(setup) {
 
             if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
 
-            console.log('LEAVE_GROUP');
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 5000,
                 callback : jsonp,
                 data     : _get_url_params(data),
                 success  : function(response) {
-                    console.log('success ' + JSON.stringify(response));
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
-                    console.log('FAIL LEAVE GROUP ' + JSON.stringify(response));
                     _invoke_error(response, err);
                 },
                 url      : [
