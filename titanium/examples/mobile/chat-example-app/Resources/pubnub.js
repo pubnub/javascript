@@ -316,7 +316,7 @@ function PN_API(setup) {
     ,   jsonp_cb      = setup['jsonp_cb']   || function() { return 0 }
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
     ,   CIPHER_KEY    = setup['cipher_key']
-    ,   UUID          = setup['uuid'] || ( db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
+    ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
     ,   _poll_timer
     ,   _poll_timer2;
 
@@ -580,6 +580,49 @@ function PN_API(setup) {
                 url      : [
                     origin, 'v2', 'presence', 'sub_key',
                     SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
+                ]
+            });
+            return true;
+        },
+        'LEAVE_GROUP' : function( channel_group, blocking, callback, error ) {
+
+            var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
+            ,   origin = nextorigin(ORIGIN)
+            ,   callback = callback || function(){}
+            ,   err      = error    || function(){}
+            ,   jsonp  = jsonp_cb();
+
+            // Prevent Leaving a Presence Channel Group
+            if (channel_group.indexOf(PRESENCE_SUFFIX) > 0) return true;
+
+            if (COMPATIBLE_35) {
+                if (!SSL)         return false;
+                if (jsonp == '0') return false;
+            }
+
+            if (NOLEAVE)  return false;
+
+            if (jsonp != '0') data['callback'] = jsonp;
+
+            if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
+
+            console.log('LEAVE_GROUP');
+            xdr({
+                blocking : blocking || SSL,
+                timeout  : 5000,
+                callback : jsonp,
+                data     : _get_url_params(data),
+                success  : function(response) {
+                    console.log('success ' + JSON.stringify(response));
+                    _invoke_callback(response, callback, err);
+                },
+                fail     : function(response) {
+                    console.log('FAIL LEAVE GROUP ' + JSON.stringify(response));
+                    _invoke_error(response, err);
+                },
+                url      : [
+                    origin, 'v2', 'presence', 'sub_key',
+                    SUBSCRIBE_KEY, 'channel', encode(','), 'leave'
                 ]
             });
             return true;
@@ -992,12 +1035,14 @@ function PN_API(setup) {
                 each( channel.split(','), function(ch) {
                     var CB_CALLED = true;
                     if (!ch) return;
+                    CHANNELS[ch] = 0;
+                    if (ch in STATE) delete STATE[ch];
                     if (READY) {
                         CB_CALLED = SELF['LEAVE']( ch, 0 , callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
-                    CHANNELS[ch] = 0;
-                    if (ch in STATE) delete STATE[ch];
+
+                    
                 } );
             }
 
@@ -1014,12 +1059,13 @@ function PN_API(setup) {
                 each( channel_group.split(','), function(chg) {
                     var CB_CALLED = true;
                     if (!chg) return;
-                    if (READY) {
-                        CB_CALLED = SELF['LEAVE']( chg, 0 , callback, err);
-                    }
-                    if (!CB_CALLED) callback({action : "leave"});
                     CHANNEL_GROUPS[chg] = 0;
                     if (chg in STATE) delete STATE[chg];
+                    if (READY) {
+                        CB_CALLED = SELF['LEAVE_GROUP']( chg, 0 , callback, err);
+                    }
+                    if (!CB_CALLED) callback({action : "leave"});
+
                 } );
             }
 
