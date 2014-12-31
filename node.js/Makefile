@@ -12,6 +12,7 @@ build: $(PUBNUB_JS)
 $(PUBNUB_JS): $(PUBNUB_COMMON_JS) $(PUBNUB_NODE_JS)
 	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_JS)
 	cat $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) >> $(PUBNUB_JS)
+	cat tests/tests-include.js tests/test.js > tests/tests.js
 	sed -i -e "s/VERSION/\'$(VERSION)\'/g" $(PUBNUB_JS)
 	sed -i -e "s/PLATFORM/\'$(PLATFORM)\'/g" $(PUBNUB_JS)
 
@@ -21,6 +22,6 @@ clean:
 
 .PHONY: test
 test:
-	mocha -R spec tests/test.js
+	mocha -R spec tests/tests.js
 
 include ../Makefile.post
