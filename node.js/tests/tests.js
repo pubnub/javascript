@@ -2245,17 +2245,19 @@ describe('Pubnub', function() {
                                 assert.deepEqual(channels.split(','), r.channels);
                                 pubnub.channel_group_remove_channel({
                                     callback : function(r) {
-                                        pubnub.channel_group_list_channels({
-                                            channel_group : channel_group,
-                                            callback : function(r) {
-                                                assert.deepEqual([], r.channels);
-                                                done();
-                                            },
-                                            error    : function(r) {
-                                                assert.ok(false, "Error occurred in getting group " + JSON.stringify(r));
-                                                done();
-                                            } 
-                                        });
+                                        setTimeout(function(){
+                                            pubnub.channel_group_list_channels({
+                                                channel_group : channel_group,
+                                                callback : function(r) {
+                                                    assert.deepEqual([], r.channels);
+                                                    done();
+                                                },
+                                                error    : function(r) {
+                                                    assert.ok(false, "Error occurred in getting group " + JSON.stringify(r));
+                                                    done();
+                                                } 
+                                            });
+                                        }, 5000);
                                     },
                                     error    : function(r) {
                                         assert.ok(false, "Error occurred in adding channel to group " + JSON.stringify(r));
@@ -2296,17 +2298,19 @@ describe('Pubnub', function() {
                                 assert.deepEqual(channels.split(','), r.channels);
                                 pubnub.channel_group_remove_channel({
                                     callback : function(r) {
-                                        pubnub.channel_group_list_channels({
-                                            channel_group : channel_group,
-                                            callback : function(r) {
-                                                assert.deepEqual([], r.channels);
-                                                done();
-                                            },
-                                            error    : function(r) {
-                                                assert.ok(false, "Error occurred in getting group " + JSON.stringify(r));
-                                                done();
-                                            } 
-                                        });
+                                        setTimeout(function(){
+                                            pubnub.channel_group_list_channels({
+                                                channel_group : channel_group,
+                                                callback : function(r) {
+                                                    assert.deepEqual([], r.channels);
+                                                    done();
+                                                },
+                                                error    : function(r) {
+                                                    assert.ok(false, "Error occurred in getting group " + JSON.stringify(r));
+                                                    done();
+                                                } 
+                                            });
+                                        }, 5000);
                                     },
                                     error    : function(r) {
                                         assert.ok(false, "Error occurred in adding channel to group " + JSON.stringify(r));
@@ -2449,16 +2453,18 @@ describe('Pubnub', function() {
                                 pubnub.channel_group_remove_namespace({
                                     namespace : namespace,
                                     callback : function(r) {
-                                        pubnub.channel_group_list_namespaces({
-                                            callback : function(r) {
-                                                assert.ok(!in_list_deep(r.namespaces, namespace), "namespace not deleted");
-                                                done();
-                                            },
-                                            error    : function(r) {
-                                                assert.ok(false, "Error occurred in getting all registry " + JSON.stringify(r));
-                                                done();
-                                            } 
-                                        });
+                                        setTimeout(function(){
+                                            pubnub.channel_group_list_namespaces({
+                                                callback : function(r) {
+                                                    assert.ok(!in_list_deep(r.namespaces, namespace), "namespace not deleted");
+                                                    done();
+                                                },
+                                                error    : function(r) {
+                                                    assert.ok(false, "Error occurred in getting all registry " + JSON.stringify(r));
+                                                    done();
+                                                } 
+                                            });
+                                        }, 5000);
                                     },
                                     error    : function(r) {
                                         assert.ok(false, "Error occurred in getting all registry " + JSON.stringify(r));

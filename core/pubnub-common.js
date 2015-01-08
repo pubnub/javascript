@@ -544,9 +544,9 @@ function PN_API(setup) {
 
     // Announce Leave Event
     var SELF = {
-        'LEAVE' : function( channel, blocking, callback, error ) {
+        'LEAVE' : function( channel, blocking, auth_key, callback, error ) {
 
-            var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
+            var data   = { 'uuid' : UUID, 'auth' : auth_key || AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
             ,   callback = callback || function(){}
             ,   err      = error    || function(){}
@@ -582,9 +582,9 @@ function PN_API(setup) {
             });
             return true;
         },
-        'LEAVE_GROUP' : function( channel_group, blocking, callback, error ) {
+        'LEAVE_GROUP' : function( channel_group, blocking, auth_key, callback, error ) {
 
-            var data   = { 'uuid' : UUID, 'auth' : AUTH_KEY }
+            var data   = { 'uuid' : UUID, 'auth' : auth_key || AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
             ,   callback = callback || function(){}
             ,   err      = error    || function(){}
@@ -1011,6 +1011,7 @@ function PN_API(setup) {
         'unsubscribe' : function(args, callback) {
             var channel       = args['channel']
             ,   channel_group = args['channel_group']
+            ,   auth_key      = args['auth_key']    || AUTH_KEY
             ,   callback      = callback            || args['callback'] || function(){}
             ,   err           = args['error']       || function(){};
 
@@ -1033,7 +1034,7 @@ function PN_API(setup) {
                     CHANNELS[ch] = 0;
                     if (ch in STATE) delete STATE[ch];
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE']( ch, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE']( ch, 0 , auth_key, callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
 
@@ -1057,7 +1058,7 @@ function PN_API(setup) {
                     CHANNEL_GROUPS[chg] = 0;
                     if (chg in STATE) delete STATE[chg];
                     if (READY) {
-                        CB_CALLED = SELF['LEAVE_GROUP']( chg, 0 , callback, err);
+                        CB_CALLED = SELF['LEAVE_GROUP']( chg, 0 , auth_key, callback, err);
                     }
                     if (!CB_CALLED) callback({action : "leave"});
 
