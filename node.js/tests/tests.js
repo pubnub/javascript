@@ -126,6 +126,25 @@ describe('Pubnub', function() {
 
             })
         })
+        it('should take an error callback which will be invoked if channel permission not there', function(done){
+            var channel = 'channel' + Date.now();
+            var auth_key = 'abcd';
+            pubnub_pam.subscribe({
+                'auth_key' : auth_key,
+                'channel' : channel,
+                'error'   : function(r) {
+                    assert.deepEqual(r['message'],'Forbidden');
+                    assert.ok(r['payload'], "Payload should be there in error response");
+                    assert.ok(r['payload']['channels'], "Channels should be there in error payload");
+                    assert.ok(in_list_deep(r['payload']['channels'], channel), "Channel should be there in channel list");
+                    pubnub_pam.unsubscribe({'channel' : channel });
+                    done(); 
+                },
+                'callback' : function(r) {
+                    assert.ok(false, "Callback should not get invoked if permission not there");
+                }
+            })
+        })
     })
 
     describe('#publish()', function(){

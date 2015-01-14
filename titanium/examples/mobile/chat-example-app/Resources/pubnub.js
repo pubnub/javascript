@@ -1301,11 +1301,15 @@ function PN_API(setup) {
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function(response) {
-                        //SUB_RECEIVER = null;
-                        SELF['time'](function(success){
-                            !success && ( _invoke_error(response, errcb));
-                            _test_connection(success);
-                        });
+                        if (response['error'] && response['service']) {
+                            _invoke_error(response, errcb);
+                            _test_connection(1);
+                        } else {
+                            SELF['time'](function(success){
+                                !success && ( _invoke_error(response, errcb));
+                                _test_connection(success);
+                            });
+                        }
                     },
                     data     : _get_url_params(data),
                     url      : [
@@ -1315,7 +1319,6 @@ function PN_API(setup) {
                     ],
                     success : function(messages) {
 
-                        //SUB_RECEIVER = null;
                         // Check for Errors
                         if (!messages || (
                             typeof messages == 'object' &&
