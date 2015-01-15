@@ -1,3 +1,11 @@
+1-15-15 * 3.7.8
+. fixed bug where 403s (PAM Access Denied) do not fire error callback
+
+1-1-15 * 3.7.7
+. time pings disabled by default
+. leave with channel groups bug fixed
+. checking for online (keepalive) every 3 to 60s
+
 12-24-14 * 3.7.6
 . crypto calls are now available in min and non-versioned builds
 . heartbeats not being sent correctly with channel groups
