@@ -37,8 +37,8 @@ function error3(r,c,m) {
 	console.log('ERROR ' + JSON.stringify(r) + '   ' + JSON.stringify(c) + '   ' + JSON.stringify(m));
 }
 
-function publish() {
-	var m = {
+function publish(obj) {
+	var m = obj || {
 			'sn' : ++sn,
 			'ts' : moment().utc().format('YYYY-MM-DD hh:mm:ss')
 		};
@@ -47,9 +47,17 @@ function publish() {
 		channel : c,
 		callback : function(r) {
 			success3(r,c,m);
+			clearTimeout(intloop);
+			intloop = setTimeout(function(){
+				publish();
+			},interval)
 		},
 		error : function(r) {
 			error3(r,c,m);
+			clearTimeout(intloop);
+			intloop = setTimeout(function(){
+				publish(m);
+			},1000);
 		},
 		message : m
 	})
@@ -64,16 +72,12 @@ pubnub.subscribe({
 		sn = r.sn || sn;
 		if (r.interval) {
 			interval = r.interval;
-			clearInterval(intloop);
-			setInterval(function(){
+			clearTimeout(intloop);
+			intloop = setTimeout(function(){
 				publish();
 			}, interval)
 		}
 	}
 })
 
-
-
-intloop = setInterval(function(){
-	publish();
-}, interval);
+publish();
