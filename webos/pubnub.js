@@ -1300,7 +1300,7 @@ function PN_API(setup) {
                     timeout  : sub_timeout,
                     callback : jsonp,
                     fail     : function(response) {
-                        if (response['error'] && response['service']) {
+                        if (response && response['error'] && response['service']) {
                             _invoke_error(response, errcb);
                             _test_connection(1);
                         } else {
