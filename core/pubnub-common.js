@@ -686,6 +686,7 @@ function PN_API(setup) {
 
         'channel_group' : function(args, callback) {
             var ns_ch       = args['channel_group']
+            ,   callback    = callback         || args['callback']
             ,   channels    = args['channels'] || args['channel']
             ,   cloak       = args['cloak']
             ,   namespace
