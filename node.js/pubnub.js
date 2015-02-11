@@ -2085,7 +2085,7 @@ function xdr( setup ) {
     options.headers  = proxy ? { 'Host': origin }:null;
     options.method   = mode;
     options.keepAlive= !!keepAliveAgent;
-    //options.agent    = keepAliveAgent;    
+    options.agent    = keepAliveAgent;
     options.body     = payload;
 
     require('http').globalAgent.maxSockets = Infinity;
