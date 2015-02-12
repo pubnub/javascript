@@ -3354,7 +3354,7 @@ function error(message) { console['error'](message) }
 function search( elements, start) {
     var list = [];
     each( elements.split(/\s+/), function(el) {
-        each( (start || document).getElementsByTagName(el), function(node) {
+        each( (start || document).getElementsByTagName(el), function(i, node) {
             list.push(node);
         } );
     });
