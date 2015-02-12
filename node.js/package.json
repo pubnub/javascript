@@ -1,7 +1,7 @@
 {
   "name": "pubnub",
   "preferGlobal": false,
-  "version": "3.7.8", 
+  "version": "3.7.8",
   "author": "PubNub <stephen@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "contributors": [
@@ -11,7 +11,9 @@
     }
   ],
   "bin": {},
-  "scripts": { },
+  "scripts": {
+    "test": "node_modules/.bin/mocha tests/tests.js"
+  },
   "main": "./pubnub.js",
   "repository": {
     "type": "git",
@@ -28,11 +30,15 @@
     "real-time",
     "messaging"
   ],
-  "dependencies" : {
+  "dependencies": {
     "agentkeepalive": "~0.2"
   },
   "noAnalyze": false,
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^2.1.0",
+    "nodeunit": "^0.9.0",
+    "underscore": "^1.7.0"
+  },
   "bundleDependencies": [],
   "license": "MIT",
   "engine": {
