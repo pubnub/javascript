@@ -35,11 +35,13 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
-,   keepAliveAgent      = new (keepAliveIsEmbedded() ? http.Agent : require('agentkeepalive'))({
-                            keepAlive: true,
-                            keepAliveMsecs: 300000,
-                            maxSockets: 5
-                          })
+,   keepAliveConfig     = {
+    keepAlive: true,
+    keepAliveMsecs: 300000,
+    maxSockets: 5
+}
+,   keepAliveAgent      = new (keepAliveIsEmbedded() ? http.Agent : require('agentkeepalive'))(keepAliveConfig)
+,   keepAliveAgentSSL   = new (keepAliveIsEmbedded() ? https.Agent: require('agentkeepalive'))(keepAliveConfig)
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
@@ -133,10 +135,16 @@ function xdr( setup ) {
     options.headers  = proxy ? { 'Host': origin }:null;
     options.method   = mode;
     options.keepAlive= !!keepAliveAgent;
-    options.agent    = keepAliveAgent;
     options.body     = payload;
 
+    if (options.keepAlive && ssl) {
+        options.agent = keepAliveAgentSSL;
+    } else if (options.keepAlive) {
+        options.agent = keepAliveAgent;
+    }
+
     require('http').globalAgent.maxSockets = Infinity;
+
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
