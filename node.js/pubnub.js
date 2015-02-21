@@ -2031,7 +2031,6 @@ function xdr( setup ) {
     ,   response
     ,   success  = setup.success || function(){}
     ,   fail     = setup.fail    || function(){}
-    ,   origin   = setup.origin || 'pubsub.pubnub.com'
     ,   ssl      = setup.ssl
     ,   failed   = 0
     ,   complete = 0
@@ -2069,14 +2068,14 @@ function xdr( setup ) {
     data['pnsdk'] = PNSDK;
 
     var options = {};
-    var headers = {};
     var payload = '';
 
     if (mode == 'POST')
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
-    if (!ssl) ssl = (url.split('://')[0] == 'https')?true:false;
+
+    if (!ssl) ssl = (url.split('://')[0] == 'https');
 
     url = '/' + url.split('/').slice(3).join('/');
 
@@ -2084,8 +2083,8 @@ function xdr( setup ) {
 
     options.hostname = proxy ? proxy.hostname : setup.url[0].split("//")[1];
     options.port     = proxy ? proxy.port : ssl ? 443 : 80;
-    options.path     = proxy ? "http://" + origin + url:url;
-    options.headers  = proxy ? { 'Host': origin }:null;
+    options.path     = proxy ? "http://" + origin + url : url;
+    options.headers  = proxy ? { 'Host': origin } : null;
     options.method   = mode;
     options.keepAlive= !!keepAliveAgent;
     options.body     = payload;
