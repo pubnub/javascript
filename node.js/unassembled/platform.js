@@ -127,7 +127,7 @@ function xdr( setup ) {
 
     url = '/' + url.split('/').slice(3).join('/');
 
-    var origin       = setup.url[0].split("//")[1]
+    var origin       = setup.url[0].split("//")[1];
 
     options.hostname = proxy ? proxy.hostname : setup.url[0].split("//")[1];
     options.port     = proxy ? proxy.port : ssl ? 443 : 80;
@@ -231,7 +231,7 @@ function crypto_obj() {
 }
 
 function keepAliveIsEmbedded() {
-  return 'EventEmitter' in http.Agent.super_;
+    return 'EventEmitter' in http.Agent.super_;
 }
 
 
@@ -248,23 +248,27 @@ var CREATE_PUBNUB = function(setup) {
       keepAliveAgent = undefined;
     }
 
-    SELF = function(setup) {
+    var SELF = function(setup) {
         return CREATE_PUBNUB(setup);
-    }
+    };
+
     var PN = PN_API(setup);
+
     for (var prop in PN) {
         if (PN.hasOwnProperty(prop)) {
             SELF[prop] = PN[prop];
         }
     }
+
     SELF.init = SELF;
     SELF.secure = SELF;
     SELF.ready();
-    return SELF;
-}
-CREATE_PUBNUB.init = CREATE_PUBNUB;
 
-CREATE_PUBNUB.unique = unique
+    return SELF;
+};
+
+CREATE_PUBNUB.init = CREATE_PUBNUB;
+CREATE_PUBNUB.unique = unique;
 CREATE_PUBNUB.secure = CREATE_PUBNUB;
-module.exports = CREATE_PUBNUB
+module.exports = CREATE_PUBNUB;
 module.exports.PNmessage = PNmessage;
