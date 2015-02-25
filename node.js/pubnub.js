@@ -299,6 +299,7 @@ function PN_API(setup) {
     ,   RESUMED       = false
     ,   CHANNELS      = {}
     ,   CHANNEL_GROUPS       = {}
+    ,   SUB_ERROR     = function(){}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
     ,   PRESENCE_HB          = validate_presence_heartbeat(
@@ -1086,7 +1087,7 @@ function PN_API(setup) {
             ,   connect         = args['connect']     || function(){}
             ,   reconnect       = args['reconnect']   || function(){}
             ,   disconnect      = args['disconnect']  || function(){}
-            ,   errcb           = args['error']       || function(){}
+            ,   SUB_ERROR       = args['error']       || SUB_ERROR || function(){}
             ,   idlecb          = args['idle']        || function(){}
             ,   presence        = args['presence']    || 0
             ,   noheresync      = args['noheresync']  || 0
@@ -1302,11 +1303,11 @@ function PN_API(setup) {
                     callback : jsonp,
                     fail     : function(response) {
                         if (response && response['error'] && response['service']) {
-                            _invoke_error(response, errcb);
+                            _invoke_error(response, SUB_ERROR);
                             _test_connection(1);
                         } else {
                             SELF['time'](function(success){
-                                !success && ( _invoke_error(response, errcb));
+                                !success && ( _invoke_error(response, SUB_ERROR));
                                 _test_connection(success);
                             });
                         }
@@ -1325,7 +1326,7 @@ function PN_API(setup) {
                             'error' in messages         &&
                             messages['error']
                         )) {
-                            errcb(messages['error']);
+                            SUB_ERROR(messages['error']);
                             return timeout( CONNECT, SECOND );
                         }
 
