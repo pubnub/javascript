@@ -1162,6 +1162,7 @@ function PN_API(setup) {
                     if (noheresync) return;
                     SELF['here_now']({
                         'channel'  : channel,
+                        'data'     : _get_url_params({ 'uuid' : UUID, 'auth' : auth_key }),
                         'callback' : function(here) {
                             each( 'uuids' in here ? here['uuids'] : [],
                             function(uid) { presence( {
@@ -1200,7 +1201,8 @@ function PN_API(setup) {
                     SELF['subscribe']({
                         'channel_group'  : channel_group + PRESENCE_SUFFIX,
                         'callback' : presence,
-                        'restore'  : restore
+                        'restore'  : restore,
+                        'auth_key' : auth_key
                     });
 
                     // Presence Subscribed?
@@ -1210,6 +1212,7 @@ function PN_API(setup) {
                     if (noheresync) return;
                     SELF['here_now']({
                         'channel_group'  : channel_group,
+                        'data'           : _get_url_params({ 'uuid' : UUID, 'auth' : auth_key }),
                         'callback' : function(here) {
                             each( 'uuids' in here ? here['uuids'] : [],
                             function(uid) { presence( {
