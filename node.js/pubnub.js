@@ -2113,17 +2113,15 @@ function xdr( setup ) {
                 var statusCode = response.statusCode;
 
                 switch(statusCode) {
-                    case 401:
-                    case 402:
-                    case 403:
+                    case 200:
+                        break;
+                    default:
                         try {
                             response = JSON['parse'](body);
                             done(1,response);
                         }
-                        catch (r) { return done(1, body); }
+                        catch (r) { return done(1, {status : statusCode, payload : null, message : body}); }
                         return;
-                    default:
-                        break;
                 }
                 finished();
             });
