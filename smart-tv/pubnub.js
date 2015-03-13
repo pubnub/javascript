@@ -183,7 +183,7 @@ var nextorigin = (function() {
         return origin.indexOf('pubsub.') > 0
             && origin.replace(
              'pubsub', 'ps' + (
-                failover ? uuid().split('-')[0] :
+                failover ? generate_uuid().split('-')[0] :
                 (++ori < max? ori : ori=1)
             ) ) || origin;
     }
@@ -268,9 +268,9 @@ function timeout( fun, wait ) {
 /**
  * uuid
  * ====
- * var my_uuid = uuid();
+ * var my_uuid = generate_uuid();
  */
-function uuid(callback) {
+function generate_uuid(callback) {
     var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
     function(c) {
         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -467,6 +467,8 @@ function PN_API(setup) {
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
     ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
+    ,   USE_INSTANCEID = setup['instance_id'] || true
+    ,   INSTANCEID     = ''
     ,   _poll_timer
     ,   _poll_timer2;
 
@@ -716,6 +718,8 @@ function PN_API(setup) {
 
             if (jsonp != '0') data['callback'] = jsonp;
 
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
@@ -755,6 +759,8 @@ function PN_API(setup) {
             if (jsonp != '0') data['callback'] = jsonp;
 
             if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
+
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
             xdr({
                 blocking : blocking || SSL,
@@ -1081,9 +1087,14 @@ function PN_API(setup) {
         */
         'time' : function(callback) {
             var jsonp = jsonp_cb();
+
+            var data = { 'uuid' : UUID, 'auth' : AUTH_KEY }
+
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+
             xdr({
                 callback : jsonp,
-                data     : _get_url_params({ 'uuid' : UUID, 'auth' : AUTH_KEY }),
+                data     : _get_url_params(data),
                 timeout  : SECOND * 5,
                 url      : [STD_ORIGIN, 'time', jsonp],
                 success  : function(response) { callback(response[0]) },
@@ -1136,6 +1147,8 @@ function PN_API(setup) {
             params = { 'uuid' : UUID, 'auth' : auth_key }
 
             if (!store) params['store'] ="0"
+
+            if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
 
             // Queue Message Send
             PUB_QUEUE[add_msg]({
@@ -1450,6 +1463,8 @@ function PN_API(setup) {
 
                 if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
 
+                if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+
                 start_presence_heartbeat();
                 SUB_RECEIVER = xdr({
                     timeout  : sub_timeout,
@@ -1641,6 +1656,7 @@ function PN_API(setup) {
                 !channel && url.push('channel') && url.push(','); 
             }
 
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
             xdr({
                 callback : jsonp,
@@ -1671,6 +1687,8 @@ function PN_API(setup) {
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (jsonp != '0') { data['callback'] = jsonp; }
+
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
             xdr({
                 callback : jsonp,
@@ -1726,6 +1744,8 @@ function PN_API(setup) {
             }
 
             data['state'] = JSON.stringify(state);
+
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
             if (state) {
                 url      = [
@@ -1880,6 +1900,8 @@ function PN_API(setup) {
                 params['remove'] = channel;
             }
 
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+
             xdr({
                 callback : jsonp,
                 data     : params,
@@ -2004,6 +2026,8 @@ function PN_API(setup) {
             if (!channels) channels = ',';
             if (channel_groups) data['channel-group'] = channel_groups;
 
+            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
@@ -2029,7 +2053,7 @@ function PN_API(setup) {
         'xdr'           : xdr,
         'ready'         : ready,
         'db'            : db,
-        'uuid'          : uuid,
+        'uuid'          : generate_uuid,
         'map'           : map,
         'each'          : each,
         'each-channel'  : each_channel,
@@ -2071,8 +2095,14 @@ function PN_API(setup) {
         clearTimeout(_poll_timer);
         clearTimeout(_poll_timer2);
     }
-
+    /*
+    console.log(UUID);
+    console.log(typeof SELF['uuid']);
+    console.log(typeof uuid);
+    console.log(typeof UUID);
+    */
     if (!UUID) UUID = SELF['uuid']();
+    if (!INSTANCEID) INSTANCEID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
 
     _poll_timer  = timeout( _poll_online,  SECOND    );
