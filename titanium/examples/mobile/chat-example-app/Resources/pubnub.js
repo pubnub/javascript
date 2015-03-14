@@ -318,7 +318,7 @@ function PN_API(setup) {
     ,   db            = setup['db']         || {'get': function(){}, 'set': function(){}}
     ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
-    ,   USE_INSTANCEID = setup['instance_id'] || true
+    ,   USE_INSTANCEID = setup['instance_id'] || false
     ,   INSTANCEID     = ''
     ,   _poll_timer
     ,   _poll_timer2;
@@ -1946,12 +1946,7 @@ function PN_API(setup) {
         clearTimeout(_poll_timer);
         clearTimeout(_poll_timer2);
     }
-    /*
-    console.log(UUID);
-    console.log(typeof SELF['uuid']);
-    console.log(typeof uuid);
-    console.log(typeof UUID);
-    */
+    
     if (!UUID) UUID = SELF['uuid']();
     if (!INSTANCEID) INSTANCEID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
