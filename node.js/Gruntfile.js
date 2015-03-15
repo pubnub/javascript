@@ -9,7 +9,7 @@ module.exports = function (grunt) {
                     quiet: false
                 },
                 // NOTICE: ignore test2.js test due it's
-                src: ['tests/test.js', 'tests/tests.js']
+                src: ['tests/ssl_test.js', 'tests/test.js', 'tests/tests.js']
             },
             unit: 'karma.conf.js'
         },
