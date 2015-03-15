@@ -1,3 +1,7 @@
+var PUBNUB = require('../pubnub.js'),
+    assert = require('assert'),
+    _ = require("underscore");
+
 var pubnub = PUBNUB.init({
     publish_key     : 'ds',
     subscribe_key   : 'ds',
