@@ -1,7 +1,9 @@
-
 var assert = require('assert');
 var PUBNUB = require('../pubnub.js');
 var _ = require("underscore");
+
+require('nock').enableNetConnect();
+
 var pubnub = PUBNUB.init({
     publish_key     : 'ds',
     subscribe_key   : 'ds',

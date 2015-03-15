@@ -1,6 +1,7 @@
 var PUBNUB = require('../pubnub.js'),
     assert = require('assert'),
-    _ = require("underscore");
+    _ = require("underscore"),
+    nock = require('nock');
 
 var pubnub = PUBNUB.init({
     publish_key     : 'ds',
@@ -86,6 +87,10 @@ describe('Pubnub', function() {
             }
         });
     })
+
+    beforeEach(function () {
+        nock.enableNetConnect();
+    });
 
     after(function(){
         for (var i in namespaces) {
