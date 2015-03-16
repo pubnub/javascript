@@ -12,7 +12,7 @@
   ],
   "bin": {},
   "scripts": {
-    "test": "node_modules/.bin/mocha tests/tests.js"
+    "test": "grunt test"
   },
   "main": "./pubnub.js",
   "repository": {
