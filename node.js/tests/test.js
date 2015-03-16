@@ -1,7 +1,9 @@
-var PUBNUB = require('../pubnub.js'),
-    assert = require('assert'),
-    _ = require("underscore"),
-    nock = require('nock');
+if (typeof window == 'undefined') {
+    var PUBNUB = require('../pubnub.js'),
+        assert = require('assert'),
+        _ = require("underscore"),
+        nock = require('nock');
+}
 
 var pubnub = PUBNUB.init({
     publish_key: 'ds',
@@ -63,7 +65,9 @@ describe('Pubnub', function () {
     this.timeout(180000);
 
     before(function () {
-        nock.enableNetConnect();
+        if (nock) {
+            nock.enableNetConnect();
+        }
 
         pubnub.channel_group_list_groups({
             callback: function (r) {
