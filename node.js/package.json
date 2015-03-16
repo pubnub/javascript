@@ -12,7 +12,7 @@
   ],
   "bin": {},
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test --force"
   },
   "main": "./pubnub.js",
   "repository": {

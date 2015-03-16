@@ -1,9 +1,16 @@
-language: node.js
+language: node_js
 
 node_js:
   - "0.12"
   - "0.10"
   - "iojs"
 
+
+before_install:
+  npm install -g grunt-cli
+
+install:
+  cd node.js && npm install
+
 script:
-  cd node.js && grunt test
+  grunt test

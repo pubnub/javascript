@@ -23,7 +23,7 @@ describe("When SSL mode", function () {
                 origin          : 'pubsub.pubnub.com'
             });
 
-            subscribeAndPublish(pubnub, channel + "_enabled", done);
+            subscribeAndPublish(pubnub, channel + "_enabled_" + get_random(), done);
         });
 
         it("should send requests via HTTPS to 443 port", function (done) {
@@ -69,7 +69,7 @@ describe("When SSL mode", function () {
                 origin          : 'pubsub.pubnub.com'
             });
 
-            subscribeAndPublish(pubnub, channel + "_disabled", done);
+            subscribeAndPublish(pubnub, channel + "_disabled_" + get_random(), done);
         });
 
         it("should send requests via HTTP to 80 port", function (done) {
@@ -118,4 +118,8 @@ function subscribeAndPublish(pubnub, channel, done) {
             done();
         }
     });
+}
+
+function get_random(max) {
+    return Math.floor((Math.random() * (max || 1000000000) + 1))
 }
