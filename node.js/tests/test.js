@@ -1393,7 +1393,7 @@ describe('Pubnub', function() {
         });
     });
 
-    describe.only('#here_now()', function(){
+    describe('#here_now()', function(){
         var uuid  = '' + get_random()
         ,   uuid1 = uuid + '-1'
         ,   uuid2 = uuid + '-2'
