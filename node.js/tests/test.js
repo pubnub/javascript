@@ -64,6 +64,7 @@ describe('Pubnub', function() {
     this.timeout(180000);
     
     before(function(){
+        nock.enableNetConnect();
         pubnub.channel_group_list_groups({
             callback : function(r) {
                 var groups = r.groups;
@@ -87,10 +88,6 @@ describe('Pubnub', function() {
             }
         });
     })
-
-    beforeEach(function () {
-        nock.enableNetConnect();
-    });
 
     after(function(){
         for (var i in namespaces) {
