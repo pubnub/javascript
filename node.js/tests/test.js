@@ -133,28 +133,39 @@ describe('Pubnub', function () {
                     pubnub_enc.unsubscribe({channel: ch});
                     done();
                 }
-
             })
         });
 
         it('should take an error callback which will be invoked if channel permission not there', function (done) {
             var channel = 'channel' + Date.now();
             var auth_key = 'abcd';
-            pubnub_pam.subscribe({
-                'auth_key': auth_key,
-                'channel': channel,
-                'error': function (r) {
-                    assert.deepEqual(r['message'], 'Forbidden');
-                    assert.ok(r['payload'], "Payload should be there in error response");
-                    assert.ok(r['payload']['channels'], "Channels should be there in error payload");
-                    assert.ok(in_list_deep(r['payload']['channels'], channel), "Channel should be there in channel list");
-                    pubnub_pam.unsubscribe({'channel': channel});
-                    done();
-                },
-                'callback': function () {
-                    done(new Error("Callback should not get invoked if permission not there"));
+
+            this.timeout(3000);
+
+            pubnub_pam.revoke({
+                auth_key: auth_key,
+                channel: channel,
+                callback: function () {
+                    pubnub_pam.subscribe({
+                        auth_key: auth_key,
+                        channel: channel,
+                        error: function (r) {
+                            assert.deepEqual(r['message'], 'Forbidden');
+                            assert.ok(r['payload'], "Payload should be there in error response");
+                            assert.ok(r['payload']['channels'], "Channels should be there in error payload");
+                            assert.ok(in_list_deep(r['payload']['channels'], channel), "Channel should be there in channel list");
+                            pubnub_pam.unsubscribe({'channel': channel});
+                            done();
+                        },
+                        callback: function () {
+                            done(new Error("Callback should not get invoked if permission not there"));
+                        },
+                        connect: function () {
+                            done(new Error("Connect should not get invoked if permission not there"));
+                        }
+                    })
                 }
-            })
+            });
         });
 
         it("should not generate spurious presence events when adding new channels to subscribe in_list", function (done) {
@@ -839,6 +850,8 @@ describe('Pubnub', function () {
             build_u: true
         });
 
+        this.timeout(15000);
+
         for (var i = 0; i < get_random(10); i++) {
             pubnub._add_param('a-' + get_random(1000), Date.now());
         }
@@ -1239,6 +1252,9 @@ describe('Pubnub', function () {
                                         done(new Error("Unable to get history for the sub_key with granted read permissions"))
                                     }
                                 });
+                            },
+                            error: function () {
+                                done(new Error("Error in audit"))
                             }
                         });
                     }
