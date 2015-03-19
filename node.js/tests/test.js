@@ -13,9 +13,9 @@ var pubnub = PUBNUB.init({
 });
 
 var pubnub_pam = PUBNUB.init({
-    publish_key: 'ds-pam',
-    subscribe_key: 'ds-pam',
-    secret_key: 'ds-pam',
+    publish_key: 'pam',
+    subscribe_key: 'pam',
+    secret_key: 'pam',
     origin: 'pubsub.pubnub.com',
     build_u: true
 });
@@ -113,6 +113,58 @@ describe('Pubnub', function () {
     });
 
     describe('#subscribe()', function () {
+
+        it ('should be able to set heartbeat and heartbeat interval', function(done) {
+            pubnub.subscribe({
+                'channel' : 'ch-a',
+                'heartbeat' : 30,
+                'connect' : function(r) {
+                    assert.deepEqual(30, pubnub.get_heartbeat());
+                    assert.deepEqual(14, pubnub.get_heartbeat_interval());
+                    pubnub.unsubscribe({'channel' : 'abcd'});
+                    pubnub.subscribe({
+                        'channel' : 'ch-b',
+                        'connect' : function(r) {
+                            assert.deepEqual(30, pubnub.get_heartbeat());
+                            assert.deepEqual(14, pubnub.get_heartbeat_interval());
+                            pubnub.unsubscribe({'channel' : 'abcd1'});
+                            pubnub.subscribe({
+                                'channel' : 'ch-c',
+                                'heartbeat' : 60,
+                                'heartbeat_interval' : 10,
+                                'connect' : function(r) {
+                                    assert.deepEqual(60, pubnub.get_heartbeat());
+                                    assert.deepEqual(10, pubnub.get_heartbeat_interval());
+                                    pubnub.unsubscribe({'channel' : 'abcd1'});
+                                    pubnub.subscribe({
+                                        'channel' : 'ch-d',
+                                        'heartbeat' : 10,
+                                        'connect' : function(r) {
+                                            assert.deepEqual(10, pubnub.get_heartbeat());
+                                            assert.deepEqual(4, pubnub.get_heartbeat_interval());
+                                            pubnub.unsubscribe({'channel' : 'abcd1'});
+                                            done();
+                                        },
+                                        'callback' : function(r) {
+
+                                        }
+                                    })   
+                                },
+                                'callback' : function(r) {
+
+                                }
+                            })   
+                        },
+                        'callback' : function(r) {
+
+                        }
+                    })   
+                },
+                'callback' : function(r) {
+
+                }
+            })
+        })
         it('should pass plain text to callback on decryption error', function (done) {
             var ch = channel + '-' + ++count;
 
@@ -845,12 +897,12 @@ describe('Pubnub', function () {
     describe('#grant()', function () {
         var grant_channel = channel + '-grant';
         var auth_key = "abcd";
-        var sub_key = 'ds-pam';
+        var sub_key = 'pam';
         var pubnub = PUBNUB.init({
             origin: 'pubsub.pubnub.com',
-            publish_key: 'ds-pam',
-            subscribe_key: 'ds-pam',
-            secret_key: 'ds-pam',
+            publish_key: 'pam',
+            subscribe_key: 'pam',
+            secret_key: 'pam',
             build_u: true
         });
 
@@ -1175,9 +1227,9 @@ describe('Pubnub', function () {
 
             var pubnub = PUBNUB.init({
                 origin: 'pubsub.pubnub.com',
-                publish_key: 'ds-pam',
-                subscribe_key: 'ds-pam',
-                secret_key: 'ds-pam',
+                publish_key: 'pam',
+                subscribe_key: 'pam',
+                secret_key: 'pam',
                 build_u: true
             });
 
@@ -1188,7 +1240,7 @@ describe('Pubnub', function () {
                     callback: function () {
                         pubnub.audit({
                             callback: function (response) {
-                                assert.deepEqual(response.subscribe_key, 'ds-pam');
+                                assert.deepEqual(response.subscribe_key, 'pam');
                                 pubnub.history({
                                     'channel': grant_channel_local,
                                     'auth_key': "",
@@ -1223,9 +1275,9 @@ describe('Pubnub', function () {
 
             var pubnub = PUBNUB.init({
                 origin: 'pubsub.pubnub.com',
-                publish_key: 'ds-pam',
-                subscribe_key: 'ds-pam',
-                secret_key: 'ds-pam',
+                publish_key: 'pam',
+                subscribe_key: 'pam',
+                secret_key: 'pam',
                 build_u: true
             });
 
@@ -1236,7 +1288,7 @@ describe('Pubnub', function () {
                     callback: function () {
                         pubnub.audit({
                             callback: function (response) {
-                                assert.deepEqual(response.subscribe_key, 'ds-pam');
+                                assert.deepEqual(response.subscribe_key, 'pam');
                                 pubnub.history({
                                     'channel': grant_channel_local,
                                     'callback': function () {
@@ -1273,9 +1325,9 @@ describe('Pubnub', function () {
 
         var pubnub = PUBNUB.init({
             origin: 'pubsub.pubnub.com',
-            publish_key: 'ds-pam',
-            subscribe_key: 'ds-pam',
-            secret_key: 'ds-pam',
+            publish_key: 'pam',
+            subscribe_key: 'pam',
+            secret_key: 'pam',
             build_u: true
         });
 
