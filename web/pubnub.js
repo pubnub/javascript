@@ -452,14 +452,10 @@ function PN_API(setup) {
     ,   SUB_ERROR     = function(){}
     ,   STATE         = {}
     ,   PRESENCE_HB_TIMEOUT  = null
-    /*
     ,   PRESENCE_HB          = validate_presence_heartbeat(
         setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']
     )
-    ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB - 3
-    */
-    ,   PRESENCE_HB          = 0
-    ,   PRESENCE_HB_INTERVAL = 0
+    ,   PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || (PRESENCE_HB / 2) -1
     ,   PRESENCE_HB_RUNNING  = false
     ,   NO_WAIT_FOR_PENDING  = setup['no_wait_for_pending']
     ,   COMPATIBLE_35 = setup['compatible_3.5']  || false
@@ -473,6 +469,8 @@ function PN_API(setup) {
     ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
     ,   _poll_timer
     ,   _poll_timer2;
+
+    if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
 
     var crypto_obj    = setup['crypto_obj'] ||
         {
@@ -800,6 +798,7 @@ function PN_API(setup) {
         'get_heartbeat' : function() {
             return PRESENCE_HB;
         },
+        
         'set_heartbeat' : function(heartbeat, heartbeat_interval) {
             PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, error);
             PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
@@ -809,13 +808,16 @@ function PN_API(setup) {
             CONNECT();
             _presence_heartbeat();
         },
+        
         'get_heartbeat_interval' : function() {
             return PRESENCE_HB_INTERVAL;
         },
+        
         'set_heartbeat_interval' : function(heartbeat_interval) {
             PRESENCE_HB_INTERVAL = heartbeat_interval;
             _presence_heartbeat();
         },
+        
         'get_version' : function() {
             return SDK_VER;
         },

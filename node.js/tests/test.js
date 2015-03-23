@@ -113,58 +113,6 @@ describe('Pubnub', function () {
     });
 
     describe('#subscribe()', function () {
-
-        it ('should be able to set heartbeat and heartbeat interval', function(done) {
-            pubnub.subscribe({
-                'channel' : 'ch-a',
-                'heartbeat' : 30,
-                'connect' : function(r) {
-                    assert.deepEqual(30, pubnub.get_heartbeat());
-                    assert.deepEqual(14, pubnub.get_heartbeat_interval());
-                    pubnub.unsubscribe({'channel' : 'abcd'});
-                    pubnub.subscribe({
-                        'channel' : 'ch-b',
-                        'connect' : function(r) {
-                            assert.deepEqual(30, pubnub.get_heartbeat());
-                            assert.deepEqual(14, pubnub.get_heartbeat_interval());
-                            pubnub.unsubscribe({'channel' : 'abcd1'});
-                            pubnub.subscribe({
-                                'channel' : 'ch-c',
-                                'heartbeat' : 60,
-                                'heartbeat_interval' : 10,
-                                'connect' : function(r) {
-                                    assert.deepEqual(60, pubnub.get_heartbeat());
-                                    assert.deepEqual(10, pubnub.get_heartbeat_interval());
-                                    pubnub.unsubscribe({'channel' : 'abcd1'});
-                                    pubnub.subscribe({
-                                        'channel' : 'ch-d',
-                                        'heartbeat' : 10,
-                                        'connect' : function(r) {
-                                            assert.deepEqual(10, pubnub.get_heartbeat());
-                                            assert.deepEqual(4, pubnub.get_heartbeat_interval());
-                                            pubnub.unsubscribe({'channel' : 'abcd1'});
-                                            done();
-                                        },
-                                        'callback' : function(r) {
-
-                                        }
-                                    })   
-                                },
-                                'callback' : function(r) {
-
-                                }
-                            })   
-                        },
-                        'callback' : function(r) {
-
-                        }
-                    })   
-                },
-                'callback' : function(r) {
-
-                }
-            })
-        })
         it('should pass plain text to callback on decryption error', function (done) {
             var ch = channel + '-' + ++count;
 

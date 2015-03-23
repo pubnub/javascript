@@ -353,6 +353,33 @@ pubnub_test_all("instantiation test 7", function(config) {
     }, config);
 });
 
+pubnub_test_all("instantiation test (heartbeat)", function(config) {
+    var hb  = 20;
+    var hbi = 5;
+    var pubnub1 = _pubnub_init({
+        publish_key: test_publish_key,
+        subscribe_key: test_subscribe_key,
+        heartbeat : hb,
+        heartbeat_interval : hbi
+    }, config);
+
+    var pubnub2 = _pubnub_init({
+        publish_key: test_publish_key,
+        subscribe_key: test_subscribe_key,
+        heartbeat : hb
+    }, config);
+
+
+    expect(4);
+    stop(1);
+    equal(hb,pubnub1.get_heartbeat());
+    equal(hbi, pubnub1.get_heartbeat_interval());
+
+    equal(hb, pubnub2.get_heartbeat());
+    equal(hb/2 -1, pubnub2.get_heartbeat_interval());
+    start();
+});
+
 pubnub_test_all("publish() should publish strings without error", function(config) {
     var pubnub = _pubnub_init({
         publish_key: test_publish_key,
