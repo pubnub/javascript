@@ -5,11 +5,11 @@ PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/jav
 ### CDN Links
 
 #### HTTP
-* http://cdn.pubnub.com/pubnub-3.7.8.min.js
-* http://cdn.pubnub.com/pubnub-3.7.8.js
+* http://cdn.pubnub.com/pubnub-3.7.9.min.js
+* http://cdn.pubnub.com/pubnub-3.7.9.js
 
 #### HTTPS
-* https://cdn.pubnub.com/pubnub-3.7.8.min.js
-* https://cdn.pubnub.com/pubnub-3.7.8.js
+* https://cdn.pubnub.com/pubnub-3.7.9.min.js
+* https://cdn.pubnub.com/pubnub-3.7.9.js
 
 # Please direct all Support Questions and Concerns to Support@PubNub.com
