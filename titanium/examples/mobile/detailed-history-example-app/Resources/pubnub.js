@@ -165,6 +165,13 @@ function map( list, fun ) {
     return fin;
 }
 
+
+function pam_encode(str) {
+  return encodeURIComponent(str).replace(/[!'()*~]/g, function(c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+
 /**
  * ENCODE
  * ======
@@ -356,7 +363,7 @@ function PN_API(setup) {
 
         for (var i in l) {
             var k = l[i]
-            si += k + "=" + encode(params[k]) ;
+            si += k + "=" + pam_encode(params[k]) ;
             if (i != l.length - 1) si += "&"
         }
         return si;
