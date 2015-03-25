@@ -35,21 +35,33 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
-,   keepAliveConfig     = {
-    keepAlive: true,
-    keepAliveMsecs: 300000,
-    maxSockets: 5
-}
-,   keepAliveAgent      = new (keepAliveIsEmbedded() ? http.Agent : require('agentkeepalive'))(keepAliveConfig)
-,   keepAliveAgentSSL   = new (keepAliveIsEmbedded() ? https.Agent: require('agentkeepalive'))(keepAliveConfig)
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
 ,   PNSDK               = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
 ,   crypto              = require('crypto')
 ,   proxy               = null
-,   XORIGN              = 1;
+,   XORIGN              = 1
+,   keepAliveConfig     = {
+    keepAlive: true,
+    keepAliveMsecs: 300000,
+    maxSockets: 5
+}
+,   keepAliveAgent
+,   keepAliveAgentSSL;
 
+if (keepAliveIsEmbedded()) {
+    keepAliveAgent = new http.Agent(keepAliveConfig);
+    keepAliveAgentSSL = new https.Agent(keepAliveConfig);
+} else {
+    (function () {
+        var agent = require('agentkeepalive'),
+            agentSSL = agent.HttpsAgent;
+
+        keepAliveAgent = new agent(keepAliveConfig);
+        keepAliveAgentSSL = new agentSSL(keepAliveConfig);
+    })();
+}
 
 function get_hmac_SHA256(data, key) {
     return crypto.createHmac('sha256',

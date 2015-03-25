@@ -12,7 +12,7 @@
   ],
   "bin": {},
   "scripts": {
-    "test": "node_modules/.bin/mocha tests/tests.js"
+    "test": "grunt test --force"
   },
   "main": "./pubnub.js",
   "repository": {
@@ -35,7 +35,12 @@
   },
   "noAnalyze": false,
   "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-nodeunit": "^0.4.1",
+    "grunt-mocha-test": "^0.12.7",
     "mocha": "^2.1.0",
+    "nock": "^1.1.0",
     "nodeunit": "^0.9.0",
     "underscore": "^1.7.0"
   },

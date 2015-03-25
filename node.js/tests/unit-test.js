@@ -1,4 +1,5 @@
-var PUBNUB, channel, here_now_test, history_test, nodeunit, publish_dummy, publish_test, pubnub, run_dummy_subscribe, subscribe_test, time_test, uuid_test, detailed_history_test_1, detailed_history_test_2, detailed_history_test_3;
+var PUBNUB, channel, here_now_test, history_test, nodeunit, publish_dummy, publish_test, pubnub, run_dummy_subscribe,
+    subscribe_test, time_test, uuid_test, detailed_history_test_1;
 
 PUBNUB = require('../pubnub');
 
@@ -66,38 +67,6 @@ detailed_history_test_1 = function (test) {
         }
     });
 };
-
-detailed_history_test_2 = function (test) {
-
-    test.expect(2);
-
-    return pubnub.history({
-        count:1,
-        channel:temp_channel,
-        callback:function (messages) {
-            test.notEqual(messages, null);
-            test.equal(messages[0][0], "second");
-            test.done();
-        }
-    });
-};
-
-detailed_history_test_3 = function (test) {
-
-    test.expect(2);
-
-    return pubnub.history({
-        count:1,
-        channel:temp_channel,
-        reverse:'true',
-        callback:function (messages) {
-            test.notEqual(messages, null);
-            test.equal(messages[0][0], "first");
-            test.done();
-        }
-    });
-};
-
 
 history_test = function (test) {
     test.expect(2);
@@ -171,7 +140,5 @@ module.exports = {
   "UUID Test": uuid_test,
   "Here Now Test":here_now_test,
   "Detailed History Test 1":detailed_history_test_1,
-  "Detailed History Test 2":detailed_history_test_2,
-  "Detailed History Test 3":detailed_history_test_3,
   "Subscribe Test": subscribe_test
 };

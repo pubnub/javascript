@@ -1,0 +1,40 @@
+<script src="http://cdn.pubnub.com/pubnub-dev.js"></script>
+<script>
+
+// INIT PubNub
+
+var pubnub = PUBNUB.init({
+    publish_key     : 'demo-36',
+    publish_key     : 'demo-36',
+    secret_key     : 'demo-36',
+    uuid: "subWithHB"
+});
+
+
+pubnub.subscribe({
+    'channel' :  Math.floor((Math.random() * 1000) + 1) +   'a.*',
+    'callback'       : function(r) {
+        console.log(JSON.stringify(r));
+    },
+    'presence'         : function(r) {
+        console.log(JSON.stringify(r));  
+    },    
+    'error'         : function(r) {
+        console.log(JSON.stringify(r));  
+    },    
+    'disconnect'       : function(r) {
+        console.log('DISCONNECT ' + JSON.stringify(r));
+    },    
+    'reconnect'       : function(r) {
+        console.log('RECONNECT ' +JSON.stringify(r));
+    },    
+    'connect'       : function(r) {
+        console.log('CONNECT ' +JSON.stringify(r));
+    },
+    heartbeat: 10
+})
+
+
+
+
+</script>
