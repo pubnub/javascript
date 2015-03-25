@@ -1,4 +1,4 @@
-// Version: 3.7.9
+// Version: 3.7.10
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.9'
+,   SDK_VER         = '3.7.10'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -3179,7 +3179,7 @@ THE SOFTWARE.
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.7.9'
+,    PNSDK      = 'PubNub-JS-' + 'Modern' + '/' + '3.7.10'
 ,   XHRTME     = 310000;
 
 
