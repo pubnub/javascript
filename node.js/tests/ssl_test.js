@@ -38,7 +38,7 @@ describe("When SSL mode", function () {
             });
 
             var path = "/publish/demo/demo/0/" + channel + "/0/" + encodeURI('"' + message + '"') +
-                "?uuid=" + uuid + "&pnsdk=PubNub-JS-Nodejs%2F3.7.9";
+                "?uuid=" + uuid + "&pnsdk=PubNub-JS-Nodejs%2F3.7.10";
 
             nock("https://" + origin + ":443")
                 .get(path)
@@ -83,7 +83,7 @@ describe("When SSL mode", function () {
             });
 
             var path = "/publish/demo/demo/0/" + channel + "/0/" + encodeURI('"' + message + '"') +
-                "?uuid=" + uuid + "&pnsdk=PubNub-JS-Nodejs%2F3.7.9";
+                "?uuid=" + uuid + "&pnsdk=PubNub-JS-Nodejs%2F3.7.10";
 
             nock("http://" + origin + ":80")
                 .get(path)
