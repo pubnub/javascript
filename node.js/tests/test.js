@@ -952,6 +952,49 @@ describe('Pubnub', function () {
             }, 5000);
         });
 
+        it('should be able to grant read write access for wildcard channel', function (done) {
+            var auth_key = "abcd";
+            var grant_channel_local = grant_channel + "-" + Date.now() + ".";
+            setTimeout(function () {
+                pubnub.grant({
+                    channel: grant_channel_local + "*",
+                    'auth_key': auth_key,
+                    read: true,
+                    write: true,
+                    callback: function () {
+                        pubnub.audit({
+                            channel: grant_channel_local + "*",
+                            'auth_key': auth_key,
+                            callback: function (response) {
+                                assert.deepEqual(response.auths[auth_key].r, 1);
+                                assert.deepEqual(response.auths[auth_key].w, 1);
+                                pubnub.history({
+                                    'channel': grant_channel_local + "a",
+                                    'auth_key': auth_key,
+                                    'callback': function () {
+                                        pubnub.publish({
+                                            'channel': grant_channel_local + "a",
+                                            'auth_key': auth_key,
+                                            'message': 'Test',
+                                            'callback': function () {
+                                                done();
+                                            },
+                                            'error': function () {
+                                                done(new Error("Unable to publish to granted channel"));
+                                            }
+                                        })
+                                    },
+                                    'error': function () {
+                                        done(new Error("Unable to get history of granted channel"));
+                                    }
+                                });
+                            }
+                        });
+                    }
+                })
+            }, 5000);
+        });
+
         it('should be able to grant read write access without auth key', function (done) {
             var grant_channel_local = grant_channel + Date.now();
             setTimeout(function () {
