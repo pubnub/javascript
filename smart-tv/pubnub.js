@@ -1813,14 +1813,14 @@ function PN_API(setup) {
         'grant' : function( args, callback ) {
             var callback        = args['callback'] || callback
             ,   err             = args['error']    || function(){}
-            ,   channel         = args['channel']
+            ,   channel         = args['channel']  || args['channels']
             ,   channel_group   = args['channel_group']
             ,   jsonp           = jsonp_cb()
             ,   ttl             = args['ttl']
             ,   r               = (args['read'] )?"1":"0"
             ,   w               = (args['write'])?"1":"0"
             ,   m               = (args['manage'])?"1":"0"
-            ,   auth_key        = args['auth_key'];
+            ,   auth_key        = args['auth_key'] || args['auth_keys'];
 
             if (!callback)      return error('Missing Callback');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
@@ -1838,6 +1838,12 @@ function PN_API(setup) {
             };
             if (args['manage']) {
                 data['m'] = m;
+            }
+            if (isArray(channel)) {
+                channel = channel['join'](',');
+            }
+            if (isArray(auth_key)) {
+                auth_key = auth_key['join'](',');
             }
             if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
             if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
