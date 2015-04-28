@@ -1971,7 +1971,25 @@ test('#state() should be able to set state for uuid', function(){
             start();
         }
     })
-})
+});
+
+//TODO Uncomment the following test
+//test('#crypto_obj should be able to encrypt and decrypt messages and is accessible via interfaces', function(){
+//
+//    //equal(PUBNUB.crypto_obj, pubnub.crypto_obj);
+//
+//    var key = 'fookey';
+//    var expectedBase64 = 'sNEP8cQFxiU3FeFXJH9zEJeBQcyhEXLN7SGfVGlaDrM=';
+//    var expectedObject = {foo: 'bar', baz: 'qux'};
+//
+//    ok(expectedBase64 == pubnub.crypto_obj.encrypt(expectedObject, key));
+//    ok(expectedBase64 == PUBNUB.crypto_obj.encrypt(expectedObject, key));
+//
+//    deepEqual(pubnub.crypto_obj.decrypt(expectedBase64, key), expectedObject);
+//    deepEqual(PUBNUB.crypto_obj.decrypt(expectedBase64, key), expectedObject);
+//
+//});
+
 /*
 asyncTest('#state() should be able to delete state for uuid', function(){
     expect(4);
