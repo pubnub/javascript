@@ -2224,21 +2224,74 @@ var db = (function(){
 
 function crypto_obj() {
     var iv = "0123456789012345";
-    function get_padded_key(key) {
-        return crypto.createHash('sha256').update(key).digest("hex").slice(0,32);
+
+    var allowedKeyEncodings = ['hex', 'utf8', 'base64', 'binary'];
+    var allowedKeyLengths = [128, 256];
+    var allowedModes = ['ecb', 'cbc'];
+
+    var defaultOptions = {
+        encryptKey: true,
+        keyEncoding: 'utf8',
+        keyLength: 256,
+        mode: 'cbc'
+    };
+
+    function parse_options(options) {
+
+        // Defaults
+        options = options || {};
+        if (!options.hasOwnProperty('encryptKey')) options.encryptKey = defaultOptions.encryptKey;
+        if (!options.hasOwnProperty('keyEncoding')) options.keyEncoding = defaultOptions.keyEncoding;
+        if (!options.hasOwnProperty('keyLength')) options.keyLength = defaultOptions.keyLength;
+        if (!options.hasOwnProperty('mode')) options.mode = defaultOptions.mode;
+
+        // Validation
+        if (allowedKeyEncodings.indexOf(options.keyEncoding.toLowerCase()) == -1) options.keyEncoding = defaultOptions.keyEncoding;
+        if (allowedKeyLengths.indexOf(parseInt(options.keyLength, 10)) == -1) options.keyLength = defaultOptions.keyLength;
+        if (allowedModes.indexOf(options.mode.toLowerCase()) == -1) options.mode = defaultOptions.mode;
+
+        return options;
+
+    }
+
+    function decode_key(key, options) {
+        if (options.keyEncoding == 'base64' || options.keyEncoding == 'hex') {
+            return new Buffer(key, options.keyEncoding);
+        } else {
+            return key;
+        }
+    }
+
+    function get_padded_key(key, options) {
+        key = decode_key(key, options);
+        if (options.encryptKey) {
+            return crypto.createHash('sha256').update(key).digest("hex").slice(0,32);
+        } else {
+            return key;
+        }
+    }
+
+    function get_algorythm(options) {
+        return 'aes-' + options.keyLength + '-' + options.mode;
+    }
+
+    function get_iv(options) {
+        return (options.mode == 'cbc') ? iv : '';
     }
 
     return {
-        'encrypt' : function(input, key) {
+        'encrypt' : function(input, key, options) {
             if (!key) return input;
+            options = parse_options(options);
             var plain_text = JSON['stringify'](input);
-            var cipher = crypto.createCipheriv('aes-256-cbc', get_padded_key(key), iv);
+            var cipher = crypto.createCipheriv(get_algorythm(options), get_padded_key(key, options), get_iv(options));
             var base_64_encrypted = cipher.update(plain_text, 'utf8', 'base64') + cipher.final('base64');
             return base_64_encrypted || input;
         },
-        'decrypt' : function(input, key) {
+        'decrypt' : function(input, key, options) {
             if (!key) return input;
-            var decipher = crypto.createDecipheriv('aes-256-cbc', get_padded_key(key), iv);
+            options = parse_options(options);
+            var decipher = crypto.createDecipheriv(get_algorythm(options), get_padded_key(key, options), get_iv(options));
             try {
                 var decrypted = decipher.update(input, 'base64', 'utf8') + decipher.final('utf8');
             } catch (e) {
@@ -2281,6 +2334,7 @@ var CREATE_PUBNUB = function(setup) {
 
     SELF.init = SELF;
     SELF.secure = SELF;
+    SELF.crypto_obj = crypto_obj();
     SELF.ready();
 
     return SELF;
@@ -2289,5 +2343,6 @@ var CREATE_PUBNUB = function(setup) {
 CREATE_PUBNUB.init = CREATE_PUBNUB;
 CREATE_PUBNUB.unique = unique;
 CREATE_PUBNUB.secure = CREATE_PUBNUB;
+CREATE_PUBNUB.crypto_obj = crypto_obj();
 module.exports = CREATE_PUBNUB;
 module.exports.PNmessage = PNmessage;

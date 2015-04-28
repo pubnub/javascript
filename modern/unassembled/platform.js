@@ -308,6 +308,7 @@ function CREATE_PUBNUB(setup) {
     SELF['bind'] = bind;
     SELF['css'] = css;
     SELF['create'] = create;
+    SELF['crypto_obj'] = crypto_obj();
 
     if (typeof(window) !== 'undefined'){
         bind( 'beforeunload', window, function() {
@@ -332,6 +333,7 @@ function CREATE_PUBNUB(setup) {
 }
 CREATE_PUBNUB['init'] = CREATE_PUBNUB
 CREATE_PUBNUB['secure'] = CREATE_PUBNUB
+CREATE_PUBNUB['crypto_obj'] = crypto_obj()
 PUBNUB = CREATE_PUBNUB({})
 typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
 typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);

@@ -285,6 +285,7 @@ function CREATE_PUBNUB(setup) {
     }
 
     SELF['init'] = SELF;
+    SELF['crypto_obj'] = crypto_obj();
 
 
     // Return without Testing
@@ -294,6 +295,7 @@ function CREATE_PUBNUB(setup) {
     return SELF;
 }
 CREATE_PUBNUB['init'] = CREATE_PUBNUB;
+CREATE_PUBNUB['crypto_obj'] = crypto_obj();
 
 typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
 typeof exports !== 'undefined' && (exports.PN = CREATE_PUBNUB)     || (PUBNUB = CREATE_PUBNUB);

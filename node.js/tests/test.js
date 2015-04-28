@@ -112,6 +112,54 @@ describe('Pubnub', function () {
         }
     });
 
+    describe('#crypto_obj', function() {
+
+        it('should be able to encrypt and decrypt messages', function() {
+
+            var key = 'fookey';
+            var expectedBase64 = 'sNEP8cQFxiU3FeFXJH9zEJeBQcyhEXLN7SGfVGlaDrM=';
+            var expectedObject = {foo: 'bar', baz: 'qux'};
+
+            assert.equal(pubnub.crypto_obj.encrypt(expectedObject, key), expectedBase64, 'Instance pubnub.crypto_obj encrypted message');
+            assert.equal(PUBNUB.crypto_obj.encrypt(expectedObject, key), expectedBase64, 'Constructor PUBNUB.crypto_obj encrypted message');
+
+            assert.deepEqual(pubnub.crypto_obj.decrypt(expectedBase64, key), expectedObject, 'Instance pubnub.crypto_obj decrypted message');
+            assert.deepEqual(PUBNUB.crypto_obj.decrypt(expectedBase64, key), expectedObject, 'Constructor PUBNUB.crypto_obj decrypted message');
+
+        });
+
+        it('should allow to pass custom options', function() {
+
+            var expected = {
+                    "timestamp": "2014-03-12T20:47:54.712+0000",
+                    "body": {
+                        "extensionId": 402853446008,
+                        "telephonyStatus": "OnHold"
+                    },
+                    "event": "/restapi/v1.0/account/~/extension/402853446008/presence",
+                    "uuid": "db01e7de-5f3c-4ee5-ab72-f8bd3b77e308"
+                },
+                aesMessage = 'gkw8EU4G1SDVa2/hrlv6+0ViIxB7N1i1z5MU/Hu2xkIKzH6yQzhr3vIc27IAN558kTOkacqE5DkLpRdnN1orwtIBsUHmPMkMWTOLDzVr6eRk+2Gcj2Wft7ZKrCD+FCXlKYIoa98tUD2xvoYnRwxiE2QaNywl8UtjaqpTk1+WDImBrt6uabB1WICY/qE0It3DqQ6vdUWISoTfjb+vT5h9kfZxWYUP4ykN2UtUW1biqCjj1Rb6GWGnTx6jPqF77ud0XgV1rk/Q6heSFZWV/GP23/iytDPK1HGJoJqXPx7ErQU=',
+                key = 'e0bMTqmumPfFUbwzppkSbA==';
+
+            assert.equal(pubnub.crypto_obj.encrypt(expected, key, {
+                encryptKey: false,
+                keyEncoding: 'base64',
+                keyLength: 128,
+                mode: 'ecb'
+            }), aesMessage);
+
+            assert.deepEqual(pubnub.crypto_obj.decrypt(aesMessage, key, {
+                encryptKey: false,
+                keyEncoding: 'base64',
+                keyLength: 128,
+                mode: 'ecb'
+            }), expected);
+
+        });
+
+    });
+
     describe('#subscribe()', function () {
         it('should pass plain text to callback on decryption error', function (done) {
             var ch = channel + '-' + ++count;
