@@ -1115,7 +1115,6 @@ function PN_API(setup) {
             ,   channel_group   = args['channel_group']
             ,   callback        = callback            || args['callback']
             ,   callback        = callback            || args['message']
-            ,   auth_key        = args['auth_key']    || AUTH_KEY
             ,   connect         = args['connect']     || function(){}
             ,   reconnect       = args['reconnect']   || function(){}
             ,   disconnect      = args['disconnect']  || function(){}
@@ -1131,6 +1130,8 @@ function PN_API(setup) {
             ,   heartbeat       = args['heartbeat'] || args['pnexpires']
             ,   heartbeat_interval = args['heartbeat_interval']
             ,   restore         = args['restore'] || SUB_RESTORE;
+
+            AUTH_KEY            = args['auth_key']    || AUTH_KEY;
 
             // Restore Enabled?
             SUB_RESTORE = restore;
@@ -1194,7 +1195,7 @@ function PN_API(setup) {
                     if (noheresync) return;
                     SELF['here_now']({
                         'channel'  : channel,
-                        'data'     : _get_url_params({ 'uuid' : UUID, 'auth' : auth_key }),
+                        'data'     : _get_url_params({ 'uuid' : UUID, 'auth' : AUTH_KEY }),
                         'callback' : function(here) {
                             each( 'uuids' in here ? here['uuids'] : [],
                             function(uid) { presence( {
@@ -1234,7 +1235,7 @@ function PN_API(setup) {
                         'channel_group'  : channel_group + PRESENCE_SUFFIX,
                         'callback' : presence,
                         'restore'  : restore,
-                        'auth_key' : auth_key
+                        'auth_key' : AUTH_KEY
                     });
 
                     // Presence Subscribed?
@@ -1244,7 +1245,7 @@ function PN_API(setup) {
                     if (noheresync) return;
                     SELF['here_now']({
                         'channel_group'  : channel_group,
-                        'data'           : _get_url_params({ 'uuid' : UUID, 'auth' : auth_key }),
+                        'data'           : _get_url_params({ 'uuid' : UUID, 'auth' : AUTH_KEY }),
                         'callback' : function(here) {
                             each( 'uuids' in here ? here['uuids'] : [],
                             function(uid) { presence( {
@@ -1321,7 +1322,7 @@ function PN_API(setup) {
                 // Connect to PubNub Subscribe Servers
                 _reset_offline();
 
-                var data = _get_url_params({ 'uuid' : UUID, 'auth' : auth_key });
+                var data = _get_url_params({ 'uuid' : UUID, 'auth' : AUTH_KEY });
 
                 if (channel_groups) {
                     data['channel-group'] = channel_groups;
