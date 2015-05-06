@@ -2,6 +2,7 @@
 node_modules
 javascript.iml
 *.js-e
+*.json-e
 upload/*
 .idea
 *.iml
