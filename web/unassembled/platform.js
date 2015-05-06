@@ -417,6 +417,7 @@ var PDIV          = $('pubnub') || 0
     SELF['events']      = events;
     SELF['init']        = SELF;
     SELF['secure']      = SELF;
+    SELF['crypto_obj']  = crypto_obj(); // export to instance
 
 
     // Add Leave Functions
@@ -436,6 +437,7 @@ var PDIV          = $('pubnub') || 0
 };
 CREATE_PUBNUB['init']   = CREATE_PUBNUB;
 CREATE_PUBNUB['secure'] = CREATE_PUBNUB;
+CREATE_PUBNUB['crypto_obj'] = crypto_obj(); // export to constructor
 
 // Bind for PUBNUB Readiness to Subscribe
 if (document.readyState === 'complete') {

@@ -1971,7 +1971,8 @@ test('#state() should be able to set state for uuid', function(){
             start();
         }
     })
-})
+});
+
 /*
 asyncTest('#state() should be able to delete state for uuid', function(){
     expect(4);
