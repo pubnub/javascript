@@ -4,6 +4,7 @@ VERSION=$(shell cat $(REPOS_DIR)/VERSION)
 GOOGLE_MINIFY=/opt/minify/compiler.jar
 CORE_DIR=$(REPOS_DIR)/core
 ECHO=/bin/echo
+PACKAGE_JSON=$(REPOS_DIR)/package.json
 PUBNUB_JS=pubnub.js
 PUBNUB_MIN_JS=pubnub.min.js
 PUBNUB_VERSION_JS=pubnub-$(VERSION).js

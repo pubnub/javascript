@@ -14,7 +14,7 @@
   "scripts": {
     "test": "grunt test --force"
   },
-  "main": "./pubnub.js",
+  "main": "./node.js/pubnub.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
@@ -48,5 +48,12 @@
   "license": "MIT",
   "engine": {
     "node": ">=0.2"
-  }
+  },
+  "files": [
+    "node.js",
+    "CHANGELOG",
+    "FUTURE.md",
+    "LICENSE",
+    "README.md"
+  ]
 }
