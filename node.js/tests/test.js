@@ -161,9 +161,116 @@ describe('Pubnub', function () {
     });
 
     describe('#subscribe()', function () {
-        it('should pass plain text to callback on decryption error', function (done) {
-            var ch = channel + '-' + ++count;
 
+        it('should be able to handle wildcard, channel group and channel together', function (done) {
+            var random  = get_random();
+            var ch      = 'channel-' + random;
+            var chg     = 'channel-group-' + random;
+            var chgc    = 'channel-group-channel' + random
+            var chw     = ch + '.*';
+            var chwc    = ch + ".a";
+
+            pubnub.channel_group_add_channel({
+                'channel_group' : chg,
+                'channels'      : chgc,
+                'callback'      : function(r) {
+                    pubnub.channel_group_list_channels({
+                        'channel_group' : chg,
+                        'callback' : function(r) {
+                             pubnub.subscribe({
+                                channel: ch,
+                                connect: function () {
+                                    pubnub.subscribe({
+                                        channel: chw,
+                                        connect: function () {
+                                            pubnub.subscribe({
+                                                channel_group: chg,
+                                                connect: function () {
+                                                    pubnub.publish({
+                                                        'channel' : ch,
+                                                        message : 'message' + ch,
+                                                        callback : function(r) {
+                                                            assert.ok(true, 'message published');
+                                                            pubnub.publish({
+                                                                'channel' : chwc,
+                                                                message : 'message' + chwc,
+                                                                callback : function(r) {
+                                                                    assert.ok(true, 'message published');   
+                                                                    pubnub.publish({
+                                                                        'channel' : chgc,
+                                                                        message : 'message' + chgc,
+                                                                        callback : function(r) {
+                                                                            assert.ok(true, 'message published');
+                                                                            
+                                                                        },
+                                                                        error : function(r) {
+                                                                            assert.ok(false, 'error occurred in publish');
+                                                                        }
+
+                                                                    })
+                                                                },
+                                                                error : function(r) {
+                                                                    assert.ok(false, 'error occurred in publish');
+                                                                }
+                                                            })
+                                                        },
+                                                        error : function(r) {
+                                                            assert.ok(false, 'error occurred in publish');
+                                                        }
+
+                                                    })
+                                                },
+                                                callback: function (response) {
+                                                    assert.deepEqual(response, 'message' + chgc);
+                                                    pubnub.unsubscribe({channel: chgc});
+                                                    done();
+                                                },
+                                                error: function () {
+                                                    assert.ok(false);
+                                                    pubnub.unsubscribe({channel: ch});
+                                                    done();
+                                                }
+                                            });
+                                        },
+                                        callback: function (response) {
+                                            assert.deepEqual(response, 'message' + chwc);
+                                            //pubnub.unsubscribe({channel: chwc});
+                                        },
+                                        error: function () {
+                                            assert.ok(false);
+                                            pubnub.unsubscribe({channel: ch});
+                                            done();
+                                        }
+                                    });
+                                },
+                                callback: function (response) {
+                                    assert.deepEqual(response, 'message' + ch);
+                                    pubnub.unsubscribe({channel: ch});
+                                },
+                                error: function () {
+                                    assert.ok(false);
+                                    pubnub.unsubscribe({channel: ch});
+                                    done();
+                                }
+                            })            
+                        },
+                        'error'         : function(r) {
+                            assert.ok(false, "error occurred in adding channel to group");
+                        }
+
+                    });
+                        },
+                        'error' : function(r) {
+                            ok(false, "error occurred");
+                        }
+                    })
+
+           
+        });
+
+
+        it('should pass plain text to callback on decryption error', function (done) {
+            var ch = channel + '-' + ++channel;
             pubnub_enc.subscribe({
                 channel: ch,
                 connect: function () {

@@ -406,6 +406,117 @@ pubnub_test_all("publish() should publish strings without error", function(confi
     }, config);
 });
 
+
+pubnub_test_all("subscribe() should be able to handle wildcard, channel group and channel together",function(config){
+    var random  = get_random();
+    var ch      = 'channel-' + random;
+    var chg     = 'channel-group-' + random;
+    var chgc    = 'channel-group-channel' + random
+    var chw     = ch + '.*';
+    var chwc    = ch + ".a";
+
+
+    expect(6);
+    stop(3);
+
+    pubnub.channel_group_add_channel({
+        'channel_group' : chg,
+        'channels'      : chgc,
+        'callback'      : function(r) {
+            pubnub.channel_group_list_channels({
+                'channel_group' : chg,
+                'callback' : function(r) {
+                     pubnub.subscribe({
+                        channel: ch,
+                        connect: function () {
+                            pubnub.subscribe({
+                                channel: chw,
+                                connect: function () {
+                                    pubnub.subscribe({
+                                        channel_group: chg,
+                                        connect: function () {
+                                            pubnub.publish({
+                                                'channel' : ch,
+                                                message : 'message' + ch,
+                                                callback : function(r) {
+                                                    ok(true, 'message published');
+                                                    pubnub.publish({
+                                                        'channel' : chwc,
+                                                        message : 'message' + chwc,
+                                                        callback : function(r) {
+                                                            ok(true, 'message published');   
+                                                            pubnub.publish({
+                                                                'channel' : chgc,
+                                                                message : 'message' + chgc,
+                                                                callback : function(r) {
+                                                                    ok(true, 'message published');
+                                                                    
+                                                                },
+                                                                error : function(r) {
+                                                                    ok(false, 'error occurred in publish');
+                                                                }
+
+                                                            })
+                                                        },
+                                                        error : function(r) {
+                                                            ok(false, 'error occurred in publish');
+                                                        }
+                                                    })
+                                                },
+                                                error : function(r) {
+                                                    ok(false, 'error occurred in publish');
+                                                }
+
+                                            })
+                                        },
+                                        callback: function (response) {
+                                            deepEqual(response, 'message' + chgc);
+                                            //pubnub.unsubscribe({channel: chgc});
+                                            start();
+                                        },
+                                        error: function () {
+                                            ok(false);
+                                            pubnub.unsubscribe({channel: chgc});
+                                            start();
+                                        }
+                                    });
+                                },
+                                callback: function (response) {
+                                    deepEqual(response, 'message' + chwc);
+                                    //pubnub.unsubscribe({channel: chwc});
+                                    start();
+                                },
+                                error: function () {
+                                    ok(false);
+                                    pubnub.unsubscribe({channel: chwc});
+                                    
+                                }
+                            });
+                        },
+                        callback: function (response) {
+                            deepEqual(response, 'message' + ch);
+                            //pubnub.unsubscribe({channel: ch});
+                            start();
+                        },
+                        error: function () {
+                            ok(false);
+                            pubnub.unsubscribe({channel: ch});
+                        }
+                    })
+                },
+                'error' : function(r) {
+                    ok(false, "error occurred");
+                }
+            })      
+        },
+        'error'         : function(r) {
+            ok(false, "error occurred in adding channel to group");
+        }
+
+    });
+           
+})
+
 pubnub_test_all("publish() should publish strings when using channel groups without error", function(config) {
     var pubnub = _pubnub_init({
         publish_key: test_publish_key,

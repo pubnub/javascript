@@ -2585,8 +2585,8 @@ function ajax( setup ) {
               new XDomainRequest()  ||
               new XMLHttpRequest();
 
-        xhr.onerror = xhr.onabort   = function(){ done(
-            1, xhr.responseText || { "error" : "Network Connection Error"}
+        xhr.onerror = xhr.onabort   = function(e){ done(
+            1, e || (xhr && xhr.responseText) || { "error" : "Network Connection Error"}
         ) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.onreadystatechange = function() {
