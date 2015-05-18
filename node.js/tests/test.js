@@ -181,16 +181,13 @@ describe('Pubnub', function () {
                     pubnub.channel_group_list_channels({
                         'channel_group' : chg,
                         'callback' : function(r) {
-                            console.log(1);
                             setTimeout(function(){
                                 pubnub.subscribe({
                                     channel: ch,
                                     connect: function () {
-                                        console.log(2);
                                         pubnub.subscribe({
                                             channel: chw,
                                             connect: function () {
-                                                console.log(3);
                                                 pubnub.subscribe({
                                                     channel_group: chg,
                                                     connect: function () {
@@ -199,19 +196,16 @@ describe('Pubnub', function () {
                                                                 'channel' : ch,
                                                                 message : 'message' + ch,
                                                                 callback : function(r) {
-                                                                    console.log(4 + ' : PUBLISHED ' + 'message' + ch);
                                                                     assert.ok(true, 'message published');
                                                                     pubnub.publish({
                                                                         'channel' : chwc,
                                                                         message : 'message' + chwc,
                                                                         callback : function(r) {
-                                                                            console.log(5 + ' : PUBLISHED ' + 'message' + chwc);
                                                                             assert.ok(true, 'message published');   
                                                                             pubnub.publish({
                                                                                 'channel' : chgc,
                                                                                 message : 'message' + chgc,
                                                                                 callback : function(r) {
-                                                                                    console.log( 9 + ' : PUBLISHED ' + 'message' + chgc)
                                                                                     assert.ok(true, 'message published');
                                                                                 },
                                                                                 error : function(r) {
@@ -232,7 +226,6 @@ describe('Pubnub', function () {
                                                         }, 5000);
                                                     },
                                                     callback: function (response) {
-                                                        console.log(6 + ' : ' + response);
                                                         assert.deepEqual(response, 'message' + chgc);
                                                         pubnub.unsubscribe({channel_group: chg});
                                                         d();
@@ -245,7 +238,6 @@ describe('Pubnub', function () {
                                                 });
                                             },
                                             callback: function (response) {
-                                                console.log(7 + ' : ' + response);
                                                 assert.deepEqual(response, 'message' + chwc);
                                                 d();
                                                 //pubnub.unsubscribe({channel: chw});
@@ -258,7 +250,6 @@ describe('Pubnub', function () {
                                         });
                                     },
                                     callback: function (response) {
-                                        console.log(8 + ' : ' + response);
                                         assert.deepEqual(response, 'message' + ch);
                                         //pubnub.unsubscribe({channel: ch});
                                         d();

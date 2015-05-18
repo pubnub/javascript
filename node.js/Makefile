@@ -12,7 +12,7 @@ build: $(PUBNUB_JS)
 $(PUBNUB_JS): $(PUBNUB_COMMON_JS) $(PUBNUB_NODE_JS)
 	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_JS)
 	cat $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS) >> $(PUBNUB_JS)
-	sed -i -e "s/\"version\"\: \".*\"/\"version\"\: \"$(VERSION)foo\"/g" $(PACKAGE_JSON)
+	sed -i -e "s/\"version\"\: \".*\"/\"version\"\: \"$(VERSION)\"/g" $(PACKAGE_JSON)
 	sed -i -e "s/VERSION/\'$(VERSION)\'/g" $(PUBNUB_JS)
 	sed -i -e "s/PLATFORM/\'$(PLATFORM)\'/g" $(PUBNUB_JS)
 
