@@ -10,7 +10,8 @@ Test.prototype.run = function (next) {
 
     try {
         this.func(function (error) {
-            if (error instanceof Error) {
+            // "error instanceof Error" doesn't works
+            if (error && 'message' in error) {
                 throw error;
             }
 

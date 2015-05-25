@@ -1,89 +1,90 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Document</title>
-  <script src="bower_components/jquery/dist/jquery.js"></script>
-  <script src="bower_components/parse/parse.js"></script>
-  <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-  <script src="bower_components/underscore/underscore.js"></script>
-  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css"/>
-  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.css"/>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/parse/parse.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/underscore/underscore.js"></script>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css"/>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.css"/>
 </head>
 <body>
 <script type="text/template" id="successTemplate">
-  <div class="row">
-    <div class="col-sm-12">
-      <h4><%= name %></h4>
-      <ul class="list-group">
-        <% for (var i = 0; i < payload.length; i++) { %>
-        <% var current = payload[i]; %>
-        <% if (!current.error) { %>
-        <li class="list-group-item list-group-item-success"><%= current.name %></li>
-        <% } else { %>
-        <li class="list-group-item list-group-item-danger">
-          <%= current.name %> <br/> <pre><%= current.stacktrace || current.message%></pre>
-        </li>
-        <% } %>
-        <% } %>
-      </ul>
+    <div class="row">
+        <div class="col-sm-12">
+            <h4><%= name %></h4>
+            <ul class="list-group">
+                <% for (var i = 0; i < payload.length; i++) { %>
+                <% var current = payload[i]; %>
+                <% if (!current.error) { %>
+                <li class="list-group-item list-group-item-success"><%= current.name %></li>
+                <% } else { %>
+                <li class="list-group-item list-group-item-danger">
+                    <%= current.name %> <br/>
+                    <pre><%= current.stacktrace || current.message%></pre>
+                </li>
+                <% } %>
+                <% } %>
+            </ul>
+        </div>
     </div>
-  </div>
 </script>
 <script type="text/template" id="errorTemplate">
-  <div class="row">
-    <div class="col-sm-12">
-      <pre class="alert alert-danger"><%= message %></pre>
+    <div class="row">
+        <div class="col-sm-12">
+            <pre class="alert alert-danger"><%= message %></pre>
+        </div>
     </div>
-  </div>
 </script>
 
 <div class="container" id="main">
 </div>
 <script>
-  String.prototype.escape = function() {
-    var tagsToReplace = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;'
+    String.prototype.escape = function () {
+        var tagsToReplace = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;'
+        };
+
+        return this.replace(/[&<>]/g, function (tag) {
+            return tagsToReplace[tag] || tag;
+        });
     };
 
-    return this.replace(/[&<>]/g, function(tag) {
-      return tagsToReplace[tag] || tag;
-    });
-  };
+    $(function () {
+        Parse.initialize("zZOc0BCJc8LwfAFnw4wlK9W5taNf7umvTginEnGt",
+                "rtFJWM2mr6ev9ZD70rgrIAuiIMItqXVTNi5ALY2A");
 
-  $(function () {
-    Parse.initialize("zZOc0BCJc8LwfAFnw4wlK9W5taNf7umvTginEnGt",
-            "rtFJWM2mr6ev9ZD70rgrIAuiIMItqXVTNi5ALY2A");
+        var testNames = ['errors', 'ssl', 'pam'],
+                successTemplate = _.template($("#successTemplate").html()),
+                errorTemplate = _.template($("#errorTemplate").html());
 
-    var testNames = ['testErrors'],
-            successTemplate = _.template($("#successTemplate").html()),
-            errorTemplate = _.template($("#errorTemplate").html());
+        testNames.forEach(function (name) {
+            Parse.Cloud.run(name + 'Test', {}, {
+                success: function (response) {
+                    pushSuccessResult(response);
+                },
+                error: function (error) {
+                    pushErrorResult(error);
+                }
+            });
+        });
 
-    testNames.forEach(function (name) {
-      Parse.Cloud.run(name, {}, {
-        success: function (response) {
-          pushSuccessResult(response);
-        },
-        error: function (error) {
-          pushErrorResult(error);
+        function pushSuccessResult(response) {
+            var html = successTemplate(response);
+
+            $("#main").append(html);
         }
-      });
+
+        function pushErrorResult(error) {
+            error.message = error.message.escape();
+
+            $("#main").append(errorTemplate(error));
+        }
     });
-
-    function pushSuccessResult(response) {
-      var html = successTemplate(response);
-
-      $("#main").append(html);
-    }
-
-    function pushErrorResult(error) {
-      error.message = error.message.escape();
-
-      $("#main").append(errorTemplate(error));
-    }
-  });
 
 </script>
 </body>
