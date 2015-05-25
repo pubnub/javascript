@@ -3,7 +3,7 @@ var Pubnub = require('cloud/pubnub'),
     Sandbox = require('cloud/utils/sandbox'),
     TestSuite = require('cloud/utils/testSuite');
 
-var test = new TestSuite("Using SSL mode"),
+var test = new TestSuite("PAM methods"),
     pubnub,
     sandbox;
 
@@ -19,7 +19,7 @@ test.beforeEach(function () {
     sandbox = Sandbox.create();
 });
 
-test.it("be able to audit sub-key", function (done) {
+test.it("should be able to grant to the sub-key", function (done) {
     var channel = 'js-parse-test';
 
     pubnub.grant({
