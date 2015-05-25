@@ -27,7 +27,10 @@ test.it("be able to audit sub-key", function (done) {
         read: true,
         write: false,
         callback: function (response) {
-            assert.equal(response[0], 1);
+            assert('channels' in response);
+            assert(channel in response['channels']);
+            assert.equal(1, response['channels'][channel]['r']);
+            assert.equal(0, response['channels'][channel]['w']);
             done()
         },
         error: function (error) {

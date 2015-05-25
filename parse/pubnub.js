@@ -2043,6 +2043,7 @@ function PN_API(setup) {
  * UTIL LOCALS
  */
 var crypto = require('crypto'),
+    Buffer = require('buffer').Buffer,
     PNSDK = 'PubNub-JS-' + 'Parse' + '/' +  '3.7.11';
 
 function get_hmac_SHA256(data, key) {

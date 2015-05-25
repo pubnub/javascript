@@ -33,6 +33,7 @@
  * UTIL LOCALS
  */
 var crypto = require('crypto'),
+    Buffer = require('buffer').Buffer,
     PNSDK = 'PubNub-JS-' + PLATFORM + '/' +  VERSION;
 
 function get_hmac_SHA256(data, key) {
