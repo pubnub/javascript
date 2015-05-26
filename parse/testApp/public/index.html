@@ -58,9 +58,9 @@
         Parse.initialize("zZOc0BCJc8LwfAFnw4wlK9W5taNf7umvTginEnGt",
                 "rtFJWM2mr6ev9ZD70rgrIAuiIMItqXVTNi5ALY2A");
 
-        var testNames = ['errors', 'ssl', 'pam'],
-                successTemplate = _.template($("#successTemplate").html()),
-                errorTemplate = _.template($("#errorTemplate").html());
+        var testNames = ['errors', 'ssl', 'pam', 'cipherKey'],
+            successTemplate = _.template($("#successTemplate").html()),
+            errorTemplate = _.template($("#errorTemplate").html());
 
         testNames.forEach(function (name) {
             Parse.Cloud.run(name + 'Test', {}, {

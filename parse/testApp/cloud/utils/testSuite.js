@@ -8,6 +8,7 @@ function TestSuite(name) {
     this.afterEachFunc = function () {};
     this.tests = [];
     this.onlyFlag = false;
+    this.config = null;
 }
 
 TestSuite.prototype.before = function (func) {
@@ -42,29 +43,32 @@ TestSuite.prototype.run = function (success, error) {
         i = 0,
         currentTest;
 
-    this.beforeFunc();
+    Parse.Config.get().then(function (config) {
+        _this.config = config;
+        _this.beforeFunc();
 
-    function runNextTest() {
-        currentTest = _this.tests[i];
+        function runNextTest() {
+            currentTest = _this.tests[i];
 
-        if (currentTest instanceof Test) {
-            _this.beforeEachFunc();
-            currentTest.run(function (result) {
-                results.push(result);
-                _this.afterEachFunc();
-                i++;
-                runNextTest();
-            })
-        } else {
-            _this.afterFunc();
-            success({
-                name: _this.name,
-                payload: results
-            });
+            if (currentTest instanceof Test) {
+                _this.beforeEachFunc();
+                currentTest.run(function (result) {
+                    results.push(result);
+                    _this.afterEachFunc();
+                    i++;
+                    runNextTest();
+                })
+            } else {
+                _this.afterFunc();
+                success({
+                    name: _this.name,
+                    payload: results
+                });
+            }
         }
-    }
 
-    runNextTest();
+        runNextTest();
+    });
 };
 
 module.exports = TestSuite;

@@ -9,8 +9,8 @@ var test = new TestSuite("Error callback"),
 
 test.before(function () {
     pubnub = Pubnub.init({
-        publish_key: 'pub-c-a82961b5-d8ee-462c-bd16-0cd53edbbe09',
-        subscribe_key: 'sub-c-f5674c7e-7d52-11e3-a993-02ee2ddab7fe'
+        publish_key: test.config.get("pub_key"),
+        subscribe_key: test.config.get("sub_key")
     });
 });
 

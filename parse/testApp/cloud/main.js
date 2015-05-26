@@ -1,4 +1,4 @@
-var tests = ['errors', 'ssl', 'pam'],
+var tests = ['errors', 'ssl', 'pam', 'cipherKey'],
     length = tests.length,
     current,
     i;
