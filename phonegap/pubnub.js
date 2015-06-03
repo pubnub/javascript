@@ -1265,7 +1265,7 @@ function PN_API(setup) {
             function _test_connection(success) {
                 if (success) {
                     // Begin Next Socket Connection
-                    timeout( CONNECT, SECOND );
+                    timeout( CONNECT, windowing);
                 }
                 else {
                     // New Origin on Failed Connection
