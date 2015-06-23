@@ -1,3 +1,7 @@
+6-22-15 * 3.7.12
+. wildcard subscribe support
+. fix for windowing fallback to 1 s
+
 5-18-15 * 3.7.11
 . fixed error messages on sleep and resume
 . custom AES implementation replaced with CryptoJS
