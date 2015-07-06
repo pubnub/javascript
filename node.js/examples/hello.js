@@ -5,23 +5,26 @@
 
 --------------------------------------------------------------------------- */
 
-var PUBNUB = require("../pubnub.js")
+var pubnub = require("../pubnub.js")
 
-var pubnub = PUBNUB({
-    publish_key   : "demo",
-    subscribe_key : "demo"
-    //cipher_key : "demo"
+var p = pubnub.init({
+    "subscribe_key" : "new-pam",
+    "publish_key" : "new-pam",
+    "secret_key" : "new-pam",
+    "params" : {},
 });
 
-pubnub.publish({
-    post: false,
-channel : 'PubNubTest_RX',
-message : { 'test' : 'f?ds' },
-callback : function(details) {
-var success = details[0]
-, response = details[1];
+p.publish({
+    "message" : "foo",
+    "channel" : "bar",
+});
 
-if (success) console.log( "Success!", response );
-if (!success) console.log( "Fail!", response );
-}
+p.publish({
+    "message" : "foo",
+    "channel" : "bar",
+});
+
+p.grant({
+    "callback" : function (m) { console.log(m); },
+    "error" : function (e) { console.error(e); },
 });

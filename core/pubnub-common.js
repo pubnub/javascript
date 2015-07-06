@@ -990,6 +990,7 @@ function PN_API(setup) {
             ,   store    = ('store_in_history' in args) ? args['store_in_history']: true
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
+            ,   params
             ,   url;
 
             if (args['prepend']) add_msg = 'unshift'
@@ -1754,6 +1755,7 @@ function PN_API(setup) {
                 ,   op             = args['op']
                 ,   gw_type        = args['gw_type']
                 ,   device_id      = args['device_id']
+                ,   params
                 ,   url;
 
             if (!device_id)     return error('Missing Device ID (device_id)');
