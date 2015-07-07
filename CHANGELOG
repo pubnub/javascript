@@ -1,3 +1,6 @@
+7-07-15 * 3.7.13
+. fix for signature mismatch issue in Grant
+
 6-22-15 * 3.7.12
 . wildcard subscribe support
 . fix for windowing fallback to 1 s
