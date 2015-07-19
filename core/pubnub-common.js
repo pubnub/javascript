@@ -583,7 +583,7 @@ function PN_API(setup) {
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
             xdr({
-                blocking : blocking || SSL,
+                blocking : blocking,
                 timeout  : 2000,
                 callback : jsonp,
                 data     : _get_url_params(data),
