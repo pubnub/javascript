@@ -325,7 +325,8 @@ function PN_API(setup) {
     ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
     ,   USE_INSTANCEID = setup['instance_id'] || false
-    ,   INSTANCEID     = ''
+    ,   INSTANCEID    = ''
+    ,   shutdown      = setup['shutdown']
     ,   _poll_timer
     ,   _poll_timer2;
 
@@ -1927,6 +1928,11 @@ function PN_API(setup) {
         'stop_timers': function () {
             clearTimeout(_poll_timer);
             clearTimeout(_poll_timer2);
+            clearTimeout(PRESENCE_HB_TIMEOUT);
+        },
+        'shutdown': function () {
+            SELF['stop_timers']();
+            shutdown && shutdown();
         },
 
         // Expose PUBNUB Functions
@@ -2317,6 +2323,10 @@ var CREATE_PUBNUB = function(setup) {
     setup['hmac_SHA256'] = get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
     setup['params'] = {'pnsdk' : PNSDK};
+    setup['shutdown'] = function() {
+        keepAliveAgentSSL && keepAliveAgentSSL.destroy && keepAliveAgentSSL.destroy();
+        keepAliveAgent && keepAliveAgent.destroy && keepAliveAgent.destroy();
+    }
 
     if (setup['keepAlive'] === false) {
       keepAliveAgent = undefined;
@@ -2338,6 +2348,7 @@ var CREATE_PUBNUB = function(setup) {
     SELF.secure = SELF;
     SELF.crypto_obj = crypto_obj();
     SELF.ready();
+
 
     return SELF;
 };

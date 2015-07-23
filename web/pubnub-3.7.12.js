@@ -475,7 +475,8 @@ function PN_API(setup) {
     ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
     ,   USE_INSTANCEID = setup['instance_id'] || false
-    ,   INSTANCEID     = ''
+    ,   INSTANCEID    = ''
+    ,   shutdown      = setup['shutdown']
     ,   _poll_timer
     ,   _poll_timer2;
 
@@ -2077,6 +2078,11 @@ function PN_API(setup) {
         'stop_timers': function () {
             clearTimeout(_poll_timer);
             clearTimeout(_poll_timer2);
+            clearTimeout(PRESENCE_HB_TIMEOUT);
+        },
+        'shutdown': function () {
+            SELF['stop_timers']();
+            shutdown && shutdown();
         },
 
         // Expose PUBNUB Functions

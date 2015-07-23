@@ -305,6 +305,10 @@ var CREATE_PUBNUB = function(setup) {
     setup['hmac_SHA256'] = get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
     setup['params'] = {'pnsdk' : PNSDK};
+    setup['shutdown'] = function() {
+        keepAliveAgentSSL && keepAliveAgentSSL.destroy && keepAliveAgentSSL.destroy();
+        keepAliveAgent && keepAliveAgent.destroy && keepAliveAgent.destroy();
+    }
 
     if (setup['keepAlive'] === false) {
       keepAliveAgent = undefined;
@@ -326,6 +330,7 @@ var CREATE_PUBNUB = function(setup) {
     SELF.secure = SELF;
     SELF.crypto_obj = crypto_obj();
     SELF.ready();
+
 
     return SELF;
 };
