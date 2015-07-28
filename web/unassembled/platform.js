@@ -368,6 +368,13 @@ function _is_online() {
     catch (e) { return true }
 }
 
+
+function sendBeacon(url) {
+    if (!('sendBeacon' in navigator)) return false;
+
+    return navigator.sendBeacon(url);
+}
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -394,6 +401,7 @@ var PDIV          = $('pubnub') || 0
     setup['jsonp_cb']   = jsonp_cb;
     setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
+    setup['sendBeacon'] = sendBeacon;
     setup['params']     = { 'pnsdk' : PNSDK }
 
     var SELF = function(setup) {

@@ -477,6 +477,7 @@ function PN_API(setup) {
     ,   USE_INSTANCEID = setup['instance_id'] || false
     ,   INSTANCEID    = ''
     ,   shutdown      = setup['shutdown']
+    ,   sendBeacon    = (setup['use_send_beacon'])?setup['sendBeacon']:null
     ,   _poll_timer
     ,   _poll_timer2;
 
@@ -718,10 +719,16 @@ function PN_API(setup) {
             ,   origin = nextorigin(ORIGIN)
             ,   callback = callback || function(){}
             ,   err      = error    || function(){}
+            ,   url
             ,   jsonp  = jsonp_cb();
+
+
 
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
+
+
+
 
             if (COMPATIBLE_35) {
                 if (!SSL)         return false;
@@ -734,21 +741,35 @@ function PN_API(setup) {
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
+            url = [
+                    origin, 'v2', 'presence', 'sub_key',
+                    SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
+                ];
+
+            params = _get_url_params(data);
+
+
+            if (sendBeacon) {
+                url_string = build_url(url, params);
+                if (sendBeacon(url_string)) {
+                    callback && callback({"status": 200, "action": "leave", "message": "OK", "service": "Presence"});
+                    return true;
+                }
+            }
+
+
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
                 callback : jsonp,
-                data     : _get_url_params(data),
+                data     : params,
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
                     _invoke_error(response, err);
                 },
-                url      : [
-                    origin, 'v2', 'presence', 'sub_key',
-                    SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
-                ]
+                url      : url
             });
             return true;
         },
@@ -2636,6 +2657,13 @@ function _is_online() {
     catch (e) { return true }
 }
 
+
+function sendBeacon(url) {
+    if (!('sendBeacon' in navigator)) return false;
+
+    return navigator.sendBeacon(url);
+}
+
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     PUBNUB     ===========================-= */
@@ -2662,6 +2690,7 @@ var PDIV          = $('pubnub') || 0
     setup['jsonp_cb']   = jsonp_cb;
     setup['hmac_SHA256']= get_hmac_SHA256;
     setup['crypto_obj'] = crypto_obj();
+    setup['sendBeacon'] = sendBeacon;
     setup['params']     = { 'pnsdk' : PNSDK }
 
     var SELF = function(setup) {
