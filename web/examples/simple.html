@@ -7,8 +7,8 @@
 var pubnub = PUBNUB.init({
     origin          : 'dara25.devbuild.pubnub.com',
     publish_key     : 'demo',
-    subscribe_key   : 'demo',
-    use_send_beacon :  true
+    subscribe_key   : 'demo'
+
 });
 
 
@@ -16,7 +16,6 @@ pubnub.subscribe({
     'channel' :  "a",
     'callback'       : function(r) {
         console.log(JSON.stringify(r));
-
     },
     'presence'         : function(r) {
         console.log(JSON.stringify(r));  

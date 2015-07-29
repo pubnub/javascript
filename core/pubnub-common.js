@@ -326,7 +326,8 @@ function PN_API(setup) {
     ,   USE_INSTANCEID = setup['instance_id'] || false
     ,   INSTANCEID    = ''
     ,   shutdown      = setup['shutdown']
-    ,   sendBeacon    = (setup['use_send_beacon'])?setup['sendBeacon']:null
+    ,   use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined')?setup['use_send_beacon']:true
+    ,   sendBeacon    = (use_send_beacon)?setup['sendBeacon']:null
     ,   _poll_timer
     ,   _poll_timer2;
 
