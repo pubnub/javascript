@@ -5,10 +5,10 @@
 // INIT PubNub
 
 var pubnub = PUBNUB.init({
+    origin          : 'dara25.devbuild.pubnub.com',
     publish_key     : 'demo',
     subscribe_key   : 'demo',
-    ssl : true,
-    use_send_beacon : true
+    use_send_beacon :  true
 });
 
 
@@ -16,7 +16,7 @@ pubnub.subscribe({
     'channel' :  "a",
     'callback'       : function(r) {
         console.log(JSON.stringify(r));
-        pubnub.unsubscribe({'channel' : 'a'});
+
     },
     'presence'         : function(r) {
         console.log(JSON.stringify(r));  
@@ -32,6 +32,7 @@ pubnub.subscribe({
     },    
     'connect'       : function(r) {
         console.log('CONNECT ' +JSON.stringify(r));
+        pubnub.unsubscribe({'channel' : 'a'});
     }
 })
 
