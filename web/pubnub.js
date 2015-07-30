@@ -1007,6 +1007,7 @@ function PN_API(setup) {
             ,   start            = args['start']
             ,   end              = args['end']
             ,   include_token    = args['include_token']
+            ,   string_msg_token = args['string_message_token'] || false
             ,   params           = {}
             ,   jsonp            = jsonp_cb();
 
@@ -1030,6 +1031,7 @@ function PN_API(setup) {
             if (start) params['start']                 = start;
             if (end)   params['end']                   = end;
             if (include_token) params['include_token'] = 'true';
+            if (string_msg_token) params['string_message_token'] = 'true';
 
             // Send Message
             xdr({
