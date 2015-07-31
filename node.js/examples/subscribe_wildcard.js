@@ -6,8 +6,8 @@
 --------------------------------------------------------------------------- */
 
 var pubnub = require("./../pubnub.js").init({
-    publish_key   : "pub-c-c077418d-f83c-4860-b213-2f6c77bde29a",
-    subscribe_key : "sub-c-e8839098-f568-11e2-a11a-02ee2ddab7fe"
+    publish_key   : "ds",
+    subscribe_key : "ds"
 });
 
 
@@ -32,12 +32,12 @@ function subscribe(channel) {
         'error' : function(e) {
             console.log('ERROR  ' + JSON.stringify(r));
         },
-        'callback' : function(m,a,b,c,d) {
+        'callback' : function(m,a,subscribed_channel,c,real_channel) {
             console.log(JSON.stringify(m));
-            console.log(JSON.stringify(b));
-            console.log(JSON.stringify(d));
+            console.log(JSON.stringify(subscribed_channel));
+            console.log(JSON.stringify(real_channel));
         }
     })
 }
-
-subscribe('ab.*');
+subscribe("ab.*");
+//console.log(process.argv.slice(2));

@@ -162,6 +162,173 @@ describe('Pubnub', function () {
 
     describe('#subscribe()', function () {
 
+        it('should should message sent to a channel which matches wildcard', function (done) {
+
+            var random  = get_random();
+            var ch      = 'channel-' + random;
+            var chw     = ch + '.*';
+            var chwc    = ch + ".a";
+
+
+            pubnub.subscribe({
+                channel: chw,
+                connect: function () {
+                    pubnub.publish({
+                        'channel' : chwc,
+                        message : 'message' + chwc,
+                        callback : function(r) {
+                            assert.ok(true, 'message published');
+                        },
+                        error : function(r) {
+                            assert.ok(false, 'error occurred in publish');
+                        }
+                    });
+
+                },
+                callback: function (response) {
+                    assert.deepEqual(response, 'message' + chwc);
+                    pubnub.unsubscribe({channel: chw});
+                    done();
+                },
+                error: function () {
+                    assert.ok(false);
+                    pubnub.unsubscribe({channel: ch});
+                    done();
+                }
+            });    
+        });
+
+        it('should be able to subscribe on foo.* and receive presence events on foo.bar-pnpres when presence callback is provided', function (done) {
+            var count = 3;
+            function d() {
+                if (--count == 0) done();
+            }
+            var random  = get_random();
+            var ch      = 'channel-' + random;
+            var chw     = ch + '.*';
+            var chwc    = ch + ".a";
+            var pubnub2 = PUBNUB.init({
+                publish_key: 'ds',
+                subscribe_key: 'ds',
+                origin: 'pubsub.pubnub.com',
+                build_u: true
+            });
+            function f(x) {
+                return JSON.stringify(x) + '  ';
+            }
+            pubnub.subscribe({
+                channel: chw,
+                presence : function(a,b,x,y,z) {
+                    assert.deepEqual(x, chw);
+                    d();
+                },
+                connect: function () {
+                    setTimeout(function(){
+                        pubnub2.subscribe({
+                            channel: chwc,
+                            connect: function () {
+                                pubnub2.publish({
+                                    'channel' : chwc,
+                                    message : 'message' + chwc,
+                                    callback : function(r) {
+                                        assert.ok(true, 'message published');
+                                    },
+                                    error : function(r) {
+                                        assert.ok(false, 'error occurred in publish');
+                                    }
+                                });
+
+                            },
+                            callback: function (response) {
+                                assert.deepEqual(response, 'message' + chwc);
+                                pubnub2.unsubscribe({channel: chwc});
+                                d();
+                            },
+                            error: function () {
+                                assert.ok(false);
+                                pubnub2.unsubscribe({channel: ch});
+                                done();
+                            }
+                        });
+                    }, 5000);
+                },
+                callback: function (response) {
+                    assert.deepEqual(response, 'message' + chwc);
+                    pubnub.unsubscribe({channel: chw});
+                    d();
+                },
+                error: function () {
+                    assert.ok(false);
+                    pubnub.unsubscribe({channel: ch});
+                    done();
+                }
+            });    
+        });
+
+        it('should be able to subscribe on foo.* and should not receive presence events on foo.bar-pnpres when presence callback is not provided', function (done) {
+            var count = 2;
+            function d() {
+                if (--count == 0) done();
+            }
+            var random  = get_random();
+            var ch      = 'channel-' + random;
+            var chw     = ch + '.*';
+            var chwc    = ch + ".a";
+            var pubnub2 = PUBNUB.init({
+                publish_key: 'ds',
+                subscribe_key: 'ds',
+                origin: 'pubsub.pubnub.com',
+                build_u: true
+            });
+            function f(x) {
+                return JSON.stringify(x) + '  ';
+            }
+            pubnub.subscribe({
+                channel: chw,
+                connect: function () {
+                    setTimeout(function(){
+                        pubnub2.subscribe({
+                            channel: chwc,
+                            connect: function () {
+                                pubnub2.publish({
+                                    'channel' : chwc,
+                                    message : 'message' + chwc,
+                                    callback : function(r) {
+                                        assert.ok(true, 'message published');
+                                    },
+                                    error : function(r) {
+                                        assert.ok(false, 'error occurred in publish');
+                                    }
+                                });
+
+                            },
+                            callback: function (response) {
+                                assert.deepEqual(response, 'message' + chwc);
+                                pubnub2.unsubscribe({channel: chwc});
+                                d();
+                            },
+                            error: function () {
+                                assert.ok(false);
+                                pubnub2.unsubscribe({channel: ch});
+                                done();
+                            }
+                        });
+                    }, 5000);
+                },
+                callback: function (response) {
+                    assert.deepEqual(response, 'message' + chwc);
+                    pubnub.unsubscribe({channel: chw});
+                    d();
+                },
+                error: function () {
+                    assert.ok(false);
+                    pubnub.unsubscribe({channel: ch});
+                    done();
+                }
+            });    
+        });
+
+
         it('should be able to handle wildcard, channel group and channel together', function (done) {
             var count = 3;
             function d() {

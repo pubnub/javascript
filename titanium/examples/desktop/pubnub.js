@@ -1,4 +1,4 @@
-// 3.7.11
+// 3.7.12
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -13,7 +13,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.11'
+,   SDK_VER         = '3.7.12'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -326,7 +326,10 @@ function PN_API(setup) {
     ,   CIPHER_KEY    = setup['cipher_key']
     ,   UUID          = setup['uuid'] || ( !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY+'uuid') || '')
     ,   USE_INSTANCEID = setup['instance_id'] || false
-    ,   INSTANCEID     = ''
+    ,   INSTANCEID    = ''
+    ,   shutdown      = setup['shutdown']
+    ,   use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined')?setup['use_send_beacon']:true
+    ,   sendBeacon    = (use_send_beacon)?setup['sendBeacon']:null
     ,   _poll_timer
     ,   _poll_timer2;
 
@@ -568,10 +571,16 @@ function PN_API(setup) {
             ,   origin = nextorigin(ORIGIN)
             ,   callback = callback || function(){}
             ,   err      = error    || function(){}
+            ,   url
             ,   jsonp  = jsonp_cb();
+
+
 
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
+
+
+
 
             if (COMPATIBLE_35) {
                 if (!SSL)         return false;
@@ -584,21 +593,35 @@ function PN_API(setup) {
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
+            url = [
+                    origin, 'v2', 'presence', 'sub_key',
+                    SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
+                ];
+
+            params = _get_url_params(data);
+
+
+            if (sendBeacon) {
+                url_string = build_url(url, params);
+                if (sendBeacon(url_string)) {
+                    callback && callback({"status": 200, "action": "leave", "message": "OK", "service": "Presence"});
+                    return true;
+                }
+            }
+
+
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 2000,
                 callback : jsonp,
-                data     : _get_url_params(data),
+                data     : params,
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
                     _invoke_error(response, err);
                 },
-                url      : [
-                    origin, 'v2', 'presence', 'sub_key',
-                    SUBSCRIBE_KEY, 'channel', encode(channel), 'leave'
-                ]
+                url      : url
             });
             return true;
         },
@@ -835,6 +858,7 @@ function PN_API(setup) {
             ,   start            = args['start']
             ,   end              = args['end']
             ,   include_token    = args['include_token']
+            ,   string_msg_token = args['string_message_token'] || false
             ,   params           = {}
             ,   jsonp            = jsonp_cb();
 
@@ -858,6 +882,7 @@ function PN_API(setup) {
             if (start) params['start']                 = start;
             if (end)   params['end']                   = end;
             if (include_token) params['include_token'] = 'true';
+            if (string_msg_token) params['string_message_token'] = 'true';
 
             // Send Message
             xdr({
@@ -992,6 +1017,7 @@ function PN_API(setup) {
             ,   store    = ('store_in_history' in args) ? args['store_in_history']: true
             ,   jsonp    = jsonp_cb()
             ,   add_msg  = 'push'
+            ,   params
             ,   url;
 
             if (args['prepend']) add_msg = 'unshift'
@@ -1266,7 +1292,7 @@ function PN_API(setup) {
             function _test_connection(success) {
                 if (success) {
                     // Begin Next Socket Connection
-                    timeout( CONNECT, SECOND );
+                    timeout( CONNECT, windowing);
                 }
                 else {
                     // New Origin on Failed Connection
@@ -1756,6 +1782,7 @@ function PN_API(setup) {
                 ,   op             = args['op']
                 ,   gw_type        = args['gw_type']
                 ,   device_id      = args['device_id']
+                ,   params
                 ,   url;
 
             if (!device_id)     return error('Missing Device ID (device_id)');
@@ -1926,6 +1953,11 @@ function PN_API(setup) {
         'stop_timers': function () {
             clearTimeout(_poll_timer);
             clearTimeout(_poll_timer2);
+            clearTimeout(PRESENCE_HB_TIMEOUT);
+        },
+        'shutdown': function () {
+            SELF['stop_timers']();
+            shutdown && shutdown();
         },
 
         // Expose PUBNUB Functions
@@ -2145,7 +2177,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.7.11'
+,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.7.12'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
 ,   XHRTME     = 310000;
 

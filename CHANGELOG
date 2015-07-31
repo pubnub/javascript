@@ -1,3 +1,20 @@
+6-22-15 * 3.7.12
+. wildcard subscribe support
+. fix for windowing fallback to 1 s
+
+5-18-15 * 3.7.11
+. fixed error messages on sleep and resume
+. custom AES implementation replaced with CryptoJS
+. fix bug where auth_key given as param to subscribe method was not replacing global auth key
+. added batch grant support
+. fix for wildcard grant
+. heartbeat setting moved to init
+. fix node.js 0.10 SSL mode with agentkeepalive
+. multi tab presence support
+. fix for auth key not being sent with few requests
+. fix for issue on IE in error callback of subscribe
+
+
 1-15-15 * 3.7.8
 . fixed bug where 403s (PAM Access Denied) do not fire error callback
 
