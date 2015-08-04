@@ -1,3 +1,7 @@
+. default keys "demo" removed.
+. "string_message_timetoken" variable added. default false.
+. sendBeacon support added. will be used by default if available
+
 7-07-15 * 3.7.13
 . fix for signature mismatch issue in Grant
 
