@@ -5,7 +5,7 @@
 
 --------------------------------------------------------------------------- */
 var PUBNUB  = require("./../pubnub.js");
-var channel = 'my_channel1';
+var channel = 'demo';
 var pubnub = PUBNUB.init({
     publish_key   : "demo",
     subscribe_key : "demo"
@@ -15,6 +15,7 @@ var pubnub = PUBNUB.init({
 
 pubnub.history({
     channel  : channel,
+    count : 5,
     include_token : true,
     string_message_token : true,
     callback : function(messages) {
