@@ -574,12 +574,8 @@ function PN_API(setup) {
             ,   url
             ,   jsonp  = jsonp_cb();
 
-
-
             // Prevent Leaving a Presence Channel
             if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
-
-
 
 
             if (COMPATIBLE_35) {
@@ -649,21 +645,33 @@ function PN_API(setup) {
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
+            url = [
+                    origin, 'v2', 'presence', 'sub_key',
+                    SUBSCRIBE_KEY, 'channel', encode(','), 'leave'
+            ];
+
+            params = _get_url_params(data);
+
+            if (sendBeacon) {
+                url_string = build_url(url, params);
+                if (sendBeacon(url_string)) {
+                    callback && callback({"status": 200, "action": "leave", "message": "OK", "service": "Presence"});
+                    return true;
+                }
+            }
+
             xdr({
                 blocking : blocking || SSL,
                 timeout  : 5000,
                 callback : jsonp,
-                data     : _get_url_params(data),
+                data     : params,
                 success  : function(response) {
                     _invoke_callback(response, callback, err);
                 },
                 fail     : function(response) {
                     _invoke_error(response, err);
                 },
-                url      : [
-                    origin, 'v2', 'presence', 'sub_key',
-                    SUBSCRIBE_KEY, 'channel', encode(','), 'leave'
-                ]
+                url      : url
             });
             return true;
         },
@@ -1082,6 +1090,15 @@ function PN_API(setup) {
             //SUB_RESTORE = 1;    REVISIT !!!!
 
             if (channel) {
+
+                // Prepare LeaveChannel(s)
+                leave_c = map( (
+                    channel.join ? channel.join(',') : ''+channel
+                ).split(','), function(channel) {
+                    if (!CHANNELS[channel]) return;
+                    return channel;
+                } ).join(',');
+
                 // Prepare Channel(s)
                 channel = map( (
                     channel.join ? channel.join(',') : ''+channel
@@ -1091,21 +1108,29 @@ function PN_API(setup) {
                 } ).join(',');
 
                 // Iterate over Channels
-                each( channel.split(','), function(ch) {
-                    var CB_CALLED = true;
+                each(channel.split(','), function(ch) {
                     if (!ch) return;
                     CHANNELS[ch] = 0;
                     if (ch in STATE) delete STATE[ch];
-                    if (READY) {
-                        CB_CALLED = SELF['LEAVE']( ch, 0 , auth_key, callback, err);
-                    }
-                    if (!CB_CALLED) callback({action : "leave"});
-
-                    
                 } );
+
+                var CB_CALLED = true;
+                if (READY) {
+                    CB_CALLED = SELF['LEAVE'](leave_c, 0 , auth_key, callback, err);
+                }
+                if (!CB_CALLED) callback({action : "leave"});
             }
 
             if (channel_group) {
+
+                // Prepare channel group(s)
+                leave_gc = map( (
+                    channel_group.join ? channel_group.join(',') : ''+channel_group
+                ).split(','), function(channel_group) {
+                    if (!CHANNEL_GROUPS[channel_group]) return;
+                    return channel_group;
+                } ).join(',');
+
                 // Prepare channel group(s)
                 channel_group = map( (
                     channel_group.join ? channel_group.join(',') : ''+channel_group
@@ -1116,16 +1141,16 @@ function PN_API(setup) {
 
                 // Iterate over channel groups
                 each( channel_group.split(','), function(chg) {
-                    var CB_CALLED = true;
                     if (!chg) return;
                     CHANNEL_GROUPS[chg] = 0;
                     if (chg in STATE) delete STATE[chg];
-                    if (READY) {
-                        CB_CALLED = SELF['LEAVE_GROUP']( chg, 0 , auth_key, callback, err);
-                    }
-                    if (!CB_CALLED) callback({action : "leave"});
-
                 } );
+
+                var CB_CALLED = true;
+                if (READY) {
+                    CB_CALLED = SELF['LEAVE_GROUP'](leave_gc, 0 , auth_key, callback, err);
+                }
+                if (!CB_CALLED) callback({action : "leave"});
             }
 
             // Reset Connection if Count Less
