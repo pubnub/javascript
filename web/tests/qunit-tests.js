@@ -78,7 +78,7 @@ function pubnub_test(test_name, test_func, config) {
 
 function pubnub_test_all(test_name, test_func) {
     pubnub_test(test_name, test_func);
-    pubnub_test(test_name, test_func, {jsonp : true});
+    //pubnub_test(test_name, test_func, {jsonp : true});
     pubnub_test(test_name, test_func, {ssl : true});
     //pubnub_test(test_name, test_func, {cipher_key : 'enigma'});
     pubnub_test(test_name, test_func, {
@@ -87,7 +87,7 @@ function pubnub_test_all(test_name, test_func) {
         }
     });
     //pubnub_test(test_name, test_func, {jsonp : true, ssl : true, cipher_key : 'enigma'});
-    pubnub_test(test_name, test_func, {jsonp : true, ssl : true});
+    //pubnub_test(test_name, test_func, {jsonp : true, ssl : true});
 }
 
 
