@@ -2401,13 +2401,14 @@ describe('Pubnub', function () {
         it('should show occupancy 1 user if 1 user is subscribed to channel', function (done) {
             this.timeout(80000);
 
-            var ch = channel + '-' + 'here-now';
+            var ch = channel + '-' + 'here-now-' + get_random();
             pubnub.subscribe({
                 channel: ch,
                 connect: function () {
                     setTimeout(function () {
                             pubnub.here_now({
-                                channel: ch, callback: function (data) {
+                                channel: ch,
+                                callback: function (data) {
                                     assert.deepEqual(data.occupancy, 1);
                                     pubnub.unsubscribe({channel: ch});
                                     done();

@@ -4,8 +4,15 @@
 
 // INIT PubNub
 
+//console.log(map);
 
-PUBNUB.subscribe({
+var pubnub = PUBNUB.init({
+    'publish_key' : 'demo',
+    'subscribe_key' : 'demo' 
+});
+
+
+pubnub.subscribe({
     'channel' :  "a",
     'callback'       : function(r) {
         console.log(JSON.stringify(r));
@@ -25,7 +32,6 @@ PUBNUB.subscribe({
     },    
     'connect'       : function(r) {
         console.log('CONNECT ' +JSON.stringify(r));
-        pubnub.unsubscribe({'channel' : 'a'});
     }
 })
 

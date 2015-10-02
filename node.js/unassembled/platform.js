@@ -88,6 +88,7 @@ function error(message) { console['error'](message) }
 function xdr( setup ) {
     var request
     ,   response
+    ,   debug    = setup['debug']
     ,   success  = setup.success || function(){}
     ,   fail     = setup.fail    || function(){}
     ,   ssl      = setup.ssl
@@ -133,6 +134,7 @@ function xdr( setup ) {
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
+    debug && debug(url);
 
     if (!ssl) ssl = (url.split('://')[0] == 'https');
 

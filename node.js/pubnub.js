@@ -571,6 +571,7 @@ function PN_API(setup) {
             ,   callback = callback || function(){}
             ,   err      = error    || function(){}
             ,   url
+            ,   params
             ,   jsonp  = jsonp_cb();
 
             // Prevent Leaving a Presence Channel
@@ -624,6 +625,8 @@ function PN_API(setup) {
 
             var data   = { 'uuid' : UUID, 'auth' : auth_key || AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
+            ,   url
+            ,   params
             ,   callback = callback || function(){}
             ,   err      = error    || function(){}
             ,   jsonp  = jsonp_cb();
@@ -1091,7 +1094,7 @@ function PN_API(setup) {
             if (channel) {
 
                 // Prepare LeaveChannel(s)
-                leave_c = map( (
+                var leave_c = map( (
                     channel.join ? channel.join(',') : ''+channel
                 ).split(','), function(channel) {
                     if (!CHANNELS[channel]) return;
@@ -1123,7 +1126,7 @@ function PN_API(setup) {
             if (channel_group) {
 
                 // Prepare channel group(s)
-                leave_gc = map( (
+                var leave_gc = map( (
                     channel_group.join ? channel_group.join(',') : ''+channel_group
                 ).split(','), function(channel_group) {
                     if (!CHANNEL_GROUPS[channel_group]) return;
@@ -1549,6 +1552,7 @@ function PN_API(setup) {
         */
         'here_now' : function( args, callback ) {
             var callback = args['callback'] || callback
+            ,   debug    = args['debug']
             ,   err      = args['error']    || function(){}
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   channel  = args['channel']
@@ -1590,6 +1594,7 @@ function PN_API(setup) {
                 fail     : function(response) {
                     _invoke_error(response, err);
                 },
+                debug    : debug,
                 url      : url
             });
         },
@@ -2155,6 +2160,7 @@ function error(message) { console['error'](message) }
 function xdr( setup ) {
     var request
     ,   response
+    ,   debug    = setup['debug']
     ,   success  = setup.success || function(){}
     ,   fail     = setup.fail    || function(){}
     ,   ssl      = setup.ssl
@@ -2200,6 +2206,7 @@ function xdr( setup ) {
         payload = decodeURIComponent(setup.url.pop());
 
     var url = build_url( setup.url, data );
+    debug && debug(url);
 
     if (!ssl) ssl = (url.split('://')[0] == 'https');
 
