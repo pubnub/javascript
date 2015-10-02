@@ -372,7 +372,7 @@ function _is_online() {
 function sendBeacon(url) {
     if (!('sendBeacon' in navigator)) return false;
 
-    return navigator.sendBeacon(url);
+    return navigator['sendBeacon'](url);
 }
 
 /* =-====================================================================-= */

@@ -1,3 +1,4 @@
+8-11-15 * 3.7.14
 . default keys "demo" removed.
 . "string_message_timetoken" variable added. default false.
 . sendBeacon support added. will be used by default if available
