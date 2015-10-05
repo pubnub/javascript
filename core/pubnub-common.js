@@ -1088,7 +1088,7 @@ function PN_API(setup) {
             ,   err           = args['error']       || function(){};
 
             TIMETOKEN   = 0;
-            //SUB_RESTORE = 1;    REVISIT !!!!
+            SUB_RESTORE = 1;   // REVISIT !!!!
 
             if (channel) {
 

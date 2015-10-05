@@ -1,4 +1,4 @@
-// Version: 3.7.14
+// Version: 3.7.15
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.14'
+,   SDK_VER         = '3.7.15'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1120,7 +1120,7 @@ function PN_API(setup) {
             ,   err           = args['error']       || function(){};
 
             TIMETOKEN   = 0;
-            //SUB_RESTORE = 1;    REVISIT !!!!
+            SUB_RESTORE = 1;   // REVISIT !!!!
 
             if (channel) {
 
@@ -2206,7 +2206,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.7.14'
+,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.7.15'
 ,   XHRTME     = 310000;
 
 
