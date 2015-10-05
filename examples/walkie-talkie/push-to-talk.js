@@ -4,8 +4,8 @@ var push_to_talk = function(settings) {
     // PubNub and Internal Variables and PubNub
     // -----------------------------------------------------------------------
     var p = PUBNUB.init({
-        publish_key   : 'ea1afbc1-70a3-43c1-990c-ede5cf65a542',
-        subscribe_key : 'e19f2bb0-623a-11df-98a1-fbd39d75aa3f'
+        publish_key   : 'pub-c-b34f5469-ee73-4b8b-9c20-3b0ace46fd26',
+        subscribe_key : 'sub-c-15c50dea-6964-11e5-bbfd-0693d8625082'
     })
     ,   signature     = p.uuid()
     ,   channel       = settings.channel || 'speak'
