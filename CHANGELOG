@@ -1,3 +1,7 @@
+10-07-15 * 3.7.15
+- fix for namespace for map and other functions
+- fix sub,unsub missed message regression
+
 8-11-15 * 3.7.14
 . default keys "demo" removed.
 . "string_message_timetoken" variable added. default false.
