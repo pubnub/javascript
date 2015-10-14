@@ -2669,8 +2669,12 @@ function ajax( setup ) {
         var url = build_url(setup.url,data);
 
         xhr.open( 'GET', url, async );
-        if (async) xhr.timeout = xhrtme;
-        xhr.send();
+
+        // xhr could be set to null by error/done handler
+        if (xhr) {
+            if (async) xhr.timeout = xhrtme;
+            xhr.send();
+        }
     }
     catch(eee) {
         done(0);
