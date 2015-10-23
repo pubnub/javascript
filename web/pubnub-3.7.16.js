@@ -1,4 +1,4 @@
-// Version: 3.7.15
+// Version: 3.7.16
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -169,7 +169,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.15'
+,   SDK_VER         = '3.7.16'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2334,7 +2334,7 @@ function crypto_obj() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.15'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.16'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
@@ -2660,17 +2660,20 @@ function ajax( setup ) {
                             response = JSON['parse'](xhr.responseText);
                             done(1,response);
                         }
-                        catch (r) { return done(1, {status : xhr.status, payload : null, message : xhr.responseText}); }
+                        catch (r) { return done(1, 
+                            (xhr && {status : xhr.status, payload : null, message : xhr.responseText}) || "Error" ) }
                         return;
                 }
             }
         }
 
         var url = build_url(setup.url,data);
-
-        xhr.open( 'GET', url, async );
-        if (async) xhr.timeout = xhrtme;
-        xhr.send();
+        
+        if (xhr) {
+            xhr.open( 'GET', url, async );
+            if (async) xhr.timeout = xhrtme;
+            xhr.send();
+        }
     }
     catch(eee) {
         done(0);

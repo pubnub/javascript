@@ -4,46 +4,44 @@
     http://www.pubnub.com/account#api-keys
 
 --------------------------------------------------------------------------- */
-var pubnub  = require("./../pubnub.js");
-var channel = 'my_channel';
-var network = pubnub.init({
+var PUBNUB  = require("./../pubnub.js");
+var channel = 'my_channel1';
+var pubnub = PUBNUB.init({
+    publish_key   : "demo",
+    subscribe_key : "demo",
+    cipher_key    : "enigma"
+});
+var pubnub1 = PUBNUB.init({
     publish_key   : "demo",
     subscribe_key : "demo"
 });
 
-/* ---------------------------------------------------------------------------
-Print All
---------------------------------------------------------------------------- */
-get_all_history({
-    channel  : channel,
-    callback : function(messages) {
-        console.log(messages);
-    }
-})
+pubnub.history({
+	'channel' : channel,
+    'callback' : function(r) {
+		console.log(JSON.stringify(r));
+	},
+	'error' : function(r) {
 
-/* ---------------------------------------------------------------------------
-Get All History Message for a CHANNEL
---------------------------------------------------------------------------- */
-function get_all_history(args) {
-    var channel  = args['channel']
-    ,   callback = args['callback']
-    ,   start    = 0
-    ,   history  = [];
+	}
+});
+pubnub.history({
+    'include_token' : true,
+	'channel' : channel,
+    'callback' : function(r) {
+		console.log(JSON.stringify(r));
+	},
+	'error' : function(r) {
 
-    (function add_messages() {
-        network.detailedHistory({
-            channel  : channel,
-            start    : start,
-            reverse  : true,
-            callback : function(messages) {
-                var msgs = messages[0]
-                ,   end  = start = messages[2];
+	}
+});
+pubnub1.history({
+    'include_token' : true,
+	'channel' : channel,
+    'callback' : function(r) {
+		console.log(JSON.stringify(r));
+	},
+	'error' : function(r) {
 
-                if (!msgs.length) return callback(history);
-
-                history = history.concat(msgs);
-                add_messages();
-            }
-        });
-    })();
-}
+	}
+});
