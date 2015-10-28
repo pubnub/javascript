@@ -1063,11 +1063,21 @@ function PN_API(setup) {
                     var messages = response[0];
                     var decrypted_messages = [];
                     for (var a = 0; a < messages.length; a++) {
-                        var new_message = decrypt(messages[a],cipher_key);
-                        try {
-                            decrypted_messages['push'](JSON['parse'](new_message));
-                        } catch (e) {
-                            decrypted_messages['push']((new_message));
+                        if (include_token) {
+                            var new_message = decrypt(messages[a]['message'],cipher_key);
+                            var timetoken = messages[a]['timetoken'];
+                            try {
+                                decrypted_messages['push']({"message" : JSON['parse'](new_message), "timetoken" : timetoken});
+                            } catch (e) {
+                                decrypted_messages['push'](({"message" : new_message, "timetoken" : timetoken}));
+                            }
+                        } else {
+                            var new_message = decrypt(messages[a],cipher_key);
+                            try {
+                                decrypted_messages['push'](JSON['parse'](new_message));
+                            } catch (e) {
+                                decrypted_messages['push']((new_message));
+                            }     
                         }
                     }
                     callback([decrypted_messages, response[1], response[2]]);
@@ -2660,20 +2670,17 @@ function ajax( setup ) {
                             response = JSON['parse'](xhr.responseText);
                             done(1,response);
                         }
-                        catch (r) { return done(1, 
-                            (xhr && {status : xhr.status, payload : null, message : xhr.responseText}) || "Error" ) }
+                        catch (r) { return done(1, {status : xhr.status, payload : null, message : xhr.responseText}); }
                         return;
                 }
             }
         }
 
         var url = build_url(setup.url,data);
-        
-        if (xhr) {
-            xhr.open( 'GET', url, async );
-            if (async) xhr.timeout = xhrtme;
-            xhr.send();
-        }
+
+        xhr.open( 'GET', url, async );
+        if (async) xhr.timeout = xhrtme;
+        xhr.send();
     }
     catch(eee) {
         done(0);

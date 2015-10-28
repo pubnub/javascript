@@ -1,7 +1,7 @@
 {
   "name": "pubnub",
   "preferGlobal": false,
-  "version": "3.7.15",
+  "version": "3.7.16",
   "author": "PubNub <stephen@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "contributors": [
@@ -15,6 +15,7 @@
     "test": "grunt test --force"
   },
   "main": "./node.js/pubnub.js",
+  "browser": "./web/pubnub.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
@@ -51,6 +52,7 @@
   },
   "files": [
     "node.js",
+    "web/pubnub.js",
     "CHANGELOG",
     "FUTURE.md",
     "LICENSE",

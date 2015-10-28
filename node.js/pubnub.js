@@ -1,4 +1,4 @@
-// Version: 3.7.15
+// Version: 3.7.16
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.15'
+,   SDK_VER         = '3.7.16'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -521,7 +521,7 @@ function PN_API(setup) {
                 if (response['payload']) {
                     callback_data['payload'] = response['payload'];
                 }
-
+                
                 err && err(callback_data);
                 return;
         } else {
@@ -534,20 +534,20 @@ function PN_API(setup) {
             ,   jsonp           = jsonp_cb();
 
             data = data || {};
-
+            
             if (!data['auth']) {
                 data['auth'] = args['auth_key'] || AUTH_KEY;
             }
-
+            
             var url = [
                     STD_ORIGIN, 'v1', 'channel-registration',
                     'sub-key', SUBSCRIBE_KEY
                 ];
 
             url.push.apply(url,url1);
-
+            
             if (jsonp) data['callback']              = jsonp;
-
+            
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
@@ -695,7 +695,7 @@ function PN_API(setup) {
         'get_heartbeat' : function() {
             return PRESENCE_HB;
         },
-
+        
         'set_heartbeat' : function(heartbeat, heartbeat_interval) {
             PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, error);
             PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
@@ -705,16 +705,16 @@ function PN_API(setup) {
             CONNECT();
             _presence_heartbeat();
         },
-
+        
         'get_heartbeat_interval' : function() {
             return PRESENCE_HB_INTERVAL;
         },
-
+        
         'set_heartbeat_interval' : function(heartbeat_interval) {
             PRESENCE_HB_INTERVAL = heartbeat_interval;
             _presence_heartbeat();
         },
-
+        
         'get_version' : function() {
             return SDK_VER;
         },
@@ -885,7 +885,7 @@ function PN_API(setup) {
             if (channel_group) {
                 params['channel-group'] = channel_group;
                 if (!channel) {
-                    channel = ',';
+                    channel = ','; 
                 }
             }
             if (jsonp) params['callback']              = jsonp;
@@ -1356,7 +1356,7 @@ function PN_API(setup) {
                         channel.disconnect(channel.name);
                     }
                 });
-
+                
                 // Disconnect & Reconnect for channel groups
                 each_channel_group(function(channel_group){
                     // Reconnect
@@ -1513,7 +1513,7 @@ function PN_API(setup) {
                                 var chobj = {};
 
                                 if (channel2) {
-                                    if (channel && channel.indexOf('-pnpres') >= 0
+                                    if (channel && channel.indexOf('-pnpres') >= 0 
                                         && channel2.indexOf('-pnpres') < 0) {
                                         channel2 += '-pnpres';
                                     }
@@ -1590,7 +1590,7 @@ function PN_API(setup) {
 
             if (channel_group) {
                 data['channel-group'] = channel_group;
-                !channel && url.push('channel') && url.push(',');
+                !channel && url.push('channel') && url.push(','); 
             }
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
@@ -2045,7 +2045,7 @@ function PN_API(setup) {
         clearTimeout(_poll_timer);
         clearTimeout(_poll_timer2);
     }
-
+    
     if (!UUID) UUID = SELF['uuid']();
     if (!INSTANCEID) INSTANCEID = SELF['uuid']();
     db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
@@ -2120,7 +2120,7 @@ var NOW                 = 1
 ,   XHRTME              = 310000
 ,   DEF_TIMEOUT         = 10000
 ,   SECOND              = 1000
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.15'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.16'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1
@@ -2231,7 +2231,6 @@ function xdr( setup ) {
     options.method   = mode;
     options.keepAlive= !!keepAliveAgent;
     options.body     = payload;
-    options.withCredentials = false;
 
     if (options.keepAlive && ssl) {
         options.agent = keepAliveAgentSSL;
@@ -2243,9 +2242,7 @@ function xdr( setup ) {
 
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
-            if(response.setEncoding) {
-                response.setEncoding('utf8');
-            }
+            response.setEncoding('utf8');
             response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
             response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
