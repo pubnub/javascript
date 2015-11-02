@@ -227,7 +227,7 @@ function xdr( setup ) {
     ,   id        = unique()
     ,   finished  = 0
     ,   xhrtme    = setup.timeout || DEF_TIMEOUT
-    ,   timer     = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
+    ,   timer     = timeout( function(){done(1, {"message" : "Timeout"})}, xhrtme )
     ,   fail      = setup.fail    || function(){}
     ,   data      = setup.data    || {}
     ,   success   = setup.success || function(){}
@@ -242,7 +242,7 @@ function xdr( setup ) {
             (failed || !response) || success(response);
 
             timeout( function() {
-                failed && fail();
+                failed && fail(response);
                 var s = $(id)
                 ,   p = s && s.parentNode;
                 p && p.removeChild(s);
@@ -255,7 +255,7 @@ function xdr( setup ) {
 
     if (!setup.blocking) script[ASYNC] = ASYNC;
 
-    script.onerror = function() { done(1) };
+    script.onerror = function() { done(1, {"message" : "Network Connection Error"}) };
     script.src     = build_url( setup.url, data );
 
     attr( script, 'id', id );
@@ -282,7 +282,7 @@ function ajax( setup ) {
             clearTimeout(timer);
 
             try       { response = JSON['parse'](xhr.responseText); }
-            catch (r) { return done(1); }
+            catch (r) { return done(1, {"message" : "Parse Error", "payload" : xhr.responseText}); }
 
             complete = 1;
             success(response);
@@ -290,7 +290,7 @@ function ajax( setup ) {
     ,   complete = 0
     ,   loaded   = 0
     ,   xhrtme   = setup.timeout || DEF_TIMEOUT
-    ,   timer    = timeout( function(){done(1, {"message" : "timeout"})}, xhrtme )
+    ,   timer    = timeout( function(){done(1, {"message" : "Timeout"})}, xhrtme )
     ,   fail     = setup.fail    || function(){}
     ,   data     = setup.data    || {}
     ,   success  = setup.success || function(){}
@@ -318,7 +318,7 @@ function ajax( setup ) {
               new XMLHttpRequest();
 
         xhr.onerror = xhr.onabort   = function(e){ done(
-            1, e || (xhr && xhr.responseText) || { "error" : "Network Connection Error"}
+            1, e || (xhr && xhr.responseText) || {"message" : "Network Connection Error"}
         ) };
         xhr.onload  = xhr.onloadend = finished;
         xhr.onreadystatechange = function() {
@@ -331,7 +331,7 @@ function ajax( setup ) {
                             response = JSON['parse'](xhr.responseText);
                             done(1,response);
                         }
-                        catch (r) { return done(1, {status : xhr.status, payload : null, message : xhr.responseText}); }
+                        catch (r) { return done(1, {"status" : xhr.status, "message" : "Parse Error", "payload" : xhr.responseText}); }
                         return;
                 }
             }

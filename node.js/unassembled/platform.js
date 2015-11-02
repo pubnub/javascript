@@ -105,7 +105,7 @@ function xdr( setup ) {
 
             clearTimeout(timer);
             try       { response = JSON['parse'](body); }
-            catch (r) { return done(1); }
+            catch (r) { return done(1, {"message" : "Parse Error", "payload" : body); }
             success(response);
         }
     ,   done    = function(failed, response) {
@@ -123,7 +123,7 @@ function xdr( setup ) {
             }
             failed && fail(response);
         }
-        ,   timer  = timeout( function(){done(1);} , xhrtme );
+        ,   timer  = timeout( function(){done(1, {"message" : "Timeout"});} , xhrtme );
 
     data['pnsdk'] = PNSDK;
 
@@ -161,8 +161,8 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(){done(1, { "message" : "Response Error", "payload" : body})});
+            response.on( 'abort', function(){done(1, { "message" : "Response Abort", "payload" : body})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );
@@ -177,7 +177,7 @@ function xdr( setup ) {
                             response = JSON['parse'](body);
                             done(1,response);
                         }
-                        catch (r) { return done(1, {status : statusCode, payload : null, message : body}); }
+                        catch (r) { return done(1, {"status" : statusCode, "message" : "Parse Error", "payload" : body}); }
                         return;
                 }
                 finished();
@@ -185,7 +185,7 @@ function xdr( setup ) {
         });
         request.timeout = xhrtme;
         request.on( 'error', function() {
-            done( 1, {"error":"Network Connection Error"} );
+            done( 1, {"message" : "Network Connection Error"} );
         } );
 
         if (mode == 'POST') request.write(payload);
