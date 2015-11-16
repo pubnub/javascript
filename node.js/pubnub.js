@@ -2187,7 +2187,7 @@ function xdr( setup ) {
 
             clearTimeout(timer);
             try       { response = JSON['parse'](body); }
-            catch (r) { return done(1); }
+            catch (r) { return done(1, {"error" : true, "message" : "error in response parsing"}); }
             success(response);
         }
     ,   done    = function(failed, response) {
@@ -2205,7 +2205,7 @@ function xdr( setup ) {
             }
             failed && fail(response);
         }
-        ,   timer  = timeout( function(){done(1);} , xhrtme );
+        ,   timer  = timeout( function(){done(1, {"error" : true, "message" : "timeout"})} , xhrtme );
 
     data['pnsdk'] = PNSDK;
 
@@ -2243,8 +2243,8 @@ function xdr( setup ) {
     try {
         request = (ssl ? https : http)['request'](options, function(response) {
             response.setEncoding('utf8');
-            response.on( 'error', function(){done(1, body || { "error" : "Network Connection Error"})});
-            response.on( 'abort', function(){done(1, body || { "error" : "Network Connection Error"})});
+            response.on( 'error', function(){done(1, body || { "error" : true, "message" : "Network Connection Error"})});
+            response.on( 'abort', function(){done(1, body || { "error" : true, "message" : "Network Connection Error"})});
             response.on( 'data', function (chunk) {
                 if (chunk) body += chunk;
             } );
@@ -2267,7 +2267,7 @@ function xdr( setup ) {
         });
         request.timeout = xhrtme;
         request.on( 'error', function() {
-            done( 1, {"error":"Network Connection Error"} );
+            done( 1, {"error": true, "message" : "Network Connection Error"} );
         } );
 
         if (mode == 'POST') request.write(payload);
