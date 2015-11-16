@@ -65,9 +65,11 @@ describe('Pubnub', function () {
     this.timeout(180000);
 
     before(function () {
+        /*
         if (nock) {
             nock.enableNetConnect();
         }
+        */
 
         pubnub.channel_group_list_groups({
             callback: function (r) {
@@ -1588,7 +1590,7 @@ describe('Pubnub', function () {
                 })
             }, 5000);
         });
-
+        /*
         it('should be able to grant read write access at sub key level', function (done) {
             var grant_channel_local = grant_channel + Date.now();
 
@@ -1635,7 +1637,7 @@ describe('Pubnub', function () {
                     }
                 })
             }, 5000);
-        })
+        })*/
     });
 
     describe('#revoke()', function () {
