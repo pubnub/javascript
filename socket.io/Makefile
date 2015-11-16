@@ -2,7 +2,7 @@ include ../Makefile.inc
 
 WEB_DIR=$(REPOS_DIR)/web
 
-PUBNUB_MIN_JS=$(WEB_DIR)/pubnub.min.js
+PUBNUB_JS=$(WEB_DIR)/pubnub.js
 SOCKET_IO_BASE_JS=socket.io-base.js
 SOCKET_IO_MIN_JS=socket.io.min.js
 OUTPUT_FILES=$(SOCKET_IO_MIN_JS)
@@ -14,9 +14,13 @@ all: build
 .PHONY	: build
 build: $(SOCKET_IO_MIN_JS)
 
-$(SOCKET_IO_MIN_JS): $(SOCKET_IO_BASE_JS) $(PUBNUB_MIN_JS)
-	cat $(SOCKET_IO_BASE_JS) | java -jar $(GOOGLE_MINIFY) > $(SOCKET_IO_TMP)
-	cat $(PUBNUB_MIN_JS) $(SOCKET_IO_TMP) > $(SOCKET_IO_MIN_JS) 
+$(SOCKET_IO_MIN_JS): $(SOCKET_IO_BASE_JS) $(PUBNUB_JS)
+	$(ECHO) "// Version: $(VERSION)" > $(SOCKET_IO_MIN_JS)
+	$(ECHO) "(function(){" >> $(SOCKET_IO_MIN_JS)
+	cat $(PUBNUB_JS)  | java -jar $(GOOGLE_MINIFY) --compilation_level=ADVANCED_OPTIMIZATIONS>> $(SOCKET_IO_MIN_JS)
+	$(ECHO) "})();" >> $(SOCKET_IO_MIN_JS)
+	cat $(SOCKET_IO_BASE_JS)  | java -jar $(GOOGLE_MINIFY) > $(SOCKET_IO_TMP)
+	cat $(SOCKET_IO_TMP) >> $(SOCKET_IO_MIN_JS) 
 	rm $(SOCKET_IO_TMP)
 
 .PHONY	: clean
