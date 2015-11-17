@@ -1,3 +1,9 @@
+11-17-15 * 3.7.16
+- fix for history decryption with include_token
+- changes for accomodating browserify
+- changes for react native
+- changes to modern lib Makefile for crypto
+
 10-07-15 * 3.7.15
 - fix for namespace for map and other functions
 - fix sub,unsub missed message regression
