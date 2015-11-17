@@ -15,7 +15,7 @@
     "test": "grunt test --force"
   },
   "main": "./node.js/pubnub.js",
-  "browser": "./web/pubnub.js",
+  "browser": "./modern/pubnub.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
