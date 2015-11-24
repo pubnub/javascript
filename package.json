@@ -52,7 +52,7 @@
   },
   "files": [
     "node.js",
-    "web/pubnub.js",
+    "modern/pubnub.js",
     "CHANGELOG",
     "FUTURE.md",
     "LICENSE",
