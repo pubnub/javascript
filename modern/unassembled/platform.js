@@ -3,8 +3,7 @@
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + PLATFORM + '/' + VERSION
-,   XHRTME     = 310000;
+,    PNSDK      = 'PubNub-JS-' + PLATFORM + '/' + VERSION;
 
 
 
@@ -58,7 +57,8 @@ function xdr( setup ) {
         }
     ,   complete = 0
     ,   loaded   = 0
-    ,   timer    = timeout( function(){done(1)}, XHRTME )
+    ,   xhrtme   = setup.timeout || DEF_TIMEOUT
+    ,   timer    = timeout( function(){done(1)}, xhrtme )
     ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
@@ -104,7 +104,7 @@ function xdr( setup ) {
         data['pnsdk'] = PNSDK;
         url = build_url(setup.url, data);
         xhr.open( 'GET', url, async);
-        if (async) xhr.timeout = XHRTME;
+        if (async) xhr.timeout = xhrtme;
         xhr.send();
     }
     catch(eee) {

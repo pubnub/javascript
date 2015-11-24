@@ -34,9 +34,8 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
-,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
-,   XHRTME     = 310000;
+,   PNSDK            = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
+,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0;
 
 
 

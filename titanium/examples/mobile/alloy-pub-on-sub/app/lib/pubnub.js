@@ -1,11 +1,11 @@
-// 3.7.15
+// 3.7.16
 (function(){
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
 ,   PRESENCE_SUFFIX = '-pnpres'
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
-,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
+,   DEF_TIMEOUT     = 15000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS (FOR TIMESYNC).
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
@@ -13,7 +13,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.15'
+,   SDK_VER         = '3.7.16'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -907,11 +907,21 @@ function PN_API(setup) {
                     var messages = response[0];
                     var decrypted_messages = [];
                     for (var a = 0; a < messages.length; a++) {
-                        var new_message = decrypt(messages[a],cipher_key);
-                        try {
-                            decrypted_messages['push'](JSON['parse'](new_message));
-                        } catch (e) {
-                            decrypted_messages['push']((new_message));
+                        if (include_token) {
+                            var new_message = decrypt(messages[a]['message'],cipher_key);
+                            var timetoken = messages[a]['timetoken'];
+                            try {
+                                decrypted_messages['push']({"message" : JSON['parse'](new_message), "timetoken" : timetoken});
+                            } catch (e) {
+                                decrypted_messages['push'](({"message" : new_message, "timetoken" : timetoken}));
+                            }
+                        } else {
+                            var new_message = decrypt(messages[a],cipher_key);
+                            try {
+                                decrypted_messages['push'](JSON['parse'](new_message));
+                            } catch (e) {
+                                decrypted_messages['push']((new_message));
+                            }     
                         }
                     }
                     callback([decrypted_messages, response[1], response[2]]);
@@ -2207,9 +2217,8 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.7.15'
-,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
-,   XHRTME     = 310000;
+,   PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.7.16'
+,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0;
 
 
 

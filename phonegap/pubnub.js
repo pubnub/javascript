@@ -35,7 +35,7 @@ var NOW             = 1
 ,   READY_BUFFER    = []
 ,   PRESENCE_SUFFIX = '-pnpres'
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
-,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
+,   DEF_TIMEOUT     = 15000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS (FOR TIMESYNC).
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
@@ -2216,8 +2216,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.7.16'
-,   XHRTME     = 310000;
+,    PNSDK      = 'PubNub-JS-' + 'Phonegap' + '/' + '3.7.16';
 
 
 
@@ -2271,7 +2270,8 @@ function xdr( setup ) {
         }
     ,   complete = 0
     ,   loaded   = 0
-    ,   timer    = timeout( function(){done(1)}, XHRTME )
+    ,   xhrtme   = setup.timeout || DEF_TIMEOUT
+    ,   timer    = timeout( function(){done(1)}, xhrtme )
     ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
@@ -2317,7 +2317,7 @@ function xdr( setup ) {
         data['pnsdk'] = PNSDK;
         url = build_url(setup.url, data);
         xhr.open( 'GET', url, async);
-        if (async) xhr.timeout = XHRTME;
+        if (async) xhr.timeout = xhrtme;
         xhr.send();
     }
     catch(eee) {

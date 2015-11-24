@@ -35,9 +35,6 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
-,   XHRTME              = 310000
-,   DEF_TIMEOUT         = 10000
-,   SECOND              = 1000
 ,   PNSDK               = 'PubNub-JS-' + PLATFORM + '/' +  VERSION
 ,   crypto              = require('crypto')
 ,   proxy               = null

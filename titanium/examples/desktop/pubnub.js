@@ -5,7 +5,7 @@ var NOW             = 1
 ,   READY_BUFFER    = []
 ,   PRESENCE_SUFFIX = '-pnpres'
 ,   DEF_WINDOWING   = 10     // MILLISECONDS.
-,   DEF_TIMEOUT     = 10000  // MILLISECONDS.
+,   DEF_TIMEOUT     = 15000  // MILLISECONDS.
 ,   DEF_SUB_TIMEOUT = 310    // SECONDS.
 ,   DEF_KEEPALIVE   = 60     // SECONDS (FOR TIMESYNC).
 ,   SECOND          = 1000   // A THOUSAND MILLISECONDS.
@@ -2217,9 +2217,8 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,    PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.7.16'
-,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0
-,   XHRTME     = 310000;
+,   PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.7.16'
+,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0;
 
 
 
