@@ -609,7 +609,6 @@ function PN_API(setup) {
 
             xdr({
                 blocking : blocking || SSL,
-                timeout  : 2000,
                 callback : jsonp,
                 data     : params,
                 success  : function(response) {
@@ -665,7 +664,6 @@ function PN_API(setup) {
 
             xdr({
                 blocking : blocking || SSL,
-                timeout  : 5000,
                 callback : jsonp,
                 data     : params,
                 success  : function(response) {
@@ -1012,7 +1010,6 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
-                timeout  : SECOND * 5,
                 url      : [STD_ORIGIN, 'time', jsonp],
                 success  : function(response) { callback(response[0]) },
                 fail     : function() { callback(0) }
@@ -1071,7 +1068,6 @@ function PN_API(setup) {
             // Queue Message Send
             PUB_QUEUE[add_msg]({
                 callback : jsonp,
-                timeout  : SECOND * 5,
                 url      : url,
                 data     : _get_url_params(params),
                 fail     : function(response){
@@ -1977,7 +1973,6 @@ function PN_API(setup) {
             xdr({
                 callback : jsonp,
                 data     : _get_url_params(data),
-                timeout  : SECOND * 5,
                 url      : [
                     STD_ORIGIN, 'v2', 'presence',
                     'sub-key', SUBSCRIBE_KEY,
