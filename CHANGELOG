@@ -1,3 +1,6 @@
+11-25-15 * 3.7.18
+- fix for versioning error
+
 11-24-15 * 3.7.17
 - fix for react native module not found issue
 - change non sub timeout to 15 s
