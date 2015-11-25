@@ -1,4 +1,4 @@
-// Version: 3.7.17
+// Version: 3.7.18
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.17'
+,   SDK_VER         = '3.7.18'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2211,7 +2211,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.17';
+,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.18';
 
 
 

@@ -1,4 +1,4 @@
-// Version: 3.7.17
+// Version: 3.7.18
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.17'
+,   SDK_VER         = '3.7.18'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2112,7 +2112,7 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.17'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.18'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1
