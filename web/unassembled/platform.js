@@ -327,11 +327,13 @@ function ajax( setup ) {
                     case 200:
                         break;
                     default:
+                        var responseText = xhr.responseText;
+                        var status = xhr.status;
                         try {
-                            response = JSON['parse'](xhr.responseText);
+                            response = JSON['parse'](responseText);
                             done(1,response);
                         }
-                        catch (r) { return done(1, {status : xhr.status, payload : null, message : xhr.responseText}); }
+                        catch (r) { return done(1, {status : status, payload : null, message : responseText}); }
                         return;
                 }
             }
