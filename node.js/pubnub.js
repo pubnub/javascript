@@ -1945,7 +1945,7 @@ function PN_API(setup) {
         'isArray'  : function(arg) {
             return isArray(arg);
         },
-        'get_subscibed_channels' : function() {
+        'get_subscribed_channels' : function() {
             return generate_channel_list(CHANNELS, true);
         },
         'presence_heartbeat' : function(args) {
