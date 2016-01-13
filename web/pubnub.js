@@ -722,7 +722,6 @@ function PN_API(setup) {
     // Announce Leave Event
     var SELF = {
         'LEAVE' : function( channel, blocking, auth_key, callback, error ) {
-
             var data   = { 'uuid' : UUID, 'auth' : auth_key || AUTH_KEY }
             ,   origin = nextorigin(ORIGIN)
             ,   callback = callback || function(){}
@@ -1245,75 +1244,69 @@ function PN_API(setup) {
             PUBNUB.unsubscribe({ channel : 'my_chat' });
         */
         'unsubscribe' : function(args, callback) {
-            var channel       = args['channel']
-            ,   channel_group = args['channel_group']
-            ,   auth_key      = args['auth_key']    || AUTH_KEY
-            ,   callback      = callback            || args['callback'] || function(){}
-            ,   err           = args['error']       || function(){};
+            var channel       = args['channel'];
+            var channel_group = args['channel_group'];
+            var auth_key      = args['auth_key'] || AUTH_KEY;
+            var callback      = callback || args['callback'] || function(){};
+            var err           = args['error'] || function(){};
 
             TIMETOKEN   = 0;
             SUB_RESTORE = 1;   // REVISIT !!!!
 
             if (channel) {
+                var channelList;
+                var presenceChannelList;
 
-                // Prepare LeaveChannel(s)
-                var leave_c = map( (
-                    channel.join ? channel.join(',') : ''+channel
-                ).split(','), function(channel) {
-                    if (!CHANNELS[channel]) return;
-                    return channel;
-                } ).join(',');
+                if (isArray(channel)){
+                    channelList = channel;
+                } else {
+                    channelList = [channel];
+                }
 
-                // Prepare Channel(s)
-                channel = map( (
-                    channel.join ? channel.join(',') : ''+channel
-                ).split(','), function(channel) {
-                    if (!CHANNELS[channel]) return;
-                    return channel + ',' + channel + PRESENCE_SUFFIX;
-                } ).join(',');
+                // Prepare presence channels
+                presenceChannelList = map(channelList, function(channel) {
+                    return channel + PRESENCE_SUFFIX;
+                });
 
-                // Iterate over Channels
-                each(channel.split(','), function(ch) {
-                    if (!ch) return;
-                    CHANNELS[ch] = 0;
+                var combinedChannelsList = channelList.concat(presenceChannelList);
+
+                each(combinedChannelsList, function(ch){
+                    if (ch in CHANNELS) CHANNELS[ch] = 0;
                     if (ch in STATE) delete STATE[ch];
-                } );
+                });
 
                 var CB_CALLED = true;
                 if (READY) {
-                    CB_CALLED = SELF['LEAVE'](leave_c, 0 , auth_key, callback, err);
+                    CB_CALLED = SELF['LEAVE'](combinedChannelsList, 0 , auth_key, callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
             }
 
             if (channel_group) {
+                var channelGroupList;
+                var presenceGroupChannelList;
 
-                // Prepare channel group(s)
-                var leave_gc = map( (
-                    channel_group.join ? channel_group.join(',') : ''+channel_group
-                ).split(','), function(channel_group) {
-                    if (!CHANNEL_GROUPS[channel_group]) return;
-                    return channel_group;
-                } ).join(',');
+                if (isArray(channel_group)){
+                    channelGroupList = channel_group;
+                } else {
+                    channelGroupList = [channel_group];
+                }
 
-                // Prepare channel group(s)
-                channel_group = map( (
-                    channel_group.join ? channel_group.join(',') : ''+channel_group
-                ).split(','), function(channel_group) {
-                    if (!CHANNEL_GROUPS[channel_group]) return;
-                    return channel_group + ',' + channel_group + PRESENCE_SUFFIX;
-                } ).join(',');
+                // Prepare presence channels
+                presenceGroupChannelList = map(channelGroupList, function(channelGroup) {
+                    return channelGroup + PRESENCE_SUFFIX;
+                });
 
-                // Iterate over channel groups
-                each( channel_group.split(','), function(chg) {
-                    if (!chg) return;
-                    CHANNEL_GROUPS[chg] = 0;
-                    if (chg in STATE) delete STATE[chg];
-                } );
+                var combinedChannelGroupsList = channelGroupList.concat(presenceGroupChannelList);
+
+                each(combinedChannelGroupsList, function(channelGroup){
+                    if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
+                    if (channelGroup in STATE) delete STATE[channelGroup];
+                });
 
                 var CB_CALLED = true;
                 if (READY) {
-                    CB_CALLED = SELF['LEAVE_GROUP'](leave_gc, 0 , auth_key, callback, err);
+                    CB_CALLED = SELF['LEAVE_GROUP'](combinedChannelGroupsList, 0 , auth_key, callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
             }

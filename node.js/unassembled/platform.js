@@ -328,6 +328,11 @@ var CREATE_PUBNUB = function(setup) {
     SELF.init = SELF;
     SELF.secure = SELF;
     SELF.crypto_obj = crypto_obj();
+
+    // TODO: remove dependence
+    SELF.__PN = PN;
+    //
+
     SELF.ready();
 
 
