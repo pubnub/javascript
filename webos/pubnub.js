@@ -1,4 +1,4 @@
-// Version: 3.7.18
+// Version: 3.7.19
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.18'
+,   SDK_VER         = '3.7.19'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1118,69 +1118,75 @@ function PN_API(setup) {
             PUBNUB.unsubscribe({ channel : 'my_chat' });
         */
         'unsubscribe' : function(args, callback) {
-            var channel       = args['channel'];
-            var channel_group = args['channel_group'];
-            var auth_key      = args['auth_key'] || AUTH_KEY;
-            var callback      = callback || args['callback'] || function(){};
-            var err           = args['error'] || function(){};
+            var channelArg = args['channel'];
+            var channelGroupArg = args['channel_group'];
+            var auth_key = args['auth_key'] || AUTH_KEY;
+            var callback = callback || args['callback'] || function(){};
+            var err = args['error'] || function(){};
 
             TIMETOKEN   = 0;
             SUB_RESTORE = 1;   // REVISIT !!!!
 
-            if (channel) {
-                var channelList;
-                var presenceChannelList;
+            if (channelArg) {
+                var channels = isArray(channelArg) ? channelArg : ('' + channelArg).split(",");
+                var existingChannels = [];
+                var presenceChannels = [];
 
-                if (isArray(channel)){
-                    channelList = channel;
-                } else {
-                    channelList = [channel];
-                }
-
-                // Prepare presence channels
-                presenceChannelList = map(channelList, function(channel) {
-                    return channel + PRESENCE_SUFFIX;
+                each(channels, function(channel){
+                    if (CHANNELS[channel]) existingChannels.push(channel);
                 });
 
-                var combinedChannelsList = channelList.concat(presenceChannelList);
+                // if we do not have any channels to unsubscribe from, trigger a callback.
+                if (existingChannels.length == 0){
+                    callback({action : "leave"});
+                    return;
+                }
 
-                each(combinedChannelsList, function(ch){
-                    if (ch in CHANNELS) CHANNELS[ch] = 0;
-                    if (ch in STATE) delete STATE[ch];
+                each(existingChannels, function(channel){
+                    if (channel in CHANNELS) CHANNELS[channel] = 0;
+                    if (channel in STATE) delete STATE[channel];
+                });
+
+                // Prepare presence channels
+                each(existingChannels, function(channel) {
+                    presenceChannels.push(channel + PRESENCE_SUFFIX);
                 });
 
                 var CB_CALLED = true;
                 if (READY) {
-                    CB_CALLED = SELF['LEAVE'](combinedChannelsList, 0 , auth_key, callback, err);
+                    CB_CALLED = SELF['LEAVE'](existingChannels.concat(presenceChannels), 0 , auth_key, callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
             }
 
-            if (channel_group) {
-                var channelGroupList;
-                var presenceGroupChannelList;
+            if (channelGroupArg) {
+                var channelGroups = isArray(channelGroupArg) ? channelGroupArg : ('' + channelGroupArg).split(",");
+                var existingChannelGroups = [];
+                var presenceGroupChannels = [];
 
-                if (isArray(channel_group)){
-                    channelGroupList = channel_group;
-                } else {
-                    channelGroupList = [channel_group];
-                }
-
-                // Prepare presence channels
-                presenceGroupChannelList = map(channelGroupList, function(channelGroup) {
-                    return channelGroup + PRESENCE_SUFFIX;
+                each(channelGroups, function(channelGroup){
+                    if (CHANNEL_GROUPS[channelGroup]) existingChannelGroups.push(channelGroup);
                 });
 
-                var combinedChannelGroupsList = channelGroupList.concat(presenceGroupChannelList);
+                // if we do not have any channel groups to unsubscribe from, trigger a callback.
+                if (existingChannelGroups.length == 0){
+                    callback({action : "leave"});
+                    return;
+                }
 
-                each(combinedChannelGroupsList, function(channelGroup){
+                each(existingChannelGroups, function(channelGroup){
                     if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
                     if (channelGroup in STATE) delete STATE[channelGroup];
                 });
 
+                // Prepare presence channels
+                each(existingChannelGroups, function(channelGroup) {
+                    presenceGroupChannels.push(channelGroup + PRESENCE_SUFFIX);
+                });
+
                 var CB_CALLED = true;
                 if (READY) {
-                    CB_CALLED = SELF['LEAVE_GROUP'](combinedChannelGroupsList, 0 , auth_key, callback, err);
+                    CB_CALLED = SELF['LEAVE_GROUP'](existingChannelGroups.concat(presenceGroupChannels), 0 , auth_key, callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
             }
@@ -2204,7 +2210,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.18';
+,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.19';
 
 
 
