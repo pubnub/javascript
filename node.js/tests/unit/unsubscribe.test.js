@@ -9,11 +9,14 @@ describe("#unsubscribe", function(){
     this.timeout(3000);
     fixture = {};
 
+    fixture.errorStub = sinon.stub();
+
     fixture.pubnubInstance = pubnub.init({
       publish_key: 'ds',
       subscribe_key: 'ds',
       origin: 'pubsub.pubnub.com',
-      build_u: true
+      build_u: true,
+      error: fixture.errorStub
     });
 
     fixture.stubbedLeave = sinon.stub(fixture.pubnubInstance.__PN, "LEAVE", function (channel, intz , authKey, callback, err){
@@ -25,9 +28,51 @@ describe("#unsubscribe", function(){
       callback();
       return true;
     });
-    
+
     fixture.pubnubInstance.ready();
     setTimeout(done, 1500)
+
+  });
+
+  describe("init checks are executed", function(){
+
+    it("triggers error if publish key is not passed", function(){
+      var errorStub = sinon.stub();
+
+      var localInstance = pubnub.init({
+        subscribe_key: 'ds',
+        origin: 'pubsub.pubnub.com',
+        build_u: true,
+        error: errorStub
+      });
+
+      localInstance.unsubscribe({channel: "max"});
+      assert.equal(errorStub.callCount, 1);
+      assert.equal(errorStub.args[0][0], "Missing Publish Key");
+    });
+
+    it("triggers error if subscribe key is not passed", function(){
+      var errorStub = sinon.stub();
+
+      var localInstance = pubnub.init({
+        publish_key: 'ds',
+        origin: 'pubsub.pubnub.com',
+        build_u: true,
+        error: errorStub
+      });
+
+      localInstance.unsubscribe({channel: "max"});
+      assert.equal(errorStub.callCount, 1);
+      assert.equal(errorStub.args[0][0], "Missing Subscribe Key");
+    });
+
+    it("triggers error if channel and channel group is not passed", function(){
+      fixture.pubnubInstance.unsubscribe({});
+      assert.equal(fixture.errorStub.callCount, 1);
+      assert.equal(fixture.stubbedLeave.callCount, 0);
+      assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
+      assert.equal(fixture.errorStub.args[0][0], "Missing Channel or Channel Group");
+    });
 
   });
 

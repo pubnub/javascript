@@ -1127,6 +1127,10 @@ function PN_API(setup) {
             TIMETOKEN   = 0;
             SUB_RESTORE = 1;   // REVISIT !!!!
 
+            if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
+            if (!PUBLISH_KEY)   return error('Missing Publish Key');
+            if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+
             if (channelArg) {
                 var channels = isArray(channelArg) ? channelArg : ('' + channelArg).split(",");
                 var existingChannels = [];
