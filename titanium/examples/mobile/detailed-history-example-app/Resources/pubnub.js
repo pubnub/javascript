@@ -1025,7 +1025,7 @@ function PN_API(setup) {
             var msg      = args['message'];
             if (!msg) return error('Missing Message');
 
-            var callback = callback || args['callback'] || msg['callback'] || function(){}
+            var callback = callback || args['callback'] || msg['callback'] || args['success'] || function(){}
             ,   channel  = args['channel'] || msg['channel']
             ,   auth_key = args['auth_key'] || AUTH_KEY
             ,   cipher_key = args['cipher_key']
@@ -1949,7 +1949,7 @@ function PN_API(setup) {
         'isArray'  : function(arg) {
             return isArray(arg);
         },
-        'get_subscibed_channels' : function() {
+        'get_subscribed_channels' : function() {
             return generate_channel_list(CHANNELS, true);
         },
         'presence_heartbeat' : function(args) {
