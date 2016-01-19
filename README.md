@@ -1,6 +1,6 @@
 # PubNub JavaScript SDK
 
-[![Build Status](https://travis-ci.org/pubnub/pubnub-angular.svg)](https://travis-ci.org/pubnub/pubnub-angular)
+[![Build Status](https://travis-ci.org/pubnub/javascript.svg)](https://travis-ci.org/pubnub/javascript)
 
 PubNub for JavaScript Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
 
