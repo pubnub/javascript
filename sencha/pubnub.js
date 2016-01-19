@@ -1,4 +1,4 @@
-// Version: 3.7.19
+// Version: 3.7.18
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.19'
+,   SDK_VER         = '3.7.18'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2214,7 +2214,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.7.19';
+,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.7.18';
 
 
 

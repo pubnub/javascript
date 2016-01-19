@@ -5,16 +5,15 @@ module.exports = function (grunt) {
             test: {
                 options: {
                     reporter: "spec",
-                    require: 'tests/tests-include.js',
+                    require: 'node.js/tests/tests-include.js',
                     quiet: false
                 },
-                // NOTICE: ignore test2.js test due it's
-                src: ['tests/ssl_test.js', 'tests/test.js']
+                src: ['node.js/tests/unit/**.test.js']
             },
             unit: 'karma.conf.js'
         },
         nodeunit: {
-            tests: ['tests/unit-test.js'],
+            tests: ['node.js/**/tests/unit-test.js'],
             options: {}
         }
     });
@@ -23,7 +22,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-contrib-clean');
 
-    grunt.registerTask('test', ["test:mocha", "test:unit"]);
+    grunt.registerTask('test', ["test:mocha"]);
     grunt.registerTask('test:mocha', 'mochaTest');
     grunt.registerTask('test:unit', 'nodeunit');
 };
