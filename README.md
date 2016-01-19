@@ -1,8 +1,15 @@
-# Please direct all Support Questions and Concerns to Support@PubNub.com
+# PubNub JavaScript SDK
 
-PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
+[![Build Status](https://travis-ci.org/pubnub/pubnub-angular.svg)](https://travis-ci.org/pubnub/pubnub-angular)
 
-### CDN Links
+PubNub for JavaScript Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
+
+## Communication
+
+- If you **need help** or have a **general question**, contact <support@pubnub.com>
+- If you **want to contribute**, please open a pull request.
+
+## CDN Links
 
 #### HTTP
 * http://cdn.pubnub.com/pubnub-3.7.18.min.js
@@ -11,5 +18,3 @@ PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/jav
 #### HTTPS
 * https://cdn.pubnub.com/pubnub-3.7.18.min.js
 * https://cdn.pubnub.com/pubnub-3.7.18.js
-
-# Please direct all Support Questions and Concerns to Support@PubNub.com
