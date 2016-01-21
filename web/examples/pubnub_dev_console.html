@@ -1,0 +1,109 @@
+<html>
+<head>
+    <script src=../pubnub.min.js></script>
+    <script src=./pubnub_dev_console.js></script>
+    <style>
+
+        #currentAuthKey {
+            color: blue;
+        }
+
+        button {
+            margin-bottom: 5px;
+            margin-top: 10px;
+        }
+
+        code {
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        div.inline {
+            float: left;
+            margin-right: 100px;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+    </style>
+</head>
+<body>
+<p>
+
+<h2>Please open Developer Tools->Console and click around below to begin</h2>
+</p>
+<p>
+
+<h3>Init Methods</h3>
+
+Init with test PAM-enabled domain and default keys:
+<button onclick='dev_console.init("pubsub.pubnub.com","pub-c-e72b633d-bb2f-42ba-8e98-69a9d3f7bdaa","sub-c-8e798456-4520-11e3-9b46-02ee2ddab7fe","sec-c-ZjFjZmRhODMtM2E5Yi00N2ViLWJjYTktMjk2NmExOTQyMmYz","myauthkey", false)'>
+    Init
+</button>
+<p/>
+Init with origin set to presence keys:
+<button onclick='dev_console.init("pubsub.pubnub.com","pub-c-fb5fa283-0d93-424f-bf86-d9aca2366c86","sub-c-d247d250-9dbd-11e3-8008-02ee2ddab7fe","demo","demo", false, true)'>
+    Init with beta presence origin
+</button>
+
+<h2>Output</h2>
+<button onclick='clearOutputs()'>Clear</button>
+
+<h3>Successful Response</h3>
+<div id="output">You'll find your JSON output here!</div>
+<h3>Error Response</h3>
+<div id="error">You'll find your default error callback output here!</div>
+<div class="clear"></div>
+<h2>Operations</h2>
+
+<div class="inline">
+    Subscribe:
+    <button onclick="dev_console.input(1)">dev_console.input(1)</button>
+    <p/>
+    Publish:
+    <button onclick="dev_console.input(2)">dev_console.input(2)</button>
+    <p/>
+    History:
+    <button onclick="dev_console.input(3)">dev_console.input(3)</button>
+    <p/>
+    Here Now:
+    <button onclick="dev_console.input(4)">dev_console.input(4)</button>
+    <p/>
+    Unsubscribe:
+    <button onclick="dev_console.input(5)">dev_console.input(5)</button>
+    <p/>
+    Time:
+    <button onclick="dev_console.input(6)">dev_console.input(6)</button>
+    <p/>
+    Set UUID:
+    <button onclick="dev_console.input(7)">dev_console.input(7)</button>
+    <div id="currentUUID"></div>
+</div>
+<div class="inline">
+    Set auth key:
+    <button onclick="dev_console.input(8)">dev_console.input(8)</button>
+    <div id="currentAuthKey"></div>
+    <p/>
+    PAM Grant:
+    <button onclick="dev_console.input(9)">dev_console.input(9)</button>
+    <p/>
+    PAM Revoke:
+    <button onclick="dev_console.input(10)">dev_console.input(10)</button>
+    </p>
+    PAM Audit:
+    <button onclick="dev_console.input(11)">dev_console.input(11)</button>
+    </p>
+    Set State:
+    <button onclick="dev_console.input(12)">dev_console.input(12)</button>
+    </p>
+    Set Heartbeat:
+    <button onclick="dev_console.input(13)">dev_console.input(13)</button>
+    </p>
+    Set Heartbeat Interval:
+    <button onclick="dev_console.input(14)">dev_console.input(14)</button>
+</div>
+
+</body>
+</html>

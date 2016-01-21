@@ -1,0 +1,29 @@
+
+<div id=pubnub></div>
+<script src="../pubnub.js"></script>
+<script>(function(){
+    // INIT PubNub
+    console.log(PUBNUB);
+    var pubnub = PUBNUB.init({
+        //leave_on_unload : true, // Perform a Leave Explicitly on Page Unload Event
+        publish_key     : 'demo',
+        subscribe_key   : 'demo'
+    });
+
+    pubnub.channel_group_add_channel({"channel_group":"xxx", "channel":"a", "callback":function(r){ console.log('ERROR : ' + JSON.stringify(r));}});
+
+
+function cb(m,e,c,d,f){
+    console.log(JSON.stringify(m));
+}
+    pubnub.subscribe({
+        callback : cb,
+        error : function(r){ console.log('ERROR : ' + JSON.stringify(r));},
+        channel_group : "xxx",
+        connect : function(r) {console.log("CONNECT");},
+        disconnect : function(r) {console.log("DISCONNECT");},
+        reconnect : function(r) {console.log("RECONNECT");}
+    })
+
+
+})();</script>

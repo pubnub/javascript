@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <!-- Hey, let's be friends! twitter.com/pubnub -->
+    <title>PubNub JavaScript Multiplexing Test</title>
+</head>
+<body><div class=container>
+
+<div style="font-family:'Monaco';" id=out>...</div>
+
+<script src=../pubnub.min.js></script>
+<script>(function(){
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Testing Examples
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+var pubnub = PUBNUB({
+    subscribe_key : 'demo',
+    publish_key   : 'demo---111',
+    keepalive     : 1,
+    timecheck     : false
+});
+PUBNUB.init({
+    subscribe_key : 'demo',
+    publish_key   : 'demo---222',
+    keepalive     : 3,
+    timecheck     : false
+});
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Subscribe
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+subscribe('bot');
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Unsubscribe
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+setTimeout( function() { unsubscribe('bot') }, 30000 );
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Sub/UnSub Helper Functions
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+function unsubscribe(channel) { pubnub.unsubscribe({
+    channel : channel
+}) }
+
+function subscribe(channel) { pubnub.subscribe({
+    channel    : channel,
+    connect    : function() { log('NETWORK CONNECTED!!!') },
+    disconnect : function() { log('NETWORK DISCONNECTED!!!') },
+    reconnect  : function() { log('NETWORK RECONNECTED!!!') },
+    message    : function( message, envelope, channel ) {
+        log('CHANNEL "' + channel + '": ' + JSON.stringify(message));
+    }
+}) }
+
+function log(data) {
+    console.log(data);
+    PUBNUB.$('out').innerHTML += "<div>"+data+"</div>";
+}
+
+})();</script>
+</div></body>
+</html>
