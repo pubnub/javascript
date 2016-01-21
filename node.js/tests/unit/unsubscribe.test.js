@@ -46,7 +46,7 @@ describe("#unsubscribe", function(){
         error: errorStub
       });
 
-      localInstance.unsubscribe({channel: "max"});
+      localInstance.unsubscribe({channel: "ch"});
       assert.equal(errorStub.callCount, 1);
       assert.equal(errorStub.args[0][0], "Missing Publish Key");
     });
@@ -61,7 +61,7 @@ describe("#unsubscribe", function(){
         error: errorStub
       });
 
-      localInstance.unsubscribe({channel: "max"});
+      localInstance.unsubscribe({channel: "ch"});
       assert.equal(errorStub.callCount, 1);
       assert.equal(errorStub.args[0][0], "Missing Subscribe Key");
     });
@@ -78,12 +78,12 @@ describe("#unsubscribe", function(){
 
   describe("leaving a channel", function(){
     it("supports leaving of a singular channel", function(done){
-      fixture.pubnubInstance.subscribe({channel: "max"}, function(){});
+      fixture.pubnubInstance.subscribe({channel: "ch"}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({channel: "max"}, function(){
+      fixture.pubnubInstance.unsubscribe({channel: "ch"}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 1);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
-        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], [ 'max', 'max-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], 'ch');
         done()
       });
     });
@@ -94,46 +94,46 @@ describe("#unsubscribe", function(){
       fixture.pubnubInstance.unsubscribe({channel: 1}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 1);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
-        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], [ '1', '1-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], '1');
         done()
       });
     });
 
     it("supports leaving of multiple channels", function(done){
-      fixture.pubnubInstance.subscribe({channel: ["max", "max2"]}, function(){});
+      fixture.pubnubInstance.subscribe({channel: ["ch", "ch2"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({channel: ["max", "max2"]}, function(){
+      fixture.pubnubInstance.unsubscribe({channel: ["ch", "ch2"]}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 1);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
-        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], [ 'max', 'max2', 'max-pnpres', 'max2-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], 'ch,ch2');
         done()
       });
     });
 
     it("supports leaving of multiple channels with a string splitting ,", function(done){
-      fixture.pubnubInstance.subscribe({channel: ["max", "max2"]}, function(){});
+      fixture.pubnubInstance.subscribe({channel: ["ch", "ch2"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({channel: "max,max2"}, function(){
+      fixture.pubnubInstance.unsubscribe({channel: "ch,ch2"}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 1);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
-        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], [ 'max', 'max2', 'max-pnpres', 'max2-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], 'ch,ch2');
         done()
       });
     });
 
     it("omits channels which are not present in the subscribed records", function(done){
-      fixture.pubnubInstance.subscribe({channel: ["max", "max10"]}, function(){});
+      fixture.pubnubInstance.subscribe({channel: ["ch", "ch10"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({channel: ["max", "max2"]}, function(){
+      fixture.pubnubInstance.unsubscribe({channel: ["ch", "ch2"]}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 1);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
-        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], [ 'max', 'max-pnpres']);
+        assert.deepEqual(fixture.stubbedLeave.firstCall.args[0], 'ch');
         done()
       });
     });
 
     it("does not call server if all the channels are not present in the subscribed records", function(done){
-      fixture.pubnubInstance.unsubscribe({channel: ["max", "max2"]}, function(){
+      fixture.pubnubInstance.unsubscribe({channel: ["ch", "ch2"]}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
         done()
@@ -144,12 +144,12 @@ describe("#unsubscribe", function(){
 
   describe("leaving a channel group", function(){
     it("supports leaving of a singular channel group", function(done){
-      fixture.pubnubInstance.subscribe({'channel_group': ["max"]}, function(){});
+      fixture.pubnubInstance.subscribe({'channel_group': ["ch"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({'channel_group': "max"}, function(){
+      fixture.pubnubInstance.unsubscribe({'channel_group': "ch"}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 1);
-        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], [ 'max', 'max-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], 'ch');
         done()
       });
     });
@@ -160,46 +160,46 @@ describe("#unsubscribe", function(){
       fixture.pubnubInstance.unsubscribe({'channel_group': 1}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 1);
-        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], [ '1', '1-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], '1');
         done()
       });
     });
 
     it("supports leaving of multiple channel groups", function(done){
-      fixture.pubnubInstance.subscribe({'channel_group': ["max", "max2"]}, function(){});
+      fixture.pubnubInstance.subscribe({'channel_group': ["ch", "ch2"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({'channel_group': ["max", "max2"]}, function(){
+      fixture.pubnubInstance.unsubscribe({'channel_group': ["ch", "ch2"]}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 1);
-        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], [ 'max', 'max2', 'max-pnpres', 'max2-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], 'ch,ch2');
         done()
       });
     });
 
     it("supports leaving of multiple channel groups with a string splitting ,", function(done){
-      fixture.pubnubInstance.subscribe({'channel_group': ["max", "max2"]}, function(){});
+      fixture.pubnubInstance.subscribe({'channel_group': ["ch", "ch2"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({'channel_group': "max,max2"}, function(){
+      fixture.pubnubInstance.unsubscribe({'channel_group': "ch,ch2"}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 1);
-        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], [ 'max', 'max2', 'max-pnpres', 'max2-pnpres' ]);
+        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], 'ch,ch2');
         done()
       });
     });
 
     it("omits channel groups which are not present in the subscribed records", function(done){
-      fixture.pubnubInstance.subscribe({'channel_group': ["max", "max10"]}, function(){});
+      fixture.pubnubInstance.subscribe({'channel_group': ["ch", "ch10"]}, function(){});
 
-      fixture.pubnubInstance.unsubscribe({'channel_group': ["max", "max2"]}, function(){
+      fixture.pubnubInstance.unsubscribe({'channel_group': ["ch", "ch2"]}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 1);
-        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], [ 'max', 'max-pnpres']);
+        assert.deepEqual(fixture.stubbedLeaveGroup.firstCall.args[0], 'ch');
         done()
       });
     });
 
     it("does not call server if all the channel groups are not present in the subscribed records", function(done){
-      fixture.pubnubInstance.unsubscribe({'channel_group': ["max", "max2"]}, function(){
+      fixture.pubnubInstance.unsubscribe({'channel_group': ["ch", "ch2"]}, function(){
         assert.equal(fixture.stubbedLeave.callCount, 0);
         assert.equal(fixture.stubbedLeaveGroup.callCount, 0);
         done()

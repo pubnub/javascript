@@ -1,4 +1,4 @@
-// Version: 3.7.19
+// Version: 3.7.20
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.19'
+,   SDK_VER         = '3.7.20'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1146,19 +1146,19 @@ function PN_API(setup) {
                     return;
                 }
 
-                each(existingChannels, function(channel){
-                    if (channel in CHANNELS) CHANNELS[channel] = 0;
-                    if (channel in STATE) delete STATE[channel];
-                });
-
                 // Prepare presence channels
                 each(existingChannels, function(channel) {
                     presenceChannels.push(channel + PRESENCE_SUFFIX);
                 });
 
+                each(existingChannels.concat(presenceChannels), function(channel){
+                    if (channel in CHANNELS) CHANNELS[channel] = 0;
+                    if (channel in STATE) delete STATE[channel];
+                });
+
                 var CB_CALLED = true;
                 if (READY) {
-                    CB_CALLED = SELF['LEAVE'](existingChannels.concat(presenceChannels), 0 , auth_key, callback, err);
+                    CB_CALLED = SELF['LEAVE'](existingChannels.join(','), 0 , auth_key, callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
             }
@@ -1166,7 +1166,7 @@ function PN_API(setup) {
             if (channelGroupArg) {
                 var channelGroups = isArray(channelGroupArg) ? channelGroupArg : ('' + channelGroupArg).split(",");
                 var existingChannelGroups = [];
-                var presenceGroupChannels = [];
+                var presenceChannelGroups = [];
 
                 each(channelGroups, function(channelGroup){
                     if (CHANNEL_GROUPS[channelGroup]) existingChannelGroups.push(channelGroup);
@@ -1178,19 +1178,19 @@ function PN_API(setup) {
                     return;
                 }
 
-                each(existingChannelGroups, function(channelGroup){
+                // Prepare presence channels
+                each(existingChannelGroups, function(channelGroup) {
+                    presenceChannelGroups.push(channelGroup + PRESENCE_SUFFIX);
+                });
+
+                each(existingChannelGroups.concat(presenceChannelGroups), function(channelGroup){
                     if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
                     if (channelGroup in STATE) delete STATE[channelGroup];
                 });
 
-                // Prepare presence channels
-                each(existingChannelGroups, function(channelGroup) {
-                    presenceGroupChannels.push(channelGroup + PRESENCE_SUFFIX);
-                });
-
                 var CB_CALLED = true;
                 if (READY) {
-                    CB_CALLED = SELF['LEAVE_GROUP'](existingChannelGroups.concat(presenceGroupChannels), 0 , auth_key, callback, err);
+                    CB_CALLED = SELF['LEAVE_GROUP'](existingChannelGroups.join(','), 0 , auth_key, callback, err);
                 }
                 if (!CB_CALLED) callback({action : "leave"});
             }
@@ -2214,7 +2214,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.7.19';
+,    PNSDK      = 'PubNub-JS-' + 'Sencha' + '/' + '3.7.20';
 
 
 
