@@ -1,9 +1,12 @@
+01-25-16 * 3.7.21
+- remove dependence on publish keys when unsubscribing.
+
 01-21-16 * 3.7.19 // 3.7.20
 - fixing typo in get_subscribed_channels
 - fix for case where xhr can be null
 - adding success alias to callback for publish api
 - adjusting unsubscribe methods
-- check for sub,pub keys and channel or channel group on unsubscribe 
+- check for sub,pub keys and channel or channel group on unsubscribe
 
 11-25-15 * 3.7.18
 - fix for versioning error

@@ -1096,7 +1096,6 @@ function PN_API(setup) {
             SUB_RESTORE = 1;   // REVISIT !!!!
 
             if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
-            if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (channelArg) {

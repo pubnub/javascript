@@ -36,21 +36,6 @@ describe("#unsubscribe", function(){
 
   describe("init checks are executed", function(){
 
-    it("triggers error if publish key is not passed", function(){
-      var errorStub = sinon.stub();
-
-      var localInstance = pubnub.init({
-        subscribe_key: 'ds',
-        origin: 'pubsub.pubnub.com',
-        build_u: true,
-        error: errorStub
-      });
-
-      localInstance.unsubscribe({channel: "ch"});
-      assert.equal(errorStub.callCount, 1);
-      assert.equal(errorStub.args[0][0], "Missing Publish Key");
-    });
-
     it("triggers error if subscribe key is not passed", function(){
       var errorStub = sinon.stub();
 
@@ -66,7 +51,7 @@ describe("#unsubscribe", function(){
       assert.equal(errorStub.args[0][0], "Missing Subscribe Key");
     });
 
-    it("triggers error if channel and channel group is not passed", function(){
+    it("triggers error if both channel and channel group are missing", function(){
       fixture.pubnubInstance.unsubscribe({});
       assert.equal(fixture.errorStub.callCount, 1);
       assert.equal(fixture.stubbedLeave.callCount, 0);

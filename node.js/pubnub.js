@@ -1,4 +1,4 @@
-// Version: 3.7.20
+// Version: 3.7.21
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -12,7 +12,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.20'
+,   SDK_VER         = '3.7.21'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1097,7 +1097,6 @@ function PN_API(setup) {
             SUB_RESTORE = 1;   // REVISIT !!!!
 
             if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
-            if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (channelArg) {
@@ -2115,7 +2114,7 @@ THE SOFTWARE.
 var NOW                 = 1
 ,   http                = require('http')
 ,   https               = require('https')
-,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.20'
+,   PNSDK               = 'PubNub-JS-' + 'Nodejs' + '/' +  '3.7.21'
 ,   crypto              = require('crypto')
 ,   proxy               = null
 ,   XORIGN              = 1

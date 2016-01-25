@@ -1,4 +1,4 @@
-// Version: 3.7.20
+// Version: 3.7.21
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.20'
+,   SDK_VER         = '3.7.21'
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -1128,7 +1128,6 @@ function PN_API(setup) {
             SUB_RESTORE = 1;   // REVISIT !!!!
 
             if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
-            if (!PUBLISH_KEY)   return error('Missing Publish Key');
             if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
             if (channelArg) {
@@ -2214,7 +2213,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.20';
+,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.7.21';
 
 
 
