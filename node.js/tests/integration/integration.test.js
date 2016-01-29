@@ -1,5 +1,5 @@
 if (typeof window == 'undefined') {
-    var PUBNUB = require('../pubnub.js'),
+    var PUBNUB = require('../../pubnub.js'),
         assert = require('assert'),
         //nock = require('nock'),
         _ = require("underscore");

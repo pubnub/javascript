@@ -11,7 +11,6 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = VERSION
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2076,3 +2075,22 @@ function PN_API(setup) {
 
     return SELF;
 }
+
+
+// pump out the dependencies of the core
+// this will not be activated in browser until webpack is enabled.
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+    module.exports = {
+        'PN_API': PN_API,
+        'unique': unique,
+        'PNmessage': PNmessage,
+        'DEF_TIMEOUT': DEF_TIMEOUT,
+        'timeout': timeout,
+        'build_url': build_url,
+        'each': each,
+        'uuid': generate_uuid,
+        'URLBIT': URLBIT
+    };
+}
+
+

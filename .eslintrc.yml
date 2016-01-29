@@ -1,0 +1,10 @@
+plugins:
+  - react
+rules:
+  no-undef: 2
+env:
+  browser: true,
+  node: true,
+  amd: false,
+  mocha: false,
+  jasmine: false
