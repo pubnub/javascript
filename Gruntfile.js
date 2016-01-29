@@ -4,15 +4,22 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         mochaTest: {
-            test: {
+            unit: {
                 options: {
                     reporter: "spec",
                     require: 'node.js/tests/tests-include.js',
                     quiet: false
                 },
-                src: ['node.js/tests/**/*.test.js']
+                src: ['node.js/tests/unit/*.test.js']
             },
-            unit: 'karma.conf.js'
+            integration: {
+                options: {
+                    reporter: "spec",
+                    require: 'node.js/tests/tests-include.js',
+                    quiet: false
+                },
+                src: ['node.js/tests/integration/*.test.js']
+            }
         },
         eslint: {
             target: [
@@ -29,7 +36,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-contrib-clean');
 
-    grunt.registerTask('test', ['test:mocha', 'eslint']);
-    grunt.registerTask('test:mocha', 'mochaTest');
-    grunt.registerTask('test:unit', 'nodeunit');
+    grunt.registerTask('ci-test', ['mochaTest:unit', 'eslint']);
+    grunt.registerTask('test', ['mochaTest', 'eslint']);
 };
