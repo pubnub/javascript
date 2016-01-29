@@ -3,6 +3,14 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        mocha_istanbul: {
+            coverage_unit: {
+                src: 'node.js/tests', // a folder works nicely
+                options: {
+                    mask: '**/*.test.js'
+                }
+            }
+        },
         mochaTest: {
             unit: {
                 options: {
@@ -35,7 +43,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-mocha-test');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-mocha-istanbul');
 
     grunt.registerTask('ci-test', ['mochaTest:unit', 'eslint']);
-    grunt.registerTask('test', ['mochaTest', 'eslint']);
+    grunt.registerTask('test', ['mocha_istanbul', 'eslint']);
 };

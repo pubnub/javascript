@@ -5,7 +5,7 @@
 
 /* ---------------------------------------------------------------------------
  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
- Copyright (c) 2011 TopMambo Inc.
+ Copyright (c) 2016 PubNub Inc.
  http://www.pubnub.com/
  http://www.pubnub.com/terms
  --------------------------------------------------------------------------- */
@@ -330,7 +330,7 @@ var CREATE_PUBNUB = function (setup) {
   setup['shutdown'] = function () {
     keepAliveAgentSSL && keepAliveAgentSSL.destroy && keepAliveAgentSSL.destroy();
     keepAliveAgent && keepAliveAgent.destroy && keepAliveAgent.destroy();
-  }
+  };
 
   if (setup['keepAlive'] === false) {
     keepAliveAgent = undefined;
