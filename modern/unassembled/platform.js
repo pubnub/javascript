@@ -291,11 +291,11 @@ function CREATE_PUBNUB(setup) {
     if (setup['notest']) return SELF;
 
     if (typeof(window) !== 'undefined'){
-        bind( 'offline', window,   SELF['_reset_offline'] );
+        bind( 'offline', window,   SELF['offline'] );
     }
 
     if (typeof(document) !== 'undefined'){
-        bind( 'offline', document, SELF['_reset_offline'] );
+        bind( 'offline', document, SELF['offline'] );
     }
 
     SELF['ready']();
