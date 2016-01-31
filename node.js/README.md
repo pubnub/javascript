@@ -1,7 +1,6 @@
 # PubNub Node.JS SDK and NPM 
 
-PubNub for JS Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
-
+PubNub for JS Docs have been moved to: https://www.pubnub.com/docs/nodejs-javascript/pubnub-javascript-sdk
 ## PubNub Node.js Quick Usage
 
 Open `./tests/unit-test.js` to see examples for all the basics,
