@@ -348,6 +348,11 @@ var CREATE_PUBNUB = function (setup) {
     }
   }
 
+  // overwrite version function to fetch information from json.
+  SELF.get_version = function(){
+    return packageJSON.version;
+  };
+
   SELF.init = SELF;
   SELF.secure = SELF;
   SELF.crypto_obj = crypto_obj();

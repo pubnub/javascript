@@ -11,6 +11,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
+,   SDK_VER         = "VERSION".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2077,8 +2078,7 @@ function PN_API(setup) {
 }
 
 
-// pump out the dependencies of the core
-// this will not be activated in browser until webpack is enabled.
+// expose a closure to server oriented applications.s
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = {
         'PN_API': PN_API,

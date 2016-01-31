@@ -35,7 +35,7 @@ module.exports = function (grunt) {
             ]
         },
         nodeunit: {
-            tests: ['node.js/tests/unit-test.js'],
+            tests: ['node.js/**/tests/unit-test.js'],
             options: {}
         }
     });
@@ -45,6 +45,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
 
+    grunt.registerTask('test:mocha', 'mochaTest');
+    grunt.registerTask('test:unit', 'nodeunit');
     grunt.registerTask('ci-test', ['mochaTest:unit', 'eslint']);
     grunt.registerTask('test', ['mocha_istanbul', 'eslint']);
 };

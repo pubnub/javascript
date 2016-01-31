@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = '3.7.22'
+,   SDK_VER         = "'3.7.22'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2108,6 +2108,24 @@ function PN_API(setup) {
 
     return SELF;
 }
+
+
+// expose a closure to server oriented applications.s
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+    module.exports = {
+        'PN_API': PN_API,
+        'unique': unique,
+        'PNmessage': PNmessage,
+        'DEF_TIMEOUT': DEF_TIMEOUT,
+        'timeout': timeout,
+        'build_url': build_url,
+        'each': each,
+        'uuid': generate_uuid,
+        'URLBIT': URLBIT
+    };
+}
+
+
 function crypto_obj() {
 
     function SHA256(s) {
