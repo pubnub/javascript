@@ -1,3 +1,6 @@
+02-01-16 * 3.7.23
+- Checking for existence of xhr before checking the state.
+
 01-29-16 * 3.7.22
 - Adjusing callback function when disconnect is happening on modern browser.
 
