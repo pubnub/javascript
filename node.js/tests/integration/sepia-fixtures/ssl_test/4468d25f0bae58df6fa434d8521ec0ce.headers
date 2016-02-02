@@ -1,0 +1,17 @@
+{
+  "statusCode": 200,
+  "headers": {
+    "date": "Tue, 02 Feb 2016 08:20:27 GMT",
+    "content-type": "text/javascript; charset=\"UTF-8\"",
+    "content-length": "19",
+    "connection": "close",
+    "cache-control": "no-cache",
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET"
+  },
+  "url": "http://ps3.pubnub.com:80/time/0?uuid=ba2c16b1-7473-4f88-bba0-ad7465a73cdc&pnsdk=PubNub-JS-Nodejs%2F3.7.23",
+  "time": 20,
+  "request": {
+    "method": "GET"
+  }
+}

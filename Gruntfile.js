@@ -3,30 +3,39 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    env: {
+      test_lockdown: {
+        VCR_MODE: 'playback'
+      },
+      test_record: {
+        VCR_MODE: 'cache'
+      }
+    },
     mocha_istanbul: {
-      coverage_unit: {
-        src: 'node.js/tests', // a folder works nicely
+      coverage_integration: {
+        src: 'node.js/tests/integration/stubbed', // a folder works nicely
         options: {
-          mask: '**/*.test.js'
+          coverageFolder: 'coverage/integration',
+          mask: '**/*.test.js',
+          print: 'none'
+        }
+      },
+      coverage_unit: {
+        src: 'node.js/tests/unit', // a folder works nicely
+        options: {
+          coverageFolder: 'coverage/unit',
+          mask: '**/*.test.js',
+          print: 'none'
         }
       }
     },
-    mochaTest: {
-      unit: {
+    istanbul_check_coverage: {
+      default: {
         options: {
-          reporter: 'spec',
-          require: 'node.js/tests/tests-include.js',
-          quiet: false
-        },
-        src: ['node.js/tests/unit/*.test.js']
-      },
-      integration: {
-        options: {
-          reporter: 'spec',
-          require: 'node.js/tests/tests-include.js',
-          quiet: false
-        },
-        src: ['node.js/tests/integration/*.test.js']
+          coverageFolder: 'coverage/**',
+          check: {
+          }
+        }
       }
     },
     eslint: {
@@ -46,8 +55,9 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
 
-  grunt.registerTask('test:mocha', 'mochaTest');
-  grunt.registerTask('test:unit', 'nodeunit');
-  grunt.registerTask('ci-test', ['mochaTest:unit', 'eslint']);
-  grunt.registerTask('test', ['mocha_istanbul', 'eslint']);
+  grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);
+  grunt.registerTask('test-integration', ['env:test_lockdown', 'mocha_istanbul:coverage_integration']);
+
+  grunt.registerTask('test', ['test-unit', 'test-integration', 'istanbul_check_coverage', 'eslint']);
+  grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);
 };

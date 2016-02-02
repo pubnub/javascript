@@ -1,4 +1,4 @@
-var Pubnub = require('../pubnub'),
+var Pubnub = require('../../../pubnub'),
     pubnub = Pubnub.init({
         publish_key   : 'demo',
         subscribe_key : 'demo'

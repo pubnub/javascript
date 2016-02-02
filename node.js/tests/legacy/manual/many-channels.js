@@ -1,4 +1,4 @@
-var PUBNUB   = require('../pubnub.js')
+var PUBNUB   = require('../../../pubnub.js')
 var pubnubs  = {};
 var received = 0;
 

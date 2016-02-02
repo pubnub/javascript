@@ -1,4 +1,4 @@
-var PUBNUB    = require('../pubnub.js')
+var PUBNUB    = require('../../../pubnub.js')
 var CHANNELS  = {};
 var currentpn = null;
 var totalpn   = 0;

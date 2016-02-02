@@ -1,4 +1,4 @@
-var pubnub = require('../pubnub.js').init({})
+var pubnub = require('../../../pubnub.js').init({})
 
 function error(result) {
     console.log( 'Error with', result  )
