@@ -32,7 +32,8 @@
     "messaging"
   ],
   "dependencies": {
-    "agentkeepalive": "~0.2"
+    "agentkeepalive": "~0.2",
+    "lodash": "^4.1.0"
   },
   "noAnalyze": false,
   "devDependencies": {
