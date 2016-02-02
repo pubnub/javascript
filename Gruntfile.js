@@ -14,7 +14,7 @@ module.exports = function (grunt) {
     mochaTest: {
       unit: {
         options: {
-          reporter: "spec",
+          reporter: 'spec',
           require: 'node.js/tests/tests-include.js',
           quiet: false
         },
@@ -22,7 +22,7 @@ module.exports = function (grunt) {
       },
       integration: {
         options: {
-          reporter: "spec",
+          reporter: 'spec',
           require: 'node.js/tests/tests-include.js',
           quiet: false
         },
