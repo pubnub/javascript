@@ -11,10 +11,7 @@ describe('node cryptography wrapper', function () {
     var expectedObject = { foo: 'bar', baz: 'qux' };
 
     assert.equal(cryptoWrapper.encrypt(expectedObject, key), expectedBase64, 'Instance pubnub.crypto_obj encrypted message');
-    // assert.equal(cryptoWrapper.encrypt(expectedObject, key), expectedBase64, 'Constructor PUBNUB.crypto_obj encrypted message');
-
     assert.deepEqual(cryptoWrapper.decrypt(expectedBase64, key), expectedObject, 'Instance pubnub.crypto_obj decrypted message');
-    // assert.deepEqual(cryptoWrapper.decrypt(expectedBase64, key), expectedObject, 'Constructor PUBNUB.crypto_obj decrypted message');
   });
 
   it('should allow to pass custom options', function () {
@@ -101,5 +98,4 @@ describe('node cryptography wrapper', function () {
       mode: 'ecb'
     }), expectedObject);
   });
-
 });

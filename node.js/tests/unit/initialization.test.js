@@ -38,6 +38,6 @@ describe('PubNub Initalization', function () {
       uuid: 'abc'
     });
 
-    assert(pubnubInstance.get_version(), require("../../../package.json").version);
+    assert(pubnubInstance.get_version(), require('../../../package.json').version);
   });
 });
