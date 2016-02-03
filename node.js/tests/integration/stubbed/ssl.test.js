@@ -1,4 +1,4 @@
-/* global describe, it, before, after */
+/* global describe, it, before, after, beforeEach */
 
 var path = require('path');
 var assert = require('assert');
@@ -6,7 +6,6 @@ var PUBNUB = require('../../../pubnub.js');
 var sepia = require('sepia');
 var testUtils = require('../../utils');
 
-sepia.fixtureDir(path.join(__dirname, '../sepia-fixtures', 'ssl_test'));
 
 function subscribeAndPublish(pubnub, channel, message, done) {
   pubnub.subscribe({
@@ -32,6 +31,10 @@ function subscribeAndPublish(pubnub, channel, message, done) {
 describe('When SSL mode', function () {
   var fileFixtures = {};
   var itFixtures = {};
+
+  beforeEach(function () {
+    sepia.fixtureDir(path.join(__dirname, '../sepia-fixtures', 'ssl_test'));
+  });
 
   before(function () {
     fileFixtures.channel = 'test_javascript_ssl';

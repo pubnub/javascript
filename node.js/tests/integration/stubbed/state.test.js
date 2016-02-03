@@ -6,11 +6,13 @@ var PUBNUB = require('../../../pubnub.js');
 var sepia = require('sepia');
 var testUtils = require('../../utils');
 
-sepia.fixtureDir(path.join(__dirname, '../sepia-fixtures', 'state_test'));
-
 describe('#state()', function () {
   var fileFixtures = {};
   var itFixtures = {};
+
+  beforeEach(function () {
+    sepia.fixtureDir(path.join(__dirname, '../sepia-fixtures', 'state_test'));
+  });
 
   before(function () {
     fileFixtures.channel = 'test_state';

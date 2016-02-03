@@ -49,6 +49,7 @@ module.exports = function (grunt) {
     },
     eslint: {
       target: [
+        'node.js/tests/integration/stubbed/**/*.js',
         'node.js/tests/unit/**/*.js',
         'node.js/*.js',
         'node.js/lib/*.js'

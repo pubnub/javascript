@@ -152,7 +152,9 @@ function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
     if (mode === 'POST') request.write(payload);
     request.end();
   } catch (e) {
-    done(1, { error: true, stacktrace: e });
+    // TODO: remove recursive XDR's
+    done(0);
+    return xdr(PNSDK, proxy, keepaliveEnabled, setup);
   }
 
   return done;

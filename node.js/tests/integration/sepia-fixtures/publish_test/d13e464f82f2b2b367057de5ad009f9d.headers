@@ -1,0 +1,20 @@
+{
+  "statusCode": 200,
+  "headers": {
+    "date": "Wed, 03 Feb 2016 07:50:40 GMT",
+    "content-type": "text/javascript; charset=\"UTF-8\"",
+    "content-length": "12",
+    "connection": "close",
+    "cache-control": "no-cache",
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET",
+    "accept-ranges": "bytes",
+    "age": "0",
+    "server": "Pubnub"
+  },
+  "url": "http://blah.pubnub.com:80/v2/history/sub-key/ds/channel/test_publish-18?stringtoken=true&count=3&reverse=false&pnsdk=PubNub-JS-Nodejs%2F3.7.23",
+  "time": 25,
+  "request": {
+    "method": "GET"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "statusCode": 200,
   "headers": {
-    "date": "Tue, 02 Feb 2016 09:09:48 GMT",
+    "date": "Wed, 03 Feb 2016 07:50:40 GMT",
     "content-type": "text/javascript; charset=\"UTF-8\"",
     "content-length": "205",
     "connection": "close",
@@ -13,7 +13,7 @@
     "server": "Pubnub Presence"
   },
   "url": "http://blah.pubnub.com:80/v2/presence/sub-key/ds/channel/test_state-setstate10/uuid/dd6af454-fa7a-47be-a800-1b9b050f5d94?pnsdk=PubNub-JS-Nodejs%2F3.7.23",
-  "time": 165,
+  "time": 164,
   "request": {
     "method": "GET"
   }

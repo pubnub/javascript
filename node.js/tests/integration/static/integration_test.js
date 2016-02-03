@@ -554,7 +554,7 @@ describe('Pubnub', function () {
         });
     });
 
-    describe('#publish()', function () {
+    describe.skip('#publish()', function () {
         it('should publish strings without error', function (done) {
             var ch = channel + '-' + ++count;
             pubnub.subscribe({
