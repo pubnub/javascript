@@ -23,8 +23,17 @@ module.exports = function (grunt) {
       coverage_unit: {
         src: 'node.js/tests/unit', // a folder works nicely
         options: {
+          mochaOptions: ['--bail'],
           coverageFolder: 'coverage/unit',
           mask: '**/*.test.js',
+          print: 'none'
+        }
+      },
+      old: {
+        src: 'node.js/tests/integration/static', // a folder works nicely
+        options: {
+          coverageFolder: 'coverage/integration',
+          mask: 'integration_test.js',
           print: 'none'
         }
       }
@@ -40,6 +49,7 @@ module.exports = function (grunt) {
     },
     eslint: {
       target: [
+        'node.js/tests/unit/**/*.js',
         'node.js/*.js',
         'node.js/lib/*.js'
       ]
@@ -55,6 +65,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
 
+  grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);
   grunt.registerTask('test-integration', ['env:test_lockdown', 'mocha_istanbul:coverage_integration']);
 

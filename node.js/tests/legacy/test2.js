@@ -1,5 +1,5 @@
     var assert = require('assert');
-    var PUBNUB = require('../pubnub.js');
+    var PUBNUB = require('../../pubnub.js');
 
     var pubnub = PUBNUB.init({
         publish_key     : 'demo',

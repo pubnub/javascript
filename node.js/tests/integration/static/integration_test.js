@@ -114,7 +114,7 @@ describe('Pubnub', function () {
         }
     });
 
-    describe('#crypto_obj', function() {
+    describe.skip('#crypto_obj', function() {
 
         it('should be able to encrypt and decrypt messages', function() {
 
@@ -1782,6 +1782,48 @@ describe('Pubnub', function () {
                 }
             })
         })
+    });
+
+    describe.skip('#state()', function () {
+        var uuid = Date.now();
+        var pubnub = PUBNUB.init({
+            publish_key: 'ds', // 'demo',
+            subscribe_key: 'ds', // 'demo',
+            uuid: uuid,
+            origin: 'pubsub.pubnub.com',
+            build_u: true
+        });
+
+        this.timeout(80000);
+
+        it('should be able to set state for uuid', function (done) {
+            var ch = channel + '-' + 'setstate',
+                uuid = pubnub.uuid(),
+                state = {'name': 'name-' + uuid};
+
+            pubnub.state({
+                channel: ch,
+                uuid: uuid,
+                state: state,
+                callback: function (response) {
+                    assert.deepEqual(response, state);
+                    pubnub.state({
+                        channel: ch,
+                        uuid: uuid,
+                        callback: function (response) {
+                            assert.deepEqual(response, state);
+                            done();
+                        },
+                        error: function (error) {
+                            done(new Error("Error occurred in where_now " + JSON.stringify(error)));
+                        }
+                    });
+                },
+                error: function (error) {
+                    done(new Error("Error occurred in where_now " + JSON.stringify(error)));
+                }
+            })
+        });
     });
 
     describe('#here_now()', function () {

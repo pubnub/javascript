@@ -42,10 +42,6 @@ describe('When SSL mode', function () {
     fileFixtures.subscribeKey = 'ds';
   });
 
-  after(function () {
-    sepia.shutdown();
-  })
-
 
   describe('is enabled', function () {
     before(function () {

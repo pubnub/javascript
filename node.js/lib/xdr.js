@@ -152,8 +152,7 @@ function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
     if (mode === 'POST') request.write(payload);
     request.end();
   } catch (e) {
-    done(0);
-    return xdr(setup);
+    done(1, { error: true, stacktrace: e });
   }
 
   return done;
