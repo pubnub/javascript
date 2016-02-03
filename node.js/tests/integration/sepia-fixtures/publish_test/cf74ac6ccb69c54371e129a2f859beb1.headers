@@ -1,7 +1,7 @@
 {
   "statusCode": 200,
   "headers": {
-    "date": "Wed, 03 Feb 2016 07:50:28 GMT",
+    "date": "Wed, 03 Feb 2016 08:05:16 GMT",
     "content-type": "text/javascript; charset=\"UTF-8\"",
     "content-length": "24",
     "connection": "close",
@@ -10,7 +10,7 @@
     "access-control-allow-methods": "GET"
   },
   "url": "http://blah.pubnub.com:80/subscribe/ds/test_publish-4/0/0?uuid=dd6af454-fa7a-47be-a800-1b9b050f5d94&pnsdk=PubNub-JS-Nodejs%2F3.7.23",
-  "time": 19,
+  "time": 29,
   "request": {
     "method": "GET"
   }

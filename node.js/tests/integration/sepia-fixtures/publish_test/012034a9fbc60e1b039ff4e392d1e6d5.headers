@@ -1,7 +1,7 @@
 {
   "statusCode": 200,
   "headers": {
-    "date": "Wed, 03 Feb 2016 07:50:28 GMT",
+    "date": "Wed, 03 Feb 2016 08:05:16 GMT",
     "content-type": "text/javascript; charset=\"UTF-8\"",
     "content-length": "30",
     "connection": "close",
@@ -10,7 +10,7 @@
     "access-control-allow-methods": "GET"
   },
   "url": "http://blah.pubnub.com:80/publish/ds/ds/0/test_publish-3/0/%7B%22message%22%3A%22Hi%20from%20Javascript%22%7D?uuid=dd6af454-fa7a-47be-a800-1b9b050f5d94&pnsdk=PubNub-JS-Nodejs%2F3.7.23",
-  "time": 20,
+  "time": 15,
   "request": {
     "method": "GET"
   }
