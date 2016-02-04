@@ -3,14 +3,31 @@ var http = require('http');
 var https = require('https');
 var _ = require('lodash');
 
+var keepAliveAgent;
+var keepAliveAgentSSL;
+
 var keepAliveConfig = {
   keepAlive: true,
   keepAliveMsecs: 300000,
   maxSockets: 5
 };
 
-var keepAliveAgent = new http.Agent(keepAliveConfig);
-var keepAliveAgentSSL = new https.Agent(keepAliveConfig);
+function keepAliveIsEmbedded() {
+  return 'EventEmitter' in http.Agent.super_;
+}
+
+if (keepAliveIsEmbedded()) {
+  keepAliveAgent = new http.Agent(keepAliveConfig);
+  keepAliveAgentSSL = new https.Agent(keepAliveConfig);
+} else {
+  (function () {
+    var agent = require('agentkeepalive');
+    var agentSSL = agent.HttpsAgent;
+
+    keepAliveAgent = new agent(keepAliveConfig);
+    keepAliveAgentSSL = new agentSSL(keepAliveConfig);
+  })();
+}
 
 /**
  * Request

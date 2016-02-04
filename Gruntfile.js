@@ -13,7 +13,7 @@ module.exports = function (grunt) {
     },
     mocha_istanbul: {
       coverage_integration: {
-        src: 'node.js/tests/integration/stubbed', // a folder works nicely
+        src: 'node.js/tests/integration/stubbed',
         options: {
           coverageFolder: 'coverage/integration',
           mask: '**/*.test.js',
@@ -21,7 +21,7 @@ module.exports = function (grunt) {
         }
       },
       coverage_unit: {
-        src: 'node.js/tests/unit', // a folder works nicely
+        src: 'node.js/tests/unit',
         options: {
           mochaOptions: ['--bail'],
           coverageFolder: 'coverage/unit',
@@ -30,7 +30,7 @@ module.exports = function (grunt) {
         }
       },
       old: {
-        src: 'node.js/tests/integration/static', // a folder works nicely
+        src: 'node.js/tests/integration/static',
         options: {
           coverageFolder: 'coverage/integration',
           mask: 'integration_test.js',
@@ -54,15 +54,9 @@ module.exports = function (grunt) {
         'node.js/*.js',
         'node.js/lib/*.js'
       ]
-    },
-    nodeunit: {
-      tests: ['node.js/**/tests/unit-test.js'],
-      options: {}
     }
   });
 
-  grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-contrib-nodeunit');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
 
