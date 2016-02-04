@@ -1,4 +1,5 @@
 /* global describe, it, before, after, beforeEach */
+/* eslint-disable no-console */
 
 var path = require('path');
 var assert = require('assert');
