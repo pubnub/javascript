@@ -4,10 +4,10 @@ module.exports = function (grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     env: {
-      test_lockdown: {
+      lockdown: {
         VCR_MODE: 'playback'
       },
-      test_record: {
+      record: {
         VCR_MODE: 'cache'
       }
     },
@@ -60,9 +60,13 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
 
+  //envs
+  grunt.registerTask('lockdown', ['env:lockdown']);
+  grunt.registerTask('record', ['env:record']);
+
   grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);
-  grunt.registerTask('test-integration', ['env:test_lockdown', 'mocha_istanbul:coverage_integration']);
+  grunt.registerTask('test-integration', ['mocha_istanbul:coverage_integration']);
 
   grunt.registerTask('test', ['test-unit', 'test-integration', 'istanbul_check_coverage', 'eslint']);
   grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);

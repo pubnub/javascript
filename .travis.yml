@@ -14,4 +14,4 @@ install:
   cd node.js && npm install
 
 script:
-  grunt test
+  grunt env:lockdown test
