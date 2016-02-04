@@ -16,7 +16,7 @@ module.exports = function (grunt) {
         src: 'node.js/tests/integration/stubbed',
         options: {
           coverageFolder: 'coverage/integration',
-          mask: '**/*.test.js',
+          mask: '*.test.js',
           print: 'none'
         }
       },
@@ -25,7 +25,7 @@ module.exports = function (grunt) {
         options: {
           mochaOptions: ['--bail'],
           coverageFolder: 'coverage/unit',
-          mask: '**/*.test.js',
+          mask: '*.test.js',
           print: 'none'
         }
       },
