@@ -72,14 +72,16 @@ var db = (function () {
 
 
 var CREATE_PUBNUB = function (setup) {
-  setup.xdr = XDR.createInstance(PNSDK, setup.proxy, setup.keepAlive);
+  var xdrInstance = XDR.createInstance(PNSDK, setup.proxy, setup.keepAlive);
+
+  setup.xdr = xdrInstance.request;
   setup.db = db;
   setup.error = setup.error || error;
   setup.hmac_SHA256 = getHMACSHA256;
   setup.crypto_obj = require('./lib/crypto-wrapper');
   setup.params = { pnsdk: PNSDK };
   setup.shutdown = function () {
-    XDR.destroyKeepAlive();
+    xdrInstance.destroy();
   };
 
   var SELF = function (setup) {

@@ -3,9 +3,6 @@ var http = require('http');
 var https = require('https');
 var _ = require('lodash');
 
-var keepAliveAgent;
-var keepAliveAgentSSL;
-
 var keepAliveConfig = {
   keepAlive: true,
   keepAliveMsecs: 300000,
@@ -16,18 +13,9 @@ function keepAliveIsEmbedded() {
   return 'EventEmitter' in http.Agent.super_;
 }
 
-if (keepAliveIsEmbedded()) {
-  keepAliveAgent = new http.Agent(keepAliveConfig);
-  keepAliveAgentSSL = new https.Agent(keepAliveConfig);
-} else {
-  (function () {
-    var agent = require('agentkeepalive');
-    var agentSSL = agent.HttpsAgent;
-
-    keepAliveAgent = new agent(keepAliveConfig);
-    keepAliveAgentSSL = new agentSSL(keepAliveConfig);
-  })();
-}
+// perform optimizations on the XDR
+http.globalAgent.maxSockets = Infinity;
+https.globalAgent.maxSockets = Infinity;
 
 /**
  * Request
@@ -38,7 +26,7 @@ if (keepAliveIsEmbedded()) {
  *     fail    : function() {}
  *  });
  */
-function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
+function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, setup) {
   var request;
   var response;
   var debug = setup.debug;
@@ -53,6 +41,11 @@ function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
   var body = '';
 
   var timer;
+
+  // by default, keepalive is enabled.
+  if (keepaliveEnabled === undefined) {
+    keepaliveEnabled = true;
+  }
 
   var finished = function () {
     if (loaded) return;
@@ -129,8 +122,6 @@ function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
     options.agent = keepAliveAgent;
   }
 
-  require('http').globalAgent.maxSockets = Infinity;
-
   try {
     request = (ssl ? https : http).request(options, function (response) {
       response.setEncoding('utf8');
@@ -171,7 +162,7 @@ function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
   } catch (e) {
     // TODO: remove recursive XDR's
     done(0);
-    return xdr(PNSDK, proxy, keepaliveEnabled, setup);
+    return xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, setup);
   }
 
   return done;
@@ -179,14 +170,33 @@ function xdr(PNSDK, proxy, keepaliveEnabled, setup) {
 
 module.exports = {
   createInstance: function (PNSDK, proxy, keepaliveEnabled) {
-    return _.partial(xdr, PNSDK, proxy, keepaliveEnabled);
-  },
-  destroyKeepAlive: function () {
-    if (keepAliveAgentSSL && keepAliveAgentSSL.destroy) {
-      keepAliveAgentSSL.destroy();
+    var keepAliveAgent;
+    var keepAliveAgentSSL;
+
+    if (keepAliveIsEmbedded()) {
+      keepAliveAgent = new http.Agent(keepAliveConfig);
+      keepAliveAgentSSL = new https.Agent(keepAliveConfig);
+    } else {
+      (function () {
+        var agent = require('agentkeepalive');
+        var agentSSL = agent.HttpsAgent;
+
+        keepAliveAgent = new agent(keepAliveConfig);
+        keepAliveAgentSSL = new agentSSL(keepAliveConfig);
+      })();
     }
-    if (keepAliveAgent && keepAliveAgent.destroy) {
-      keepAliveAgent.destroy();
-    }
+
+
+    return {
+      request: _.partial(xdr, PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL),
+      destroy: function () {
+        if (keepAliveAgentSSL && keepAliveAgentSSL.destroy) {
+          keepAliveAgentSSL.destroy();
+        }
+        if (keepAliveAgent && keepAliveAgent.destroy) {
+          keepAliveAgent.destroy();
+        }
+      }
+    };
   }
 };
