@@ -60,7 +60,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
 
-  //envs
   grunt.registerTask('lockdown', ['env:lockdown']);
   grunt.registerTask('record', ['env:record']);
 
