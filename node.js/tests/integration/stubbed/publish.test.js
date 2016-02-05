@@ -1,9 +1,7 @@
 /* global describe, it, before, after, beforeEach */
 
-var path = require('path');
 var assert = require('assert');
 var PUBNUB = require('../../../pubnub.js');
-var sepia = require('sepia');
 var testUtils = require('../../utils');
 
 describe('#publish()', function () {
@@ -19,10 +17,6 @@ describe('#publish()', function () {
   var messageJsonaStr = '["message" , "Hi from javascript"]';
   var fileFixtures = {};
   var itFixtures = {};
-
-  beforeEach(function () {
-    sepia.fixtureDir(path.join(__dirname, '../sepia-fixtures', 'publish_test'));
-  });
 
   before(function () {
     fileFixtures.channel = 'test_publish';

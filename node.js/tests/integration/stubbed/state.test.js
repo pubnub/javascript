@@ -1,18 +1,13 @@
 /* global describe, it, before, after, beforeEach */
 
-var path = require('path');
 var assert = require('assert');
 var PUBNUB = require('../../../pubnub.js');
-var sepia = require('sepia');
 var testUtils = require('../../utils');
 
 describe('#state()', function () {
+  this.timeout(180000);
   var fileFixtures = {};
   var itFixtures = {};
-
-  beforeEach(function () {
-    sepia.fixtureDir(path.join(__dirname, '../sepia-fixtures', 'state_test'));
-  });
 
   before(function () {
     fileFixtures.channel = 'test_state';
@@ -33,7 +28,6 @@ describe('#state()', function () {
     });
   });
 
-  this.timeout(80000);
 
   it('should be able to set state for uuid', function (done) {
     var ch = fileFixtures.channel + '-' + 'setstate' + testUtils.getChannelPostFix();
