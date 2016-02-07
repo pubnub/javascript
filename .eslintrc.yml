@@ -1,7 +1,10 @@
 extends: airbnb/legacy # TODO: add es6 compiler and move away from legacy.
 plugins:
   - react
+  - mocha
 rules:
+  mocha/no-exclusive-tests: 2
+
   func-names: 0
   comma-dangle: 0
   no-param-reassign: 0
