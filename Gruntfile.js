@@ -25,7 +25,7 @@ module.exports = function (grunt) {
         options: {
           mochaOptions: ['--bail'],
           coverageFolder: 'coverage/unit',
-          mask: '*.test.js',
+          mask: '**/*.test.js',
           print: 'none'
         }
       },

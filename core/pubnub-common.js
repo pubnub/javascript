@@ -2078,7 +2078,7 @@ function PN_API(setup) {
 }
 
 
-// expose a closure to server oriented applications.s
+// expose a closure to server oriented applications.
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = {
         'PN_API': PN_API,

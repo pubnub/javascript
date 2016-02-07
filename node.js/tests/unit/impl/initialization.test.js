@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it */
 /* eslint no-console: 0 */
 
-var pubnub = require('../../pubnub.js');
+var pubnub = require('../../../pubnub.js');
 var assert = require('assert');
 
 
@@ -38,6 +38,6 @@ describe('PubNub Initalization', function () {
       uuid: 'abc'
     });
 
-    assert(pubnubInstance.get_version(), require('../../../package.json').version);
+    assert(pubnubInstance.get_version(), require('../../../../package.json').version);
   });
 });

@@ -43,7 +43,7 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
   var timer;
 
   // by default, keepalive is enabled.
-  if (keepaliveEnabled === undefined) {
+  if (keepaliveEnabled === undefined || keepaliveEnabled === null) {
     keepaliveEnabled = true;
   }
 
@@ -160,9 +160,7 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
     if (mode === 'POST') request.write(payload);
     request.end();
   } catch (e) {
-    // TODO: remove recursive XDR's
-    done(0);
-    return xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, setup);
+    done(1, { error: true, message: 'XHR call failed', stacktrace: e });
   }
 
   return done;
