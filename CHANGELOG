@@ -1,8 +1,13 @@
+02-07-16 * 3.8.0
+- Restructuring of the node.js client.
+- eslint for node.js
+- separation of some tests into smaller chunks
+
 02-01-16 * 3.7.23
 - Checking for existence of xhr before checking the state.
 
 01-29-16 * 3.7.22
-- Adjusing callback function when disconnect is happening on modern browser.
+- Adjusting callback function when disconnect is happening on modern browser.
 
 01-25-16 * 3.7.21
 - remove dependence on publish keys when unsubscribing.

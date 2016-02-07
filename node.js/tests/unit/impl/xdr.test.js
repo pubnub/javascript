@@ -8,7 +8,7 @@ var assert = require('assert');
 
 var XDR = require('../../../lib/xdr');
 
-describe.only('#xdr', function () {
+describe('#xdr', function () {
   var httpMock;
   var httpsMock;
 

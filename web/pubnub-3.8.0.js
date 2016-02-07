@@ -1,4 +1,4 @@
-// Version: 3.7.23
+// Version: 3.8.0
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -169,7 +169,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = "'3.7.23'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
+,   SDK_VER         = "'3.8.0'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2236,7 +2236,7 @@ function PN_API(setup) {
 }
 
 
-// expose a closure to server oriented applications.s
+// expose a closure to server oriented applications.
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = {
         'PN_API': PN_API,
@@ -2359,7 +2359,7 @@ function crypto_obj() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.7.23'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.8.0'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
