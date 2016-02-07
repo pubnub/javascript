@@ -1,8 +1,0 @@
-{
-  "timeout": true,
-  "time": 0,
-  "url": "http://blah.pubnub.com:80/subscribe/ds/test_where_now-where-now-1%2Ctest_where_now-where-now-2%2Ctest_where_now-where-now-3/0/14544486003826855?uuid=dd6af454-fa7a-47be-a800-1b9b050f5d94&pnsdk=PubNub-JS-Nodejs%2F3.7.23",
-  "request": {
-    "method": "GET"
-  }
-}
