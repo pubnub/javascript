@@ -13,10 +13,10 @@ module.exports = function (grunt) {
     },
     mocha_istanbul: {
       coverage_integration: {
-        src: 'node.js/tests/integration/stubbed',
+        src: 'node.js/tests/integration/',
         options: {
           coverageFolder: 'coverage/integration',
-          mask: '*.test.js',
+          mask: '**/*.test.js',
           print: 'none'
         }
       },
@@ -30,9 +30,9 @@ module.exports = function (grunt) {
         }
       },
       old: {
-        src: 'node.js/tests/integration/static',
+        src: 'node.js/tests/legacy',
         options: {
-          coverageFolder: 'coverage/integration',
+          coverageFolder: 'coverage/old',
           mask: 'integration_test.js',
           print: 'none'
         }

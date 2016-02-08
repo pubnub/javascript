@@ -1,8 +1,8 @@
 /* global describe, it, before, after, beforeEach */
 
 var assert = require('assert');
-var PUBNUB = require('../../../pubnub.js');
-var testUtils = require('../../utils');
+var PUBNUB = require('../../pubnub.js');
+var testUtils = require('../utils');
 
 describe('#publish()', function () {
   this.timeout(180000);

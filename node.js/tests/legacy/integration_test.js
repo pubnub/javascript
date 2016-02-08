@@ -1,5 +1,5 @@
 if (typeof window == 'undefined') {
-    var PUBNUB = require('../../../pubnub.js'),
+    var PUBNUB = require('../../pubnub.js'),
         assert = require('assert'),
         //nock = require('nock'),
         _ = require("underscore");
@@ -197,7 +197,7 @@ describe('Pubnub', function () {
                     pubnub.unsubscribe({channel: ch});
                     done();
                 }
-            });    
+            });
         });
 
         it('should be able to subscribe on foo.* and receive presence events on foo.bar-pnpres when presence callback is provided', function (done) {
@@ -264,7 +264,7 @@ describe('Pubnub', function () {
                     pubnub.unsubscribe({channel: ch});
                     done();
                 }
-            });    
+            });
         });
 
         it('should be able to subscribe on foo.* and should not receive presence events on foo.bar-pnpres when presence callback is not provided', function (done) {
@@ -327,7 +327,7 @@ describe('Pubnub', function () {
                     pubnub.unsubscribe({channel: ch});
                     done();
                 }
-            });    
+            });
         });
 
 
@@ -370,7 +370,7 @@ describe('Pubnub', function () {
                                                                         'channel' : chwc,
                                                                         message : 'message' + chwc,
                                                                         callback : function(r) {
-                                                                            assert.ok(true, 'message published');   
+                                                                            assert.ok(true, 'message published');
                                                                             pubnub.publish({
                                                                                 'channel' : chgc,
                                                                                 message : 'message' + chgc,
@@ -429,7 +429,7 @@ describe('Pubnub', function () {
                                         done();
                                     }
                                 })
-                            },5000);          
+                            },5000);
                         },
                         'error'         : function(r) {
                             assert.ok(false, "error occurred in adding channel to group");
@@ -440,7 +440,7 @@ describe('Pubnub', function () {
                 'error' : function(r) {
                     ok(false, "error occurred");
                 }
-            })           
+            })
         });
 
 

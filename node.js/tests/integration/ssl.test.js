@@ -2,8 +2,8 @@
 /* eslint-disable no-console */
 
 var assert = require('assert');
-var PUBNUB = require('../../../pubnub.js');
-var testUtils = require('../../utils');
+var PUBNUB = require('../../pubnub.js');
+var testUtils = require('../utils');
 
 function subscribeAndPublish(pubnub, channel, message, done) {
   pubnub.subscribe({
