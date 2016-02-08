@@ -19,8 +19,8 @@ $(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATFORM_JS)
 	$(ECHO) "(function(){" >> $(PUBNUB_MIN_JS)
 	cat $(PUBNUB_JS) | ../node_modules/.bin/uglifyjs -c -m >> $(PUBNUB_MIN_JS)
 	$(ECHO) "})();" >> $(PUBNUB_MIN_JS)
-	cat $(CRYPTOJS_HMAC_SHA256_JS) $(CRYPTOJS_ENC_BASE64_JS) >> $(PUBNUB_JS)
-	cat $(CRYPTOJS_HMAC_SHA256_JS) $(CRYPTOJS_ENC_BASE64_JS) >> $(PUBNUB_MIN_JS)
+	cat $(CRYPTOJS_HMAC_SHA256_JS) >> $(PUBNUB_JS)
+	cat $(CRYPTOJS_HMAC_SHA256_JS) >> $(PUBNUB_MIN_JS)
 
 .PHONY	: clean
 clean:
