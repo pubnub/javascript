@@ -1,5 +1,4 @@
 include ../Makefile.inc
-OUTPUT_FILES=$(PUBNUB_JS)
 EXAMPLE_RESOURCES=$(shell for file in `find examples -name "pubnub.js" | grep -v build`;do echo $$file; done)
 PLATFORM=Titanium
 
@@ -10,6 +9,9 @@ all: build
 build: $(PUBNUB_JS)
 
 $(PUBNUB_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS)
+	echo "\n\n $(PLATFORM) \n\n" 
+	mkdir $(PUBNUB_DIST_DIR)
+
 	$(ECHO) -n "// " > $(PUBNUB_JS)
 	$(ECHO) $(VERSION) >> $(PUBNUB_JS)
 	$(ECHO) "(function(){" >> $(PUBNUB_JS)
@@ -21,6 +23,6 @@ $(PUBNUB_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(PUBNUB_PLATFORM_JS)
 
 .PHONY	: clean
 clean:
-	rm -f $(OUTPUT_FILES)
+	rm -rf $(PUBNUB_DIST_DIR)
 
 include ../Makefile.post

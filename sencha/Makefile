@@ -1,5 +1,4 @@
 include ../Makefile.inc
-OUTPUT_FILES=$(PUBNUB_MIN_JS)
 PLATFORM=Sencha
 MODERN_PLATFORM_JS=../modern/$(PUBNUB_PLATFORM_JS)
 MODERN_PLATFORM_PRE_JS=../modern/$(PUBNUB_PLATFORM_PRE_JS)
@@ -11,6 +10,9 @@ all: build
 build: $(PUBNUB_MIN_JS)
 
 $(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(MODERN_PLATFORM_JS)
+	echo "\n\n $(PLATFORM) \n\n" 
+	mkdir $(PUBNUB_DIST_DIR)
+
 	## Full Version
 	$(ECHO)  "// Version: $(VERSION)" > $(PUBNUB_JS)
 	cat $(MODERN_PLATFORM_PRE_JS) $(PUBNUB_COMMON_JS) $(CRYPTO_OBJ_JS) $(MODERN_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_JS)
@@ -25,6 +27,6 @@ $(PUBNUB_MIN_JS) : $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(MODERN_PLATFORM_JS)
 
 .PHONY	: clean
 clean:
-	rm -f $(OUTPUT_FILES)
+	rm -rf $(PUBNUB_DIST_DIR)
 
 include ../Makefile.post

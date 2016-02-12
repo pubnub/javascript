@@ -8,6 +8,8 @@ all browsers. It also enhances WebSockets by providing built-in multiplexing,
 automatic scalability, automatic JSON encoding/decoding, and
 even more with PubNub.
 
+#####  Please use the distributable in the `dist` folder
+
 ## Enhanced Socket.IO with PubNub
 
 ![Socket.IO on PubNub](http://pubnub.s3.amazonaws.com/assets/socket.io-enhanced-with-pubnub.png "Socket.IO on PubNub")

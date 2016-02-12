@@ -5,9 +5,9 @@ VERSION=`cat VERSION`
 mkdir -p upload
 rm upload/*
 
-cp web/pubnub.js upload/pubnub.js
-cp web/pubnub.min.js upload/pubnub.min.js
-cp socket.io/socket.io.min.js upload/socket.io.min.js
+cp web/dist/pubnub.js upload/pubnub.js
+cp web/dist/pubnub.min.js upload/pubnub.min.js
+cp socket.io/dist/socket.io.min.js upload/socket.io.min.js
 
 cp upload/pubnub.js upload/pubnub-$VERSION.js
 cp upload/pubnub.min.js upload/pubnub-$VERSION.min.js
@@ -21,3 +21,4 @@ mv upload/socket.io.min.js.gz upload/socket.io.min.js
 mv upload/pubnub-$VERSION.js.gz upload/pubnub-$VERSION.js
 mv upload/pubnub-$VERSION.min.js.gz upload/pubnub-$VERSION.min.js
 
+cp upload/pubnub-$VERSION.js upload/pubnub-dev.js

@@ -6,6 +6,8 @@ PubNub is a Massively Scalable Real-time Service for Web and Mobile Games.
 This is a cloud-based service for broadcasting Real-time messages
 to millions of web and mobile clients simultaneously.
 
+#####  Please use the distributable in the `dist` folder
+
 #### API Usage Summary
 API Usage summary follows. But checkout the real working examples in examples/mobile
 

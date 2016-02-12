@@ -1,5 +1,4 @@
 include ../Makefile.inc
-OUTPUT_FILES=$(PUBNUB_VERSION_MIN_JS) $(PUBNUB_VERSION_JS) $(PUBNUB_JS) $(PUBNUB_MIN_JS)
 PLATFORM=Web
 
 .PHONY	: all
@@ -9,6 +8,9 @@ all: build
 build: $(PUBNUB_VERSION_MIN_JS)
 
 $(PUBNUB_VERSION_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBNUB_PLATFORM_JS)
+	echo "\n\n $(PLATFORM) \n\n" 
+	mkdir $(PUBNUB_DIST_DIR)
+
 	## Full Version
 	$(ECHO) "// Version: $(VERSION)" > $(PUBNUB_VERSION_JS)
 	cat $(JSON_JS) $(PUBNUB_PLATFORM_PRE_JS) $(PUBNUB_COMMON_JS) $(CRYPTO_OBJ_JS) $(PUBNUB_PLATFORM_JS) $(WEBSOCKET_JS) >> $(PUBNUB_VERSION_JS)
@@ -28,6 +30,6 @@ $(PUBNUB_VERSION_MIN_JS) : $(JSON_JS) $(PUBNUB_COMMON_JS) $(WEBSOCKET_JS) $(PUBN
 
 .PHONY	: clean
 clean:
-	rm -f $(OUTPUT_FILES)
+	rm -rf $(PUBNUB_DIST_DIR)
 
 include ../Makefile.post
