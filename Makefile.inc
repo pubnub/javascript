@@ -20,6 +20,7 @@ ENCRYPT_JS=$(CORE_DIR)/crypto/encrypt-pubnub.js
 PACKAGE_JSON=$(REPOS_DIR)/package.json
 PUBNUB_PLATFORM_JS=$(PUBNUB_UNASSEMBLED_DIR)/platform.js
 PUBNUB_PLATFORM_PRE_JS=$(PUBNUB_UNASSEMBLED_DIR)/platform-pre.js
+PUBNUB_PLATFORM_POST_JS=$(PUBNUB_UNASSEMBLED_DIR)/platform-post.js
 PUBNUB_COMMON_JS=$(CORE_DIR)/pubnub-common.js
 
 ## vendors

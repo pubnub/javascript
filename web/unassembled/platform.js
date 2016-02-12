@@ -505,4 +505,3 @@ function FDomainRequest() {
 }
 FDomainRequest['id'] = SECOND;
 
-})();

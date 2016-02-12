@@ -308,4 +308,3 @@ PUBNUB = CREATE_PUBNUB({})
 typeof module  !== 'undefined' && (module.exports = CREATE_PUBNUB) ||
 typeof exports !== 'undefined' && (exports.PUBNUB = CREATE_PUBNUB) || (PUBNUB = CREATE_PUBNUB);
 
-})();
