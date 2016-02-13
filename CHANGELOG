@@ -1,5 +1,5 @@
 
-02-13-16 * 3.9.0
+02-13-16 * 3.9.0 / 3.9.1
 - Restructuring of client side testing with karma.
 - eslinting of all isolated tests
 - modern XHR only performs calls via async
