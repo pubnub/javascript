@@ -5,15 +5,15 @@
 
 var assert = chai.assert;
 
-describe('#subscribe', function () {
+describe.only('#subscribe', function () {
   this.timeout(180000);
 
   var fileFixtures = {};
   var itFixtures = {};
   var messageString = 'Hi from Javascript';
-  var message_jsono = { message: 'Hi Hi from Javascript' };
-  var message_jsona = ['message', 'Hi Hi from javascript'];
-  var message_number = 123456;
+  var message_string_numeric = '12345';
+  var message_string_array = '[0,1,2,3]';
+  var message_string_object = '{"foo":"bar"}';
 
   before(function () {
     fileFixtures.publishKey = 'ds';
@@ -312,6 +312,238 @@ describe('#subscribe', function () {
         }
 
       });
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should take heartbeat as argument', function () {
+    var testFun = function (done, config) {
+      var pubnub = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub, { channel: ch,
+        heartbeat: 30,
+        connect: function () {
+          assert.ok(true, 'connect should be called');
+          pubnub.unsubscribe({ channel: ch });
+          done();
+        },
+        callback: function (response) {
+
+        },
+        error: function () {
+          assert.ok(false, 'error should not occur');
+          pubnub.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should pass on plain text on decryption error', function () {
+    var testFun = function (done, config) {
+      var pubnub = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey
+      }, config);
+
+      var pubnub_enc = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey,
+        cipher_key: 'enigma'
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub, { channel: ch,
+        connect: function () {
+          pubnub.publish({ channel: ch, message: messageString,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, messageString);
+          pubnub_enc.unsubscribe({ channel: ch });
+          done();
+        },
+        error: function () {
+          assert.ok(false, 'error should not occur');
+          pubnub_enc.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should receive a string (not a number)', function () {
+    var testFun = function (done, config) {
+      var pubnub = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub, { channel: ch,
+        connect: function () {
+          pubnub.publish({ channel: ch, message: message_string_numeric,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, message_string_numeric);
+          pubnub.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should receive a string (not a number) ( encryption enabled )', function () {
+    var testFun = function (done, config) {
+      var pubnub_enc = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey,
+        cipher_key: 'enigma'
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub_enc, { channel: ch,
+        connect: function () {
+          pubnub_enc.publish({ channel: ch, message: message_string_numeric,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, message_string_numeric);
+          pubnub_enc.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should receive a string (not an array)', function () {
+    var testFun = function (done, config) {
+      var pubnub = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub, { channel: ch,
+        connect: function () {
+          pubnub.publish({ channel: ch, message: message_string_array,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, message_string_array);
+          pubnub.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should receive a string (not an array) ( encryption enabled )', function () {
+    var testFun = function (done, config) {
+      var pubnub_enc = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey,
+        cipher_key: 'enigma'
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub_enc, { channel: ch,
+        connect: function () {
+          pubnub_enc.publish({ channel: ch, message: message_string_array,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, message_string_array);
+          pubnub_enc.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should receive a string (not an object)', function () {
+    var testFun = function (done, config) {
+      var pubnub = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub, { channel: ch,
+        connect: function () {
+          pubnub.publish({ channel: ch, message: message_string_object,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, message_string_object);
+          pubnub.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
+    };
+
+    variationRunner(testFun);
+  });
+
+  describe('should receive a string (not an object) ( encryption enabled )', function () {
+    var testFun = function (done, config) {
+      var pubnub_enc = _pubnub({
+        publish_key: fileFixtures.publishKey,
+        subscribe_key: fileFixtures.subscribeKey,
+        cipher_key: 'enigma'
+      }, config);
+
+      var ch = itFixtures.channel + '-' + get_random();
+      _pubnub_subscribe(pubnub_enc, { channel: ch,
+        connect: function () {
+          pubnub_enc.publish({ channel: ch, message: message_string_object,
+            callback: function (response) {
+              assert.equal(response[0], 1);
+            }
+          });
+        },
+        callback: function (response) {
+          assert.deepEqual(response, message_string_object);
+          pubnub_enc.unsubscribe({ channel: ch });
+          done();
+        }
+      }, config);
     };
 
     variationRunner(testFun);
