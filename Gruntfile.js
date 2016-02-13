@@ -75,6 +75,6 @@ module.exports = function (grunt) {
   grunt.registerTask('test-integration', ['mocha_istanbul:coverage_integration']);
   grunt.registerTask('test-client', ['karma']);
 
-  grunt.registerTask('test', ['test-unit', 'test-integration', 'test-client', 'istanbul_check_coverage', 'eslint']);
+  grunt.registerTask('test', ['test-unit', 'test-integration', 'istanbul_check_coverage', 'eslint']);
   grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);
 };

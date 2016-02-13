@@ -1,7 +1,7 @@
 var _ = require('lodash');
 
 function getRandom(max) {
-  return Math.floor((Math.random() * (max || 1000000000) + 1))
+  return Math.floor((Math.random() * (max || 1000000000) + 1));
 }
 
 function getTestUUID() {

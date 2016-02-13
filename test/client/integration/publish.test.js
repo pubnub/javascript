@@ -55,8 +55,8 @@ describe('#publish', function () {
   describe('should publish strings when using channel groups without error', function () {
     var testFun = function (done, config) {
       var pubnub = _pubnub_init({
-        publish_key: fileFixtures.publishKey,
-        subscribe_key: fileFixtures.subscribeKey
+        publish_key: 'pub-c-8beb3658-0dfd-4032-8f4b-9c6b9ca4d803',
+        subscribe_key: 'sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f',
       }, config);
 
       var channel_group = 'cg' + get_random();
