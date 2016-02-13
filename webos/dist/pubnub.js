@@ -1,4 +1,4 @@
-// Version: 3.9.0
+// Version: 3.9.1
 /* ---------------------------------------------------------------------------
 --------------------------------------------------------------------------- */
 
@@ -43,7 +43,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = "'3.9.0'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
+,   SDK_VER         = "'3.9.1'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2231,7 +2231,7 @@ function crypto_obj() {
  * UTIL LOCALS
  */
 var NOW        = 1
-,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.9.0';
+,    PNSDK      = 'PubNub-JS-' + 'Webos' + '/' + '3.9.1';
 
 
 
