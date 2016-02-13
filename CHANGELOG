@@ -1,3 +1,9 @@
+
+02-13-16 * 3.9.0
+- Restructuring of client side testing with karma.
+- eslinting of all isolated tests
+- modern XHR only performs calls via async
+
 02-07-16 * 3.8.0
 - Restructuring of the node.js client.
 - eslint for node.js

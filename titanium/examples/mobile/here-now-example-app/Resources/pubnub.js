@@ -1,4 +1,4 @@
-// 3.8.0
+// 3.9.0
 (function(){
 var NOW             = 1
 ,   READY           = false
@@ -13,7 +13,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = "'3.8.0'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
+,   SDK_VER         = "'3.9.0'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2232,7 +2232,7 @@ THE SOFTWARE.
  */
 var NOW        = 1
 ,   MAGIC   = /\$?{([\w\-]+)}/g
-,   PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.8.0'
+,   PNSDK            = 'PubNub-JS-' + 'Titanium' + '/' +  '3.9.0'
 ,   ANDROID = Ti.Platform.name.toLowerCase().indexOf('android') >= 0;
 
 
