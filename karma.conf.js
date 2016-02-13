@@ -2,7 +2,7 @@ module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+    basePath: __dirname,
 
 
     // frameworks to use
@@ -12,9 +12,8 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'web/dist/pubnub.js',
-      'web/tests/utils.js',
-      'web/tests/integration/*.test.js'
+      'test/client/utils.js',
+      'test/client/**/*.test.js'
     ],
 
 
@@ -55,8 +54,10 @@ module.exports = function(config) {
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true,
 
-    browserDisconnectTimeout: 180000,
-    browserNoActivityTimeout: 180000,
+    browserDisconnectTimeout: 18000000,
+    browserNoActivityTimeout: 18000000
 
   });
+
+  return config;
 };

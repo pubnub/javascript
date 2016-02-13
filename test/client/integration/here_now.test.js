@@ -58,7 +58,7 @@ describe('#here_now', function () {
     variationRunner(testFun);
   });
 
-  describe('#here_now() should show occupancy 1 when 1 user subscribed to channel (DEBUG TEST)', function () {
+  describe.skip('#here_now() should show occupancy 1 when 1 user subscribed to channel (DEBUG TEST)', function () {
     var testFun = function (done, config) {
       var pubnub = _pubnub({
         publish_key: fileFixtures.publishKey,

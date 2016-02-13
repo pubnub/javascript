@@ -12,13 +12,14 @@ module.exports = function (grunt) {
       }
     },
     karma: {
-      suite: {
-        configFile: 'karma.conf.js'
-      }
+      webFull: { configFile: 'web/tests/karma.conf.js' },
+      webMin: { configFile: 'web/tests/karma.min.conf.js' },
+      modernFull: { configFile: 'modern/tests/karma.conf.js' },
+      modernMin: { configFile: 'modern/tests/karma.min.conf.js' }
     },
     mocha_istanbul: {
       coverage_integration: {
-        src: 'node.js/tests/integration/',
+        src: 'test/server/integration/',
         options: {
           coverageFolder: 'coverage/integration',
           mask: '**/*.test.js',
@@ -26,7 +27,7 @@ module.exports = function (grunt) {
         }
       },
       coverage_unit: {
-        src: 'node.js/tests/unit',
+        src: 'test/server/unit',
         options: {
           mochaOptions: ['--bail'],
           coverageFolder: 'coverage/unit',
@@ -54,11 +55,10 @@ module.exports = function (grunt) {
     },
     eslint: {
       target: [
-        'node.js/tests/integration/stubbed/**/*.js',
         'node.js/tests/unit/**/*.js',
         'node.js/*.js',
         'node.js/lib/*.js',
-        'web/tests/integration/**/*.js'
+        'test/**/*.js'
       ]
     }
   });
@@ -73,7 +73,7 @@ module.exports = function (grunt) {
   grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);
   grunt.registerTask('test-integration', ['mocha_istanbul:coverage_integration']);
-  grunt.registerTask('test-client', ['karma:suite']);
+  grunt.registerTask('test-client', ['karma']);
 
   grunt.registerTask('test', ['test-unit', 'test-integration', 'test-client', 'istanbul_check_coverage', 'eslint']);
   grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);

@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it */
 /* eslint no-console: 0 */
 
-var cryptoWrapper = require('../../../lib/crypto-wrapper');
+var cryptoWrapper = require('../../../../../node.js/lib/crypto-wrapper');
 var assert = require('assert');
 
 describe('node cryptography wrapper', function () {

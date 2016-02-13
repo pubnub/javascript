@@ -931,7 +931,7 @@ require.register("interfaces/bdd.js", function(module, exports, require){
 
 var Suite = require('../suite')
   , Test = require('../test')
-  , utils = require('../utils')
+  , utils = require('../../../test/client/utils')
   , escapeRe = require('browser/escape-string-regexp');
 
 /**
@@ -1148,7 +1148,7 @@ require.register("interfaces/qunit.js", function(module, exports, require){
 var Suite = require('../suite')
   , Test = require('../test')
   , escapeRe = require('browser/escape-string-regexp')
-  , utils = require('../utils');
+  , utils = require('../../../test/client/utils');
 
 /**
  * QUnit-style interface:
@@ -1276,7 +1276,7 @@ require.register("interfaces/tdd.js", function(module, exports, require){
 var Suite = require('../suite')
   , Test = require('../test')
   , escapeRe = require('browser/escape-string-regexp')
-  , utils = require('../utils');
+  , utils = require('../../../test/client/utils');
 
 /**
  * TDD-style interface:
@@ -1956,7 +1956,7 @@ require.register("reporters/base.js", function(module, exports, require){
 var tty = require('browser/tty')
   , diff = require('browser/diff')
   , ms = require('../ms')
-  , utils = require('../utils');
+  , utils = require('../../../test/client/utils');
 
 /**
  * Save timer references to avoid Sinon interfering (see GH-237).
@@ -2415,7 +2415,7 @@ require.register("reporters/doc.js", function(module, exports, require){
  */
 
 var Base = require('./base')
-  , utils = require('../utils');
+  , utils = require('../../../test/client/utils');
 
 /**
  * Expose `Doc`.
@@ -2605,7 +2605,7 @@ require.register("reporters/html.js", function(module, exports, require){
  */
 
 var Base = require('./base')
-  , utils = require('../utils')
+  , utils = require('../../../test/client/utils')
   , Progress = require('../browser/progress')
   , escape = utils.escape;
 
@@ -3404,7 +3404,7 @@ require.register("reporters/markdown.js", function(module, exports, require){
  */
 
 var Base = require('./base')
-  , utils = require('../utils');
+  , utils = require('../../../test/client/utils');
 
 /**
  * Constants
@@ -4087,7 +4087,7 @@ require.register("reporters/xunit.js", function(module, exports, require){
  */
 
 var Base = require('./base')
-  , utils = require('../utils')
+  , utils = require('../../../test/client/utils')
   , fs = require('browser/fs')
   , escape = utils.escape;
 
