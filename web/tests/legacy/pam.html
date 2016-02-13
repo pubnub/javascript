@@ -7,22 +7,27 @@
 </head>
 <body>
 
-<script src=../dist/pubnub.min.js></script>
+<script src=../../dist/pubnub.js></script>
 <script>(function(){
 var pubnub;
 
 (pubnub = PUBNUB.init({
+    origin        : 'pubsub.pubnub.com',
     publish_key   : 'demo',
-    subscribe_key : 'demo'
+    subscribe_key : 'sub-c-624fbcc6-c274-11e2-ba80-02ee2ddab7fe'
 })).subscribe({
-    channel : 'my_channel,b',
-    idle    : idle,
-    message : watch_age
+    channel    : 'my_channel,b',
+    idle       : idle,
+    error      : log,
+    disconnect : log,
+    reconnect  : log,
+    message    : watch_age
 });
 
 function idle(time) {
-    //log(['idle',time]);
+    log(['idle',time]);
 }
+
 function watch_age( msg, env, chan, latency ) {
     log([ msg, latency ]);
 }

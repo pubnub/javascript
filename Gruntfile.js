@@ -11,6 +11,11 @@ module.exports = function (grunt) {
         VCR_MODE: 'cache'
       }
     },
+    karma: {
+      suite: {
+        configFile: 'karma.conf.js'
+      }
+    },
     mocha_istanbul: {
       coverage_integration: {
         src: 'node.js/tests/integration/',
@@ -59,6 +64,7 @@ module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
+  grunt.loadNpmTasks('grunt-karma');
 
   grunt.registerTask('lockdown', ['env:lockdown']);
   grunt.registerTask('record', ['env:record']);
