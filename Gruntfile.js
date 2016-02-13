@@ -35,6 +35,15 @@ module.exports = function (grunt) {
           print: 'none'
         }
       },
+      coverage_release: {
+        src: 'test/release',
+        options: {
+          mochaOptions: ['--bail'],
+          coverageFolder: 'coverage/release',
+          mask: '**/*.test.js',
+          print: 'none'
+        }
+      },
       old: {
         src: 'node.js/tests/legacy',
         options: {
@@ -73,6 +82,7 @@ module.exports = function (grunt) {
   grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);
   grunt.registerTask('test-integration', ['mocha_istanbul:coverage_integration']);
+  grunt.registerTask('test-release', ['mocha_istanbul:coverage_release']);
   grunt.registerTask('test-client', ['karma']);
 
   grunt.registerTask('test', ['test-unit', 'test-integration', 'istanbul_check_coverage', 'eslint']);

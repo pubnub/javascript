@@ -62,7 +62,7 @@ function xdr( setup ) {
     ,   data     = setup.data || {}
     ,   fail     = setup.fail    || function(){}
     ,   success  = setup.success || function(){}
-    ,   async    = ( typeof(setup.blocking) === 'undefined' )
+    ,   async    = true /* do not allow sync operations in modern builds */
     ,   done     = function(failed, response) {
             if (complete) return;
                 complete = 1;
