@@ -57,7 +57,8 @@ module.exports = function (grunt) {
         'node.js/tests/integration/stubbed/**/*.js',
         'node.js/tests/unit/**/*.js',
         'node.js/*.js',
-        'node.js/lib/*.js'
+        'node.js/lib/*.js',
+        'web/tests/integration/**/*.js'
       ]
     }
   });
@@ -72,7 +73,8 @@ module.exports = function (grunt) {
   grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);
   grunt.registerTask('test-integration', ['mocha_istanbul:coverage_integration']);
+  grunt.registerTask('test-client', ['karma:suite']);
 
-  grunt.registerTask('test', ['test-unit', 'test-integration', 'istanbul_check_coverage', 'eslint']);
+  grunt.registerTask('test', ['test-unit', 'test-integration', 'test-client', 'istanbul_check_coverage', 'eslint']);
   grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);
 };

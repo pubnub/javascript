@@ -38,22 +38,28 @@ var _pubnub_subscribe = function (pubnub, args, config) {
   return pubnub.subscribe(args);
 };
 
-var _pubnub_init = function (args, config) {
+var _pubnub_init = function (args, config, pn) {
   if (config) {
     args.ssl = config.ssl;
     args.jsonp = config.jsonp;
     // args.cipher_key = config.cipher_key;
   }
-
-  return PUBNUB.init(args);
+  if (pn) {
+    return pn.init(args);
+  } else {
+    return PUBNUB.init(args);
+  }
 };
 
-var _pubnub = function (args, config) {
+var _pubnub = function (args, config, pn) {
   if (config) {
     args.ssl = config.ssl;
     args.jsonp = config.jsonp;
     // args.cipher_key = config.cipher_key;
   }
-
-  return PUBNUB.init(args);
+  if (pn) {
+    return pn(args);
+  } else {
+    return PUBNUB(args);
+  }
 };
