@@ -5,7 +5,7 @@
 
 var assert = chai.assert;
 
-describe.only('#subscribe', function () {
+describe('#subscribe', function () {
   this.timeout(180000);
 
   var fileFixtures = {};

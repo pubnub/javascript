@@ -1,6 +1,20 @@
-/* global it, assert, PUBNUB */
+/* global it, assert, PUBNUB, _ */
 /* eslint no-unused-vars: 0 */
 /* eslint camelcase: 0 */
+
+var in_list = function (list, str) {
+  for (var x in list) {
+    if (list[x] === str) return true;
+  }
+  return false;
+};
+
+var in_list_deep = function (list, obj) {
+  for (var x in list) {
+    if (_.isEqual(list[x], obj)) return true;
+  }
+  return false;
+};
 
 var variationRunner = function (testFun) {
   it('over http', function (done) {
