@@ -1,4 +1,4 @@
-// Version: 3.9.1 / Web
+// Version: 3.9.2 / Web
 /* =-====================================================================-= */
 /* =-====================================================================-= */
 /* =-=========================     JSON     =============================-= */
@@ -169,7 +169,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = "'3.9.1'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
+,   SDK_VER         = "'3.9.2'".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**
@@ -2359,7 +2359,7 @@ function crypto_obj() {
 var SWF             = 'https://pubnub.a.ssl.fastly.net/pubnub.swf'
 ,   ASYNC           = 'async'
 ,   UA              = navigator.userAgent
-,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.9.1'
+,   PNSDK           = 'PubNub-JS-' + 'Web' + '/' + '3.9.2'
 ,   XORIGN          = UA.indexOf('MSIE 6') == -1;
 
 /**
