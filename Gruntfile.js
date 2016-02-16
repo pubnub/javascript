@@ -1,4 +1,6 @@
-var WEBPACKED_PLATFORMS = ['modern', 'webos', 'sencha', 'phonegap'];
+var webpack = require('webpack');
+
+var WEBPACKED_PLATFORMS = ['modern', 'webos', 'sencha', 'phonegap', 'parse'];
 
 function registerWebpackBuilding(grunt) {
   var compileTargets = [];
@@ -17,9 +19,9 @@ function registerWebpackBuilding(grunt) {
   grunt.registerTask('_compile', ['exec:make_clean', 'exec:make'].concat(compileTargets));
 }
 
-function webpackModernBuilder(folderName) {
+function webpackCommonBuilder(folderName, baseFolder, externals) {
   return {
-    entry: './modern/lib/platform.js',
+    entry: './' + baseFolder + '/lib/platform.js',
     module: {
       loaders: [
         { test: /\.json/, loader: 'json' }
@@ -30,8 +32,25 @@ function webpackModernBuilder(folderName) {
       filename: 'pubnub.js',
       library: 'PUBNUB',
       libraryTarget: 'umd'
-    }
+    },
+    plugins: [
+      new webpack.BannerPlugin(require('./package.json').version + ' / ' + folderName, {
+        raw: false, entryOnly: true
+      })
+    ],
+    externals: externals
   };
+}
+
+
+function createCleanRules() {
+  var preparedRules = [];
+
+  WEBPACKED_PLATFORMS.forEach(function (platform) {
+    preparedRules[platform] = [platform + '/dist'];
+  });
+
+  return preparedRules;
 }
 
 function createUglifyRules() {
@@ -56,12 +75,19 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    clean: {
-      modern: ['modern/dist', 'modern/pubnub.js', 'modern/pubnub.min.js'],
-      sencha: ['sencha/dist'],
-      phonegap: ['phonegap/dist'],
-      webos: ['webos/dist']
+
+    // prepackaged rules
+    clean: createCleanRules(),
+    uglify: createUglifyRules(),
+    webpack: {
+      modern: webpackCommonBuilder('modern', 'modern', []),
+      sencha: webpackCommonBuilder('sencha', 'modern', []),
+      phonegap: webpackCommonBuilder('phonegap', 'modern', []),
+      webos: webpackCommonBuilder('webos', 'modern', []),
+      parse: webpackCommonBuilder('parse', 'parse', ['crypto', 'buffer'])
     },
+    //
+
     env: {
       lockdown: {
         VCR_MODE: 'playback'
@@ -80,7 +106,6 @@ module.exports = function (grunt) {
       modernFull: { configFile: 'modern/tests/karma.conf.js' },
       modernMin: { configFile: 'modern/tests/karma.min.conf.js' }
     },
-    uglify: createUglifyRules(),
     mocha_istanbul: {
       coverage_integration: {
         src: 'test/server/integration/',
@@ -130,8 +155,9 @@ module.exports = function (grunt) {
       target: [
         'node.js/*.js',
         'node.js/lib/*.js',
-        'test/**/*.js',
-        'modern/lib/**/*.js'
+        'modern/lib/**/*.js',
+        'parse/lib/**/*.js',
+        'test/**/*.js'
       ]
     },
     replace: {
@@ -166,21 +192,23 @@ module.exports = function (grunt) {
           from: /PLATFORM/g,
           to: '\'Webos\''
         }]
+      },
+      parse: {
+        src: ['parse/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Parse\''
+        }]
       }
-    },
-    webpack: {
-      modern: webpackModernBuilder('modern'),
-      sencha: webpackModernBuilder('sencha'),
-      phonegap: webpackModernBuilder('phonegap'),
-      webos: webpackModernBuilder('webos')
     }
   });
-
 
 
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   grunt.registerTask('lockdown', ['env:lockdown']);
   grunt.registerTask('record', ['env:record']);
