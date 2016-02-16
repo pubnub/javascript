@@ -1,8 +1,67 @@
+var WEBPACKED_PLATFORMS = ['modern', 'webos', 'sencha', 'phonegap'];
+
+function registerWebpackBuilding(grunt) {
+  var compileTargets = [];
+
+  WEBPACKED_PLATFORMS.forEach(function (platform) {
+    var actions = [];
+
+    ['clean', 'webpack', 'replace', 'uglify'].forEach(function (utility) {
+      actions.push(utility + ':' + platform);
+    });
+
+    compileTargets.push('compile:' + platform);
+    grunt.registerTask('compile:' + platform, actions);
+  });
+
+  grunt.registerTask('_compile', ['exec:make_clean', 'exec:make'].concat(compileTargets));
+}
+
+function webpackModernBuilder(folderName) {
+  return {
+    entry: './modern/lib/platform.js',
+    module: {
+      loaders: [
+        { test: /\.json/, loader: 'json' }
+      ]
+    },
+    output: {
+      path: './' + folderName + '/dist',
+      filename: 'pubnub.js',
+      library: 'PUBNUB',
+      libraryTarget: 'umd'
+    }
+  };
+}
+
+function createUglifyRules() {
+  var preparedRules = {
+    options: {
+      mangle: true,
+      compress: true
+    }
+  };
+
+  WEBPACKED_PLATFORMS.forEach(function (platform) {
+    preparedRules[platform] = {};
+    preparedRules[platform].files = {};
+    preparedRules[platform].files[platform + '/dist/pubnub.min.js'] = [platform + '/dist/pubnub.js'];
+  });
+
+  return preparedRules;
+}
+
 module.exports = function (grunt) {
   require('load-grunt-tasks')(grunt);
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    clean: {
+      modern: ['modern/dist', 'modern/pubnub.js', 'modern/pubnub.min.js'],
+      sencha: ['sencha/dist'],
+      phonegap: ['phonegap/dist'],
+      webos: ['webos/dist']
+    },
     env: {
       lockdown: {
         VCR_MODE: 'playback'
@@ -11,12 +70,17 @@ module.exports = function (grunt) {
         VCR_MODE: 'cache'
       }
     },
+    exec: {
+      make_clean: 'make clean',
+      make: 'make'
+    },
     karma: {
       webFull: { configFile: 'web/tests/karma.conf.js' },
       webMin: { configFile: 'web/tests/karma.min.conf.js' },
       modernFull: { configFile: 'modern/tests/karma.conf.js' },
       modernMin: { configFile: 'modern/tests/karma.min.conf.js' }
     },
+    uglify: createUglifyRules(),
     mocha_istanbul: {
       coverage_integration: {
         src: 'test/server/integration/',
@@ -64,13 +128,55 @@ module.exports = function (grunt) {
     },
     eslint: {
       target: [
-        'node.js/tests/unit/**/*.js',
         'node.js/*.js',
         'node.js/lib/*.js',
-        'test/**/*.js'
+        'test/**/*.js',
+        'modern/lib/**/*.js'
       ]
+    },
+    replace: {
+      modern: {
+        src: ['modern/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Modern\''
+        }]
+      },
+      sencha: {
+        src: ['sencha/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Sencha\''
+        }]
+      },
+      phonegap: {
+        src: ['phonegap/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Phonegap\''
+        }]
+      },
+      webos: {
+        src: ['webos/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Webos\''
+        }]
+      }
+    },
+    webpack: {
+      modern: webpackModernBuilder('modern'),
+      sencha: webpackModernBuilder('sencha'),
+      phonegap: webpackModernBuilder('phonegap'),
+      webos: webpackModernBuilder('webos')
     }
   });
+
+
 
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
@@ -78,6 +184,11 @@ module.exports = function (grunt) {
 
   grunt.registerTask('lockdown', ['env:lockdown']);
   grunt.registerTask('record', ['env:record']);
+
+  registerWebpackBuilding(grunt);
+
+
+  grunt.registerTask('compile', ['_compile']); // mapping for visbility
 
   grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);

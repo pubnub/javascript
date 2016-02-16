@@ -1,4 +1,4 @@
-SUBDIRS = web socket.io node.js modern titanium phonegap sencha webos 
+SUBDIRS = web socket.io titanium
 
 .PHONY: all
 all:
