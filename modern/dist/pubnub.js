@@ -361,6 +361,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  SELF.create = create;
 	  SELF.crypto_obj = crypto_obj();
 	  SELF.WS = WS;
+	  SELF.PNmessage = pubNubCore.PNmessage;
 
 	  if (typeof(window) !== 'undefined') {
 	    bind('beforeunload', window, function () {
@@ -391,7 +392,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	CREATE_PUBNUB.secure = CREATE_PUBNUB;
 	CREATE_PUBNUB.crypto_obj = crypto_obj();
 	CREATE_PUBNUB.WS = WS;
-
+	CREATE_PUBNUB.db = db;
+	CREATE_PUBNUB.PNmessage = pubNubCore.PNmessage;
 
 	module.exports = CREATE_PUBNUB;
 
@@ -449,11 +451,11 @@ return /******/ (function(modules) { // webpackBootstrap
 			"grunt-contrib-uglify": "^0.11.1",
 			"grunt-env": "^0.4.4",
 			"grunt-eslint": "^17.3.1",
-			"grunt-exec": "^0.4.6",
 			"grunt-karma": "^0.12.1",
 			"grunt-mocha-istanbul": "^3.0.1",
 			"grunt-text-replace": "^0.4.0",
 			"grunt-webpack": "^1.0.11",
+			"imports-loader": "^0.6.5",
 			"istanbul": "^0.4.2",
 			"json-loader": "^0.5.4",
 			"karma": "^0.13.21",
@@ -710,11 +712,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	// PUBNUB READY TO CONNECT
-	function ready() { timeout( function() {
+	function ready() {
 	    if (READY) return;
 	    READY = 1;
-	    each( READY_BUFFER, function(connect) { connect() } );
-	}, SECOND ); }
+	    each(READY_BUFFER, function(connect) { connect(); } );
+	}
 
 	function PNmessage(args) {
 	    msg = args || {'apns' : {}},

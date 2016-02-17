@@ -216,11 +216,11 @@ function generate_channel_group_list(channel_groups, nopresence) {
 }
 
 // PUBNUB READY TO CONNECT
-function ready() { timeout( function() {
+function ready() {
     if (READY) return;
     READY = 1;
-    each( READY_BUFFER, function(connect) { connect() } );
-}, SECOND ); }
+    each(READY_BUFFER, function(connect) { connect(); } );
+}
 
 function PNmessage(args) {
     msg = args || {'apns' : {}},

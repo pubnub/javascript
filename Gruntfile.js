@@ -1,6 +1,6 @@
 var webpack = require('webpack');
 
-var WEBPACKED_PLATFORMS = ['modern', 'webos', 'sencha', 'phonegap', 'parse'];
+var WEBPACKED_PLATFORMS = ['web', 'modern', 'webos', 'sencha', 'phonegap', 'parse', 'titanium'];
 
 function registerWebpackBuilding(grunt) {
   var compileTargets = [];
@@ -16,7 +16,7 @@ function registerWebpackBuilding(grunt) {
     grunt.registerTask('compile:' + platform, actions);
   });
 
-  grunt.registerTask('_compile', ['exec:make_clean', 'exec:make'].concat(compileTargets));
+  grunt.registerTask('_compile', compileTargets);
 }
 
 function webpackCommonBuilder(folderName, baseFolder, externals) {
@@ -80,11 +80,13 @@ module.exports = function (grunt) {
     clean: createCleanRules(),
     uglify: createUglifyRules(),
     webpack: {
+      web: webpackCommonBuilder('web', 'web', []),
       modern: webpackCommonBuilder('modern', 'modern', []),
       sencha: webpackCommonBuilder('sencha', 'modern', []),
       phonegap: webpackCommonBuilder('phonegap', 'modern', []),
       webos: webpackCommonBuilder('webos', 'modern', []),
-      parse: webpackCommonBuilder('parse', 'parse', ['crypto', 'buffer'])
+      parse: webpackCommonBuilder('parse', 'parse', ['crypto', 'buffer']),
+      titanium: webpackCommonBuilder('titanium', 'titanium', [])
     },
     //
 
@@ -95,10 +97,6 @@ module.exports = function (grunt) {
       record: {
         VCR_MODE: 'cache'
       }
-    },
-    exec: {
-      make_clean: 'make clean',
-      make: 'make'
     },
     karma: {
       webFull: { configFile: 'web/tests/karma.conf.js' },
@@ -157,10 +155,20 @@ module.exports = function (grunt) {
         'node.js/lib/*.js',
         'modern/lib/**/*.js',
         'parse/lib/**/*.js',
+        'titanium/lib/**/*.js',
+        'web/lib/**/*.js',
         'test/**/*.js'
       ]
     },
     replace: {
+      web: {
+        src: ['web/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Web\''
+        }]
+      },
       modern: {
         src: ['modern/dist/pubnub.js'],
         overwrite: true,
@@ -200,6 +208,14 @@ module.exports = function (grunt) {
           from: /PLATFORM/g,
           to: '\'Parse\''
         }]
+      },
+      titanium: {
+        src: ['titanium/dist/pubnub.js'],
+        overwrite: true,
+        replacements: [{
+          from: /PLATFORM/g,
+          to: '\'Titanium\''
+        }]
       }
     }
   });
@@ -216,7 +232,7 @@ module.exports = function (grunt) {
   registerWebpackBuilding(grunt);
 
 
-  grunt.registerTask('compile', ['_compile']); // mapping for visbility
+  grunt.registerTask('compile', ['_compile']); // mapping for visibility
 
   grunt.registerTask('test-old', ['mocha_istanbul:old']);
   grunt.registerTask('test-unit', ['mocha_istanbul:coverage_unit']);

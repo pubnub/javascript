@@ -304,6 +304,7 @@ function CREATE_PUBNUB(setup) {
   SELF.create = create;
   SELF.crypto_obj = crypto_obj();
   SELF.WS = WS;
+  SELF.PNmessage = pubNubCore.PNmessage;
 
   if (typeof(window) !== 'undefined') {
     bind('beforeunload', window, function () {
@@ -334,6 +335,7 @@ CREATE_PUBNUB.init = CREATE_PUBNUB;
 CREATE_PUBNUB.secure = CREATE_PUBNUB;
 CREATE_PUBNUB.crypto_obj = crypto_obj();
 CREATE_PUBNUB.WS = WS;
-
+CREATE_PUBNUB.db = db;
+CREATE_PUBNUB.PNmessage = pubNubCore.PNmessage;
 
 module.exports = CREATE_PUBNUB;
