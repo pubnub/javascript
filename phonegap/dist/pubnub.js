@@ -394,6 +394,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	CREATE_PUBNUB.WS = WS;
 	CREATE_PUBNUB.db = db;
 	CREATE_PUBNUB.PNmessage = pubNubCore.PNmessage;
+	CREATE_PUBNUB.uuid = pubNubCore.uuid;
 
 	module.exports = CREATE_PUBNUB;
 

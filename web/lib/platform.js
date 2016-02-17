@@ -384,6 +384,7 @@ CREATE_PUBNUB.crypto_obj = crypto_obj(); // export to constructor
 CREATE_PUBNUB.WS = WS;
 CREATE_PUBNUB.db = db;
 CREATE_PUBNUB.PNmessage = pubNubCore.PNmessage;
+CREATE_PUBNUB.uuid = pubNubCore.uuid;
 
 // jQuery Interface
 window['jQuery'] && (window['jQuery']['PUBNUB'] = CREATE_PUBNUB);
