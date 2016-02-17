@@ -1414,7 +1414,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (response['payload']) {
 	                    callback_data['payload'] = response['payload'];
 	                }
-	                
+
 	                err && err(callback_data);
 	                return;
 	        } else {
@@ -1427,20 +1427,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ,   jsonp           = jsonp_cb();
 
 	            data = data || {};
-	            
+
 	            if (!data['auth']) {
 	                data['auth'] = args['auth_key'] || AUTH_KEY;
 	            }
-	            
+
 	            var url = [
 	                    STD_ORIGIN, 'v1', 'channel-registration',
 	                    'sub-key', SUBSCRIBE_KEY
 	                ];
 
 	            url.push.apply(url,url1);
-	            
+
 	            if (jsonp) data['callback']              = jsonp;
-	            
+
 	            xdr({
 	                callback : jsonp,
 	                data     : _get_url_params(data),
@@ -1585,7 +1585,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'get_heartbeat' : function() {
 	            return PRESENCE_HB;
 	        },
-	        
+
 	        'set_heartbeat' : function(heartbeat, heartbeat_interval) {
 	            PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, error);
 	            PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
@@ -1595,16 +1595,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            CONNECT();
 	            _presence_heartbeat();
 	        },
-	        
+
 	        'get_heartbeat_interval' : function() {
 	            return PRESENCE_HB_INTERVAL;
 	        },
-	        
+
 	        'set_heartbeat_interval' : function(heartbeat_interval) {
 	            PRESENCE_HB_INTERVAL = heartbeat_interval;
 	            _presence_heartbeat();
 	        },
-	        
+
 	        'get_version' : function() {
 	            return SDK_VER;
 	        },
@@ -1775,7 +1775,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (channel_group) {
 	                params['channel-group'] = channel_group;
 	                if (!channel) {
-	                    channel = ','; 
+	                    channel = ',';
 	                }
 	            }
 	            if (jsonp) params['callback']              = jsonp;
@@ -1810,7 +1810,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                decrypted_messages['push'](JSON['parse'](new_message));
 	                            } catch (e) {
 	                                decrypted_messages['push']((new_message));
-	                            }     
+	                            }
 	                        }
 	                    }
 	                    callback([decrypted_messages, response[1], response[2]]);
@@ -2247,7 +2247,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        channel.disconnect(channel.name);
 	                    }
 	                });
-	                
+
 	                // Disconnect & Reconnect for channel groups
 	                each_channel_group(function(channel_group){
 	                    // Reconnect
@@ -2404,7 +2404,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                var chobj = {};
 
 	                                if (channel2) {
-	                                    if (channel && channel.indexOf('-pnpres') >= 0 
+	                                    if (channel && channel.indexOf('-pnpres') >= 0
 	                                        && channel2.indexOf('-pnpres') < 0) {
 	                                        channel2 += '-pnpres';
 	                                    }
@@ -2481,7 +2481,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (channel_group) {
 	                data['channel-group'] = channel_group;
-	                !channel && url.push('channel') && url.push(','); 
+	                !channel && url.push('channel') && url.push(',');
 	            }
 
 	            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
@@ -2935,7 +2935,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        clearTimeout(_poll_timer);
 	        clearTimeout(_poll_timer2);
 	    }
-	    
+
 	    if (!UUID) UUID = SELF['uuid']();
 	    if (!INSTANCEID) INSTANCEID = SELF['uuid']();
 	    db['set']( SUBSCRIBE_KEY + 'uuid', UUID );
@@ -2971,23 +2971,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return SELF;
 	}
 
-
-	// expose a closure to server oriented applications.
-	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	    module.exports = {
-	        'PN_API': PN_API,
-	        'unique': unique,
-	        'PNmessage': PNmessage,
-	        'DEF_TIMEOUT': DEF_TIMEOUT,
-	        'timeout': timeout,
-	        'build_url': build_url,
-	        'each': each,
-	        'uuid': generate_uuid,
-	        'URLBIT': URLBIT
-	    };
-	}
-
-
+	module.exports = {
+	  PN_API: PN_API,
+	  unique: unique,
+	  PNmessage: PNmessage,
+	  DEF_TIMEOUT: DEF_TIMEOUT,
+	  timeout: timeout,
+	  build_url: build_url,
+	  each: each,
+	  uuid: generate_uuid,
+	  URLBIT: URLBIT
+	};
 
 
 /***/ },
