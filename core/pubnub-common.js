@@ -1,3 +1,5 @@
+var packageJSON = require('../package.json');
+
 var NOW             = 1
 ,   READY           = false
 ,   READY_BUFFER    = []
@@ -11,7 +13,7 @@ var NOW             = 1
 ,   PARAMSBIT       = '&'
 ,   PRESENCE_HB_THRESHOLD = 5
 ,   PRESENCE_HB_DEFAULT  = 30
-,   SDK_VER         = "VERSION".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
+,   SDK_VER         = packageJSON.version
 ,   REPL            = /{([\w\-]+)}/g;
 
 /**

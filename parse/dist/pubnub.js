@@ -375,7 +375,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
+
+	var packageJSON = __webpack_require__(3);
 
 	var NOW             = 1
 	,   READY           = false
@@ -390,7 +392,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	,   PARAMSBIT       = '&'
 	,   PRESENCE_HB_THRESHOLD = 5
 	,   PRESENCE_HB_DEFAULT  = 30
-	,   SDK_VER         = "VERSION".replace(/'/g, '') /* TODO: replace version embedding with webpack. */
+	,   SDK_VER         = packageJSON.version
 	,   REPL            = /{([\w\-]+)}/g;
 
 	/**
