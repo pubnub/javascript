@@ -157,6 +157,7 @@ module.exports = function (grunt) {
         'parse/lib/**/*.js',
         'titanium/lib/**/*.js',
         'web/lib/**/*.js',
+        'core/lib/**/*.js',
         'test/**/*.js'
       ]
     },

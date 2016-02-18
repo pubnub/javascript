@@ -1,3 +1,12 @@
+
+/* eslint camelcase: 0, space-in-parens: 0, no-use-before-define: 0, no-unused-expressions: 0  */
+/* eslint no-multi-spaces: 0, indent: 0, quotes: 0, key-spacing: 0 */
+/* eslint quote-props: 0, eqeqeq: 0, space-before-function-paren: 0, comma-style: 0, one-var: 0 */
+/* eslint space-before-blocks: 0, padded-blocks: 0, no-redeclare: 0, space-infix-ops: 0, semi: 0  */
+/* eslint object-curly-spacing: 0, brace-style: 0, array-bracket-spacing: 0, guard-for-in: 0 */
+/* eslint block-scoped-var: 0, comma-spacing: 0, space-return-throw-case: 0, no-unused-vars: 0 */
+/* eslint space-before-keywords: 0, semi-spacing: 0, curly: 0 */
+
 var packageJSON = require('../../package.json');
 
 var NOW             = 1
@@ -133,7 +142,7 @@ function generate_uuid(callback) {
 
 function isArray(arg) {
   return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
-  //return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
+  // return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
 }
 
 /**
@@ -188,7 +197,7 @@ function generate_channel_list(channels, nopresence) {
     var list = [];
     each( channels, function( channel, status ) {
         if (nopresence) {
-            if(channel.search('-pnpres') < 0) {
+            if (channel.search('-pnpres') < 0) {
                 if (status.subscribed) list.push(channel);
             }
         } else {
@@ -207,7 +216,7 @@ function generate_channel_group_list(channel_groups, nopresence) {
     var list = [];
     each(channel_groups, function( channel_group, status ) {
         if (nopresence) {
-            if(channel_group.search('-pnpres') < 0) {
+            if (channel_group.search('-pnpres') < 0) {
                 if (status.subscribed) list.push(channel_group);
             }
         } else {
@@ -225,7 +234,8 @@ function ready() {
 }
 
 function PNmessage(args) {
-    msg = args || {'apns' : {}},
+    var msg = args || {'apns' : {}};
+
     msg['getPubnubMessage'] = function() {
         var m = {};
 
@@ -235,7 +245,7 @@ function PNmessage(args) {
                         'alert' : msg['apns']['alert'] ,
                         'badge' : msg['apns']['badge']
                     }
-            }
+            };
             for (var k in msg['apns']) {
                 m['pn_apns'][k] = msg['apns'][k];
             }
@@ -244,8 +254,6 @@ function PNmessage(args) {
                 delete m['pn_apns'][exclude1[k]];
             }
         }
-
-
 
         if (msg['gcm']) {
             m['pn_gcm'] = {
@@ -384,7 +392,7 @@ function PN_API(setup) {
                 err = false;
             else
                 err = true;
-        } else if(typeof heartbeat === 'boolean'){
+        } else if (typeof heartbeat === 'boolean'){
             if (!heartbeat) {
                 return 0;
             } else {
@@ -598,7 +606,7 @@ function PN_API(setup) {
 
 
             if (sendBeacon) {
-                url_string = build_url(url, params);
+                var url_string = build_url(url, params);
                 if (sendBeacon(url_string)) {
                     callback && callback({"status": 200, "action": "leave", "message": "OK", "service": "Presence"});
                     return true;
@@ -654,7 +662,7 @@ function PN_API(setup) {
             params = _get_url_params(data);
 
             if (sendBeacon) {
-                url_string = build_url(url, params);
+                var url_string = build_url(url, params);
                 if (sendBeacon(url_string)) {
                     callback && callback({"status": 200, "action": "leave", "message": "OK", "service": "Presence"});
                     return true;
@@ -724,18 +732,9 @@ function PN_API(setup) {
         'getApnsMessageObject' : function(obj) {
             var x =  {
                 'aps' : { 'badge' : 1, 'alert' : ''}
-            }
-            for (k in obj) {
+            };
+            for (var k in obj) {
                 k[x] = obj[k];
-            }
-            return x;
-        },
-        'newPnMessage' : function() {
-            var x = {};
-            if (gcm) x['pn_gcm'] = gcm;
-            if (apns) x['pn_apns'] = apns;
-            for ( k in n ) {
-                x[k] = n[k];
             }
             return x;
         },
@@ -944,6 +943,7 @@ function PN_API(setup) {
             ,   auth_key    = args['auth_key'] || AUTH_KEY
             ,   source      = args['source']
             ,   destination = args['destination']
+            ,   err         = args['error'] || args['error'] || function() {}
             ,   stop        = args['stop']
             ,   start       = args['start']
             ,   end         = args['end']
@@ -1844,7 +1844,7 @@ function PN_API(setup) {
                 params['remove'] = channel;
             }
 
-            if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+            if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
 
             xdr({
                 callback : jsonp,
