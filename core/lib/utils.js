@@ -2,6 +2,9 @@
 
 var defaultConfiguration = require('../defaults.json');
 
+function rnow() {
+  return +new Date;
+}
 
 function isArray(arg) {
   return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === 'number');
@@ -60,8 +63,31 @@ function buildURL(urlComponents, urlParams) {
   return url;
 }
 
+/**
+ * UPDATER
+ * =======
+ * var timestamp = unique();
+ */
+function updater(fun, rate) {
+  var timeout;
+  var last = 0;
+  var runnit = function () {
+    if (last + rate > rnow()) {
+      clearTimeout(timeout);
+      timeout = setTimeout(runnit, rate);
+    } else {
+      last = rnow();
+      fun();
+    }
+  };
+
+  return runnit;
+}
+
 module.exports = {
   buildURL: buildURL,
   encode: encode,
-  each: each
+  each: each,
+  updater: updater,
+  rnow: rnow
 };

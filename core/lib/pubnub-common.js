@@ -28,7 +28,6 @@ var NOW             = 1
  * UTILITIES
  */
 function unique() { return'x' + ++NOW + '' + (+new Date); }
-function rnow()   { return+new Date; }
 
 /**
  * NEXTORIGIN
@@ -48,27 +47,6 @@ var nextorigin = (function () {
     };
 })();
 
-
-/**
- * UPDATER
- * =======
- * var timestamp = unique();
- */
-function updater(fun, rate) {
-    var timeout
-    ,   last   = 0
-    ,   runnit = function () {
-        if (last + rate > rnow()) {
-            clearTimeout(timeout);
-            timeout = setTimeout(runnit, rate);
-        } else {
-            last = rnow();
-            fun();
-        }
-    };
-
-    return runnit;
-}
 
 /**
  * GREP
@@ -1206,7 +1184,7 @@ function PN_API(setup) {
                               presence({
                                 'action'    : 'join',
                                 'uuid'      : uid,
-                                'timestamp' : Math.floor(rnow() / 1000),
+                                'timestamp' : Math.floor(utils.rnow() / 1000),
                                 'occupancy' : here['occupancy'] || 1
                               }, here, channel);
                             });
@@ -1257,7 +1235,7 @@ function PN_API(setup) {
                               presence({
                                 'action'    : 'join',
                                 'uuid'      : uid,
-                                'timestamp' : Math.floor(rnow() / 1000),
+                                'timestamp' : Math.floor(utils.rnow() / 1000),
                                 'occupancy' : here['occupancy'] || 1
                             }, here, channel_group); });
                         }
@@ -1949,9 +1927,9 @@ function PN_API(setup) {
           _reset_offline(1, { "message" : "Offline. Please check your network settings." });
         },
         'supplant'      : supplant,
-        'now'           : rnow,
+        'now'           : utils.rnow,
         'unique'        : unique,
-        'updater'       : updater
+        'updater'       : utils.updater
     };
 
     function _poll_online() {
@@ -1996,21 +1974,21 @@ function PN_API(setup) {
 
     // Detect Age of Message
     function detect_latency(tt) {
-        var adjusted_time = rnow() - TIME_DRIFT;
+        var adjusted_time = utils.rnow() - TIME_DRIFT;
         return adjusted_time - tt / 10000;
     }
 
     detect_time_detla();
     function detect_time_detla(cb, time) {
-        var stime = rnow();
+        var stime = utils.rnow();
 
         time && calculate(time) || SELF['time'](calculate);
 
         function calculate(time) {
             if (!time) return;
             var ptime   = time / 10000
-            ,   latency = (rnow() - stime) / 2;
-            TIME_DRIFT = rnow() - (ptime + latency);
+            ,   latency = (utils.rnow() - stime) / 2;
+            TIME_DRIFT = utils.rnow() - (ptime + latency);
             cb && cb(TIME_DRIFT);
         }
     }
