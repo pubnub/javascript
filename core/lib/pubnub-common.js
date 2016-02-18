@@ -2008,8 +2008,7 @@ module.exports = {
     URLBIT: defaultConfiguration.URLBIT,
     grep: grep,
     supplant: supplant,
-    now: rnow,
-    updater: updater,
+    now: utils.rnow,
+    updater: utils.updater,
     map: map,
-    updater: updater
 };

@@ -89,5 +89,6 @@ module.exports = {
   encode: encode,
   each: each,
   updater: updater,
-  rnow: rnow
+  rnow: rnow,
+  isArray: isArray
 };
