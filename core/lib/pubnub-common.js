@@ -2080,13 +2080,19 @@ function PN_API(setup) {
 }
 
 module.exports = {
-  PN_API: PN_API,
-  unique: unique,
-  PNmessage: PNmessage,
-  DEF_TIMEOUT: DEF_TIMEOUT,
-  timeout: timeout,
-  build_url: build_url,
-  each: each,
-  uuid: generate_uuid,
-  URLBIT: URLBIT
+    PN_API: PN_API,
+    unique: unique,
+    PNmessage: PNmessage,
+    DEF_TIMEOUT: DEF_TIMEOUT,
+    timeout: timeout,
+    build_url: build_url,
+    each: each,
+    uuid: generate_uuid,
+    URLBIT: URLBIT,
+    grep: grep,
+    supplant: supplant,
+    now: rnow,
+    updater: updater,
+    map: map,
+    updater: updater
 };

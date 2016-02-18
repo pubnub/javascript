@@ -1,4 +1,4 @@
-/*! 3.10.0 / parse */
+/*! 3.10.2 / parse */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("crypto"), require("buffer"));
@@ -288,7 +288,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.10.0",
+		"version": "3.10.2",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -2459,15 +2459,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = {
-	  PN_API: PN_API,
-	  unique: unique,
-	  PNmessage: PNmessage,
-	  DEF_TIMEOUT: DEF_TIMEOUT,
-	  timeout: timeout,
-	  build_url: build_url,
-	  each: each,
-	  uuid: generate_uuid,
-	  URLBIT: URLBIT
+	    PN_API: PN_API,
+	    unique: unique,
+	    PNmessage: PNmessage,
+	    DEF_TIMEOUT: DEF_TIMEOUT,
+	    timeout: timeout,
+	    build_url: build_url,
+	    each: each,
+	    uuid: generate_uuid,
+	    URLBIT: URLBIT,
+	    grep: grep,
+	    supplant: supplant,
+	    now: rnow,
+	    updater: updater,
+	    map: map,
+	    updater: updater
 	};
 
 
