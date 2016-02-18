@@ -2,7 +2,7 @@
 /* eslint curly: 0, camelcase: 0, dot-notation: 0 */
 
 var packageJSON = require('../../package.json');
-var pubNubCore = require('../../core/pubnub-common.js');
+var pubNubCore = require('../../core/lib/pubnub-common.js');
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');
 var CryptoJS = require('../../core/umd_vendor/hmac-sha256.js');
 var WS = require('../../core/umd_vendor/websocket');

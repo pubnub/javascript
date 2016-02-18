@@ -1,12 +1,12 @@
 /* globals window, console, PLATFORM */
 /* eslint no-unused-expressions: 0, no-console: 0, camelcase: 0, curly: 0 */
 
-require('imports?this=>window!../../core/json.js');
+require('imports?this=>window!../../core/polyfill/json.js');
 
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');
 var CryptoJS = require('../../core/umd_vendor/hmac-sha256.js');
 var packageJSON = require('../../package.json');
-var pubNubCore = require('../../core/pubnub-common.js');
+var pubNubCore = require('../../core/lib/pubnub-common.js');
 var WS = require('../../core/umd_vendor/websocket');
 
 /**

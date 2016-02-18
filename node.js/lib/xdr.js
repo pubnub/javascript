@@ -1,4 +1,4 @@
-var pubNubCore = require('../../core/pubnub-common');
+var pubNubCore = require('../../core/lib/pubnub-common');
 var http = require('http');
 var https = require('https');
 var _ = require('lodash');

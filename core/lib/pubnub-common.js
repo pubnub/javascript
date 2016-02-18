@@ -1,4 +1,4 @@
-var packageJSON = require('../package.json');
+var packageJSON = require('../../package.json');
 
 var NOW             = 1
 ,   READY           = false
