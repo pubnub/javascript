@@ -1,4 +1,11 @@
 
+02-17-16 * 3.10.0 [IE6 no longer supported]
+- Webpacking of all SDK's
+- Reducing support for IE6 and flash requirements
+- removing automatic kick-off of SDK upon script load
+- async is true for default web installations.
+- removing flash from web dependencies, disallowing
+
 02-13-16 * 3.9.0 / 3.9.1 / 3.9.2
 - Restructuring of client side testing with karma.
 - eslinting of all isolated tests
