@@ -3,7 +3,7 @@
 /* eslint no-multi-spaces: 0, indent: 0, quotes: 0, key-spacing: 0 */
 /* eslint quote-props: 0, eqeqeq: 0, comma-style: 0, one-var: 0 */
 /* eslint no-redeclare: 0 */
-/* eslint array-bracket-spacing: 0, guard-for-in: 0 */
+/* eslint guard-for-in: 0 */
 /* eslint block-scoped-var: 0 space-return-throw-case: 0, no-unused-vars: 0 */
 
 var packageJSON = require('../../package.json');
@@ -901,7 +901,7 @@ function PN_API(setup) {
                 success  : function (response) {
                     _invoke_callback(response, callback, err);
                 },
-                fail     : function () { callback([ 0, 'Disconnected' ]); },
+                fail     : function () { callback([0, 'Disconnected']); },
                 url      : url,
                 data     : _get_url_params(data)
             });
