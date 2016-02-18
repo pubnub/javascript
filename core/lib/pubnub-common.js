@@ -5,7 +5,7 @@
 /* eslint space-before-blocks: 0, padded-blocks: 0, no-redeclare: 0, space-infix-ops: 0, semi: 0  */
 /* eslint object-curly-spacing: 0, brace-style: 0, array-bracket-spacing: 0, guard-for-in: 0 */
 /* eslint block-scoped-var: 0, comma-spacing: 0, space-return-throw-case: 0, no-unused-vars: 0 */
-/* eslint semi-spacing: 0, curly: 0 */
+/* eslint semi-spacing: 0 */
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -337,10 +337,11 @@ function PN_API(setup) {
         }
 
         if (typeof heartbeat === 'number') {
-            if (heartbeat > PRESENCE_HB_THRESHOLD || heartbeat == 0)
-                err = false;
-            else
-                err = true;
+            if (heartbeat > PRESENCE_HB_THRESHOLD || heartbeat == 0) {
+              err = false;
+            } else {
+              err = true;
+            }
         } else if (typeof heartbeat === 'boolean'){
             if (!heartbeat) {
                 return 0;
@@ -457,10 +458,11 @@ function PN_API(setup) {
 
             }
             if (response['payload']) {
-                if (response['next_page'])
-                    callback && callback(response['payload'], response['next_page']);
-                else
-                    callback && callback(response['payload']);
+                if (response['next_page']) {
+                  callback && callback(response['payload'], response['next_page']);
+                } else {
+                  callback && callback(response['payload']);
+                }
                 return;
             }
         }
