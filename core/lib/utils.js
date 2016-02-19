@@ -1,6 +1,7 @@
 /* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
 var defaultConfiguration = require('../defaults.json');
+var REPL = /{([\w\-]+)}/g;
 
 function rnow() {
   return +new Date;
@@ -84,11 +85,87 @@ function updater(fun, rate) {
   return runnit;
 }
 
+/**
+ * GREP
+ * ====
+ * var list = grep( [1,2,3], function(item) { return item % 2 } )
+ */
+function grep(list, fun) {
+  var fin = [];
+  each(list || [], function (l) {
+    fun(l) && fin.push(l);
+  });
+  return fin;
+}
+
+/**
+ * SUPPLANT
+ * ========
+ * var text = supplant( 'Hello {name}!', { name : 'John' } )
+ */
+function supplant(str, values) {
+  return str.replace(REPL, function (_, match) {
+    return values[match] || _;
+  });
+}
+
+/**
+ * timeout
+ * =======
+ * timeout( function(){}, 100 );
+ */
+function timeout(fun, wait) {
+  return setTimeout(fun, wait);
+}
+
+/**
+ * uuid
+ * ====
+ * var my_uuid = generateUUID();
+ */
+function generateUUID(callback) {
+  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+    function (c) {
+      var r = Math.random() * 16 | 0;
+      var v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  if (callback) callback(u);
+  return u;
+}
+
+/**
+ * MAP
+ * ===
+ * var list = map( [1,2,3], function(item) { return item + 1 } )
+ */
+function map(list, fun) {
+  var fin = [];
+  each(list || [], function (k, v) {
+    fin.push(fun(k, v));
+  });
+  return fin;
+}
+
+
+function pamEncode(str) {
+  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+
+
 module.exports = {
   buildURL: buildURL,
   encode: encode,
   each: each,
   updater: updater,
   rnow: rnow,
-  isArray: isArray
+  isArray: isArray,
+  map: map,
+  pamEncode: pamEncode,
+  generateUUID: generateUUID,
+  timeout: timeout,
+  supplant: supplant,
+  grep: grep
 };

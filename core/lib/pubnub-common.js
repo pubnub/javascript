@@ -20,7 +20,6 @@ var SECOND = 1000; // A THOUSAND MILLISECONDS.
 var PRESENCE_HB_THRESHOLD = 5;
 var PRESENCE_HB_DEFAULT = 30;
 var SDK_VER = packageJSON.version;
-var REPL = /{([\w\-]+)}/g;
 
 /**
  * UTILITIES
@@ -41,80 +40,11 @@ var nextorigin = (function () {
     return origin.indexOf('pubsub.') > 0
       && origin.replace(
         'pubsub', 'ps' + (
-          failover ? generate_uuid().split('-')[0] :
+          failover ? utils.generateUUID().split('-')[0] :
             (++ori < max ? ori : ori = 1)
         )) || origin;
   };
 })();
-
-
-/**
- * GREP
- * ====
- * var list = grep( [1,2,3], function(item) { return item % 2 } )
- */
-function grep(list, fun) {
-  var fin = [];
-  utils.each(list || [], function (l) {
-    fun(l) && fin.push(l);
-  });
-  return fin;
-}
-
-/**
- * SUPPLANT
- * ========
- * var text = supplant( 'Hello {name}!', { name : 'John' } )
- */
-function supplant(str, values) {
-  return str.replace(REPL, function (_, match) {
-    return values[match] || _;
-  });
-}
-
-/**
- * timeout
- * =======
- * timeout( function(){}, 100 );
- */
-function timeout(fun, wait) {
-  return setTimeout(fun, wait);
-}
-
-/**
- * uuid
- * ====
- * var my_uuid = generate_uuid();
- */
-function generate_uuid(callback) {
-  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-    function (c) {
-      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  if (callback) callback(u);
-  return u;
-}
-
-/**
- * MAP
- * ===
- * var list = map( [1,2,3], function(item) { return item + 1 } )
- */
-function map(list, fun) {
-  var fin = [];
-  utils.each(list || [], function (k, v) {
-    fin.push(fun(k, v));
-  });
-  return fin;
-}
-
-
-function pam_encode(str) {
-  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
-    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-  });
-}
 
 
 /**
@@ -311,7 +241,7 @@ function PN_API(setup) {
 
     for (var i in l) {
       var k = l[i];
-      si += k + '=' + pam_encode(params[k]);
+      si += k + '=' + utils.pamEncode(params[k]);
       if (i != l.length - 1) si += '&';
     }
     return si;
@@ -374,11 +304,11 @@ function PN_API(setup) {
     PRESENCE_HB_RUNNING = true;
     SELF['presence_heartbeat']({
       callback: function (r) {
-        PRESENCE_HB_TIMEOUT = timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
+        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
       },
       error: function (e) {
         error && error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
-        PRESENCE_HB_TIMEOUT = timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
+        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
       }
     });
   }
@@ -1285,14 +1215,14 @@ function PN_API(setup) {
       function _test_connection(success) {
         if (success) {
           // Begin Next Socket Connection
-          timeout(CONNECT, windowing);
+          utils.timeout(CONNECT, windowing);
         } else {
           // New Origin on Failed Connection
           STD_ORIGIN = nextorigin(ORIGIN, 1);
           SUB_ORIGIN = nextorigin(ORIGIN, 1);
 
           // Re-test Connection
-          timeout(function () {
+          utils.timeout(function () {
             SELF['time'](_test_connection);
           }, SECOND);
         }
@@ -1385,7 +1315,7 @@ function PN_API(setup) {
                 messages['error']
               )) {
               SUB_ERROR(messages['error']);
-              return timeout(CONNECT, SECOND);
+              return utils.timeout(CONNECT, SECOND);
             }
 
             // User Idle Callback
@@ -1422,7 +1352,7 @@ function PN_API(setup) {
               RESUMED = false;
               // Update Saved Timetoken
               db['set'](SUBSCRIBE_KEY, 0);
-              timeout(_connect, windowing);
+              utils.timeout(_connect, windowing);
               return;
             }
 
@@ -1447,9 +1377,9 @@ function PN_API(setup) {
               } else if (messages.length > 2) {
                 channels = messages[2];
               } else {
-                channels = map(
+                channels = utils.map(
                   generate_channel_list(CHANNELS), function (chan) {
-                    return map(
+                    return utils.map(
                       Array(messages[0].length)
                         .join(',').split(','),
                       function () {
@@ -1496,14 +1426,14 @@ function PN_API(setup) {
               next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
             });
 
-            timeout(_connect, windowing);
+            utils.timeout(_connect, windowing);
           }
         });
       }
 
       CONNECT = function () {
         _reset_offline();
-        timeout(_connect, windowing);
+        utils.timeout(_connect, windowing);
       };
 
       // Reduce Status Flicker
@@ -1970,15 +1900,15 @@ function PN_API(setup) {
     xdr: xdr,
     ready: ready,
     db: db,
-    uuid: generate_uuid,
-    map: map,
+    uuid: utils.generateUUID,
+    map: utils.map,
     each: utils.each,
     'each-channel': each_channel,
-    grep: grep,
+    grep: utils.grep,
     offline: function () {
       _reset_offline(1, { message: 'Offline. Please check your network settings.' });
     },
-    supplant: supplant,
+    supplant: utils.supplant,
     now: utils.rnow,
     unique: unique,
     updater: utils.updater
@@ -1987,7 +1917,7 @@ function PN_API(setup) {
   function _poll_online() {
     _is_online() || _reset_offline(1, { error: 'Offline. Please check your network settings.' });
     _poll_timer && clearTimeout(_poll_timer);
-    _poll_timer = timeout(_poll_online, SECOND);
+    _poll_timer = utils.timeout(_poll_online, SECOND);
   }
 
   function _poll_online2() {
@@ -2000,7 +1930,7 @@ function PN_API(setup) {
         'Please check your network settings.'
       });
       _poll_timer2 && clearTimeout(_poll_timer2);
-      _poll_timer2 = timeout(_poll_online2, KEEPALIVE);
+      _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
     });
   }
 
@@ -2016,9 +1946,9 @@ function PN_API(setup) {
   if (!INSTANCEID) INSTANCEID = SELF['uuid']();
   db['set'](SUBSCRIBE_KEY + 'uuid', UUID);
 
-  _poll_timer = timeout(_poll_online, SECOND);
-  _poll_timer2 = timeout(_poll_online2, KEEPALIVE);
-  PRESENCE_HB_TIMEOUT = timeout(
+  _poll_timer = utils.timeout(_poll_online, SECOND);
+  _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
+  PRESENCE_HB_TIMEOUT = utils.timeout(
     start_presence_heartbeat,
     (PRESENCE_HB_INTERVAL - 3) * SECOND
   );
@@ -2052,14 +1982,14 @@ module.exports = {
   unique: unique,
   PNmessage: PNmessage,
   DEF_TIMEOUT: DEF_TIMEOUT,
-  timeout: timeout,
+  timeout: utils.timeout,
   build_url: utils.buildURL,
   each: utils.each,
-  uuid: generate_uuid,
+  uuid: utils.generateUUID,
   URLBIT: defaultConfiguration.URLBIT,
-  grep: grep,
-  supplant: supplant,
+  grep: utils.grep,
+  supplant: utils.supplant,
   now: utils.rnow,
   updater: utils.updater,
-  map: map
+  map: utils.map
 };
