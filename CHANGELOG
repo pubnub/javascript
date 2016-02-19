@@ -1,3 +1,5 @@
+2-18-16 * 3.10.2
+- Adding back DOM manipulating elements.
 
 02-17-16 * 3.10.0 [IE6 no longer supported]
 - Webpacking of all SDK's

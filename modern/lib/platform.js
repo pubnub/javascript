@@ -343,7 +343,6 @@ CREATE_PUBNUB.css = css;
 CREATE_PUBNUB.$ = $;
 CREATE_PUBNUB.create = $;
 CREATE_PUBNUB.bind = bind;
-CREATE_PUBNUB.head = head;
 CREATE_PUBNUB.search = search;
 CREATE_PUBNUB.attr = attr;
 CREATE_PUBNUB.events = events;
