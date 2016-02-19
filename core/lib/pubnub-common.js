@@ -1293,7 +1293,7 @@ function PN_API(setup) {
           fail: function (response) {
             if (response && response['error'] && response['service']) {
               _invoke_error(response, SUB_ERROR);
-              _test_connection(1);
+              _test_connection(false);
             } else {
               SELF['time'](function (success) {
                 !success && (_invoke_error(response, SUB_ERROR));
