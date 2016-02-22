@@ -1,4 +1,4 @@
-/*! 3.10.2 / sencha */
+/*! 3.10.3 / sencha */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -422,7 +422,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.10.2",
+		"version": "3.10.3",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -465,6 +465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"eslint-plugin-react": "^3.16.1",
 			"grunt": "^0.4.5",
 			"grunt-contrib-clean": "^0.6.0",
+			"grunt-contrib-copy": "^0.8.2",
 			"grunt-contrib-uglify": "^0.11.1",
 			"grunt-env": "^0.4.4",
 			"grunt-eslint": "^17.3.1",

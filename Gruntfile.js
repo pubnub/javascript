@@ -16,6 +16,8 @@ function registerWebpackBuilding(grunt) {
     grunt.registerTask('compile:' + platform, actions);
   });
 
+  compileTargets.push('copy');
+
   grunt.registerTask('_compile', compileTargets);
 }
 
@@ -47,7 +49,7 @@ function createCleanRules() {
   var preparedRules = [];
 
   WEBPACKED_PLATFORMS.forEach(function (platform) {
-    preparedRules[platform] = [platform + '/dist'];
+    preparedRules[platform] = [platform + '/dist', platform + '/pubnub.js', platform + '/pubnub.min.js'];
   });
 
   return preparedRules;
@@ -218,11 +220,23 @@ module.exports = function (grunt) {
           to: '\'Titanium\''
         }]
       }
+    },
+    copy: {
+      main: {
+        files: [
+          // includes files within path
+          { src: ['modern/dist/pubnub.js' ], dest: 'modern/pubnub.js' },
+          { src: ['modern/dist/pubnub.min.js' ], dest: 'modern/pubnub.min.js' },
+          { src: ['web/dist/pubnub.js' ], dest: 'web/pubnub.js' },
+          { src: ['web/dist/pubnub.min.js' ], dest: 'web/pubnub.min.js' }
+        ]
+      }
     }
   });
 
 
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
   grunt.loadNpmTasks('grunt-karma');
 
