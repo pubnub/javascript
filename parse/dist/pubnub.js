@@ -324,17 +324,20 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 		"noAnalyze": false,
 		"devDependencies": {
+			"babel": "^6.5.2",
+			"babel-preset-es2015": "^6.5.0",
 			"chai": "^3.5.0",
-			"eslint": "^1.10.3",
-			"eslint-config-airbnb": "^5.0.0",
-			"eslint-plugin-mocha": "^1.1.0",
-			"eslint-plugin-react": "^3.16.1",
+			"eslint": "^2.2.0",
+			"eslint-config-airbnb": "^6.0.2",
+			"eslint-plugin-mocha": "^2.0.0",
+			"eslint-plugin-react": "^4.1.0",
 			"grunt": "^0.4.5",
-			"grunt-contrib-clean": "^0.6.0",
+			"grunt-babel": "^6.0.0",
+			"grunt-contrib-clean": "^1.0.0",
 			"grunt-contrib-copy": "^0.8.2",
 			"grunt-contrib-uglify": "^0.11.1",
 			"grunt-env": "^0.4.4",
-			"grunt-eslint": "^17.3.1",
+			"grunt-eslint": "^18.0.0",
 			"grunt-karma": "^0.12.1",
 			"grunt-mocha-istanbul": "^3.0.1",
 			"grunt-text-replace": "^0.4.0",
@@ -348,7 +351,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"karma-phantomjs-launcher": "^1.0.0",
 			"karma-spec-reporter": "0.0.24",
 			"load-grunt-tasks": "^3.4.0",
-			"mocha": "^2.1.0",
+			"mocha": "^2.4.5",
 			"nock": "^1.1.0",
 			"node-uuid": "^1.4.7",
 			"nodeunit": "^0.9.0",
@@ -356,7 +359,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"sinon": "^1.17.2",
 			"uglify-js": "^2.6.1",
 			"underscore": "^1.7.0",
-			"webpack": "^1.12.13"
+			"webpack": "^1.12.13",
+			"webpack-dev-server": "^1.14.1"
 		},
 		"bundleDependencies": [],
 		"license": "MIT",
@@ -377,6 +381,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 	/* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
 	/* eslint eqeqeq: 0, one-var: 0 */
@@ -405,7 +413,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * UTILITIES
 	 */
 	function unique() {
-	  return 'x' + ++NOW + '' + (+new Date);
+	  return 'x' + ++NOW + '' + +new Date();
 	}
 
 	/**
@@ -413,19 +421,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * ==========
 	 * var next_origin = nextorigin();
 	 */
-	var nextorigin = (function () {
+	var nextorigin = function () {
 	  var max = 20;
 	  var ori = Math.floor(Math.random() * max);
 	  return function (origin, failover) {
-	    return origin.indexOf('pubsub.') > 0
-	      && origin.replace(
-	        'pubsub', 'ps' + (
-	          failover ? utils.generateUUID().split('-')[0] :
-	            (++ori < max ? ori : ori = 1)
-	        )) || origin;
+	    return origin.indexOf('pubsub.') > 0 && origin.replace('pubsub', 'ps' + (failover ? utils.generateUUID().split('-')[0] : ++ori < max ? ori : ori = 1)) || origin;
 	  };
-	})();
-
+	}();
 
 	/**
 	 * Generate Subscription Channel List
@@ -542,8 +544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
 	  var STD_ORIGIN = nextorigin(ORIGIN);
 	  var SUB_ORIGIN = nextorigin(ORIGIN);
-	  var CONNECT = function () {
-	  };
+	  var CONNECT = function CONNECT() {};
 	  var PUB_QUEUE = [];
 	  var CLOAK = true;
 	  var TIME_DRIFT = 0;
@@ -556,44 +557,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var RESUMED = false;
 	  var CHANNELS = {};
 	  var CHANNEL_GROUPS = {};
-	  var SUB_ERROR = function () {
-	  };
+	  var SUB_ERROR = function SUB_ERROR() {};
 	  var STATE = {};
 	  var PRESENCE_HB_TIMEOUT = null;
-	  var PRESENCE_HB = validate_presence_heartbeat(
-	    setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']
-	  );
-	  var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || (PRESENCE_HB / 2) - 1;
+	  var PRESENCE_HB = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']);
+	  var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB / 2 - 1;
 	  var PRESENCE_HB_RUNNING = false;
 	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
 	  var COMPATIBLE_35 = setup['compatible_3.5'] || false;
 	  var xdr = setup['xdr'];
 	  var params = setup['params'] || {};
-	  var error = setup['error'] || function () {};
-	  var _is_online = setup['_is_online'] || function () { return 1;};
-	  var jsonp_cb = setup['jsonp_cb'] || function () { return 0; };
-	  var db = setup['db'] || { get: function () {}, set: function () {} };
+	  var _error = setup['error'] || function () {};
+	  var _is_online = setup['_is_online'] || function () {
+	    return 1;
+	  };
+	  var jsonp_cb = setup['jsonp_cb'] || function () {
+	    return 0;
+	  };
+	  var db = setup['db'] || { get: function get() {}, set: function set() {} };
 	  var CIPHER_KEY = setup['cipher_key'];
-	  var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY + 'uuid') || '');
+	  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY + 'uuid') || '';
 	  var USE_INSTANCEID = setup['instance_id'] || false;
 	  var INSTANCEID = '';
-	  var shutdown = setup['shutdown'];
-	  var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
-	  var sendBeacon = (use_send_beacon) ? setup['sendBeacon'] : null;
+	  var _shutdown = setup['shutdown'];
+	  var use_send_beacon = typeof setup['use_send_beacon'] != 'undefined' ? setup['use_send_beacon'] : true;
+	  var sendBeacon = use_send_beacon ? setup['sendBeacon'] : null;
 	  var _poll_timer;
 	  var _poll_timer2;
 
 	  if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
 
-	  var crypto_obj = setup['crypto_obj'] ||
-	    {
-	      encrypt: function (a, key) {
-	        return a;
-	      },
-	      decrypt: function (b, key) {
-	        return b;
-	      }
-	    };
+	  var crypto_obj = setup['crypto_obj'] || {
+	    encrypt: function encrypt(a, key) {
+	      return a;
+	    },
+	    decrypt: function decrypt(b, key) {
+	      return b;
+	    }
+	  };
 
 	  function _get_url_params(data) {
 	    if (!data) data = {};
@@ -661,34 +662,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  function decrypt(input, key) {
-	    return crypto_obj['decrypt'](input, key || CIPHER_KEY) ||
-	      crypto_obj['decrypt'](input, CIPHER_KEY) ||
-	      input;
+	    return crypto_obj['decrypt'](input, key || CIPHER_KEY) || crypto_obj['decrypt'](input, CIPHER_KEY) || input;
 	  }
 
 	  function error_common(message, callback) {
 	    callback && callback({ error: message || 'error occurred' });
-	    error && error(message);
+	    _error && _error(message);
 	  }
 
 	  function _presence_heartbeat() {
 	    clearTimeout(PRESENCE_HB_TIMEOUT);
 
-	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 ||
-	      PRESENCE_HB_INTERVAL < 1 ||
-	      (!generate_channel_list(CHANNELS, true).length && !generate_channel_group_list(CHANNEL_GROUPS, true).length)) {
+	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS, true).length && !generate_channel_group_list(CHANNEL_GROUPS, true).length) {
 	      PRESENCE_HB_RUNNING = false;
 	      return;
 	    }
 
 	    PRESENCE_HB_RUNNING = true;
 	    SELF['presence_heartbeat']({
-	      callback: function (r) {
-	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
+	      callback: function callback(r) {
+	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, PRESENCE_HB_INTERVAL * SECOND);
 	      },
-	      error: function (e) {
-	        error && error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
-	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
+	      error: function error(e) {
+	        _error && _error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
+	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, PRESENCE_HB_INTERVAL * SECOND);
 	      }
 	    });
 	  }
@@ -697,7 +694,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    !PRESENCE_HB_RUNNING && _presence_heartbeat();
 	  }
 
-	  function publish(next) {
+	  function _publish(next) {
 	    if (NO_WAIT_FOR_PENDING) {
 	      if (!PUB_QUEUE.length) return;
 	    } else {
@@ -718,8 +715,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!chang) return;
 
 	      count++;
-	      (callback || function () {
-	      })(chang);
+	      (callback || function () {})(chang);
 	    });
 
 	    return count;
@@ -734,15 +730,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!chan) return;
 
 	      count++;
-	      (callback || function () {
-	      })(chan);
+	      (callback || function () {})(chan);
 	    });
 
 	    return count;
 	  }
 
 	  function _invoke_callback(response, callback, err) {
-	    if (typeof response == 'object') {
+	    if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object') {
 	      if (response['error']) {
 	        var callback_data = {};
 
@@ -770,7 +765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  function _invoke_error(response, err) {
-	    if (typeof response == 'object' && response['error']) {
+	    if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
 	      var callback_data = {};
 
 	      if (response['message']) {
@@ -790,7 +785,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  function CR(args, callback, url1, data) {
 	    var callback = args['callback'] || callback;
-	    var err = args['error'] || error;
+	    var err = args['error'] || _error;
 	    var jsonp = jsonp_cb();
 
 	    data = data || {};
@@ -799,10 +794,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      data['auth'] = args['auth_key'] || AUTH_KEY;
 	    }
 
-	    var url = [
-	      STD_ORIGIN, 'v1', 'channel-registration',
-	      'sub-key', SUBSCRIBE_KEY
-	    ];
+	    var url = [STD_ORIGIN, 'v1', 'channel-registration', 'sub-key', SUBSCRIBE_KEY];
 
 	    url.push.apply(url, url1);
 
@@ -811,10 +803,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    xdr({
 	      callback: jsonp,
 	      data: _get_url_params(data),
-	      success: function (response) {
+	      success: function success(response) {
 	        _invoke_callback(response, callback, err);
 	      },
-	      fail: function (response) {
+	      fail: function fail(response) {
 	        _invoke_error(response, err);
 	      },
 	      url: url
@@ -823,7 +815,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Announce Leave Event
 	  var SELF = {
-	    LEAVE: function (channel, blocking, auth_key, callback, error) {
+	    LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
 	      var origin = nextorigin(ORIGIN);
 	      var callback = callback || function () {};
@@ -834,7 +826,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Prevent Leaving a Presence Channel
 	      if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
-
 
 	      if (COMPATIBLE_35) {
 	        if (!SSL) return false;
@@ -847,13 +838,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      url = [
-	        origin, 'v2', 'presence', 'sub_key',
-	        SUBSCRIBE_KEY, 'channel', utils.encode(channel), 'leave'
-	      ];
+	      url = [origin, 'v2', 'presence', 'sub_key', SUBSCRIBE_KEY, 'channel', utils.encode(channel), 'leave'];
 
 	      params = _get_url_params(data);
-
 
 	      if (sendBeacon) {
 	        var url_string = utils.buildURL(url, params);
@@ -863,15 +850,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      }
 
-
 	      xdr({
 	        blocking: blocking || SSL,
 	        callback: jsonp,
 	        data: params,
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -879,7 +865,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return true;
 	    },
 
-	    LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
+	    LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
 	      var origin = nextorigin(ORIGIN);
 	      var url;
@@ -904,10 +890,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      url = [
-	        origin, 'v2', 'presence', 'sub_key',
-	        SUBSCRIBE_KEY, 'channel', utils.encode(','), 'leave'
-	      ];
+	      url = [origin, 'v2', 'presence', 'sub_key', SUBSCRIBE_KEY, 'channel', utils.encode(','), 'leave'];
 
 	      params = _get_url_params(data);
 
@@ -923,10 +906,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        blocking: blocking || SSL,
 	        callback: jsonp,
 	        data: params,
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -934,33 +917,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return true;
 	    },
 
-	    set_resumed: function (resumed) {
+	    set_resumed: function set_resumed(resumed) {
 	      RESUMED = resumed;
 	    },
 
-	    get_cipher_key: function () {
+	    get_cipher_key: function get_cipher_key() {
 	      return CIPHER_KEY;
 	    },
 
-	    set_cipher_key: function (key) {
+	    set_cipher_key: function set_cipher_key(key) {
 	      CIPHER_KEY = key;
 	    },
 
-	    raw_encrypt: function (input, key) {
+	    raw_encrypt: function raw_encrypt(input, key) {
 	      return encrypt(input, key);
 	    },
 
-	    raw_decrypt: function (input, key) {
+	    raw_decrypt: function raw_decrypt(input, key) {
 	      return decrypt(input, key);
 	    },
 
-	    get_heartbeat: function () {
+	    get_heartbeat: function get_heartbeat() {
 	      return PRESENCE_HB;
 	    },
 
-	    set_heartbeat: function (heartbeat, heartbeat_interval) {
-	      PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, error);
-	      PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
+	    set_heartbeat: function set_heartbeat(heartbeat, heartbeat_interval) {
+	      PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, _error);
+	      PRESENCE_HB_INTERVAL = heartbeat_interval || PRESENCE_HB / 2 - 1;
 	      if (PRESENCE_HB == 2) {
 	        PRESENCE_HB_INTERVAL = 1;
 	      }
@@ -968,26 +951,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	      _presence_heartbeat();
 	    },
 
-	    get_heartbeat_interval: function () {
+	    get_heartbeat_interval: function get_heartbeat_interval() {
 	      return PRESENCE_HB_INTERVAL;
 	    },
 
-	    set_heartbeat_interval: function (heartbeat_interval) {
+	    set_heartbeat_interval: function set_heartbeat_interval(heartbeat_interval) {
 	      PRESENCE_HB_INTERVAL = heartbeat_interval;
 	      _presence_heartbeat();
 	    },
 
-	    get_version: function () {
+	    get_version: function get_version() {
 	      return SDK_VER;
 	    },
 
-	    getGcmMessageObject: function (obj) {
+	    getGcmMessageObject: function getGcmMessageObject(obj) {
 	      return {
 	        data: obj
 	      };
 	    },
 
-	    getApnsMessageObject: function (obj) {
+	    getApnsMessageObject: function getApnsMessageObject(obj) {
 	      var x = {
 	        aps: { badge: 1, alert: '' }
 	      };
@@ -997,11 +980,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return x;
 	    },
 
-	    _add_param: function (key, val) {
+	    _add_param: function _add_param(key, val) {
 	      params[key] = val;
 	    },
 
-	    channel_group: function (args, callback) {
+	    channel_group: function channel_group(args, callback) {
 	      var ns_ch = args['channel_group'];
 	      var callback = callback || args['callback'];
 	      var channels = args['channels'] || args['channel'];
@@ -1012,12 +995,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var data = {};
 	      var mode = args['mode'] || 'add';
 
-
 	      if (ns_ch) {
 	        var ns_ch_a = ns_ch.split(':');
 
 	        if (ns_ch_a.length > 1) {
-	          namespace = (ns_ch_a[0] === '*') ? null : ns_ch_a[0];
+	          namespace = ns_ch_a[0] === '*' ? null : ns_ch_a[0];
 
 	          channel_group = ns_ch_a[1];
 	        } else {
@@ -1038,17 +1020,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	          channels = channels.join(',');
 	        }
 	        data[mode] = channels;
-	        data['cloak'] = (CLOAK) ? 'true' : 'false';
+	        data['cloak'] = CLOAK ? 'true' : 'false';
 	      } else {
 	        if (mode === 'remove') url.push('remove');
 	      }
 
-	      if (typeof cloak != 'undefined') data['cloak'] = (cloak) ? 'true' : 'false';
+	      if (typeof cloak != 'undefined') data['cloak'] = cloak ? 'true' : 'false';
 
 	      CR(args, callback, url, data);
 	    },
 
-	    channel_group_list_groups: function (args, callback) {
+	    channel_group_list_groups: function channel_group_list_groups(args, callback) {
 	      var namespace;
 
 	      namespace = args['namespace'] || args['ns'] || args['channel_group'] || null;
@@ -1059,34 +1041,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_list_channels: function (args, callback) {
-	      if (!args['channel_group']) return error('Missing Channel Group');
+	    channel_group_list_channels: function channel_group_list_channels(args, callback) {
+	      if (!args['channel_group']) return _error('Missing Channel Group');
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_remove_channel: function (args, callback) {
-	      if (!args['channel_group']) return error('Missing Channel Group');
-	      if (!args['channel'] && !args['channels']) return error('Missing Channel');
+	    channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
+	      if (!args['channel_group']) return _error('Missing Channel Group');
+	      if (!args['channel'] && !args['channels']) return _error('Missing Channel');
 
 	      args['mode'] = 'remove';
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_remove_group: function (args, callback) {
-	      if (!args['channel_group']) return error('Missing Channel Group');
-	      if (args['channel']) return error('Use channel_group_remove_channel if you want to remove a channel from a group.');
+	    channel_group_remove_group: function channel_group_remove_group(args, callback) {
+	      if (!args['channel_group']) return _error('Missing Channel Group');
+	      if (args['channel']) return _error('Use channel_group_remove_channel if you want to remove a channel from a group.');
 
 	      args['mode'] = 'remove';
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_add_channel: function (args, callback) {
-	      if (!args['channel_group']) return error('Missing Channel Group');
-	      if (!args['channel'] && !args['channels']) return error('Missing Channel');
+	    channel_group_add_channel: function channel_group_add_channel(args, callback) {
+	      if (!args['channel_group']) return _error('Missing Channel Group');
+	      if (!args['channel'] && !args['channels']) return _error('Missing Channel');
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_cloak: function (args, callback) {
+	    channel_group_cloak: function channel_group_cloak(args, callback) {
 	      if (typeof args['cloak'] == 'undefined') {
 	        callback(CLOAK);
 	        return;
@@ -1095,12 +1077,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_list_namespaces: function (args, callback) {
+	    channel_group_list_namespaces: function channel_group_list_namespaces(args, callback) {
 	      var url = ['namespace'];
 	      CR(args, callback, url);
 	    },
 
-	    channel_group_remove_namespace: function (args, callback) {
+	    channel_group_remove_namespace: function channel_group_remove_namespace(args, callback) {
 	      var url = ['namespace', args['namespace'], 'remove'];
 	      CR(args, callback, url);
 	    },
@@ -1112,7 +1094,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     callback : function(history) { }
 	     });
 	     */
-	    history: function (args, callback) {
+	    history: function history(args, callback) {
 	      var callback = args['callback'] || callback;
 	      var count = args['count'] || args['limit'] || 100;
 	      var reverse = args['reverse'] || 'false';
@@ -1129,9 +1111,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var jsonp = jsonp_cb();
 
 	      // Make sure we have a Channel
-	      if (!channel && !channel_group) return error('Missing Channel');
-	      if (!callback) return error('Missing Callback');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!channel && !channel_group) return _error('Missing Channel');
+	      if (!callback) return _error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      params['stringtoken'] = 'true';
 	      params['count'] = count;
@@ -1154,8 +1136,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(params),
-	        success: function (response) {
-	          if (typeof response == 'object' && response['error']) {
+	        success: function success(response) {
+	          if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
 	            err({ message: response['message'], payload: response['payload'] });
 	            return;
 	          }
@@ -1168,26 +1150,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	              try {
 	                decrypted_messages['push']({ message: JSON['parse'](new_message), timetoken: timetoken });
 	              } catch (e) {
-	                decrypted_messages['push'](({ message: new_message, timetoken: timetoken }));
+	                decrypted_messages['push']({ message: new_message, timetoken: timetoken });
 	              }
 	            } else {
 	              var new_message = decrypt(messages[a], cipher_key);
 	              try {
 	                decrypted_messages['push'](JSON['parse'](new_message));
 	              } catch (e) {
-	                decrypted_messages['push']((new_message));
+	                decrypted_messages['push'](new_message);
 	              }
 	            }
 	          }
 	          callback([decrypted_messages, response[1], response[2]]);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [
-	          STD_ORIGIN, 'v2', 'history', 'sub-key',
-	          SUBSCRIBE_KEY, 'channel', utils.encode(channel)
-	        ]
+	        url: [STD_ORIGIN, 'v2', 'history', 'sub-key', SUBSCRIBE_KEY, 'channel', utils.encode(channel)]
 	      });
 	    },
 
@@ -1197,7 +1176,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     destination : 'new_channel'
 	     });
 	     */
-	    replay: function (args, callback) {
+	    replay: function replay(args, callback) {
 	      var callback = callback || args['callback'] || function () {};
 	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var source = args['source'];
@@ -1213,10 +1192,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var url;
 
 	      // Check User Input
-	      if (!source) return error('Missing Source Channel');
-	      if (!destination) return error('Missing Destination Channel');
-	      if (!PUBLISH_KEY) return error('Missing Publish Key');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!source) return _error('Missing Source Channel');
+	      if (!destination) return _error('Missing Destination Channel');
+	      if (!PUBLISH_KEY) return _error('Missing Publish Key');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      // Setup URL Params
 	      if (jsonp != '0') data['callback'] = jsonp;
@@ -1229,19 +1208,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      data['auth'] = auth_key;
 
 	      // Compose URL Parts
-	      url = [
-	        STD_ORIGIN, 'v1', 'replay',
-	        PUBLISH_KEY, SUBSCRIBE_KEY,
-	        source, destination
-	      ];
+	      url = [STD_ORIGIN, 'v1', 'replay', PUBLISH_KEY, SUBSCRIBE_KEY, source, destination];
 
 	      // Start (or Stop) Replay!
 	      xdr({
 	        callback: jsonp,
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function () {
+	        fail: function fail() {
 	          callback([0, 'Disconnected']);
 	        },
 	        url: url,
@@ -1252,15 +1227,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.auth('AJFLKAJSDKLA');
 	     */
-	    auth: function (auth) {
-	      AUTH_KEY = auth;
+	    auth: function auth(_auth) {
+	      AUTH_KEY = _auth;
 	      CONNECT();
 	    },
 
 	    /*
 	     PUBNUB.time(function(time){ });
 	     */
-	    time: function (callback) {
+	    time: function time(callback) {
 	      var jsonp = jsonp_cb();
 
 	      var data = { uuid: UUID, auth: AUTH_KEY };
@@ -1271,10 +1246,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: _get_url_params(data),
 	        url: [STD_ORIGIN, 'time', jsonp],
-	        success: function (response) {
+	        success: function success(response) {
 	          callback(response[0]);
 	        },
-	        fail: function () {
+	        fail: function fail() {
 	          callback(0);
 	        }
 	      });
@@ -1286,9 +1261,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     message : 'hello!'
 	     });
 	     */
-	    publish: function (args, callback) {
+	    publish: function publish(args, callback) {
 	      var msg = args['message'];
-	      if (!msg) return error('Missing Message');
+	      if (!msg) return _error('Missing Message');
 
 	      var callback = callback || args['callback'] || msg['callback'] || args['success'] || function () {};
 	      var channel = args['channel'] || msg['channel'];
@@ -1296,7 +1271,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var cipher_key = args['cipher_key'];
 	      var err = args['error'] || msg['error'] || function () {};
 	      var post = args['post'] || false;
-	      var store = ('store_in_history' in args) ? args['store_in_history'] : true;
+	      var store = 'store_in_history' in args ? args['store_in_history'] : true;
 	      var jsonp = jsonp_cb();
 	      var add_msg = 'push';
 	      var params;
@@ -1304,9 +1279,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (args['prepend']) add_msg = 'unshift';
 
-	      if (!channel) return error('Missing Channel');
-	      if (!PUBLISH_KEY) return error('Missing Publish Key');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!channel) return _error('Missing Channel');
+	      if (!PUBLISH_KEY) return _error('Missing Publish Key');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      if (msg['getPubnubMessage']) {
 	        msg = msg['getPubnubMessage']();
@@ -1316,12 +1291,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      msg = JSON['stringify'](encrypt(msg, cipher_key));
 
 	      // Create URL
-	      url = [
-	        STD_ORIGIN, 'publish',
-	        PUBLISH_KEY, SUBSCRIBE_KEY,
-	        0, utils.encode(channel),
-	        jsonp, utils.encode(msg)
-	      ];
+	      url = [STD_ORIGIN, 'publish', PUBLISH_KEY, SUBSCRIBE_KEY, 0, utils.encode(channel), jsonp, utils.encode(msg)];
 
 	      params = { uuid: UUID, auth: auth_key };
 
@@ -1334,25 +1304,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        url: url,
 	        data: _get_url_params(params),
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
-	          publish(1);
+	          _publish(1);
 	        },
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
-	          publish(1);
+	          _publish(1);
 	        },
-	        mode: (post) ? 'POST' : 'GET'
+	        mode: post ? 'POST' : 'GET'
 	      });
 
 	      // Send Message
-	      publish();
+	      _publish();
 	    },
 
 	    /*
 	     PUBNUB.unsubscribe({ channel : 'my_chat' });
 	     */
-	    unsubscribe: function (args, callback) {
+	    unsubscribe: function unsubscribe(args, callback) {
 	      var channelArg = args['channel'];
 	      var channelGroupArg = args['channel_group'];
 	      var auth_key = args['auth_key'] || AUTH_KEY;
@@ -1360,10 +1330,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var err = args['error'] || function () {};
 
 	      TIMETOKEN = 0;
-	      SUB_RESTORE = 1;   // REVISIT !!!!
+	      SUB_RESTORE = 1; // REVISIT !!!!
 
-	      if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!channelArg && !channelGroupArg) return _error('Missing Channel or Channel Group');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      if (channelArg) {
 	        var channels = utils.isArray(channelArg) ? channelArg : ('' + channelArg).split(',');
@@ -1439,7 +1409,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     callback : function(message) { }
 	     });
 	     */
-	    subscribe: function (args, callback) {
+	    subscribe: function subscribe(args, callback) {
 	      var channel = args['channel'];
 	      var channel_group = args['channel_group'];
 	      var callback = callback || args['callback'];
@@ -1470,11 +1440,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Make sure we have a Channel
 	      if (!channel && !channel_group) {
-	        return error('Missing Channel');
+	        return _error('Missing Channel');
 	      }
 
-	      if (!callback) return error('Missing Callback');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!callback) return _error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      if (heartbeat || heartbeat === 0 || heartbeat_interval || heartbeat_interval === 0) {
 	        SELF['set_heartbeat'](heartbeat, heartbeat_interval);
@@ -1482,114 +1452,111 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Setup Channel(s)
 	      if (channel) {
-	        utils.each((channel.join ? channel.join(',') : '' + channel).split(','),
-	          function (channel) {
-	            var settings = CHANNELS[channel] || {};
+	        utils.each((channel.join ? channel.join(',') : '' + channel).split(','), function (channel) {
+	          var settings = CHANNELS[channel] || {};
 
-	            // Store Channel State
-	            CHANNELS[SUB_CHANNEL = channel] = {
-	              name: channel,
-	              connected: settings.connected,
-	              disconnected: settings.disconnected,
-	              subscribed: 1,
-	              callback: SUB_CALLBACK = callback,
-	              cipher_key: args['cipher_key'],
-	              connect: connect,
-	              disconnect: disconnect,
-	              reconnect: reconnect
-	            };
+	          // Store Channel State
+	          CHANNELS[SUB_CHANNEL = channel] = {
+	            name: channel,
+	            connected: settings.connected,
+	            disconnected: settings.disconnected,
+	            subscribed: 1,
+	            callback: SUB_CALLBACK = callback,
+	            cipher_key: args['cipher_key'],
+	            connect: connect,
+	            disconnect: disconnect,
+	            reconnect: reconnect
+	          };
 
-	            if (state) {
-	              if (channel in state) {
-	                STATE[channel] = state[channel];
-	              } else {
-	                STATE[channel] = state;
-	              }
+	          if (state) {
+	            if (channel in state) {
+	              STATE[channel] = state[channel];
+	            } else {
+	              STATE[channel] = state;
 	            }
+	          }
 
-	            // Presence Enabled?
-	            if (!presence) return;
+	          // Presence Enabled?
+	          if (!presence) return;
 
-	            // Subscribe Presence Channel
-	            SELF['subscribe']({
-	              channel: channel + PRESENCE_SUFFIX,
-	              callback: presence,
-	              restore: restore
-	            });
-
-	            // Presence Subscribed?
-	            if (settings.subscribed) return;
-
-	            // See Who's Here Now?
-	            if (noheresync) return;
-	            SELF['here_now']({
-	              channel: channel,
-	              data: _get_url_params({ uuid: UUID, auth: AUTH_KEY }),
-	              callback: function (here) {
-	                utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
-	                  presence({
-	                    action: 'join',
-	                    uuid: uid,
-	                    timestamp: Math.floor(utils.rnow() / 1000),
-	                    occupancy: here['occupancy'] || 1
-	                  }, here, channel);
-	                });
-	              }
-	            });
+	          // Subscribe Presence Channel
+	          SELF['subscribe']({
+	            channel: channel + PRESENCE_SUFFIX,
+	            callback: presence,
+	            restore: restore
 	          });
+
+	          // Presence Subscribed?
+	          if (settings.subscribed) return;
+
+	          // See Who's Here Now?
+	          if (noheresync) return;
+	          SELF['here_now']({
+	            channel: channel,
+	            data: _get_url_params({ uuid: UUID, auth: AUTH_KEY }),
+	            callback: function callback(here) {
+	              utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
+	                presence({
+	                  action: 'join',
+	                  uuid: uid,
+	                  timestamp: Math.floor(utils.rnow() / 1000),
+	                  occupancy: here['occupancy'] || 1
+	                }, here, channel);
+	              });
+	            }
+	          });
+	        });
 	      }
 
 	      // Setup Channel Groups
 	      if (channel_group) {
-	        utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','),
-	          function (channel_group) {
-	            var settings = CHANNEL_GROUPS[channel_group] || {};
+	        utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','), function (channel_group) {
+	          var settings = CHANNEL_GROUPS[channel_group] || {};
 
-	            CHANNEL_GROUPS[channel_group] = {
-	              name: channel_group,
-	              connected: settings.connected,
-	              disconnected: settings.disconnected,
-	              subscribed: 1,
-	              callback: SUB_CALLBACK = callback,
-	              cipher_key: args['cipher_key'],
-	              connect: connect,
-	              disconnect: disconnect,
-	              reconnect: reconnect
-	            };
+	          CHANNEL_GROUPS[channel_group] = {
+	            name: channel_group,
+	            connected: settings.connected,
+	            disconnected: settings.disconnected,
+	            subscribed: 1,
+	            callback: SUB_CALLBACK = callback,
+	            cipher_key: args['cipher_key'],
+	            connect: connect,
+	            disconnect: disconnect,
+	            reconnect: reconnect
+	          };
 
-	            // Presence Enabled?
-	            if (!presence) return;
+	          // Presence Enabled?
+	          if (!presence) return;
 
-	            // Subscribe Presence Channel
-	            SELF['subscribe']({
-	              channel_group: channel_group + PRESENCE_SUFFIX,
-	              callback: presence,
-	              restore: restore,
-	              auth_key: AUTH_KEY
-	            });
-
-	            // Presence Subscribed?
-	            if (settings.subscribed) return;
-
-	            // See Who's Here Now?
-	            if (noheresync) return;
-	            SELF['here_now']({
-	              channel_group: channel_group,
-	              data: _get_url_params({ uuid: UUID, auth: AUTH_KEY }),
-	              callback: function (here) {
-	                utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
-	                  presence({
-	                    action: 'join',
-	                    uuid: uid,
-	                    timestamp: Math.floor(utils.rnow() / 1000),
-	                    occupancy: here['occupancy'] || 1
-	                  }, here, channel_group);
-	                });
-	              }
-	            });
+	          // Subscribe Presence Channel
+	          SELF['subscribe']({
+	            channel_group: channel_group + PRESENCE_SUFFIX,
+	            callback: presence,
+	            restore: restore,
+	            auth_key: AUTH_KEY
 	          });
-	      }
 
+	          // Presence Subscribed?
+	          if (settings.subscribed) return;
+
+	          // See Who's Here Now?
+	          if (noheresync) return;
+	          SELF['here_now']({
+	            channel_group: channel_group,
+	            data: _get_url_params({ uuid: UUID, auth: AUTH_KEY }),
+	            callback: function callback(here) {
+	              utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
+	                presence({
+	                  action: 'join',
+	                  uuid: uid,
+	                  timestamp: Math.floor(utils.rnow() / 1000),
+	                  occupancy: here['occupancy'] || 1
+	                }, here, channel_group);
+	              });
+	            }
+	          });
+	        });
+	      }
 
 	      // Test Network Connection
 	      function _test_connection(success) {
@@ -1658,7 +1625,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	          data['channel-group'] = channel_groups;
 	        }
 
-
 	        var st = JSON.stringify(STATE);
 	        if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
@@ -1670,26 +1636,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	        SUB_RECEIVER = xdr({
 	          timeout: sub_timeout,
 	          callback: jsonp,
-	          fail: function (response) {
+	          fail: function fail(response) {
 	            if (response && response['error'] && response['service']) {
 	              _invoke_error(response, SUB_ERROR);
 	              _test_connection(false);
 	            } else {
 	              SELF['time'](function (success) {
-	                !success && (_invoke_error(response, SUB_ERROR));
+	                !success && _invoke_error(response, SUB_ERROR);
 	                _test_connection(success);
 	              });
 	            }
 	          },
 	          data: _get_url_params(data),
-	          url: [
-	            SUB_ORIGIN, 'subscribe',
-	            SUBSCRIBE_KEY, utils.encode(channels),
-	            jsonp, TIMETOKEN
-	          ],
-	          success: function (messages) {
+	          url: [SUB_ORIGIN, 'subscribe', SUBSCRIBE_KEY, utils.encode(channels), jsonp, TIMETOKEN],
+	          success: function success(messages) {
 	            // Check for Errors
-	            if (!messages || (typeof messages == 'object' && 'error' in messages && messages['error'])) {
+	            if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
 	              SUB_ERROR(messages);
 	              return utils.timeout(CONNECT, SECOND);
 	            }
@@ -1743,7 +1705,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            db['set'](SUBSCRIBE_KEY, messages[1]);
 
 	            // Route Channel <---> Callback for Message
-	            var next_callback = (function () {
+	            var next_callback = function () {
 	              var channels = '';
 	              var channels2 = '';
 
@@ -1753,20 +1715,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	              } else if (messages.length > 2) {
 	                channels = messages[2];
 	              } else {
-	                channels = utils.map(
-	                  generate_channel_list(CHANNELS), function (chan) {
-	                    return utils.map(
-	                      Array(messages[0].length)
-	                        .join(',').split(','),
-	                      function () {
-	                        return chan;
-	                      }
-	                    );
-	                  }).join(',');
+	                channels = utils.map(generate_channel_list(CHANNELS), function (chan) {
+	                  return utils.map(Array(messages[0].length).join(',').split(','), function () {
+	                    return chan;
+	                  });
+	                }).join(',');
 	              }
 
 	              var list = channels.split(',');
-	              var list2 = (channels2) ? channels2.split(',') : [];
+	              var list2 = channels2 ? channels2.split(',') : [];
 
 	              return function () {
 	                var channel = list.shift() || SUB_CHANNEL;
@@ -1775,30 +1732,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var chobj = {};
 
 	                if (channel2) {
-	                  if (channel && channel.indexOf('-pnpres') >= 0
-	                    && channel2.indexOf('-pnpres') < 0) {
+	                  if (channel && channel.indexOf('-pnpres') >= 0 && channel2.indexOf('-pnpres') < 0) {
 	                    channel2 += '-pnpres';
 	                  }
-	                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function () {} };
+	                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function callback() {} };
 	                } else {
 	                  chobj = CHANNELS[channel];
 	                }
 
-	                var r = [
-	                  chobj
-	                    .callback || SUB_CALLBACK,
-	                  channel.split(PRESENCE_SUFFIX)[0]
-	                ];
+	                var r = [chobj.callback || SUB_CALLBACK, channel.split(PRESENCE_SUFFIX)[0]];
 	                channel2 && r.push(channel2.split(PRESENCE_SUFFIX)[0]);
 	                return r;
 	              };
-	            })();
+	            }();
 
 	            var latency = detect_latency(+messages[1]);
 	            utils.each(messages[0], function (msg) {
 	              var next = next_callback();
-	              var decrypted_msg = decrypt(msg,
-	                (CHANNELS[next[1]]) ? CHANNELS[next[1]]['cipher_key'] : null);
+	              var decrypted_msg = decrypt(msg, CHANNELS[next[1]] ? CHANNELS[next[1]]['cipher_key'] : null);
 	              next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
 	            });
 
@@ -1807,7 +1758,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 	      }
 
-	      CONNECT = function () {
+	      CONNECT = function CONNECT() {
 	        _reset_offline();
 	        utils.timeout(_connect, windowing);
 	      };
@@ -1822,7 +1773,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.here_now({ channel : 'my_chat', callback : fun });
 	     */
-	    here_now: function (args, callback) {
+	    here_now: function here_now(args, callback) {
 	      var callback = args['callback'] || callback;
 	      var debug = args['debug'];
 	      var err = args['error'] || function () {};
@@ -1830,7 +1781,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var channel = args['channel'];
 	      var channel_group = args['channel_group'];
 	      var jsonp = jsonp_cb();
-	      var uuids = ('uuids' in args) ? args['uuids'] : true;
+	      var uuids = 'uuids' in args ? args['uuids'] : true;
 	      var state = args['state'];
 	      var data = { uuid: UUID, auth: auth_key };
 
@@ -1838,13 +1789,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (state) data['state'] = 1;
 
 	      // Make sure we have a Channel
-	      if (!callback) return error('Missing Callback');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!callback) return _error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
-	      var url = [
-	        STD_ORIGIN, 'v2', 'presence',
-	        'sub_key', SUBSCRIBE_KEY
-	      ];
+	      var url = [STD_ORIGIN, 'v2', 'presence', 'sub_key', SUBSCRIBE_KEY];
 
 	      channel && url.push('channel') && url.push(utils.encode(channel));
 
@@ -1862,10 +1810,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
 	        debug: debug,
@@ -1876,7 +1824,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
 	     */
-	    where_now: function (args, callback) {
+	    where_now: function where_now(args, callback) {
 	      var callback = args['callback'] || callback;
 	      var err = args['error'] || function () {};
 	      var auth_key = args['auth_key'] || AUTH_KEY;
@@ -1885,8 +1833,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var data = { auth: auth_key };
 
 	      // Make sure we have a Channel
-	      if (!callback) return error('Missing Callback');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!callback) return _error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      if (jsonp != '0') {
 	        data['callback'] = jsonp;
@@ -1897,21 +1845,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [
-	          STD_ORIGIN, 'v2', 'presence',
-	          'sub_key', SUBSCRIBE_KEY,
-	          'uuid', utils.encode(uuid)
-	        ]
+	        url: [STD_ORIGIN, 'v2', 'presence', 'sub_key', SUBSCRIBE_KEY, 'uuid', utils.encode(uuid)]
 	      });
 	    },
 
-	    state: function (args, callback) {
+	    state: function state(args, callback) {
 	      var callback = args['callback'] || callback || function (r) {};
 	      var err = args['error'] || function () {};
 	      var auth_key = args['auth_key'] || AUTH_KEY;
@@ -1924,23 +1868,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var data = _get_url_params({ auth: auth_key });
 
 	      // Make sure we have a Channel
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-	      if (!uuid) return error('Missing UUID');
-	      if (!channel && !channel_group) return error('Missing Channel');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
+	      if (!uuid) return _error('Missing UUID');
+	      if (!channel && !channel_group) return _error('Missing Channel');
 
 	      if (jsonp != '0') {
 	        data['callback'] = jsonp;
 	      }
 
-	      if (typeof channel != 'undefined'
-	        && CHANNELS[channel] && CHANNELS[channel].subscribed) {
+	      if (typeof channel != 'undefined' && CHANNELS[channel] && CHANNELS[channel].subscribed) {
 	        if (state) STATE[channel] = state;
 	      }
 
-	      if (typeof channel_group != 'undefined'
-	        && CHANNEL_GROUPS[channel_group]
-	        && CHANNEL_GROUPS[channel_group].subscribed
-	      ) {
+	      if (typeof channel_group != 'undefined' && CHANNEL_GROUPS[channel_group] && CHANNEL_GROUPS[channel_group].subscribed) {
 	        if (state) STATE[channel_group] = state;
 	        data['channel-group'] = channel_group;
 
@@ -1954,28 +1894,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
 	      if (state) {
-	        url = [
-	          STD_ORIGIN, 'v2', 'presence',
-	          'sub-key', SUBSCRIBE_KEY,
-	          'channel', channel,
-	          'uuid', uuid, 'data'
-	        ];
+	        url = [STD_ORIGIN, 'v2', 'presence', 'sub-key', SUBSCRIBE_KEY, 'channel', channel, 'uuid', uuid, 'data'];
 	      } else {
-	        url = [
-	          STD_ORIGIN, 'v2', 'presence',
-	          'sub-key', SUBSCRIBE_KEY,
-	          'channel', channel,
-	          'uuid', utils.encode(uuid)
-	        ];
+	        url = [STD_ORIGIN, 'v2', 'presence', 'sub-key', SUBSCRIBE_KEY, 'channel', channel, 'uuid', utils.encode(uuid)];
 	      }
 
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -1994,22 +1924,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	     auth_key : '3y8uiajdklytowsj'
 	     });
 	     */
-	    grant: function (args, callback) {
+	    grant: function grant(args, callback) {
 	      var callback = args['callback'] || callback;
 	      var err = args['error'] || function () {};
 	      var channel = args['channel'] || args['channels'];
 	      var channel_group = args['channel_group'];
 	      var jsonp = jsonp_cb();
 	      var ttl = args['ttl'];
-	      var r = (args['read']) ? '1' : '0';
-	      var w = (args['write']) ? '1' : '0';
-	      var m = (args['manage']) ? '1' : '0';
+	      var r = args['read'] ? '1' : '0';
+	      var w = args['write'] ? '1' : '0';
+	      var m = args['manage'] ? '1' : '0';
 	      var auth_key = args['auth_key'] || args['auth_keys'];
 
-	      if (!callback) return error('Missing Callback');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-	      if (!PUBLISH_KEY) return error('Missing Publish Key');
-	      if (!SECRET_KEY) return error('Missing Secret Key');
+	      if (!callback) return _error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
+	      if (!PUBLISH_KEY) return _error('Missing Publish Key');
+	      if (!SECRET_KEY) return _error('Missing Secret Key');
 
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
 	      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'grant' + '\n';
@@ -2052,16 +1982,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: data,
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [
-	          STD_ORIGIN, 'v1', 'auth', 'grant',
-	          'sub-key', SUBSCRIBE_KEY
-	        ]
+	        url: [STD_ORIGIN, 'v1', 'auth', 'grant', 'sub-key', SUBSCRIBE_KEY]
 	      });
 	    },
 
@@ -2076,7 +2003,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     });
 	     */
 
-	    mobile_gw_provision: function (args) {
+	    mobile_gw_provision: function mobile_gw_provision(args) {
 	      var callback = args['callback'] || function () {};
 	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var err = args['error'] || function () {};
@@ -2088,18 +2015,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var params;
 	      var url;
 
-	      if (!device_id) return error('Missing Device ID (device_id)');
-	      if (!gw_type) return error('Missing GW Type (gw_type: gcm or apns)');
-	      if (!op) return error('Missing GW Operation (op: add or remove)');
-	      if (!channel) return error('Missing gw destination Channel (channel)');
-	      if (!PUBLISH_KEY) return error('Missing Publish Key');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!device_id) return _error('Missing Device ID (device_id)');
+	      if (!gw_type) return _error('Missing GW Type (gw_type: gcm or apns)');
+	      if (!op) return _error('Missing GW Operation (op: add or remove)');
+	      if (!channel) return _error('Missing gw destination Channel (channel)');
+	      if (!PUBLISH_KEY) return _error('Missing Publish Key');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
 
 	      // Create URL
-	      url = [
-	        STD_ORIGIN, 'v1/push/sub-key',
-	        SUBSCRIBE_KEY, 'devices', device_id
-	      ];
+	      url = [STD_ORIGIN, 'v1/push/sub-key', SUBSCRIBE_KEY, 'devices', device_id];
 
 	      params = { uuid: UUID, auth: auth_key, type: gw_type };
 
@@ -2114,10 +2038,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: params,
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -2134,7 +2058,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     auth_key : '3y8uiajdklytowsj'
 	     });
 	     */
-	    audit: function (args, callback) {
+	    audit: function audit(args, callback) {
 	      var callback = args['callback'] || callback;
 	      var err = args['error'] || function () {};
 	      var channel = args['channel'];
@@ -2143,10 +2067,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var jsonp = jsonp_cb();
 
 	      // Make sure we have a Channel
-	      if (!callback) return error('Missing Callback');
-	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-	      if (!PUBLISH_KEY) return error('Missing Publish Key');
-	      if (!SECRET_KEY) return error('Missing Secret Key');
+	      if (!callback) return _error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return _error('Missing Subscribe Key');
+	      if (!PUBLISH_KEY) return _error('Missing Publish Key');
+	      if (!SECRET_KEY) return _error('Missing Secret Key');
 
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
 	      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'audit' + '\n';
@@ -2176,16 +2100,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: data,
-	        success: function (response) {
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [
-	          STD_ORIGIN, 'v1', 'auth', 'audit',
-	          'sub-key', SUBSCRIBE_KEY
-	        ]
+	        url: [STD_ORIGIN, 'v1', 'auth', 'audit', 'sub-key', SUBSCRIBE_KEY]
 	      });
 	    },
 
@@ -2197,30 +2118,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	     auth_key : '3y8uiajdklytowsj'
 	     });
 	     */
-	    revoke: function (args, callback) {
+	    revoke: function revoke(args, callback) {
 	      args['read'] = false;
 	      args['write'] = false;
 	      SELF['grant'](args, callback);
 	    },
 
-	    set_uuid: function (uuid) {
+	    set_uuid: function set_uuid(uuid) {
 	      UUID = uuid;
 	      CONNECT();
 	    },
 
-	    get_uuid: function () {
+	    get_uuid: function get_uuid() {
 	      return UUID;
 	    },
 
-	    isArray: function (arg) {
+	    isArray: function isArray(arg) {
 	      return utils.isArray(arg);
 	    },
 
-	    get_subscribed_channels: function () {
+	    get_subscribed_channels: function get_subscribed_channels() {
 	      return generate_channel_list(CHANNELS, true);
 	    },
 
-	    presence_heartbeat: function (args) {
+	    presence_heartbeat: function presence_heartbeat(args) {
 	      var callback = args['callback'] || function () {};
 	      var err = args['error'] || function () {};
 	      var jsonp = jsonp_cb();
@@ -2246,30 +2167,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        url: [
-	          STD_ORIGIN, 'v2', 'presence',
-	          'sub-key', SUBSCRIBE_KEY,
-	          'channel', channels,
-	          'heartbeat'
-	        ],
-	        success: function (response) {
+	        url: [STD_ORIGIN, 'v2', 'presence', 'sub-key', SUBSCRIBE_KEY, 'channel', channels, 'heartbeat'],
+	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function (response) {
+	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        }
 	      });
 	    },
 
-	    stop_timers: function () {
+	    stop_timers: function stop_timers() {
 	      clearTimeout(_poll_timer);
 	      clearTimeout(_poll_timer2);
 	      clearTimeout(PRESENCE_HB_TIMEOUT);
 	    },
 
-	    shutdown: function () {
+	    shutdown: function shutdown() {
 	      SELF['stop_timers']();
-	      shutdown && shutdown();
+	      _shutdown && _shutdown();
 	    },
 
 	    // Expose PUBNUB Functions
@@ -2281,7 +2197,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    each: utils.each,
 	    'each-channel': each_channel,
 	    grep: utils.grep,
-	    offline: function () {
+	    offline: function offline() {
 	      _reset_offline(1, { message: 'Offline. Please check your network settings.' });
 	    },
 	    supplant: utils.supplant,
@@ -2299,11 +2215,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _poll_online2() {
 	    if (!TIME_CHECK) return;
 	    SELF['time'](function (success) {
-	      detect_time_detla(function () {
-	      }, success);
+	      detect_time_detla(function () {}, success);
 	      success || _reset_offline(1, {
-	        error: 'Heartbeat failed to connect to Pubnub Servers.' +
-	        'Please check your network settings.'
+	        error: 'Heartbeat failed to connect to Pubnub Servers.' + 'Please check your network settings.'
 	      });
 	      _poll_timer2 && clearTimeout(_poll_timer2);
 	      _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
@@ -2324,10 +2238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  _poll_timer = utils.timeout(_poll_online, SECOND);
 	  _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-	  PRESENCE_HB_TIMEOUT = utils.timeout(
-	    start_presence_heartbeat,
-	    (PRESENCE_HB_INTERVAL - 3) * SECOND
-	  );
+	  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND);
 
 	  // Detect Age of Message
 	  function detect_latency(tt) {
@@ -2384,17 +2295,21 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 	/* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
 	var defaultConfiguration = __webpack_require__(5);
 	var REPL = /{([\w\-]+)}/g;
 
 	function rnow() {
-	  return +new Date;
+	  return +new Date();
 	}
 
 	function isArray(arg) {
-	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === 'number');
+	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === 'number');
 	  // return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
 	}
 
@@ -2414,9 +2329,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  } else {
 	    for (var i in o) {
-	      o.hasOwnProperty &&
-	      o.hasOwnProperty(i) &&
-	      f.call(o[i], i, o[i]);
+	      o.hasOwnProperty && o.hasOwnProperty(i) && f.call(o[i], i, o[i]);
 	    }
 	  }
 	}
@@ -2426,7 +2339,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * ======
 	 * var encoded_data = encode('path');
 	 */
-	function encode(path) { return encodeURIComponent(path); }
+	function encode(path) {
+	  return encodeURIComponent(path);
+	}
 
 	/**
 	 * Build Url
@@ -2440,10 +2355,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (!urlParams) return url;
 
 	  each(urlParams, function (key, value) {
-	    var valueStr = (typeof value === 'object') ? JSON['stringify'](value) : value;
-	    (typeof value !== 'undefined' &&
-	      value !== null && encode(valueStr).length > 0
-	    ) && params.push(key + '=' + encode(valueStr));
+	    var valueStr = (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' ? JSON['stringify'](value) : value;
+	    typeof value !== 'undefined' && value !== null && encode(valueStr).length > 0 && params.push(key + '=' + encode(valueStr));
 	  });
 
 	  url += '?' + params.join(defaultConfiguration.PARAMSBIT);
@@ -2458,7 +2371,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function updater(fun, rate) {
 	  var timeout;
 	  var last = 0;
-	  var runnit = function () {
+	  var runnit = function runnit() {
 	    if (last + rate > rnow()) {
 	      clearTimeout(timeout);
 	      timeout = setTimeout(runnit, rate);
@@ -2510,12 +2423,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * var my_uuid = generateUUID();
 	 */
 	function generateUUID(callback) {
-	  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-	    function (c) {
-	      var r = Math.random() * 16 | 0;
-	      var v = c === 'x' ? r : (r & 0x3 | 0x8);
-	      return v.toString(16);
-	    });
+	  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+	    var r = Math.random() * 16 | 0;
+	    var v = c === 'x' ? r : r & 0x3 | 0x8;
+	    return v.toString(16);
+	  });
 	  if (callback) callback(u);
 	  return u;
 	}
@@ -2533,13 +2445,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return fin;
 	}
 
-
 	function pamEncode(str) {
 	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
 	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
 	  });
 	}
-
 
 	module.exports = {
 	  buildURL: buildURL,

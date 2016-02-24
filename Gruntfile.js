@@ -3,7 +3,7 @@ var webpack = require('webpack');
 var WEBPACKED_PLATFORMS = ['web', 'modern', 'webos', 'sencha', 'phonegap', 'parse', 'titanium'];
 
 function registerWebpackBuilding(grunt) {
-  var compileTargets = [];
+  var compileTargets = ['clean:core', 'babel:core'];
 
   WEBPACKED_PLATFORMS.forEach(function (platform) {
     var actions = [];
@@ -16,7 +16,7 @@ function registerWebpackBuilding(grunt) {
     grunt.registerTask('compile:' + platform, actions);
   });
 
-  compileTargets.push('copy');
+  compileTargets = compileTargets.concat('copy', 'eslint');
 
   grunt.registerTask('_compile', compileTargets);
 }
@@ -46,7 +46,10 @@ function webpackCommonBuilder(folderName, baseFolder, externals) {
 
 
 function createCleanRules() {
-  var preparedRules = [];
+  var preparedRules = {
+    core: 'core/lib',
+    coverage: 'coverage'
+  };
 
   WEBPACKED_PLATFORMS.forEach(function (platform) {
     preparedRules[platform] = [platform + '/dist', platform + '/pubnub.js', platform + '/pubnub.min.js'];
@@ -151,6 +154,18 @@ module.exports = function (grunt) {
         }
       }
     },
+    babel: {
+      core: {
+        files: [
+          {
+            expand: true,
+            cwd: 'core/src/',
+            src: ['**/*.js'],
+            dest: 'core/lib/'
+          }
+        ]
+      }
+    },
     eslint: {
       target: [
         'node.js/*.js',
@@ -159,7 +174,7 @@ module.exports = function (grunt) {
         'parse/lib/**/*.js',
         'titanium/lib/**/*.js',
         'web/lib/**/*.js',
-        'core/lib/**/*.js',
+        'core/src/**/*.js',
         'test/**/*.js'
       ]
     },
@@ -225,10 +240,10 @@ module.exports = function (grunt) {
       main: {
         files: [
           // includes files within path
-          { src: ['modern/dist/pubnub.js' ], dest: 'modern/pubnub.js' },
-          { src: ['modern/dist/pubnub.min.js' ], dest: 'modern/pubnub.min.js' },
-          { src: ['web/dist/pubnub.js' ], dest: 'web/pubnub.js' },
-          { src: ['web/dist/pubnub.min.js' ], dest: 'web/pubnub.min.js' }
+          { src: ['modern/dist/pubnub.js'], dest: 'modern/pubnub.js' },
+          { src: ['modern/dist/pubnub.min.js'], dest: 'modern/pubnub.min.js' },
+          { src: ['web/dist/pubnub.js'], dest: 'web/pubnub.js' },
+          { src: ['web/dist/pubnub.min.js'], dest: 'web/pubnub.min.js' }
         ]
       }
     }

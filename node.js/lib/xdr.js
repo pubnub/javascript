@@ -47,19 +47,6 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
     keepaliveEnabled = true;
   }
 
-  var finished = function () {
-    if (loaded) return;
-    loaded = 1;
-
-    clearTimeout(timer);
-    try {
-      response = JSON.parse(body);
-    } catch (r) {
-      return done(1, { error: true, message: 'error in response parsing' });
-    }
-    success(response);
-  };
-
   var done = function (failed, response) {
     if (complete) return;
     complete = 1;
@@ -81,6 +68,19 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
     if (failed) {
       fail(response);
     }
+  };
+
+  var finished = function () {
+    if (loaded) return;
+    loaded = 1;
+
+    clearTimeout(timer);
+    try {
+      response = JSON.parse(body);
+    } catch (r) {
+      return done(1, { error: true, message: 'error in response parsing' });
+    }
+    success(response);
   };
 
   timer = pubNubCore.timeout(function () {

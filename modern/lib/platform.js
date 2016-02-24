@@ -62,6 +62,21 @@ function xdr(setup) {
   var fail = setup.fail || function () {};
   var success = setup.success || function () {};
 
+  var done = function (failed, response) {
+    if (complete) return;
+    complete = 1;
+
+    clearTimeout(timer);
+
+    if (xhr) {
+      xhr.onerror = xhr.onload = null;
+      if (xhr.abort) xhr.abort();
+      xhr = null;
+    }
+
+    if (failed) fail(response);
+  };
+
   var finished = function () {
     if (loaded) return;
     var response;
@@ -76,21 +91,6 @@ function xdr(setup) {
     }
 
     success(response);
-  };
-
-  var done = function (failed, response) {
-    if (complete) return;
-    complete = 1;
-
-    clearTimeout(timer);
-
-    if (xhr) {
-      xhr.onerror = xhr.onload = null;
-      if (xhr.abort) xhr.abort();
-      xhr = null;
-    }
-
-    if (failed) fail(response);
   };
 
   timer = pubNubCore.timeout(function () {
