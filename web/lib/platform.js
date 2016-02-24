@@ -267,22 +267,6 @@ function xdr(setup) {
       done(1, xhr.responseText || { error: 'Network Connection Error' });
     };
     xhr.onload = xhr.onloadend = finished;
-    xhr.onreadystatechange = function () {
-      if (xhr && xhr.readyState === 4) {
-        switch (xhr.status) {
-          case 200:
-            break;
-          default:
-            try {
-              var response = JSON.parse(xhr.responseText);
-              done(1, response);
-            } catch (r) {
-              return done(1, { status: xhr.status, payload: null, message: xhr.responseText });
-            }
-            return;
-        }
-      }
-    };
 
     data.pnsdk = PNSDK;
     var url = pubNubCore.build_url(setup.url, data);

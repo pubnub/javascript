@@ -1689,12 +1689,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          ],
 	          success: function (messages) {
 	            // Check for Errors
-	            if (!messages || (
-	                typeof messages == 'object' &&
-	                'error' in messages &&
-	                messages['error']
-	              )) {
-	              SUB_ERROR(messages['error']);
+	            if (!messages || (typeof messages == 'object' && 'error' in messages && messages['error'])) {
+	              SUB_ERROR(messages);
 	              return utils.timeout(CONNECT, SECOND);
 	            }
 
