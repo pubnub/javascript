@@ -16,7 +16,7 @@ function registerWebpackBuilding(grunt) {
     grunt.registerTask('compile:' + platform, actions);
   });
 
-  compileTargets = compileTargets.concat('copy', 'eslint');
+  compileTargets = compileTargets.concat('copy', 'eslint', 'flow');
 
   grunt.registerTask('_compile', compileTargets);
 }
@@ -154,6 +154,15 @@ module.exports = function (grunt) {
         }
       }
     },
+    flow: {
+      app: {
+        src: '.',
+        options: {
+          background: false,
+          'show-all-errors': true
+        }
+      }
+    },
     babel: {
       core: {
         files: [
@@ -254,6 +263,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-flow');
 
   grunt.registerTask('lockdown', ['env:lockdown']);
   grunt.registerTask('record', ['env:record']);
@@ -268,6 +278,6 @@ module.exports = function (grunt) {
   grunt.registerTask('test-release', ['mocha_istanbul:coverage_release']);
   grunt.registerTask('test-client', ['karma']);
 
-  grunt.registerTask('test', ['test-unit', 'test-integration', 'test-release', 'istanbul_check_coverage', 'eslint']);
+  grunt.registerTask('test', ['test-unit', 'test-integration', 'test-release', 'istanbul_check_coverage', 'eslint', 'flow']);
   grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);
 };

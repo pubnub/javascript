@@ -1,6 +1,8 @@
 extends: airbnb/base # TODO: add es6 compiler and move away from legacy.
+parser: babel-eslint
 plugins:
   - mocha
+  - flowtype
 rules:
   mocha/no-exclusive-tests: 2
 

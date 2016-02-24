@@ -1,8 +1,12 @@
+/* @flow weak */
+
 /* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
 /* eslint eqeqeq: 0, one-var: 0 */
 /* eslint no-redeclare: 0 */
 /* eslint guard-for-in: 0 */
 /* eslint block-scoped-var: 0 space-return-throw-case: 0, no-unused-vars: 0 */
+
+import Networking from './components/networking';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -98,7 +102,7 @@ function PNmessage(args) {
   var msg = args || { apns: {} };
 
   msg['getPubnubMessage'] = function () {
-    var m = {};
+    var m: Object = {};
 
     if (Object.keys(msg['apns']).length) {
       m['pn_apns'] = {
@@ -148,13 +152,14 @@ function PNmessage(args) {
 }
 
 function PN_API(setup) {
+  let { subscribe_key, publish_key } = setup;
+  let networkingComponent = new Networking(subscribe_key, publish_key);
+
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
   var KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
   var TIME_CHECK = setup['timecheck'] || 0;
   var NOLEAVE = setup['noleave'] || 0;
-  var PUBLISH_KEY = setup['publish_key'];
-  var SUBSCRIBE_KEY = setup['subscribe_key'];
   var AUTH_KEY = setup['auth_key'] || '';
   var SECRET_KEY = setup['secret_key'] || '';
   var hmac_SHA256 = setup['hmac_SHA256'];
@@ -194,7 +199,7 @@ function PN_API(setup) {
   var jsonp_cb = setup['jsonp_cb'] || function () { return 0; };
   var db = setup['db'] || { get: function () {}, set: function () {} };
   var CIPHER_KEY = setup['cipher_key'];
-  var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY + 'uuid') || '');
+  var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](networkingComponent.subscribeKey + 'uuid') || '');
   var USE_INSTANCEID = setup['instance_id'] || false;
   var INSTANCEID = '';
   var shutdown = setup['shutdown'];
@@ -421,7 +426,7 @@ function PN_API(setup) {
 
     var url = [
       STD_ORIGIN, 'v1', 'channel-registration',
-      'sub-key', SUBSCRIBE_KEY
+      'sub-key', networkingComponent.getSubscribeKey()
     ];
 
     url.push.apply(url, url1);
@@ -444,7 +449,7 @@ function PN_API(setup) {
   // Announce Leave Event
   var SELF = {
     LEAVE: function (channel, blocking, auth_key, callback, error) {
-      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
+      var data: Object = { uuid: UUID, auth: auth_key || AUTH_KEY };
       var origin = nextorigin(ORIGIN);
       var callback = callback || function () {};
       var err = error || function () {};
@@ -469,7 +474,7 @@ function PN_API(setup) {
 
       url = [
         origin, 'v2', 'presence', 'sub_key',
-        SUBSCRIBE_KEY, 'channel', utils.encode(channel), 'leave'
+        networkingComponent.getSubscribeKey(), 'channel', utils.encode(channel), 'leave'
       ];
 
       params = _get_url_params(data);
@@ -500,7 +505,7 @@ function PN_API(setup) {
     },
 
     LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
-      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
+      var data: Object = { uuid: UUID, auth: auth_key || AUTH_KEY };
       var origin = nextorigin(ORIGIN);
       var url;
       var params;
@@ -526,7 +531,7 @@ function PN_API(setup) {
 
       url = [
         origin, 'v2', 'presence', 'sub_key',
-        SUBSCRIBE_KEY, 'channel', utils.encode(','), 'leave'
+        networkingComponent.getSubscribeKey(), 'channel', utils.encode(','), 'leave'
       ];
 
       params = _get_url_params(data);
@@ -751,7 +756,7 @@ function PN_API(setup) {
       // Make sure we have a Channel
       if (!channel && !channel_group) return error('Missing Channel');
       if (!callback) return error('Missing Callback');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       params['stringtoken'] = 'true';
       params['count'] = count;
@@ -786,16 +791,16 @@ function PN_API(setup) {
               var new_message = decrypt(messages[a]['message'], cipher_key);
               var timetoken = messages[a]['timetoken'];
               try {
-                decrypted_messages['push']({ message: JSON['parse'](new_message), timetoken: timetoken });
+                decrypted_messages.push({ message: JSON.parse(new_message), timetoken: timetoken });
               } catch (e) {
-                decrypted_messages['push'](({ message: new_message, timetoken: timetoken }));
+                decrypted_messages.push(({ message: new_message, timetoken: timetoken }));
               }
             } else {
               var new_message = decrypt(messages[a], cipher_key);
               try {
-                decrypted_messages['push'](JSON['parse'](new_message));
+                decrypted_messages.push(JSON.parse(new_message));
               } catch (e) {
-                decrypted_messages['push']((new_message));
+                decrypted_messages.push((new_message));
               }
             }
           }
@@ -806,7 +811,7 @@ function PN_API(setup) {
         },
         url: [
           STD_ORIGIN, 'v2', 'history', 'sub-key',
-          SUBSCRIBE_KEY, 'channel', utils.encode(channel)
+          networkingComponent.getSubscribeKey(), 'channel', utils.encode(channel)
         ]
       });
     },
@@ -835,8 +840,8 @@ function PN_API(setup) {
       // Check User Input
       if (!source) return error('Missing Source Channel');
       if (!destination) return error('Missing Destination Channel');
-      if (!PUBLISH_KEY) return error('Missing Publish Key');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getPublishKey()) return error('Missing Publish Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       // Setup URL Params
       if (jsonp != '0') data['callback'] = jsonp;
@@ -851,7 +856,7 @@ function PN_API(setup) {
       // Compose URL Parts
       url = [
         STD_ORIGIN, 'v1', 'replay',
-        PUBLISH_KEY, SUBSCRIBE_KEY,
+        networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(),
         source, destination
       ];
 
@@ -883,7 +888,7 @@ function PN_API(setup) {
     time: function (callback) {
       var jsonp = jsonp_cb();
 
-      var data = { uuid: UUID, auth: AUTH_KEY };
+      var data: Object = { uuid: UUID, auth: AUTH_KEY };
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
@@ -919,31 +924,29 @@ function PN_API(setup) {
       var store = ('store_in_history' in args) ? args['store_in_history'] : true;
       var jsonp = jsonp_cb();
       var add_msg = 'push';
-      var params;
+      var params: Object = { uuid: UUID, auth: auth_key };
       var url;
 
       if (args['prepend']) add_msg = 'unshift';
 
       if (!channel) return error('Missing Channel');
-      if (!PUBLISH_KEY) return error('Missing Publish Key');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getPublishKey()) return error('Missing Publish Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       if (msg['getPubnubMessage']) {
         msg = msg['getPubnubMessage']();
       }
 
       // If trying to send Object
-      msg = JSON['stringify'](encrypt(msg, cipher_key));
+      msg = JSON.stringify(encrypt(msg, cipher_key));
 
       // Create URL
       url = [
         STD_ORIGIN, 'publish',
-        PUBLISH_KEY, SUBSCRIBE_KEY,
+        networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(),
         0, utils.encode(channel),
         jsonp, utils.encode(msg)
       ];
-
-      params = { uuid: UUID, auth: auth_key };
 
       if (!store) params['store'] = '0';
 
@@ -983,7 +986,7 @@ function PN_API(setup) {
       SUB_RESTORE = 1;   // REVISIT !!!!
 
       if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       if (channelArg) {
         var channels = utils.isArray(channelArg) ? channelArg : ('' + channelArg).split(',');
@@ -1094,7 +1097,7 @@ function PN_API(setup) {
       }
 
       if (!callback) return error('Missing Callback');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       if (heartbeat || heartbeat === 0 || heartbeat_interval || heartbeat_interval === 0) {
         SELF['set_heartbeat'](heartbeat, heartbeat_interval);
@@ -1304,7 +1307,7 @@ function PN_API(setup) {
           data: _get_url_params(data),
           url: [
             SUB_ORIGIN, 'subscribe',
-            SUBSCRIBE_KEY, utils.encode(channels),
+            networkingComponent.getSubscribeKey(), utils.encode(channels),
             jsonp, TIMETOKEN
           ],
           success: function (messages) {
@@ -1318,7 +1321,7 @@ function PN_API(setup) {
             idlecb(messages[1]);
 
             // Restore Previous Connection Point if Needed
-            TIMETOKEN = !TIMETOKEN && SUB_RESTORE && db['get'](SUBSCRIBE_KEY) || messages[1];
+            TIMETOKEN = !TIMETOKEN && SUB_RESTORE && db['get'](networkingComponent.getSubscribeKey()) || messages[1];
 
             /*
              // Connect
@@ -1347,7 +1350,7 @@ function PN_API(setup) {
               TIMETOKEN = 0;
               RESUMED = false;
               // Update Saved Timetoken
-              db['set'](SUBSCRIBE_KEY, 0);
+              db['set'](networkingComponent.getSubscribeKey(), 0);
               utils.timeout(_connect, windowing);
               return;
             }
@@ -1360,7 +1363,7 @@ function PN_API(setup) {
             }
 
             // Update Saved Timetoken
-            db['set'](SUBSCRIBE_KEY, messages[1]);
+            db['set'](networkingComponent.getSubscribeKey(), messages[1]);
 
             // Route Channel <---> Callback for Message
             var next_callback = (function () {
@@ -1452,18 +1455,18 @@ function PN_API(setup) {
       var jsonp = jsonp_cb();
       var uuids = ('uuids' in args) ? args['uuids'] : true;
       var state = args['state'];
-      var data = { uuid: UUID, auth: auth_key };
+      var data: Object = { uuid: UUID, auth: auth_key };
 
       if (!uuids) data['disable_uuids'] = 1;
       if (state) data['state'] = 1;
 
       // Make sure we have a Channel
       if (!callback) return error('Missing Callback');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       var url = [
         STD_ORIGIN, 'v2', 'presence',
-        'sub_key', SUBSCRIBE_KEY
+        'sub_key', networkingComponent.getSubscribeKey()
       ];
 
       channel && url.push('channel') && url.push(utils.encode(channel));
@@ -1502,11 +1505,11 @@ function PN_API(setup) {
       var auth_key = args['auth_key'] || AUTH_KEY;
       var jsonp = jsonp_cb();
       var uuid = args['uuid'] || UUID;
-      var data = { auth: auth_key };
+      var data: Object = { auth: auth_key };
 
       // Make sure we have a Channel
       if (!callback) return error('Missing Callback');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
 
       if (jsonp != '0') {
         data['callback'] = jsonp;
@@ -1525,7 +1528,7 @@ function PN_API(setup) {
         },
         url: [
           STD_ORIGIN, 'v2', 'presence',
-          'sub_key', SUBSCRIBE_KEY,
+          'sub_key', networkingComponent.getSubscribeKey(),
           'uuid', utils.encode(uuid)
         ]
       });
@@ -1544,7 +1547,7 @@ function PN_API(setup) {
       var data = _get_url_params({ auth: auth_key });
 
       // Make sure we have a Channel
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
       if (!uuid) return error('Missing UUID');
       if (!channel && !channel_group) return error('Missing Channel');
 
@@ -1576,14 +1579,14 @@ function PN_API(setup) {
       if (state) {
         url = [
           STD_ORIGIN, 'v2', 'presence',
-          'sub-key', SUBSCRIBE_KEY,
+          'sub-key', networkingComponent.getSubscribeKey(),
           'channel', channel,
           'uuid', uuid, 'data'
         ];
       } else {
         url = [
           STD_ORIGIN, 'v2', 'presence',
-          'sub-key', SUBSCRIBE_KEY,
+          'sub-key', networkingComponent.getSubscribeKey(),
           'channel', channel,
           'uuid', utils.encode(uuid)
         ];
@@ -1627,14 +1630,14 @@ function PN_API(setup) {
       var auth_key = args['auth_key'] || args['auth_keys'];
 
       if (!callback) return error('Missing Callback');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-      if (!PUBLISH_KEY) return error('Missing Publish Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
+      if (!networkingComponent.getPublishKey()) return error('Missing Publish Key');
       if (!SECRET_KEY) return error('Missing Secret Key');
 
       var timestamp = Math.floor(new Date().getTime() / 1000);
-      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'grant' + '\n';
+      var sign_input = networkingComponent.getSubscribeKey() + '\n' + networkingComponent.getPublishKey() + '\n' + 'grant' + '\n';
 
-      var data = { w: w, r: r, timestamp: timestamp };
+      var data: Object = { w: w, r: r, timestamp: timestamp };
 
       if (args['manage']) {
         data['m'] = m;
@@ -1680,7 +1683,7 @@ function PN_API(setup) {
         },
         url: [
           STD_ORIGIN, 'v1', 'auth', 'grant',
-          'sub-key', SUBSCRIBE_KEY
+          'sub-key', networkingComponent.getSubscribeKey()
         ]
       });
     },
@@ -1705,23 +1708,22 @@ function PN_API(setup) {
       var op = args['op'];
       var gw_type = args['gw_type'];
       var device_id = args['device_id'];
-      var params;
       var url;
 
       if (!device_id) return error('Missing Device ID (device_id)');
       if (!gw_type) return error('Missing GW Type (gw_type: gcm or apns)');
       if (!op) return error('Missing GW Operation (op: add or remove)');
       if (!channel) return error('Missing gw destination Channel (channel)');
-      if (!PUBLISH_KEY) return error('Missing Publish Key');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+      if (!networkingComponent.getPublishKey()) return error('Missing Publish Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
+
+      var params: Object = { uuid: UUID, auth: auth_key, type: gw_type };
 
       // Create URL
       url = [
         STD_ORIGIN, 'v1/push/sub-key',
-        SUBSCRIBE_KEY, 'devices', device_id
+        networkingComponent.getSubscribeKey(), 'devices', device_id
       ];
-
-      params = { uuid: UUID, auth: auth_key, type: gw_type };
 
       if (op == 'add') {
         params['add'] = channel;
@@ -1764,14 +1766,14 @@ function PN_API(setup) {
 
       // Make sure we have a Channel
       if (!callback) return error('Missing Callback');
-      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
-      if (!PUBLISH_KEY) return error('Missing Publish Key');
+      if (!networkingComponent.getSubscribeKey()) return error('Missing Subscribe Key');
+      if (!networkingComponent.getPublishKey()) return error('Missing Publish Key');
       if (!SECRET_KEY) return error('Missing Secret Key');
 
       var timestamp = Math.floor(new Date().getTime() / 1000);
-      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'audit' + '\n';
+      var sign_input = networkingComponent.getSubscribeKey() + '\n' + networkingComponent.getPublishKey() + '\n' + 'audit' + '\n';
 
-      var data = { timestamp: timestamp };
+      var data: Object = { timestamp: timestamp };
       if (jsonp != '0') {
         data['callback'] = jsonp;
       }
@@ -1804,7 +1806,7 @@ function PN_API(setup) {
         },
         url: [
           STD_ORIGIN, 'v1', 'auth', 'audit',
-          'sub-key', SUBSCRIBE_KEY
+          'sub-key', networkingComponent.getSubscribeKey()
         ]
       });
     },
@@ -1844,10 +1846,10 @@ function PN_API(setup) {
       var callback = args['callback'] || function () {};
       var err = args['error'] || function () {};
       var jsonp = jsonp_cb();
-      var data = { uuid: UUID, auth: AUTH_KEY };
+      var data: Object = { uuid: UUID, auth: AUTH_KEY };
 
-      var st = JSON['stringify'](STATE);
-      if (st.length > 2) data['state'] = JSON['stringify'](STATE);
+      var st = JSON.stringify(STATE);
+      if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
       if (PRESENCE_HB > 0 && PRESENCE_HB < 320) data['heartbeat'] = PRESENCE_HB;
 
@@ -1868,7 +1870,7 @@ function PN_API(setup) {
         data: _get_url_params(data),
         url: [
           STD_ORIGIN, 'v2', 'presence',
-          'sub-key', SUBSCRIBE_KEY,
+          'sub-key', networkingComponent.getSubscribeKey(),
           'channel', channels,
           'heartbeat'
         ],
@@ -1940,7 +1942,7 @@ function PN_API(setup) {
 
   if (!UUID) UUID = SELF['uuid']();
   if (!INSTANCEID) INSTANCEID = SELF['uuid']();
-  db['set'](SUBSCRIBE_KEY + 'uuid', UUID);
+  db['set'](networkingComponent.getSubscribeKey() + 'uuid', UUID);
 
   _poll_timer = utils.timeout(_poll_online, SECOND);
   _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
