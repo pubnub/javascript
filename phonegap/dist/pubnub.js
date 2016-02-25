@@ -2618,6 +2618,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * timeout( function(){}, 100 );
 	 */
 	function timeout(fun, wait) {
+	  if (typeof setTimeout === 'undefined') {
+	    return;
+	  }
+
 	  return setTimeout(fun, wait);
 	}
 
