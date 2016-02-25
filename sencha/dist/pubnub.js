@@ -524,8 +524,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var packageJSON = __webpack_require__(1);
-	var defaultConfiguration = __webpack_require__(4);
-	var utils = __webpack_require__(5);
+	var defaultConfiguration = __webpack_require__(5);
+	var utils = __webpack_require__(4);
 
 	var NOW = 1;
 	var READY = false;
@@ -661,10 +661,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function PN_API(setup) {
+	  var xdr = setup.xdr;
 	  var subscribe_key = setup.subscribe_key;
 	  var publish_key = setup.publish_key;
 
-	  var networkingComponent = new _networking2.default(subscribe_key, publish_key);
+	  var networkingComponent = new _networking2.default(xdr, subscribe_key, publish_key);
 
 	  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
 	  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -699,7 +700,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var PRESENCE_HB_RUNNING = false;
 	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
 	  var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-	  var xdr = setup['xdr'];
 	  var params = setup['params'] || {};
 	  var _error = setup['error'] || function () {};
 	  var _is_online = setup['_is_online'] || function () {
@@ -1267,7 +1267,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (string_msg_token) params['string_message_token'] = 'true';
 
 	      // Send Message
-	      xdr({
+	      networkingComponent.fetchHistory(STD_ORIGIN, channel, {
 	        callback: jsonp,
 	        data: _get_url_params(params),
 	        success: function success(response) {
@@ -1299,8 +1299,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        fail: function fail(response) {
 	          _invoke_error(response, err);
-	        },
-	        url: [STD_ORIGIN, 'v2', 'history', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', utils.encode(channel)]
+	        }
 	      });
 	    },
 
@@ -1341,11 +1340,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      data['auth'] = auth_key;
 
-	      // Compose URL Parts
-	      url = [STD_ORIGIN, 'v1', 'replay', networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(), source, destination];
-
 	      // Start (or Stop) Replay!
-	      xdr({
+	      networkingComponent.fetchReplay(STD_ORIGIN, source, destination, {
 	        callback: jsonp,
 	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
@@ -1353,7 +1349,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        fail: function fail() {
 	          callback([0, 'Disconnected']);
 	        },
-	        url: url,
 	        data: _get_url_params(data)
 	      });
 	    },
@@ -1376,10 +1371,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      xdr({
+	      networkingComponent.fetchTime(STD_ORIGIN, jsonp, {
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        url: [STD_ORIGIN, 'time', jsonp],
 	        success: function success(response) {
 	          callback(response[0]);
 	        },
@@ -2416,9 +2410,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 3 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -2428,21 +2422,66 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+	var utils = __webpack_require__(4);
+
 	var _class = function () {
-	  function _class(subscribeKey, publishKey) {
+	  function _class(xdr, subscribeKey, publishKey) {
 	    _classCallCheck(this, _class);
 
+	    this.xdr = xdr;
 	    this.subscribeKey = subscribeKey;
 	    this.publishKey = publishKey;
 	  }
 
+	  // method based URL's
+
+
 	  _createClass(_class, [{
-	    key: "getSubscribeKey",
+	    key: 'fetchHistory',
+	    value: function fetchHistory(STD_ORIGIN, channel, _ref) {
+	      var data = _ref.data;
+	      var callback = _ref.callback;
+	      var success = _ref.success;
+	      var fail = _ref.fail;
+
+	      var url = [STD_ORIGIN, 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)];
+
+	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'fetchReplay',
+	    value: function fetchReplay(STD_ORIGIN, source, destination, _ref2) {
+	      var data = _ref2.data;
+	      var callback = _ref2.callback;
+	      var success = _ref2.success;
+	      var fail = _ref2.fail;
+
+	      var url = [STD_ORIGIN, 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination];
+
+	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'fetchTime',
+	    value: function fetchTime(STD_ORIGIN, jsonp, _ref3) {
+	      var data = _ref3.data;
+	      var callback = _ref3.callback;
+	      var success = _ref3.success;
+	      var fail = _ref3.fail;
+
+	      var url = [STD_ORIGIN, 'time', jsonp];
+
+	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+
+	    // getters
+
+	  }, {
+	    key: 'getSubscribeKey',
 	    value: function getSubscribeKey() {
 	      return this.subscribeKey;
 	    }
 	  }, {
-	    key: "getPublishKey",
+	    key: 'getPublishKey',
 	    value: function getPublishKey() {
 	      return this.publishKey;
 	    }
@@ -2458,15 +2497,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"PARAMSBIT": "&",
-		"URLBIT": "/"
-	};
-
-/***/ },
-/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2475,7 +2505,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
-	var defaultConfiguration = __webpack_require__(4);
+	var defaultConfiguration = __webpack_require__(5);
 	var REPL = /{([\w\-]+)}/g;
 
 	function rnow() {
@@ -2641,6 +2671,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	//# sourceMappingURL=utils.js.map
 
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"PARAMSBIT": "&",
+		"URLBIT": "/"
+	};
 
 /***/ },
 /* 6 */

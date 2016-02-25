@@ -152,8 +152,8 @@ function PNmessage(args) {
 }
 
 function PN_API(setup) {
-  let { subscribe_key, publish_key } = setup;
-  let networkingComponent = new Networking(subscribe_key, publish_key);
+  let { xdr, subscribe_key, publish_key } = setup;
+  let networkingComponent = new Networking(xdr, subscribe_key, publish_key);
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -192,7 +192,6 @@ function PN_API(setup) {
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
   var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-  var xdr = setup['xdr'];
   var params = setup['params'] || {};
   var error = setup['error'] || function () {};
   var _is_online = setup['_is_online'] || function () { return 1;};
@@ -776,7 +775,7 @@ function PN_API(setup) {
       if (string_msg_token) params['string_message_token'] = 'true';
 
       // Send Message
-      xdr({
+      networkingComponent.fetchHistory(STD_ORIGIN, channel, {
         callback: jsonp,
         data: _get_url_params(params),
         success: function (response) {
@@ -808,11 +807,7 @@ function PN_API(setup) {
         },
         fail: function (response) {
           _invoke_error(response, err);
-        },
-        url: [
-          STD_ORIGIN, 'v2', 'history', 'sub-key',
-          networkingComponent.getSubscribeKey(), 'channel', utils.encode(channel)
-        ]
+        }
       });
     },
 
@@ -853,15 +848,8 @@ function PN_API(setup) {
 
       data['auth'] = auth_key;
 
-      // Compose URL Parts
-      url = [
-        STD_ORIGIN, 'v1', 'replay',
-        networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(),
-        source, destination
-      ];
-
       // Start (or Stop) Replay!
-      xdr({
+      networkingComponent.fetchReplay(STD_ORIGIN, source, destination, {
         callback: jsonp,
         success: function (response) {
           _invoke_callback(response, callback, err);
@@ -869,7 +857,6 @@ function PN_API(setup) {
         fail: function () {
           callback([0, 'Disconnected']);
         },
-        url: url,
         data: _get_url_params(data)
       });
     },
@@ -892,10 +879,9 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-      xdr({
+      networkingComponent.fetchTime(STD_ORIGIN, jsonp, {
         callback: jsonp,
         data: _get_url_params(data),
-        url: [STD_ORIGIN, 'time', jsonp],
         success: function (response) {
           callback(response[0]);
         },
