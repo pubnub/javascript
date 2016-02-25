@@ -442,8 +442,10 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 		"noAnalyze": false,
 		"devDependencies": {
-			"babel": "^6.5.2",
+			"babel-core": "^6.5.2",
 			"babel-eslint": "^5.0.0",
+			"babel-plugin-add-module-exports": "^0.1.2",
+			"babel-plugin-transform-class-properties": "^6.5.2",
 			"babel-plugin-transform-flow-strip-types": "^6.5.0",
 			"babel-preset-es2015": "^6.5.0",
 			"chai": "^3.5.0",
@@ -460,12 +462,13 @@ return /******/ (function(modules) { // webpackBootstrap
 			"grunt-contrib-uglify": "^0.11.1",
 			"grunt-env": "^0.4.4",
 			"grunt-eslint": "^18.0.0",
+			"grunt-flow": "^1.0.3",
 			"grunt-karma": "^0.12.1",
 			"grunt-mocha-istanbul": "^3.0.1",
 			"grunt-text-replace": "^0.4.0",
 			"grunt-webpack": "^1.0.11",
 			"imports-loader": "^0.6.5",
-			"istanbul": "^0.4.2",
+			"isparta": "^4.0.0",
 			"json-loader": "^0.5.4",
 			"karma": "^0.13.21",
 			"karma-chai": "^0.1.0",
@@ -707,7 +710,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	  var db = setup['db'] || { get: function get() {}, set: function set() {} };
 	  var CIPHER_KEY = setup['cipher_key'];
-	  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](networkingComponent.subscribeKey + 'uuid') || '';
+	  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](networkingComponent.getSubscribeKey() + 'uuid') || '';
 	  var USE_INSTANCEID = setup['instance_id'] || false;
 	  var INSTANCEID = '';
 	  var _shutdown = setup['shutdown'];
@@ -2408,6 +2411,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  updater: utils.updater,
 	  map: utils.map
 	};
+	//# sourceMappingURL=pubnub-common.js.map
 
 
 /***/ },
@@ -2448,6 +2452,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}();
 
 	exports.default = _class;
+	module.exports = exports['default'];
+	//# sourceMappingURL=networking.js.map
 
 
 /***/ },
@@ -2633,6 +2639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  supplant: supplant,
 	  grep: grep
 	};
+	//# sourceMappingURL=utils.js.map
 
 
 /***/ },

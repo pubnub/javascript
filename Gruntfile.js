@@ -113,6 +113,7 @@ module.exports = function (grunt) {
       coverage_integration: {
         src: 'test/server/integration/',
         options: {
+          scriptPath: require.resolve('isparta/bin/isparta'),
           coverageFolder: 'coverage/integration',
           mask: '**/*.test.js',
           print: 'none'
@@ -121,7 +122,8 @@ module.exports = function (grunt) {
       coverage_unit: {
         src: 'test/server/unit',
         options: {
-          mochaOptions: ['--bail'],
+          scriptPath: require.resolve('isparta/bin/isparta'),
+          mochaOptions: ['--bail', '--require', 'babel-core/register'],
           coverageFolder: 'coverage/unit',
           mask: '**/*.test.js',
           print: 'none'
@@ -130,6 +132,7 @@ module.exports = function (grunt) {
       coverage_release: {
         src: 'test/release',
         options: {
+          scriptPath: require.resolve('isparta/bin/isparta'),
           mochaOptions: ['--bail'],
           coverageFolder: 'coverage/release',
           mask: '**/*.test.js',
@@ -145,21 +148,11 @@ module.exports = function (grunt) {
         }
       }
     },
-    istanbul_check_coverage: {
-      default: {
-        options: {
-          coverageFolder: 'coverage/**',
-          check: {
-          }
-        }
-      }
-    },
     flow: {
       app: {
         src: '.',
         options: {
-          background: false,
-          'show-all-errors': true
+          background: false
         }
       }
     },
@@ -170,7 +163,8 @@ module.exports = function (grunt) {
             expand: true,
             cwd: 'core/src/',
             src: ['**/*.js'],
-            dest: 'core/lib/'
+            dest: 'core/lib/',
+            ext: '.js'
           }
         ]
       }
@@ -278,6 +272,6 @@ module.exports = function (grunt) {
   grunt.registerTask('test-release', ['mocha_istanbul:coverage_release']);
   grunt.registerTask('test-client', ['karma']);
 
-  grunt.registerTask('test', ['test-unit', 'test-integration', 'test-release', 'istanbul_check_coverage', 'eslint', 'flow']);
+  grunt.registerTask('test', ['test-unit', 'test-integration', 'test-release', 'eslint']);
   grunt.registerTask('test-record', ['env:test_record', 'mocha_istanbul:coverage_integration']);
 };

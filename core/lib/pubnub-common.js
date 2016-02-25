@@ -201,7 +201,7 @@ function PN_API(setup) {
   };
   var db = setup['db'] || { get: function get() {}, set: function set() {} };
   var CIPHER_KEY = setup['cipher_key'];
-  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](networkingComponent.subscribeKey + 'uuid') || '';
+  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](networkingComponent.getSubscribeKey() + 'uuid') || '';
   var USE_INSTANCEID = setup['instance_id'] || false;
   var INSTANCEID = '';
   var _shutdown = setup['shutdown'];
@@ -1902,3 +1902,4 @@ module.exports = {
   updater: utils.updater,
   map: utils.map
 };
+//# sourceMappingURL=pubnub-common.js.map

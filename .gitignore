@@ -7,3 +7,4 @@ upload/*
 coverage/
 .idea
 *.iml
+*.map

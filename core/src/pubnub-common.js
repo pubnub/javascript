@@ -199,7 +199,7 @@ function PN_API(setup) {
   var jsonp_cb = setup['jsonp_cb'] || function () { return 0; };
   var db = setup['db'] || { get: function () {}, set: function () {} };
   var CIPHER_KEY = setup['cipher_key'];
-  var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](networkingComponent.subscribeKey + 'uuid') || '');
+  var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](networkingComponent.getSubscribeKey() + 'uuid') || '');
   var USE_INSTANCEID = setup['instance_id'] || false;
   var INSTANCEID = '';
   var shutdown = setup['shutdown'];
