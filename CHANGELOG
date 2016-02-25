@@ -1,3 +1,9 @@
+2-25-16 * 3.13.0
+ - adding flow types on certain files
+ - ECMA6 compilation of core
+ - eslint v2
+ - introduction of networking class to handle pub,sub keys and some urls.
+
 2-23-16 * 3.12.0
 - updating XHR methods to skip on statechange.
 
