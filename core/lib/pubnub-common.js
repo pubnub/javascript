@@ -157,9 +157,6 @@ function PN_API(setup) {
   var SECRET_KEY = setup['secret_key'] || '';
   var hmac_SHA256 = setup['hmac_SHA256'];
   var SSL = setup['ssl'] ? 's' : '';
-  var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
-  var STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
-  var SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
   var CONNECT = function CONNECT() {};
   var PUB_QUEUE = [];
   var CLOAK = true;
@@ -409,7 +406,7 @@ function PN_API(setup) {
       data['auth'] = args['auth_key'] || AUTH_KEY;
     }
 
-    var url = [STD_ORIGIN, 'v1', 'channel-registration', 'sub-key', networkingComponent.getSubscribeKey()];
+    var url = [networkingComponent.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', networkingComponent.getSubscribeKey()];
 
     url.push.apply(url, url1);
 
@@ -432,7 +429,7 @@ function PN_API(setup) {
   var SELF = {
     LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
       var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-      var origin = networkingComponent.nextOrigin(ORIGIN);
+      var origin = networkingComponent.nextOrigin(false);
       var callback = callback || function () {};
       var err = error || function () {};
       var url;
@@ -482,7 +479,7 @@ function PN_API(setup) {
 
     LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
       var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-      var origin = networkingComponent.nextOrigin(ORIGIN);
+      var origin = networkingComponent.nextOrigin(networkingComponent.origin);
       var url;
       var params;
       var callback = callback || function () {};
@@ -748,7 +745,7 @@ function PN_API(setup) {
       if (string_msg_token) params['string_message_token'] = 'true';
 
       // Send Message
-      networkingComponent.fetchHistory(STD_ORIGIN, channel, {
+      networkingComponent.fetchHistory(channel, {
         callback: jsonp,
         data: _get_url_params(params),
         success: function success(response) {
@@ -822,7 +819,7 @@ function PN_API(setup) {
       data['auth'] = auth_key;
 
       // Start (or Stop) Replay!
-      networkingComponent.fetchReplay(STD_ORIGIN, source, destination, {
+      networkingComponent.fetchReplay(source, destination, {
         callback: jsonp,
         success: function success(response) {
           _invoke_callback(response, callback, err);
@@ -852,7 +849,7 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-      networkingComponent.fetchTime(STD_ORIGIN, jsonp, {
+      networkingComponent.fetchTime(jsonp, {
         callback: jsonp,
         data: _get_url_params(data),
         success: function success(response) {
@@ -900,7 +897,7 @@ function PN_API(setup) {
       msg = JSON.stringify(encrypt(msg, cipher_key));
 
       // Create URL
-      url = [STD_ORIGIN, 'publish', networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
+      url = [networkingComponent.getStandardOrigin(), 'publish', networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
 
       if (!store) params['store'] = '0';
 
@@ -1172,8 +1169,8 @@ function PN_API(setup) {
           utils.timeout(CONNECT, windowing);
         } else {
           // New Origin on Failed Connection
-          STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
-          SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
+          networkingComponent.shiftStandardOrigin(true);
+          networkingComponent.shiftSubscribeOrigin(true);
 
           // Re-test Connection
           utils.timeout(function () {
@@ -1255,7 +1252,7 @@ function PN_API(setup) {
             }
           },
           data: _get_url_params(data),
-          url: [SUB_ORIGIN, 'subscribe', networkingComponent.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
+          url: [networkingComponent.getSubscribeOrigin(), 'subscribe', networkingComponent.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
           success: function success(messages) {
             // Check for Errors
             if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
@@ -1399,7 +1396,7 @@ function PN_API(setup) {
       if (!callback) return _error('Missing Callback');
       if (!networkingComponent.getSubscribeKey()) return _error('Missing Subscribe Key');
 
-      var url = [STD_ORIGIN, 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey()];
+      var url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey()];
 
       channel && url.push('channel') && url.push(utils.encode(channel));
 
@@ -1458,7 +1455,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _invoke_error(response, err);
         },
-        url: [STD_ORIGIN, 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey(), 'uuid', utils.encode(uuid)]
+        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey(), 'uuid', utils.encode(uuid)]
       });
     },
 
@@ -1501,9 +1498,9 @@ function PN_API(setup) {
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
       if (state) {
-        url = [STD_ORIGIN, 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
+        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
       } else {
-        url = [STD_ORIGIN, 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
+        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
       }
 
       xdr({
@@ -1595,7 +1592,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _invoke_error(response, err);
         },
-        url: [STD_ORIGIN, 'v1', 'auth', 'grant', 'sub-key', networkingComponent.getSubscribeKey()]
+        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', networkingComponent.getSubscribeKey()]
       });
     },
 
@@ -1631,7 +1628,7 @@ function PN_API(setup) {
       var params = { uuid: UUID, auth: auth_key, type: gw_type };
 
       // Create URL
-      url = [STD_ORIGIN, 'v1/push/sub-key', networkingComponent.getSubscribeKey(), 'devices', device_id];
+      url = [networkingComponent.getStandardOrigin(), 'v1/push/sub-key', networkingComponent.getSubscribeKey(), 'devices', device_id];
 
       if (op == 'add') {
         params['add'] = channel;
@@ -1712,7 +1709,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _invoke_error(response, err);
         },
-        url: [STD_ORIGIN, 'v1', 'auth', 'audit', 'sub-key', networkingComponent.getSubscribeKey()]
+        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', networkingComponent.getSubscribeKey()]
       });
     },
 
@@ -1770,10 +1767,12 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
+      data['X-REQUEST-ID'] = utils.generateUUID();
+
       xdr({
         callback: jsonp,
         data: _get_url_params(data),
-        url: [STD_ORIGIN, 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channels, 'heartbeat'],
+        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channels, 'heartbeat'],
         success: function success(response) {
           _invoke_callback(response, callback, err);
         },

@@ -4,28 +4,38 @@ const utils = require('../utils');
 
 type commonXDRObject = {data: Object, callback: Function, success: Function, fail: Function};
 
-
 export default class {
 
-  xdr: Function;
-  subscribeKey: string;
-  publishKey: string;
+  _xdr: Function;
+  _subscribeKey: string;
+  _publishKey: string;
 
-  maxHostNumber: number;
-  currentOrigin: number;
+  _maxSubDomain: number;
+  _currentSubDomain: number;
 
-  constructor(xdr: Function) {
-    this.xdr = xdr;
+  _standardOrigin: string;
+  _subscribeOrigin: string;
 
-    this.maxHostNumber = 20;
-    this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
+  _providedFQDN: string;
+
+  constructor(xdr: Function, ssl: boolean = false, origin: string = 'pubsub.pubnub.com') {
+    this._xdr = xdr;
+
+    this._maxSubDomain = 20;
+    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
+
+    this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+
+    // create initial origins
+    this.shiftStandardOrigin(false);
+    this.shiftSubscribeOrigin(false);
   }
 
 
-  nextOrigin(origin: string, failover: boolean): string {
+  nextOrigin(failover: boolean): string {
     // if a custom origin is supplied, use do not bother with shuffling subdomains
-    if (origin.indexOf('pubsub.') === -1) {
-      return origin;
+    if (this._providedFQDN.indexOf('pubsub.') === -1) {
+      return this._providedFQDN;
     }
 
     let newSubdomain: string;
@@ -33,56 +43,82 @@ export default class {
     if (failover) {
       newSubdomain = utils.generateUUID().split('-')[0];
     } else {
-      this.currentOrigin = this.currentOrigin + 1;
+      this._currentSubDomain = this._currentSubDomain + 1;
 
-      if (this.currentOrigin >= this.maxHostNumber) { this.currentOrigin = 1; }
+      if (this._currentSubDomain >= this._maxSubDomain) { this._currentSubDomain = 1; }
 
-      newSubdomain = this.currentOrigin.toString();
+      newSubdomain = this._currentSubDomain.toString();
     }
 
-    return origin.replace('pubsub', 'ps' + newSubdomain);
+    return this._providedFQDN.replace('pubsub', 'ps' + newSubdomain);
+  }
+
+  // origin operations
+  shiftStandardOrigin(failover: boolean = false): string {
+    this._standardOrigin = this.nextOrigin(failover);
+
+    return this._standardOrigin;
+  }
+
+  shiftSubscribeOrigin(failover: boolean = false): string {
+    this._subscribeOrigin = this.nextOrigin(failover);
+
+    return this._subscribeOrigin;
   }
 
   // method based URL's
-  fetchHistory(STD_ORIGIN: string, channel: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchHistory(channel: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      STD_ORIGIN, 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)
+      this.getStandardOrigin(), 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)
     ];
 
-    this.xdr({ data, callback, success, fail, url });
+    this._xdr({ data, callback, success, fail, url });
   }
 
-  fetchReplay(STD_ORIGIN: string, source: string, destination: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchReplay(source: string, destination: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      STD_ORIGIN, 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination
+      this.getStandardOrigin(), 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination
     ];
 
-    this.xdr({ data, callback, success, fail, url });
+    this._xdr({ data, callback, success, fail, url });
   }
 
-  fetchTime(STD_ORIGIN: string, jsonp: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchTime(jsonp: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      STD_ORIGIN, 'time', jsonp
+      this.getStandardOrigin(), 'time', jsonp
     ];
 
-    this.xdr({ data, callback, success, fail, url });
+    this._xdr({ data, callback, success, fail, url });
   }
 
   // setters
   setSubscribeKey(subscribeKey: string): void {
-    this.subscribeKey = subscribeKey;
+    this._subscribeKey = subscribeKey;
   }
 
   setPublishKey(publishKey: string): void {
-    this.publishKey = publishKey;
+    this._publishKey = publishKey;
+  }
+
+  getOrigin(): string {
+    return this._providedFQDN;
   }
 
   // getters
   getSubscribeKey(): string {
-    return this.subscribeKey;
+    return this._subscribeKey;
   }
 
   getPublishKey(): string {
-    return this.publishKey;
+    return this._publishKey;
   }
+
+  getStandardOrigin(): string {
+    return this._standardOrigin;
+  }
+
+  getSubscribeOrigin(): string {
+    return this._subscribeOrigin;
+  }
+
 }

@@ -1,9 +1,9 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-let Networking = require('../../../../../core/lib/components/networking');
+import Networking from '../../../../../core/src/components/networking';
 
-const utils = require('../../../../../core/lib/utils');
+const utils = require('../../../../../core/src/utils');
 const assert = require('assert');
 const sinon = require('sinon');
 
@@ -17,6 +17,28 @@ describe('#components/networking', () => {
 
     assert.equal(networking.getPublishKey(), 'pubKey');
     assert.equal(networking.getSubscribeKey(), 'subKey');
+
+    assert.equal(networking.getOrigin(), 'http://pubsub.pubnub.com');
+  });
+
+  it('creates a class with enabled SSL FQDN', () => {
+    var networking = new Networking(null, true);
+    assert.equal(networking.getOrigin(), 'https://pubsub.pubnub.com');
+  });
+
+  it('creates a class with disabled SSL FQDN', () => {
+    var networking = new Networking(null, false);
+    assert.equal(networking.getOrigin(), 'http://pubsub.pubnub.com');
+  });
+
+  it('creates a class with enabled SSL and custom domain', () => {
+    var networking = new Networking(null, true, 'custom.domain.com');
+    assert.equal(networking.getOrigin(), 'https://custom.domain.com');
+  });
+
+  it('creates a class with disabled SSL FQDN and custom domain', () => {
+    var networking = new Networking(null, false, 'custom.domain.com');
+    assert.equal(networking.getOrigin(), 'http://custom.domain.com');
   });
 
   describe('#nextOrigin', () => {
@@ -36,40 +58,40 @@ describe('#components/networking', () => {
     });
 
     it('it does not operate on non pubsub domains', () => {
-      var networking = new Networking(null);
+      var networking = new Networking(null, null, 'custom.url.com');
 
-      let newDomain = networking.nextOrigin('http://custom.url.com');
+      let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://custom.url.com');
     });
 
     it('applies the next subdomain if default url is used', () => {
-      var networking = new Networking(null);
+      var networking = new Networking(null, null, 'pubsub.pubnub.com');
 
-      let newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
-      assert.equal(newDomain, 'http://ps17.pubnub.com');
+      let newDomain = networking.nextOrigin(false);
+      assert.equal(newDomain, 'http://ps19.pubnub.com');
     });
 
     // assuming MAX=20 inside the configurations, this test is not isolated.
     it('applies the next subdomain if default url is used and resets over', () => {
-      var networking = new Networking(null);
+      var networking = new Networking(null, null, 'pubsub.pubnub.com');
 
-      let newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
-      assert.equal(newDomain, 'http://ps17.pubnub.com');
-      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
-      assert.equal(newDomain, 'http://ps18.pubnub.com');
-      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
-      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps1.pubnub.com');
-      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps2.pubnub.com');
-      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps3.pubnub.com');
+      newDomain = networking.nextOrigin(false);
+      assert.equal(newDomain, 'http://ps4.pubnub.com');
+      newDomain = networking.nextOrigin(false);
+      assert.equal(newDomain, 'http://ps5.pubnub.com');
     });
 
     it('supports failover', () => {
-      var networking = new Networking(null);
-      let newDomain = networking.nextOrigin('http://pubsub.pubnub.com', true);
+      var networking = new Networking(null, null, 'pubsub.pubnub.com');
+      let newDomain = networking.nextOrigin(true);
       assert.equal(newDomain, 'http://ps5f0651fc.pubnub.com');
 
       utils.generateUUID.restore();
@@ -78,8 +100,40 @@ describe('#components/networking', () => {
         return '5f1z51fc-5b92-4a3b-96ca-08eee41508bd';
       });
 
-      newDomain = networking.nextOrigin('http://pubsub.pubnub.com', true);
+      newDomain = networking.nextOrigin(true);
       assert.equal(newDomain, 'http://ps5f1z51fc.pubnub.com');
+    });
+  });
+
+  describe('#shiftStandardOrigin', () => {
+    it('calls the #nextOrigin, updates the local variable and returns it', () => {
+      let networking = new Networking(null, null, null);
+
+      sinon.stub(networking, 'nextOrigin', function () {
+        return 'sample-url';
+      });
+
+      let newOrigin = networking.shiftStandardOrigin();
+      assert.equal(newOrigin, 'sample-url');
+      assert.equal(networking.getStandardOrigin(), 'sample-url');
+
+      networking.nextOrigin.restore();
+    });
+  });
+
+  describe('#shiftSubscribeOrigin', () => {
+    it('calls the #nextOrigin, updates the local variable and returns it', () => {
+      let networking = new Networking(null);
+
+      sinon.stub(networking, 'nextOrigin', function () {
+        return 'sample-url';
+      });
+
+      let newOrigin = networking.shiftSubscribeOrigin();
+      assert.equal(newOrigin, 'sample-url');
+      assert.equal(networking.shiftSubscribeOrigin(), 'sample-url');
+
+      networking.nextOrigin.restore();
     });
   });
 
@@ -90,9 +144,9 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      var networkingComponent = new Networking(xdrStub);
+      let networkingComponent = new Networking(xdrStub, null, 'origin1.pubnub.com');
 
-      networkingComponent.fetchTime('origin1.pubnub.com', '0', {
+      networkingComponent.fetchTime('0', {
         fail: failStub,
         success: successStub,
         callback: callbackStub,
@@ -104,7 +158,7 @@ describe('#components/networking', () => {
       assert.deepEqual(xdrStub.args[0][0].success, successStub);
       assert.deepEqual(xdrStub.args[0][0].fail, failStub);
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
-      assert.deepEqual(xdrStub.args[0][0].url, ['origin1.pubnub.com', 'time', 0]);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'time', 0]);
     });
   });
 
@@ -115,12 +169,12 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      var networkingComponent = new Networking(xdrStub);
+      let networkingComponent = new Networking(xdrStub, null, 'origin1.pubnub.com');
 
       networkingComponent.setSubscribeKey('subKey');
       networkingComponent.setPublishKey('pubKey');
 
-      networkingComponent.fetchHistory('origin1.pubnub.com', 'mychannel', {
+      networkingComponent.fetchHistory('mychannel', {
         fail: failStub,
         success: successStub,
         callback: callbackStub,
@@ -132,7 +186,7 @@ describe('#components/networking', () => {
       assert.deepEqual(xdrStub.args[0][0].success, successStub);
       assert.deepEqual(xdrStub.args[0][0].fail, failStub);
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
-      assert.deepEqual(xdrStub.args[0][0].url, ['origin1.pubnub.com', 'v2', 'history',
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'history',
         'sub-key', 'subKey', 'channel', 'mychannel']);
     });
   });
@@ -144,12 +198,12 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      var networkingComponent = new Networking(xdrStub);
+      let networkingComponent = new Networking(xdrStub, null, 'origin1.pubnub.com');
 
       networkingComponent.setSubscribeKey('subKey');
       networkingComponent.setPublishKey('pubKey');
 
-      networkingComponent.fetchReplay('origin1.pubnub.com', 'src', 'dist', {
+      networkingComponent.fetchReplay('src', 'dist', {
         fail: failStub,
         success: successStub,
         callback: callbackStub,
@@ -161,7 +215,7 @@ describe('#components/networking', () => {
       assert.deepEqual(xdrStub.args[0][0].success, successStub);
       assert.deepEqual(xdrStub.args[0][0].fail, failStub);
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
-      assert.deepEqual(xdrStub.args[0][0].url, ['origin1.pubnub.com', 'v1', 'replay',
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v1', 'replay',
         'pubKey', 'subKey', 'src', 'dist']);
     });
   });

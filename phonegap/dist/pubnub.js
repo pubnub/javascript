@@ -1,4 +1,4 @@
-/*! 3.13.0 / phonegap */
+/*! 3.1X.0-MAX / phonegap */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -406,7 +406,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.13.0",
+		"version": "3.1X.0-MAX",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -666,9 +666,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var SECRET_KEY = setup['secret_key'] || '';
 	  var hmac_SHA256 = setup['hmac_SHA256'];
 	  var SSL = setup['ssl'] ? 's' : '';
-	  var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
-	  var STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
-	  var SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
 	  var CONNECT = function CONNECT() {};
 	  var PUB_QUEUE = [];
 	  var CLOAK = true;
@@ -918,7 +915,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      data['auth'] = args['auth_key'] || AUTH_KEY;
 	    }
 
-	    var url = [STD_ORIGIN, 'v1', 'channel-registration', 'sub-key', networkingComponent.getSubscribeKey()];
+	    var url = [networkingComponent.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', networkingComponent.getSubscribeKey()];
 
 	    url.push.apply(url, url1);
 
@@ -941,7 +938,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var SELF = {
 	    LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-	      var origin = networkingComponent.nextOrigin(ORIGIN);
+	      var origin = networkingComponent.nextOrigin(false);
 	      var callback = callback || function () {};
 	      var err = error || function () {};
 	      var url;
@@ -991,7 +988,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-	      var origin = networkingComponent.nextOrigin(ORIGIN);
+	      var origin = networkingComponent.nextOrigin(networkingComponent.origin);
 	      var url;
 	      var params;
 	      var callback = callback || function () {};
@@ -1257,7 +1254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (string_msg_token) params['string_message_token'] = 'true';
 
 	      // Send Message
-	      networkingComponent.fetchHistory(STD_ORIGIN, channel, {
+	      networkingComponent.fetchHistory(channel, {
 	        callback: jsonp,
 	        data: _get_url_params(params),
 	        success: function success(response) {
@@ -1331,7 +1328,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      data['auth'] = auth_key;
 
 	      // Start (or Stop) Replay!
-	      networkingComponent.fetchReplay(STD_ORIGIN, source, destination, {
+	      networkingComponent.fetchReplay(source, destination, {
 	        callback: jsonp,
 	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
@@ -1361,7 +1358,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      networkingComponent.fetchTime(STD_ORIGIN, jsonp, {
+	      networkingComponent.fetchTime(jsonp, {
 	        callback: jsonp,
 	        data: _get_url_params(data),
 	        success: function success(response) {
@@ -1409,7 +1406,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      msg = JSON.stringify(encrypt(msg, cipher_key));
 
 	      // Create URL
-	      url = [STD_ORIGIN, 'publish', networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
+	      url = [networkingComponent.getStandardOrigin(), 'publish', networkingComponent.getPublishKey(), networkingComponent.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
 
 	      if (!store) params['store'] = '0';
 
@@ -1681,8 +1678,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          utils.timeout(CONNECT, windowing);
 	        } else {
 	          // New Origin on Failed Connection
-	          STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
-	          SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
+	          networkingComponent.shiftStandardOrigin(true);
+	          networkingComponent.shiftSubscribeOrigin(true);
 
 	          // Re-test Connection
 	          utils.timeout(function () {
@@ -1764,7 +1761,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	          },
 	          data: _get_url_params(data),
-	          url: [SUB_ORIGIN, 'subscribe', networkingComponent.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
+	          url: [networkingComponent.getSubscribeOrigin(), 'subscribe', networkingComponent.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
 	          success: function success(messages) {
 	            // Check for Errors
 	            if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
@@ -1908,7 +1905,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!callback) return _error('Missing Callback');
 	      if (!networkingComponent.getSubscribeKey()) return _error('Missing Subscribe Key');
 
-	      var url = [STD_ORIGIN, 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey()];
+	      var url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey()];
 
 	      channel && url.push('channel') && url.push(utils.encode(channel));
 
@@ -1967,7 +1964,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [STD_ORIGIN, 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey(), 'uuid', utils.encode(uuid)]
+	        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', networkingComponent.getSubscribeKey(), 'uuid', utils.encode(uuid)]
 	      });
 	    },
 
@@ -2010,9 +2007,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
 	      if (state) {
-	        url = [STD_ORIGIN, 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
+	        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
 	      } else {
-	        url = [STD_ORIGIN, 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
+	        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
 	      }
 
 	      xdr({
@@ -2104,7 +2101,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [STD_ORIGIN, 'v1', 'auth', 'grant', 'sub-key', networkingComponent.getSubscribeKey()]
+	        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', networkingComponent.getSubscribeKey()]
 	      });
 	    },
 
@@ -2140,7 +2137,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var params = { uuid: UUID, auth: auth_key, type: gw_type };
 
 	      // Create URL
-	      url = [STD_ORIGIN, 'v1/push/sub-key', networkingComponent.getSubscribeKey(), 'devices', device_id];
+	      url = [networkingComponent.getStandardOrigin(), 'v1/push/sub-key', networkingComponent.getSubscribeKey(), 'devices', device_id];
 
 	      if (op == 'add') {
 	        params['add'] = channel;
@@ -2221,7 +2218,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        fail: function fail(response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [STD_ORIGIN, 'v1', 'auth', 'audit', 'sub-key', networkingComponent.getSubscribeKey()]
+	        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', networkingComponent.getSubscribeKey()]
 	      });
 	    },
 
@@ -2279,10 +2276,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
+	      data['X-REQUEST-ID'] = utils.generateUUID();
+
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        url: [STD_ORIGIN, 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channels, 'heartbeat'],
+	        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', networkingComponent.getSubscribeKey(), 'channel', channels, 'heartbeat'],
 	        success: function success(response) {
 	          _invoke_callback(response, callback, err);
 	        },
@@ -2416,20 +2415,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(xdr) {
+	    var ssl = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+	    var origin = arguments.length <= 2 || arguments[2] === undefined ? 'pubsub.pubnub.com' : arguments[2];
+
 	    _classCallCheck(this, _class);
 
-	    this.xdr = xdr;
+	    this._xdr = xdr;
 
-	    this.maxHostNumber = 20;
-	    this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
+	    this._maxSubDomain = 20;
+	    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
+
+	    this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+
+	    // create initial origins
+	    this.shiftStandardOrigin(false);
+	    this.shiftSubscribeOrigin(false);
 	  }
 
 	  _createClass(_class, [{
 	    key: 'nextOrigin',
-	    value: function nextOrigin(origin, failover) {
+	    value: function nextOrigin(failover) {
 	      // if a custom origin is supplied, use do not bother with shuffling subdomains
-	      if (origin.indexOf('pubsub.') === -1) {
-	        return origin;
+	      if (this._providedFQDN.indexOf('pubsub.') === -1) {
+	        return this._providedFQDN;
 	      }
 
 	      var newSubdomain = undefined;
@@ -2437,68 +2445,89 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (failover) {
 	        newSubdomain = utils.generateUUID().split('-')[0];
 	      } else {
-	        this.currentOrigin = this.currentOrigin + 1;
+	        this._currentSubDomain = this._currentSubDomain + 1;
 
-	        if (this.currentOrigin >= this.maxHostNumber) {
-	          this.currentOrigin = 1;
+	        if (this._currentSubDomain >= this._maxSubDomain) {
+	          this._currentSubDomain = 1;
 	        }
 
-	        newSubdomain = this.currentOrigin.toString();
+	        newSubdomain = this._currentSubDomain.toString();
 	      }
 
-	      return origin.replace('pubsub', 'ps' + newSubdomain);
+	      return this._providedFQDN.replace('pubsub', 'ps' + newSubdomain);
+	    }
+
+	    // origin operations
+
+	  }, {
+	    key: 'shiftStandardOrigin',
+	    value: function shiftStandardOrigin() {
+	      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+
+	      this._standardOrigin = this.nextOrigin(failover);
+
+	      return this._standardOrigin;
+	    }
+	  }, {
+	    key: 'shiftSubscribeOrigin',
+	    value: function shiftSubscribeOrigin() {
+	      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+
+	      this._subscribeOrigin = this.nextOrigin(failover);
+
+	      return this._subscribeOrigin;
 	    }
 
 	    // method based URL's
 
 	  }, {
 	    key: 'fetchHistory',
-	    value: function fetchHistory(STD_ORIGIN, channel, _ref) {
+	    value: function fetchHistory(channel, _ref) {
 	      var data = _ref.data;
 	      var callback = _ref.callback;
 	      var success = _ref.success;
 	      var fail = _ref.fail;
 
-	      var url = [STD_ORIGIN, 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)];
+	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)];
 
-	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
 	  }, {
 	    key: 'fetchReplay',
-	    value: function fetchReplay(STD_ORIGIN, source, destination, _ref2) {
+	    value: function fetchReplay(source, destination, _ref2) {
 	      var data = _ref2.data;
 	      var callback = _ref2.callback;
 	      var success = _ref2.success;
 	      var fail = _ref2.fail;
 
-	      var url = [STD_ORIGIN, 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination];
+	      var url = [this.getStandardOrigin(), 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination];
 
-	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
 	  }, {
 	    key: 'fetchTime',
-	    value: function fetchTime(STD_ORIGIN, jsonp, _ref3) {
+	    value: function fetchTime(jsonp, _ref3) {
 	      var data = _ref3.data;
 	      var callback = _ref3.callback;
 	      var success = _ref3.success;
 	      var fail = _ref3.fail;
 
-	      var url = [STD_ORIGIN, 'time', jsonp];
+	      var url = [this.getStandardOrigin(), 'time', jsonp];
 
-	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
 
-	    // getters
+	    // setters
 
 	  }, {
 	    key: 'setSubscribeKey',
 	    value: function setSubscribeKey(subscribeKey) {
-	      this.subscribeKey = subscribeKey;
+	      this._subscribeKey = subscribeKey;
 	    }
 	  }, {
 	    key: 'setPublishKey',
 	    value: function setPublishKey(publishKey) {
-	      this.publishKey = publishKey;
+	      this._publishKey = publishKey;
 	    }
 
 	    // getters
@@ -2506,12 +2535,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getSubscribeKey',
 	    value: function getSubscribeKey() {
-	      return this.subscribeKey;
+	      return this._subscribeKey;
 	    }
 	  }, {
 	    key: 'getPublishKey',
 	    value: function getPublishKey() {
-	      return this.publishKey;
+	      return this._publishKey;
+	    }
+	  }, {
+	    key: 'getStandardOrigin',
+	    value: function getStandardOrigin() {
+	      return this._standardOrigin;
+	    }
+	  }, {
+	    key: 'getSubscribeOrigin',
+	    value: function getSubscribeOrigin() {
+	      return this._subscribeOrigin;
 	    }
 	  }]);
 

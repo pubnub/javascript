@@ -12,20 +12,29 @@ var utils = require('../utils');
 
 var _class = function () {
   function _class(xdr) {
+    var ssl = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+    var origin = arguments.length <= 2 || arguments[2] === undefined ? 'pubsub.pubnub.com' : arguments[2];
+
     _classCallCheck(this, _class);
 
-    this.xdr = xdr;
+    this._xdr = xdr;
 
-    this.maxHostNumber = 20;
-    this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
+    this._maxSubDomain = 20;
+    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
+
+    this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+
+    // create initial origins
+    this.shiftStandardOrigin(false);
+    this.shiftSubscribeOrigin(false);
   }
 
   _createClass(_class, [{
     key: 'nextOrigin',
-    value: function nextOrigin(origin, failover) {
+    value: function nextOrigin(failover) {
       // if a custom origin is supplied, use do not bother with shuffling subdomains
-      if (origin.indexOf('pubsub.') === -1) {
-        return origin;
+      if (this._providedFQDN.indexOf('pubsub.') === -1) {
+        return this._providedFQDN;
       }
 
       var newSubdomain = undefined;
@@ -33,68 +42,89 @@ var _class = function () {
       if (failover) {
         newSubdomain = utils.generateUUID().split('-')[0];
       } else {
-        this.currentOrigin = this.currentOrigin + 1;
+        this._currentSubDomain = this._currentSubDomain + 1;
 
-        if (this.currentOrigin >= this.maxHostNumber) {
-          this.currentOrigin = 1;
+        if (this._currentSubDomain >= this._maxSubDomain) {
+          this._currentSubDomain = 1;
         }
 
-        newSubdomain = this.currentOrigin.toString();
+        newSubdomain = this._currentSubDomain.toString();
       }
 
-      return origin.replace('pubsub', 'ps' + newSubdomain);
+      return this._providedFQDN.replace('pubsub', 'ps' + newSubdomain);
+    }
+
+    // origin operations
+
+  }, {
+    key: 'shiftStandardOrigin',
+    value: function shiftStandardOrigin() {
+      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+
+      this._standardOrigin = this.nextOrigin(failover);
+
+      return this._standardOrigin;
+    }
+  }, {
+    key: 'shiftSubscribeOrigin',
+    value: function shiftSubscribeOrigin() {
+      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+
+      this._subscribeOrigin = this.nextOrigin(failover);
+
+      return this._subscribeOrigin;
     }
 
     // method based URL's
 
   }, {
     key: 'fetchHistory',
-    value: function fetchHistory(STD_ORIGIN, channel, _ref) {
+    value: function fetchHistory(channel, _ref) {
       var data = _ref.data;
       var callback = _ref.callback;
       var success = _ref.success;
       var fail = _ref.fail;
 
-      var url = [STD_ORIGIN, 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)];
+      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)];
 
-      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
   }, {
     key: 'fetchReplay',
-    value: function fetchReplay(STD_ORIGIN, source, destination, _ref2) {
+    value: function fetchReplay(source, destination, _ref2) {
       var data = _ref2.data;
       var callback = _ref2.callback;
       var success = _ref2.success;
       var fail = _ref2.fail;
 
-      var url = [STD_ORIGIN, 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination];
+      var url = [this.getStandardOrigin(), 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination];
 
-      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
   }, {
     key: 'fetchTime',
-    value: function fetchTime(STD_ORIGIN, jsonp, _ref3) {
+    value: function fetchTime(jsonp, _ref3) {
       var data = _ref3.data;
       var callback = _ref3.callback;
       var success = _ref3.success;
       var fail = _ref3.fail;
 
-      var url = [STD_ORIGIN, 'time', jsonp];
+      var url = [this.getStandardOrigin(), 'time', jsonp];
 
-      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
 
-    // getters
+    // setters
 
   }, {
     key: 'setSubscribeKey',
     value: function setSubscribeKey(subscribeKey) {
-      this.subscribeKey = subscribeKey;
+      this._subscribeKey = subscribeKey;
     }
   }, {
     key: 'setPublishKey',
     value: function setPublishKey(publishKey) {
-      this.publishKey = publishKey;
+      this._publishKey = publishKey;
     }
 
     // getters
@@ -102,12 +132,22 @@ var _class = function () {
   }, {
     key: 'getSubscribeKey',
     value: function getSubscribeKey() {
-      return this.subscribeKey;
+      return this._subscribeKey;
     }
   }, {
     key: 'getPublishKey',
     value: function getPublishKey() {
-      return this.publishKey;
+      return this._publishKey;
+    }
+  }, {
+    key: 'getStandardOrigin',
+    value: function getStandardOrigin() {
+      return this._standardOrigin;
+    }
+  }, {
+    key: 'getSubscribeOrigin',
+    value: function getSubscribeOrigin() {
+      return this._subscribeOrigin;
     }
   }]);
 
