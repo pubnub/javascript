@@ -827,19 +827,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
-	 * NEXTORIGIN
-	 * ==========
-	 * var next_origin = nextorigin();
-	 */
-	var nextorigin = function () {
-	  var max = 20;
-	  var ori = Math.floor(Math.random() * max);
-	  return function (origin, failover) {
-	    return origin.indexOf('pubsub.') > 0 && origin.replace('pubsub', 'ps' + (failover ? utils.generateUUID().split('-')[0] : ++ori < max ? ori : ori = 1)) || origin;
-	  };
-	}();
-
-	/**
 	 * Generate Subscription Channel List
 	 * ==================================
 	 * generate_channel_list(channels_object);
@@ -956,8 +943,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var hmac_SHA256 = setup['hmac_SHA256'];
 	  var SSL = setup['ssl'] ? 's' : '';
 	  var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
-	  var STD_ORIGIN = nextorigin(ORIGIN);
-	  var SUB_ORIGIN = nextorigin(ORIGIN);
+	  var STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
+	  var SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
 	  var CONNECT = function CONNECT() {};
 	  var PUB_QUEUE = [];
 	  var CLOAK = true;
@@ -1230,7 +1217,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var SELF = {
 	    LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-	      var origin = nextorigin(ORIGIN);
+	      var origin = networkingComponent.nextOrigin(ORIGIN);
 	      var callback = callback || function () {};
 	      var err = error || function () {};
 	      var url;
@@ -1280,7 +1267,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-	      var origin = nextorigin(ORIGIN);
+	      var origin = networkingComponent.nextOrigin(ORIGIN);
 	      var url;
 	      var params;
 	      var callback = callback || function () {};
@@ -1970,8 +1957,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          utils.timeout(CONNECT, windowing);
 	        } else {
 	          // New Origin on Failed Connection
-	          STD_ORIGIN = nextorigin(ORIGIN, 1);
-	          SUB_ORIGIN = nextorigin(ORIGIN, 1);
+	          STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
+	          SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
 
 	          // Re-test Connection
 	          utils.timeout(function () {
@@ -2710,12 +2697,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.xdr = xdr;
 	    this.subscribeKey = subscribeKey;
 	    this.publishKey = publishKey;
+
+	    this.maxHostNumber = 20;
+	    this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
 	  }
 
-	  // method based URL's
-
-
 	  _createClass(_class, [{
+	    key: 'nextOrigin',
+	    value: function nextOrigin(origin, failover) {
+	      // if a custom origin is supplied, use do not bother with shuffling subdomains
+	      if (origin.indexOf('pubsub.') === -1) {
+	        return origin;
+	      }
+
+	      var newSubdomain = undefined;
+
+	      if (failover) {
+	        newSubdomain = utils.generateUUID().split('-')[0];
+	      } else {
+	        this.currentOrigin = this.currentOrigin + 1;
+
+	        if (this.currentOrigin >= this.maxHostNumber) {
+	          this.currentOrigin = 1;
+	        }
+
+	        newSubdomain = this.currentOrigin.toString();
+	      }
+
+	      return origin.replace('pubsub', 'ps' + newSubdomain);
+	    }
+
+	    // method based URL's
+
+	  }, {
 	    key: 'fetchHistory',
 	    value: function fetchHistory(STD_ORIGIN, channel, _ref) {
 	      var data = _ref.data;

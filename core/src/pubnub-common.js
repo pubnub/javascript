@@ -32,24 +32,6 @@ function unique() {
   return 'x' + ++NOW + '' + (+new Date);
 }
 
-/**
- * NEXTORIGIN
- * ==========
- * var next_origin = nextorigin();
- */
-var nextorigin = (function () {
-  var max = 20;
-  var ori = Math.floor(Math.random() * max);
-  return function (origin, failover) {
-    return origin.indexOf('pubsub.') > 0
-      && origin.replace(
-        'pubsub', 'ps' + (
-          failover ? utils.generateUUID().split('-')[0] :
-            (++ori < max ? ori : ori = 1)
-        )) || origin;
-  };
-})();
-
 
 /**
  * Generate Subscription Channel List
@@ -165,8 +147,8 @@ function PN_API(setup) {
   var hmac_SHA256 = setup['hmac_SHA256'];
   var SSL = setup['ssl'] ? 's' : '';
   var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
-  var STD_ORIGIN = nextorigin(ORIGIN);
-  var SUB_ORIGIN = nextorigin(ORIGIN);
+  var STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
+  var SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, false);
   var CONNECT = function () {
   };
   var PUB_QUEUE = [];
@@ -449,7 +431,7 @@ function PN_API(setup) {
   var SELF = {
     LEAVE: function (channel, blocking, auth_key, callback, error) {
       var data: Object = { uuid: UUID, auth: auth_key || AUTH_KEY };
-      var origin = nextorigin(ORIGIN);
+      var origin = networkingComponent.nextOrigin(ORIGIN);
       var callback = callback || function () {};
       var err = error || function () {};
       var url;
@@ -505,7 +487,7 @@ function PN_API(setup) {
 
     LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
       var data: Object = { uuid: UUID, auth: auth_key || AUTH_KEY };
-      var origin = nextorigin(ORIGIN);
+      var origin = networkingComponent.nextOrigin(ORIGIN);
       var url;
       var params;
       var callback = callback || function () {};
@@ -1207,8 +1189,8 @@ function PN_API(setup) {
           utils.timeout(CONNECT, windowing);
         } else {
           // New Origin on Failed Connection
-          STD_ORIGIN = nextorigin(ORIGIN, 1);
-          SUB_ORIGIN = nextorigin(ORIGIN, 1);
+          STD_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
+          SUB_ORIGIN = networkingComponent.nextOrigin(ORIGIN, 1);
 
           // Re-test Connection
           utils.timeout(function () {

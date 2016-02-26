@@ -17,12 +17,39 @@ var _class = function () {
     this.xdr = xdr;
     this.subscribeKey = subscribeKey;
     this.publishKey = publishKey;
+
+    this.maxHostNumber = 20;
+    this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
   }
 
-  // method based URL's
-
-
   _createClass(_class, [{
+    key: 'nextOrigin',
+    value: function nextOrigin(origin, failover) {
+      // if a custom origin is supplied, use do not bother with shuffling subdomains
+      if (origin.indexOf('pubsub.') === -1) {
+        return origin;
+      }
+
+      var newSubdomain = undefined;
+
+      if (failover) {
+        newSubdomain = utils.generateUUID().split('-')[0];
+      } else {
+        this.currentOrigin = this.currentOrigin + 1;
+
+        if (this.currentOrigin >= this.maxHostNumber) {
+          this.currentOrigin = 1;
+        }
+
+        newSubdomain = this.currentOrigin.toString();
+      }
+
+      return origin.replace('pubsub', 'ps' + newSubdomain);
+    }
+
+    // method based URL's
+
+  }, {
     key: 'fetchHistory',
     value: function fetchHistory(STD_ORIGIN, channel, _ref) {
       var data = _ref.data;

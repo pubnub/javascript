@@ -1,7 +1,9 @@
-/* global describe, beforeEach, it */
+/* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-var Networking = require('../../../../../core/lib/components/networking');
+let Networking = require('../../../../../core/lib/components/networking');
+
+const utils = require('../../../../../core/lib/utils');
 const assert = require('assert');
 const sinon = require('sinon');
 
@@ -12,6 +14,67 @@ describe('#components/networking', () => {
 
     assert.equal(networking.getPublishKey(), 'pubKey');
     assert.equal(networking.getSubscribeKey(), 'subKey');
+  });
+
+  describe('#nextOrigin', () => {
+    beforeEach(() => {
+      sinon.stub(Math, 'random', function () {
+        return 0.8;
+      });
+
+      sinon.stub(utils, 'generateUUID', function () {
+        return '5f0651fc-5b92-4a3b-96ca-08eee41508bd';
+      });
+    });
+
+    afterEach(() => {
+      Math.random.restore();
+      utils.generateUUID.restore();
+    });
+
+    it('it does not operate on non pubsub domains', () => {
+      var networking = new Networking(null, 'subKey', 'pubKey');
+      let newDomain = networking.nextOrigin('http://custom.url.com');
+      assert.equal(newDomain, 'http://custom.url.com');
+    });
+
+    it('applies the next subdomain if default url is used', () => {
+      var networking = new Networking(null, 'subKey', 'pubKey');
+      let newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps17.pubnub.com');
+    });
+
+    // assuming MAX=20 inside the configurations, this test is not isolated.
+    it('applies the next subdomain if default url is used and resets over', () => {
+      var networking = new Networking(null, 'subKey', 'pubKey');
+      let newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps17.pubnub.com');
+      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps18.pubnub.com');
+      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps19.pubnub.com');
+      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps1.pubnub.com');
+      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps2.pubnub.com');
+      newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
+      assert.equal(newDomain, 'http://ps3.pubnub.com');
+    });
+
+    it('supports failover', () => {
+      var networking = new Networking(null, 'subKey', 'pubKey');
+      let newDomain = networking.nextOrigin('http://pubsub.pubnub.com', true);
+      assert.equal(newDomain, 'http://ps5f0651fc.pubnub.com');
+
+      utils.generateUUID.restore();
+
+      sinon.stub(utils, 'generateUUID', function () {
+        return '5f1z51fc-5b92-4a3b-96ca-08eee41508bd';
+      });
+
+      newDomain = networking.nextOrigin('http://pubsub.pubnub.com', true);
+      assert.equal(newDomain, 'http://ps5f1z51fc.pubnub.com');
+    });
   });
 
   describe('#fetchTime', () => {
