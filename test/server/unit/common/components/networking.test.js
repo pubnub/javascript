@@ -10,7 +10,10 @@ const sinon = require('sinon');
 
 describe('#components/networking', () => {
   it('creates a class with publish and subscribe keys', () => {
-    var networking = new Networking(null, 'subKey', 'pubKey');
+    var networking = new Networking(null);
+
+    networking.setSubscribeKey('subKey');
+    networking.setPublishKey('pubKey');
 
     assert.equal(networking.getPublishKey(), 'pubKey');
     assert.equal(networking.getSubscribeKey(), 'subKey');
@@ -33,20 +36,23 @@ describe('#components/networking', () => {
     });
 
     it('it does not operate on non pubsub domains', () => {
-      var networking = new Networking(null, 'subKey', 'pubKey');
+      var networking = new Networking(null);
+
       let newDomain = networking.nextOrigin('http://custom.url.com');
       assert.equal(newDomain, 'http://custom.url.com');
     });
 
     it('applies the next subdomain if default url is used', () => {
-      var networking = new Networking(null, 'subKey', 'pubKey');
+      var networking = new Networking(null);
+
       let newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
       assert.equal(newDomain, 'http://ps17.pubnub.com');
     });
 
     // assuming MAX=20 inside the configurations, this test is not isolated.
     it('applies the next subdomain if default url is used and resets over', () => {
-      var networking = new Networking(null, 'subKey', 'pubKey');
+      var networking = new Networking(null);
+
       let newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
       assert.equal(newDomain, 'http://ps17.pubnub.com');
       newDomain = networking.nextOrigin('http://pubsub.pubnub.com');
@@ -62,7 +68,7 @@ describe('#components/networking', () => {
     });
 
     it('supports failover', () => {
-      var networking = new Networking(null, 'subKey', 'pubKey');
+      var networking = new Networking(null);
       let newDomain = networking.nextOrigin('http://pubsub.pubnub.com', true);
       assert.equal(newDomain, 'http://ps5f0651fc.pubnub.com');
 
@@ -84,7 +90,7 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      var networkingComponent = new Networking(xdrStub, 'subKey', 'pubKey');
+      var networkingComponent = new Networking(xdrStub);
 
       networkingComponent.fetchTime('origin1.pubnub.com', '0', {
         fail: failStub,
@@ -109,7 +115,10 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      var networkingComponent = new Networking(xdrStub, 'subKey', 'pubKey');
+      var networkingComponent = new Networking(xdrStub);
+
+      networkingComponent.setSubscribeKey('subKey');
+      networkingComponent.setPublishKey('pubKey');
 
       networkingComponent.fetchHistory('origin1.pubnub.com', 'mychannel', {
         fail: failStub,
@@ -135,7 +144,10 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      var networkingComponent = new Networking(xdrStub, 'subKey', 'pubKey');
+      var networkingComponent = new Networking(xdrStub);
+
+      networkingComponent.setSubscribeKey('subKey');
+      networkingComponent.setPublishKey('pubKey');
 
       networkingComponent.fetchReplay('origin1.pubnub.com', 'src', 'dist', {
         fail: failStub,

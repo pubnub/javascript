@@ -11,12 +11,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var utils = require('../utils');
 
 var _class = function () {
-  function _class(xdr, subscribeKey, publishKey) {
+  function _class(xdr) {
     _classCallCheck(this, _class);
 
     this.xdr = xdr;
-    this.subscribeKey = subscribeKey;
-    this.publishKey = publishKey;
 
     this.maxHostNumber = 20;
     this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
@@ -84,6 +82,19 @@ var _class = function () {
       var url = [STD_ORIGIN, 'time', jsonp];
 
       this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+
+    // getters
+
+  }, {
+    key: 'setSubscribeKey',
+    value: function setSubscribeKey(subscribeKey) {
+      this.subscribeKey = subscribeKey;
+    }
+  }, {
+    key: 'setPublishKey',
+    value: function setPublishKey(publishKey) {
+      this.publishKey = publishKey;
     }
 
     // getters

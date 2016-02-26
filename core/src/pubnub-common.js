@@ -135,7 +135,10 @@ function PNmessage(args) {
 
 function PN_API(setup) {
   let { xdr, subscribe_key, publish_key } = setup;
-  let networkingComponent = new Networking(xdr, subscribe_key, publish_key);
+  let networkingComponent = new Networking(xdr);
+
+  networkingComponent.setSubscribeKey(subscribe_key);
+  networkingComponent.setPublishKey(publish_key);
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;

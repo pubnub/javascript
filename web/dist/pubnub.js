@@ -1050,7 +1050,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var subscribe_key = setup.subscribe_key;
 	  var publish_key = setup.publish_key;
 
-	  var networkingComponent = new _networking2.default(xdr, subscribe_key, publish_key);
+	  var networkingComponent = new _networking2.default(xdr);
+
+	  networkingComponent.setSubscribeKey(subscribe_key);
+	  networkingComponent.setPublishKey(publish_key);
 
 	  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
 	  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -2810,12 +2813,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var utils = __webpack_require__(7);
 
 	var _class = function () {
-	  function _class(xdr, subscribeKey, publishKey) {
+	  function _class(xdr) {
 	    _classCallCheck(this, _class);
 
 	    this.xdr = xdr;
-	    this.subscribeKey = subscribeKey;
-	    this.publishKey = publishKey;
 
 	    this.maxHostNumber = 20;
 	    this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
@@ -2883,6 +2884,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var url = [STD_ORIGIN, 'time', jsonp];
 
 	      this.xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+
+	    // getters
+
+	  }, {
+	    key: 'setSubscribeKey',
+	    value: function setSubscribeKey(subscribeKey) {
+	      this.subscribeKey = subscribeKey;
+	    }
+	  }, {
+	    key: 'setPublishKey',
+	    value: function setPublishKey(publishKey) {
+	      this.publishKey = publishKey;
 	    }
 
 	    // getters

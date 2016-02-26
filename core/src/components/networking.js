@@ -14,10 +14,8 @@ export default class {
   maxHostNumber: number;
   currentOrigin: number;
 
-  constructor(xdr: Function, subscribeKey: string, publishKey: string) {
+  constructor(xdr: Function) {
     this.xdr = xdr;
-    this.subscribeKey = subscribeKey;
-    this.publishKey = publishKey;
 
     this.maxHostNumber = 20;
     this.currentOrigin = Math.floor(Math.random() * this.maxHostNumber);
@@ -68,6 +66,15 @@ export default class {
     ];
 
     this.xdr({ data, callback, success, fail, url });
+  }
+
+  // setters
+  setSubscribeKey(subscribeKey: string): void {
+    this.subscribeKey = subscribeKey;
+  }
+
+  setPublishKey(publishKey: string): void {
+    this.publishKey = publishKey;
   }
 
   // getters
