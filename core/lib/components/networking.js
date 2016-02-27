@@ -37,10 +37,10 @@ var _class = function () {
         return this._providedFQDN;
       }
 
-      var newSubdomain = undefined;
+      var newSubDomain = undefined;
 
       if (failover) {
-        newSubdomain = utils.generateUUID().split('-')[0];
+        newSubDomain = utils.generateUUID().split('-')[0];
       } else {
         this._currentSubDomain = this._currentSubDomain + 1;
 
@@ -48,10 +48,10 @@ var _class = function () {
           this._currentSubDomain = 1;
         }
 
-        newSubdomain = this._currentSubDomain.toString();
+        newSubDomain = this._currentSubDomain.toString();
       }
 
-      return this._providedFQDN.replace('pubsub', 'ps' + newSubdomain);
+      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
     }
 
     // origin operations
@@ -125,6 +125,11 @@ var _class = function () {
     key: 'setPublishKey',
     value: function setPublishKey(publishKey) {
       this._publishKey = publishKey;
+    }
+  }, {
+    key: 'getOrigin',
+    value: function getOrigin() {
+      return this._providedFQDN;
     }
 
     // getters

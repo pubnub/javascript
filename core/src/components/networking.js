@@ -38,19 +38,19 @@ export default class {
       return this._providedFQDN;
     }
 
-    let newSubdomain: string;
+    let newSubDomain: string;
 
     if (failover) {
-      newSubdomain = utils.generateUUID().split('-')[0];
+      newSubDomain = utils.generateUUID().split('-')[0];
     } else {
       this._currentSubDomain = this._currentSubDomain + 1;
 
       if (this._currentSubDomain >= this._maxSubDomain) { this._currentSubDomain = 1; }
 
-      newSubdomain = this._currentSubDomain.toString();
+      newSubDomain = this._currentSubDomain.toString();
     }
 
-    return this._providedFQDN.replace('pubsub', 'ps' + newSubdomain);
+    return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
   }
 
   // origin operations

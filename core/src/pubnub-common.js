@@ -1,4 +1,4 @@
-/* @flow weak */
+/* @flow */
 
 /* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
 /* eslint eqeqeq: 0, one-var: 0 */
@@ -28,7 +28,7 @@ var SDK_VER = packageJSON.version;
 /**
  * UTILITIES
  */
-function unique() {
+function unique(): string {
   return 'x' + ++NOW + '' + (+new Date);
 }
 
@@ -487,7 +487,7 @@ function PN_API(setup) {
 
     LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
       var data: Object = { uuid: UUID, auth: auth_key || AUTH_KEY };
-      var origin = networkingComponent.nextOrigin(networkingComponent.getOrigin());
+      var origin = networkingComponent.nextOrigin(false);
       var url;
       var params;
       var callback = callback || function () {};
@@ -1832,8 +1832,6 @@ function PN_API(setup) {
       if (channel_groups) data['channel-group'] = channel_groups;
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
-
-      data['X-REQUEST-ID'] = utils.generateUUID();
 
       xdr({
         callback: jsonp,

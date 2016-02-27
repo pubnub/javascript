@@ -1,4 +1,4 @@
-/*! 3.1X.0-MAX / modern */
+/*! 3.13.0 / modern */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -406,7 +406,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.1X.0-MAX",
+		"version": "3.13.0",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -509,7 +509,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; /*  weak */
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 	/* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
 	/* eslint eqeqeq: 0, one-var: 0 */
@@ -988,7 +988,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
 	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-	      var origin = networkingComponent.nextOrigin(networkingComponent.origin);
+	      var origin = networkingComponent.nextOrigin(false);
 	      var url;
 	      var params;
 	      var callback = callback || function () {};
@@ -2276,8 +2276,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      data['X-REQUEST-ID'] = utils.generateUUID();
-
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
@@ -2440,10 +2438,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._providedFQDN;
 	      }
 
-	      var newSubdomain = undefined;
+	      var newSubDomain = undefined;
 
 	      if (failover) {
-	        newSubdomain = utils.generateUUID().split('-')[0];
+	        newSubDomain = utils.generateUUID().split('-')[0];
 	      } else {
 	        this._currentSubDomain = this._currentSubDomain + 1;
 
@@ -2451,10 +2449,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          this._currentSubDomain = 1;
 	        }
 
-	        newSubdomain = this._currentSubDomain.toString();
+	        newSubDomain = this._currentSubDomain.toString();
 	      }
 
-	      return this._providedFQDN.replace('pubsub', 'ps' + newSubdomain);
+	      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
 	    }
 
 	    // origin operations
@@ -2528,6 +2526,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setPublishKey',
 	    value: function setPublishKey(publishKey) {
 	      this._publishKey = publishKey;
+	    }
+	  }, {
+	    key: 'getOrigin',
+	    value: function getOrigin() {
+	      return this._providedFQDN;
 	    }
 
 	    // getters

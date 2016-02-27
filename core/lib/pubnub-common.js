@@ -1,6 +1,6 @@
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; /*  weak */
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 /* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
 /* eslint eqeqeq: 0, one-var: 0 */
@@ -479,7 +479,7 @@ function PN_API(setup) {
 
     LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
       var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
-      var origin = networkingComponent.nextOrigin(networkingComponent.origin);
+      var origin = networkingComponent.nextOrigin(false);
       var url;
       var params;
       var callback = callback || function () {};
@@ -1766,8 +1766,6 @@ function PN_API(setup) {
       if (channel_groups) data['channel-group'] = channel_groups;
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
-
-      data['X-REQUEST-ID'] = utils.generateUUID();
 
       xdr({
         callback: jsonp,
