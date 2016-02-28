@@ -1,6 +1,7 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
+import Keychain from '../../../../../core/src/components/keychain';
 import Networking from '../../../../../core/src/components/networking';
 
 const utils = require('../../../../../core/src/utils');
@@ -9,35 +10,28 @@ const sinon = require('sinon');
 
 
 describe('#components/networking', () => {
-  it('creates a class with publish and subscribe keys', () => {
-    var networking = new Networking(null);
-
-    networking.setSubscribeKey('subKey');
-    networking.setPublishKey('pubKey');
-
-    assert.equal(networking.getPublishKey(), 'pubKey');
-    assert.equal(networking.getSubscribeKey(), 'subKey');
-
+  it('creates a class with default origin', () => {
+    var networking = new Networking(() => {}, new Keychain());
     assert.equal(networking.getOrigin(), 'http://pubsub.pubnub.com');
   });
 
   it('creates a class with enabled SSL FQDN', () => {
-    var networking = new Networking(null, true);
+    var networking = new Networking(() => {}, new Keychain(), true);
     assert.equal(networking.getOrigin(), 'https://pubsub.pubnub.com');
   });
 
   it('creates a class with disabled SSL FQDN', () => {
-    var networking = new Networking(null, false);
+    var networking = new Networking(() => {}, new Keychain(), false);
     assert.equal(networking.getOrigin(), 'http://pubsub.pubnub.com');
   });
 
   it('creates a class with enabled SSL and custom domain', () => {
-    var networking = new Networking(null, true, 'custom.domain.com');
+    var networking = new Networking(() => {}, new Keychain(), true, 'custom.domain.com');
     assert.equal(networking.getOrigin(), 'https://custom.domain.com');
   });
 
   it('creates a class with disabled SSL FQDN and custom domain', () => {
-    var networking = new Networking(null, false, 'custom.domain.com');
+    var networking = new Networking(() => {}, new Keychain(), false, 'custom.domain.com');
     assert.equal(networking.getOrigin(), 'http://custom.domain.com');
   });
 
@@ -58,14 +52,14 @@ describe('#components/networking', () => {
     });
 
     it('it does not operate on non pubsub domains', () => {
-      var networking = new Networking(null, null, 'custom.url.com');
+      var networking = new Networking(() => {}, new Keychain(), null, 'custom.url.com');
 
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://custom.url.com');
     });
 
     it('applies the next subdomain if default url is used', () => {
-      var networking = new Networking(null, null, 'pubsub.pubnub.com');
+      var networking = new Networking(() => {}, new Keychain(), null, 'pubsub.pubnub.com');
 
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
@@ -73,7 +67,7 @@ describe('#components/networking', () => {
 
     // assuming MAX=20 inside the configurations, this test is not isolated.
     it('applies the next subdomain if default url is used and resets over', () => {
-      var networking = new Networking(null, null, 'pubsub.pubnub.com');
+      var networking = new Networking(() => {}, new Keychain(), null, 'pubsub.pubnub.com');
 
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
@@ -90,7 +84,7 @@ describe('#components/networking', () => {
     });
 
     it('supports failover', () => {
-      var networking = new Networking(null, null, 'pubsub.pubnub.com');
+      var networking = new Networking(() => {}, new Keychain(), undefined, 'pubsub.pubnub.com');
       let newDomain = networking.nextOrigin(true);
       assert.equal(newDomain, 'http://ps5f0651fc.pubnub.com');
 
@@ -107,7 +101,7 @@ describe('#components/networking', () => {
 
   describe('#shiftStandardOrigin', () => {
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
-      let networking = new Networking(null, null, null);
+      let networking = new Networking(() => {}, new Keychain(), undefined, undefined);
 
       sinon.stub(networking, 'nextOrigin', function () {
         return 'sample-url';
@@ -123,7 +117,7 @@ describe('#components/networking', () => {
 
   describe('#shiftSubscribeOrigin', () => {
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
-      let networking = new Networking(null);
+      let networking = new Networking(() => {}, new Keychain());
 
       sinon.stub(networking, 'nextOrigin', function () {
         return 'sample-url';
@@ -144,7 +138,7 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      let networkingComponent = new Networking(xdrStub, null, 'origin1.pubnub.com');
+      let networkingComponent = new Networking(xdrStub, new Keychain(), undefined, 'origin1.pubnub.com');
 
       networkingComponent.fetchTime('0', {
         fail: failStub,
@@ -169,10 +163,12 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      let networkingComponent = new Networking(xdrStub, null, 'origin1.pubnub.com');
 
-      networkingComponent.setSubscribeKey('subKey');
-      networkingComponent.setPublishKey('pubKey');
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
 
       networkingComponent.fetchHistory('mychannel', {
         fail: failStub,
@@ -198,10 +194,12 @@ describe('#components/networking', () => {
       let failStub = sinon.stub();
       let callbackStub = sinon.stub();
       let data = { my: 'object' };
-      let networkingComponent = new Networking(xdrStub, null, 'origin1.pubnub.com');
 
-      networkingComponent.setSubscribeKey('subKey');
-      networkingComponent.setPublishKey('pubKey');
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
 
       networkingComponent.fetchReplay('src', 'dist', {
         fail: failStub,

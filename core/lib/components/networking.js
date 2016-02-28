@@ -6,18 +6,25 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _keychain = require('./keychain.js');
+
+var _keychain2 = _interopRequireDefault(_keychain);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var utils = require('../utils');
 
 var _class = function () {
-  function _class(xdr) {
-    var ssl = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-    var origin = arguments.length <= 2 || arguments[2] === undefined ? 'pubsub.pubnub.com' : arguments[2];
+  function _class(xdr, keychain) {
+    var ssl = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+    var origin = arguments.length <= 3 || arguments[3] === undefined ? 'pubsub.pubnub.com' : arguments[3];
 
     _classCallCheck(this, _class);
 
     this._xdr = xdr;
+    this._keychain = keychain;
 
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
@@ -85,7 +92,7 @@ var _class = function () {
       var success = _ref.success;
       var fail = _ref.fail;
 
-      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)];
+      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)];
 
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
@@ -97,7 +104,7 @@ var _class = function () {
       var success = _ref2.success;
       var fail = _ref2.fail;
 
-      var url = [this.getStandardOrigin(), 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination];
+      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
@@ -113,36 +120,10 @@ var _class = function () {
 
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
-
-    // setters
-
-  }, {
-    key: 'setSubscribeKey',
-    value: function setSubscribeKey(subscribeKey) {
-      this._subscribeKey = subscribeKey;
-    }
-  }, {
-    key: 'setPublishKey',
-    value: function setPublishKey(publishKey) {
-      this._publishKey = publishKey;
-    }
   }, {
     key: 'getOrigin',
     value: function getOrigin() {
       return this._providedFQDN;
-    }
-
-    // getters
-
-  }, {
-    key: 'getSubscribeKey',
-    value: function getSubscribeKey() {
-      return this._subscribeKey;
-    }
-  }, {
-    key: 'getPublishKey',
-    value: function getPublishKey() {
-      return this._publishKey;
     }
   }, {
     key: 'getStandardOrigin',
@@ -160,5 +141,4 @@ var _class = function () {
 }();
 
 exports.default = _class;
-module.exports = exports['default'];
 //# sourceMappingURL=networking.js.map

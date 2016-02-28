@@ -1,14 +1,16 @@
 /* @flow */
 
+import Keychain from './keychain.js';
+
 const utils = require('../utils');
+
 
 type commonXDRObject = {data: Object, callback: Function, success: Function, fail: Function};
 
 export default class {
 
   _xdr: Function;
-  _subscribeKey: string;
-  _publishKey: string;
+  _keychain: Keychain;
 
   _maxSubDomain: number;
   _currentSubDomain: number;
@@ -18,8 +20,9 @@ export default class {
 
   _providedFQDN: string;
 
-  constructor(xdr: Function, ssl: boolean = false, origin: string = 'pubsub.pubnub.com') {
+  constructor(xdr: Function, keychain: Keychain, ssl: boolean = false, origin: string = 'pubsub.pubnub.com') {
     this._xdr = xdr;
+    this._keychain = keychain;
 
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
@@ -69,7 +72,7 @@ export default class {
   // method based URL's
   fetchHistory(channel: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      this.getStandardOrigin(), 'v2', 'history', 'sub-key', this.getSubscribeKey(), 'channel', utils.encode(channel)
+      this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)
     ];
 
     this._xdr({ data, callback, success, fail, url });
@@ -77,7 +80,7 @@ export default class {
 
   fetchReplay(source: string, destination: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      this.getStandardOrigin(), 'v1', 'replay', this.getPublishKey(), this.getSubscribeKey(), source, destination
+      this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination
     ];
 
     this._xdr({ data, callback, success, fail, url });
@@ -91,26 +94,8 @@ export default class {
     this._xdr({ data, callback, success, fail, url });
   }
 
-  // setters
-  setSubscribeKey(subscribeKey: string): void {
-    this._subscribeKey = subscribeKey;
-  }
-
-  setPublishKey(publishKey: string): void {
-    this._publishKey = publishKey;
-  }
-
   getOrigin(): string {
     return this._providedFQDN;
-  }
-
-  // getters
-  getSubscribeKey(): string {
-    return this._subscribeKey;
-  }
-
-  getPublishKey(): string {
-    return this._publishKey;
   }
 
   getStandardOrigin(): string {
