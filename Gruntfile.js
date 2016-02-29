@@ -133,7 +133,7 @@ module.exports = function (grunt) {
         src: 'test/release',
         options: {
           scriptPath: require.resolve('isparta/bin/isparta'),
-          mochaOptions: ['--bail'],
+          mochaOptions: ['--bail', '--require', 'babel-core/register'],
           coverageFolder: 'coverage/release',
           mask: '**/*.test.js',
           print: 'none'
@@ -142,6 +142,7 @@ module.exports = function (grunt) {
       old: {
         src: 'node.js/tests/legacy',
         options: {
+          scriptPath: require.resolve('isparta/bin/isparta'),
           coverageFolder: 'coverage/old',
           mask: 'integration_test.js',
           print: 'none'
