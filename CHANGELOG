@@ -1,3 +1,8 @@
+
+3-1-16 * 3.14.0
+ - introduction of keychain class to support internal storage of key
+ - refactoring of origin calculations and handling
+
 2-25-16 * 3.13.0
  - adding flow types on certain files
  - ECMA6 compilation of core
@@ -124,7 +129,7 @@
 . channel is no longer mandatory for PAM
 
 5-08-14 * 3.6.4 * e02160be2b046e1b76fcf3e11c86bb7b80192a77
-. fixes bug where ssl settings were not getting applied for node.js 
+. fixes bug where ssl settings were not getting applied for node.js
 
 5-01-14 * 3.6.3 * d8e1ebb15dc8b644b8e0430b0859368f35bdb72f
 . Improved isArray logic
@@ -158,7 +163,7 @@
 . added async load special support.
 
 10-09-13 * NEW VERSION 3.5.45 *
-. rebuilt with space char escaping %20 sort of thing. 
+. rebuilt with space char escaping %20 sort of thing.
 
 10-01-13 * NEW VERSION 3.5.43 *
 . added enhancement by reducing number of escaped chars on publish
@@ -318,7 +323,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Wed Jan 23 15:12:55 2013 -0800
 
     Update javascript/README.md
-    
+
     Adding UUID override documentation in init object example in README
 
 commit 0aa7ab5584ee41d2cdb159b8648c4b683e9ece60
@@ -409,7 +414,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Mon Dec 17 18:48:26 2012 -0800
 
     Update javascript/README.md
-    
+
     Adding AES documentation.
 
 commit a69b723aedb4bbd65d8151f7dd4cc52b33f3de0d
@@ -497,7 +502,7 @@ Author: Stephen Blum <blum.stephen@gmail.com>
 Date:   Wed Dec 12 21:25:40 2012 -0800
 
     Merge branch 'master' of https://github.com/pubnub/pubnub-api
-    
+
     Conflicts:
     	javascript/3.4/pubnub-3.4.min.js
     	javascript/3.4/pubnub-3.4.min.js.gz
@@ -537,7 +542,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Mon Dec 10 14:16:33 2012 -0800
 
     Update javascript/README.md
-    
+
     updating URLs in README
 
 commit 2e20b5231e65fec9301ad3e4944e9b93d941fa69
@@ -672,7 +677,7 @@ Author: Stephen L. Blum <stephen@pubnub.com>
 Date:   Tue Nov 27 10:41:47 2012 -0800
 
     Merge pull request #147 from mintrigue/patch-1
-    
+
     Update javascript/pubnub-3.3.1.js
 
 commit 69eaef47409e17fbe9444c8bef1cf6452d73684d
@@ -692,9 +697,9 @@ Author: mintrigue <millermichaelx@gmail.com>
 Date:   Mon Nov 19 00:24:56 2012 -0800
 
     Update javascript/pubnub-3.3.1.js
-    
+
     Modified to call ready() if the page has already been loaded when this script is added to the page.
-    
+
     Without this change, apps (like GWT w/ ScriptInjector) will not be able to subscribe to a channel because ready will never be called.
      
 
@@ -703,7 +708,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Mon Nov 12 15:05:04 2012 -0800
 
     Update javascript/3.3.1/README.md
-    
+
     Better examples
 
 commit 750219b477045d04e046ad645b61037610fe1d40
@@ -711,7 +716,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Mon Nov 12 15:04:04 2012 -0800
 
     Update javascript/README.md
-    
+
     Fixed README
 
 commit 215e498172f70f327e870c326d4ab7a418d51bbf
@@ -824,7 +829,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Tue Sep 4 13:47:08 2012 -0700
 
     Update javascript/README.md
-    
+
     readme typo
 
 commit e2f11eb9d5bd5d7fd45952fcb37bd9bbc1af7541
@@ -851,7 +856,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Fri Aug 31 13:36:42 2012 -0700
 
     Update javascript/README.md
-    
+
     Use CDN version of JS
 
 commit 18a2efe0473ced1b8ccf4d9cd114bf1873f0d0ec
@@ -859,7 +864,7 @@ Author: Geremy Cohen <gcohen@pubnub.com>
 Date:   Fri Aug 31 13:34:52 2012 -0700
 
     Update javascript/README.md
-    
+
     updating README for here_now and presence
 
 commit 467bea63afbd301fbc40bbb50c4ea4600a3adc69
@@ -927,7 +932,7 @@ Author: Stephen L. Blum <blum.stephen@gmail.com>
 Date:   Fri Jul 27 19:37:25 2012 -0700
 
     Update javascript/README.md
-    
+
     Added PubNub init Function Example.
 
 commit 1cf64829c6ed3cd1e8375be7791e1a1cf44c3d69

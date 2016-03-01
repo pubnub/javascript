@@ -6,7 +6,7 @@ var path = require('path');
 
 var packageJSON = require('../../package.json');
 var bowerJSON = require('../../bower.json');
-var versionFile = fs.readFileSync(path.resolve(__dirname, '../../VERSION'), 'UTF-8');
+var versionFile = fs.readFileSync(path.resolve(__dirname, '../../VERSION'), 'UTF-8').trim();
 var readMe = fs.readFileSync(path.resolve(__dirname, '../..//README.md'), 'UTF-8');
 
 describe('release should be consistent', function () {
