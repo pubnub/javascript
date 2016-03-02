@@ -2,7 +2,17 @@
 
 export default class {
 
+  /*
+    if instanceId config is true, the SDK will pass the unique instance
+    identifier to the server as instanceId=<UUID>
+  */
   _instanceId: boolean;
+
+
+  /*
+    if requestId config is true, the SDK will pass a unique request identifier
+    with each request as request_id=<UUID>
+  */
   _requestId: boolean;
 
   constructor() {

@@ -21,16 +21,68 @@ describe('core initalization', () => {
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/config': class {
         setInstanceIdConfig(config) {
-          assert(config, 'instanceIdConfig');
+          assert.equal(config, 'instanceIdConfig');
           return this;
         }
 
         setRequestIdConfig(config) {
-          assert(config, 'requestIdConfig');
+          assert.equal(config, 'requestIdConfig');
           return this;
         }
 
         isInstanceIdEnabled() { return false; }
+
+      }
+    });
+
+    proxiedCore.PN_API(setupConfig);
+  });
+
+  it('passes the correct arguments to the keychain class', () => {
+    const setupConfig = {
+      subscribe_key: 'subKey',
+      publish_key: 'publishKey',
+      auth_key: 'authKey',
+      secret_key: 'secretKey',
+      origin: 'customOrigin.origin.com',
+      ssl: true,
+      instance_id: 'instanceIdConfig',
+      use_request_id: 'requestIdConfig',
+      xdr: function () {}
+    };
+
+    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+      './components/keychain': class {
+        setAuthKey(config) {
+          assert.equal(config, 'authKey');
+          return this;
+        }
+
+        setSecretKey(config) {
+          assert.equal(config, 'secretKey');
+          return this;
+        }
+
+        setSubscribeKey(config) {
+          assert.equal(config, 'subKey');
+          return this;
+        }
+
+        setPublishKey(config) {
+          assert.equal(config, 'publishKey');
+          return this;
+        }
+
+        setInstanceId(config) {
+          assert.equal(config, '');
+          return this;
+        }
+
+        getSubscribeKey() {return 'subKey';}
+        getPublishKey() {return 'pubKey';}
+        getAuthKey() {return 'authKe';}
+        getSecretKey() {return 'secKey';}
+        getInstanceId() {return 'instanceID';}
 
       }
     });

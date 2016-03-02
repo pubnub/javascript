@@ -541,7 +541,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var xdr = setup.xdr;
 
 
-	  var keychain = new _keychain2.default().setInstanceId('').setAuthKey(setup.auth_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key);
+	  var keychain = new _keychain2.default().setInstanceId('').setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key);
 
 	  var configComponent = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
@@ -552,7 +552,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
 	  var TIME_CHECK = setup['timecheck'] || 0;
 	  var NOLEAVE = setup['noleave'] || 0;
-	  var SECRET_KEY = setup['secret_key'] || '';
 	  var hmac_SHA256 = setup['hmac_SHA256'];
 	  var SSL = setup['ssl'] ? 's' : '';
 	  var CONNECT = function CONNECT() {};
@@ -1955,7 +1954,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!callback) return _error('Missing Callback');
 	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
 	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!SECRET_KEY) return _error('Missing Secret Key');
+	      if (!keychain.getSecretKey()) return _error('Missing Secret Key');
 
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
 	      var sign_input = keychain.getSubscribeKey() + '\n' + keychain.getPublishKey() + '\n' + 'grant' + '\n';
@@ -1988,7 +1987,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      sign_input += _get_pam_sign_input_from_params(data);
 
-	      var signature = hmac_SHA256(sign_input, SECRET_KEY);
+	      var signature = hmac_SHA256(sign_input, keychain.getSecretKey());
 
 	      signature = signature.replace(/\+/g, '-');
 	      signature = signature.replace(/\//g, '_');
@@ -2087,7 +2086,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!callback) return _error('Missing Callback');
 	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
 	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!SECRET_KEY) return _error('Missing Secret Key');
+	      if (!keychain.getSecretKey()) return _error('Missing Secret Key');
 
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
 	      var sign_input = keychain.getSubscribeKey() + '\n' + keychain.getPublishKey() + '\n' + 'audit' + '\n';
@@ -2108,7 +2107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      sign_input += _get_pam_sign_input_from_params(data);
 
-	      var signature = hmac_SHA256(sign_input, SECRET_KEY);
+	      var signature = hmac_SHA256(sign_input, keychain.getSecretKey());
 
 	      signature = signature.replace(/\+/g, '-');
 	      signature = signature.replace(/\//g, '_');
@@ -2500,6 +2499,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this;
 	    }
 	  }, {
+	    key: "setSecretKey",
+	    value: function setSecretKey(secretKey) {
+	      this._secretKey = secretKey;
+	      return this;
+	    }
+
+	    //
+
+	  }, {
 	    key: "getSubscribeKey",
 	    value: function getSubscribeKey() {
 	      return this._subscribeKey;
@@ -2518,6 +2526,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: "getInstanceId",
 	    value: function getInstanceId() {
 	      return this._instanceId;
+	    }
+	  }, {
+	    key: "getSecretKey",
+	    value: function getSecretKey() {
+	      return this._secretKey;
 	    }
 	  }]);
 
@@ -2733,12 +2746,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var _class = function () {
+
+	  /*
+	    if instanceId config is true, the SDK will pass the unique instance
+	    identifier to the server as instanceId=<UUID>
+	  */
+
 	  function _class() {
 	    _classCallCheck(this, _class);
 
 	    this._instanceId = false;
 	    this._requestId = false;
 	  }
+
+	  /*
+	    if requestId config is true, the SDK will pass a unique request identifier
+	    with each request as request_id=<UUID>
+	  */
+
 
 	  _createClass(_class, [{
 	    key: "setInstanceIdConfig",

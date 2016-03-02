@@ -6,6 +6,7 @@ export default class {
   _publishKey: string;
   _authKey: string;
   _instanceId: string;
+  _secretKey: string;
 
   setSubscribeKey(subscribeKey: string): this {
     this._subscribeKey = subscribeKey;
@@ -27,6 +28,13 @@ export default class {
     return this;
   }
 
+  setSecretKey(secretKey: string): this {
+    this._secretKey = secretKey;
+    return this;
+  }
+
+  //
+
   getSubscribeKey(): string {
     return this._subscribeKey;
   }
@@ -41,6 +49,10 @@ export default class {
 
   getInstanceId(): string {
     return this._instanceId;
+  }
+
+  getSecretKey(): string {
+    return this._secretKey;
   }
 
 }

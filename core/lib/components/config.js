@@ -9,12 +9,24 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var _class = function () {
+
+  /*
+    if instanceId config is true, the SDK will pass the unique instance
+    identifier to the server as instanceId=<UUID>
+  */
+
   function _class() {
     _classCallCheck(this, _class);
 
     this._instanceId = false;
     this._requestId = false;
   }
+
+  /*
+    if requestId config is true, the SDK will pass a unique request identifier
+    with each request as request_id=<UUID>
+  */
+
 
   _createClass(_class, [{
     key: "setInstanceIdConfig",

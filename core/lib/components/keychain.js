@@ -38,6 +38,15 @@ var _class = function () {
       return this;
     }
   }, {
+    key: "setSecretKey",
+    value: function setSecretKey(secretKey) {
+      this._secretKey = secretKey;
+      return this;
+    }
+
+    //
+
+  }, {
     key: "getSubscribeKey",
     value: function getSubscribeKey() {
       return this._subscribeKey;
@@ -56,6 +65,11 @@ var _class = function () {
     key: "getInstanceId",
     value: function getInstanceId() {
       return this._instanceId;
+    }
+  }, {
+    key: "getSecretKey",
+    value: function getSecretKey() {
+      return this._secretKey;
     }
   }]);
 

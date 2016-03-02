@@ -16,6 +16,11 @@ describe('#components/keychain', () => {
     assert.equal(keychain.getAuthKey(), 'authKey');
   });
 
+  it('supports secret keys', () => {
+    let keychain = new Keychain().setSecretKey('secretKey');
+    assert.equal(keychain.getSecretKey(), 'secretKey');
+  });
+
   it('supports publish keys', () => {
     let keychain = new Keychain().setPublishKey('pubKey');
     assert.equal(keychain.getPublishKey(), 'pubKey');
