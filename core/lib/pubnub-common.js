@@ -513,7 +513,7 @@ function PN_API(setup) {
       params = _get_url_params(data);
 
       if (sendBeacon) {
-        var url_string = utils.build_url(url, params);
+        var url_string = utils.buildURL(url, params);
         if (sendBeacon(url_string)) {
           callback && callback({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
           return true;
