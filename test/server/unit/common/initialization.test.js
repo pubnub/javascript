@@ -6,6 +6,38 @@ const proxyquire = require('proxyquire').noCallThru();
 
 // temp integration test while core is still complex
 describe('core initalization', () => {
+  it('passes the correct arguments to the config class', () => {
+    const setupConfig = {
+      subscribe_key: 'subKey',
+      publish_key: 'publishKey',
+      auth_key: 'authKey',
+      origin: 'customOrigin.origin.com',
+      ssl: true,
+      instance_id: 'instanceIdConfig',
+      use_request_id: 'requestIdConfig',
+      xdr: function () {}
+    };
+
+    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+      './components/config': class {
+        setInstanceIdConfig(config) {
+          assert(config, 'instanceIdConfig');
+          return this;
+        }
+
+        setRequestIdConfig(config) {
+          assert(config, 'requestIdConfig');
+          return this;
+        }
+
+        isInstanceIdEnabled() { return false; }
+
+      }
+    });
+
+    proxiedCore.PN_API(setupConfig);
+  });
+
   it('passes the correct arguments to the networking class', () => {
     const setupConfig = {
       subscribe_key: 'subKey',

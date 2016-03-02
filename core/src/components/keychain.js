@@ -5,6 +5,7 @@ export default class {
   _subscribeKey: string;
   _publishKey: string;
   _authKey: string;
+  _instanceId: string;
 
   setSubscribeKey(subscribeKey: string): this {
     this._subscribeKey = subscribeKey;
@@ -21,6 +22,11 @@ export default class {
     return this;
   }
 
+  setInstanceId(instanceId: string): this {
+    this._instanceId = instanceId;
+    return this;
+  }
+
   getSubscribeKey(): string {
     return this._subscribeKey;
   }
@@ -31,6 +37,10 @@ export default class {
 
   getAuthKey(): string {
     return this._authKey;
+  }
+
+  getInstanceId(): string {
+    return this._instanceId;
   }
 
 }

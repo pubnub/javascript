@@ -11,51 +11,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _class = function () {
   function _class() {
     _classCallCheck(this, _class);
+
+    this._instanceId = false;
+    this._requestId = false;
   }
 
   _createClass(_class, [{
-    key: "setSubscribeKey",
-    value: function setSubscribeKey(subscribeKey) {
-      this._subscribeKey = subscribeKey;
+    key: "setInstanceIdConfig",
+    value: function setInstanceIdConfig(configValue) {
+      this._instanceId = configValue;
       return this;
     }
   }, {
-    key: "setPublishKey",
-    value: function setPublishKey(publishkey) {
-      this._publishKey = publishkey;
+    key: "setRequestIdConfig",
+    value: function setRequestIdConfig(configValue) {
+      this._requestId = configValue;
       return this;
     }
   }, {
-    key: "setAuthKey",
-    value: function setAuthKey(authKey) {
-      this._authKey = authKey;
-      return this;
-    }
-  }, {
-    key: "setInstanceId",
-    value: function setInstanceId(instanceId) {
-      this._instanceId = instanceId;
-      return this;
-    }
-  }, {
-    key: "getSubscribeKey",
-    value: function getSubscribeKey() {
-      return this._subscribeKey;
-    }
-  }, {
-    key: "getPublishKey",
-    value: function getPublishKey() {
-      return this._publishKey;
-    }
-  }, {
-    key: "getAuthKey",
-    value: function getAuthKey() {
-      return this._authKey;
-    }
-  }, {
-    key: "getInstanceId",
-    value: function getInstanceId() {
+    key: "isInstanceIdEnabled",
+    value: function isInstanceIdEnabled() {
       return this._instanceId;
+    }
+  }, {
+    key: "isRequestIdEnabled",
+    value: function isRequestIdEnabled() {
+      return this._requestId;
     }
   }]);
 
@@ -63,4 +44,4 @@ var _class = function () {
 }();
 
 exports.default = _class;
-//# sourceMappingURL=keychain.js.map
+//# sourceMappingURL=config.js.map

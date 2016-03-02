@@ -8,6 +8,7 @@
 
 import Networking from './components/networking';
 import Keychain from './components/keychain';
+import Config from './components/config';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -135,14 +136,19 @@ function PNmessage(args) {
 }
 
 function PN_API(setup) {
-  let { xdr, subscribe_key, publish_key, ssl, origin, auth_key } = setup;
+  let { xdr } = setup;
 
   let keychain = new Keychain()
-    .setAuthKey(auth_key || '')
-    .setSubscribeKey(subscribe_key)
-    .setPublishKey(publish_key);
+    .setInstanceId('')
+    .setAuthKey(setup.auth_key || '')
+    .setSubscribeKey(setup.subscribe_key)
+    .setPublishKey(setup.publish_key);
 
-  let networkingComponent = new Networking(xdr, keychain, ssl, origin);
+  let configComponent = new Config()
+    .setRequestIdConfig(setup.use_request_id || false)
+    .setInstanceIdConfig(setup.instance_id || false);
+
+  let networkingComponent = new Networking(setup.xdr, keychain, setup.ssl, setup.origin);
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -184,8 +190,6 @@ function PN_API(setup) {
   var db = setup['db'] || { get: function () {}, set: function () {} };
   var CIPHER_KEY = setup['cipher_key'];
   var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](keychain.getSubscribeKey() + 'uuid') || '');
-  var USE_INSTANCEID = setup['instance_id'] || false;
-  var INSTANCEID = '';
   var shutdown = setup['shutdown'];
   var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
   var sendBeacon = (use_send_beacon) ? setup['sendBeacon'] : null;
@@ -454,7 +458,9 @@ function PN_API(setup) {
 
       if (jsonp != '0') data['callback'] = jsonp;
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
 
       url = [
         origin, 'v2', 'presence', 'sub_key',
@@ -511,7 +517,9 @@ function PN_API(setup) {
 
       if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
 
       url = [
         origin, 'v2', 'presence', 'sub_key',
@@ -862,7 +870,9 @@ function PN_API(setup) {
 
       var data: Object = { uuid: UUID, auth: keychain.getAuthKey() };
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
 
       networkingComponent.fetchTime(jsonp, {
         callback: jsonp,
@@ -921,7 +931,9 @@ function PN_API(setup) {
 
       if (!store) params['store'] = '0';
 
-      if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        params['instanceid'] = keychain.getInstanceId();
+      }
 
       // Queue Message Send
       PUB_QUEUE[add_msg]({
@@ -1258,7 +1270,9 @@ function PN_API(setup) {
 
         if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
 
-        if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+        if (configComponent.isInstanceIdEnabled()) {
+          data['instanceid'] = keychain.getInstanceId();
+        }
 
         start_presence_heartbeat();
         SUB_RECEIVER = xdr({
@@ -1451,7 +1465,9 @@ function PN_API(setup) {
         !channel && url.push('channel') && url.push(',');
       }
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
 
       xdr({
         callback: jsonp,
@@ -1486,7 +1502,9 @@ function PN_API(setup) {
         data['callback'] = jsonp;
       }
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
 
       xdr({
         callback: jsonp,
@@ -1545,7 +1563,9 @@ function PN_API(setup) {
 
       data['state'] = JSON.stringify(state);
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
 
       if (state) {
         url = [
@@ -1702,7 +1722,9 @@ function PN_API(setup) {
         params['remove'] = channel;
       }
 
-      if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        params['instanceid'] = keychain.getInstanceId();
+      }
 
       xdr({
         callback: jsonp,
@@ -1834,7 +1856,13 @@ function PN_API(setup) {
       if (!channels) channels = ',';
       if (channel_groups) data['channel-group'] = channel_groups;
 
-      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
+      if (configComponent.isInstanceIdEnabled()) {
+        data['instanceid'] = keychain.getInstanceId();
+      }
+
+      if (configComponent.isRequestIdEnabled()) {
+        data['requestid'] = utils.generateUUID();
+      }
 
       xdr({
         callback: jsonp,
@@ -1912,7 +1940,7 @@ function PN_API(setup) {
   }
 
   if (!UUID) UUID = SELF['uuid']();
-  if (!INSTANCEID) INSTANCEID = SELF['uuid']();
+  if (!keychain.getInstanceId()) keychain.setInstanceId(SELF['uuid']());
   db['set'](keychain.getSubscribeKey() + 'uuid', UUID);
 
   _poll_timer = utils.timeout(_poll_online, SECOND);
