@@ -277,4 +277,47 @@ describe('core initalization', () => {
 
     proxiedCore.PN_API(commonSettings);
   });
+
+  it('intializes the timeEndpoint class', () => {
+    let _networking;
+    let _keychain;
+    let _config;
+    let _jsonp_cb;
+    let _get_url_params;
+    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+      './endpoints/time': class {
+        constructor({ networking, config, keychain, jsonp_cb, get_url_params }) {
+          _networking = networking;
+          _config = config;
+          _keychain = keychain;
+          _jsonp_cb = jsonp_cb;
+          _get_url_params = get_url_params;
+        }
+
+        fetchTime() { }
+
+      }
+    });
+
+    proxiedCore.PN_API(commonSettings);
+    assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+    assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+    assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
+    assert(_get_url_params);
+    assert(_jsonp_cb);
+  });
+
+  it('mounts the time endpoint', () => {
+    let _mockedArgs;
+    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+      './endpoints/time': class {
+        fetchTime(callback) { _mockedArgs = callback; }
+      }
+    });
+
+    let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+    pubnubInstance.time('callback');
+    assert.equal(_mockedArgs, 'callback');
+  });
 });

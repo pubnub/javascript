@@ -37,7 +37,7 @@ export default class {
     };
 
     if (this._config.isInstanceIdEnabled()) {
-      data['instanceid'] = this._keychain.getInstanceId();
+      data.instanceid = this._keychain.getInstanceId();
     }
 
     let onSuccess = (response) => {

@@ -13,7 +13,6 @@ import Keychain from './components/keychain';
 import Config from './components/config';
 
 import TimeEndpoint from './endpoints/time';
-import _bind from 'lodash/bind';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -160,18 +159,14 @@ function PN_API(setup) {
   // write the new key to storage
   db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-  let configComponent = new Config()
+  let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
     .setInstanceIdConfig(setup.instance_id || false);
 
-  let networkingComponent = new Networking(setup.xdr, keychain, setup.ssl, setup.origin);
+  let networking = new Networking(setup.xdr, keychain, setup.ssl, setup.origin);
 
   // initalize the endpoints
-  let timeEndpoint = new TimeEndpoint({
-    keychain,
-    config: configComponent,
-    networking: networkingComponent,
-    jsonp_cb: jsonp_cb,
+  let timeEndpoint = new TimeEndpoint({ keychain, config, networking, jsonp_cb,
     get_url_params: _get_url_params
   });
 
@@ -434,7 +429,7 @@ function PN_API(setup) {
     }
 
     var url = [
-      networkingComponent.getStandardOrigin(), 'v1', 'channel-registration',
+      networking.getStandardOrigin(), 'v1', 'channel-registration',
       'sub-key', keychain.getSubscribeKey()
     ];
 
@@ -459,7 +454,7 @@ function PN_API(setup) {
   var SELF = {
     LEAVE: function (channel, blocking, auth_key, callback, error) {
       var data: Object = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
-      var origin = networkingComponent.nextOrigin(false);
+      var origin = networking.nextOrigin(false);
       var callback = callback || function () {};
       var err = error || function () {};
       var url;
@@ -479,7 +474,7 @@ function PN_API(setup) {
 
       if (jsonp != '0') data['callback'] = jsonp;
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -517,7 +512,7 @@ function PN_API(setup) {
 
     LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
       var data: Object = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
-      var origin = networkingComponent.nextOrigin(false);
+      var origin = networking.nextOrigin(false);
       var url;
       var params;
       var callback = callback || function () {};
@@ -538,7 +533,7 @@ function PN_API(setup) {
 
       if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -789,7 +784,7 @@ function PN_API(setup) {
       if (string_msg_token) params['string_message_token'] = 'true';
 
       // Send Message
-      networkingComponent.fetchHistory(channel, {
+      networking.fetchHistory(channel, {
         callback: jsonp,
         data: _get_url_params(params),
         success: function (response) {
@@ -863,7 +858,7 @@ function PN_API(setup) {
       data['auth'] = auth_key;
 
       // Start (or Stop) Replay!
-      networkingComponent.fetchReplay(source, destination, {
+      networking.fetchReplay(source, destination, {
         callback: jsonp,
         success: function (response) {
           _invoke_callback(response, callback, err);
@@ -886,7 +881,7 @@ function PN_API(setup) {
     /*
      PUBNUB.time(function(time){ });
      */
-    time: _bind(timeEndpoint.fetchTime, timeEndpoint),
+    time: (callback) => { timeEndpoint.fetchTime(callback); },
 
     /*
      PUBNUB.publish({
@@ -925,7 +920,7 @@ function PN_API(setup) {
 
       // Create URL
       url = [
-        networkingComponent.getStandardOrigin(), 'publish',
+        networking.getStandardOrigin(), 'publish',
         keychain.getPublishKey(), keychain.getSubscribeKey(),
         0, utils.encode(channel),
         jsonp, utils.encode(msg)
@@ -933,7 +928,7 @@ function PN_API(setup) {
 
       if (!store) params['store'] = '0';
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         params['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1206,8 +1201,8 @@ function PN_API(setup) {
           utils.timeout(CONNECT, windowing);
         } else {
           // New Origin on Failed Connection
-          networkingComponent.shiftStandardOrigin(true);
-          networkingComponent.shiftSubscribeOrigin(true);
+          networking.shiftStandardOrigin(true);
+          networking.shiftSubscribeOrigin(true);
 
           // Re-test Connection
           utils.timeout(function () {
@@ -1272,7 +1267,7 @@ function PN_API(setup) {
 
         if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
 
-        if (configComponent.isInstanceIdEnabled()) {
+        if (config.isInstanceIdEnabled()) {
           data['instanceid'] = keychain.getInstanceId();
         }
 
@@ -1293,7 +1288,7 @@ function PN_API(setup) {
           },
           data: _get_url_params(data),
           url: [
-            networkingComponent.getSubscribeOrigin(), 'subscribe',
+            networking.getSubscribeOrigin(), 'subscribe',
             keychain.getSubscribeKey(), utils.encode(channels),
             jsonp, TIMETOKEN
           ],
@@ -1452,7 +1447,7 @@ function PN_API(setup) {
       if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
 
       var url = [
-        networkingComponent.getStandardOrigin(), 'v2', 'presence',
+        networking.getStandardOrigin(), 'v2', 'presence',
         'sub_key', keychain.getSubscribeKey()
       ];
 
@@ -1467,7 +1462,7 @@ function PN_API(setup) {
         !channel && url.push('channel') && url.push(',');
       }
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1504,7 +1499,7 @@ function PN_API(setup) {
         data['callback'] = jsonp;
       }
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1518,7 +1513,7 @@ function PN_API(setup) {
           _invoke_error(response, err);
         },
         url: [
-          networkingComponent.getStandardOrigin(), 'v2', 'presence',
+          networking.getStandardOrigin(), 'v2', 'presence',
           'sub_key', keychain.getSubscribeKey(),
           'uuid', utils.encode(uuid)
         ]
@@ -1565,20 +1560,20 @@ function PN_API(setup) {
 
       data['state'] = JSON.stringify(state);
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
       if (state) {
         url = [
-          networkingComponent.getStandardOrigin(), 'v2', 'presence',
+          networking.getStandardOrigin(), 'v2', 'presence',
           'sub-key', keychain.getSubscribeKey(),
           'channel', channel,
           'uuid', uuid, 'data'
         ];
       } else {
         url = [
-          networkingComponent.getStandardOrigin(), 'v2', 'presence',
+          networking.getStandardOrigin(), 'v2', 'presence',
           'sub-key', keychain.getSubscribeKey(),
           'channel', channel,
           'uuid', utils.encode(uuid)
@@ -1675,7 +1670,7 @@ function PN_API(setup) {
           _invoke_error(response, err);
         },
         url: [
-          networkingComponent.getStandardOrigin(), 'v1', 'auth', 'grant',
+          networking.getStandardOrigin(), 'v1', 'auth', 'grant',
           'sub-key', keychain.getSubscribeKey()
         ]
       });
@@ -1714,7 +1709,7 @@ function PN_API(setup) {
 
       // Create URL
       url = [
-        networkingComponent.getStandardOrigin(), 'v1/push/sub-key',
+        networking.getStandardOrigin(), 'v1/push/sub-key',
         keychain.getSubscribeKey(), 'devices', device_id
       ];
 
@@ -1724,7 +1719,7 @@ function PN_API(setup) {
         params['remove'] = channel;
       }
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         params['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1800,7 +1795,7 @@ function PN_API(setup) {
           _invoke_error(response, err);
         },
         url: [
-          networkingComponent.getStandardOrigin(), 'v1', 'auth', 'audit',
+          networking.getStandardOrigin(), 'v1', 'auth', 'audit',
           'sub-key', keychain.getSubscribeKey()
         ]
       });
@@ -1858,11 +1853,11 @@ function PN_API(setup) {
       if (!channels) channels = ',';
       if (channel_groups) data['channel-group'] = channel_groups;
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
-      if (configComponent.isRequestIdEnabled()) {
+      if (config.isRequestIdEnabled()) {
         data['requestid'] = utils.generateUUID();
       }
 
@@ -1870,7 +1865,7 @@ function PN_API(setup) {
         callback: jsonp,
         data: _get_url_params(data),
         url: [
-          networkingComponent.getStandardOrigin(), 'v2', 'presence',
+          networking.getStandardOrigin(), 'v2', 'presence',
           'sub-key', keychain.getSubscribeKey(),
           'channel', channels,
           'heartbeat'

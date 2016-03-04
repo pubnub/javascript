@@ -28,10 +28,6 @@ var _time = require('./endpoints/time');
 
 var _time2 = _interopRequireDefault(_time);
 
-var _bind2 = require('lodash/bind');
-
-var _bind3 = _interopRequireDefault(_bind2);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var packageJSON = require('../../package.json');
@@ -173,16 +169,12 @@ function PN_API(setup) {
   // write the new key to storage
   db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-  var configComponent = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
+  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
-  var networkingComponent = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin);
+  var networking = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin);
 
   // initalize the endpoints
-  var timeEndpoint = new _time2.default({
-    keychain: keychain,
-    config: configComponent,
-    networking: networkingComponent,
-    jsonp_cb: jsonp_cb,
+  var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb,
     get_url_params: _get_url_params
   });
 
@@ -435,7 +427,7 @@ function PN_API(setup) {
       data['auth'] = args['auth_key'] || keychain.getAuthKey();
     }
 
-    var url = [networkingComponent.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', keychain.getSubscribeKey()];
+    var url = [networking.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', keychain.getSubscribeKey()];
 
     url.push.apply(url, url1);
 
@@ -458,7 +450,7 @@ function PN_API(setup) {
   var SELF = {
     LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
       var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
-      var origin = networkingComponent.nextOrigin(false);
+      var origin = networking.nextOrigin(false);
       var callback = callback || function () {};
       var err = error || function () {};
       var url;
@@ -477,7 +469,7 @@ function PN_API(setup) {
 
       if (jsonp != '0') data['callback'] = jsonp;
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -510,7 +502,7 @@ function PN_API(setup) {
 
     LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
       var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
-      var origin = networkingComponent.nextOrigin(false);
+      var origin = networking.nextOrigin(false);
       var url;
       var params;
       var callback = callback || function () {};
@@ -531,7 +523,7 @@ function PN_API(setup) {
 
       if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -778,7 +770,7 @@ function PN_API(setup) {
       if (string_msg_token) params['string_message_token'] = 'true';
 
       // Send Message
-      networkingComponent.fetchHistory(channel, {
+      networking.fetchHistory(channel, {
         callback: jsonp,
         data: _get_url_params(params),
         success: function success(response) {
@@ -852,7 +844,7 @@ function PN_API(setup) {
       data['auth'] = auth_key;
 
       // Start (or Stop) Replay!
-      networkingComponent.fetchReplay(source, destination, {
+      networking.fetchReplay(source, destination, {
         callback: jsonp,
         success: function success(response) {
           _invoke_callback(response, callback, err);
@@ -875,7 +867,9 @@ function PN_API(setup) {
     /*
      PUBNUB.time(function(time){ });
      */
-    time: (0, _bind3.default)(timeEndpoint.fetchTime, timeEndpoint),
+    time: function time(callback) {
+      timeEndpoint.fetchTime(callback);
+    },
 
     /*
      PUBNUB.publish({
@@ -913,11 +907,11 @@ function PN_API(setup) {
       msg = JSON.stringify(encrypt(msg, cipher_key));
 
       // Create URL
-      url = [networkingComponent.getStandardOrigin(), 'publish', keychain.getPublishKey(), keychain.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
+      url = [networking.getStandardOrigin(), 'publish', keychain.getPublishKey(), keychain.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
 
       if (!store) params['store'] = '0';
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         params['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1187,8 +1181,8 @@ function PN_API(setup) {
           utils.timeout(CONNECT, windowing);
         } else {
           // New Origin on Failed Connection
-          networkingComponent.shiftStandardOrigin(true);
-          networkingComponent.shiftSubscribeOrigin(true);
+          networking.shiftStandardOrigin(true);
+          networking.shiftSubscribeOrigin(true);
 
           // Re-test Connection
           utils.timeout(function () {
@@ -1252,7 +1246,7 @@ function PN_API(setup) {
 
         if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
 
-        if (configComponent.isInstanceIdEnabled()) {
+        if (config.isInstanceIdEnabled()) {
           data['instanceid'] = keychain.getInstanceId();
         }
 
@@ -1272,7 +1266,7 @@ function PN_API(setup) {
             }
           },
           data: _get_url_params(data),
-          url: [networkingComponent.getSubscribeOrigin(), 'subscribe', keychain.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
+          url: [networking.getSubscribeOrigin(), 'subscribe', keychain.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
           success: function success(messages) {
             // Check for Errors
             if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
@@ -1416,7 +1410,7 @@ function PN_API(setup) {
       if (!callback) return _error('Missing Callback');
       if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
 
-      var url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey()];
+      var url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey()];
 
       channel && url.push('channel') && url.push(utils.encode(channel));
 
@@ -1429,7 +1423,7 @@ function PN_API(setup) {
         !channel && url.push('channel') && url.push(',');
       }
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1466,7 +1460,7 @@ function PN_API(setup) {
         data['callback'] = jsonp;
       }
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1479,7 +1473,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _invoke_error(response, err);
         },
-        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)]
+        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)]
       });
     },
 
@@ -1519,14 +1513,14 @@ function PN_API(setup) {
 
       data['state'] = JSON.stringify(state);
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
       if (state) {
-        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
+        url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
       } else {
-        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
+        url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
       }
 
       xdr({
@@ -1618,7 +1612,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _invoke_error(response, err);
         },
-        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', keychain.getSubscribeKey()]
+        url: [networking.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', keychain.getSubscribeKey()]
       });
     },
 
@@ -1654,7 +1648,7 @@ function PN_API(setup) {
       var params = { uuid: keychain.getUUID(), auth: auth_key, type: gw_type };
 
       // Create URL
-      url = [networkingComponent.getStandardOrigin(), 'v1/push/sub-key', keychain.getSubscribeKey(), 'devices', device_id];
+      url = [networking.getStandardOrigin(), 'v1/push/sub-key', keychain.getSubscribeKey(), 'devices', device_id];
 
       if (op == 'add') {
         params['add'] = channel;
@@ -1662,7 +1656,7 @@ function PN_API(setup) {
         params['remove'] = channel;
       }
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         params['instanceid'] = keychain.getInstanceId();
       }
 
@@ -1737,7 +1731,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _invoke_error(response, err);
         },
-        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', keychain.getSubscribeKey()]
+        url: [networking.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', keychain.getSubscribeKey()]
       });
     },
 
@@ -1793,18 +1787,18 @@ function PN_API(setup) {
       if (!channels) channels = ',';
       if (channel_groups) data['channel-group'] = channel_groups;
 
-      if (configComponent.isInstanceIdEnabled()) {
+      if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
-      if (configComponent.isRequestIdEnabled()) {
+      if (config.isRequestIdEnabled()) {
         data['requestid'] = utils.generateUUID();
       }
 
       xdr({
         callback: jsonp,
         data: _get_url_params(data),
-        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'],
+        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'],
         success: function success(response) {
           _invoke_callback(response, callback, err);
         },
