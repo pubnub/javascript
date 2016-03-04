@@ -13,6 +13,7 @@ import Keychain from './components/keychain';
 import Config from './components/config';
 
 import TimeEndpoint from './endpoints/time';
+import _bind from 'lodash/bind';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -885,7 +886,7 @@ function PN_API(setup) {
     /*
      PUBNUB.time(function(time){ });
      */
-    time: timeEndpoint.fetchTime,
+    time: _bind(timeEndpoint.fetchTime, timeEndpoint),
 
     /*
      PUBNUB.publish({

@@ -28,6 +28,10 @@ var _time = require('./endpoints/time');
 
 var _time2 = _interopRequireDefault(_time);
 
+var _bind2 = require('lodash/bind');
+
+var _bind3 = _interopRequireDefault(_bind2);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var packageJSON = require('../../package.json');
@@ -871,7 +875,7 @@ function PN_API(setup) {
     /*
      PUBNUB.time(function(time){ });
      */
-    time: timeEndpoint.fetchTime,
+    time: (0, _bind3.default)(timeEndpoint.fetchTime, timeEndpoint),
 
     /*
      PUBNUB.publish({
