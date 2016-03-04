@@ -8,6 +8,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 /* eslint guard-for-in: 0 */
 /* eslint block-scoped-var: 0 space-return-throw-case: 0, no-unused-vars: 0 */
 
+var _uuid = require('uuid');
+
+var _uuid2 = _interopRequireDefault(_uuid);
+
 var _networking = require('./components/networking');
 
 var _networking2 = _interopRequireDefault(_networking);
@@ -151,9 +155,12 @@ function PN_API(setup) {
 
   var db = setup.db || { get: function get() {}, set: function set() {} };
 
-  var keychain = new _keychain2.default().setInstanceId('').setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key);
+  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key);
 
-  keychain.setUUID(setup.uuid || !setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || '');
+  keychain.setUUID(setup.uuid || !setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || _uuid2.default.v4());
+
+  // write the new key to storage
+  db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
   var configComponent = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
@@ -1863,10 +1870,6 @@ function PN_API(setup) {
     clearTimeout(_poll_timer);
     clearTimeout(_poll_timer2);
   }
-
-  if (!keychain.getUUID()) keychain.setUUID(SELF['uuid']());
-  if (!keychain.getInstanceId()) keychain.setInstanceId(SELF['uuid']());
-  db['set'](keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
   _poll_timer = utils.timeout(_poll_online, SECOND);
   _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);

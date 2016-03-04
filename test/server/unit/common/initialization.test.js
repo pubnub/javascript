@@ -3,11 +3,15 @@
 
 const assert = require('assert');
 const proxyquire = require('proxyquire').noCallThru();
+const sinon = require('sinon');
+const uuid = require('uuid');
 
 // temp integration test while core is still complex
 describe('core initalization', () => {
-  it('passes the correct arguments to the config class', () => {
-    const setupConfig = {
+  let commonSettings;
+
+  beforeEach(() => {
+    commonSettings = {
       subscribe_key: 'subKey',
       publish_key: 'publishKey',
       auth_key: 'authKey',
@@ -17,7 +21,9 @@ describe('core initalization', () => {
       use_request_id: 'requestIdConfig',
       xdr: function () {}
     };
+  });
 
+  it('passes the correct arguments to the config class', () => {
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/config': class {
         setInstanceIdConfig(config) {
@@ -35,57 +41,54 @@ describe('core initalization', () => {
       }
     });
 
-    proxiedCore.PN_API(setupConfig);
+    proxiedCore.PN_API(commonSettings);
   });
 
-  it('passes the correct arguments to the keychain class', () => {
-    const setupConfig = {
-      subscribe_key: 'subKey',
-      publish_key: 'publishKey',
-      auth_key: 'authKey',
-      secret_key: 'secretKey',
-      origin: 'customOrigin.origin.com',
-      ssl: true,
-      instance_id: 'instanceIdConfig',
-      use_request_id: 'requestIdConfig',
-      db: {
-        get: function () {
-          return 'UUID10';
-        },
-        set: function () {},
-      },
-      xdr: function () {}
-    };
+  it('generates a uuid if not provided in setup or in database', () => {
+    commonSettings.xdr = function () {};
+    commonSettings.secret_key = 'secretKey';
+
+    sinon.stub(uuid, 'v4')
+      .onFirstCall().returns('UUID1')
+      .onSecondCall().returns('UUID2');
+
+    let passedUUID;
+    let passedSecret;
+    let passedPublish;
+    let passedAuth;
+    let passedSub;
+    let passedInstance;
 
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/keychain': class {
         setAuthKey(config) {
-          assert.equal(config, 'authKey');
+          passedAuth = config;
           return this;
         }
 
         setSecretKey(config) {
-          assert.equal(config, 'secretKey');
+          passedSecret = config;
           return this;
         }
 
         setSubscribeKey(config) {
-          assert.equal(config, 'subKey');
+          passedSub = config;
           return this;
         }
 
         setPublishKey(config) {
-          assert.equal(config, 'publishKey');
+          passedPublish = config;
           return this;
         }
 
         setInstanceId(config) {
-          assert.equal(config, '');
+          passedInstance = config;
           return this;
         }
 
         setUUID(config) {
-          assert.equal(config, 'UUID10');
+          passedUUID = config;
+          return this;
         }
 
         getSubscribeKey() {return 'subKey';}
@@ -94,36 +97,184 @@ describe('core initalization', () => {
         getSecretKey() {return 'secKey';}
         getInstanceId() {return 'instanceID';}
         getUUID() {return 'UUID';}
-
       }
     });
 
-    proxiedCore.PN_API(setupConfig);
+    proxiedCore.PN_API(commonSettings);
+
+    assert.equal(passedUUID, 'UUID2');
+    assert.equal(passedInstance, 'UUID1');
+    assert.equal(passedSub, 'subKey');
+    assert.equal(passedAuth, 'authKey');
+    assert.equal(passedPublish, 'publishKey');
+    assert.equal(passedSecret, 'secretKey');
+    uuid.v4.restore();
+  });
+
+  it('uses uuid provided in settings', () => {
+    commonSettings.xdr = function () {};
+    commonSettings.secret_key = 'secretKey';
+    commonSettings.uuid = 'setup-uuid';
+
+    sinon.stub(uuid, 'v4')
+      .onFirstCall().returns('UUID1')
+      .onSecondCall().returns('UUID2');
+
+    let passedUUID;
+    let passedSecret;
+    let passedPublish;
+    let passedAuth;
+    let passedSub;
+    let passedInstance;
+
+    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+      './components/keychain': class {
+        setAuthKey(config) {
+          passedAuth = config;
+          return this;
+        }
+
+        setSecretKey(config) {
+          passedSecret = config;
+          return this;
+        }
+
+        setSubscribeKey(config) {
+          passedSub = config;
+          return this;
+        }
+
+        setPublishKey(config) {
+          passedPublish = config;
+          return this;
+        }
+
+        setInstanceId(config) {
+          passedInstance = config;
+          return this;
+        }
+
+        setUUID(config) {
+          passedUUID = config;
+          return this;
+        }
+
+        getSubscribeKey() {return 'subKey';}
+        getPublishKey() {return 'pubKey';}
+        getAuthKey() {return 'authKe';}
+        getSecretKey() {return 'secKey';}
+        getInstanceId() {return 'instanceID';}
+        getUUID() {return 'UUID';}
+      }
+    });
+
+    proxiedCore.PN_API(commonSettings);
+
+    assert.equal(passedUUID, 'setup-uuid');
+    assert.equal(passedInstance, 'UUID1');
+    assert.equal(passedSub, 'subKey');
+    assert.equal(passedAuth, 'authKey');
+    assert.equal(passedPublish, 'publishKey');
+    assert.equal(passedSecret, 'secretKey');
+    uuid.v4.restore();
+  });
+
+  it('passes the correct arguments to the keychain class', () => {
+    let setKey;
+    let setValue;
+
+    commonSettings.db = {
+      get: function () {
+        return 'UUID10-FROM-DB';
+      },
+      set: function (passedKey, passedValue) {
+        setKey = passedKey;
+        setValue = passedValue;
+      },
+    };
+
+    commonSettings.xdr = function () {};
+    commonSettings.secret_key = 'secretKey';
+
+    sinon.stub(uuid, 'v4')
+      .onFirstCall().returns('UUID1')
+      .onSecondCall().returns('UUID2');
+
+    let passedUUID;
+    let passedSecret;
+    let passedPublish;
+    let passedAuth;
+    let passedSub;
+    let passedInstance;
+
+    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+      './components/keychain': class {
+        setAuthKey(config) {
+          passedAuth = config;
+          return this;
+        }
+
+        setSecretKey(config) {
+          passedSecret = config;
+          return this;
+        }
+
+        setSubscribeKey(config) {
+          passedSub = config;
+          return this;
+        }
+
+        setPublishKey(config) {
+          passedPublish = config;
+          return this;
+        }
+
+        setInstanceId(config) {
+          passedInstance = config;
+          return this;
+        }
+
+        setUUID(config) {
+          passedUUID = config;
+          return this;
+        }
+
+        getSubscribeKey() {return 'subKey';}
+        getPublishKey() {return 'pubKey';}
+        getAuthKey() {return 'authKe';}
+        getSecretKey() {return 'secKey';}
+        getInstanceId() {return 'instanceID';}
+        getUUID() {return 'UUID';}
+      }
+    });
+
+    proxiedCore.PN_API(commonSettings);
+
+    assert.equal(passedUUID, 'UUID10-FROM-DB');
+    assert.equal(passedInstance, 'UUID1');
+    assert.equal(passedSub, 'subKey');
+    assert.equal(passedAuth, 'authKey');
+    assert.equal(passedPublish, 'publishKey');
+    assert.equal(passedSecret, 'secretKey');
+    assert.equal(setKey, 'subKeyuuid');
+    assert.equal(setValue, 'UUID');
+    uuid.v4.restore();
   });
 
   it('passes the correct arguments to the networking class', () => {
-    const setupConfig = {
-      subscribe_key: 'subKey',
-      publish_key: 'publishKey',
-      auth_key: 'authKey',
-      origin: 'customOrigin.origin.com',
-      ssl: true,
-      xdr: function () {}
-    };
-
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/networking': class {
         constructor(xhr, keychain, ssl, domain) {
-          assert.equal(keychain.getAuthKey(), setupConfig.auth_key);
-          assert.equal(keychain.getPublishKey(), setupConfig.publish_key);
-          assert.equal(keychain.getSubscribeKey(), setupConfig.subscribe_key);
-          assert.equal(ssl, setupConfig.ssl);
+          assert.equal(keychain.getAuthKey(), commonSettings.auth_key);
+          assert.equal(keychain.getPublishKey(), commonSettings.publish_key);
+          assert.equal(keychain.getSubscribeKey(), commonSettings.subscribe_key);
+          assert.equal(ssl, commonSettings.ssl);
           assert.equal(domain, 'customOrigin.origin.com');
         }
         fetchTime() {}
       }
     });
 
-    proxiedCore.PN_API(setupConfig);
+    proxiedCore.PN_API(commonSettings);
   });
 });

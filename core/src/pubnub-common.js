@@ -6,6 +6,8 @@
 /* eslint guard-for-in: 0 */
 /* eslint block-scoped-var: 0 space-return-throw-case: 0, no-unused-vars: 0 */
 
+import uuidGenerator from 'uuid';
+
 import Networking from './components/networking';
 import Keychain from './components/keychain';
 import Config from './components/config';
@@ -140,13 +142,19 @@ function PN_API(setup) {
   let db = setup.db || { get: function () {}, set: function () {} };
 
   let keychain = new Keychain()
-    .setInstanceId('')
+    .setInstanceId(uuidGenerator.v4())
     .setAuthKey(setup.auth_key || '')
     .setSecretKey(setup.secret_key || '')
     .setSubscribeKey(setup.subscribe_key)
     .setPublishKey(setup.publish_key);
 
-  keychain.setUUID(setup.uuid || (!setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || ''));
+  keychain.setUUID(
+    setup.uuid ||
+    (!setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || uuidGenerator.v4())
+  );
+
+  // write the new key to storage
+  db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
   let configComponent = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
@@ -1939,10 +1947,6 @@ function PN_API(setup) {
     clearTimeout(_poll_timer);
     clearTimeout(_poll_timer2);
   }
-
-  if (!keychain.getUUID()) keychain.setUUID(SELF['uuid']());
-  if (!keychain.getInstanceId()) keychain.setInstanceId(SELF['uuid']());
-  db['set'](keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
   _poll_timer = utils.timeout(_poll_online, SECOND);
   _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);

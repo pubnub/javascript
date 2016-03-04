@@ -1,5 +1,7 @@
 /* @flow */
 
+import uuidGenerator from 'uuid';
+
 /* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
 var defaultConfiguration = require('../defaults.json');
@@ -129,13 +131,8 @@ function timeout(fun, wait) {
  * ====
  * var my_uuid = generateUUID();
  */
-function generateUUID(callback) {
-  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-    function (c) {
-      var r = Math.random() * 16 | 0;
-      var v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+function generateUUID(callback: Function): string {
+  var u = uuidGenerator.v4();
   if (callback) callback(u);
   return u;
 }

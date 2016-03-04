@@ -33,7 +33,8 @@
   ],
   "dependencies": {
     "agentkeepalive": "~0.2",
-    "lodash": "^4.1.0"
+    "lodash": "^4.1.0",
+    "uuid": "^2.0.1"
   },
   "noAnalyze": false,
   "devDependencies": {
