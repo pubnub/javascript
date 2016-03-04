@@ -12,6 +12,8 @@ import Networking from './components/networking';
 import Keychain from './components/keychain';
 import Config from './components/config';
 
+import TimeEndpoint from './endpoints/time';
+
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
 var utils = require('./utils');
@@ -138,6 +140,7 @@ function PNmessage(args) {
 }
 
 function PN_API(setup) {
+  let jsonp_cb = setup.jsonp_cb || function () { return 0; };
   let { xdr } = setup;
   let db = setup.db || { get: function () {}, set: function () {} };
 
@@ -161,6 +164,15 @@ function PN_API(setup) {
     .setInstanceIdConfig(setup.instance_id || false);
 
   let networkingComponent = new Networking(setup.xdr, keychain, setup.ssl, setup.origin);
+
+  // initalize the endpoints
+  let timeEndpoint = new TimeEndpoint({
+    keychain,
+    config: configComponent,
+    networking: networkingComponent,
+    jsonp_cb: jsonp_cb,
+    get_url_params: _get_url_params
+  });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -197,7 +209,6 @@ function PN_API(setup) {
   var params = setup['params'] || {};
   var error = setup['error'] || function () {};
   var _is_online = setup['_is_online'] || function () { return 1;};
-  var jsonp_cb = setup['jsonp_cb'] || function () { return 0; };
   var CIPHER_KEY = setup['cipher_key'];
   var shutdown = setup['shutdown'];
   var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
@@ -874,26 +885,7 @@ function PN_API(setup) {
     /*
      PUBNUB.time(function(time){ });
      */
-    time: function (callback) {
-      var jsonp = jsonp_cb();
-
-      var data: Object = { uuid: keychain.getUUID(), auth: keychain.getAuthKey() };
-
-      if (configComponent.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      networkingComponent.fetchTime(jsonp, {
-        callback: jsonp,
-        data: _get_url_params(data),
-        success: function (response) {
-          callback(response[0]);
-        },
-        fail: function () {
-          callback(0);
-        }
-      });
-    },
+    time: timeEndpoint.fetchTime,
 
     /*
      PUBNUB.publish({

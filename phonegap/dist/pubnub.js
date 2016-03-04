@@ -60,9 +60,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var packageJSON = __webpack_require__(1);
 	var pubNubCore = __webpack_require__(2);
-	var crypto_obj = __webpack_require__(10);
-	var CryptoJS = __webpack_require__(11);
-	var WS = __webpack_require__(12);
+	var crypto_obj = __webpack_require__(11);
+	var CryptoJS = __webpack_require__(12);
+	var WS = __webpack_require__(13);
 
 	/**
 	 * UTIL LOCALS
@@ -534,6 +534,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
+	var _time = __webpack_require__(10);
+
+	var _time2 = _interopRequireDefault(_time);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var packageJSON = __webpack_require__(1);
@@ -661,6 +665,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function PN_API(setup) {
+	  var jsonp_cb = setup.jsonp_cb || function () {
+	    return 0;
+	  };
 	  var xdr = setup.xdr;
 
 	  var db = setup.db || { get: function get() {}, set: function set() {} };
@@ -675,6 +682,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var configComponent = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
 	  var networkingComponent = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin);
+
+	  // initalize the endpoints
+	  var timeEndpoint = new _time2.default({
+	    keychain: keychain,
+	    config: configComponent,
+	    networking: networkingComponent,
+	    jsonp_cb: jsonp_cb,
+	    get_url_params: _get_url_params
+	  });
 
 	  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
 	  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -708,9 +724,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _error = setup['error'] || function () {};
 	  var _is_online = setup['_is_online'] || function () {
 	    return 1;
-	  };
-	  var jsonp_cb = setup['jsonp_cb'] || function () {
-	    return 0;
 	  };
 	  var CIPHER_KEY = setup['cipher_key'];
 	  var _shutdown = setup['shutdown'];
@@ -1368,26 +1381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.time(function(time){ });
 	     */
-	    time: function time(callback) {
-	      var jsonp = jsonp_cb();
-
-	      var data = { uuid: keychain.getUUID(), auth: keychain.getAuthKey() };
-
-	      if (configComponent.isInstanceIdEnabled()) {
-	        data['instanceid'] = keychain.getInstanceId();
-	      }
-
-	      networkingComponent.fetchTime(jsonp, {
-	        callback: jsonp,
-	        data: _get_url_params(data),
-	        success: function success(response) {
-	          callback(response[0]);
-	        },
-	        fail: function fail() {
-	          callback(0);
-	        }
-	      });
-	    },
+	    time: timeEndpoint.fetchTime,
 
 	    /*
 	     PUBNUB.publish({
@@ -3163,9 +3157,92 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(5);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _config = __webpack_require__(9);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _keychain = __webpack_require__(6);
+
+	var _keychain2 = _interopRequireDefault(_keychain);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+	    var config = _ref.config;
+	    var keychain = _ref.keychain;
+	    var jsonp_cb = _ref.jsonp_cb;
+	    var get_url_params = _ref.get_url_params;
+
+	    _classCallCheck(this, _class);
+
+	    this._networking = networking;
+	    this._config = config;
+	    this._keychain = keychain;
+	    this._jsonp_cb = jsonp_cb;
+	    this._get_url_params = get_url_params;
+	  }
+
+	  _createClass(_class, [{
+	    key: 'fetchTime',
+	    value: function fetchTime(callback) {
+	      var jsonp = this._jsonp_cb();
+
+	      var data = {
+	        uuid: this._keychain.getUUID(),
+	        auth: this._keychain.getAuthKey()
+	      };
+
+	      if (this._config.isInstanceIdEnabled()) {
+	        data['instanceid'] = this._keychain.getInstanceId();
+	      }
+
+	      var onSuccess = function onSuccess(response) {
+	        callback(response[0]);
+	      };
+
+	      var onFail = function onFail() {
+	        callback(0);
+	      };
+
+	      this._networking.fetchTime(jsonp, {
+	        callback: jsonp,
+	        data: this._get_url_params(data),
+	        success: onSuccess,
+	        fail: onFail
+	      });
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+	//# sourceMappingURL=time.js.map
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/* eslint camelcase: 0 eqeqeq: 0 */
 
-	var CryptoJS = __webpack_require__(11);
+	var CryptoJS = __webpack_require__(12);
 
 	function crypto_obj() {
 	  function SHA256(s) {
@@ -3267,7 +3344,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	/*
@@ -3346,7 +3423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports) {
 
 	// ---------------------------------------------------------------------------
