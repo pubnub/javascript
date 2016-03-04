@@ -15,6 +15,7 @@ describe('#components/keychain', () => {
       .setSecretKey('secretKey')
       .setPublishKey('pubKey')
       .setInstanceId('instanceId')
+      .setCipherKey('cipherKey')
       .setUUID('UUID');
   });
 
@@ -40,5 +41,9 @@ describe('#components/keychain', () => {
 
   it('supports UUID storage', () => {
     assert.equal(keychain.getUUID(), 'UUID');
+  });
+
+  it('supports cipher key', () => {
+    assert.equal(keychain.getCipherKey(), 'cipherKey');
   });
 });

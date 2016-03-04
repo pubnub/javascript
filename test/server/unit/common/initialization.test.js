@@ -58,6 +58,7 @@ describe('core initalization', () => {
     let passedAuth;
     let passedSub;
     let passedInstance;
+    let passedCipher;
 
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/keychain': class {
@@ -88,6 +89,11 @@ describe('core initalization', () => {
 
         setUUID(config) {
           passedUUID = config;
+          return this;
+        }
+
+        setCipherKey(config) {
+          passedCipher = config;
           return this;
         }
 
@@ -108,6 +114,7 @@ describe('core initalization', () => {
     assert.equal(passedAuth, 'authKey');
     assert.equal(passedPublish, 'publishKey');
     assert.equal(passedSecret, 'secretKey');
+    assert.equal(passedCipher, undefined);
     uuid.v4.restore();
   });
 
@@ -125,6 +132,7 @@ describe('core initalization', () => {
     let passedPublish;
     let passedAuth;
     let passedSub;
+    let passedCipher;
     let passedInstance;
 
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
@@ -156,6 +164,11 @@ describe('core initalization', () => {
 
         setUUID(config) {
           passedUUID = config;
+          return this;
+        }
+
+        setCipherKey(config) {
+          passedCipher = config;
           return this;
         }
 
@@ -176,6 +189,7 @@ describe('core initalization', () => {
     assert.equal(passedAuth, 'authKey');
     assert.equal(passedPublish, 'publishKey');
     assert.equal(passedSecret, 'secretKey');
+    assert.equal(passedCipher, undefined);
     uuid.v4.restore();
   });
 
@@ -195,6 +209,7 @@ describe('core initalization', () => {
 
     commonSettings.xdr = function () {};
     commonSettings.secret_key = 'secretKey';
+    commonSettings.cipher_key = 'cipherKey';
 
     sinon.stub(uuid, 'v4')
       .onFirstCall().returns('UUID1')
@@ -206,6 +221,7 @@ describe('core initalization', () => {
     let passedAuth;
     let passedSub;
     let passedInstance;
+    let passedCipher;
 
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/keychain': class {
@@ -236,6 +252,11 @@ describe('core initalization', () => {
 
         setUUID(config) {
           passedUUID = config;
+          return this;
+        }
+
+        setCipherKey(config) {
+          passedCipher = config;
           return this;
         }
 
@@ -258,6 +279,7 @@ describe('core initalization', () => {
     assert.equal(passedSecret, 'secretKey');
     assert.equal(setKey, 'subKeyuuid');
     assert.equal(setValue, 'UUID');
+    assert.equal(passedCipher, 'cipherKey');
     uuid.v4.restore();
   });
 

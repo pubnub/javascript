@@ -20,6 +20,12 @@ var _class = function () {
       return this;
     }
   }, {
+    key: "setCipherKey",
+    value: function setCipherKey(cipherKey) {
+      this._cipherKey = cipherKey;
+      return this;
+    }
+  }, {
     key: "setSubscribeKey",
     value: function setSubscribeKey(subscribeKey) {
       this._subscribeKey = subscribeKey;
@@ -52,6 +58,11 @@ var _class = function () {
 
     //
 
+  }, {
+    key: "getCipherKey",
+    value: function getCipherKey() {
+      return this._cipherKey;
+    }
   }, {
     key: "getSubscribeKey",
     value: function getSubscribeKey() {

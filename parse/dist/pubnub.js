@@ -554,7 +554,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var db = setup.db || { get: function get() {}, set: function set() {} };
 
-	  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key);
+	  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key).setCipherKey(setup.cipher_key);
 
 	  keychain.setUUID(setup.uuid || !setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || _uuid2.default.v4());
 
@@ -603,7 +603,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _is_online = setup['_is_online'] || function () {
 	    return 1;
 	  };
-	  var CIPHER_KEY = setup['cipher_key'];
 	  var _shutdown = setup['shutdown'];
 	  var use_send_beacon = typeof setup['use_send_beacon'] != 'undefined' ? setup['use_send_beacon'] : true;
 	  var sendBeacon = use_send_beacon ? setup['sendBeacon'] : null;
@@ -683,11 +682,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  function encrypt(input, key) {
-	    return crypto_obj['encrypt'](input, key || CIPHER_KEY) || input;
+	    return crypto_obj['encrypt'](input, key || keychain.getCipherKey()) || input;
 	  }
 
 	  function decrypt(input, key) {
-	    return crypto_obj['decrypt'](input, key || CIPHER_KEY) || crypto_obj['decrypt'](input, CIPHER_KEY) || input;
+	    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) || crypto_obj['decrypt'](input, keychain.getCipherKey()) || input;
 	  }
 
 	  function error_common(message, callback) {
@@ -951,11 +950,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    get_cipher_key: function get_cipher_key() {
-	      return CIPHER_KEY;
+	      return keychain.getCipherKey();
 	    },
 
 	    set_cipher_key: function set_cipher_key(key) {
-	      CIPHER_KEY = key;
+	      keychain.setCipherKey(key);
 	    },
 
 	    raw_encrypt: function raw_encrypt(input, key) {
@@ -2705,6 +2704,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this;
 	    }
 	  }, {
+	    key: "setCipherKey",
+	    value: function setCipherKey(cipherKey) {
+	      this._cipherKey = cipherKey;
+	      return this;
+	    }
+	  }, {
 	    key: "setSubscribeKey",
 	    value: function setSubscribeKey(subscribeKey) {
 	      this._subscribeKey = subscribeKey;
@@ -2737,6 +2742,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    //
 
+	  }, {
+	    key: "getCipherKey",
+	    value: function getCipherKey() {
+	      return this._cipherKey;
+	    }
 	  }, {
 	    key: "getSubscribeKey",
 	    value: function getSubscribeKey() {
