@@ -64,7 +64,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var CryptoJS = __webpack_require__(3);
 	var packageJSON = __webpack_require__(4);
 	var pubNubCore = __webpack_require__(5);
-	var WS = __webpack_require__(48);
+	var WS = __webpack_require__(54);
 
 	/**
 	 * UTIL LOCALS
@@ -932,7 +932,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _time = __webpack_require__(47);
+	var _responders = __webpack_require__(47);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	var _time = __webpack_require__(53);
 
 	var _time2 = _interopRequireDefault(_time);
 
@@ -1265,53 +1269,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return count;
 	  }
 
-	  function _invoke_callback(response, callback, err) {
-	    if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object') {
-	      if (response['error']) {
-	        var callback_data = {};
-
-	        if (response['message']) {
-	          callback_data['message'] = response['message'];
-	        }
-
-	        if (response['payload']) {
-	          callback_data['payload'] = response['payload'];
-	        }
-
-	        err && err(callback_data);
-	        return;
-	      }
-	      if (response['payload']) {
-	        if (response['next_page']) {
-	          callback && callback(response['payload'], response['next_page']);
-	        } else {
-	          callback && callback(response['payload']);
-	        }
-	        return;
-	      }
-	    }
-	    callback && callback(response);
-	  }
-
-	  function _invoke_error(response, err) {
-	    if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
-	      var callback_data = {};
-
-	      if (response['message']) {
-	        callback_data['message'] = response['message'];
-	      }
-
-	      if (response['payload']) {
-	        callback_data['payload'] = response['payload'];
-	      }
-
-	      err && err(callback_data);
-	      return;
-	    } else {
-	      err && err(response);
-	    }
-	  }
-
 	  function CR(args, callback, url1, data) {
 	    var callback = args['callback'] || callback;
 	    var err = args['error'] || _error;
@@ -1333,10 +1290,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      callback: jsonp,
 	      data: networking.prepareParams(data),
 	      success: function success(response) {
-	        _invoke_callback(response, callback, err);
+	        _responders2.default.callback(response, callback, err);
 	      },
 	      fail: function fail(response) {
-	        _invoke_error(response, err);
+	        _responders2.default.error(response, err);
 	      },
 	      url: url
 	    });
@@ -1386,10 +1343,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: params,
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: url
 	      });
@@ -1440,10 +1397,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: params,
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: url
 	      });
@@ -1697,7 +1654,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          callback([decrypted_messages, response[1], response[2]]);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        }
 	      });
 	    },
@@ -1743,7 +1700,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      networking.fetchReplay(source, destination, {
 	        callback: jsonp,
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail() {
 	          callback([0, 'Disconnected']);
@@ -1817,11 +1774,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: url,
 	        data: networking.prepareParams(params),
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	          _publish(1);
 	        },
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	          _publish(1);
 	        },
 	        mode: post ? 'POST' : 'GET'
@@ -2152,11 +2109,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	          callback: jsonp,
 	          fail: function fail(response) {
 	            if (response && response['error'] && response['service']) {
-	              _invoke_error(response, SUB_ERROR);
+	              _responders2.default.error(response, SUB_ERROR);
 	              _test_connection(false);
 	            } else {
 	              SELF['time'](function (success) {
-	                !success && _invoke_error(response, SUB_ERROR);
+	                !success && _responders2.default.error(response, SUB_ERROR);
 	                _test_connection(success);
 	              });
 	            }
@@ -2327,10 +2284,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: networking.prepareParams(data),
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        debug: debug,
 	        url: url
@@ -2364,10 +2321,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: networking.prepareParams(data),
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)]
 	      });
@@ -2423,10 +2380,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: networking.prepareParams(data),
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: url
 
@@ -2503,10 +2460,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: data,
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: [networking.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', keychain.getSubscribeKey()]
 	      });
@@ -2560,10 +2517,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: params,
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: url
 	      });
@@ -2622,10 +2579,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        data: data,
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        },
 	        url: [networking.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', keychain.getSubscribeKey()]
 	      });
@@ -2696,10 +2653,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data: networking.prepareParams(data),
 	        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'],
 	        success: function success(response) {
-	          _invoke_callback(response, callback, err);
+	          _responders2.default.callback(response, callback, err);
 	        },
 	        fail: function fail(response) {
-	          _invoke_error(response, err);
+	          _responders2.default.error(response, err);
 	        }
 	      });
 	    },
@@ -4821,6 +4778,234 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _pick2 = __webpack_require__(48);
+
+	var _pick3 = _interopRequireDefault(_pick2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class() {
+	    _classCallCheck(this, _class);
+	  }
+
+	  _createClass(_class, null, [{
+	    key: 'callback',
+	    value: function callback(response, _callback, err) {
+	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object') {
+	        if (response.error) {
+	          var preparedData = (0, _pick3.default)(response, ['message', 'payload']);
+	          if (err) err(preparedData);
+	          return;
+	        }
+	        if (response.payload) {
+	          if (response.next_page) {
+	            if (_callback) _callback(response.payload, response.next_page);
+	          } else {
+	            if (_callback) _callback(response.payload);
+	          }
+	          return;
+	        }
+	      }
+	      if (_callback) _callback(response);
+	    }
+	  }, {
+	    key: 'error',
+	    value: function error(response, err) {
+	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object' && response.error) {
+	        var preparedData = (0, _pick3.default)(response, ['message', 'payload']);
+	        if (err) return err(preparedData);
+	      } else {
+	        if (err) return err(response);
+	      }
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+	//# sourceMappingURL=responders.js.map
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseFlatten = __webpack_require__(49),
+	    basePick = __webpack_require__(51),
+	    rest = __webpack_require__(26);
+
+	/**
+	 * Creates an object composed of the picked `object` properties.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Object
+	 * @param {Object} object The source object.
+	 * @param {...(string|string[])} [props] The property names to pick, specified
+	 *  individually or in arrays.
+	 * @returns {Object} Returns the new object.
+	 * @example
+	 *
+	 * var object = { 'a': 1, 'b': '2', 'c': 3 };
+	 *
+	 * _.pick(object, ['a', 'c']);
+	 * // => { 'a': 1, 'c': 3 }
+	 */
+	var pick = rest(function(object, props) {
+	  return object == null ? {} : basePick(object, baseFlatten(props, 1));
+	});
+
+	module.exports = pick;
+
+
+/***/ },
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayPush = __webpack_require__(50),
+	    isArguments = __webpack_require__(38),
+	    isArray = __webpack_require__(41),
+	    isArrayLikeObject = __webpack_require__(39);
+
+	/**
+	 * The base implementation of `_.flatten` with support for restricting flattening.
+	 *
+	 * @private
+	 * @param {Array} array The array to flatten.
+	 * @param {number} depth The maximum recursion depth.
+	 * @param {boolean} [isStrict] Restrict flattening to arrays-like objects.
+	 * @param {Array} [result=[]] The initial result value.
+	 * @returns {Array} Returns the new flattened array.
+	 */
+	function baseFlatten(array, depth, isStrict, result) {
+	  result || (result = []);
+
+	  var index = -1,
+	      length = array.length;
+
+	  while (++index < length) {
+	    var value = array[index];
+	    if (depth > 0 && isArrayLikeObject(value) &&
+	        (isStrict || isArray(value) || isArguments(value))) {
+	      if (depth > 1) {
+	        // Recursively flatten arrays (susceptible to call stack limits).
+	        baseFlatten(value, depth - 1, isStrict, result);
+	      } else {
+	        arrayPush(result, value);
+	      }
+	    } else if (!isStrict) {
+	      result[result.length] = value;
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = baseFlatten;
+
+
+/***/ },
+/* 50 */
+/***/ function(module, exports) {
+
+	/**
+	 * Appends the elements of `values` to `array`.
+	 *
+	 * @private
+	 * @param {Array} array The array to modify.
+	 * @param {Array} values The values to append.
+	 * @returns {Array} Returns `array`.
+	 */
+	function arrayPush(array, values) {
+	  var index = -1,
+	      length = values.length,
+	      offset = array.length;
+
+	  while (++index < length) {
+	    array[offset + index] = values[index];
+	  }
+	  return array;
+	}
+
+	module.exports = arrayPush;
+
+
+/***/ },
+/* 51 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayReduce = __webpack_require__(52);
+
+	/**
+	 * The base implementation of `_.pick` without support for individual
+	 * property names.
+	 *
+	 * @private
+	 * @param {Object} object The source object.
+	 * @param {string[]} props The property names to pick.
+	 * @returns {Object} Returns the new object.
+	 */
+	function basePick(object, props) {
+	  object = Object(object);
+	  return arrayReduce(props, function(result, key) {
+	    if (key in object) {
+	      result[key] = object[key];
+	    }
+	    return result;
+	  }, {});
+	}
+
+	module.exports = basePick;
+
+
+/***/ },
+/* 52 */
+/***/ function(module, exports) {
+
+	/**
+	 * A specialized version of `_.reduce` for arrays without support for
+	 * iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @param {*} [accumulator] The initial value.
+	 * @param {boolean} [initAccum] Specify using the first element of `array` as the initial value.
+	 * @returns {*} Returns the accumulated value.
+	 */
+	function arrayReduce(array, iteratee, accumulator, initAccum) {
+	  var index = -1,
+	      length = array.length;
+
+	  if (initAccum && length) {
+	    accumulator = array[++index];
+	  }
+	  while (++index < length) {
+	    accumulator = iteratee(accumulator, array[index], index, array);
+	  }
+	  return accumulator;
+	}
+
+	module.exports = arrayReduce;
+
+
+/***/ },
+/* 53 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _networking = __webpack_require__(8);
@@ -4893,7 +5078,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 48 */
+/* 54 */
 /***/ function(module, exports) {
 
 	// ---------------------------------------------------------------------------

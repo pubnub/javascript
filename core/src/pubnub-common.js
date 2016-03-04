@@ -11,6 +11,7 @@ import uuidGenerator from 'uuid';
 import Networking from './components/networking';
 import Keychain from './components/keychain';
 import Config from './components/config';
+import Responders from './components/responders';
 
 import TimeEndpoint from './endpoints/time';
 
@@ -360,53 +361,6 @@ function PN_API(setup) {
     return count;
   }
 
-  function _invoke_callback(response, callback, err) {
-    if (typeof response == 'object') {
-      if (response['error']) {
-        var callback_data = {};
-
-        if (response['message']) {
-          callback_data['message'] = response['message'];
-        }
-
-        if (response['payload']) {
-          callback_data['payload'] = response['payload'];
-        }
-
-        err && err(callback_data);
-        return;
-      }
-      if (response['payload']) {
-        if (response['next_page']) {
-          callback && callback(response['payload'], response['next_page']);
-        } else {
-          callback && callback(response['payload']);
-        }
-        return;
-      }
-    }
-    callback && callback(response);
-  }
-
-  function _invoke_error(response, err) {
-    if (typeof response == 'object' && response['error']) {
-      var callback_data = {};
-
-      if (response['message']) {
-        callback_data['message'] = response['message'];
-      }
-
-      if (response['payload']) {
-        callback_data['payload'] = response['payload'];
-      }
-
-      err && err(callback_data);
-      return;
-    } else {
-      err && err(response);
-    }
-  }
-
   function CR(args, callback, url1, data) {
     var callback = args['callback'] || callback;
     var err = args['error'] || error;
@@ -431,10 +385,10 @@ function PN_API(setup) {
       callback: jsonp,
       data: networking.prepareParams(data),
       success: function (response) {
-        _invoke_callback(response, callback, err);
+        Responders.callback(response, callback, err);
       },
       fail: function (response) {
-        _invoke_error(response, err);
+        Responders.error(response, err);
       },
       url: url
     });
@@ -490,10 +444,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: params,
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: url
       });
@@ -547,10 +501,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: params,
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: url
       });
@@ -805,7 +759,7 @@ function PN_API(setup) {
           callback([decrypted_messages, response[1], response[2]]);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         }
       });
     },
@@ -851,7 +805,7 @@ function PN_API(setup) {
       networking.fetchReplay(source, destination, {
         callback: jsonp,
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function () {
           callback([0, 'Disconnected']);
@@ -928,11 +882,11 @@ function PN_API(setup) {
         url: url,
         data: networking.prepareParams(params),
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
           publish(1);
         },
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
           publish(1);
         },
         mode: (post) ? 'POST' : 'GET'
@@ -1267,11 +1221,11 @@ function PN_API(setup) {
           callback: jsonp,
           fail: function (response) {
             if (response && response['error'] && response['service']) {
-              _invoke_error(response, SUB_ERROR);
+              Responders.error(response, SUB_ERROR);
               _test_connection(false);
             } else {
               SELF['time'](function (success) {
-                !success && (_invoke_error(response, SUB_ERROR));
+                !success && (Responders.error(response, SUB_ERROR));
                 _test_connection(success);
               });
             }
@@ -1460,10 +1414,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: networking.prepareParams(data),
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         debug: debug,
         url: url
@@ -1497,10 +1451,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: networking.prepareParams(data),
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: [
           networking.getStandardOrigin(), 'v2', 'presence',
@@ -1574,10 +1528,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: networking.prepareParams(data),
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: url
 
@@ -1654,10 +1608,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: data,
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: [
           networking.getStandardOrigin(), 'v1', 'auth', 'grant',
@@ -1717,10 +1671,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: params,
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: url
       });
@@ -1779,10 +1733,10 @@ function PN_API(setup) {
         callback: jsonp,
         data: data,
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         },
         url: [
           networking.getStandardOrigin(), 'v1', 'auth', 'audit',
@@ -1861,10 +1815,10 @@ function PN_API(setup) {
           'heartbeat'
         ],
         success: function (response) {
-          _invoke_callback(response, callback, err);
+          Responders.callback(response, callback, err);
         },
         fail: function (response) {
-          _invoke_error(response, err);
+          Responders.error(response, err);
         }
       });
     },
