@@ -6,23 +6,39 @@ const assert = require('assert');
 
 
 describe('#components/keychain', () => {
+  let keychain;
+
+  before(() => {
+    keychain = new Keychain()
+      .setSubscribeKey('subKey')
+      .setAuthKey('authKey')
+      .setSecretKey('secretKey')
+      .setPublishKey('pubKey')
+      .setInstanceId('instanceId')
+      .setUUID('UUID');
+  });
+
   it('supports subscribe keys', () => {
-    let keychain = new Keychain().setSubscribeKey('subKey');
     assert.equal(keychain.getSubscribeKey(), 'subKey');
   });
 
   it('supports auth keys', () => {
-    let keychain = new Keychain().setAuthKey('authKey');
     assert.equal(keychain.getAuthKey(), 'authKey');
   });
 
   it('supports secret keys', () => {
-    let keychain = new Keychain().setSecretKey('secretKey');
     assert.equal(keychain.getSecretKey(), 'secretKey');
   });
 
   it('supports publish keys', () => {
-    let keychain = new Keychain().setPublishKey('pubKey');
     assert.equal(keychain.getPublishKey(), 'pubKey');
+  });
+
+  it('supports instance ids', () => {
+    assert.equal(keychain.getInstanceId(), 'instanceId');
+  });
+
+  it('supports UUID storage', () => {
+    assert.equal(keychain.getUUID(), 'UUID');
   });
 });

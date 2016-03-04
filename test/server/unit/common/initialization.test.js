@@ -48,6 +48,12 @@ describe('core initalization', () => {
       ssl: true,
       instance_id: 'instanceIdConfig',
       use_request_id: 'requestIdConfig',
+      db: {
+        get: function () {
+          return 'UUID10';
+        },
+        set: function () {},
+      },
       xdr: function () {}
     };
 
@@ -78,11 +84,16 @@ describe('core initalization', () => {
           return this;
         }
 
+        setUUID(config) {
+          assert.equal(config, 'UUID10');
+        }
+
         getSubscribeKey() {return 'subKey';}
         getPublishKey() {return 'pubKey';}
         getAuthKey() {return 'authKe';}
         getSecretKey() {return 'secKey';}
         getInstanceId() {return 'instanceID';}
+        getUUID() {return 'UUID';}
 
       }
     });

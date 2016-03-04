@@ -937,8 +937,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	function PN_API(setup) {
 	  var xdr = setup.xdr;
 
+	  var db = setup.db || { get: function get() {}, set: function set() {} };
 
 	  var keychain = new _keychain2.default().setInstanceId('').setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key);
+
+	  keychain.setUUID(setup.uuid || !setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || '');
 
 	  var configComponent = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
@@ -980,9 +983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var jsonp_cb = setup['jsonp_cb'] || function () {
 	    return 0;
 	  };
-	  var db = setup['db'] || { get: function get() {}, set: function set() {} };
 	  var CIPHER_KEY = setup['cipher_key'];
-	  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](keychain.getSubscribeKey() + 'uuid') || '';
 	  var _shutdown = setup['shutdown'];
 	  var use_send_beacon = typeof setup['use_send_beacon'] != 'undefined' ? setup['use_send_beacon'] : true;
 	  var sendBeacon = use_send_beacon ? setup['sendBeacon'] : null;
@@ -1220,7 +1221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Announce Leave Event
 	  var SELF = {
 	    LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
-	      var data = { uuid: UUID, auth: auth_key || keychain.getAuthKey() };
+	      var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
 	      var origin = networkingComponent.nextOrigin(false);
 	      var callback = callback || function () {};
 	      var err = error || function () {};
@@ -1272,7 +1273,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
-	      var data = { uuid: UUID, auth: auth_key || keychain.getAuthKey() };
+	      var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
 	      var origin = networkingComponent.nextOrigin(false);
 	      var url;
 	      var params;
@@ -1641,7 +1642,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    time: function time(callback) {
 	      var jsonp = jsonp_cb();
 
-	      var data = { uuid: UUID, auth: keychain.getAuthKey() };
+	      var data = { uuid: keychain.getUUID(), auth: keychain.getAuthKey() };
 
 	      if (configComponent.isInstanceIdEnabled()) {
 	        data['instanceid'] = keychain.getInstanceId();
@@ -1678,7 +1679,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var store = 'store_in_history' in args ? args['store_in_history'] : true;
 	      var jsonp = jsonp_cb();
 	      var add_msg = 'push';
-	      var params = { uuid: UUID, auth: auth_key };
+	      var params = { uuid: keychain.getUUID(), auth: auth_key };
 	      var url;
 
 	      if (args['prepend']) add_msg = 'unshift';
@@ -1897,7 +1898,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          if (noheresync) return;
 	          SELF['here_now']({
 	            channel: channel,
-	            data: _get_url_params({ uuid: UUID, auth: keychain.getAuthKey() }),
+	            data: _get_url_params({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
 	            callback: function callback(here) {
 	              utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
 	                presence({
@@ -1947,7 +1948,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          if (noheresync) return;
 	          SELF['here_now']({
 	            channel_group: channel_group,
-	            data: _get_url_params({ uuid: UUID, auth: keychain.getAuthKey() }),
+	            data: _get_url_params({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
 	            callback: function callback(here) {
 	              utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
 	                presence({
@@ -2023,7 +2024,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Connect to PubNub Subscribe Servers
 	        _reset_offline();
 
-	        var data = _get_url_params({ uuid: UUID, auth: keychain.getAuthKey() });
+	        var data = _get_url_params({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() });
 
 	        if (channel_groups) {
 	          data['channel-group'] = channel_groups;
@@ -2189,7 +2190,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var jsonp = jsonp_cb();
 	      var uuids = 'uuids' in args ? args['uuids'] : true;
 	      var state = args['state'];
-	      var data = { uuid: UUID, auth: auth_key };
+	      var data = { uuid: keychain.getUUID(), auth: auth_key };
 
 	      if (!uuids) data['disable_uuids'] = 1;
 	      if (state) data['state'] = 1;
@@ -2237,7 +2238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var err = args['error'] || function () {};
 	      var auth_key = args['auth_key'] || keychain.getAuthKey();
 	      var jsonp = jsonp_cb();
-	      var uuid = args['uuid'] || UUID;
+	      var uuid = args['uuid'] || keychain.getUUID();
 	      var data = { auth: auth_key };
 
 	      // Make sure we have a Channel
@@ -2271,7 +2272,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var auth_key = args['auth_key'] || keychain.getAuthKey();
 	      var jsonp = jsonp_cb();
 	      var state = args['state'];
-	      var uuid = args['uuid'] || UUID;
+	      var uuid = args['uuid'] || keychain.getUUID();
 	      var channel = args['channel'];
 	      var channel_group = args['channel_group'];
 	      var url;
@@ -2433,7 +2434,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
 	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
 
-	      var params = { uuid: UUID, auth: auth_key, type: gw_type };
+	      var params = { uuid: keychain.getUUID(), auth: auth_key, type: gw_type };
 
 	      // Create URL
 	      url = [networkingComponent.getStandardOrigin(), 'v1/push/sub-key', keychain.getSubscribeKey(), 'devices', device_id];
@@ -2538,12 +2539,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    set_uuid: function set_uuid(uuid) {
-	      UUID = uuid;
+	      keychain.setUUID(uuid);
 	      CONNECT();
 	    },
 
 	    get_uuid: function get_uuid() {
-	      return UUID;
+	      return keychain.getUUID();
 	    },
 
 	    isArray: function isArray(arg) {
@@ -2558,7 +2559,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var callback = args['callback'] || function () {};
 	      var err = args['error'] || function () {};
 	      var jsonp = jsonp_cb();
-	      var data = { uuid: UUID, auth: keychain.getAuthKey() };
+	      var data = { uuid: keychain.getUUID(), auth: keychain.getAuthKey() };
 
 	      var st = JSON.stringify(STATE);
 	      if (st.length > 2) data['state'] = JSON.stringify(STATE);
@@ -2651,9 +2652,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    clearTimeout(_poll_timer2);
 	  }
 
-	  if (!UUID) UUID = SELF['uuid']();
+	  if (!keychain.getUUID()) keychain.setUUID(SELF['uuid']());
 	  if (!keychain.getInstanceId()) keychain.setInstanceId(SELF['uuid']());
-	  db['set'](keychain.getSubscribeKey() + 'uuid', UUID);
+	  db['set'](keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
 	  _poll_timer = utils.timeout(_poll_online, SECOND);
 	  _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
@@ -2872,6 +2873,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
+	    key: "setUUID",
+	    value: function setUUID(UUID) {
+	      this._UUID = UUID;
+	      return this;
+	    }
+	  }, {
 	    key: "setSubscribeKey",
 	    value: function setSubscribeKey(subscribeKey) {
 	      this._subscribeKey = subscribeKey;
@@ -2928,6 +2935,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: "getSecretKey",
 	    value: function getSecretKey() {
 	      return this._secretKey;
+	    }
+	  }, {
+	    key: "getUUID",
+	    value: function getUUID() {
+	      return this._UUID;
 	    }
 	  }]);
 

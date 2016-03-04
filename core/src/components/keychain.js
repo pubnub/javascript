@@ -7,6 +7,12 @@ export default class {
   _authKey: string;
   _instanceId: string;
   _secretKey: string;
+  _UUID: string;
+
+  setUUID(UUID: string): this {
+    this._UUID = UUID;
+    return this;
+  }
 
   setSubscribeKey(subscribeKey: string): this {
     this._subscribeKey = subscribeKey;
@@ -53,6 +59,10 @@ export default class {
 
   getSecretKey(): string {
     return this._secretKey;
+  }
+
+  getUUID(): string {
+    return this._UUID;
   }
 
 }

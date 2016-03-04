@@ -14,6 +14,12 @@ var _class = function () {
   }
 
   _createClass(_class, [{
+    key: "setUUID",
+    value: function setUUID(UUID) {
+      this._UUID = UUID;
+      return this;
+    }
+  }, {
     key: "setSubscribeKey",
     value: function setSubscribeKey(subscribeKey) {
       this._subscribeKey = subscribeKey;
@@ -70,6 +76,11 @@ var _class = function () {
     key: "getSecretKey",
     value: function getSecretKey() {
       return this._secretKey;
+    }
+  }, {
+    key: "getUUID",
+    value: function getUUID() {
+      return this._UUID;
     }
   }]);
 
