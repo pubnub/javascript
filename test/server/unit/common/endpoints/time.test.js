@@ -40,12 +40,15 @@ describe('time endpoints', () => {
   it('calls networking #fetchTime with instanceId', () => {
     config.setInstanceIdConfig(true);
     let fetchTimeStub = sinon.stub(networking, 'fetchTime');
+    let prepareParams = sinon.stub(networking, 'prepareParams').returns({ prepared: 'params' });
 
     let timeEndpoint = new TimeEndpoint({ networking, config, keychain, jsonp_cb, get_url_params });
     timeEndpoint.fetchTime();
     assert.equal(fetchTimeStub.called, 1);
     assert.equal(fetchTimeStub.args[0][0], 'im-jsonp');
-    assert.deepEqual(fetchTimeStub.args[0][1].data, {
+    assert.deepEqual(fetchTimeStub.args[0][1].data, { prepared: 'params' });
+    assert.equal(prepareParams.called, 1);
+    assert.deepEqual(prepareParams.args[0][0], {
       uuid: 'uuidKey',
       auth: 'authKey',
       instanceid: 'instanceId'

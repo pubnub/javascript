@@ -28,7 +28,6 @@ var _class = function () {
     var config = _ref.config;
     var keychain = _ref.keychain;
     var jsonp_cb = _ref.jsonp_cb;
-    var get_url_params = _ref.get_url_params;
 
     _classCallCheck(this, _class);
 
@@ -36,7 +35,6 @@ var _class = function () {
     this._config = config;
     this._keychain = keychain;
     this._jsonp_cb = jsonp_cb;
-    this._get_url_params = get_url_params;
   }
 
   _createClass(_class, [{
@@ -63,7 +61,7 @@ var _class = function () {
 
       this._networking.fetchTime(jsonp, {
         callback: jsonp,
-        data: this._get_url_params(data),
+        data: this._networking.prepareParams(data),
         success: onSuccess,
         fail: onFail
       });

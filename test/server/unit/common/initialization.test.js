@@ -284,6 +284,9 @@ describe('core initalization', () => {
   });
 
   it('passes the correct arguments to the networking class', () => {
+    commonSettings.params = { param1: 10 };
+    let _passedParams;
+
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './components/networking': class {
         constructor(xhr, keychain, ssl, domain) {
@@ -294,10 +297,16 @@ describe('core initalization', () => {
           assert.equal(domain, 'customOrigin.origin.com');
         }
         fetchTime() {}
+        prepareParams() {}
+        setCoreParams(params) {
+          _passedParams = params;
+          return this;
+        }
       }
     });
 
     proxiedCore.PN_API(commonSettings);
+    assert.deepEqual(_passedParams, { param1: 10 });
   });
 
   it('intializes the timeEndpoint class', () => {
@@ -305,15 +314,13 @@ describe('core initalization', () => {
     let _keychain;
     let _config;
     let _jsonp_cb;
-    let _get_url_params;
     let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
       './endpoints/time': class {
-        constructor({ networking, config, keychain, jsonp_cb, get_url_params }) {
+        constructor({ networking, config, keychain, jsonp_cb }) {
           _networking = networking;
           _config = config;
           _keychain = keychain;
           _jsonp_cb = jsonp_cb;
-          _get_url_params = get_url_params;
         }
 
         fetchTime() { }
@@ -325,7 +332,6 @@ describe('core initalization', () => {
     assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
     assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
     assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
-    assert(_get_url_params);
     assert(_jsonp_cb);
   });
 

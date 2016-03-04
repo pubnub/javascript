@@ -1,6 +1,7 @@
 /* @flow */
 
 import Keychain from './keychain.js';
+import _defaults from 'lodash/defaults';
 
 const utils = require('../utils');
 
@@ -20,6 +21,8 @@ export default class {
 
   _providedFQDN: string;
 
+  _coreParams: Object; /* items that must be passed with each request. */
+
   constructor(xdr: Function, keychain: Keychain, ssl: boolean = false, origin: string = 'pubsub.pubnub.com') {
     this._xdr = xdr;
     this._keychain = keychain;
@@ -28,12 +31,28 @@ export default class {
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
 
     this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+    this._coreParams = {};
 
     // create initial origins
     this.shiftStandardOrigin(false);
     this.shiftSubscribeOrigin(false);
   }
 
+  setCoreParams(params: Object): this {
+    this._coreParams = params;
+    return this;
+  }
+
+  addCoreParam(key: string, value: any) {
+    this._coreParams[key] = value;
+  }
+
+  /*
+    Fuses the provided endpoint specific params (from data) with instance params
+  */
+  prepareParams(data: Object): Object {
+    return _defaults(data || {}, this._coreParams);
+  }
 
   nextOrigin(failover: boolean): string {
     // if a custom origin is supplied, use do not bother with shuffling subdomains

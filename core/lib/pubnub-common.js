@@ -171,12 +171,10 @@ function PN_API(setup) {
 
   var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
-  var networking = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin);
+  var networking = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin).setCoreParams(setup.params || {});
 
   // initalize the endpoints
-  var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb,
-    get_url_params: _get_url_params
-  });
+  var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -206,7 +204,6 @@ function PN_API(setup) {
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
   var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-  var params = setup['params'] || {};
   var _error = setup['error'] || function () {};
   var _is_online = setup['_is_online'] || function () {
     return 1;
@@ -227,14 +224,6 @@ function PN_API(setup) {
       return b;
     }
   };
-
-  function _get_url_params(data) {
-    if (!data) data = {};
-    utils.each(params, function (key, value) {
-      if (!(key in data)) data[key] = value;
-    });
-    return data;
-  }
 
   function _object_to_key_list(o) {
     var l = [];
@@ -434,7 +423,7 @@ function PN_API(setup) {
 
     xdr({
       callback: jsonp,
-      data: _get_url_params(data),
+      data: networking.prepareParams(data),
       success: function success(response) {
         _invoke_callback(response, callback, err);
       },
@@ -474,7 +463,7 @@ function PN_API(setup) {
 
       url = [origin, 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave'];
 
-      params = _get_url_params(data);
+      params = networking.prepareParams(data);
 
       if (sendBeacon) {
         var url_string = utils.buildURL(url, params);
@@ -528,7 +517,7 @@ function PN_API(setup) {
 
       url = [origin, 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'channel', utils.encode(','), 'leave'];
 
-      params = _get_url_params(data);
+      params = networking.prepareParams(data);
 
       if (sendBeacon) {
         var url_string = utils.buildURL(url, params);
@@ -617,7 +606,7 @@ function PN_API(setup) {
     },
 
     _add_param: function _add_param(key, val) {
-      params[key] = val;
+      networking.addCoreParam(key, val);
     },
 
     channel_group: function channel_group(args, callback) {
@@ -771,7 +760,7 @@ function PN_API(setup) {
       // Send Message
       networking.fetchHistory(channel, {
         callback: jsonp,
-        data: _get_url_params(params),
+        data: networking.prepareParams(params),
         success: function success(response) {
           if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
             err({ message: response['message'], payload: response['payload'] });
@@ -851,7 +840,7 @@ function PN_API(setup) {
         fail: function fail() {
           callback([0, 'Disconnected']);
         },
-        data: _get_url_params(data)
+        data: networking.prepareParams(data)
       });
     },
 
@@ -918,7 +907,7 @@ function PN_API(setup) {
       PUB_QUEUE[add_msg]({
         callback: jsonp,
         url: url,
-        data: _get_url_params(params),
+        data: networking.prepareParams(params),
         fail: function fail(response) {
           _invoke_error(response, err);
           _publish(1);
@@ -1108,7 +1097,7 @@ function PN_API(setup) {
           if (noheresync) return;
           SELF['here_now']({
             channel: channel,
-            data: _get_url_params({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
+            data: networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
             callback: function callback(here) {
               utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
                 presence({
@@ -1158,7 +1147,7 @@ function PN_API(setup) {
           if (noheresync) return;
           SELF['here_now']({
             channel_group: channel_group,
-            data: _get_url_params({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
+            data: networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
             callback: function callback(here) {
               utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
                 presence({
@@ -1234,7 +1223,7 @@ function PN_API(setup) {
         // Connect to PubNub Subscribe Servers
         _reset_offline();
 
-        var data = _get_url_params({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() });
+        var data = networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() });
 
         if (channel_groups) {
           data['channel-group'] = channel_groups;
@@ -1264,7 +1253,7 @@ function PN_API(setup) {
               });
             }
           },
-          data: _get_url_params(data),
+          data: networking.prepareParams(data),
           url: [networking.getSubscribeOrigin(), 'subscribe', keychain.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
           success: function success(messages) {
             // Check for Errors
@@ -1428,7 +1417,7 @@ function PN_API(setup) {
 
       xdr({
         callback: jsonp,
-        data: _get_url_params(data),
+        data: networking.prepareParams(data),
         success: function success(response) {
           _invoke_callback(response, callback, err);
         },
@@ -1465,7 +1454,7 @@ function PN_API(setup) {
 
       xdr({
         callback: jsonp,
-        data: _get_url_params(data),
+        data: networking.prepareParams(data),
         success: function success(response) {
           _invoke_callback(response, callback, err);
         },
@@ -1486,7 +1475,7 @@ function PN_API(setup) {
       var channel = args['channel'];
       var channel_group = args['channel_group'];
       var url;
-      var data = _get_url_params({ auth: auth_key });
+      var data = networking.prepareParams({ auth: auth_key });
 
       // Make sure we have a Channel
       if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
@@ -1524,7 +1513,7 @@ function PN_API(setup) {
 
       xdr({
         callback: jsonp,
-        data: _get_url_params(data),
+        data: networking.prepareParams(data),
         success: function success(response) {
           _invoke_callback(response, callback, err);
         },
@@ -1589,7 +1578,7 @@ function PN_API(setup) {
 
       if (auth_key) data['auth'] = auth_key;
 
-      data = _get_url_params(data);
+      data = networking.prepareParams(data);
 
       if (!auth_key) delete data['auth'];
 
@@ -1709,7 +1698,7 @@ function PN_API(setup) {
       }
       if (auth_key) data['auth'] = auth_key;
 
-      data = _get_url_params(data);
+      data = networking.prepareParams(data);
 
       if (!auth_key) delete data['auth'];
 
@@ -1796,7 +1785,7 @@ function PN_API(setup) {
 
       xdr({
         callback: jsonp,
-        data: _get_url_params(data),
+        data: networking.prepareParams(data),
         url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'],
         success: function success(response) {
           _invoke_callback(response, callback, err);

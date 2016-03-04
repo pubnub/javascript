@@ -115,6 +115,38 @@ describe('#components/networking', () => {
     });
   });
 
+  describe('#prepareParams', () => {
+    it('works when the passed data is null', () => {
+      let networking = new Networking(() => {}, new Keychain())
+        .setCoreParams({ test: 10 });
+
+      let preparedParams = networking.prepareParams();
+      assert.deepEqual(preparedParams, { test: 10 });
+    });
+
+    it('works when the passed data is set', () => {
+      let networking = new Networking(() => {}, new Keychain())
+        .setCoreParams({ test: 10 });
+
+      let preparedParams = networking.prepareParams({ test2: 15 });
+      assert.deepEqual(preparedParams, { test: 10, test2: 15 });
+    });
+
+    it('works when the default core params are note passed', () => {
+      let networking = new Networking(() => {}, new Keychain());
+      let preparedParams = networking.prepareParams({ test2: 15 });
+      assert.deepEqual(preparedParams, { test2: 15 });
+    });
+
+    it('works when the passed data is set and it over-rides default', () => {
+      let networking = new Networking(() => {}, new Keychain())
+        .setCoreParams({ test: 10 });
+
+      let preparedParams = networking.prepareParams({ test: 15 });
+      assert.deepEqual(preparedParams, { test: 15 });
+    });
+  });
+
   describe('#shiftSubscribeOrigin', () => {
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
       let networking = new Networking(() => {}, new Keychain());

@@ -9,7 +9,6 @@ type timeConstruct = {
   config: Config,
   keychain: Keychain,
   jsonp_cb: Function,
-  get_url_params: Function
 };
 
 export default class {
@@ -18,14 +17,12 @@ export default class {
   _config: Config;
   _keychain: Keychain;
   _jsonp_cb: Function;
-  _get_url_params: Function;
 
-  constructor({ networking, config, keychain, jsonp_cb, get_url_params }: timeConstruct) {
+  constructor({ networking, config, keychain, jsonp_cb }: timeConstruct) {
     this._networking = networking;
     this._config = config;
     this._keychain = keychain;
     this._jsonp_cb = jsonp_cb;
-    this._get_url_params = get_url_params;
   }
 
   fetchTime(callback: Function) {
@@ -50,7 +47,7 @@ export default class {
 
     this._networking.fetchTime(jsonp, {
       callback: jsonp,
-      data: this._get_url_params(data),
+      data: this._networking.prepareParams(data),
       success: onSuccess,
       fail: onFail
     });

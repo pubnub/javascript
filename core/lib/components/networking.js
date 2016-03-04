@@ -10,6 +10,10 @@ var _keychain = require('./keychain.js');
 
 var _keychain2 = _interopRequireDefault(_keychain);
 
+var _defaults2 = require('lodash/defaults');
+
+var _defaults3 = _interopRequireDefault(_defaults2);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -17,6 +21,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var utils = require('../utils');
 
 var _class = function () {
+  /* items that must be passed with each request. */
+
   function _class(xdr, keychain) {
     var ssl = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
     var origin = arguments.length <= 3 || arguments[3] === undefined ? 'pubsub.pubnub.com' : arguments[3];
@@ -30,6 +36,7 @@ var _class = function () {
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
 
     this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+    this._coreParams = {};
 
     // create initial origins
     this.shiftStandardOrigin(false);
@@ -37,6 +44,27 @@ var _class = function () {
   }
 
   _createClass(_class, [{
+    key: 'setCoreParams',
+    value: function setCoreParams(params) {
+      this._coreParams = params;
+      return this;
+    }
+  }, {
+    key: 'addCoreParam',
+    value: function addCoreParam(key, value) {
+      this._coreParams[key] = value;
+    }
+
+    /*
+      Fuses the provided endpoint specific params (from data) with instance params
+    */
+
+  }, {
+    key: 'prepareParams',
+    value: function prepareParams(data) {
+      return (0, _defaults3.default)(data || {}, this._coreParams);
+    }
+  }, {
     key: 'nextOrigin',
     value: function nextOrigin(failover) {
       // if a custom origin is supplied, use do not bother with shuffling subdomains
