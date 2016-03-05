@@ -1,11 +1,11 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Responders from '../../../../../core/src/components/responders';
+import Responders from '../../../../../core/src/presenters/responders';
 const assert = require('assert');
 
 
-describe('#components/responders', () => {
+describe('#presenters/responders', () => {
   describe('#callback', () => {
     it('returns the passed item if it is not an object', (done) => {
       Responders.callback('hello', (reponderResult) => {

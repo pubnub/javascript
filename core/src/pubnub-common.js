@@ -11,7 +11,9 @@ import uuidGenerator from 'uuid';
 import Networking from './components/networking';
 import Keychain from './components/keychain';
 import Config from './components/config';
-import Responders from './components/responders';
+import State from './components/state';
+
+import Responders from './presenters/responders';
 
 import TimeEndpoint from './endpoints/time';
 import PresenceEndpoints from './endpoints/presence';
@@ -40,44 +42,6 @@ function unique(): string {
   return 'x' + ++NOW + '' + (+new Date);
 }
 
-
-/**
- * Generate Subscription Channel List
- * ==================================
- * generate_channel_list(channels_object);
- */
-function generate_channel_list(channels, nopresence) {
-  var list = [];
-  utils.each(channels, function (channel, status) {
-    if (nopresence) {
-      if (channel.search('-pnpres') < 0) {
-        if (status.subscribed) list.push(channel);
-      }
-    } else {
-      if (status.subscribed) list.push(channel);
-    }
-  });
-  return list.sort();
-}
-
-/**
- * Generate Subscription Channel Groups List
- * ==================================
- * generate_channel_group_list(channels_groups object);
- */
-function generate_channel_group_list(channel_groups, nopresence) {
-  var list = [];
-  utils.each(channel_groups, function (channel_group, status) {
-    if (nopresence) {
-      if (channel_group.search('-pnpres') < 0) {
-        if (status.subscribed) list.push(channel_group);
-      }
-    } else {
-      if (status.subscribed) list.push(channel_group);
-    }
-  });
-  return list.sort();
-}
 
 // PUBNUB READY TO CONNECT
 function ready() {
@@ -167,6 +131,8 @@ function PN_API(setup) {
     .setRequestIdConfig(setup.use_request_id || false)
     .setInstanceIdConfig(setup.instance_id || false);
 
+  let stateStorage = new State();
+
   let networking = new Networking(setup.xdr, keychain, setup.ssl, setup.origin)
     .setCoreParams(setup.params || {});
 
@@ -193,8 +159,6 @@ function PN_API(setup) {
   var SUB_BUFF_WAIT = 0;
   var TIMETOKEN = 0;
   var RESUMED = false;
-  var CHANNELS = {};
-  var CHANNEL_GROUPS = {};
   var SUB_ERROR = function () {
   };
   var STATE = {};
@@ -298,7 +262,7 @@ function PN_API(setup) {
 
     if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 ||
       PRESENCE_HB_INTERVAL < 1 ||
-      (!generate_channel_list(CHANNELS, true).length && !generate_channel_group_list(CHANNEL_GROUPS, true).length)) {
+      (!stateStorage.generate_channel_list(true).length && !stateStorage.generate_channel_group_list(true).length)) {
       PRESENCE_HB_RUNNING = false;
       return;
     }
@@ -334,8 +298,8 @@ function PN_API(setup) {
   function each_channel_group(callback) {
     var count = 0;
 
-    utils.each(generate_channel_group_list(CHANNEL_GROUPS), function (channel_group) {
-      var chang = CHANNEL_GROUPS[channel_group];
+    utils.each(stateStorage.generate_channel_group_list(), function (channel_group) {
+      var chang = stateStorage.getChannelGroup(channel_group);
 
       if (!chang) return;
 
@@ -350,8 +314,8 @@ function PN_API(setup) {
   function each_channel(callback) {
     var count = 0;
 
-    utils.each(generate_channel_list(CHANNELS), function (channel) {
-      var chan = CHANNELS[channel];
+    utils.each(stateStorage.generate_channel_list(), function (channel) {
+      var chan = stateStorage.getChannel(channel);
 
       if (!chan) return;
 
@@ -920,7 +884,7 @@ function PN_API(setup) {
         var presenceChannels = [];
 
         utils.each(channels, function (channel) {
-          if (CHANNELS[channel]) existingChannels.push(channel);
+          if (stateStorage.getChannel(channel)) existingChannels.push(channel);
         });
 
         // if we do not have any channels to unsubscribe from, trigger a callback.
@@ -935,7 +899,7 @@ function PN_API(setup) {
         });
 
         utils.each(existingChannels.concat(presenceChannels), function (channel) {
-          if (channel in CHANNELS) CHANNELS[channel] = 0;
+          if (stateStorage.containsChannel(channel)) stateStorage.addChannel(channel, 0);
           if (channel in STATE) delete STATE[channel];
         });
 
@@ -952,7 +916,7 @@ function PN_API(setup) {
         var presenceChannelGroups = [];
 
         utils.each(channelGroups, function (channelGroup) {
-          if (CHANNEL_GROUPS[channelGroup]) existingChannelGroups.push(channelGroup);
+          if (stateStorage.getChannelGroup(channelGroup)) existingChannelGroups.push(channelGroup);
         });
 
         // if we do not have any channel groups to unsubscribe from, trigger a callback.
@@ -967,7 +931,7 @@ function PN_API(setup) {
         });
 
         utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-          if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
+          if (stateStorage.containsChannelGroup(channelGroup)) stateStorage.addChannelGroup(channelGroup, 0);
           if (channelGroup in STATE) delete STATE[channelGroup];
         });
 
@@ -1033,10 +997,10 @@ function PN_API(setup) {
       if (channel) {
         utils.each((channel.join ? channel.join(',') : '' + channel).split(','),
           function (channel) {
-            var settings = CHANNELS[channel] || {};
+            var settings = stateStorage.getChannel(channel) || {};
 
             // Store Channel State
-            CHANNELS[SUB_CHANNEL = channel] = {
+            stateStorage.addChannel(SUB_CHANNEL = channel, {
               name: channel,
               connected: settings.connected,
               disconnected: settings.disconnected,
@@ -1046,7 +1010,7 @@ function PN_API(setup) {
               connect: connect,
               disconnect: disconnect,
               reconnect: reconnect
-            };
+            });
 
             if (state) {
               if (channel in state) {
@@ -1092,9 +1056,9 @@ function PN_API(setup) {
       if (channel_group) {
         utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','),
           function (channel_group) {
-            var settings = CHANNEL_GROUPS[channel_group] || {};
+            var settings = stateStorage.getChannelGroup(channel_group) || {};
 
-            CHANNEL_GROUPS[channel_group] = {
+            stateStorage.addChannelGroup(channel_group, {
               name: channel_group,
               connected: settings.connected,
               disconnected: settings.disconnected,
@@ -1104,7 +1068,7 @@ function PN_API(setup) {
               connect: connect,
               disconnect: disconnect,
               reconnect: reconnect
-            };
+            });
 
             // Presence Enabled?
             if (!presence) return;
@@ -1190,8 +1154,8 @@ function PN_API(setup) {
       // Evented Subscribe
       function _connect() {
         var jsonp = jsonp_cb();
-        var channels = generate_channel_list(CHANNELS).join(',');
-        var channel_groups = generate_channel_group_list(CHANNEL_GROUPS).join(',');
+        var channels = stateStorage.generate_channel_list().join(',');
+        var channel_groups = stateStorage.generate_channel_group_list().join(',');
 
         // Stop Connection
         if (!channels && !channel_groups) return;
@@ -1305,7 +1269,7 @@ function PN_API(setup) {
                 channels = messages[2];
               } else {
                 channels = utils.map(
-                  generate_channel_list(CHANNELS), function (chan) {
+                  stateStorage.generate_channel_list(), function (chan) {
                     return utils.map(
                       Array(messages[0].length)
                         .join(',').split(','),
@@ -1330,9 +1294,9 @@ function PN_API(setup) {
                     && channel2.indexOf('-pnpres') < 0) {
                     channel2 += '-pnpres';
                   }
-                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function () {} };
+                  chobj = stateStorage.getChannelGroup(channel2) || stateStorage.getChannel(channel2) || { callback: function () {} };
                 } else {
-                  chobj = CHANNELS[channel];
+                  chobj = stateStorage.getChannel(channel);
                 }
 
                 var r = [
@@ -1349,7 +1313,7 @@ function PN_API(setup) {
             utils.each(messages[0], function (msg) {
               var next = next_callback();
               var decrypted_msg = decrypt(msg,
-                (CHANNELS[next[1]]) ? CHANNELS[next[1]]['cipher_key'] : null);
+                (stateStorage.getChannel(next[1])) ? stateStorage.getChannel(next[1])['cipher_key'] : null);
               next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
             });
 
@@ -1455,13 +1419,13 @@ function PN_API(setup) {
       }
 
       if (typeof channel != 'undefined'
-        && CHANNELS[channel] && CHANNELS[channel].subscribed) {
+        && stateStorage.getChannel(channel) && stateStorage.getChannel(channel).subscribed) {
         if (state) STATE[channel] = state;
       }
 
       if (typeof channel_group != 'undefined'
-        && CHANNEL_GROUPS[channel_group]
-        && CHANNEL_GROUPS[channel_group].subscribed
+        && stateStorage.getChannelGroup(channel_group)
+        && stateStorage.getChannelGroup(channel_group).subscribed
       ) {
         if (state) STATE[channel_group] = state;
         data['channel-group'] = channel_group;
@@ -1742,7 +1706,7 @@ function PN_API(setup) {
     },
 
     get_subscribed_channels: function () {
-      return generate_channel_list(CHANNELS, true);
+      return stateStorage.generate_channel_list(true);
     },
 
     presence_heartbeat: function (args) {
@@ -1760,8 +1724,8 @@ function PN_API(setup) {
         data['callback'] = jsonp;
       }
 
-      var channels = utils.encode(generate_channel_list(CHANNELS, true)['join'](','));
-      var channel_groups = generate_channel_group_list(CHANNEL_GROUPS, true)['join'](',');
+      var channels = utils.encode(stateStorage.generate_channel_list(true).join(','));
+      var channel_groups = stateStorage.generate_channel_group_list(true).join(',');
 
       if (!channels) channels = ',';
       if (channel_groups) data['channel-group'] = channel_groups;

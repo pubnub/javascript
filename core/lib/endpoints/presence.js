@@ -18,7 +18,7 @@ var _keychain = require('../components/keychain');
 
 var _keychain2 = _interopRequireDefault(_keychain);
 
-var _responders = require('../components/responders');
+var _responders = require('../presenters/responders');
 
 var _responders2 = _interopRequireDefault(_responders);
 

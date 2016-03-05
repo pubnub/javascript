@@ -38,7 +38,7 @@ describe('presence endpoints', () => {
     respondersClass.error = failMock;
 
     proxiedInstance = proxyquire('../../../../../core/src/endpoints/presence', {
-      '../components/responders': respondersClass
+      '../presenters/responders': respondersClass
     }).default;
   });
 

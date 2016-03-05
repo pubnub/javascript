@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Keychain from '../components/keychain';
-import Responders from '../components/responders';
+import Responders from '../presenters/responders';
 
 type presenceConstruct = {
   networking: Networking,

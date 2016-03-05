@@ -60,9 +60,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var packageJSON = __webpack_require__(1);
 	var pubNubCore = __webpack_require__(2);
-	var crypto_obj = __webpack_require__(52);
-	var CryptoJS = __webpack_require__(53);
-	var WS = __webpack_require__(54);
+	var crypto_obj = __webpack_require__(66);
+	var CryptoJS = __webpack_require__(67);
+	var WS = __webpack_require__(68);
 
 	/**
 	 * UTIL LOCALS
@@ -534,15 +534,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _responders = __webpack_require__(44);
+	var _state = __webpack_require__(44);
+
+	var _state2 = _interopRequireDefault(_state);
+
+	var _responders = __webpack_require__(58);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _time = __webpack_require__(50);
+	var _time = __webpack_require__(64);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(51);
+	var _presence = __webpack_require__(65);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
@@ -570,44 +574,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function unique() {
 	  return 'x' + ++NOW + '' + +new Date();
-	}
-
-	/**
-	 * Generate Subscription Channel List
-	 * ==================================
-	 * generate_channel_list(channels_object);
-	 */
-	function generate_channel_list(channels, nopresence) {
-	  var list = [];
-	  utils.each(channels, function (channel, status) {
-	    if (nopresence) {
-	      if (channel.search('-pnpres') < 0) {
-	        if (status.subscribed) list.push(channel);
-	      }
-	    } else {
-	      if (status.subscribed) list.push(channel);
-	    }
-	  });
-	  return list.sort();
-	}
-
-	/**
-	 * Generate Subscription Channel Groups List
-	 * ==================================
-	 * generate_channel_group_list(channels_groups object);
-	 */
-	function generate_channel_group_list(channel_groups, nopresence) {
-	  var list = [];
-	  utils.each(channel_groups, function (channel_group, status) {
-	    if (nopresence) {
-	      if (channel_group.search('-pnpres') < 0) {
-	        if (status.subscribed) list.push(channel_group);
-	      }
-	    } else {
-	      if (status.subscribed) list.push(channel_group);
-	    }
-	  });
-	  return list.sort();
 	}
 
 	// PUBNUB READY TO CONNECT
@@ -690,6 +656,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
+	  var stateStorage = new _state2.default();
+
 	  var networking = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin).setCoreParams(setup.params || {});
 
 	  // initalize the endpoints
@@ -714,8 +682,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var SUB_BUFF_WAIT = 0;
 	  var TIMETOKEN = 0;
 	  var RESUMED = false;
-	  var CHANNELS = {};
-	  var CHANNEL_GROUPS = {};
 	  var SUB_ERROR = function SUB_ERROR() {};
 	  var STATE = {};
 	  var PRESENCE_HB_TIMEOUT = null;
@@ -813,7 +779,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _presence_heartbeat() {
 	    clearTimeout(PRESENCE_HB_TIMEOUT);
 
-	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS, true).length && !generate_channel_group_list(CHANNEL_GROUPS, true).length) {
+	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !stateStorage.generate_channel_list(true).length && !stateStorage.generate_channel_group_list(true).length) {
 	      PRESENCE_HB_RUNNING = false;
 	      return;
 	    }
@@ -849,8 +815,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function each_channel_group(callback) {
 	    var count = 0;
 
-	    utils.each(generate_channel_group_list(CHANNEL_GROUPS), function (channel_group) {
-	      var chang = CHANNEL_GROUPS[channel_group];
+	    utils.each(stateStorage.generate_channel_group_list(), function (channel_group) {
+	      var chang = stateStorage.getChannelGroup(channel_group);
 
 	      if (!chang) return;
 
@@ -864,8 +830,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function each_channel(callback) {
 	    var count = 0;
 
-	    utils.each(generate_channel_list(CHANNELS), function (channel) {
-	      var chan = CHANNELS[channel];
+	    utils.each(stateStorage.generate_channel_list(), function (channel) {
+	      var chan = stateStorage.getChannel(channel);
 
 	      if (!chan) return;
 
@@ -1417,7 +1383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var presenceChannels = [];
 
 	        utils.each(channels, function (channel) {
-	          if (CHANNELS[channel]) existingChannels.push(channel);
+	          if (stateStorage.getChannel(channel)) existingChannels.push(channel);
 	        });
 
 	        // if we do not have any channels to unsubscribe from, trigger a callback.
@@ -1432,7 +1398,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 
 	        utils.each(existingChannels.concat(presenceChannels), function (channel) {
-	          if (channel in CHANNELS) CHANNELS[channel] = 0;
+	          if (stateStorage.containsChannel(channel)) stateStorage.addChannel(channel, 0);
 	          if (channel in STATE) delete STATE[channel];
 	        });
 
@@ -1449,7 +1415,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var presenceChannelGroups = [];
 
 	        utils.each(channelGroups, function (channelGroup) {
-	          if (CHANNEL_GROUPS[channelGroup]) existingChannelGroups.push(channelGroup);
+	          if (stateStorage.getChannelGroup(channelGroup)) existingChannelGroups.push(channelGroup);
 	        });
 
 	        // if we do not have any channel groups to unsubscribe from, trigger a callback.
@@ -1464,7 +1430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 
 	        utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-	          if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
+	          if (stateStorage.containsChannelGroup(channelGroup)) stateStorage.addChannelGroup(channelGroup, 0);
 	          if (channelGroup in STATE) delete STATE[channelGroup];
 	        });
 
@@ -1529,10 +1495,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // Setup Channel(s)
 	      if (channel) {
 	        utils.each((channel.join ? channel.join(',') : '' + channel).split(','), function (channel) {
-	          var settings = CHANNELS[channel] || {};
+	          var settings = stateStorage.getChannel(channel) || {};
 
 	          // Store Channel State
-	          CHANNELS[SUB_CHANNEL = channel] = {
+	          stateStorage.addChannel(SUB_CHANNEL = channel, {
 	            name: channel,
 	            connected: settings.connected,
 	            disconnected: settings.disconnected,
@@ -1542,7 +1508,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            connect: connect,
 	            disconnect: disconnect,
 	            reconnect: reconnect
-	          };
+	          });
 
 	          if (state) {
 	            if (channel in state) {
@@ -1587,9 +1553,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // Setup Channel Groups
 	      if (channel_group) {
 	        utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','), function (channel_group) {
-	          var settings = CHANNEL_GROUPS[channel_group] || {};
+	          var settings = stateStorage.getChannelGroup(channel_group) || {};
 
-	          CHANNEL_GROUPS[channel_group] = {
+	          stateStorage.addChannelGroup(channel_group, {
 	            name: channel_group,
 	            connected: settings.connected,
 	            disconnected: settings.disconnected,
@@ -1599,7 +1565,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            connect: connect,
 	            disconnect: disconnect,
 	            reconnect: reconnect
-	          };
+	          });
 
 	          // Presence Enabled?
 	          if (!presence) return;
@@ -1684,8 +1650,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // Evented Subscribe
 	      function _connect() {
 	        var jsonp = jsonp_cb();
-	        var channels = generate_channel_list(CHANNELS).join(',');
-	        var channel_groups = generate_channel_group_list(CHANNEL_GROUPS).join(',');
+	        var channels = stateStorage.generate_channel_list().join(',');
+	        var channel_groups = stateStorage.generate_channel_group_list().join(',');
 
 	        // Stop Connection
 	        if (!channels && !channel_groups) return;
@@ -1793,7 +1759,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	              } else if (messages.length > 2) {
 	                channels = messages[2];
 	              } else {
-	                channels = utils.map(generate_channel_list(CHANNELS), function (chan) {
+	                channels = utils.map(stateStorage.generate_channel_list(), function (chan) {
 	                  return utils.map(Array(messages[0].length).join(',').split(','), function () {
 	                    return chan;
 	                  });
@@ -1813,9 +1779,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                  if (channel && channel.indexOf('-pnpres') >= 0 && channel2.indexOf('-pnpres') < 0) {
 	                    channel2 += '-pnpres';
 	                  }
-	                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function callback() {} };
+	                  chobj = stateStorage.getChannelGroup(channel2) || stateStorage.getChannel(channel2) || { callback: function callback() {} };
 	                } else {
-	                  chobj = CHANNELS[channel];
+	                  chobj = stateStorage.getChannel(channel);
 	                }
 
 	                var r = [chobj.callback || SUB_CALLBACK, channel.split(PRESENCE_SUFFIX)[0]];
@@ -1827,7 +1793,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var latency = detect_latency(+messages[1]);
 	            utils.each(messages[0], function (msg) {
 	              var next = next_callback();
-	              var decrypted_msg = decrypt(msg, CHANNELS[next[1]] ? CHANNELS[next[1]]['cipher_key'] : null);
+	              var decrypted_msg = decrypt(msg, stateStorage.getChannel(next[1]) ? stateStorage.getChannel(next[1])['cipher_key'] : null);
 	              next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
 	            });
 
@@ -1929,11 +1895,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data['callback'] = jsonp;
 	      }
 
-	      if (typeof channel != 'undefined' && CHANNELS[channel] && CHANNELS[channel].subscribed) {
+	      if (typeof channel != 'undefined' && stateStorage.getChannel(channel) && stateStorage.getChannel(channel).subscribed) {
 	        if (state) STATE[channel] = state;
 	      }
 
-	      if (typeof channel_group != 'undefined' && CHANNEL_GROUPS[channel_group] && CHANNEL_GROUPS[channel_group].subscribed) {
+	      if (typeof channel_group != 'undefined' && stateStorage.getChannelGroup(channel_group) && stateStorage.getChannelGroup(channel_group).subscribed) {
 	        if (state) STATE[channel_group] = state;
 	        data['channel-group'] = channel_group;
 
@@ -2194,7 +2160,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    get_subscribed_channels: function get_subscribed_channels() {
-	      return generate_channel_list(CHANNELS, true);
+	      return stateStorage.generate_channel_list(true);
 	    },
 
 	    presence_heartbeat: function presence_heartbeat(args) {
@@ -2212,8 +2178,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data['callback'] = jsonp;
 	      }
 
-	      var channels = utils.encode(generate_channel_list(CHANNELS, true)['join'](','));
-	      var channel_groups = generate_channel_group_list(CHANNEL_GROUPS, true)['join'](',');
+	      var channels = utils.encode(stateStorage.generate_channel_list(true).join(','));
+	      var channel_groups = stateStorage.generate_channel_group_list(true).join(',');
 
 	      if (!channels) channels = ',';
 	      if (channel_groups) data['channel-group'] = channel_groups;
@@ -4365,11 +4331,499 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _each2 = __webpack_require__(45);
+
+	var _each3 = _interopRequireDefault(_each2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class() {
+	    _classCallCheck(this, _class);
+
+	    this._channelStorage = {};
+	    this._channelGroupStorage = {};
+	  }
+
+	  _createClass(_class, [{
+	    key: 'containsChannel',
+	    value: function containsChannel(name) {
+	      return name in this._channelStorage;
+	    }
+	  }, {
+	    key: 'containsChannelGroup',
+	    value: function containsChannelGroup(name) {
+	      return name in this._channelGroupStorage;
+	    }
+	  }, {
+	    key: 'getChannel',
+	    value: function getChannel(name) {
+	      return this._channelStorage[name];
+	    }
+	  }, {
+	    key: 'getChannelGroup',
+	    value: function getChannelGroup(name) {
+	      return this._channelGroupStorage[name];
+	    }
+	  }, {
+	    key: 'addChannel',
+	    value: function addChannel(name, metadata) {
+	      this._channelStorage[name] = metadata;
+	    }
+	  }, {
+	    key: 'addChannelGroup',
+	    value: function addChannelGroup(name, metadata) {
+	      this._channelGroupStorage[name] = metadata;
+	    }
+
+	    /**
+	     * Generate Subscription Channel List
+	     * ==================================
+	     * generate_channel_list(channels_object);
+	     * nopresence (==include-presence) == false --> presence True
+	     */
+
+	  }, {
+	    key: 'generate_channel_list',
+	    value: function generate_channel_list(nopresence) {
+	      var list = [];
+	      (0, _each3.default)(this._channelStorage, function (status, channel) {
+	        if (nopresence) {
+	          if (channel.search('-pnpres') < 0) {
+	            if (status.subscribed) list.push(channel);
+	          }
+	        } else {
+	          if (status.subscribed) list.push(channel);
+	        }
+	      });
+	      return list.sort();
+	    }
+
+	    /**
+	     * Generate Subscription Channel Groups List
+	     * ==================================
+	     * generate_channel_group_list(channels_groups object);
+	     */
+
+	  }, {
+	    key: 'generate_channel_group_list',
+	    value: function generate_channel_group_list(nopresence) {
+	      var list = [];
+	      (0, _each3.default)(this._channelGroupStorage, function (status, channel_group) {
+	        if (nopresence) {
+	          if (channel_group.search('-pnpres') < 0) {
+	            if (status.subscribed) list.push(channel_group);
+	          }
+	        } else {
+	          if (status.subscribed) list.push(channel_group);
+	        }
+	      });
+	      return list.sort();
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+	//# sourceMappingURL=state.js.map
+
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(46);
+
+
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayEach = __webpack_require__(47),
+	    baseCastFunction = __webpack_require__(48),
+	    baseEach = __webpack_require__(50),
+	    isArray = __webpack_require__(38);
+
+	/**
+	 * Iterates over elements of `collection` invoking `iteratee` for each element.
+	 * The iteratee is invoked with three arguments: (value, index|key, collection).
+	 * Iteratee functions may exit iteration early by explicitly returning `false`.
+	 *
+	 * **Note:** As with other "Collections" methods, objects with a "length" property
+	 * are iterated like arrays. To avoid this behavior use `_.forIn` or `_.forOwn`
+	 * for object iteration.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @alias each
+	 * @category Collection
+	 * @param {Array|Object} collection The collection to iterate over.
+	 * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+	 * @returns {Array|Object} Returns `collection`.
+	 * @example
+	 *
+	 * _([1, 2]).forEach(function(value) {
+	 *   console.log(value);
+	 * });
+	 * // => logs `1` then `2`
+	 *
+	 * _.forEach({ 'a': 1, 'b': 2 }, function(value, key) {
+	 *   console.log(key);
+	 * });
+	 * // => logs 'a' then 'b' (iteration order is not guaranteed)
+	 */
+	function forEach(collection, iteratee) {
+	  return (typeof iteratee == 'function' && isArray(collection))
+	    ? arrayEach(collection, iteratee)
+	    : baseEach(collection, baseCastFunction(iteratee));
+	}
+
+	module.exports = forEach;
+
+
+/***/ },
+/* 47 */
+/***/ function(module, exports) {
+
+	/**
+	 * A specialized version of `_.forEach` for arrays without support for
+	 * iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @returns {Array} Returns `array`.
+	 */
+	function arrayEach(array, iteratee) {
+	  var index = -1,
+	      length = array.length;
+
+	  while (++index < length) {
+	    if (iteratee(array[index], index, array) === false) {
+	      break;
+	    }
+	  }
+	  return array;
+	}
+
+	module.exports = arrayEach;
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var identity = __webpack_require__(49);
+
+	/**
+	 * Casts `value` to `identity` if it's not a function.
+	 *
+	 * @private
+	 * @param {*} value The value to inspect.
+	 * @returns {Array} Returns the array-like object.
+	 */
+	function baseCastFunction(value) {
+	  return typeof value == 'function' ? value : identity;
+	}
+
+	module.exports = baseCastFunction;
+
+
+/***/ },
+/* 49 */
+/***/ function(module, exports) {
+
+	/**
+	 * This method returns the first argument given to it.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Util
+	 * @param {*} value Any value.
+	 * @returns {*} Returns `value`.
+	 * @example
+	 *
+	 * var object = { 'user': 'fred' };
+	 *
+	 * _.identity(object) === object;
+	 * // => true
+	 */
+	function identity(value) {
+	  return value;
+	}
+
+	module.exports = identity;
+
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseForOwn = __webpack_require__(51),
+	    createBaseEach = __webpack_require__(57);
+
+	/**
+	 * The base implementation of `_.forEach` without support for iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Array|Object} collection The collection to iterate over.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @returns {Array|Object} Returns `collection`.
+	 */
+	var baseEach = createBaseEach(baseForOwn);
+
+	module.exports = baseEach;
+
+
+/***/ },
+/* 51 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseFor = __webpack_require__(52),
+	    keys = __webpack_require__(54);
+
+	/**
+	 * The base implementation of `_.forOwn` without support for iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Object} object The object to iterate over.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @returns {Object} Returns `object`.
+	 */
+	function baseForOwn(object, iteratee) {
+	  return object && baseFor(object, iteratee, keys);
+	}
+
+	module.exports = baseForOwn;
+
+
+/***/ },
+/* 52 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var createBaseFor = __webpack_require__(53);
+
+	/**
+	 * The base implementation of `baseForIn` and `baseForOwn` which iterates
+	 * over `object` properties returned by `keysFunc` invoking `iteratee` for
+	 * each property. Iteratee functions may exit iteration early by explicitly
+	 * returning `false`.
+	 *
+	 * @private
+	 * @param {Object} object The object to iterate over.
+	 * @param {Function} iteratee The function invoked per iteration.
+	 * @param {Function} keysFunc The function to get the keys of `object`.
+	 * @returns {Object} Returns `object`.
+	 */
+	var baseFor = createBaseFor();
+
+	module.exports = baseFor;
+
+
+/***/ },
+/* 53 */
+/***/ function(module, exports) {
+
+	/**
+	 * Creates a base function for methods like `_.forIn`.
+	 *
+	 * @private
+	 * @param {boolean} [fromRight] Specify iterating from right to left.
+	 * @returns {Function} Returns the new base function.
+	 */
+	function createBaseFor(fromRight) {
+	  return function(object, iteratee, keysFunc) {
+	    var index = -1,
+	        iterable = Object(object),
+	        props = keysFunc(object),
+	        length = props.length;
+
+	    while (length--) {
+	      var key = props[fromRight ? length : ++index];
+	      if (iteratee(iterable[key], key, iterable) === false) {
+	        break;
+	      }
+	    }
+	    return object;
+	  };
+	}
+
+	module.exports = createBaseFor;
+
+
+/***/ },
+/* 54 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseHas = __webpack_require__(55),
+	    baseKeys = __webpack_require__(56),
+	    indexKeys = __webpack_require__(33),
+	    isArrayLike = __webpack_require__(16),
+	    isIndex = __webpack_require__(22),
+	    isPrototype = __webpack_require__(40);
+
+	/**
+	 * Creates an array of the own enumerable property names of `object`.
+	 *
+	 * **Note:** Non-object values are coerced to objects. See the
+	 * [ES spec](http://ecma-international.org/ecma-262/6.0/#sec-object.keys)
+	 * for more details.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 * @example
+	 *
+	 * function Foo() {
+	 *   this.a = 1;
+	 *   this.b = 2;
+	 * }
+	 *
+	 * Foo.prototype.c = 3;
+	 *
+	 * _.keys(new Foo);
+	 * // => ['a', 'b'] (iteration order is not guaranteed)
+	 *
+	 * _.keys('hi');
+	 * // => ['0', '1']
+	 */
+	function keys(object) {
+	  var isProto = isPrototype(object);
+	  if (!(isProto || isArrayLike(object))) {
+	    return baseKeys(object);
+	  }
+	  var indexes = indexKeys(object),
+	      skipIndexes = !!indexes,
+	      result = indexes || [],
+	      length = result.length;
+
+	  for (var key in object) {
+	    if (baseHas(object, key) &&
+	        !(skipIndexes && (key == 'length' || isIndex(key, length))) &&
+	        !(isProto && key == 'constructor')) {
+	      result.push(key);
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = keys;
+
+
+/***/ },
+/* 55 */
+/***/ function(module, exports) {
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+
+	/** Built-in value references. */
+	var getPrototypeOf = Object.getPrototypeOf;
+
+	/**
+	 * The base implementation of `_.has` without support for deep paths.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} key The key to check.
+	 * @returns {boolean} Returns `true` if `key` exists, else `false`.
+	 */
+	function baseHas(object, key) {
+	  // Avoid a bug in IE 10-11 where objects with a [[Prototype]] of `null`,
+	  // that are composed entirely of index properties, return `false` for
+	  // `hasOwnProperty` checks of them.
+	  return hasOwnProperty.call(object, key) ||
+	    (typeof object == 'object' && key in object && getPrototypeOf(object) === null);
+	}
+
+	module.exports = baseHas;
+
+
+/***/ },
+/* 56 */
+/***/ function(module, exports) {
+
+	/* Built-in method references for those with the same name as other `lodash` methods. */
+	var nativeKeys = Object.keys;
+
+	/**
+	 * The base implementation of `_.keys` which doesn't skip the constructor
+	 * property of prototypes or treat sparse arrays as dense.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 */
+	function baseKeys(object) {
+	  return nativeKeys(Object(object));
+	}
+
+	module.exports = baseKeys;
+
+
+/***/ },
+/* 57 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArrayLike = __webpack_require__(16);
+
+	/**
+	 * Creates a `baseEach` or `baseEachRight` function.
+	 *
+	 * @private
+	 * @param {Function} eachFunc The function to iterate over a collection.
+	 * @param {boolean} [fromRight] Specify iterating from right to left.
+	 * @returns {Function} Returns the new base function.
+	 */
+	function createBaseEach(eachFunc, fromRight) {
+	  return function(collection, iteratee) {
+	    if (collection == null) {
+	      return collection;
+	    }
+	    if (!isArrayLike(collection)) {
+	      return eachFunc(collection, iteratee);
+	    }
+	    var length = collection.length,
+	        index = fromRight ? length : -1,
+	        iterable = Object(collection);
+
+	    while ((fromRight ? index-- : ++index < length)) {
+	      if (iteratee(iterable[index], index, iterable) === false) {
+	        break;
+	      }
+	    }
+	    return collection;
+	  };
+	}
+
+	module.exports = createBaseEach;
+
+
+/***/ },
+/* 58 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _pick2 = __webpack_require__(45);
+	var _pick2 = __webpack_require__(59);
 
 	var _pick3 = _interopRequireDefault(_pick2);
 
@@ -4422,11 +4876,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 45 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFlatten = __webpack_require__(46),
-	    basePick = __webpack_require__(48),
+	var baseFlatten = __webpack_require__(60),
+	    basePick = __webpack_require__(62),
 	    rest = __webpack_require__(23);
 
 	/**
@@ -4454,10 +4908,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 46 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayPush = __webpack_require__(47),
+	var arrayPush = __webpack_require__(61),
 	    isArguments = __webpack_require__(35),
 	    isArray = __webpack_require__(38),
 	    isArrayLikeObject = __webpack_require__(36);
@@ -4499,7 +4953,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 47 */
+/* 61 */
 /***/ function(module, exports) {
 
 	/**
@@ -4525,10 +4979,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 48 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayReduce = __webpack_require__(49);
+	var arrayReduce = __webpack_require__(63);
 
 	/**
 	 * The base implementation of `_.pick` without support for individual
@@ -4553,7 +5007,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 49 */
+/* 63 */
 /***/ function(module, exports) {
 
 	/**
@@ -4584,7 +5038,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 50 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4665,7 +5119,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 51 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4688,7 +5142,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
-	var _responders = __webpack_require__(44);
+	var _responders = __webpack_require__(58);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
@@ -4756,12 +5210,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 52 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* eslint camelcase: 0 eqeqeq: 0 */
 
-	var CryptoJS = __webpack_require__(53);
+	var CryptoJS = __webpack_require__(67);
 
 	function crypto_obj() {
 	  function SHA256(s) {
@@ -4863,7 +5317,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 53 */
+/* 67 */
 /***/ function(module, exports) {
 
 	/*
@@ -4942,7 +5396,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 54 */
+/* 68 */
 /***/ function(module, exports) {
 
 	// ---------------------------------------------------------------------------
