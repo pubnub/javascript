@@ -219,6 +219,37 @@ describe('#components/networking', () => {
     });
   });
 
+  describe('#fetchWhereNow', () => {
+    it('passes arguments to the xdr module', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.fetchWhereNow('my-uuid', {
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'presence',
+        'sub_key', 'subKey', 'uuid', 'my-uuid']);
+    });
+  });
+
   describe('#fetchReplay', () => {
     it('passes arguments to the xdr module', () => {
       let xdrStub = sinon.stub();

@@ -113,6 +113,16 @@ export default class {
     this._xdr({ data, callback, success, fail, url });
   }
 
+  fetchWhereNow(uuid: string, { data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v2', 'presence',
+      'sub_key', this._keychain.getSubscribeKey(),
+      'uuid', utils.encode(uuid)
+    ];
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
   getOrigin(): string {
     return this._providedFQDN;
   }

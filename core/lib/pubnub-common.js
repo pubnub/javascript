@@ -32,6 +32,10 @@ var _time = require('./endpoints/time');
 
 var _time2 = _interopRequireDefault(_time);
 
+var _presence = require('./endpoints/presence');
+
+var _presence2 = _interopRequireDefault(_presence);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var packageJSON = require('../../package.json');
@@ -165,6 +169,7 @@ function PN_API(setup) {
   var xdr = setup.xdr;
 
   var db = setup.db || { get: function get() {}, set: function set() {} };
+  var _error = setup.error || function () {};
 
   var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key).setCipherKey(setup.cipher_key);
 
@@ -179,6 +184,7 @@ function PN_API(setup) {
 
   // initalize the endpoints
   var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb });
+  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb, error: _error });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -208,7 +214,6 @@ function PN_API(setup) {
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
   var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-  var _error = setup['error'] || function () {};
   var _is_online = setup['_is_online'] || function () {
     return 1;
   };
@@ -1390,36 +1395,7 @@ function PN_API(setup) {
      PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
      */
     where_now: function where_now(args, callback) {
-      var callback = args['callback'] || callback;
-      var err = args['error'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var jsonp = jsonp_cb();
-      var uuid = args['uuid'] || keychain.getUUID();
-      var data = { auth: auth_key };
-
-      // Make sure we have a Channel
-      if (!callback) return _error('Missing Callback');
-      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      xdr({
-        callback: jsonp,
-        data: networking.prepareParams(data),
-        success: function success(response) {
-          _responders2.default.callback(response, callback, err);
-        },
-        fail: function fail(response) {
-          _responders2.default.error(response, err);
-        },
-        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)]
-      });
+      presenceEndpoints.whereNow(args, callback);
     },
 
     state: function state(args, callback) {
