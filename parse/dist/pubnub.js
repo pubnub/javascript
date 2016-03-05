@@ -325,50 +325,50 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 		"noAnalyze": false,
 		"devDependencies": {
-			"babel-core": "^6.5.2",
-			"babel-eslint": "^5.0.0",
-			"babel-plugin-transform-class-properties": "^6.5.2",
-			"babel-plugin-transform-flow-strip-types": "^6.5.0",
-			"babel-preset-es2015": "^6.5.0",
-			"chai": "^3.5.0",
-			"eslint": "^2.2.0",
-			"eslint-config-airbnb": "^6.0.2",
-			"eslint-plugin-flowtype": "^2.1.0",
-			"eslint-plugin-mocha": "^2.0.0",
-			"eslint-plugin-react": "^4.1.0",
-			"flow-bin": "^0.22.0",
-			"grunt": "^0.4.5",
-			"grunt-babel": "^6.0.0",
-			"grunt-contrib-clean": "^1.0.0",
-			"grunt-contrib-copy": "^0.8.2",
-			"grunt-contrib-uglify": "^0.11.1",
-			"grunt-env": "^0.4.4",
-			"grunt-eslint": "^18.0.0",
-			"grunt-flow": "^1.0.3",
-			"grunt-karma": "^0.12.1",
-			"grunt-mocha-istanbul": "^3.0.1",
-			"grunt-text-replace": "^0.4.0",
-			"grunt-webpack": "^1.0.11",
-			"imports-loader": "^0.6.5",
-			"isparta": "^4.0.0",
-			"json-loader": "^0.5.4",
-			"karma": "^0.13.21",
-			"karma-chai": "^0.1.0",
-			"karma-mocha": "^0.2.1",
-			"karma-phantomjs-launcher": "^1.0.0",
+			"babel-core": "^6.6.5",
+			"babel-eslint": "5.0.0",
+			"babel-plugin-transform-class-properties": "^6.6.0",
+			"babel-plugin-transform-flow-strip-types": "^6.6.5",
+			"babel-preset-es2015": "^6.6.0",
+			"chai": "3.5.0",
+			"eslint": "2.2.0",
+			"eslint-config-airbnb": "6.0.2",
+			"eslint-plugin-flowtype": "2.1.0",
+			"eslint-plugin-mocha": "2.0.0",
+			"eslint-plugin-react": "4.1.0",
+			"flow-bin": "^0.22.1",
+			"grunt": "0.4.5",
+			"grunt-babel": "6.0.0",
+			"grunt-contrib-clean": "1.0.0",
+			"grunt-contrib-copy": "^1.0.0",
+			"grunt-contrib-uglify": "^1.0.0",
+			"grunt-env": "0.4.4",
+			"grunt-eslint": "18.0.0",
+			"grunt-flow": "1.0.3",
+			"grunt-karma": "0.12.1",
+			"grunt-mocha-istanbul": "3.0.1",
+			"grunt-text-replace": "0.4.0",
+			"grunt-webpack": "1.0.11",
+			"imports-loader": "0.6.5",
+			"isparta": "4.0.0",
+			"json-loader": "0.5.4",
+			"karma": "0.13.21",
+			"karma-chai": "0.1.0",
+			"karma-mocha": "^0.2.2",
+			"karma-phantomjs-launcher": "1.0.0",
 			"karma-spec-reporter": "0.0.24",
-			"load-grunt-tasks": "^3.4.0",
-			"mocha": "^2.4.5",
-			"nock": "^1.1.0",
-			"node-uuid": "^1.4.7",
-			"nodeunit": "^0.9.0",
-			"phantomjs-prebuilt": "^2.1.4",
-			"proxyquire": "^1.7.4",
-			"sinon": "^1.17.2",
-			"uglify-js": "^2.6.1",
-			"underscore": "^1.7.0",
-			"webpack": "^1.12.13",
-			"webpack-dev-server": "^1.14.1"
+			"load-grunt-tasks": "^3.4.1",
+			"mocha": "2.4.5",
+			"nock": "1.1.0",
+			"node-uuid": "1.4.7",
+			"nodeunit": "0.9.0",
+			"phantomjs-prebuilt": "2.1.4",
+			"proxyquire": "1.7.4",
+			"sinon": "^1.17.3",
+			"uglify-js": "^2.6.2",
+			"underscore": "1.7.0",
+			"webpack": "^1.12.14",
+			"webpack-dev-server": "1.14.1"
 		},
 		"bundleDependencies": [],
 		"license": "MIT",
@@ -423,6 +423,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _time = __webpack_require__(52);
 
 	var _time2 = _interopRequireDefault(_time);
+
+	var _presence = __webpack_require__(53);
+
+	var _presence2 = _interopRequireDefault(_presence);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -557,6 +561,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var xdr = setup.xdr;
 
 	  var db = setup.db || { get: function get() {}, set: function set() {} };
+	  var _error = setup.error || function () {};
 
 	  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key).setCipherKey(setup.cipher_key);
 
@@ -571,6 +576,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // initalize the endpoints
 	  var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb });
+	  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb, error: _error });
 
 	  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
 	  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -600,7 +606,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var PRESENCE_HB_RUNNING = false;
 	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
 	  var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-	  var _error = setup['error'] || function () {};
 	  var _is_online = setup['_is_online'] || function () {
 	    return 1;
 	  };
@@ -1782,36 +1787,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
 	     */
 	    where_now: function where_now(args, callback) {
-	      var callback = args['callback'] || callback;
-	      var err = args['error'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
-	      var jsonp = jsonp_cb();
-	      var uuid = args['uuid'] || keychain.getUUID();
-	      var data = { auth: auth_key };
-
-	      // Make sure we have a Channel
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-
-	      if (jsonp != '0') {
-	        data['callback'] = jsonp;
-	      }
-
-	      if (config.isInstanceIdEnabled()) {
-	        data['instanceid'] = keychain.getInstanceId();
-	      }
-
-	      xdr({
-	        callback: jsonp,
-	        data: networking.prepareParams(data),
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        },
-	        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)]
-	      });
+	      presenceEndpoints.whereNow(args, callback);
 	    },
 
 	    state: function state(args, callback) {
@@ -2552,7 +2528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._providedFQDN;
 	      }
 
-	      var newSubDomain = undefined;
+	      var newSubDomain = void 0;
 
 	      if (failover) {
 	        newSubDomain = utils.generateUUID().split('-')[0];
@@ -2625,6 +2601,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var fail = _ref3.fail;
 
 	      var url = [this.getStandardOrigin(), 'time', jsonp];
+
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'fetchWhereNow',
+	    value: function fetchWhereNow(uuid, _ref4) {
+	      var data = _ref4.data;
+	      var callback = _ref4.callback;
+	      var success = _ref4.success;
+	      var fail = _ref4.fail;
+
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
@@ -3121,8 +3109,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * // => false
 	 */
 	function isArrayLike(value) {
-	  return value != null &&
-	    !(typeof value == 'function' && isFunction(value)) && isLength(getLength(value));
+	  return value != null && isLength(getLength(value)) && !isFunction(value);
 	}
 
 	module.exports = isArrayLike;
@@ -3206,8 +3193,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function isFunction(value) {
 	  // The use of `Object#toString` avoids issues with the `typeof` operator
-	  // in Safari 8 which returns 'object' for typed array constructors, and
-	  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+	  // in Safari 8 which returns 'object' for typed array and weak map constructors,
+	  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
 	  var tag = isObject(value) ? objectToString.call(value) : '';
 	  return tag == funcTag || tag == genTag;
 	}
@@ -3971,9 +3958,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 42 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isFunction = __webpack_require__(21);
+/***/ function(module, exports) {
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -3987,7 +3972,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function isPrototype(value) {
 	  var Ctor = value && value.constructor,
-	      proto = (isFunction(Ctor) && Ctor.prototype) || objectProto;
+	      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
 
 	  return value === proto;
 	}
@@ -4559,6 +4544,97 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	//# sourceMappingURL=time.js.map
+
+
+/***/ },
+/* 53 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(7);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _config = __webpack_require__(45);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _keychain = __webpack_require__(8);
+
+	var _keychain2 = _interopRequireDefault(_keychain);
+
+	var _responders = __webpack_require__(46);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+	    var config = _ref.config;
+	    var keychain = _ref.keychain;
+	    var jsonp_cb = _ref.jsonp_cb;
+	    var error = _ref.error;
+
+	    _classCallCheck(this, _class);
+
+	    this._networking = networking;
+	    this._config = config;
+	    this._keychain = keychain;
+	    this._jsonp_cb = jsonp_cb;
+	    this._error = error;
+	  }
+
+	  _createClass(_class, [{
+	    key: 'whereNow',
+	    value: function whereNow(args, argumentCallback) {
+	      var callback = args.callback || argumentCallback;
+	      var err = args.error || function () {};
+	      var auth_key = args.auth_key || this._keychain.getAuthKey();
+	      var jsonp = this._jsonp_cb();
+	      var uuid = args.uuid || this._keychain.getUUID();
+	      var data = { auth: auth_key };
+
+	      // Make sure we have a Channel
+	      if (!callback) return this._error('Missing Callback');
+	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+
+	      if (jsonp !== 0) {
+	        data['callback'] = jsonp;
+	      }
+
+	      if (this._config.isInstanceIdEnabled()) {
+	        data['instanceid'] = this._keychain.getInstanceId();
+	      }
+
+	      this._networking.fetchWhereNow(uuid, {
+	        callback: jsonp,
+	        data: this._networking.prepareParams(data),
+	        success: function success(response) {
+	          _responders2.default.callback(response, callback, err);
+	        },
+	        fail: function fail(response) {
+	          _responders2.default.error(response, err);
+	        }
+	      });
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+	//# sourceMappingURL=presence.js.map
 
 
 /***/ }

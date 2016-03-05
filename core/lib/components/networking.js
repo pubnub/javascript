@@ -72,7 +72,7 @@ var _class = function () {
         return this._providedFQDN;
       }
 
-      var newSubDomain = undefined;
+      var newSubDomain = void 0;
 
       if (failover) {
         newSubDomain = utils.generateUUID().split('-')[0];
@@ -145,6 +145,18 @@ var _class = function () {
       var fail = _ref3.fail;
 
       var url = [this.getStandardOrigin(), 'time', jsonp];
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
+    key: 'fetchWhereNow',
+    value: function fetchWhereNow(uuid, _ref4) {
+      var data = _ref4.data;
+      var callback = _ref4.callback;
+      var success = _ref4.success;
+      var fail = _ref4.fail;
+
+      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }

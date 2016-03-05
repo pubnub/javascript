@@ -309,43 +309,95 @@ describe('core initalization', () => {
     assert.deepEqual(_passedParams, { param1: 10 });
   });
 
-  it('intializes the timeEndpoint class', () => {
-    let _networking;
-    let _keychain;
-    let _config;
-    let _jsonp_cb;
-    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
-      './endpoints/time': class {
-        constructor({ networking, config, keychain, jsonp_cb }) {
-          _networking = networking;
-          _config = config;
-          _keychain = keychain;
-          _jsonp_cb = jsonp_cb;
+  describe('endpoint -- time', () => {
+    it('intializes the timeEndpoint class', () => {
+      let _networking;
+      let _keychain;
+      let _config;
+      let _jsonp_cb;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/time': class {
+          constructor({ networking, config, keychain, jsonp_cb }) {
+            _networking = networking;
+            _config = config;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+          }
+
+          fetchTime() { }
+
         }
+      });
 
-        fetchTime() { }
-
-      }
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
+      assert(_jsonp_cb);
     });
 
-    proxiedCore.PN_API(commonSettings);
-    assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
-    assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
-    assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
-    assert(_jsonp_cb);
+    it('mounts the time endpoint', () => {
+      let _mockedArgs;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/time': class {
+          fetchTime(callback) { _mockedArgs = callback; }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.time('callback');
+      assert.equal(_mockedArgs, 'callback');
+    });
   });
 
-  it('mounts the time endpoint', () => {
-    let _mockedArgs;
-    let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
-      './endpoints/time': class {
-        fetchTime(callback) { _mockedArgs = callback; }
-      }
+  describe('endpoints -- presence', () => {
+    it('intializes the presenceEndpoints class', () => {
+      let _networking;
+      let _keychain;
+      let _config;
+      let _jsonp_cb;
+      let _error;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/presence': class {
+          constructor({ networking, config, keychain, jsonp_cb, error }) {
+            _networking = networking;
+            _config = config;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+            _error = error;
+          }
+
+          whereNow() { }
+
+        }
+      });
+
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
+      assert(_error);
+      assert(_jsonp_cb);
     });
 
-    let pubnubInstance = proxiedCore.PN_API(commonSettings);
+    it('mounts the time endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/presence': class {
+          whereNow(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
 
-    pubnubInstance.time('callback');
-    assert.equal(_mockedArgs, 'callback');
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.where_now({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
   });
 });

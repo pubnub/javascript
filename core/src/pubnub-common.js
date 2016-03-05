@@ -14,6 +14,7 @@ import Config from './components/config';
 import Responders from './components/responders';
 
 import TimeEndpoint from './endpoints/time';
+import PresenceEndpoints from './endpoints/presence';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -144,6 +145,7 @@ function PN_API(setup) {
   let jsonp_cb = setup.jsonp_cb || function () { return 0; };
   let { xdr } = setup;
   let db = setup.db || { get: function () {}, set: function () {} };
+  let error = setup.error || function () {};
 
   let keychain = new Keychain()
     .setInstanceId(uuidGenerator.v4())
@@ -170,6 +172,7 @@ function PN_API(setup) {
 
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ keychain, config, networking, jsonp_cb });
+  let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, jsonp_cb, error });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -203,7 +206,6 @@ function PN_API(setup) {
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
   var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-  var error = setup['error'] || function () {};
   var _is_online = setup['_is_online'] || function () { return 1;};
   var shutdown = setup['shutdown'];
   var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
@@ -1428,40 +1430,7 @@ function PN_API(setup) {
      PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
      */
     where_now: function (args, callback) {
-      var callback = args['callback'] || callback;
-      var err = args['error'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var jsonp = jsonp_cb();
-      var uuid = args['uuid'] || keychain.getUUID();
-      var data: Object = { auth: auth_key };
-
-      // Make sure we have a Channel
-      if (!callback) return error('Missing Callback');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      xdr({
-        callback: jsonp,
-        data: networking.prepareParams(data),
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        },
-        url: [
-          networking.getStandardOrigin(), 'v2', 'presence',
-          'sub_key', keychain.getSubscribeKey(),
-          'uuid', utils.encode(uuid)
-        ]
-      });
+      presenceEndpoints.whereNow(args, callback);
     },
 
     state: function (args, callback) {
