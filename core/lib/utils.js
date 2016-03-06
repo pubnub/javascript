@@ -160,6 +160,30 @@ function pamEncode(str) {
   });
 }
 
+function _object_to_key_list(o) {
+  var l = [];
+  each(o, function (key) {
+    l.push(key);
+  });
+  return l;
+}
+
+function _object_to_key_list_sorted(o) {
+  return _object_to_key_list(o).sort();
+}
+
+function _get_pam_sign_input_from_params(params) {
+  var si = '';
+  var l = _object_to_key_list_sorted(params);
+
+  for (var i in l) {
+    var k = l[i];
+    si += k + '=' + pamEncode(params[k]);
+    if (i !== l.length - 1) si += '&';
+  }
+  return si;
+}
+
 module.exports = {
   buildURL: buildURL,
   encode: encode,
@@ -172,6 +196,9 @@ module.exports = {
   generateUUID: generateUUID,
   timeout: timeout,
   supplant: supplant,
-  grep: grep
+  grep: grep,
+  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
+  _object_to_key_list_sorted: _object_to_key_list_sorted,
+  _object_to_key_list: _object_to_key_list
 };
 //# sourceMappingURL=utils.js.map

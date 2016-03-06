@@ -1,8 +1,6 @@
 /* @flow */
 
 import Keychain from './keychain.js';
-import _defaults from 'lodash/defaults';
-
 const utils = require('../utils');
 
 
@@ -51,7 +49,11 @@ export default class {
     Fuses the provided endpoint specific params (from data) with instance params
   */
   prepareParams(data: Object): Object {
-    return _defaults(data || {}, this._coreParams);
+    if (!data) data = {};
+    utils.each(this._coreParams, function (key, value) {
+      if (!(key in data)) data[key] = value;
+    });
+    return data;
   }
 
   nextOrigin(failover: boolean): string {
@@ -93,6 +95,33 @@ export default class {
     let url = [
       this.getStandardOrigin(), 'v2', 'history', 'sub-key',
       this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)
+    ];
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
+  provisionDeviceForPush(deviceId: String, { data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v1', 'push', 'sub-key',
+      this._keychain.getSubscribeKey(), 'devices', deviceId
+    ];
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
+  performGrant({ data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v1', 'auth', 'grant',
+      'sub-key', this._keychain.getSubscribeKey()
+    ];
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
+  performAudit({ data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v1', 'auth', 'audit',
+      'sub-key', this._keychain.getSubscribeKey()
     ];
 
     this._xdr({ data, callback, success, fail, url });

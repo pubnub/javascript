@@ -398,4 +398,97 @@ describe('#components/networking', () => {
         'pubKey', 'subKey', 'src', 'dist']);
     });
   });
+
+  describe('#performAudit', () => {
+    it('passes arguments to the xdr module', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.performAudit({
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v1', 'auth',
+        'audit', 'sub-key', 'subKey']);
+    });
+  });
+
+  describe('#performGrant', () => {
+    it('passes arguments to the xdr module', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.performGrant({
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v1', 'auth',
+        'grant', 'sub-key', 'subKey']);
+    });
+  });
+
+  describe('#provisionDeviceForPush', () => {
+    it('passes arguments to the xdr module', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.provisionDeviceForPush('device1', {
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v1', 'push',
+        'sub-key', 'subKey', 'devices', 'device1']);
+    });
+  });
 });

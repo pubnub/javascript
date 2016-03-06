@@ -19,6 +19,9 @@ describe('core initalization', () => {
       ssl: true,
       instance_id: 'instanceIdConfig',
       use_request_id: 'requestIdConfig',
+      hmac_SHA256() {
+        return 'this-is-hmac';
+      },
       xdr: function () {}
     };
   });
@@ -466,6 +469,173 @@ describe('core initalization', () => {
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
 
       pubnubInstance.history({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+  });
+
+  describe('endpoints -- replay', () => {
+    it('intializes the replayEndpoints class', () => {
+      let _networking;
+      let _keychain;
+      let _jsonp_cb;
+      let _error;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/replay': class {
+          constructor({ networking, keychain, jsonp_cb, error }) {
+            _networking = networking;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+            _error = error;
+          }
+
+          performReplay() { }
+
+        }
+      });
+
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert(_error);
+      assert(_jsonp_cb);
+    });
+
+    it('mounts the replay endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/replay': class {
+          performReplay(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.replay({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+  });
+
+  describe('endpoints -- push', () => {
+    it('intializes the pushEndpoints class', () => {
+      let _networking;
+      let _keychain;
+      let _config;
+      let _jsonp_cb;
+      let _error;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/push': class {
+          constructor({ networking, keychain, jsonp_cb, error, config }) {
+            _networking = networking;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+            _config = config;
+            _error = error;
+          }
+
+          provisionDevice() { }
+
+        }
+      });
+
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
+      assert(_error);
+      assert(_jsonp_cb);
+    });
+
+    it('mounts the provisionDevice endpoint', () => {
+      let _mockedArgs;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/push': class {
+          provisionDevice(args) {
+            _mockedArgs = args;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.mobile_gw_provision({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+    });
+  });
+
+  describe('endpoints -- access manager', () => {
+    it('intializes the accessEndpoints class', () => {
+      let _networking;
+      let _keychain;
+      let _jsonp_cb;
+      let _error;
+      let _config;
+      let _hmac_SHA256;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/access': class {
+          constructor({ networking, keychain, jsonp_cb, error, config, hmac_SHA256 }) {
+            _networking = networking;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+            _error = error;
+            _config = config;
+            _hmac_SHA256 = hmac_SHA256;
+          }
+
+          performGrant() { }
+          performAudit() { }
+
+        }
+      });
+
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
+      assert.equal(_hmac_SHA256(), 'this-is-hmac');
+      assert(_error);
+      assert(_jsonp_cb);
+    });
+
+    it('mounts the grant endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/access': class {
+          performGrant(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.grant({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the audit endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/access': class {
+          performAudit(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.audit({ fake: 'args' }, 'callback');
       assert.deepEqual(_mockedArgs, { fake: 'args' });
       assert.equal(_mockedCallback, 'callback');
     });

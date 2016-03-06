@@ -18,6 +18,9 @@ import Responders from './presenters/responders';
 import TimeEndpoint from './endpoints/time';
 import PresenceEndpoints from './endpoints/presence';
 import HistoryEndpoint from './endpoints/history';
+import PushEndpoint from './endpoints/push';
+import AccessEndpoints from './endpoints/access';
+import ReplyEndpoint from './endpoints/replay';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -111,6 +114,7 @@ function PN_API(setup) {
   let { xdr } = setup;
   let db = setup.db || { get: function () {}, set: function () {} };
   let error = setup.error || function () {};
+  let hmac_SHA256 = setup.hmac_SHA256;
   let crypto_obj = setup.crypto_obj || {
     encrypt(a, key) { return a; },
     decrypt(b, key) { return b; }
@@ -154,15 +158,17 @@ function PN_API(setup) {
 
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ keychain, config, networking, jsonp_cb });
+  let pushEndpoint = new PushEndpoint({ keychain, config, networking, jsonp_cb, error });
   let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, jsonp_cb, error });
   let historyEndpoint = new HistoryEndpoint({ keychain, networking, jsonp_cb, error, decrypt });
+  let accessEndpoints = new AccessEndpoints({ keychain, config, networking, jsonp_cb, error, hmac_SHA256 });
+  let replayEndpoint = new ReplyEndpoint({ keychain, networking, jsonp_cb, error });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
   var KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
   var TIME_CHECK = setup['timecheck'] || 0;
   var NOLEAVE = setup['noleave'] || 0;
-  var hmac_SHA256 = setup['hmac_SHA256'];
   var SSL = setup['ssl'] ? 's' : '';
   var CONNECT = function () {
   };
@@ -195,30 +201,6 @@ function PN_API(setup) {
   var _poll_timer2;
 
   if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
-
-  function _object_to_key_list(o) {
-    var l = [];
-    utils.each(o, function (key, value) {
-      l.push(key);
-    });
-    return l;
-  }
-
-  function _object_to_key_list_sorted(o) {
-    return _object_to_key_list(o).sort();
-  }
-
-  function _get_pam_sign_input_from_params(params) {
-    var si = '';
-    var l = _object_to_key_list_sorted(params);
-
-    for (var i in l) {
-      var k = l[i];
-      si += k + '=' + utils.pamEncode(params[k]);
-      if (i != l.length - 1) si += '&';
-    }
-    return si;
-  }
 
   function validate_presence_heartbeat(heartbeat, cur_heartbeat, error) {
     var err = false;
@@ -359,6 +341,20 @@ function PN_API(setup) {
 
   // Announce Leave Event
   var SELF = {
+    history(args: Object, callback: Function) { historyEndpoint.fetchHistory(args, callback); },
+
+    time(callback: Function) { timeEndpoint.fetchTime(callback); },
+
+    here_now(args: Object, callback: Function) { presenceEndpoints.hereNow(args, callback); },
+    where_now(args: Object, callback: Function) { presenceEndpoints.whereNow(args, callback); },
+
+    grant(args: Object, callback: Function) { accessEndpoints.performGrant(args, callback); },
+    audit(args: Object, callback: Function) { accessEndpoints.performAudit(args, callback); },
+
+    mobile_gw_provision(args: Object) { pushEndpoint.provisionDevice(args); },
+
+    replay(args: Object, callback: Function) { replayEndpoint.performReplay(args, callback); },
+
     LEAVE: function (channel, blocking, auth_key, callback, error) {
       var data: Object = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
       var origin = networking.nextOrigin(false);
@@ -646,76 +642,12 @@ function PN_API(setup) {
     },
 
     /*
-     PUBNUB.history({
-     channel  : 'my_chat_channel',
-     limit    : 100,
-     callback : function(history) { }
-     });
-     */
-    history: function (args, callback) { historyEndpoint.fetchHistory(args, callback); },
-
-    /*
-     PUBNUB.replay({
-     source      : 'my_channel',
-     destination : 'new_channel'
-     });
-     */
-    replay: function (args, callback) {
-      var callback = callback || args['callback'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var source = args['source'];
-      var destination = args['destination'];
-      var err = args['error'] || args['error'] || function () {};
-      var stop = args['stop'];
-      var start = args['start'];
-      var end = args['end'];
-      var reverse = args['reverse'];
-      var limit = args['limit'];
-      var jsonp = jsonp_cb();
-      var data = {};
-      var url;
-
-      // Check User Input
-      if (!source) return error('Missing Source Channel');
-      if (!destination) return error('Missing Destination Channel');
-      if (!keychain.getPublishKey()) return error('Missing Publish Key');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-
-      // Setup URL Params
-      if (jsonp != '0') data['callback'] = jsonp;
-      if (stop) data['stop'] = 'all';
-      if (reverse) data['reverse'] = 'true';
-      if (start) data['start'] = start;
-      if (end) data['end'] = end;
-      if (limit) data['count'] = limit;
-
-      data['auth'] = auth_key;
-
-      // Start (or Stop) Replay!
-      networking.fetchReplay(source, destination, {
-        callback: jsonp,
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function () {
-          callback([0, 'Disconnected']);
-        },
-        data: networking.prepareParams(data)
-      });
-    },
-
-    /*
      PUBNUB.auth('AJFLKAJSDKLA');
      */
     auth: function (auth) {
       keychain.setAuthKey(auth);
       CONNECT();
     },
-
-    /*
-     PUBNUB.time(function(time){ });
-     */
-    time: (callback) => { timeEndpoint.fetchTime(callback); },
 
     /*
      PUBNUB.publish({
@@ -1258,20 +1190,6 @@ function PN_API(setup) {
       CONNECT();
     },
 
-    /*
-     PUBNUB.here_now({ channel : 'my_chat', callback : fun });
-     */
-    here_now: function (args: Object, callback: Function) {
-      presenceEndpoints.hereNow(args, callback);
-    },
-
-    /*
-     PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
-     */
-    where_now: function (args: Object, callback: Function) {
-      presenceEndpoints.whereNow(args, callback);
-    },
-
     state: function (args, callback) {
       var callback = args['callback'] || callback || function (r) {};
       var err = args['error'] || function () {};
@@ -1343,213 +1261,6 @@ function PN_API(setup) {
         },
         url: url
 
-      });
-    },
-
-    /*
-     PUBNUB.grant({
-     channel  : 'my_chat',
-     callback : fun,
-     error    : fun,
-     ttl      : 24 * 60, // Minutes
-     read     : true,
-     write    : true,
-     auth_key : '3y8uiajdklytowsj'
-     });
-     */
-    grant: function (args, callback) {
-      var callback = args['callback'] || callback;
-      var err = args['error'] || function () {};
-      var channel = args['channel'] || args['channels'];
-      var channel_group = args['channel_group'];
-      var jsonp = jsonp_cb();
-      var ttl = args['ttl'];
-      var r = (args['read']) ? '1' : '0';
-      var w = (args['write']) ? '1' : '0';
-      var m = (args['manage']) ? '1' : '0';
-      var auth_key = args['auth_key'] || args['auth_keys'];
-
-      if (!callback) return error('Missing Callback');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-      if (!keychain.getPublishKey()) return error('Missing Publish Key');
-      if (!keychain.getSecretKey()) return error('Missing Secret Key');
-
-      var timestamp = Math.floor(new Date().getTime() / 1000);
-      var sign_input = keychain.getSubscribeKey() + '\n' + keychain.getPublishKey() + '\n' + 'grant' + '\n';
-
-      var data: Object = { w: w, r: r, timestamp: timestamp };
-
-      if (args['manage']) {
-        data['m'] = m;
-      }
-      if (utils.isArray(channel)) {
-        channel = channel['join'](',');
-      }
-      if (utils.isArray(auth_key)) {
-        auth_key = auth_key['join'](',');
-      }
-      if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
-      if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
-        data['channel-group'] = channel_group;
-      }
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-      if (ttl || ttl === 0) data['ttl'] = ttl;
-
-      if (auth_key) data['auth'] = auth_key;
-
-      data = networking.prepareParams(data);
-
-      if (!auth_key) delete data['auth'];
-
-      sign_input += _get_pam_sign_input_from_params(data);
-
-      var signature = hmac_SHA256(sign_input, keychain.getSecretKey());
-
-      signature = signature.replace(/\+/g, '-');
-      signature = signature.replace(/\//g, '_');
-
-      data['signature'] = signature;
-
-      xdr({
-        callback: jsonp,
-        data: data,
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        },
-        url: [
-          networking.getStandardOrigin(), 'v1', 'auth', 'grant',
-          'sub-key', keychain.getSubscribeKey()
-        ]
-      });
-    },
-
-    /*
-     PUBNUB.mobile_gw_provision ({
-     device_id: 'A655FBA9931AB',
-     op       : 'add' | 'remove',
-     gw_type  : 'apns' | 'gcm',
-     channel  : 'my_chat',
-     callback : fun,
-     error    : fun,
-     });
-     */
-
-    mobile_gw_provision: function (args) {
-      var callback = args['callback'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var err = args['error'] || function () {};
-      var jsonp = jsonp_cb();
-      var channel = args['channel'];
-      var op = args['op'];
-      var gw_type = args['gw_type'];
-      var device_id = args['device_id'];
-      var url;
-
-      if (!device_id) return error('Missing Device ID (device_id)');
-      if (!gw_type) return error('Missing GW Type (gw_type: gcm or apns)');
-      if (!op) return error('Missing GW Operation (op: add or remove)');
-      if (!channel) return error('Missing gw destination Channel (channel)');
-      if (!keychain.getPublishKey()) return error('Missing Publish Key');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-
-      var params: Object = { uuid: keychain.getUUID(), auth: auth_key, type: gw_type };
-
-      // Create URL
-      url = [
-        networking.getStandardOrigin(), 'v1/push/sub-key',
-        keychain.getSubscribeKey(), 'devices', device_id
-      ];
-
-      if (op == 'add') {
-        params['add'] = channel;
-      } else if (op == 'remove') {
-        params['remove'] = channel;
-      }
-
-      if (config.isInstanceIdEnabled()) {
-        params['instanceid'] = keychain.getInstanceId();
-      }
-
-      xdr({
-        callback: jsonp,
-        data: params,
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        },
-        url: url
-      });
-    },
-
-    /*
-     PUBNUB.audit({
-     channel  : 'my_chat',
-     callback : fun,
-     error    : fun,
-     read     : true,
-     write    : true,
-     auth_key : '3y8uiajdklytowsj'
-     });
-     */
-    audit: function (args, callback) {
-      var callback = args['callback'] || callback;
-      var err = args['error'] || function () {};
-      var channel = args['channel'];
-      var channel_group = args['channel_group'];
-      var auth_key = args['auth_key'];
-      var jsonp = jsonp_cb();
-
-      // Make sure we have a Channel
-      if (!callback) return error('Missing Callback');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-      if (!keychain.getPublishKey()) return error('Missing Publish Key');
-      if (!keychain.getSecretKey()) return error('Missing Secret Key');
-
-      var timestamp = Math.floor(new Date().getTime() / 1000);
-      var sign_input = keychain.getSubscribeKey() + '\n' + keychain.getPublishKey() + '\n' + 'audit' + '\n';
-
-      var data: Object = { timestamp: timestamp };
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-      if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
-      if (typeof channel_group != 'undefined' && channel_group != null && channel_group.length > 0) {
-        data['channel-group'] = channel_group;
-      }
-      if (auth_key) data['auth'] = auth_key;
-
-      data = networking.prepareParams(data);
-
-      if (!auth_key) delete data['auth'];
-
-      sign_input += _get_pam_sign_input_from_params(data);
-
-      var signature = hmac_SHA256(sign_input, keychain.getSecretKey());
-
-      signature = signature.replace(/\+/g, '-');
-      signature = signature.replace(/\//g, '_');
-
-      data['signature'] = signature;
-      xdr({
-        callback: jsonp,
-        data: data,
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        },
-        url: [
-          networking.getStandardOrigin(), 'v1', 'auth', 'audit',
-          'sub-key', keychain.getSubscribeKey()
-        ]
       });
     },
 

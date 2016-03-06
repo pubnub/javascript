@@ -10,10 +10,6 @@ var _keychain = require('./keychain.js');
 
 var _keychain2 = _interopRequireDefault(_keychain);
 
-var _defaults2 = require('lodash/defaults');
-
-var _defaults3 = _interopRequireDefault(_defaults2);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -62,7 +58,11 @@ var _class = function () {
   }, {
     key: 'prepareParams',
     value: function prepareParams(data) {
-      return (0, _defaults3.default)(data || {}, this._coreParams);
+      if (!data) data = {};
+      utils.each(this._coreParams, function (key, value) {
+        if (!(key in data)) data[key] = value;
+      });
+      return data;
     }
   }, {
     key: 'nextOrigin',
@@ -125,12 +125,48 @@ var _class = function () {
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
   }, {
-    key: 'fetchReplay',
-    value: function fetchReplay(source, destination, _ref2) {
+    key: 'provisionDeviceForPush',
+    value: function provisionDeviceForPush(deviceId, _ref2) {
       var data = _ref2.data;
       var callback = _ref2.callback;
       var success = _ref2.success;
       var fail = _ref2.fail;
+
+      var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._keychain.getSubscribeKey(), 'devices', deviceId];
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
+    key: 'performGrant',
+    value: function performGrant(_ref3) {
+      var data = _ref3.data;
+      var callback = _ref3.callback;
+      var success = _ref3.success;
+      var fail = _ref3.fail;
+
+      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
+    key: 'performAudit',
+    value: function performAudit(_ref4) {
+      var data = _ref4.data;
+      var callback = _ref4.callback;
+      var success = _ref4.success;
+      var fail = _ref4.fail;
+
+      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
+    key: 'fetchReplay',
+    value: function fetchReplay(source, destination, _ref5) {
+      var data = _ref5.data;
+      var callback = _ref5.callback;
+      var success = _ref5.success;
+      var fail = _ref5.fail;
 
       var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
@@ -138,11 +174,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchTime',
-    value: function fetchTime(jsonp, _ref3) {
-      var data = _ref3.data;
-      var callback = _ref3.callback;
-      var success = _ref3.success;
-      var fail = _ref3.fail;
+    value: function fetchTime(jsonp, _ref6) {
+      var data = _ref6.data;
+      var callback = _ref6.callback;
+      var success = _ref6.success;
+      var fail = _ref6.fail;
 
       var url = [this.getStandardOrigin(), 'time', jsonp];
 
@@ -150,11 +186,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchWhereNow',
-    value: function fetchWhereNow(uuid, _ref4) {
-      var data = _ref4.data;
-      var callback = _ref4.callback;
-      var success = _ref4.success;
-      var fail = _ref4.fail;
+    value: function fetchWhereNow(uuid, _ref7) {
+      var data = _ref7.data;
+      var callback = _ref7.callback;
+      var success = _ref7.success;
+      var fail = _ref7.fail;
 
       var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
@@ -162,11 +198,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchHereNow',
-    value: function fetchHereNow(channel, channel_group, _ref5) {
-      var data = _ref5.data;
-      var callback = _ref5.callback;
-      var success = _ref5.success;
-      var fail = _ref5.fail;
+    value: function fetchHereNow(channel, channel_group, _ref8) {
+      var data = _ref8.data;
+      var callback = _ref8.callback;
+      var success = _ref8.success;
+      var fail = _ref8.fail;
 
       var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 

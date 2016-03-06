@@ -1,39 +1,37 @@
 /* @flow */
 
-import _each from 'lodash/each';
-
 export default class {
 
-  _channelStorage: Object;
-  _channelGroupStorage: Object;
+  _channelStorage: Map<string, Object>;
+  _channelGroupStorage: Map<string, Object>;
 
   constructor() {
-    this._channelStorage = {};
-    this._channelGroupStorage = {};
+    this._channelStorage = new Map();
+    this._channelGroupStorage = new Map();
   }
 
   containsChannel(name: string): boolean {
-    return name in this._channelStorage;
+    return this._channelStorage.has(name);
   }
 
   containsChannelGroup(name: string): boolean {
-    return name in this._channelGroupStorage;
+    return this._channelGroupStorage.has(name);
   }
 
-  getChannel(name: string): Object {
-    return this._channelStorage[name];
+  getChannel(name: string): Object | void {
+    return this._channelStorage.get(name);
   }
 
-  getChannelGroup(name: string): Object {
-    return this._channelGroupStorage[name];
+  getChannelGroup(name: string): Object | void {
+    return this._channelGroupStorage.get(name);
   }
 
-  addChannel(name: string, metadata: Object | number) {
-    this._channelStorage[name] = metadata;
+  addChannel(name: string, metadata: Object) {
+    this._channelStorage.set(name, metadata);
   }
 
-  addChannelGroup(name: string, metadata: Object | number) {
-    this._channelGroupStorage[name] = metadata;
+  addChannelGroup(name: string, metadata: Object) {
+    this._channelGroupStorage.set(name, metadata);
   }
 
   /**
@@ -42,9 +40,9 @@ export default class {
    * generate_channel_list(channels_object);
    * nopresence (==include-presence) == false --> presence True
    */
-  generate_channel_list(nopresence: boolean): Array<Object> {
-    let list = [];
-    _each(this._channelStorage, function (status, channel) {
+  generate_channel_list(nopresence: boolean): Array<string> {
+    let list: Array<string> = [];
+    this._channelStorage.forEach((status, channel) => {
       if (nopresence) {
         if (channel.search('-pnpres') < 0) {
           if (status.subscribed) list.push(channel);
@@ -61,9 +59,9 @@ export default class {
    * ==================================
    * generate_channel_group_list(channels_groups object);
    */
-  generate_channel_group_list(nopresence: boolean): Array<Object> {
-    let list = [];
-    _each(this._channelGroupStorage, function (status, channel_group) {
+  generate_channel_group_list(nopresence: boolean): Array<string> {
+    let list: Array<string> = [];
+    this._channelGroupStorage.forEach((status, channel_group) => {
       if (nopresence) {
         if (channel_group.search('-pnpres') < 0) {
           if (status.subscribed) list.push(channel_group);
