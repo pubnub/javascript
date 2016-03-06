@@ -2168,24 +2168,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!callback) return _error('Missing Callback');
 	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
 
-	      var url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey()];
-
-	      channel && url.push('channel') && url.push(utils.encode(channel));
-
 	      if (jsonp != '0') {
 	        data['callback'] = jsonp;
 	      }
 
 	      if (channel_group) {
 	        data['channel-group'] = channel_group;
-	        !channel && url.push('channel') && url.push(',');
 	      }
 
 	      if (config.isInstanceIdEnabled()) {
 	        data['instanceid'] = keychain.getInstanceId();
 	      }
 
-	      xdr({
+	      networking.fetchHereNow(channel, channel_group, {
 	        callback: jsonp,
 	        data: networking.prepareParams(data),
 	        success: function success(response) {
@@ -2194,8 +2189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        fail: function fail(response) {
 	          _responders2.default.error(response, err);
 	        },
-	        debug: debug,
-	        url: url
+	        debug: debug
 	      });
 	    },
 
@@ -3029,6 +3023,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var fail = _ref4.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
+
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'fetchHereNow',
+	    value: function fetchHereNow(channel, channel_group, _ref5) {
+	      var data = _ref5.data;
+	      var callback = _ref5.callback;
+	      var success = _ref5.success;
+	      var fail = _ref5.fail;
+
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
+
+	      if (channel) {
+	        url.push('channel');
+	        url.push(utils.encode(channel));
+	      }
+
+	      if (channel_group && !channel) {
+	        url.push('channel');
+	        url.push(',');
+	      }
 
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }

@@ -161,6 +161,28 @@ var _class = function () {
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
   }, {
+    key: 'fetchHereNow',
+    value: function fetchHereNow(channel, channel_group, _ref5) {
+      var data = _ref5.data;
+      var callback = _ref5.callback;
+      var success = _ref5.success;
+      var fail = _ref5.fail;
+
+      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
+
+      if (channel) {
+        url.push('channel');
+        url.push(utils.encode(channel));
+      }
+
+      if (channel_group && !channel) {
+        url.push('channel');
+        url.push(',');
+      }
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
     key: 'getOrigin',
     value: function getOrigin() {
       return this._providedFQDN;

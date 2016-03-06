@@ -2253,6 +2253,8 @@ describe('Pubnub', function () {
         });
 
         it("should return correct state for multiple uuids in single channel", function (done) {
+            console.log(channel);
+
             var ch = channel + '-' + 'here-now-' + get_random();
 
             pubnub_pres.state({

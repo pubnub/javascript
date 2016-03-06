@@ -1260,24 +1260,19 @@ function PN_API(setup) {
       if (!callback) return _error('Missing Callback');
       if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
 
-      var url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey()];
-
-      channel && url.push('channel') && url.push(utils.encode(channel));
-
       if (jsonp != '0') {
         data['callback'] = jsonp;
       }
 
       if (channel_group) {
         data['channel-group'] = channel_group;
-        !channel && url.push('channel') && url.push(',');
       }
 
       if (config.isInstanceIdEnabled()) {
         data['instanceid'] = keychain.getInstanceId();
       }
 
-      xdr({
+      networking.fetchHereNow(channel, channel_group, {
         callback: jsonp,
         data: networking.prepareParams(data),
         success: function success(response) {
@@ -1286,8 +1281,7 @@ function PN_API(setup) {
         fail: function fail(response) {
           _responders2.default.error(response, err);
         },
-        debug: debug,
-        url: url
+        debug: debug
       });
     },
 

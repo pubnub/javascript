@@ -91,7 +91,8 @@ export default class {
   // method based URL's
   fetchHistory(channel: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)
+      this.getStandardOrigin(), 'v2', 'history', 'sub-key',
+      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)
     ];
 
     this._xdr({ data, callback, success, fail, url });
@@ -99,7 +100,8 @@ export default class {
 
   fetchReplay(source: string, destination: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
-      this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination
+      this.getStandardOrigin(), 'v1', 'replay',
+      this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination
     ];
 
     this._xdr({ data, callback, success, fail, url });
@@ -119,6 +121,25 @@ export default class {
       'sub_key', this._keychain.getSubscribeKey(),
       'uuid', utils.encode(uuid)
     ];
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
+  fetchHereNow(channel: string, channel_group: string, { data, callback, success, fail }: commonXDRObject) {
+    var url = [
+      this.getStandardOrigin(), 'v2', 'presence',
+      'sub_key', this._keychain.getSubscribeKey()
+    ];
+
+    if (channel) {
+      url.push('channel');
+      url.push(utils.encode(channel));
+    }
+
+    if (channel_group && !channel) {
+      url.push('channel');
+      url.push(',');
+    }
 
     this._xdr({ data, callback, success, fail, url });
   }
