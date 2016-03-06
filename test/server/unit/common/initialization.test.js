@@ -369,6 +369,7 @@ describe('core initalization', () => {
           }
 
           whereNow() { }
+          hereNow() { }
 
         }
       });
@@ -381,7 +382,7 @@ describe('core initalization', () => {
       assert(_jsonp_cb);
     });
 
-    it('mounts the presence endpoint', () => {
+    it('mounts the whereNow endpoint', () => {
       let _mockedArgs;
       let _mockedCallback;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
@@ -396,6 +397,25 @@ describe('core initalization', () => {
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
 
       pubnubInstance.where_now({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the hereNow endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/presence': class {
+          hereNow(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.here_now({ fake: 'args' }, 'callback');
       assert.deepEqual(_mockedArgs, { fake: 'args' });
       assert.equal(_mockedCallback, 'callback');
     });

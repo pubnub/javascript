@@ -1242,47 +1242,7 @@ function PN_API(setup) {
      PUBNUB.here_now({ channel : 'my_chat', callback : fun });
      */
     here_now: function here_now(args, callback) {
-      var callback = args['callback'] || callback;
-      var debug = args['debug'];
-      var err = args['error'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var channel = args['channel'];
-      var channel_group = args['channel_group'];
-      var jsonp = jsonp_cb();
-      var uuids = 'uuids' in args ? args['uuids'] : true;
-      var state = args['state'];
-      var data = { uuid: keychain.getUUID(), auth: auth_key };
-
-      if (!uuids) data['disable_uuids'] = 1;
-      if (state) data['state'] = 1;
-
-      // Make sure we have a Channel
-      if (!callback) return _error('Missing Callback');
-      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-
-      if (channel_group) {
-        data['channel-group'] = channel_group;
-      }
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      networking.fetchHereNow(channel, channel_group, {
-        callback: jsonp,
-        data: networking.prepareParams(data),
-        success: function success(response) {
-          _responders2.default.callback(response, callback, err);
-        },
-        fail: function fail(response) {
-          _responders2.default.error(response, err);
-        },
-        debug: debug
-      });
+      presenceEndpoints.hereNow(args, callback);
     },
 
     /*
