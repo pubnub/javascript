@@ -381,7 +381,7 @@ describe('core initalization', () => {
       assert(_jsonp_cb);
     });
 
-    it('mounts the time endpoint', () => {
+    it('mounts the presence endpoint', () => {
       let _mockedArgs;
       let _mockedCallback;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
@@ -396,6 +396,56 @@ describe('core initalization', () => {
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
 
       pubnubInstance.where_now({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+  });
+
+  describe('endpoints -- history', () => {
+    it('intializes the historyEndpoints class', () => {
+      let _networking;
+      let _keychain;
+      let _jsonp_cb;
+      let _error;
+      let _decrypt;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/history': class {
+          constructor({ networking, keychain, jsonp_cb, error, decrypt }) {
+            _networking = networking;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+            _error = error;
+            _decrypt = decrypt;
+          }
+
+          fetchHistory() { }
+
+        }
+      });
+
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert(_error);
+      assert(_jsonp_cb);
+      assert(_decrypt);
+    });
+
+    it('mounts the history endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/history': class {
+          fetchHistory(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.history({ fake: 'args' }, 'callback');
       assert.deepEqual(_mockedArgs, { fake: 'args' });
       assert.equal(_mockedCallback, 'callback');
     });

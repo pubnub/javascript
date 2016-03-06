@@ -40,6 +40,10 @@ var _presence = require('./endpoints/presence');
 
 var _presence2 = _interopRequireDefault(_presence);
 
+var _history = require('./endpoints/history');
+
+var _history2 = _interopRequireDefault(_history);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var packageJSON = require('../../package.json');
@@ -136,6 +140,14 @@ function PN_API(setup) {
 
   var db = setup.db || { get: function get() {}, set: function set() {} };
   var _error = setup.error || function () {};
+  var crypto_obj = setup.crypto_obj || {
+    encrypt: function encrypt(a, key) {
+      return a;
+    },
+    decrypt: function decrypt(b, key) {
+      return b;
+    }
+  };
 
   var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key).setCipherKey(setup.cipher_key);
 
@@ -150,9 +162,19 @@ function PN_API(setup) {
 
   var networking = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin).setCoreParams(setup.params || {});
 
+  // initialize the encryption and decryption logic
+  function encrypt(input, key) {
+    return crypto_obj.encrypt(input, key || keychain.getCipherKey()) || input;
+  }
+
+  function decrypt(input, key) {
+    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) || crypto_obj['decrypt'](input, keychain.getCipherKey()) || input;
+  }
+
   // initalize the endpoints
   var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb });
   var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb, error: _error });
+  var historyEndpoint = new _history2.default({ keychain: keychain, networking: networking, jsonp_cb: jsonp_cb, error: _error, decrypt: decrypt });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -190,15 +212,6 @@ function PN_API(setup) {
   var _poll_timer2;
 
   if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
-
-  var crypto_obj = setup['crypto_obj'] || {
-    encrypt: function encrypt(a, key) {
-      return a;
-    },
-    decrypt: function decrypt(b, key) {
-      return b;
-    }
-  };
 
   function _object_to_key_list(o) {
     var l = [];
@@ -251,14 +264,6 @@ function PN_API(setup) {
       error && error('Presence Heartbeat value invalid. Valid range ( x > ' + PRESENCE_HB_THRESHOLD + ' or x = 0). Current Value : ' + (cur_heartbeat || PRESENCE_HB_THRESHOLD));
       return cur_heartbeat || PRESENCE_HB_THRESHOLD;
     } else return heartbeat;
-  }
-
-  function encrypt(input, key) {
-    return crypto_obj['encrypt'](input, key || keychain.getCipherKey()) || input;
-  }
-
-  function decrypt(input, key) {
-    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) || crypto_obj['decrypt'](input, keychain.getCipherKey()) || input;
   }
 
   function error_common(message, callback) {
@@ -648,78 +653,7 @@ function PN_API(setup) {
      });
      */
     history: function history(args, callback) {
-      var callback = args['callback'] || callback;
-      var count = args['count'] || args['limit'] || 100;
-      var reverse = args['reverse'] || 'false';
-      var err = args['error'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var cipher_key = args['cipher_key'];
-      var channel = args['channel'];
-      var channel_group = args['channel_group'];
-      var start = args['start'];
-      var end = args['end'];
-      var include_token = args['include_token'];
-      var string_msg_token = args['string_message_token'] || false;
-      var params = {};
-      var jsonp = jsonp_cb();
-
-      // Make sure we have a Channel
-      if (!channel && !channel_group) return _error('Missing Channel');
-      if (!callback) return _error('Missing Callback');
-      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-
-      params['stringtoken'] = 'true';
-      params['count'] = count;
-      params['reverse'] = reverse;
-      params['auth'] = auth_key;
-
-      if (channel_group) {
-        params['channel-group'] = channel_group;
-        if (!channel) {
-          channel = ',';
-        }
-      }
-      if (jsonp) params['callback'] = jsonp;
-      if (start) params['start'] = start;
-      if (end) params['end'] = end;
-      if (include_token) params['include_token'] = 'true';
-      if (string_msg_token) params['string_message_token'] = 'true';
-
-      // Send Message
-      networking.fetchHistory(channel, {
-        callback: jsonp,
-        data: networking.prepareParams(params),
-        success: function success(response) {
-          if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
-            err({ message: response['message'], payload: response['payload'] });
-            return;
-          }
-          var messages = response[0];
-          var decrypted_messages = [];
-          for (var a = 0; a < messages.length; a++) {
-            if (include_token) {
-              var new_message = decrypt(messages[a]['message'], cipher_key);
-              var timetoken = messages[a]['timetoken'];
-              try {
-                decrypted_messages.push({ message: JSON.parse(new_message), timetoken: timetoken });
-              } catch (e) {
-                decrypted_messages.push({ message: new_message, timetoken: timetoken });
-              }
-            } else {
-              var new_message = decrypt(messages[a], cipher_key);
-              try {
-                decrypted_messages.push(JSON.parse(new_message));
-              } catch (e) {
-                decrypted_messages.push(new_message);
-              }
-            }
-          }
-          callback([decrypted_messages, response[1], response[2]]);
-        },
-        fail: function fail(response) {
-          _responders2.default.error(response, err);
-        }
-      });
+      historyEndpoint.fetchHistory(args, callback);
     },
 
     /*
