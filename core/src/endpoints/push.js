@@ -29,14 +29,12 @@ export default class {
   }
 
   provisionDevice(args: Object) {
+    let { op, gw_type, device_id, channel } = args;
+
     let callback = args.callback || function () {};
     let auth_key = args.auth_key || this._keychain.getAuthKey();
     let err = args.error || function () {};
     let jsonp = this._jsonp_cb();
-    let channel = args.channel;
-    let op = args.op;
-    let gw_type = args.gw_type;
-    let device_id = args.device_id;
 
     if (!device_id) return this._error('Missing Device ID (device_id)');
     if (!gw_type) return this._error('Missing GW Type (gw_type: gcm or apns)');

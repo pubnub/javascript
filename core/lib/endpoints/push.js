@@ -46,14 +46,16 @@ var _class = function () {
   _createClass(_class, [{
     key: 'provisionDevice',
     value: function provisionDevice(args) {
+      var op = args.op;
+      var gw_type = args.gw_type;
+      var device_id = args.device_id;
+      var channel = args.channel;
+
+
       var callback = args.callback || function () {};
       var auth_key = args.auth_key || this._keychain.getAuthKey();
       var err = args.error || function () {};
       var jsonp = this._jsonp_cb();
-      var channel = args.channel;
-      var op = args.op;
-      var gw_type = args.gw_type;
-      var device_id = args.device_id;
 
       if (!device_id) return this._error('Missing Device ID (device_id)');
       if (!gw_type) return this._error('Missing GW Type (gw_type: gcm or apns)');

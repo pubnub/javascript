@@ -40,16 +40,18 @@ var _class = function () {
   _createClass(_class, [{
     key: 'performReplay',
     value: function performReplay(args, argumentCallback) {
-      var callback = argumentCallback || args.callback || function () {};
-      var auth_key = args.auth_key || this._keychain.getAuthKey();
-      var source = args.source;
-      var destination = args.destination;
-      var err = args.error || args.error || function () {};
       var stop = args.stop;
       var start = args.start;
       var end = args.end;
       var reverse = args.reverse;
       var limit = args.limit;
+      var source = args.source;
+
+
+      var callback = argumentCallback || args.callback || function () {};
+      var auth_key = args.auth_key || this._keychain.getAuthKey();
+      var destination = args.destination;
+      var err = args.error || function () {};
       var jsonp = this._jsonp_cb();
       var data = {};
 
