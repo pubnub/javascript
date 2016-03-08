@@ -219,6 +219,17 @@ var _class = function () {
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
   }, {
+    key: 'abstractXDR',
+    value: function abstractXDR(_ref9) {
+      var data = _ref9.data;
+      var callback = _ref9.callback;
+      var success = _ref9.success;
+      var fail = _ref9.fail;
+      var url = _ref9.url;
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
     key: 'getOrigin',
     value: function getOrigin() {
       return this._providedFQDN;

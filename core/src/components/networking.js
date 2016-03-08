@@ -4,7 +4,12 @@ import Keychain from './keychain.js';
 const utils = require('../utils');
 
 
-type commonXDRObject = {data: Object, callback: Function, success: Function, fail: Function};
+type commonXDRObject = {
+  data: Object, callback: Function, success: Function, fail: Function
+};
+type abstractedXDRObject = {
+  data: Object, callback: Function, success: Function, fail: Function, url: Array<string>
+};
 
 export default class {
 
@@ -170,6 +175,10 @@ export default class {
       url.push(',');
     }
 
+    this._xdr({ data, callback, success, fail, url });
+  }
+
+  abstractXDR({ data, callback, success, fail, url }: abstractedXDRObject) {
     this._xdr({ data, callback, success, fail, url });
   }
 

@@ -56,6 +56,10 @@ var _replay = require('./endpoints/replay');
 
 var _replay2 = _interopRequireDefault(_replay);
 
+var _channel_groups = require('./endpoints/channel_groups');
+
+var _channel_groups2 = _interopRequireDefault(_channel_groups);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var packageJSON = require('../../package.json');
@@ -169,7 +173,7 @@ function PN_API(setup) {
   // write the new key to storage
   db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
+  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setCloakConfig(true).setInstanceIdConfig(setup.instance_id || false);
 
   var stateStorage = new _state2.default();
 
@@ -191,6 +195,7 @@ function PN_API(setup) {
   var historyEndpoint = new _history2.default({ keychain: keychain, networking: networking, jsonp_cb: jsonp_cb, error: _error, decrypt: decrypt });
   var accessEndpoints = new _access2.default({ keychain: keychain, config: config, networking: networking, jsonp_cb: jsonp_cb, error: _error, hmac_SHA256: hmac_SHA256 });
   var replayEndpoint = new _replay2.default({ keychain: keychain, networking: networking, jsonp_cb: jsonp_cb, error: _error });
+  var channelGroupEndpoints = new _channel_groups2.default({ keychain: keychain, networking: networking, config: config, jsonp_cb: jsonp_cb, error: _error });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -200,7 +205,6 @@ function PN_API(setup) {
   var SSL = setup['ssl'] ? 's' : '';
   var CONNECT = function CONNECT() {};
   var PUB_QUEUE = [];
-  var CLOAK = true;
   var TIME_DRIFT = 0;
   var SUB_CALLBACK = 0;
   var SUB_CHANNEL = 0;
@@ -328,36 +332,6 @@ function PN_API(setup) {
     return count;
   }
 
-  function CR(args, callback, url1, data) {
-    var callback = args['callback'] || callback;
-    var err = args['error'] || _error;
-    var jsonp = jsonp_cb();
-
-    data = data || {};
-
-    if (!data['auth']) {
-      data['auth'] = args['auth_key'] || keychain.getAuthKey();
-    }
-
-    var url = [networking.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', keychain.getSubscribeKey()];
-
-    url.push.apply(url, url1);
-
-    if (jsonp) data['callback'] = jsonp;
-
-    xdr({
-      callback: jsonp,
-      data: networking.prepareParams(data),
-      success: function success(response) {
-        _responders2.default.callback(response, callback, err);
-      },
-      fail: function fail(response) {
-        _responders2.default.error(response, err);
-      },
-      url: url
-    });
-  }
-
   // Announce Leave Event
   var SELF = {
     history: function history(args, callback) {
@@ -385,6 +359,36 @@ function PN_API(setup) {
       replayEndpoint.performReplay(args, callback);
     },
 
+
+    // channel groups related
+    channel_group: function channel_group(args, callback) {
+      channelGroupEndpoints.channelGroup(args, callback);
+    },
+    channel_group_list_groups: function channel_group_list_groups(args, callback) {
+      channelGroupEndpoints.listGroups(args, callback);
+    },
+    channel_group_remove_group: function channel_group_remove_group(args, callback) {
+      channelGroupEndpoints.removeGroup(args, callback);
+    },
+    channel_group_list_channels: function channel_group_list_channels(args, callback) {
+      channelGroupEndpoints.listChannels(args, callback);
+    },
+    channel_group_add_channel: function channel_group_add_channel(args, callback) {
+      channelGroupEndpoints.addChannel(args, callback);
+    },
+    channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
+      channelGroupEndpoints.removeChannel(args, callback);
+    },
+    channel_group_list_namespaces: function channel_group_list_namespaces(args, callback) {
+      channelGroupEndpoints.listNamespaces(args, callback);
+    },
+    channel_group_remove_namespace: function channel_group_remove_namespace(args, callback) {
+      channelGroupEndpoints.removeNamespace(args, callback);
+    },
+
+    channel_group_cloak: function channel_group_cloak(args, callback) {
+      channelGroupEndpoints.cloak(args, callback);
+    },
 
     LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
       var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
@@ -557,109 +561,6 @@ function PN_API(setup) {
 
     _add_param: function _add_param(key, val) {
       networking.addCoreParam(key, val);
-    },
-
-    channel_group: function channel_group(args, callback) {
-      var ns_ch = args['channel_group'];
-      var callback = callback || args['callback'];
-      var channels = args['channels'] || args['channel'];
-      var cloak = args['cloak'];
-      var namespace;
-      var channel_group;
-      var url = [];
-      var data = {};
-      var mode = args['mode'] || 'add';
-
-      if (ns_ch) {
-        var ns_ch_a = ns_ch.split(':');
-
-        if (ns_ch_a.length > 1) {
-          namespace = ns_ch_a[0] === '*' ? null : ns_ch_a[0];
-
-          channel_group = ns_ch_a[1];
-        } else {
-          channel_group = ns_ch_a[0];
-        }
-      }
-
-      namespace && url.push('namespace') && url.push(utils.encode(namespace));
-
-      url.push('channel-group');
-
-      if (channel_group && channel_group !== '*') {
-        url.push(channel_group);
-      }
-
-      if (channels) {
-        if (utils.isArray(channels)) {
-          channels = channels.join(',');
-        }
-        data[mode] = channels;
-        data['cloak'] = CLOAK ? 'true' : 'false';
-      } else {
-        if (mode === 'remove') url.push('remove');
-      }
-
-      if (typeof cloak != 'undefined') data['cloak'] = cloak ? 'true' : 'false';
-
-      CR(args, callback, url, data);
-    },
-
-    channel_group_list_groups: function channel_group_list_groups(args, callback) {
-      var namespace;
-
-      namespace = args['namespace'] || args['ns'] || args['channel_group'] || null;
-      if (namespace) {
-        args['channel_group'] = namespace + ':*';
-      }
-
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_list_channels: function channel_group_list_channels(args, callback) {
-      if (!args['channel_group']) return _error('Missing Channel Group');
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
-      if (!args['channel_group']) return _error('Missing Channel Group');
-      if (!args['channel'] && !args['channels']) return _error('Missing Channel');
-
-      args['mode'] = 'remove';
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_remove_group: function channel_group_remove_group(args, callback) {
-      if (!args['channel_group']) return _error('Missing Channel Group');
-      if (args['channel']) return _error('Use channel_group_remove_channel if you want to remove a channel from a group.');
-
-      args['mode'] = 'remove';
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_add_channel: function channel_group_add_channel(args, callback) {
-      if (!args['channel_group']) return _error('Missing Channel Group');
-      if (!args['channel'] && !args['channels']) return _error('Missing Channel');
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_cloak: function channel_group_cloak(args, callback) {
-      if (typeof args['cloak'] == 'undefined') {
-        callback(CLOAK);
-        return;
-      }
-      CLOAK = args['cloak'];
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_list_namespaces: function channel_group_list_namespaces(args, callback) {
-      var url = ['namespace'];
-      CR(args, callback, url);
-    },
-
-    channel_group_remove_namespace: function channel_group_remove_namespace(args, callback) {
-      var url = ['namespace', args['namespace'], 'remove'];
-      CR(args, callback, url);
     },
 
     /*

@@ -21,6 +21,7 @@ import HistoryEndpoint from './endpoints/history';
 import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ReplyEndpoint from './endpoints/replay';
+import ChannelGroupEndpoints from './endpoints/channel_groups';
 
 var packageJSON = require('../../package.json');
 var defaultConfiguration = require('../defaults.json');
@@ -138,6 +139,7 @@ function PN_API(setup) {
 
   let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
+    .setCloakConfig(true)
     .setInstanceIdConfig(setup.instance_id || false);
 
   let stateStorage = new State();
@@ -163,6 +165,7 @@ function PN_API(setup) {
   let historyEndpoint = new HistoryEndpoint({ keychain, networking, jsonp_cb, error, decrypt });
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, jsonp_cb, error, hmac_SHA256 });
   let replayEndpoint = new ReplyEndpoint({ keychain, networking, jsonp_cb, error });
+  let channelGroupEndpoints = new ChannelGroupEndpoints({ keychain, networking, config, jsonp_cb, error });
 
   var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
   var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
@@ -173,7 +176,6 @@ function PN_API(setup) {
   var CONNECT = function () {
   };
   var PUB_QUEUE = [];
-  var CLOAK = true;
   var TIME_DRIFT = 0;
   var SUB_CALLBACK = 0;
   var SUB_CHANNEL = 0;
@@ -306,39 +308,6 @@ function PN_API(setup) {
     return count;
   }
 
-  function CR(args, callback, url1, data) {
-    var callback = args['callback'] || callback;
-    var err = args['error'] || error;
-    var jsonp = jsonp_cb();
-
-    data = data || {};
-
-    if (!data['auth']) {
-      data['auth'] = args['auth_key'] || keychain.getAuthKey();
-    }
-
-    var url = [
-      networking.getStandardOrigin(), 'v1', 'channel-registration',
-      'sub-key', keychain.getSubscribeKey()
-    ];
-
-    url.push.apply(url, url1);
-
-    if (jsonp) data['callback'] = jsonp;
-
-    xdr({
-      callback: jsonp,
-      data: networking.prepareParams(data),
-      success: function (response) {
-        Responders.callback(response, callback, err);
-      },
-      fail: function (response) {
-        Responders.error(response, err);
-      },
-      url: url
-    });
-  }
-
   // Announce Leave Event
   var SELF = {
     history(args: Object, callback: Function) { historyEndpoint.fetchHistory(args, callback); },
@@ -354,6 +323,35 @@ function PN_API(setup) {
     mobile_gw_provision(args: Object) { pushEndpoint.provisionDevice(args); },
 
     replay(args: Object, callback: Function) { replayEndpoint.performReplay(args, callback); },
+
+    // channel groups related
+    channel_group(args: Object, callback: Function) {
+      channelGroupEndpoints.channelGroup(args, callback);
+    },
+    channel_group_list_groups(args: Object, callback: Function) {
+      channelGroupEndpoints.listGroups(args, callback);
+    },
+    channel_group_remove_group(args: Object, callback: Function) {
+      channelGroupEndpoints.removeGroup(args, callback);
+    },
+    channel_group_list_channels(args: Object, callback: Function) {
+      channelGroupEndpoints.listChannels(args, callback);
+    },
+    channel_group_add_channel(args: Object, callback: Function) {
+      channelGroupEndpoints.addChannel(args, callback);
+    },
+    channel_group_remove_channel(args: Object, callback: Function) {
+      channelGroupEndpoints.removeChannel(args, callback);
+    },
+    channel_group_list_namespaces(args: Object, callback: Function) {
+      channelGroupEndpoints.listNamespaces(args, callback);
+    },
+    channel_group_remove_namespace(args: Object, callback: Function) {
+      channelGroupEndpoints.removeNamespace(args, callback);
+    },
+    channel_group_cloak: function (args: Object, callback: Function) {
+      channelGroupEndpoints.cloak(args, callback);
+    },
 
     LEAVE: function (channel, blocking, auth_key, callback, error) {
       var data: Object = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
@@ -535,110 +533,6 @@ function PN_API(setup) {
 
     _add_param: function (key, val) {
       networking.addCoreParam(key, val);
-    },
-
-    channel_group: function (args, callback) {
-      var ns_ch = args['channel_group'];
-      var callback = callback || args['callback'];
-      var channels = args['channels'] || args['channel'];
-      var cloak = args['cloak'];
-      var namespace;
-      var channel_group;
-      var url = [];
-      var data = {};
-      var mode = args['mode'] || 'add';
-
-
-      if (ns_ch) {
-        var ns_ch_a = ns_ch.split(':');
-
-        if (ns_ch_a.length > 1) {
-          namespace = (ns_ch_a[0] === '*') ? null : ns_ch_a[0];
-
-          channel_group = ns_ch_a[1];
-        } else {
-          channel_group = ns_ch_a[0];
-        }
-      }
-
-      namespace && url.push('namespace') && url.push(utils.encode(namespace));
-
-      url.push('channel-group');
-
-      if (channel_group && channel_group !== '*') {
-        url.push(channel_group);
-      }
-
-      if (channels) {
-        if (utils.isArray(channels)) {
-          channels = channels.join(',');
-        }
-        data[mode] = channels;
-        data['cloak'] = (CLOAK) ? 'true' : 'false';
-      } else {
-        if (mode === 'remove') url.push('remove');
-      }
-
-      if (typeof cloak != 'undefined') data['cloak'] = (cloak) ? 'true' : 'false';
-
-      CR(args, callback, url, data);
-    },
-
-    channel_group_list_groups: function (args, callback) {
-      var namespace;
-
-      namespace = args['namespace'] || args['ns'] || args['channel_group'] || null;
-      if (namespace) {
-        args['channel_group'] = namespace + ':*';
-      }
-
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_list_channels: function (args, callback) {
-      if (!args['channel_group']) return error('Missing Channel Group');
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_remove_channel: function (args, callback) {
-      if (!args['channel_group']) return error('Missing Channel Group');
-      if (!args['channel'] && !args['channels']) return error('Missing Channel');
-
-      args['mode'] = 'remove';
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_remove_group: function (args, callback) {
-      if (!args['channel_group']) return error('Missing Channel Group');
-      if (args['channel']) return error('Use channel_group_remove_channel if you want to remove a channel from a group.');
-
-      args['mode'] = 'remove';
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_add_channel: function (args, callback) {
-      if (!args['channel_group']) return error('Missing Channel Group');
-      if (!args['channel'] && !args['channels']) return error('Missing Channel');
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_cloak: function (args, callback) {
-      if (typeof args['cloak'] == 'undefined') {
-        callback(CLOAK);
-        return;
-      }
-      CLOAK = args['cloak'];
-      SELF['channel_group'](args, callback);
-    },
-
-    channel_group_list_namespaces: function (args, callback) {
-      var url = ['namespace'];
-      CR(args, callback, url);
-    },
-
-    channel_group_remove_namespace: function (args, callback) {
-      var url = ['namespace', args['namespace'], 'remove'];
-      CR(args, callback, url);
     },
 
     /*
