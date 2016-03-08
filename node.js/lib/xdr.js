@@ -108,10 +108,21 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
 
   var origin = setup.url[0].split('//')[1];
 
+  var headers = null;
+
+  if (proxy) {
+    headers = {};
+    headers['Host'] = origin;
+
+    if (proxy.headers) {
+      _.extend(headers, proxy.headers);
+    }
+  }
+
   options.hostname = proxy ? proxy.hostname : setup.url[0].split('//')[1];
   options.port = proxy ? proxy.port : ssl ? 443 : 80;
   options.path = proxy ? 'http://' + origin + url : url;
-  options.headers = proxy ? { Host: origin } : null;
+  options.headers = headers;
   options.method = mode;
   options.keepAlive = !!keepaliveEnabled;
   options.body = payload;
