@@ -158,7 +158,7 @@ function pamEncode(str) {
 }
 
 function _object_to_key_list(o: Object): Array<mixed> {
-  var l = [];
+  let l = [];
   each(o, function (key) {
     l.push(key);
   });
@@ -170,15 +170,8 @@ function _object_to_key_list_sorted(o: Object): Array<mixed> {
 }
 
 function _get_pam_sign_input_from_params(params: Object): string {
-  var si = '';
-  var l = _object_to_key_list_sorted(params);
-
-  for (var i in l) {
-    var k = l[i];
-    si += k + '=' + pamEncode(params[k]);
-    if (i !== l.length - 1) si += '&';
-  }
-  return si;
+  let l = _object_to_key_list_sorted(params);
+  return map(l, (paramKey) => paramKey + '=' + pamEncode(params[paramKey])).join('&');
 }
 
 module.exports = {

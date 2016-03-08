@@ -173,15 +173,10 @@ function _object_to_key_list_sorted(o) {
 }
 
 function _get_pam_sign_input_from_params(params) {
-  var si = '';
   var l = _object_to_key_list_sorted(params);
-
-  for (var i in l) {
-    var k = l[i];
-    si += k + '=' + pamEncode(params[k]);
-    if (i !== l.length - 1) si += '&';
-  }
-  return si;
+  return map(l, function (paramKey) {
+    return paramKey + '=' + pamEncode(params[paramKey]);
+  }).join('&');
 }
 
 module.exports = {

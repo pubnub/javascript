@@ -8,6 +8,13 @@ const uuid = require('uuid');
 import utils from '../../../../core/src/utils';
 
 describe('utils', () => {
+  describe('#_get_pam_sign_input_from_params', () => {
+    it('prepares a stringified params from object', () => {
+      let result = utils._get_pam_sign_input_from_params({ c: 'cvar', a: 'avar', mo: '$$$' });
+      assert.equal(result, 'a=avar&c=cvar&mo=%24%24%24');
+    });
+  });
+
   describe('#generateUUID', () => {
     it('returns a generated UUID', () => {
       let stubbedUUID = sinon.stub(uuid, 'v4').returns('UUID');
