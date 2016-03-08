@@ -39,6 +39,11 @@ describe('core initalization', () => {
           return this;
         }
 
+        setCloakConfig(config) {
+          assert.equal(config, true);
+          return this;
+        }
+
         isInstanceIdEnabled() { return false; }
 
       }

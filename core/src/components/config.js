@@ -15,11 +15,6 @@ export default class {
   */
   _requestId: boolean;
 
-  /*
-    TODO: fill readme
-  */
-  _cloak: boolean;
-
   constructor() {
     this._instanceId = false;
     this._requestId = false;
@@ -35,21 +30,12 @@ export default class {
     return this;
   }
 
-  setCloakConfig(configValue: boolean): this {
-    this._cloak = configValue;
-    return this;
-  }
-
   isInstanceIdEnabled(): boolean {
     return this._instanceId;
   }
 
   isRequestIdEnabled(): boolean {
     return this._requestId;
-  }
-
-  isCloakEnabled(): boolean {
-    return this._cloak;
   }
 
 }

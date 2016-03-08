@@ -139,7 +139,6 @@ function PN_API(setup) {
 
   let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
-    .setCloakConfig(true)
     .setInstanceIdConfig(setup.instance_id || false);
 
   let stateStorage = new State();
@@ -342,15 +341,6 @@ function PN_API(setup) {
     },
     channel_group_remove_channel(args: Object, callback: Function) {
       channelGroupEndpoints.removeChannel(args, callback);
-    },
-    channel_group_list_namespaces(args: Object, callback: Function) {
-      channelGroupEndpoints.listNamespaces(args, callback);
-    },
-    channel_group_remove_namespace(args: Object, callback: Function) {
-      channelGroupEndpoints.removeNamespace(args, callback);
-    },
-    channel_group_cloak: function (args: Object, callback: Function) {
-      channelGroupEndpoints.cloak(args, callback);
     },
 
     LEAVE: function (channel, blocking, auth_key, callback, error) {

@@ -35,8 +35,6 @@ export default class {
     var ns_ch = args.channel_group;
     var callback = argumentCallback || args.callback;
     var channels = args.channels || args.channel;
-    var cloak = args.cloak;
-    var namespace;
     var channel_group;
     var url = [];
     var data = {};
@@ -47,17 +45,10 @@ export default class {
       var ns_ch_a = ns_ch.split(':');
 
       if (ns_ch_a.length > 1) {
-        namespace = (ns_ch_a[0] === '*') ? null : ns_ch_a[0];
-
         channel_group = ns_ch_a[1];
       } else {
         channel_group = ns_ch_a[0];
       }
-    }
-
-    if (namespace) {
-      url.push('namespace');
-      url.push(utils.encode(namespace));
     }
 
     url.push('channel-group');
@@ -71,13 +62,8 @@ export default class {
         channels = channels.join(',');
       }
       data[mode] = channels;
-      data['cloak'] = (this._config.isCloakEnabled()) ? 'true' : 'false';
     } else {
       if (mode === 'remove') url.push('remove');
-    }
-
-    if (typeof cloak !== 'undefined') {
-      data.cloak = (cloak) ? 'true' : 'false';
     }
 
     this.__CR(args, callback, url, data);
@@ -119,25 +105,6 @@ export default class {
     if (!args.channel && !args.channels) return this._error('Missing Channel');
 
     args.mode = 'remove';
-    this.channelGroup(args, callback);
-  }
-
-  listNamespaces(args: Object, callback: Function) {
-    let url = ['namespace'];
-    this.__CR(args, callback, url, {});
-  }
-
-  removeNamespace(args: Object, callback: Function) {
-    let url = ['namespace', args['namespace'], 'remove'];
-    this.__CR(args, callback, url, {});
-  }
-
-  cloak(args: Object, callback: Function) {
-    if (typeof args.cloak === 'undefined') {
-      callback(this._config.isCloakEnabled());
-      return;
-    }
-    this._config.setCloakConfig(args['cloak']);
     this.channelGroup(args, callback);
   }
 
