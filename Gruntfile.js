@@ -1,6 +1,6 @@
 var webpack = require('webpack');
 
-var WEBPACKED_PLATFORMS = ['web', 'modern', 'webos', 'sencha', 'phonegap', 'parse', 'titanium'];
+var WEBPACKED_PLATFORMS = ['web', 'modern', 'parse', 'titanium'];
 
 function registerWebpackBuilding(grunt) {
   var compileTargets = ['clean:core', 'babel:core'];
@@ -87,9 +87,6 @@ module.exports = function (grunt) {
     webpack: {
       web: webpackCommonBuilder('web', 'web', []),
       modern: webpackCommonBuilder('modern', 'modern', []),
-      sencha: webpackCommonBuilder('sencha', 'modern', []),
-      phonegap: webpackCommonBuilder('phonegap', 'modern', []),
-      webos: webpackCommonBuilder('webos', 'modern', []),
       parse: webpackCommonBuilder('parse', 'parse', ['crypto', 'buffer']),
       titanium: webpackCommonBuilder('titanium', 'titanium', [])
     },
@@ -197,30 +194,6 @@ module.exports = function (grunt) {
         replacements: [{
           from: /PLATFORM/g,
           to: '\'Modern\''
-        }]
-      },
-      sencha: {
-        src: ['sencha/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Sencha\''
-        }]
-      },
-      phonegap: {
-        src: ['phonegap/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Phonegap\''
-        }]
-      },
-      webos: {
-        src: ['webos/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Webos\''
         }]
       },
       parse: {
