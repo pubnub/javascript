@@ -15,6 +15,16 @@ export default class {
   */
   _requestId: boolean;
 
+  /*
+    default value for heartbeat presence interval.
+  */
+  _defaultHeartbeatInterval: number;
+
+  /*
+    the minimum heartbeat interval allowed.
+  */
+  _minimumHeartbeatInterval: number;
+
   constructor() {
     this._instanceId = false;
     this._requestId = false;

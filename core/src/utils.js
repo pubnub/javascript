@@ -174,6 +174,41 @@ function _get_pam_sign_input_from_params(params: Object): string {
   return map(l, (paramKey) => paramKey + '=' + pamEncode(params[paramKey])).join('&');
 }
 
+function validateHeartbeat(heartbeat: number, cur_heartbeat: number, error: Function): number {
+  var err = false;
+
+  if (typeof heartbeat === 'undefined') {
+    return cur_heartbeat;
+  }
+
+  if (typeof heartbeat === 'number') {
+    if (heartbeat > defaultConfiguration._minimumHeartbeatInterval || heartbeat === 0) {
+      err = false;
+    } else {
+      err = true;
+    }
+  } else if (typeof heartbeat === 'boolean') {
+    if (!heartbeat) {
+      return 0;
+    } else {
+      return defaultConfiguration._defaultHeartbeatInterval;
+    }
+  } else {
+    err = true;
+  }
+
+  if (err) {
+    if (error) {
+      let errorMessage = 'Presence Heartbeat value invalid. Valid range ( x >';
+      errorMessage += defaultConfiguration._minimumHeartbeatInterval + ' or x = 0). Current Value : ';
+      errorMessage += (cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval);
+
+      error(errorMessage);
+    }
+    return cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
+  } else return heartbeat;
+}
+
 module.exports = {
   buildURL: buildURL,
   encode: encode,
@@ -189,5 +224,6 @@ module.exports = {
   grep: grep,
   _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
   _object_to_key_list_sorted: _object_to_key_list_sorted,
-  _object_to_key_list: _object_to_key_list
+  _object_to_key_list: _object_to_key_list,
+  validateHeartbeat: validateHeartbeat
 };

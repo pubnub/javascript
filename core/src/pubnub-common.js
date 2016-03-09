@@ -36,8 +36,7 @@ var DEF_TIMEOUT = 15000; // MILLISECONDS.
 var DEF_SUB_TIMEOUT = 310; // SECONDS.
 var DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
 var SECOND = 1000; // A THOUSAND MILLISECONDS.
-var PRESENCE_HB_THRESHOLD = 5;
-var PRESENCE_HB_DEFAULT = 30;
+
 var SDK_VER = packageJSON.version;
 
 /**
@@ -187,9 +186,7 @@ function PN_API(setup) {
   };
   var STATE = {};
   var PRESENCE_HB_TIMEOUT = null;
-  var PRESENCE_HB = validate_presence_heartbeat(
-    setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']
-  );
+  var PRESENCE_HB = utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, setup.error);
   var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || (PRESENCE_HB / 2) - 1;
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
@@ -203,34 +200,6 @@ function PN_API(setup) {
 
   if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
 
-  function validate_presence_heartbeat(heartbeat, cur_heartbeat, error) {
-    var err = false;
-
-    if (typeof heartbeat === 'undefined') {
-      return cur_heartbeat;
-    }
-
-    if (typeof heartbeat === 'number') {
-      if (heartbeat > PRESENCE_HB_THRESHOLD || heartbeat == 0) {
-        err = false;
-      } else {
-        err = true;
-      }
-    } else if (typeof heartbeat === 'boolean') {
-      if (!heartbeat) {
-        return 0;
-      } else {
-        return PRESENCE_HB_DEFAULT;
-      }
-    } else {
-      err = true;
-    }
-
-    if (err) {
-      error && error('Presence Heartbeat value invalid. Valid range ( x > ' + PRESENCE_HB_THRESHOLD + ' or x = 0). Current Value : ' + (cur_heartbeat || PRESENCE_HB_THRESHOLD));
-      return cur_heartbeat || PRESENCE_HB_THRESHOLD;
-    } else return heartbeat;
-  }
 
   function error_common(message, callback) {
     callback && callback({ error: message || 'error occurred' });
@@ -483,7 +452,7 @@ function PN_API(setup) {
     },
 
     set_heartbeat: function (heartbeat, heartbeat_interval) {
-      PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, error);
+      PRESENCE_HB = utils.validateHeartbeat(heartbeat, PRESENCE_HB, error);
       PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
       if (PRESENCE_HB == 2) {
         PRESENCE_HB_INTERVAL = 1;

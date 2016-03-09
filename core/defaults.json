@@ -1,4 +1,6 @@
 {
   "PARAMSBIT": "&",
-  "URLBIT": "/"
+  "URLBIT": "/",
+  "defaultHeartbeatInterval": 30,
+  "minimumHeartbeatInterval": 5,
 }
