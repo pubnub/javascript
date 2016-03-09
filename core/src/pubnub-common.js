@@ -188,7 +188,6 @@ function PN_API(setup) {
   var RESUMED = false;
   var SUB_ERROR = function () {
   };
-  var STATE = {};
   var PRESENCE_HB_TIMEOUT = null;
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
@@ -286,6 +285,8 @@ function PN_API(setup) {
 
     here_now(args: Object, callback: Function) { presenceEndpoints.hereNow(args, callback); },
     where_now(args: Object, callback: Function) { presenceEndpoints.whereNow(args, callback); },
+    presence_heartbeat(args: Object) { presenceEndpoints.heartbeat(args); },
+    state(args:Object, callback: Function) { presenceEndpoints.performState(args, callback); },
 
     grant(args: Object, callback: Function) { accessEndpoints.performGrant(args, callback); },
     audit(args: Object, callback: Function) { accessEndpoints.performAudit(args, callback); },
@@ -611,7 +612,7 @@ function PN_API(setup) {
 
         utils.each(existingChannels.concat(presenceChannels), function (channel) {
           if (stateStorage.containsChannel(channel)) stateStorage.addChannel(channel, 0);
-          if (channel in STATE) delete STATE[channel];
+          if (stateStorage.isInPresenceState(channel)) stateStorage.removeFromPresenceState(channel);
         });
 
         var CB_CALLED = true;
@@ -643,7 +644,7 @@ function PN_API(setup) {
 
         utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
           if (stateStorage.containsChannelGroup(channelGroup)) stateStorage.addChannelGroup(channelGroup, 0);
-          if (channelGroup in STATE) delete STATE[channelGroup];
+          if (stateStorage.isInPresenceState(channelGroup)) stateStorage.removeFromPresenceState(channelGroup);
         });
 
         var CB_CALLED = true;
@@ -725,9 +726,9 @@ function PN_API(setup) {
 
             if (state) {
               if (channel in state) {
-                STATE[channel] = state[channel];
+                stateStorage.addToPresenceState(channel, state[channel]);
               } else {
-                STATE[channel] = state;
+                stateStorage.addToPresenceState(channel, state);
               }
             }
 
@@ -883,8 +884,8 @@ function PN_API(setup) {
         }
 
 
-        var st = JSON.stringify(STATE);
-        if (st.length > 2) data['state'] = JSON.stringify(STATE);
+        var st = JSON.stringify(stateStorage.getPresenceState());
+        if (st.length > 2) data['state'] = JSON.stringify(stateStorage.getPresenceState());
 
         if (config.getPresenceTimeout()) {
           data['heartbeat'] = config.getPresenceTimeout();
@@ -1047,80 +1048,6 @@ function PN_API(setup) {
       CONNECT();
     },
 
-    state: function (args, callback) {
-      var callback = args['callback'] || callback || function (r) {};
-      var err = args['error'] || function () {};
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var jsonp = jsonp_cb();
-      var state = args['state'];
-      var uuid = args['uuid'] || keychain.getUUID();
-      var channel = args['channel'];
-      var channel_group = args['channel_group'];
-      var url;
-      var data = networking.prepareParams({ auth: auth_key });
-
-      // Make sure we have a Channel
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-      if (!uuid) return error('Missing UUID');
-      if (!channel && !channel_group) return error('Missing Channel');
-
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-
-      if (typeof channel != 'undefined'
-        && stateStorage.getChannel(channel) && stateStorage.getChannel(channel).subscribed) {
-        if (state) STATE[channel] = state;
-      }
-
-      if (typeof channel_group != 'undefined'
-        && stateStorage.getChannelGroup(channel_group)
-        && stateStorage.getChannelGroup(channel_group).subscribed
-      ) {
-        if (state) STATE[channel_group] = state;
-        data['channel-group'] = channel_group;
-
-        if (!channel) {
-          channel = ',';
-        }
-      }
-
-      data['state'] = JSON.stringify(state);
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      if (state) {
-        url = [
-          networking.getStandardOrigin(), 'v2', 'presence',
-          'sub-key', keychain.getSubscribeKey(),
-          'channel', channel,
-          'uuid', uuid, 'data'
-        ];
-      } else {
-        url = [
-          networking.getStandardOrigin(), 'v2', 'presence',
-          'sub-key', keychain.getSubscribeKey(),
-          'channel', channel,
-          'uuid', utils.encode(uuid)
-        ];
-      }
-
-      xdr({
-        callback: jsonp,
-        data: networking.prepareParams(data),
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        },
-        url: url
-
-      });
-    },
-
     /*
      PUBNUB.revoke({
      channel  : 'my_chat',
@@ -1150,49 +1077,6 @@ function PN_API(setup) {
 
     get_subscribed_channels: function () {
       return stateStorage.generate_channel_list(true);
-    },
-
-    presence_heartbeat: function (args) {
-      var callback = args['callback'] || function () {};
-      var err = args['error'] || function () {};
-      var jsonp = jsonp_cb();
-      var data: Object = { uuid: keychain.getUUID(), auth: keychain.getAuthKey() };
-
-      var st = JSON.stringify(STATE);
-      if (st.length > 2) data['state'] = JSON.stringify(STATE);
-
-      if (config.getPresenceTimeout() > 0 && config.getPresenceTimeout() < 320) {
-        data['heartbeat'] = config.getPresenceTimeout();
-      }
-
-      if (jsonp != '0') {
-        data['callback'] = jsonp;
-      }
-
-      var channels = utils.encode(stateStorage.generate_channel_list(true).join(','));
-      var channel_groups = stateStorage.generate_channel_group_list(true).join(',');
-
-      if (!channels) channels = ',';
-      if (channel_groups) data['channel-group'] = channel_groups;
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      if (config.isRequestIdEnabled()) {
-        data['requestid'] = utils.generateUUID();
-      }
-
-      networking.performHeartbeat(channels, {
-        callback: jsonp,
-        data: networking.prepareParams(data),
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        }
-      });
     },
 
     stop_timers: function () {

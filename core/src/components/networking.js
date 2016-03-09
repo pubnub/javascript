@@ -147,6 +147,22 @@ export default class {
     this._xdr({ data, callback, success, fail, url });
   }
 
+  performState(state: string, channel: string, uuid: string, { data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v2', 'presence',
+      'sub-key', this._keychain.getSubscribeKey(),
+      'channel', channel
+    ];
+
+    if (state) {
+      url.push('uuid', uuid, 'data');
+    } else {
+      url.push('uuid', utils.encode(uuid));
+    }
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
   performAudit({ data, callback, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'audit',

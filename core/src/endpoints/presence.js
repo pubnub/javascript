@@ -3,7 +3,10 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Keychain from '../components/keychain';
+import State from '../components/state';
 import Responders from '../presenters/responders';
+
+import utils from '../utils';
 
 type presenceConstruct = {
   networking: Networking,
@@ -16,14 +19,16 @@ type presenceConstruct = {
 export default class {
   _networking: Networking;
   _config: Config;
+  _state: State;
   _keychain: Keychain;
   _jsonp_cb: Function;
   _error: Function;
 
-  constructor({ networking, config, keychain, jsonp_cb, error }: presenceConstruct) {
+  constructor({ networking, config, keychain, state, jsonp_cb, error }: presenceConstruct) {
     this._networking = networking;
     this._config = config;
     this._keychain = keychain;
+    this._state = state;
     this._jsonp_cb = jsonp_cb;
     this._error = error;
   }
@@ -91,6 +96,114 @@ export default class {
     }
 
     this._networking.fetchWhereNow(uuid, {
+      callback: jsonp,
+      data: this._networking.prepareParams(data),
+      success: function (response) {
+        Responders.callback(response, callback, err);
+      },
+      fail: function (response) {
+        Responders.error(response, err);
+      }
+    });
+  }
+
+  heartbeat(args: Object) {
+    let callback = args.callback || function () {};
+    let err = args.error || function () {};
+    let jsonp = this._jsonp_cb();
+    let data: Object = {
+      uuid: this._keychain.getUUID(),
+      auth: this._keychain.getAuthKey()
+    };
+
+    let st = JSON.stringify(this._state.getPresenceState());
+    if (st.length > 2) {
+      data.state = JSON.stringify(this._state.getPresenceState());
+    }
+
+    if (this._config.getPresenceTimeout() > 0 && this._config.getPresenceTimeout() < 320) {
+      data.heartbeat = this._config.getPresenceTimeout();
+    }
+
+    if (jsonp !== 0) {
+      data.callback = jsonp;
+    }
+
+    let channels = utils.encode(this._state.generate_channel_list(true).join(','));
+    let channel_groups = this._state.generate_channel_group_list(true).join(',');
+
+    if (!channels) channels = ',';
+    if (channel_groups) data['channel-group'] = channel_groups;
+
+    if (this._config.isInstanceIdEnabled()) {
+      data.instanceid = this._keychain.getInstanceId();
+    }
+
+    if (this._config.isRequestIdEnabled()) {
+      data.requestid = utils.generateUUID();
+    }
+
+    this._networking.performHeartbeat(channels, {
+      callback: jsonp,
+      data: this._networking.prepareParams(data),
+      success: function (response) {
+        Responders.callback(response, callback, err);
+      },
+      fail: function (response) {
+        Responders.error(response, err);
+      }
+    });
+  }
+
+  performState(args: Object, argumentCallback: Function) {
+    let callback = args.callback || argumentCallback || function () {};
+    let err = args.error || function () {};
+    let auth_key = args.auth_key || this._keychain.getAuthKey();
+    let jsonp = this._jsonp_cb();
+    let state = args.state;
+    let uuid = args.uuid || this._keychain.getUUID();
+    let channel = args.channel;
+    let channel_group = args.channel_group;
+    let data = this._networking.prepareParams({ auth: auth_key });
+
+    // Make sure we have a Channel
+    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+    if (!uuid) return this._error('Missing UUID');
+    if (!channel && !channel_group) return this._error('Missing Channel');
+
+    if (jsonp !== 0) {
+      data['callback'] = jsonp;
+    }
+
+    if (typeof channel !== 'undefined'
+      && this._state.getChannel(channel)
+      && this._state.getChannel(channel).subscribed) {
+      if (state) {
+        this._state.addToPresenceState(channel, state);
+      }
+    }
+
+    if (typeof channel_group !== 'undefined'
+      && this._state.getChannelGroup(channel_group)
+      && this._state.getChannelGroup(channel_group).subscribed
+    ) {
+      if (state) {
+        this._state.addToPresenceState(channel_group, state);
+      }
+      data['channel-group'] = channel_group;
+
+      if (!channel) {
+        channel = ',';
+      }
+    }
+
+    data.state = JSON.stringify(state);
+
+    if (this._config.isInstanceIdEnabled()) {
+      data['instanceid'] = this._keychain.getInstanceId();
+    }
+
+    this._networking.performState(state, channel, uuid, {
       callback: jsonp,
       data: this._networking.prepareParams(data),
       success: function (response) {

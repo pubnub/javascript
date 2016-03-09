@@ -7,9 +7,12 @@ export default class {
   _channelStorage: Object;
   _channelGroupStorage: Object;
 
+  _presenceState: Object;
+
   constructor() {
     this._channelStorage = {};
     this._channelGroupStorage = {};
+    this._presenceState = {};
   }
 
   containsChannel(name: string): boolean {
@@ -34,6 +37,22 @@ export default class {
 
   addChannelGroup(name: string, metadata: Object) {
     this._channelGroupStorage[name] = metadata;
+  }
+
+  addToPresenceState(key: string, value: Object) {
+    this._presenceState[key] = value;
+  }
+
+  isInPresenceState(key: string): boolean {
+    return key in this._presenceState;
+  }
+
+  removeFromPresenceState(key: string) {
+    delete this._presenceState[key];
+  }
+
+  getPresenceState(): Object {
+    return this._presenceState;
   }
 
   /**
