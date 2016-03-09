@@ -11,6 +11,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _class = function () {
 
   /*
+    how long the server will wait before declaring that the client is gone.
+  */
+
+
+  /*
     if instanceId config is true, the SDK will pass the unique instance
     identifier to the server as instanceId=<UUID>
   */
@@ -21,6 +26,11 @@ var _class = function () {
     this._instanceId = false;
     this._requestId = false;
   }
+
+  /*
+    how often (in seconds) the client should announce its presence to server
+  */
+
 
   /*
     if requestId config is true, the SDK will pass a unique request identifier
@@ -41,6 +51,18 @@ var _class = function () {
       return this;
     }
   }, {
+    key: "setHeartbeatInterval",
+    value: function setHeartbeatInterval(configValue) {
+      this._heartbeatInterval = configValue;
+      return this;
+    }
+  }, {
+    key: "setPresenceTimeout",
+    value: function setPresenceTimeout(configValue) {
+      this._presenceTimeout = configValue;
+      return this;
+    }
+  }, {
     key: "isInstanceIdEnabled",
     value: function isInstanceIdEnabled() {
       return this._instanceId;
@@ -49,6 +71,16 @@ var _class = function () {
     key: "isRequestIdEnabled",
     value: function isRequestIdEnabled() {
       return this._requestId;
+    }
+  }, {
+    key: "getHeartbeatInterval",
+    value: function getHeartbeatInterval() {
+      return this._heartbeatInterval;
+    }
+  }, {
+    key: "getPresenceTimeout",
+    value: function getPresenceTimeout() {
+      return this._presenceTimeout;
     }
   }]);
 

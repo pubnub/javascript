@@ -138,7 +138,11 @@ function PN_API(setup) {
 
   let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
+    .setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, error))
     .setInstanceIdConfig(setup.instance_id || false);
+
+  config
+    .setHeartbeatInterval(setup.heartbeat_interval || (config.getPresnceTimeout() / 2) - 1);
 
   let stateStorage = new State();
 
@@ -186,8 +190,6 @@ function PN_API(setup) {
   };
   var STATE = {};
   var PRESENCE_HB_TIMEOUT = null;
-  var PRESENCE_HB = utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, setup.error);
-  var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || (PRESENCE_HB / 2) - 1;
   var PRESENCE_HB_RUNNING = false;
   var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
   var COMPATIBLE_35 = setup['compatible_3.5'] || false;
@@ -198,7 +200,7 @@ function PN_API(setup) {
   var _poll_timer;
   var _poll_timer2;
 
-  if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
+  if (config.getPresenceTimeout() === 2) config.setHeartbeatInterval(1);
 
 
   function error_common(message, callback) {
@@ -209,8 +211,8 @@ function PN_API(setup) {
   function _presence_heartbeat() {
     clearTimeout(PRESENCE_HB_TIMEOUT);
 
-    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 ||
-      PRESENCE_HB_INTERVAL < 1 ||
+    if (!config.getHeartbeatInterval() || config.getHeartbeatInterval() >= 500 ||
+      config.getHeartbeatInterval() < 1 ||
       (!stateStorage.generate_channel_list(true).length && !stateStorage.generate_channel_group_list(true).length)) {
       PRESENCE_HB_RUNNING = false;
       return;
@@ -219,11 +221,11 @@ function PN_API(setup) {
     PRESENCE_HB_RUNNING = true;
     SELF['presence_heartbeat']({
       callback: function (r) {
-        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
+        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (config.getHeartbeatInterval()) * SECOND);
       },
       error: function (e) {
         error && error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
-        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
+        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (config.getHeartbeatInterval()) * SECOND);
       }
     });
   }
@@ -448,25 +450,25 @@ function PN_API(setup) {
     },
 
     get_heartbeat: function () {
-      return PRESENCE_HB;
+      return config.getPresenceTimeout();
     },
 
     set_heartbeat: function (heartbeat, heartbeat_interval) {
-      PRESENCE_HB = utils.validateHeartbeat(heartbeat, PRESENCE_HB, error);
-      PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
-      if (PRESENCE_HB == 2) {
-        PRESENCE_HB_INTERVAL = 1;
+      config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
+      config.setHeartbeatInterval(heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
+      if (config.getPresenceTimeout() == 2) {
+        config.setHeartbeatInterval(1);
       }
       CONNECT();
       _presence_heartbeat();
     },
 
     get_heartbeat_interval: function () {
-      return PRESENCE_HB_INTERVAL;
+      return config.getHeartbeatInterval();
     },
 
     set_heartbeat_interval: function (heartbeat_interval) {
-      PRESENCE_HB_INTERVAL = heartbeat_interval;
+      config.setHeartbeatInterval(heartbeat_interval);
       _presence_heartbeat();
     },
 
@@ -884,7 +886,9 @@ function PN_API(setup) {
         var st = JSON.stringify(STATE);
         if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
-        if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
+        if (config.getPresenceTimeout()) {
+          data['heartbeat'] = config.getPresenceTimeout();
+        }
 
         if (config.isInstanceIdEnabled()) {
           data['instanceid'] = keychain.getInstanceId();
@@ -1157,7 +1161,9 @@ function PN_API(setup) {
       var st = JSON.stringify(STATE);
       if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
-      if (PRESENCE_HB > 0 && PRESENCE_HB < 320) data['heartbeat'] = PRESENCE_HB;
+      if (config.getPresenceTimeout() > 0 && config.getPresenceTimeout() < 320) {
+        data['heartbeat'] = config.getPresenceTimeout();
+      }
 
       if (jsonp != '0') {
         data['callback'] = jsonp;
@@ -1177,15 +1183,9 @@ function PN_API(setup) {
         data['requestid'] = utils.generateUUID();
       }
 
-      xdr({
+      networking.performHeartbeat(channels, {
         callback: jsonp,
         data: networking.prepareParams(data),
-        url: [
-          networking.getStandardOrigin(), 'v2', 'presence',
-          'sub-key', keychain.getSubscribeKey(),
-          'channel', channels,
-          'heartbeat'
-        ],
         success: function (response) {
           Responders.callback(response, callback, err);
         },
@@ -1254,10 +1254,7 @@ function PN_API(setup) {
 
   _poll_timer = utils.timeout(_poll_online, SECOND);
   _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-  PRESENCE_HB_TIMEOUT = utils.timeout(
-    start_presence_heartbeat,
-    (PRESENCE_HB_INTERVAL - 3) * SECOND
-  );
+  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (config.getHeartbeatInterval() - 3) * SECOND);
 
   // Detect Age of Message
   function detect_latency(tt) {

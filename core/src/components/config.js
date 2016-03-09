@@ -15,15 +15,16 @@ export default class {
   */
   _requestId: boolean;
 
-  /*
-    default value for heartbeat presence interval.
-  */
-  _defaultHeartbeatInterval: number;
 
   /*
-    the minimum heartbeat interval allowed.
+    how long the server will wait before declaring that the client is gone.
   */
-  _minimumHeartbeatInterval: number;
+  _presenceTimeout: number;
+
+  /*
+    how often (in seconds) the client should announce its presence to server
+  */
+  _heartbeatInterval: number;
 
   constructor() {
     this._instanceId = false;
@@ -40,12 +41,30 @@ export default class {
     return this;
   }
 
+  setHeartbeatInterval(configValue: number): this {
+    this._heartbeatInterval = configValue;
+    return this;
+  }
+
+  setPresenceTimeout(configValue: number): this {
+    this._presenceTimeout = configValue;
+    return this;
+  }
+
   isInstanceIdEnabled(): boolean {
     return this._instanceId;
   }
 
   isRequestIdEnabled(): boolean {
     return this._requestId;
+  }
+
+  getHeartbeatInterval(): number {
+    return this._heartbeatInterval;
+  }
+
+  getPresenceTimeout(): number {
+    return this._presenceTimeout;
   }
 
 }

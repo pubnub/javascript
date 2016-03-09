@@ -136,6 +136,17 @@ export default class {
     this._xdr({ data, callback, success, fail, url });
   }
 
+  performHeartbeat(channels: string, { data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v2', 'presence',
+      'sub-key', this._keychain.getSubscribeKey(),
+      'channel', channels,
+      'heartbeat'
+    ];
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
   performAudit({ data, callback, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'audit',

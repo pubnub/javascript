@@ -983,8 +983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var DEF_SUB_TIMEOUT = 310; // SECONDS.
 	var DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
 	var SECOND = 1000; // A THOUSAND MILLISECONDS.
-	var PRESENCE_HB_THRESHOLD = 5;
-	var PRESENCE_HB_DEFAULT = 30;
+
 	var SDK_VER = packageJSON.version;
 
 	/**
@@ -1081,7 +1080,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // write the new key to storage
 	  db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
+	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, _error)).setInstanceIdConfig(setup.instance_id || false);
+
+	  config.setHeartbeatInterval(setup.heartbeat_interval || config.getPresnceTimeout() / 2 - 1);
 
 	  var stateStorage = new _state2.default();
 
@@ -1124,8 +1125,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var SUB_ERROR = function SUB_ERROR() {};
 	  var STATE = {};
 	  var PRESENCE_HB_TIMEOUT = null;
-	  var PRESENCE_HB = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']);
-	  var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB / 2 - 1;
 	  var PRESENCE_HB_RUNNING = false;
 	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
 	  var COMPATIBLE_35 = setup['compatible_3.5'] || false;
@@ -1138,36 +1137,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _poll_timer;
 	  var _poll_timer2;
 
-	  if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
-
-	  function validate_presence_heartbeat(heartbeat, cur_heartbeat, error) {
-	    var err = false;
-
-	    if (typeof heartbeat === 'undefined') {
-	      return cur_heartbeat;
-	    }
-
-	    if (typeof heartbeat === 'number') {
-	      if (heartbeat > PRESENCE_HB_THRESHOLD || heartbeat == 0) {
-	        err = false;
-	      } else {
-	        err = true;
-	      }
-	    } else if (typeof heartbeat === 'boolean') {
-	      if (!heartbeat) {
-	        return 0;
-	      } else {
-	        return PRESENCE_HB_DEFAULT;
-	      }
-	    } else {
-	      err = true;
-	    }
-
-	    if (err) {
-	      error && error('Presence Heartbeat value invalid. Valid range ( x > ' + PRESENCE_HB_THRESHOLD + ' or x = 0). Current Value : ' + (cur_heartbeat || PRESENCE_HB_THRESHOLD));
-	      return cur_heartbeat || PRESENCE_HB_THRESHOLD;
-	    } else return heartbeat;
-	  }
+	  if (config.getPresenceTimeout() === 2) config.setHeartbeatInterval(1);
 
 	  function error_common(message, callback) {
 	    callback && callback({ error: message || 'error occurred' });
@@ -1177,7 +1147,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _presence_heartbeat() {
 	    clearTimeout(PRESENCE_HB_TIMEOUT);
 
-	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !stateStorage.generate_channel_list(true).length && !stateStorage.generate_channel_group_list(true).length) {
+	    if (!config.getHeartbeatInterval() || config.getHeartbeatInterval() >= 500 || config.getHeartbeatInterval() < 1 || !stateStorage.generate_channel_list(true).length && !stateStorage.generate_channel_group_list(true).length) {
 	      PRESENCE_HB_RUNNING = false;
 	      return;
 	    }
@@ -1185,11 +1155,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    PRESENCE_HB_RUNNING = true;
 	    SELF['presence_heartbeat']({
 	      callback: function callback(r) {
-	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, PRESENCE_HB_INTERVAL * SECOND);
+	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, config.getHeartbeatInterval() * SECOND);
 	      },
 	      error: function error(e) {
 	        _error && _error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
-	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, PRESENCE_HB_INTERVAL * SECOND);
+	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, config.getHeartbeatInterval() * SECOND);
 	      }
 	    });
 	  }
@@ -1416,25 +1386,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    get_heartbeat: function get_heartbeat() {
-	      return PRESENCE_HB;
+	      return config.getPresenceTimeout();
 	    },
 
 	    set_heartbeat: function set_heartbeat(heartbeat, heartbeat_interval) {
-	      PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, _error);
-	      PRESENCE_HB_INTERVAL = heartbeat_interval || PRESENCE_HB / 2 - 1;
-	      if (PRESENCE_HB == 2) {
-	        PRESENCE_HB_INTERVAL = 1;
+	      config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), _error));
+	      config.setHeartbeatInterval(heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
+	      if (config.getPresenceTimeout() == 2) {
+	        config.setHeartbeatInterval(1);
 	      }
 	      CONNECT();
 	      _presence_heartbeat();
 	    },
 
 	    get_heartbeat_interval: function get_heartbeat_interval() {
-	      return PRESENCE_HB_INTERVAL;
+	      return config.getHeartbeatInterval();
 	    },
 
 	    set_heartbeat_interval: function set_heartbeat_interval(heartbeat_interval) {
-	      PRESENCE_HB_INTERVAL = heartbeat_interval;
+	      config.setHeartbeatInterval(heartbeat_interval);
 	      _presence_heartbeat();
 	    },
 
@@ -1843,7 +1813,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var st = JSON.stringify(STATE);
 	        if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
-	        if (PRESENCE_HB) data['heartbeat'] = PRESENCE_HB;
+	        if (config.getPresenceTimeout()) {
+	          data['heartbeat'] = config.getPresenceTimeout();
+	        }
 
 	        if (config.isInstanceIdEnabled()) {
 	          data['instanceid'] = keychain.getInstanceId();
@@ -2087,7 +2059,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var st = JSON.stringify(STATE);
 	      if (st.length > 2) data['state'] = JSON.stringify(STATE);
 
-	      if (PRESENCE_HB > 0 && PRESENCE_HB < 320) data['heartbeat'] = PRESENCE_HB;
+	      if (config.getPresenceTimeout() > 0 && config.getPresenceTimeout() < 320) {
+	        data['heartbeat'] = config.getPresenceTimeout();
+	      }
 
 	      if (jsonp != '0') {
 	        data['callback'] = jsonp;
@@ -2107,10 +2081,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data['requestid'] = utils.generateUUID();
 	      }
 
-	      xdr({
+	      networking.performHeartbeat(channels, {
 	        callback: jsonp,
 	        data: networking.prepareParams(data),
-	        url: [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'],
 	        success: function success(response) {
 	          _responders2.default.callback(response, callback, err);
 	        },
@@ -2177,7 +2150,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  _poll_timer = utils.timeout(_poll_online, SECOND);
 	  _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-	  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND);
+	  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (config.getHeartbeatInterval() - 3) * SECOND);
 
 	  // Detect Age of Message
 	  function detect_latency(tt) {
@@ -2624,12 +2597,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
 	  }, {
-	    key: 'performAudit',
-	    value: function performAudit(_ref5) {
+	    key: 'performHeartbeat',
+	    value: function performHeartbeat(channels, _ref5) {
 	      var data = _ref5.data;
 	      var callback = _ref5.callback;
 	      var success = _ref5.success;
 	      var fail = _ref5.fail;
+
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'];
+
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'performAudit',
+	    value: function performAudit(_ref6) {
+	      var data = _ref6.data;
+	      var callback = _ref6.callback;
+	      var success = _ref6.success;
+	      var fail = _ref6.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -2637,11 +2622,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchReplay',
-	    value: function fetchReplay(source, destination, _ref6) {
-	      var data = _ref6.data;
-	      var callback = _ref6.callback;
-	      var success = _ref6.success;
-	      var fail = _ref6.fail;
+	    value: function fetchReplay(source, destination, _ref7) {
+	      var data = _ref7.data;
+	      var callback = _ref7.callback;
+	      var success = _ref7.success;
+	      var fail = _ref7.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
@@ -2649,11 +2634,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchTime',
-	    value: function fetchTime(jsonp, _ref7) {
-	      var data = _ref7.data;
-	      var callback = _ref7.callback;
-	      var success = _ref7.success;
-	      var fail = _ref7.fail;
+	    value: function fetchTime(jsonp, _ref8) {
+	      var data = _ref8.data;
+	      var callback = _ref8.callback;
+	      var success = _ref8.success;
+	      var fail = _ref8.fail;
 
 	      var url = [this.getStandardOrigin(), 'time', jsonp];
 
@@ -2661,11 +2646,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchWhereNow',
-	    value: function fetchWhereNow(uuid, _ref8) {
-	      var data = _ref8.data;
-	      var callback = _ref8.callback;
-	      var success = _ref8.success;
-	      var fail = _ref8.fail;
+	    value: function fetchWhereNow(uuid, _ref9) {
+	      var data = _ref9.data;
+	      var callback = _ref9.callback;
+	      var success = _ref9.success;
+	      var fail = _ref9.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
@@ -2673,11 +2658,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchHereNow',
-	    value: function fetchHereNow(channel, channel_group, _ref9) {
-	      var data = _ref9.data;
-	      var callback = _ref9.callback;
-	      var success = _ref9.success;
-	      var fail = _ref9.fail;
+	    value: function fetchHereNow(channel, channel_group, _ref10) {
+	      var data = _ref10.data;
+	      var callback = _ref10.callback;
+	      var success = _ref10.success;
+	      var fail = _ref10.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 
@@ -3010,6 +2995,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }).join('&');
 	}
 
+	function validateHeartbeat(heartbeat, cur_heartbeat, error) {
+	  var err = false;
+
+	  if (typeof heartbeat === 'undefined') {
+	    return cur_heartbeat;
+	  }
+
+	  if (typeof heartbeat === 'number') {
+	    if (heartbeat > defaultConfiguration._minimumHeartbeatInterval || heartbeat === 0) {
+	      err = false;
+	    } else {
+	      err = true;
+	    }
+	  } else if (typeof heartbeat === 'boolean') {
+	    if (!heartbeat) {
+	      return 0;
+	    } else {
+	      return defaultConfiguration._defaultHeartbeatInterval;
+	    }
+	  } else {
+	    err = true;
+	  }
+
+	  if (err) {
+	    if (error) {
+	      var errorMessage = 'Presence Heartbeat value invalid. Valid range ( x >';
+	      errorMessage += defaultConfiguration._minimumHeartbeatInterval + ' or x = 0). Current Value : ';
+	      errorMessage += cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
+
+	      error(errorMessage);
+	    }
+	    return cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
+	  } else return heartbeat;
+	}
+
 	module.exports = {
 	  buildURL: buildURL,
 	  encode: encode,
@@ -3025,7 +3045,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  grep: grep,
 	  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
 	  _object_to_key_list_sorted: _object_to_key_list_sorted,
-	  _object_to_key_list: _object_to_key_list
+	  _object_to_key_list: _object_to_key_list,
+	  validateHeartbeat: validateHeartbeat
 	};
 	//# sourceMappingURL=utils.js.map
 
@@ -3036,7 +3057,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 		"PARAMSBIT": "&",
-		"URLBIT": "/"
+		"URLBIT": "/",
+		"defaultHeartbeatInterval": 30,
+		"minimumHeartbeatInterval": 5
 	};
 
 /***/ },
@@ -3056,6 +3079,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _class = function () {
 
 	  /*
+	    how long the server will wait before declaring that the client is gone.
+	  */
+
+
+	  /*
 	    if instanceId config is true, the SDK will pass the unique instance
 	    identifier to the server as instanceId=<UUID>
 	  */
@@ -3066,6 +3094,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._instanceId = false;
 	    this._requestId = false;
 	  }
+
+	  /*
+	    how often (in seconds) the client should announce its presence to server
+	  */
+
 
 	  /*
 	    if requestId config is true, the SDK will pass a unique request identifier
@@ -3086,6 +3119,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this;
 	    }
 	  }, {
+	    key: "setHeartbeatInterval",
+	    value: function setHeartbeatInterval(configValue) {
+	      this._heartbeatInterval = configValue;
+	      return this;
+	    }
+	  }, {
+	    key: "setPresenceTimeout",
+	    value: function setPresenceTimeout(configValue) {
+	      this._presenceTimeout = configValue;
+	      return this;
+	    }
+	  }, {
 	    key: "isInstanceIdEnabled",
 	    value: function isInstanceIdEnabled() {
 	      return this._instanceId;
@@ -3094,6 +3139,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: "isRequestIdEnabled",
 	    value: function isRequestIdEnabled() {
 	      return this._requestId;
+	    }
+	  }, {
+	    key: "getHeartbeatInterval",
+	    value: function getHeartbeatInterval() {
+	      return this._heartbeatInterval;
+	    }
+	  }, {
+	    key: "getPresenceTimeout",
+	    value: function getPresenceTimeout() {
+	      return this._presenceTimeout;
 	    }
 	  }]);
 

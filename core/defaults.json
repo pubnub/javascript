@@ -2,5 +2,5 @@
   "PARAMSBIT": "&",
   "URLBIT": "/",
   "defaultHeartbeatInterval": 30,
-  "minimumHeartbeatInterval": 5,
+  "minimumHeartbeatInterval": 5
 }
