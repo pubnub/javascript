@@ -30,7 +30,7 @@
  THE SOFTWARE.
  --------------------------------------------------------------------------- */
 
-var pubNubCore = require('../core/lib/pubnub-common.js');
+var pubNubCore = require('../core/src/pubnub-common.js');
 var XDR = require('./lib/xdr');
 var packageJSON = require('../package.json');
 var crypto = require('crypto');

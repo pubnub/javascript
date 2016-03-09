@@ -1,5 +1,3 @@
-/* @flow */
-
 /* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
 var defaultConfiguration = require('../defaults.json');
@@ -117,10 +115,6 @@ function supplant(str, values) {
  * timeout( function(){}, 100 );
  */
 function timeout(fun, wait) {
-  if (typeof(setTimeout) === 'undefined') {
-    return;
-  }
-
   return setTimeout(fun, wait);
 }
 

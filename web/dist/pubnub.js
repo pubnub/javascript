@@ -1,4 +1,4 @@
-/*! 3.14.1 / web */
+/*! 3.14.2 / web */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -64,7 +64,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var CryptoJS = __webpack_require__(3);
 	var packageJSON = __webpack_require__(4);
 	var pubNubCore = __webpack_require__(5);
-	var WS = __webpack_require__(10);
+	var WS = __webpack_require__(8);
 
 	/**
 	 * UTIL LOCALS
@@ -804,7 +804,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.14.1",
+		"version": "3.14.2",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -846,7 +846,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"babel-plugin-transform-flow-strip-types": "^6.5.0",
 			"babel-preset-es2015": "^6.5.0",
 			"chai": "^3.5.0",
-			"eslint": "^2.2.0",
+			"eslint": "2.2.0",
 			"eslint-config-airbnb": "^6.0.2",
 			"eslint-plugin-flowtype": "^2.1.0",
 			"eslint-plugin-mocha": "^2.0.0",
@@ -905,29 +905,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 	/* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
 	/* eslint eqeqeq: 0, one-var: 0 */
 	/* eslint no-redeclare: 0 */
 	/* eslint guard-for-in: 0 */
 	/* eslint block-scoped-var: 0 space-return-throw-case: 0, no-unused-vars: 0 */
 
-	var _networking = __webpack_require__(6);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _keychain = __webpack_require__(7);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 	var packageJSON = __webpack_require__(4);
-	var defaultConfiguration = __webpack_require__(9);
-	var utils = __webpack_require__(8);
+	var defaultConfiguration = __webpack_require__(6);
+	var utils = __webpack_require__(7);
 
 	var NOW = 1;
 	var READY = false;
@@ -946,8 +932,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * UTILITIES
 	 */
 	function unique() {
-	  return 'x' + ++NOW + '' + +new Date();
+	  return 'x' + ++NOW + '' + (+new Date);
 	}
+
+	/**
+	 * NEXTORIGIN
+	 * ==========
+	 * var next_origin = nextorigin();
+	 */
+	var nextorigin = (function () {
+	  var max = 20;
+	  var ori = Math.floor(Math.random() * max);
+	  return function (origin, failover) {
+	    return origin.indexOf('pubsub.') > 0
+	      && origin.replace(
+	        'pubsub', 'ps' + (
+	          failover ? utils.generateUUID().split('-')[0] :
+	            (++ori < max ? ori : ori = 1)
+	        )) || origin;
+	  };
+	})();
+
 
 	/**
 	 * Generate Subscription Channel List
@@ -1050,27 +1055,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function PN_API(setup) {
-	  var xdr = setup.xdr;
-	  var subscribe_key = setup.subscribe_key;
-	  var publish_key = setup.publish_key;
-	  var ssl = setup.ssl;
-	  var origin = setup.origin;
-	  var auth_key = setup.auth_key;
-
-
-	  var keychain = new _keychain2.default().setAuthKey(auth_key || '').setSubscribeKey(subscribe_key).setPublishKey(publish_key);
-
-	  var networkingComponent = new _networking2.default(xdr, keychain, ssl, origin);
-
 	  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
 	  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
 	  var KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
 	  var TIME_CHECK = setup['timecheck'] || 0;
 	  var NOLEAVE = setup['noleave'] || 0;
+	  var PUBLISH_KEY = setup['publish_key'];
+	  var SUBSCRIBE_KEY = setup['subscribe_key'];
+	  var AUTH_KEY = setup['auth_key'] || '';
 	  var SECRET_KEY = setup['secret_key'] || '';
 	  var hmac_SHA256 = setup['hmac_SHA256'];
 	  var SSL = setup['ssl'] ? 's' : '';
-	  var CONNECT = function CONNECT() {};
+	  var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
+	  var STD_ORIGIN = nextorigin(ORIGIN);
+	  var SUB_ORIGIN = nextorigin(ORIGIN);
+	  var CONNECT = function () {
+	  };
 	  var PUB_QUEUE = [];
 	  var CLOAK = true;
 	  var TIME_DRIFT = 0;
@@ -1083,43 +1083,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var RESUMED = false;
 	  var CHANNELS = {};
 	  var CHANNEL_GROUPS = {};
-	  var SUB_ERROR = function SUB_ERROR() {};
+	  var SUB_ERROR = function () {
+	  };
 	  var STATE = {};
 	  var PRESENCE_HB_TIMEOUT = null;
-	  var PRESENCE_HB = validate_presence_heartbeat(setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']);
-	  var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || PRESENCE_HB / 2 - 1;
+	  var PRESENCE_HB = validate_presence_heartbeat(
+	    setup['heartbeat'] || setup['pnexpires'] || 0, setup['error']
+	  );
+	  var PRESENCE_HB_INTERVAL = setup['heartbeat_interval'] || (PRESENCE_HB / 2) - 1;
 	  var PRESENCE_HB_RUNNING = false;
 	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
 	  var COMPATIBLE_35 = setup['compatible_3.5'] || false;
+	  var xdr = setup['xdr'];
 	  var params = setup['params'] || {};
-	  var _error = setup['error'] || function () {};
-	  var _is_online = setup['_is_online'] || function () {
-	    return 1;
-	  };
-	  var jsonp_cb = setup['jsonp_cb'] || function () {
-	    return 0;
-	  };
-	  var db = setup['db'] || { get: function get() {}, set: function set() {} };
+	  var error = setup['error'] || function () {};
+	  var _is_online = setup['_is_online'] || function () { return 1;};
+	  var jsonp_cb = setup['jsonp_cb'] || function () { return 0; };
+	  var db = setup['db'] || { get: function () {}, set: function () {} };
 	  var CIPHER_KEY = setup['cipher_key'];
-	  var UUID = setup['uuid'] || !setup['unique_uuid'] && db && db['get'](keychain.getSubscribeKey() + 'uuid') || '';
+	  var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY + 'uuid') || '');
 	  var USE_INSTANCEID = setup['instance_id'] || false;
 	  var INSTANCEID = '';
-	  var _shutdown = setup['shutdown'];
-	  var use_send_beacon = typeof setup['use_send_beacon'] != 'undefined' ? setup['use_send_beacon'] : true;
-	  var sendBeacon = use_send_beacon ? setup['sendBeacon'] : null;
+	  var shutdown = setup['shutdown'];
+	  var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
+	  var sendBeacon = (use_send_beacon) ? setup['sendBeacon'] : null;
 	  var _poll_timer;
 	  var _poll_timer2;
 
 	  if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
 
-	  var crypto_obj = setup['crypto_obj'] || {
-	    encrypt: function encrypt(a, key) {
-	      return a;
-	    },
-	    decrypt: function decrypt(b, key) {
-	      return b;
-	    }
-	  };
+	  var crypto_obj = setup['crypto_obj'] ||
+	    {
+	      encrypt: function (a, key) {
+	        return a;
+	      },
+	      decrypt: function (b, key) {
+	        return b;
+	      }
+	    };
 
 	  function _get_url_params(data) {
 	    if (!data) data = {};
@@ -1187,30 +1188,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  function decrypt(input, key) {
-	    return crypto_obj['decrypt'](input, key || CIPHER_KEY) || crypto_obj['decrypt'](input, CIPHER_KEY) || input;
+	    return crypto_obj['decrypt'](input, key || CIPHER_KEY) ||
+	      crypto_obj['decrypt'](input, CIPHER_KEY) ||
+	      input;
 	  }
 
 	  function error_common(message, callback) {
 	    callback && callback({ error: message || 'error occurred' });
-	    _error && _error(message);
+	    error && error(message);
 	  }
 
 	  function _presence_heartbeat() {
 	    clearTimeout(PRESENCE_HB_TIMEOUT);
 
-	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 || PRESENCE_HB_INTERVAL < 1 || !generate_channel_list(CHANNELS, true).length && !generate_channel_group_list(CHANNEL_GROUPS, true).length) {
+	    if (!PRESENCE_HB_INTERVAL || PRESENCE_HB_INTERVAL >= 500 ||
+	      PRESENCE_HB_INTERVAL < 1 ||
+	      (!generate_channel_list(CHANNELS, true).length && !generate_channel_group_list(CHANNEL_GROUPS, true).length)) {
 	      PRESENCE_HB_RUNNING = false;
 	      return;
 	    }
 
 	    PRESENCE_HB_RUNNING = true;
 	    SELF['presence_heartbeat']({
-	      callback: function callback(r) {
-	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, PRESENCE_HB_INTERVAL * SECOND);
+	      callback: function (r) {
+	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
 	      },
-	      error: function error(e) {
-	        _error && _error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
-	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, PRESENCE_HB_INTERVAL * SECOND);
+	      error: function (e) {
+	        error && error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
+	        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (PRESENCE_HB_INTERVAL) * SECOND);
 	      }
 	    });
 	  }
@@ -1219,7 +1224,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    !PRESENCE_HB_RUNNING && _presence_heartbeat();
 	  }
 
-	  function _publish(next) {
+	  function publish(next) {
 	    if (NO_WAIT_FOR_PENDING) {
 	      if (!PUB_QUEUE.length) return;
 	    } else {
@@ -1240,7 +1245,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!chang) return;
 
 	      count++;
-	      (callback || function () {})(chang);
+	      (callback || function () {
+	      })(chang);
 	    });
 
 	    return count;
@@ -1255,14 +1261,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!chan) return;
 
 	      count++;
-	      (callback || function () {})(chan);
+	      (callback || function () {
+	      })(chan);
 	    });
 
 	    return count;
 	  }
 
 	  function _invoke_callback(response, callback, err) {
-	    if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object') {
+	    if (typeof response == 'object') {
 	      if (response['error']) {
 	        var callback_data = {};
 
@@ -1290,7 +1297,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  function _invoke_error(response, err) {
-	    if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
+	    if (typeof response == 'object' && response['error']) {
 	      var callback_data = {};
 
 	      if (response['message']) {
@@ -1310,16 +1317,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  function CR(args, callback, url1, data) {
 	    var callback = args['callback'] || callback;
-	    var err = args['error'] || _error;
+	    var err = args['error'] || error;
 	    var jsonp = jsonp_cb();
 
 	    data = data || {};
 
 	    if (!data['auth']) {
-	      data['auth'] = args['auth_key'] || keychain.getAuthKey();
+	      data['auth'] = args['auth_key'] || AUTH_KEY;
 	    }
 
-	    var url = [networkingComponent.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', keychain.getSubscribeKey()];
+	    var url = [
+	      STD_ORIGIN, 'v1', 'channel-registration',
+	      'sub-key', SUBSCRIBE_KEY
+	    ];
 
 	    url.push.apply(url, url1);
 
@@ -1328,10 +1338,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    xdr({
 	      callback: jsonp,
 	      data: _get_url_params(data),
-	      success: function success(response) {
+	      success: function (response) {
 	        _invoke_callback(response, callback, err);
 	      },
-	      fail: function fail(response) {
+	      fail: function (response) {
 	        _invoke_error(response, err);
 	      },
 	      url: url
@@ -1340,9 +1350,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Announce Leave Event
 	  var SELF = {
-	    LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
-	      var data = { uuid: UUID, auth: auth_key || keychain.getAuthKey() };
-	      var origin = networkingComponent.nextOrigin(false);
+	    LEAVE: function (channel, blocking, auth_key, callback, error) {
+	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
+	      var origin = nextorigin(ORIGIN);
 	      var callback = callback || function () {};
 	      var err = error || function () {};
 	      var url;
@@ -1351,6 +1361,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Prevent Leaving a Presence Channel
 	      if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
+
 
 	      if (COMPATIBLE_35) {
 	        if (!SSL) return false;
@@ -1363,9 +1374,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      url = [origin, 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave'];
+	      url = [
+	        origin, 'v2', 'presence', 'sub_key',
+	        SUBSCRIBE_KEY, 'channel', utils.encode(channel), 'leave'
+	      ];
 
 	      params = _get_url_params(data);
+
 
 	      if (sendBeacon) {
 	        var url_string = utils.buildURL(url, params);
@@ -1375,14 +1390,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      }
 
+
 	      xdr({
 	        blocking: blocking || SSL,
 	        callback: jsonp,
 	        data: params,
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -1390,9 +1406,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return true;
 	    },
 
-	    LEAVE_GROUP: function LEAVE_GROUP(channel_group, blocking, auth_key, callback, error) {
-	      var data = { uuid: UUID, auth: auth_key || keychain.getAuthKey() };
-	      var origin = networkingComponent.nextOrigin(false);
+	    LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
+	      var data = { uuid: UUID, auth: auth_key || AUTH_KEY };
+	      var origin = nextorigin(ORIGIN);
 	      var url;
 	      var params;
 	      var callback = callback || function () {};
@@ -1415,7 +1431,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      url = [origin, 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'channel', utils.encode(','), 'leave'];
+	      url = [
+	        origin, 'v2', 'presence', 'sub_key',
+	        SUBSCRIBE_KEY, 'channel', utils.encode(','), 'leave'
+	      ];
 
 	      params = _get_url_params(data);
 
@@ -1431,10 +1450,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        blocking: blocking || SSL,
 	        callback: jsonp,
 	        data: params,
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -1442,33 +1461,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return true;
 	    },
 
-	    set_resumed: function set_resumed(resumed) {
+	    set_resumed: function (resumed) {
 	      RESUMED = resumed;
 	    },
 
-	    get_cipher_key: function get_cipher_key() {
+	    get_cipher_key: function () {
 	      return CIPHER_KEY;
 	    },
 
-	    set_cipher_key: function set_cipher_key(key) {
+	    set_cipher_key: function (key) {
 	      CIPHER_KEY = key;
 	    },
 
-	    raw_encrypt: function raw_encrypt(input, key) {
+	    raw_encrypt: function (input, key) {
 	      return encrypt(input, key);
 	    },
 
-	    raw_decrypt: function raw_decrypt(input, key) {
+	    raw_decrypt: function (input, key) {
 	      return decrypt(input, key);
 	    },
 
-	    get_heartbeat: function get_heartbeat() {
+	    get_heartbeat: function () {
 	      return PRESENCE_HB;
 	    },
 
-	    set_heartbeat: function set_heartbeat(heartbeat, heartbeat_interval) {
-	      PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, _error);
-	      PRESENCE_HB_INTERVAL = heartbeat_interval || PRESENCE_HB / 2 - 1;
+	    set_heartbeat: function (heartbeat, heartbeat_interval) {
+	      PRESENCE_HB = validate_presence_heartbeat(heartbeat, PRESENCE_HB, error);
+	      PRESENCE_HB_INTERVAL = heartbeat_interval || (PRESENCE_HB / 2) - 1;
 	      if (PRESENCE_HB == 2) {
 	        PRESENCE_HB_INTERVAL = 1;
 	      }
@@ -1476,26 +1495,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	      _presence_heartbeat();
 	    },
 
-	    get_heartbeat_interval: function get_heartbeat_interval() {
+	    get_heartbeat_interval: function () {
 	      return PRESENCE_HB_INTERVAL;
 	    },
 
-	    set_heartbeat_interval: function set_heartbeat_interval(heartbeat_interval) {
+	    set_heartbeat_interval: function (heartbeat_interval) {
 	      PRESENCE_HB_INTERVAL = heartbeat_interval;
 	      _presence_heartbeat();
 	    },
 
-	    get_version: function get_version() {
+	    get_version: function () {
 	      return SDK_VER;
 	    },
 
-	    getGcmMessageObject: function getGcmMessageObject(obj) {
+	    getGcmMessageObject: function (obj) {
 	      return {
 	        data: obj
 	      };
 	    },
 
-	    getApnsMessageObject: function getApnsMessageObject(obj) {
+	    getApnsMessageObject: function (obj) {
 	      var x = {
 	        aps: { badge: 1, alert: '' }
 	      };
@@ -1505,11 +1524,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return x;
 	    },
 
-	    _add_param: function _add_param(key, val) {
+	    _add_param: function (key, val) {
 	      params[key] = val;
 	    },
 
-	    channel_group: function channel_group(args, callback) {
+	    channel_group: function (args, callback) {
 	      var ns_ch = args['channel_group'];
 	      var callback = callback || args['callback'];
 	      var channels = args['channels'] || args['channel'];
@@ -1520,11 +1539,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var data = {};
 	      var mode = args['mode'] || 'add';
 
+
 	      if (ns_ch) {
 	        var ns_ch_a = ns_ch.split(':');
 
 	        if (ns_ch_a.length > 1) {
-	          namespace = ns_ch_a[0] === '*' ? null : ns_ch_a[0];
+	          namespace = (ns_ch_a[0] === '*') ? null : ns_ch_a[0];
 
 	          channel_group = ns_ch_a[1];
 	        } else {
@@ -1545,17 +1565,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	          channels = channels.join(',');
 	        }
 	        data[mode] = channels;
-	        data['cloak'] = CLOAK ? 'true' : 'false';
+	        data['cloak'] = (CLOAK) ? 'true' : 'false';
 	      } else {
 	        if (mode === 'remove') url.push('remove');
 	      }
 
-	      if (typeof cloak != 'undefined') data['cloak'] = cloak ? 'true' : 'false';
+	      if (typeof cloak != 'undefined') data['cloak'] = (cloak) ? 'true' : 'false';
 
 	      CR(args, callback, url, data);
 	    },
 
-	    channel_group_list_groups: function channel_group_list_groups(args, callback) {
+	    channel_group_list_groups: function (args, callback) {
 	      var namespace;
 
 	      namespace = args['namespace'] || args['ns'] || args['channel_group'] || null;
@@ -1566,34 +1586,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_list_channels: function channel_group_list_channels(args, callback) {
-	      if (!args['channel_group']) return _error('Missing Channel Group');
+	    channel_group_list_channels: function (args, callback) {
+	      if (!args['channel_group']) return error('Missing Channel Group');
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
-	      if (!args['channel_group']) return _error('Missing Channel Group');
-	      if (!args['channel'] && !args['channels']) return _error('Missing Channel');
+	    channel_group_remove_channel: function (args, callback) {
+	      if (!args['channel_group']) return error('Missing Channel Group');
+	      if (!args['channel'] && !args['channels']) return error('Missing Channel');
 
 	      args['mode'] = 'remove';
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_remove_group: function channel_group_remove_group(args, callback) {
-	      if (!args['channel_group']) return _error('Missing Channel Group');
-	      if (args['channel']) return _error('Use channel_group_remove_channel if you want to remove a channel from a group.');
+	    channel_group_remove_group: function (args, callback) {
+	      if (!args['channel_group']) return error('Missing Channel Group');
+	      if (args['channel']) return error('Use channel_group_remove_channel if you want to remove a channel from a group.');
 
 	      args['mode'] = 'remove';
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_add_channel: function channel_group_add_channel(args, callback) {
-	      if (!args['channel_group']) return _error('Missing Channel Group');
-	      if (!args['channel'] && !args['channels']) return _error('Missing Channel');
+	    channel_group_add_channel: function (args, callback) {
+	      if (!args['channel_group']) return error('Missing Channel Group');
+	      if (!args['channel'] && !args['channels']) return error('Missing Channel');
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_cloak: function channel_group_cloak(args, callback) {
+	    channel_group_cloak: function (args, callback) {
 	      if (typeof args['cloak'] == 'undefined') {
 	        callback(CLOAK);
 	        return;
@@ -1602,12 +1622,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      SELF['channel_group'](args, callback);
 	    },
 
-	    channel_group_list_namespaces: function channel_group_list_namespaces(args, callback) {
+	    channel_group_list_namespaces: function (args, callback) {
 	      var url = ['namespace'];
 	      CR(args, callback, url);
 	    },
 
-	    channel_group_remove_namespace: function channel_group_remove_namespace(args, callback) {
+	    channel_group_remove_namespace: function (args, callback) {
 	      var url = ['namespace', args['namespace'], 'remove'];
 	      CR(args, callback, url);
 	    },
@@ -1619,12 +1639,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	     callback : function(history) { }
 	     });
 	     */
-	    history: function history(args, callback) {
+	    history: function (args, callback) {
 	      var callback = args['callback'] || callback;
 	      var count = args['count'] || args['limit'] || 100;
 	      var reverse = args['reverse'] || 'false';
 	      var err = args['error'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var cipher_key = args['cipher_key'];
 	      var channel = args['channel'];
 	      var channel_group = args['channel_group'];
@@ -1636,9 +1656,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var jsonp = jsonp_cb();
 
 	      // Make sure we have a Channel
-	      if (!channel && !channel_group) return _error('Missing Channel');
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!channel && !channel_group) return error('Missing Channel');
+	      if (!callback) return error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      params['stringtoken'] = 'true';
 	      params['count'] = count;
@@ -1658,11 +1678,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (string_msg_token) params['string_message_token'] = 'true';
 
 	      // Send Message
-	      networkingComponent.fetchHistory(channel, {
+	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(params),
-	        success: function success(response) {
-	          if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) == 'object' && response['error']) {
+	        success: function (response) {
+	          if (typeof response == 'object' && response['error']) {
 	            err({ message: response['message'], payload: response['payload'] });
 	            return;
 	          }
@@ -1673,24 +1693,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	              var new_message = decrypt(messages[a]['message'], cipher_key);
 	              var timetoken = messages[a]['timetoken'];
 	              try {
-	                decrypted_messages.push({ message: JSON.parse(new_message), timetoken: timetoken });
+	                decrypted_messages['push']({ message: JSON['parse'](new_message), timetoken: timetoken });
 	              } catch (e) {
-	                decrypted_messages.push({ message: new_message, timetoken: timetoken });
+	                decrypted_messages['push'](({ message: new_message, timetoken: timetoken }));
 	              }
 	            } else {
 	              var new_message = decrypt(messages[a], cipher_key);
 	              try {
-	                decrypted_messages.push(JSON.parse(new_message));
+	                decrypted_messages['push'](JSON['parse'](new_message));
 	              } catch (e) {
-	                decrypted_messages.push(new_message);
+	                decrypted_messages['push']((new_message));
 	              }
 	            }
 	          }
 	          callback([decrypted_messages, response[1], response[2]]);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
-	        }
+	        },
+	        url: [
+	          STD_ORIGIN, 'v2', 'history', 'sub-key',
+	          SUBSCRIBE_KEY, 'channel', utils.encode(channel)
+	        ]
 	      });
 	    },
 
@@ -1700,9 +1724,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     destination : 'new_channel'
 	     });
 	     */
-	    replay: function replay(args, callback) {
+	    replay: function (args, callback) {
 	      var callback = callback || args['callback'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var source = args['source'];
 	      var destination = args['destination'];
 	      var err = args['error'] || args['error'] || function () {};
@@ -1716,10 +1740,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var url;
 
 	      // Check User Input
-	      if (!source) return _error('Missing Source Channel');
-	      if (!destination) return _error('Missing Destination Channel');
-	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!source) return error('Missing Source Channel');
+	      if (!destination) return error('Missing Destination Channel');
+	      if (!PUBLISH_KEY) return error('Missing Publish Key');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      // Setup URL Params
 	      if (jsonp != '0') data['callback'] = jsonp;
@@ -1731,15 +1755,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      data['auth'] = auth_key;
 
+	      // Compose URL Parts
+	      url = [
+	        STD_ORIGIN, 'v1', 'replay',
+	        PUBLISH_KEY, SUBSCRIBE_KEY,
+	        source, destination
+	      ];
+
 	      // Start (or Stop) Replay!
-	      networkingComponent.fetchReplay(source, destination, {
+	      xdr({
 	        callback: jsonp,
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail() {
+	        fail: function () {
 	          callback([0, 'Disconnected']);
 	        },
+	        url: url,
 	        data: _get_url_params(data)
 	      });
 	    },
@@ -1747,28 +1779,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.auth('AJFLKAJSDKLA');
 	     */
-	    auth: function auth(_auth) {
-	      keychain.setAuthKey(_auth);
+	    auth: function (auth) {
+	      AUTH_KEY = auth;
 	      CONNECT();
 	    },
 
 	    /*
 	     PUBNUB.time(function(time){ });
 	     */
-	    time: function time(callback) {
+	    time: function (callback) {
 	      var jsonp = jsonp_cb();
 
-	      var data = { uuid: UUID, auth: keychain.getAuthKey() };
+	      var data = { uuid: UUID, auth: AUTH_KEY };
 
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-	      networkingComponent.fetchTime(jsonp, {
+	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function success(response) {
+	        url: [STD_ORIGIN, 'time', jsonp],
+	        success: function (response) {
 	          callback(response[0]);
 	        },
-	        fail: function fail() {
+	        fail: function () {
 	          callback(0);
 	        }
 	      });
@@ -1780,37 +1813,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	     message : 'hello!'
 	     });
 	     */
-	    publish: function publish(args, callback) {
+	    publish: function (args, callback) {
 	      var msg = args['message'];
-	      if (!msg) return _error('Missing Message');
+	      if (!msg) return error('Missing Message');
 
 	      var callback = callback || args['callback'] || msg['callback'] || args['success'] || function () {};
 	      var channel = args['channel'] || msg['channel'];
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var cipher_key = args['cipher_key'];
 	      var err = args['error'] || msg['error'] || function () {};
 	      var post = args['post'] || false;
-	      var store = 'store_in_history' in args ? args['store_in_history'] : true;
+	      var store = ('store_in_history' in args) ? args['store_in_history'] : true;
 	      var jsonp = jsonp_cb();
 	      var add_msg = 'push';
-	      var params = { uuid: UUID, auth: auth_key };
+	      var params;
 	      var url;
 
 	      if (args['prepend']) add_msg = 'unshift';
 
-	      if (!channel) return _error('Missing Channel');
-	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!channel) return error('Missing Channel');
+	      if (!PUBLISH_KEY) return error('Missing Publish Key');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      if (msg['getPubnubMessage']) {
 	        msg = msg['getPubnubMessage']();
 	      }
 
 	      // If trying to send Object
-	      msg = JSON.stringify(encrypt(msg, cipher_key));
+	      msg = JSON['stringify'](encrypt(msg, cipher_key));
 
 	      // Create URL
-	      url = [networkingComponent.getStandardOrigin(), 'publish', keychain.getPublishKey(), keychain.getSubscribeKey(), 0, utils.encode(channel), jsonp, utils.encode(msg)];
+	      url = [
+	        STD_ORIGIN, 'publish',
+	        PUBLISH_KEY, SUBSCRIBE_KEY,
+	        0, utils.encode(channel),
+	        jsonp, utils.encode(msg)
+	      ];
+
+	      params = { uuid: UUID, auth: auth_key };
 
 	      if (!store) params['store'] = '0';
 
@@ -1821,36 +1861,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback: jsonp,
 	        url: url,
 	        data: _get_url_params(params),
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
-	          _publish(1);
+	          publish(1);
 	        },
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
-	          _publish(1);
+	          publish(1);
 	        },
-	        mode: post ? 'POST' : 'GET'
+	        mode: (post) ? 'POST' : 'GET'
 	      });
 
 	      // Send Message
-	      _publish();
+	      publish();
 	    },
 
 	    /*
 	     PUBNUB.unsubscribe({ channel : 'my_chat' });
 	     */
-	    unsubscribe: function unsubscribe(args, callback) {
+	    unsubscribe: function (args, callback) {
 	      var channelArg = args['channel'];
 	      var channelGroupArg = args['channel_group'];
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var callback = callback || args['callback'] || function () {};
 	      var err = args['error'] || function () {};
 
 	      TIMETOKEN = 0;
-	      SUB_RESTORE = 1; // REVISIT !!!!
+	      SUB_RESTORE = 1;   // REVISIT !!!!
 
-	      if (!channelArg && !channelGroupArg) return _error('Missing Channel or Channel Group');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      if (channelArg) {
 	        var channels = utils.isArray(channelArg) ? channelArg : ('' + channelArg).split(',');
@@ -1926,7 +1966,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     callback : function(message) { }
 	     });
 	     */
-	    subscribe: function subscribe(args, callback) {
+	    subscribe: function (args, callback) {
 	      var channel = args['channel'];
 	      var channel_group = args['channel_group'];
 	      var callback = callback || args['callback'];
@@ -1947,7 +1987,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var heartbeat_interval = args['heartbeat_interval'];
 	      var restore = args['restore'] || SUB_RESTORE;
 
-	      keychain.setAuthKey(args['auth_key'] || keychain.getAuthKey());
+	      AUTH_KEY = args['auth_key'] || AUTH_KEY;
 
 	      // Restore Enabled?
 	      SUB_RESTORE = restore;
@@ -1957,11 +1997,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Make sure we have a Channel
 	      if (!channel && !channel_group) {
-	        return _error('Missing Channel');
+	        return error('Missing Channel');
 	      }
 
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!callback) return error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      if (heartbeat || heartbeat === 0 || heartbeat_interval || heartbeat_interval === 0) {
 	        SELF['set_heartbeat'](heartbeat, heartbeat_interval);
@@ -1969,111 +2009,114 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Setup Channel(s)
 	      if (channel) {
-	        utils.each((channel.join ? channel.join(',') : '' + channel).split(','), function (channel) {
-	          var settings = CHANNELS[channel] || {};
+	        utils.each((channel.join ? channel.join(',') : '' + channel).split(','),
+	          function (channel) {
+	            var settings = CHANNELS[channel] || {};
 
-	          // Store Channel State
-	          CHANNELS[SUB_CHANNEL = channel] = {
-	            name: channel,
-	            connected: settings.connected,
-	            disconnected: settings.disconnected,
-	            subscribed: 1,
-	            callback: SUB_CALLBACK = callback,
-	            cipher_key: args['cipher_key'],
-	            connect: connect,
-	            disconnect: disconnect,
-	            reconnect: reconnect
-	          };
+	            // Store Channel State
+	            CHANNELS[SUB_CHANNEL = channel] = {
+	              name: channel,
+	              connected: settings.connected,
+	              disconnected: settings.disconnected,
+	              subscribed: 1,
+	              callback: SUB_CALLBACK = callback,
+	              cipher_key: args['cipher_key'],
+	              connect: connect,
+	              disconnect: disconnect,
+	              reconnect: reconnect
+	            };
 
-	          if (state) {
-	            if (channel in state) {
-	              STATE[channel] = state[channel];
-	            } else {
-	              STATE[channel] = state;
+	            if (state) {
+	              if (channel in state) {
+	                STATE[channel] = state[channel];
+	              } else {
+	                STATE[channel] = state;
+	              }
 	            }
-	          }
 
-	          // Presence Enabled?
-	          if (!presence) return;
+	            // Presence Enabled?
+	            if (!presence) return;
 
-	          // Subscribe Presence Channel
-	          SELF['subscribe']({
-	            channel: channel + PRESENCE_SUFFIX,
-	            callback: presence,
-	            restore: restore
+	            // Subscribe Presence Channel
+	            SELF['subscribe']({
+	              channel: channel + PRESENCE_SUFFIX,
+	              callback: presence,
+	              restore: restore
+	            });
+
+	            // Presence Subscribed?
+	            if (settings.subscribed) return;
+
+	            // See Who's Here Now?
+	            if (noheresync) return;
+	            SELF['here_now']({
+	              channel: channel,
+	              data: _get_url_params({ uuid: UUID, auth: AUTH_KEY }),
+	              callback: function (here) {
+	                utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
+	                  presence({
+	                    action: 'join',
+	                    uuid: uid,
+	                    timestamp: Math.floor(utils.rnow() / 1000),
+	                    occupancy: here['occupancy'] || 1
+	                  }, here, channel);
+	                });
+	              }
+	            });
 	          });
-
-	          // Presence Subscribed?
-	          if (settings.subscribed) return;
-
-	          // See Who's Here Now?
-	          if (noheresync) return;
-	          SELF['here_now']({
-	            channel: channel,
-	            data: _get_url_params({ uuid: UUID, auth: keychain.getAuthKey() }),
-	            callback: function callback(here) {
-	              utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
-	                presence({
-	                  action: 'join',
-	                  uuid: uid,
-	                  timestamp: Math.floor(utils.rnow() / 1000),
-	                  occupancy: here['occupancy'] || 1
-	                }, here, channel);
-	              });
-	            }
-	          });
-	        });
 	      }
 
 	      // Setup Channel Groups
 	      if (channel_group) {
-	        utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','), function (channel_group) {
-	          var settings = CHANNEL_GROUPS[channel_group] || {};
+	        utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','),
+	          function (channel_group) {
+	            var settings = CHANNEL_GROUPS[channel_group] || {};
 
-	          CHANNEL_GROUPS[channel_group] = {
-	            name: channel_group,
-	            connected: settings.connected,
-	            disconnected: settings.disconnected,
-	            subscribed: 1,
-	            callback: SUB_CALLBACK = callback,
-	            cipher_key: args['cipher_key'],
-	            connect: connect,
-	            disconnect: disconnect,
-	            reconnect: reconnect
-	          };
+	            CHANNEL_GROUPS[channel_group] = {
+	              name: channel_group,
+	              connected: settings.connected,
+	              disconnected: settings.disconnected,
+	              subscribed: 1,
+	              callback: SUB_CALLBACK = callback,
+	              cipher_key: args['cipher_key'],
+	              connect: connect,
+	              disconnect: disconnect,
+	              reconnect: reconnect
+	            };
 
-	          // Presence Enabled?
-	          if (!presence) return;
+	            // Presence Enabled?
+	            if (!presence) return;
 
-	          // Subscribe Presence Channel
-	          SELF['subscribe']({
-	            channel_group: channel_group + PRESENCE_SUFFIX,
-	            callback: presence,
-	            restore: restore,
-	            auth_key: keychain.getAuthKey()
+	            // Subscribe Presence Channel
+	            SELF['subscribe']({
+	              channel_group: channel_group + PRESENCE_SUFFIX,
+	              callback: presence,
+	              restore: restore,
+	              auth_key: AUTH_KEY
+	            });
+
+	            // Presence Subscribed?
+	            if (settings.subscribed) return;
+
+	            // See Who's Here Now?
+	            if (noheresync) return;
+	            SELF['here_now']({
+	              channel_group: channel_group,
+	              data: _get_url_params({ uuid: UUID, auth: AUTH_KEY }),
+	              callback: function (here) {
+	                utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
+	                  presence({
+	                    action: 'join',
+	                    uuid: uid,
+	                    timestamp: Math.floor(utils.rnow() / 1000),
+	                    occupancy: here['occupancy'] || 1
+	                  }, here, channel_group);
+	                });
+	              }
+	            });
 	          });
-
-	          // Presence Subscribed?
-	          if (settings.subscribed) return;
-
-	          // See Who's Here Now?
-	          if (noheresync) return;
-	          SELF['here_now']({
-	            channel_group: channel_group,
-	            data: _get_url_params({ uuid: UUID, auth: keychain.getAuthKey() }),
-	            callback: function callback(here) {
-	              utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
-	                presence({
-	                  action: 'join',
-	                  uuid: uid,
-	                  timestamp: Math.floor(utils.rnow() / 1000),
-	                  occupancy: here['occupancy'] || 1
-	                }, here, channel_group);
-	              });
-	            }
-	          });
-	        });
 	      }
+
 
 	      // Test Network Connection
 	      function _test_connection(success) {
@@ -2082,8 +2125,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          utils.timeout(CONNECT, windowing);
 	        } else {
 	          // New Origin on Failed Connection
-	          networkingComponent.shiftStandardOrigin(true);
-	          networkingComponent.shiftSubscribeOrigin(true);
+	          STD_ORIGIN = nextorigin(ORIGIN, 1);
+	          SUB_ORIGIN = nextorigin(ORIGIN, 1);
 
 	          // Re-test Connection
 	          utils.timeout(function () {
@@ -2136,11 +2179,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Connect to PubNub Subscribe Servers
 	        _reset_offline();
 
-	        var data = _get_url_params({ uuid: UUID, auth: keychain.getAuthKey() });
+	        var data = _get_url_params({ uuid: UUID, auth: AUTH_KEY });
 
 	        if (channel_groups) {
 	          data['channel-group'] = channel_groups;
 	        }
+
 
 	        var st = JSON.stringify(STATE);
 	        if (st.length > 2) data['state'] = JSON.stringify(STATE);
@@ -2153,22 +2197,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	        SUB_RECEIVER = xdr({
 	          timeout: sub_timeout,
 	          callback: jsonp,
-	          fail: function fail(response) {
+	          fail: function (response) {
 	            if (response && response['error'] && response['service']) {
 	              _invoke_error(response, SUB_ERROR);
 	              _test_connection(false);
 	            } else {
 	              SELF['time'](function (success) {
-	                !success && _invoke_error(response, SUB_ERROR);
+	                !success && (_invoke_error(response, SUB_ERROR));
 	                _test_connection(success);
 	              });
 	            }
 	          },
 	          data: _get_url_params(data),
-	          url: [networkingComponent.getSubscribeOrigin(), 'subscribe', keychain.getSubscribeKey(), utils.encode(channels), jsonp, TIMETOKEN],
-	          success: function success(messages) {
+	          url: [
+	            SUB_ORIGIN, 'subscribe',
+	            SUBSCRIBE_KEY, utils.encode(channels),
+	            jsonp, TIMETOKEN
+	          ],
+	          success: function (messages) {
 	            // Check for Errors
-	            if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
+	            if (!messages || (typeof messages == 'object' && 'error' in messages && messages['error'])) {
 	              SUB_ERROR(messages);
 	              return utils.timeout(CONNECT, SECOND);
 	            }
@@ -2177,7 +2225,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            idlecb(messages[1]);
 
 	            // Restore Previous Connection Point if Needed
-	            TIMETOKEN = !TIMETOKEN && SUB_RESTORE && db['get'](keychain.getSubscribeKey()) || messages[1];
+	            TIMETOKEN = !TIMETOKEN && SUB_RESTORE && db['get'](SUBSCRIBE_KEY) || messages[1];
 
 	            /*
 	             // Connect
@@ -2206,7 +2254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	              TIMETOKEN = 0;
 	              RESUMED = false;
 	              // Update Saved Timetoken
-	              db['set'](keychain.getSubscribeKey(), 0);
+	              db['set'](SUBSCRIBE_KEY, 0);
 	              utils.timeout(_connect, windowing);
 	              return;
 	            }
@@ -2219,10 +2267,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            // Update Saved Timetoken
-	            db['set'](keychain.getSubscribeKey(), messages[1]);
+	            db['set'](SUBSCRIBE_KEY, messages[1]);
 
 	            // Route Channel <---> Callback for Message
-	            var next_callback = function () {
+	            var next_callback = (function () {
 	              var channels = '';
 	              var channels2 = '';
 
@@ -2232,15 +2280,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	              } else if (messages.length > 2) {
 	                channels = messages[2];
 	              } else {
-	                channels = utils.map(generate_channel_list(CHANNELS), function (chan) {
-	                  return utils.map(Array(messages[0].length).join(',').split(','), function () {
-	                    return chan;
-	                  });
-	                }).join(',');
+	                channels = utils.map(
+	                  generate_channel_list(CHANNELS), function (chan) {
+	                    return utils.map(
+	                      Array(messages[0].length)
+	                        .join(',').split(','),
+	                      function () {
+	                        return chan;
+	                      }
+	                    );
+	                  }).join(',');
 	              }
 
 	              var list = channels.split(',');
-	              var list2 = channels2 ? channels2.split(',') : [];
+	              var list2 = (channels2) ? channels2.split(',') : [];
 
 	              return function () {
 	                var channel = list.shift() || SUB_CHANNEL;
@@ -2249,24 +2302,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var chobj = {};
 
 	                if (channel2) {
-	                  if (channel && channel.indexOf('-pnpres') >= 0 && channel2.indexOf('-pnpres') < 0) {
+	                  if (channel && channel.indexOf('-pnpres') >= 0
+	                    && channel2.indexOf('-pnpres') < 0) {
 	                    channel2 += '-pnpres';
 	                  }
-	                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function callback() {} };
+	                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function () {} };
 	                } else {
 	                  chobj = CHANNELS[channel];
 	                }
 
-	                var r = [chobj.callback || SUB_CALLBACK, channel.split(PRESENCE_SUFFIX)[0]];
+	                var r = [
+	                  chobj
+	                    .callback || SUB_CALLBACK,
+	                  channel.split(PRESENCE_SUFFIX)[0]
+	                ];
 	                channel2 && r.push(channel2.split(PRESENCE_SUFFIX)[0]);
 	                return r;
 	              };
-	            }();
+	            })();
 
 	            var latency = detect_latency(+messages[1]);
 	            utils.each(messages[0], function (msg) {
 	              var next = next_callback();
-	              var decrypted_msg = decrypt(msg, CHANNELS[next[1]] ? CHANNELS[next[1]]['cipher_key'] : null);
+	              var decrypted_msg = decrypt(msg,
+	                (CHANNELS[next[1]]) ? CHANNELS[next[1]]['cipher_key'] : null);
 	              next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
 	            });
 
@@ -2275,7 +2334,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 	      }
 
-	      CONNECT = function CONNECT() {
+	      CONNECT = function () {
 	        _reset_offline();
 	        utils.timeout(_connect, windowing);
 	      };
@@ -2290,15 +2349,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.here_now({ channel : 'my_chat', callback : fun });
 	     */
-	    here_now: function here_now(args, callback) {
+	    here_now: function (args, callback) {
 	      var callback = args['callback'] || callback;
 	      var debug = args['debug'];
 	      var err = args['error'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var channel = args['channel'];
 	      var channel_group = args['channel_group'];
 	      var jsonp = jsonp_cb();
-	      var uuids = 'uuids' in args ? args['uuids'] : true;
+	      var uuids = ('uuids' in args) ? args['uuids'] : true;
 	      var state = args['state'];
 	      var data = { uuid: UUID, auth: auth_key };
 
@@ -2306,10 +2365,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (state) data['state'] = 1;
 
 	      // Make sure we have a Channel
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!callback) return error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
-	      var url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey()];
+	      var url = [
+	        STD_ORIGIN, 'v2', 'presence',
+	        'sub_key', SUBSCRIBE_KEY
+	      ];
 
 	      channel && url.push('channel') && url.push(utils.encode(channel));
 
@@ -2327,10 +2389,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
 	        debug: debug,
@@ -2341,17 +2403,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*
 	     PUBNUB.current_channels_by_uuid({ channel : 'my_chat', callback : fun });
 	     */
-	    where_now: function where_now(args, callback) {
+	    where_now: function (args, callback) {
 	      var callback = args['callback'] || callback;
 	      var err = args['error'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var jsonp = jsonp_cb();
 	      var uuid = args['uuid'] || UUID;
 	      var data = { auth: auth_key };
 
 	      // Make sure we have a Channel
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
+	      if (!callback) return error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      if (jsonp != '0') {
 	        data['callback'] = jsonp;
@@ -2362,20 +2424,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub_key', keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)]
+	        url: [
+	          STD_ORIGIN, 'v2', 'presence',
+	          'sub_key', SUBSCRIBE_KEY,
+	          'uuid', utils.encode(uuid)
+	        ]
 	      });
 	    },
 
-	    state: function state(args, callback) {
+	    state: function (args, callback) {
 	      var callback = args['callback'] || callback || function (r) {};
 	      var err = args['error'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var jsonp = jsonp_cb();
 	      var state = args['state'];
 	      var uuid = args['uuid'] || UUID;
@@ -2385,19 +2451,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var data = _get_url_params({ auth: auth_key });
 
 	      // Make sure we have a Channel
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-	      if (!uuid) return _error('Missing UUID');
-	      if (!channel && !channel_group) return _error('Missing Channel');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!uuid) return error('Missing UUID');
+	      if (!channel && !channel_group) return error('Missing Channel');
 
 	      if (jsonp != '0') {
 	        data['callback'] = jsonp;
 	      }
 
-	      if (typeof channel != 'undefined' && CHANNELS[channel] && CHANNELS[channel].subscribed) {
+	      if (typeof channel != 'undefined'
+	        && CHANNELS[channel] && CHANNELS[channel].subscribed) {
 	        if (state) STATE[channel] = state;
 	      }
 
-	      if (typeof channel_group != 'undefined' && CHANNEL_GROUPS[channel_group] && CHANNEL_GROUPS[channel_group].subscribed) {
+	      if (typeof channel_group != 'undefined'
+	        && CHANNEL_GROUPS[channel_group]
+	        && CHANNEL_GROUPS[channel_group].subscribed
+	      ) {
 	        if (state) STATE[channel_group] = state;
 	        data['channel-group'] = channel_group;
 
@@ -2411,18 +2481,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
 	      if (state) {
-	        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
+	        url = [
+	          STD_ORIGIN, 'v2', 'presence',
+	          'sub-key', SUBSCRIBE_KEY,
+	          'channel', channel,
+	          'uuid', uuid, 'data'
+	        ];
 	      } else {
-	        url = [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
+	        url = [
+	          STD_ORIGIN, 'v2', 'presence',
+	          'sub-key', SUBSCRIBE_KEY,
+	          'channel', channel,
+	          'uuid', utils.encode(uuid)
+	        ];
 	      }
 
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -2441,25 +2521,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	     auth_key : '3y8uiajdklytowsj'
 	     });
 	     */
-	    grant: function grant(args, callback) {
+	    grant: function (args, callback) {
 	      var callback = args['callback'] || callback;
 	      var err = args['error'] || function () {};
 	      var channel = args['channel'] || args['channels'];
 	      var channel_group = args['channel_group'];
 	      var jsonp = jsonp_cb();
 	      var ttl = args['ttl'];
-	      var r = args['read'] ? '1' : '0';
-	      var w = args['write'] ? '1' : '0';
-	      var m = args['manage'] ? '1' : '0';
+	      var r = (args['read']) ? '1' : '0';
+	      var w = (args['write']) ? '1' : '0';
+	      var m = (args['manage']) ? '1' : '0';
 	      var auth_key = args['auth_key'] || args['auth_keys'];
 
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!SECRET_KEY) return _error('Missing Secret Key');
+	      if (!callback) return error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!PUBLISH_KEY) return error('Missing Publish Key');
+	      if (!SECRET_KEY) return error('Missing Secret Key');
 
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
-	      var sign_input = keychain.getSubscribeKey() + '\n' + keychain.getPublishKey() + '\n' + 'grant' + '\n';
+	      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'grant' + '\n';
 
 	      var data = { w: w, r: r, timestamp: timestamp };
 
@@ -2499,13 +2579,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: data,
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', keychain.getSubscribeKey()]
+	        url: [
+	          STD_ORIGIN, 'v1', 'auth', 'grant',
+	          'sub-key', SUBSCRIBE_KEY
+	        ]
 	      });
 	    },
 
@@ -2520,28 +2603,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	     });
 	     */
 
-	    mobile_gw_provision: function mobile_gw_provision(args) {
+	    mobile_gw_provision: function (args) {
 	      var callback = args['callback'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
+	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var err = args['error'] || function () {};
 	      var jsonp = jsonp_cb();
 	      var channel = args['channel'];
 	      var op = args['op'];
 	      var gw_type = args['gw_type'];
 	      var device_id = args['device_id'];
+	      var params;
 	      var url;
 
-	      if (!device_id) return _error('Missing Device ID (device_id)');
-	      if (!gw_type) return _error('Missing GW Type (gw_type: gcm or apns)');
-	      if (!op) return _error('Missing GW Operation (op: add or remove)');
-	      if (!channel) return _error('Missing gw destination Channel (channel)');
-	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-
-	      var params = { uuid: UUID, auth: auth_key, type: gw_type };
+	      if (!device_id) return error('Missing Device ID (device_id)');
+	      if (!gw_type) return error('Missing GW Type (gw_type: gcm or apns)');
+	      if (!op) return error('Missing GW Operation (op: add or remove)');
+	      if (!channel) return error('Missing gw destination Channel (channel)');
+	      if (!PUBLISH_KEY) return error('Missing Publish Key');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      // Create URL
-	      url = [networkingComponent.getStandardOrigin(), 'v1/push/sub-key', keychain.getSubscribeKey(), 'devices', device_id];
+	      url = [
+	        STD_ORIGIN, 'v1/push/sub-key',
+	        SUBSCRIBE_KEY, 'devices', device_id
+	      ];
+
+	      params = { uuid: UUID, auth: auth_key, type: gw_type };
 
 	      if (op == 'add') {
 	        params['add'] = channel;
@@ -2554,10 +2641,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: params,
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
 	        url: url
@@ -2574,7 +2661,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     auth_key : '3y8uiajdklytowsj'
 	     });
 	     */
-	    audit: function audit(args, callback) {
+	    audit: function (args, callback) {
 	      var callback = args['callback'] || callback;
 	      var err = args['error'] || function () {};
 	      var channel = args['channel'];
@@ -2583,13 +2670,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var jsonp = jsonp_cb();
 
 	      // Make sure we have a Channel
-	      if (!callback) return _error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-	      if (!keychain.getPublishKey()) return _error('Missing Publish Key');
-	      if (!SECRET_KEY) return _error('Missing Secret Key');
+	      if (!callback) return error('Missing Callback');
+	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
+	      if (!PUBLISH_KEY) return error('Missing Publish Key');
+	      if (!SECRET_KEY) return error('Missing Secret Key');
 
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
-	      var sign_input = keychain.getSubscribeKey() + '\n' + keychain.getPublishKey() + '\n' + 'audit' + '\n';
+	      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'audit' + '\n';
 
 	      var data = { timestamp: timestamp };
 	      if (jsonp != '0') {
@@ -2616,13 +2703,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: data,
-	        success: function success(response) {
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        },
-	        url: [networkingComponent.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', keychain.getSubscribeKey()]
+	        url: [
+	          STD_ORIGIN, 'v1', 'auth', 'audit',
+	          'sub-key', SUBSCRIBE_KEY
+	        ]
 	      });
 	    },
 
@@ -2634,37 +2724,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	     auth_key : '3y8uiajdklytowsj'
 	     });
 	     */
-	    revoke: function revoke(args, callback) {
+	    revoke: function (args, callback) {
 	      args['read'] = false;
 	      args['write'] = false;
 	      SELF['grant'](args, callback);
 	    },
 
-	    set_uuid: function set_uuid(uuid) {
+	    set_uuid: function (uuid) {
 	      UUID = uuid;
 	      CONNECT();
 	    },
 
-	    get_uuid: function get_uuid() {
+	    get_uuid: function () {
 	      return UUID;
 	    },
 
-	    isArray: function isArray(arg) {
+	    isArray: function (arg) {
 	      return utils.isArray(arg);
 	    },
 
-	    get_subscribed_channels: function get_subscribed_channels() {
+	    get_subscribed_channels: function () {
 	      return generate_channel_list(CHANNELS, true);
 	    },
 
-	    presence_heartbeat: function presence_heartbeat(args) {
+	    presence_heartbeat: function (args) {
 	      var callback = args['callback'] || function () {};
 	      var err = args['error'] || function () {};
 	      var jsonp = jsonp_cb();
-	      var data = { uuid: UUID, auth: keychain.getAuthKey() };
+	      var data = { uuid: UUID, auth: AUTH_KEY };
 
-	      var st = JSON.stringify(STATE);
-	      if (st.length > 2) data['state'] = JSON.stringify(STATE);
+	      var st = JSON['stringify'](STATE);
+	      if (st.length > 2) data['state'] = JSON['stringify'](STATE);
 
 	      if (PRESENCE_HB > 0 && PRESENCE_HB < 320) data['heartbeat'] = PRESENCE_HB;
 
@@ -2683,25 +2773,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	      xdr({
 	        callback: jsonp,
 	        data: _get_url_params(data),
-	        url: [networkingComponent.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'],
-	        success: function success(response) {
+	        url: [
+	          STD_ORIGIN, 'v2', 'presence',
+	          'sub-key', SUBSCRIBE_KEY,
+	          'channel', channels,
+	          'heartbeat'
+	        ],
+	        success: function (response) {
 	          _invoke_callback(response, callback, err);
 	        },
-	        fail: function fail(response) {
+	        fail: function (response) {
 	          _invoke_error(response, err);
 	        }
 	      });
 	    },
 
-	    stop_timers: function stop_timers() {
+	    stop_timers: function () {
 	      clearTimeout(_poll_timer);
 	      clearTimeout(_poll_timer2);
 	      clearTimeout(PRESENCE_HB_TIMEOUT);
 	    },
 
-	    shutdown: function shutdown() {
+	    shutdown: function () {
 	      SELF['stop_timers']();
-	      _shutdown && _shutdown();
+	      shutdown && shutdown();
 	    },
 
 	    // Expose PUBNUB Functions
@@ -2713,7 +2808,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    each: utils.each,
 	    'each-channel': each_channel,
 	    grep: utils.grep,
-	    offline: function offline() {
+	    offline: function () {
 	      _reset_offline(1, { message: 'Offline. Please check your network settings.' });
 	    },
 	    supplant: utils.supplant,
@@ -2731,9 +2826,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _poll_online2() {
 	    if (!TIME_CHECK) return;
 	    SELF['time'](function (success) {
-	      detect_time_detla(function () {}, success);
+	      detect_time_detla(function () {
+	      }, success);
 	      success || _reset_offline(1, {
-	        error: 'Heartbeat failed to connect to Pubnub Servers.' + 'Please check your network settings.'
+	        error: 'Heartbeat failed to connect to Pubnub Servers.' +
+	        'Please check your network settings.'
 	      });
 	      _poll_timer2 && clearTimeout(_poll_timer2);
 	      _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
@@ -2750,11 +2847,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (!UUID) UUID = SELF['uuid']();
 	  if (!INSTANCEID) INSTANCEID = SELF['uuid']();
-	  db['set'](keychain.getSubscribeKey() + 'uuid', UUID);
+	  db['set'](SUBSCRIBE_KEY + 'uuid', UUID);
 
 	  _poll_timer = utils.timeout(_poll_online, SECOND);
 	  _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-	  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (PRESENCE_HB_INTERVAL - 3) * SECOND);
+	  PRESENCE_HB_TIMEOUT = utils.timeout(
+	    start_presence_heartbeat,
+	    (PRESENCE_HB_INTERVAL - 3) * SECOND
+	  );
 
 	  // Detect Age of Message
 	  function detect_latency(tt) {
@@ -2796,239 +2896,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	  updater: utils.updater,
 	  map: utils.map
 	};
-	//# sourceMappingURL=pubnub-common.js.map
 
 
 /***/ },
 /* 6 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _keychain = __webpack_require__(7);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var utils = __webpack_require__(8);
-
-	var _class = function () {
-	  function _class(xdr, keychain) {
-	    var ssl = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
-	    var origin = arguments.length <= 3 || arguments[3] === undefined ? 'pubsub.pubnub.com' : arguments[3];
-
-	    _classCallCheck(this, _class);
-
-	    this._xdr = xdr;
-	    this._keychain = keychain;
-
-	    this._maxSubDomain = 20;
-	    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
-
-	    this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
-
-	    // create initial origins
-	    this.shiftStandardOrigin(false);
-	    this.shiftSubscribeOrigin(false);
-	  }
-
-	  _createClass(_class, [{
-	    key: 'nextOrigin',
-	    value: function nextOrigin(failover) {
-	      // if a custom origin is supplied, use do not bother with shuffling subdomains
-	      if (this._providedFQDN.indexOf('pubsub.') === -1) {
-	        return this._providedFQDN;
-	      }
-
-	      var newSubDomain = undefined;
-
-	      if (failover) {
-	        newSubDomain = utils.generateUUID().split('-')[0];
-	      } else {
-	        this._currentSubDomain = this._currentSubDomain + 1;
-
-	        if (this._currentSubDomain >= this._maxSubDomain) {
-	          this._currentSubDomain = 1;
-	        }
-
-	        newSubDomain = this._currentSubDomain.toString();
-	      }
-
-	      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
-	    }
-
-	    // origin operations
-
-	  }, {
-	    key: 'shiftStandardOrigin',
-	    value: function shiftStandardOrigin() {
-	      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
-
-	      this._standardOrigin = this.nextOrigin(failover);
-
-	      return this._standardOrigin;
-	    }
-	  }, {
-	    key: 'shiftSubscribeOrigin',
-	    value: function shiftSubscribeOrigin() {
-	      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
-
-	      this._subscribeOrigin = this.nextOrigin(failover);
-
-	      return this._subscribeOrigin;
-	    }
-
-	    // method based URL's
-
-	  }, {
-	    key: 'fetchHistory',
-	    value: function fetchHistory(channel, _ref) {
-	      var data = _ref.data;
-	      var callback = _ref.callback;
-	      var success = _ref.success;
-	      var fail = _ref.fail;
-
-	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)];
-
-	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
-	    }
-	  }, {
-	    key: 'fetchReplay',
-	    value: function fetchReplay(source, destination, _ref2) {
-	      var data = _ref2.data;
-	      var callback = _ref2.callback;
-	      var success = _ref2.success;
-	      var fail = _ref2.fail;
-
-	      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
-
-	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
-	    }
-	  }, {
-	    key: 'fetchTime',
-	    value: function fetchTime(jsonp, _ref3) {
-	      var data = _ref3.data;
-	      var callback = _ref3.callback;
-	      var success = _ref3.success;
-	      var fail = _ref3.fail;
-
-	      var url = [this.getStandardOrigin(), 'time', jsonp];
-
-	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
-	    }
-	  }, {
-	    key: 'getOrigin',
-	    value: function getOrigin() {
-	      return this._providedFQDN;
-	    }
-	  }, {
-	    key: 'getStandardOrigin',
-	    value: function getStandardOrigin() {
-	      return this._standardOrigin;
-	    }
-	  }, {
-	    key: 'getSubscribeOrigin',
-	    value: function getSubscribeOrigin() {
-	      return this._subscribeOrigin;
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-	//# sourceMappingURL=networking.js.map
-
+	module.exports = {
+		"PARAMSBIT": "&",
+		"URLBIT": "/"
+	};
 
 /***/ },
 /* 7 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class() {
-	    _classCallCheck(this, _class);
-	  }
-
-	  _createClass(_class, [{
-	    key: "setSubscribeKey",
-	    value: function setSubscribeKey(subscribeKey) {
-	      this._subscribeKey = subscribeKey;
-	      return this;
-	    }
-	  }, {
-	    key: "setPublishKey",
-	    value: function setPublishKey(publishkey) {
-	      this._publishKey = publishkey;
-	      return this;
-	    }
-	  }, {
-	    key: "setAuthKey",
-	    value: function setAuthKey(authKey) {
-	      this._authKey = authKey;
-	      return this;
-	    }
-	  }, {
-	    key: "getSubscribeKey",
-	    value: function getSubscribeKey() {
-	      return this._subscribeKey;
-	    }
-	  }, {
-	    key: "getPublishKey",
-	    value: function getPublishKey() {
-	      return this._publishKey;
-	    }
-	  }, {
-	    key: "getAuthKey",
-	    value: function getAuthKey() {
-	      return this._authKey;
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-	//# sourceMappingURL=keychain.js.map
-
-
-/***/ },
-/* 8 */
 /***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 	/* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
-	var defaultConfiguration = __webpack_require__(9);
+	var defaultConfiguration = __webpack_require__(6);
 	var REPL = /{([\w\-]+)}/g;
 
 	function rnow() {
-	  return +new Date();
+	  return +new Date;
 	}
 
 	function isArray(arg) {
-	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === 'number');
+	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === 'number');
 	  // return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
 	}
 
@@ -3048,7 +2941,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  } else {
 	    for (var i in o) {
-	      o.hasOwnProperty && o.hasOwnProperty(i) && f.call(o[i], i, o[i]);
+	      o.hasOwnProperty &&
+	      o.hasOwnProperty(i) &&
+	      f.call(o[i], i, o[i]);
 	    }
 	  }
 	}
@@ -3058,9 +2953,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * ======
 	 * var encoded_data = encode('path');
 	 */
-	function encode(path) {
-	  return encodeURIComponent(path);
-	}
+	function encode(path) { return encodeURIComponent(path); }
 
 	/**
 	 * Build Url
@@ -3074,8 +2967,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (!urlParams) return url;
 
 	  each(urlParams, function (key, value) {
-	    var valueStr = (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' ? JSON['stringify'](value) : value;
-	    typeof value !== 'undefined' && value !== null && encode(valueStr).length > 0 && params.push(key + '=' + encode(valueStr));
+	    var valueStr = (typeof value === 'object') ? JSON['stringify'](value) : value;
+	    (typeof value !== 'undefined' &&
+	      value !== null && encode(valueStr).length > 0
+	    ) && params.push(key + '=' + encode(valueStr));
 	  });
 
 	  url += '?' + params.join(defaultConfiguration.PARAMSBIT);
@@ -3090,7 +2985,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function updater(fun, rate) {
 	  var timeout;
 	  var last = 0;
-	  var runnit = function runnit() {
+	  var runnit = function () {
 	    if (last + rate > rnow()) {
 	      clearTimeout(timeout);
 	      timeout = setTimeout(runnit, rate);
@@ -3133,10 +3028,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * timeout( function(){}, 100 );
 	 */
 	function timeout(fun, wait) {
-	  if (typeof setTimeout === 'undefined') {
-	    return;
-	  }
-
 	  return setTimeout(fun, wait);
 	}
 
@@ -3146,11 +3037,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * var my_uuid = generateUUID();
 	 */
 	function generateUUID(callback) {
-	  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-	    var r = Math.random() * 16 | 0;
-	    var v = c === 'x' ? r : r & 0x3 | 0x8;
-	    return v.toString(16);
-	  });
+	  var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+	    function (c) {
+	      var r = Math.random() * 16 | 0;
+	      var v = c === 'x' ? r : (r & 0x3 | 0x8);
+	      return v.toString(16);
+	    });
 	  if (callback) callback(u);
 	  return u;
 	}
@@ -3168,11 +3060,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return fin;
 	}
 
+
 	function pamEncode(str) {
 	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
 	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
 	  });
 	}
+
 
 	module.exports = {
 	  buildURL: buildURL,
@@ -3188,20 +3082,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  supplant: supplant,
 	  grep: grep
 	};
-	//# sourceMappingURL=utils.js.map
 
 
 /***/ },
-/* 9 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"PARAMSBIT": "&",
-		"URLBIT": "/"
-	};
-
-/***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports) {
 
 	// ---------------------------------------------------------------------------

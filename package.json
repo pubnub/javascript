@@ -1,7 +1,7 @@
 {
   "name": "pubnub",
   "preferGlobal": false,
-  "version": "3.14.1",
+  "version": "3.14.2",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "contributors": [
@@ -43,7 +43,7 @@
     "babel-plugin-transform-flow-strip-types": "^6.5.0",
     "babel-preset-es2015": "^6.5.0",
     "chai": "^3.5.0",
-    "eslint": "^2.2.0",
+    "eslint": "2.2.0",
     "eslint-config-airbnb": "^6.0.2",
     "eslint-plugin-flowtype": "^2.1.0",
     "eslint-plugin-mocha": "^2.0.0",

@@ -5,7 +5,7 @@ require('imports?this=>window!../../core/polyfill/json.js');
 
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');
 var packageJSON = require('../../package.json');
-var pubNubCore = require('../../core/lib/pubnub-common.js');
+var pubNubCore = require('../../core/src/pubnub-common.js');
 /* ---------------------------------------------------------------------------
  --------------------------------------------------------------------------- */
 

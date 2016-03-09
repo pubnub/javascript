@@ -36,7 +36,7 @@
 var crypto = require('crypto');
 var Buffer = require('buffer').Buffer;
 var packageJSON = require('../../package.json');
-var pubNubCore = require('../../core/lib/pubnub-common.js');
+var pubNubCore = require('../../core/src/pubnub-common.js');
 
 var PNSDK = 'PubNub-JS-' + PLATFORM + '/' + packageJSON.version;
 

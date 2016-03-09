@@ -3,7 +3,7 @@ var webpack = require('webpack');
 var WEBPACKED_PLATFORMS = ['web', 'modern', 'webos', 'sencha', 'phonegap', 'parse', 'titanium'];
 
 function registerWebpackBuilding(grunt) {
-  var compileTargets = ['clean:core', 'babel:core'];
+  var compileTargets = ['clean:core'];
 
   WEBPACKED_PLATFORMS.forEach(function (platform) {
     var actions = [];
