@@ -359,6 +359,155 @@ describe('core initalization', () => {
     });
   });
 
+  describe('endpoints -- channel groups', () => {
+    it('intializes the presenceEndpoints class', () => {
+      let _networking;
+      let _keychain;
+      let _config;
+      let _jsonp_cb;
+      let _error;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          constructor({ networking, config, keychain, jsonp_cb, error }) {
+            _networking = networking;
+            _config = config;
+            _keychain = keychain;
+            _jsonp_cb = jsonp_cb;
+            _error = error;
+          }
+
+          channelGroup() { }
+          listGroups() { }
+          removeGroup() { }
+          listChannels() { }
+          addChannel() { }
+          removeChannel() { }
+        }
+      });
+
+      proxiedCore.PN_API(commonSettings);
+      assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
+      assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
+      assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
+      assert(_jsonp_cb);
+      assert(_error);
+    });
+
+    it('mounts the channelGroup endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          channelGroup(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.channel_group({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the listGroups endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          listGroups(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.channel_group_list_groups({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the removeGroup endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          removeGroup(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.channel_group_remove_group({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the listChannels endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          listChannels(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.channel_group_list_channels({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the addChannel endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          addChannel(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.channel_group_add_channel({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+
+    it('mounts the removeChannel endpoint', () => {
+      let _mockedArgs;
+      let _mockedCallback;
+      let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
+        './endpoints/channel_groups': class {
+          removeChannel(args, callback) {
+            _mockedArgs = args;
+            _mockedCallback = callback;
+          }
+        }
+      });
+
+      let pubnubInstance = proxiedCore.PN_API(commonSettings);
+
+      pubnubInstance.channel_group_remove_channel({ fake: 'args' }, 'callback');
+      assert.deepEqual(_mockedArgs, { fake: 'args' });
+      assert.equal(_mockedCallback, 'callback');
+    });
+  });
+
   describe('endpoints -- presence', () => {
     it('intializes the presenceEndpoints class', () => {
       let _networking;

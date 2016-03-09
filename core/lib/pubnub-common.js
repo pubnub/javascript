@@ -173,7 +173,7 @@ function PN_API(setup) {
   // write the new key to storage
   db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setCloakConfig(true).setInstanceIdConfig(setup.instance_id || false);
+  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
   var stateStorage = new _state2.default();
 
@@ -379,16 +379,7 @@ function PN_API(setup) {
     channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
       channelGroupEndpoints.removeChannel(args, callback);
     },
-    channel_group_list_namespaces: function channel_group_list_namespaces(args, callback) {
-      channelGroupEndpoints.listNamespaces(args, callback);
-    },
-    channel_group_remove_namespace: function channel_group_remove_namespace(args, callback) {
-      channelGroupEndpoints.removeNamespace(args, callback);
-    },
 
-    channel_group_cloak: function channel_group_cloak(args, callback) {
-      channelGroupEndpoints.cloak(args, callback);
-    },
 
     LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
       var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };

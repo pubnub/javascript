@@ -11,8 +11,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _class = function () {
 
   /*
-    if requestId config is true, the SDK will pass a unique request identifier
-    with each request as request_id=<UUID>
+    if instanceId config is true, the SDK will pass the unique instance
+    identifier to the server as instanceId=<UUID>
   */
 
   function _class() {
@@ -23,13 +23,8 @@ var _class = function () {
   }
 
   /*
-    TODO: fill readme
-  */
-
-
-  /*
-    if instanceId config is true, the SDK will pass the unique instance
-    identifier to the server as instanceId=<UUID>
+    if requestId config is true, the SDK will pass a unique request identifier
+    with each request as request_id=<UUID>
   */
 
 
@@ -46,12 +41,6 @@ var _class = function () {
       return this;
     }
   }, {
-    key: "setCloakConfig",
-    value: function setCloakConfig(configValue) {
-      this._cloak = configValue;
-      return this;
-    }
-  }, {
     key: "isInstanceIdEnabled",
     value: function isInstanceIdEnabled() {
       return this._instanceId;
@@ -60,11 +49,6 @@ var _class = function () {
     key: "isRequestIdEnabled",
     value: function isRequestIdEnabled() {
       return this._requestId;
-    }
-  }, {
-    key: "isCloakEnabled",
-    value: function isCloakEnabled() {
-      return this._cloak;
     }
   }]);
 

@@ -565,7 +565,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // write the new key to storage
 	  db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setCloakConfig(true).setInstanceIdConfig(setup.instance_id || false);
+	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setInstanceIdConfig(setup.instance_id || false);
 
 	  var stateStorage = new _state2.default();
 
@@ -771,16 +771,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
 	      channelGroupEndpoints.removeChannel(args, callback);
 	    },
-	    channel_group_list_namespaces: function channel_group_list_namespaces(args, callback) {
-	      channelGroupEndpoints.listNamespaces(args, callback);
-	    },
-	    channel_group_remove_namespace: function channel_group_remove_namespace(args, callback) {
-	      channelGroupEndpoints.removeNamespace(args, callback);
-	    },
 
-	    channel_group_cloak: function channel_group_cloak(args, callback) {
-	      channelGroupEndpoints.cloak(args, callback);
-	    },
 
 	    LEAVE: function LEAVE(channel, blocking, auth_key, callback, error) {
 	      var data = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
@@ -2073,12 +2064,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
 	  }, {
-	    key: 'provisionDeviceForPush',
-	    value: function provisionDeviceForPush(deviceId, _ref2) {
+	    key: 'performChannelGroupOperation',
+	    value: function performChannelGroupOperation(channelGroup, mode, _ref2) {
 	      var data = _ref2.data;
 	      var callback = _ref2.callback;
 	      var success = _ref2.success;
 	      var fail = _ref2.fail;
+
+	      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey(), 'channel-group'];
+
+	      if (channelGroup && channelGroup !== '*') {
+	        url.push(channelGroup);
+	      }
+
+	      if (mode === 'remove') {
+	        url.push('remove');
+	      }
+
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'provisionDeviceForPush',
+	    value: function provisionDeviceForPush(deviceId, _ref3) {
+	      var data = _ref3.data;
+	      var callback = _ref3.callback;
+	      var success = _ref3.success;
+	      var fail = _ref3.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._keychain.getSubscribeKey(), 'devices', deviceId];
 
@@ -2086,11 +2097,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performGrant',
-	    value: function performGrant(_ref3) {
-	      var data = _ref3.data;
-	      var callback = _ref3.callback;
-	      var success = _ref3.success;
-	      var fail = _ref3.fail;
+	    value: function performGrant(_ref4) {
+	      var data = _ref4.data;
+	      var callback = _ref4.callback;
+	      var success = _ref4.success;
+	      var fail = _ref4.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -2098,11 +2109,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performAudit',
-	    value: function performAudit(_ref4) {
-	      var data = _ref4.data;
-	      var callback = _ref4.callback;
-	      var success = _ref4.success;
-	      var fail = _ref4.fail;
+	    value: function performAudit(_ref5) {
+	      var data = _ref5.data;
+	      var callback = _ref5.callback;
+	      var success = _ref5.success;
+	      var fail = _ref5.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -2110,11 +2121,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchReplay',
-	    value: function fetchReplay(source, destination, _ref5) {
-	      var data = _ref5.data;
-	      var callback = _ref5.callback;
-	      var success = _ref5.success;
-	      var fail = _ref5.fail;
+	    value: function fetchReplay(source, destination, _ref6) {
+	      var data = _ref6.data;
+	      var callback = _ref6.callback;
+	      var success = _ref6.success;
+	      var fail = _ref6.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
@@ -2122,11 +2133,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchTime',
-	    value: function fetchTime(jsonp, _ref6) {
-	      var data = _ref6.data;
-	      var callback = _ref6.callback;
-	      var success = _ref6.success;
-	      var fail = _ref6.fail;
+	    value: function fetchTime(jsonp, _ref7) {
+	      var data = _ref7.data;
+	      var callback = _ref7.callback;
+	      var success = _ref7.success;
+	      var fail = _ref7.fail;
 
 	      var url = [this.getStandardOrigin(), 'time', jsonp];
 
@@ -2134,11 +2145,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchWhereNow',
-	    value: function fetchWhereNow(uuid, _ref7) {
-	      var data = _ref7.data;
-	      var callback = _ref7.callback;
-	      var success = _ref7.success;
-	      var fail = _ref7.fail;
+	    value: function fetchWhereNow(uuid, _ref8) {
+	      var data = _ref8.data;
+	      var callback = _ref8.callback;
+	      var success = _ref8.success;
+	      var fail = _ref8.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
@@ -2146,11 +2157,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchHereNow',
-	    value: function fetchHereNow(channel, channel_group, _ref8) {
-	      var data = _ref8.data;
-	      var callback = _ref8.callback;
-	      var success = _ref8.success;
-	      var fail = _ref8.fail;
+	    value: function fetchHereNow(channel, channel_group, _ref9) {
+	      var data = _ref9.data;
+	      var callback = _ref9.callback;
+	      var success = _ref9.success;
+	      var fail = _ref9.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 
@@ -2163,17 +2174,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url.push('channel');
 	        url.push(',');
 	      }
-
-	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
-	    }
-	  }, {
-	    key: 'abstractXDR',
-	    value: function abstractXDR(_ref9) {
-	      var data = _ref9.data;
-	      var callback = _ref9.callback;
-	      var success = _ref9.success;
-	      var fail = _ref9.fail;
-	      var url = _ref9.url;
 
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
@@ -2540,8 +2540,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _class = function () {
 
 	  /*
-	    if requestId config is true, the SDK will pass a unique request identifier
-	    with each request as request_id=<UUID>
+	    if instanceId config is true, the SDK will pass the unique instance
+	    identifier to the server as instanceId=<UUID>
 	  */
 
 	  function _class() {
@@ -2552,13 +2552,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  /*
-	    TODO: fill readme
-	  */
-
-
-	  /*
-	    if instanceId config is true, the SDK will pass the unique instance
-	    identifier to the server as instanceId=<UUID>
+	    if requestId config is true, the SDK will pass a unique request identifier
+	    with each request as request_id=<UUID>
 	  */
 
 
@@ -2575,12 +2570,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this;
 	    }
 	  }, {
-	    key: "setCloakConfig",
-	    value: function setCloakConfig(configValue) {
-	      this._cloak = configValue;
-	      return this;
-	    }
-	  }, {
 	    key: "isInstanceIdEnabled",
 	    value: function isInstanceIdEnabled() {
 	      return this._instanceId;
@@ -2589,11 +2578,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: "isRequestIdEnabled",
 	    value: function isRequestIdEnabled() {
 	      return this._requestId;
-	    }
-	  }, {
-	    key: "isCloakEnabled",
-	    value: function isCloakEnabled() {
-	      return this._cloak;
 	    }
 	  }]);
 
@@ -4315,36 +4299,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'channelGroup',
 	    value: function channelGroup(args, argumentCallback) {
 	      var ns_ch = args.channel_group;
-	      var callback = argumentCallback || args.callback;
+	      var callback = args.callback || argumentCallback;
 	      var channels = args.channels || args.channel;
-	      var cloak = args.cloak;
-	      var namespace;
-	      var channel_group;
-	      var url = [];
+	      var channel_group = '';
+
 	      var data = {};
 	      var mode = args.mode || 'add';
+	      var err = args.error || this._error;
+	      var jsonp = this._jsonp_cb();
 
 	      if (ns_ch) {
 	        var ns_ch_a = ns_ch.split(':');
 
 	        if (ns_ch_a.length > 1) {
-	          namespace = ns_ch_a[0] === '*' ? null : ns_ch_a[0];
-
 	          channel_group = ns_ch_a[1];
 	        } else {
 	          channel_group = ns_ch_a[0];
 	        }
-	      }
-
-	      if (namespace) {
-	        url.push('namespace');
-	        url.push(_utils2.default.encode(namespace));
-	      }
-
-	      url.push('channel-group');
-
-	      if (channel_group && channel_group !== '*') {
-	        url.push(channel_group);
 	      }
 
 	      if (channels) {
@@ -4352,16 +4323,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	          channels = channels.join(',');
 	        }
 	        data[mode] = channels;
-	        data['cloak'] = this._config.isCloakEnabled() ? 'true' : 'false';
-	      } else {
-	        if (mode === 'remove') url.push('remove');
 	      }
 
-	      if (typeof cloak !== 'undefined') {
-	        data.cloak = cloak ? 'true' : 'false';
+	      if (!data.auth) {
+	        data.auth = args.auth_key || this._keychain.getAuthKey();
 	      }
 
-	      this.__CR(args, callback, url, data);
+	      if (jsonp) data.callback = jsonp;
+
+	      this._networking.performChannelGroupOperation(channel_group, mode, {
+	        callback: jsonp,
+	        data: this._networking.prepareParams(data),
+	        success: function success(response) {
+	          _responders2.default.callback(response, callback, err);
+	        },
+	        fail: function fail(response) {
+	          _responders2.default.error(response, err);
+	        }
+	      });
 	    }
 	  }, {
 	    key: 'listChannels',
@@ -4382,13 +4361,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'listGroups',
 	    value: function listGroups(args, callback) {
-	      var namespace = void 0;
-
-	      namespace = args.namespace || args.ns || args.channel_group || null;
-	      if (namespace) {
-	        args.channel_group = namespace + ':*';
-	      }
-
 	      this.channelGroup(args, callback);
 	    }
 	  }, {
@@ -4406,62 +4378,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      args.mode = 'remove';
 	      this.channelGroup(args, callback);
-	    }
-	  }, {
-	    key: 'listNamespaces',
-	    value: function listNamespaces(args, callback) {
-	      var url = ['namespace'];
-	      this.__CR(args, callback, url, {});
-	    }
-	  }, {
-	    key: 'removeNamespace',
-	    value: function removeNamespace(args, callback) {
-	      var url = ['namespace', args['namespace'], 'remove'];
-	      this.__CR(args, callback, url, {});
-	    }
-	  }, {
-	    key: 'cloak',
-	    value: function cloak(args, callback) {
-	      if (typeof args.cloak === 'undefined') {
-	        callback(this._config.isCloakEnabled());
-	        return;
-	      }
-	      this._config.setCloakConfig(args['cloak']);
-	      this.channelGroup(args, callback);
-	    }
-
-	    // a private function to do the heavy lifting of channel-group operations
-
-	  }, {
-	    key: '__CR',
-	    value: function __CR(args, argumentCallback, url1, data) {
-	      var callback = args.callback || argumentCallback;
-	      var err = args.error || this._error;
-	      var jsonp = this._jsonp_cb();
-
-	      data = data || {};
-
-	      if (!data.auth) {
-	        data.auth = args.auth_key || this._keychain.getAuthKey();
-	      }
-
-	      var url = [this._networking.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey()];
-
-	      url.push.apply(url, url1);
-
-	      if (jsonp) data.callback = jsonp;
-
-	      this._networking.abstractXDR({
-	        callback: jsonp,
-	        data: this._networking.prepareParams(data),
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        },
-	        url: url
-	      });
 	    }
 	  }]);
 

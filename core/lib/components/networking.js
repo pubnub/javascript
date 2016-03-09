@@ -125,12 +125,32 @@ var _class = function () {
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }
   }, {
-    key: 'provisionDeviceForPush',
-    value: function provisionDeviceForPush(deviceId, _ref2) {
+    key: 'performChannelGroupOperation',
+    value: function performChannelGroupOperation(channelGroup, mode, _ref2) {
       var data = _ref2.data;
       var callback = _ref2.callback;
       var success = _ref2.success;
       var fail = _ref2.fail;
+
+      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey(), 'channel-group'];
+
+      if (channelGroup && channelGroup !== '*') {
+        url.push(channelGroup);
+      }
+
+      if (mode === 'remove') {
+        url.push('remove');
+      }
+
+      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+    }
+  }, {
+    key: 'provisionDeviceForPush',
+    value: function provisionDeviceForPush(deviceId, _ref3) {
+      var data = _ref3.data;
+      var callback = _ref3.callback;
+      var success = _ref3.success;
+      var fail = _ref3.fail;
 
       var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._keychain.getSubscribeKey(), 'devices', deviceId];
 
@@ -138,11 +158,11 @@ var _class = function () {
     }
   }, {
     key: 'performGrant',
-    value: function performGrant(_ref3) {
-      var data = _ref3.data;
-      var callback = _ref3.callback;
-      var success = _ref3.success;
-      var fail = _ref3.fail;
+    value: function performGrant(_ref4) {
+      var data = _ref4.data;
+      var callback = _ref4.callback;
+      var success = _ref4.success;
+      var fail = _ref4.fail;
 
       var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -150,11 +170,11 @@ var _class = function () {
     }
   }, {
     key: 'performAudit',
-    value: function performAudit(_ref4) {
-      var data = _ref4.data;
-      var callback = _ref4.callback;
-      var success = _ref4.success;
-      var fail = _ref4.fail;
+    value: function performAudit(_ref5) {
+      var data = _ref5.data;
+      var callback = _ref5.callback;
+      var success = _ref5.success;
+      var fail = _ref5.fail;
 
       var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -162,11 +182,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchReplay',
-    value: function fetchReplay(source, destination, _ref5) {
-      var data = _ref5.data;
-      var callback = _ref5.callback;
-      var success = _ref5.success;
-      var fail = _ref5.fail;
+    value: function fetchReplay(source, destination, _ref6) {
+      var data = _ref6.data;
+      var callback = _ref6.callback;
+      var success = _ref6.success;
+      var fail = _ref6.fail;
 
       var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
@@ -174,11 +194,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchTime',
-    value: function fetchTime(jsonp, _ref6) {
-      var data = _ref6.data;
-      var callback = _ref6.callback;
-      var success = _ref6.success;
-      var fail = _ref6.fail;
+    value: function fetchTime(jsonp, _ref7) {
+      var data = _ref7.data;
+      var callback = _ref7.callback;
+      var success = _ref7.success;
+      var fail = _ref7.fail;
 
       var url = [this.getStandardOrigin(), 'time', jsonp];
 
@@ -186,11 +206,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchWhereNow',
-    value: function fetchWhereNow(uuid, _ref7) {
-      var data = _ref7.data;
-      var callback = _ref7.callback;
-      var success = _ref7.success;
-      var fail = _ref7.fail;
+    value: function fetchWhereNow(uuid, _ref8) {
+      var data = _ref8.data;
+      var callback = _ref8.callback;
+      var success = _ref8.success;
+      var fail = _ref8.fail;
 
       var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
@@ -198,11 +218,11 @@ var _class = function () {
     }
   }, {
     key: 'fetchHereNow',
-    value: function fetchHereNow(channel, channel_group, _ref8) {
-      var data = _ref8.data;
-      var callback = _ref8.callback;
-      var success = _ref8.success;
-      var fail = _ref8.fail;
+    value: function fetchHereNow(channel, channel_group, _ref9) {
+      var data = _ref9.data;
+      var callback = _ref9.callback;
+      var success = _ref9.success;
+      var fail = _ref9.fail;
 
       var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 
@@ -215,17 +235,6 @@ var _class = function () {
         url.push('channel');
         url.push(',');
       }
-
-      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
-    }
-  }, {
-    key: 'abstractXDR',
-    value: function abstractXDR(_ref9) {
-      var data = _ref9.data;
-      var callback = _ref9.callback;
-      var success = _ref9.success;
-      var fail = _ref9.fail;
-      var url = _ref9.url;
 
       this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
     }

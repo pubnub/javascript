@@ -54,36 +54,23 @@ var _class = function () {
     key: 'channelGroup',
     value: function channelGroup(args, argumentCallback) {
       var ns_ch = args.channel_group;
-      var callback = argumentCallback || args.callback;
+      var callback = args.callback || argumentCallback;
       var channels = args.channels || args.channel;
-      var cloak = args.cloak;
-      var namespace;
-      var channel_group;
-      var url = [];
+      var channel_group = '';
+
       var data = {};
       var mode = args.mode || 'add';
+      var err = args.error || this._error;
+      var jsonp = this._jsonp_cb();
 
       if (ns_ch) {
         var ns_ch_a = ns_ch.split(':');
 
         if (ns_ch_a.length > 1) {
-          namespace = ns_ch_a[0] === '*' ? null : ns_ch_a[0];
-
           channel_group = ns_ch_a[1];
         } else {
           channel_group = ns_ch_a[0];
         }
-      }
-
-      if (namespace) {
-        url.push('namespace');
-        url.push(_utils2.default.encode(namespace));
-      }
-
-      url.push('channel-group');
-
-      if (channel_group && channel_group !== '*') {
-        url.push(channel_group);
       }
 
       if (channels) {
@@ -91,16 +78,24 @@ var _class = function () {
           channels = channels.join(',');
         }
         data[mode] = channels;
-        data['cloak'] = this._config.isCloakEnabled() ? 'true' : 'false';
-      } else {
-        if (mode === 'remove') url.push('remove');
       }
 
-      if (typeof cloak !== 'undefined') {
-        data.cloak = cloak ? 'true' : 'false';
+      if (!data.auth) {
+        data.auth = args.auth_key || this._keychain.getAuthKey();
       }
 
-      this.__CR(args, callback, url, data);
+      if (jsonp) data.callback = jsonp;
+
+      this._networking.performChannelGroupOperation(channel_group, mode, {
+        callback: jsonp,
+        data: this._networking.prepareParams(data),
+        success: function success(response) {
+          _responders2.default.callback(response, callback, err);
+        },
+        fail: function fail(response) {
+          _responders2.default.error(response, err);
+        }
+      });
     }
   }, {
     key: 'listChannels',
@@ -121,13 +116,6 @@ var _class = function () {
   }, {
     key: 'listGroups',
     value: function listGroups(args, callback) {
-      var namespace = void 0;
-
-      namespace = args.namespace || args.ns || args.channel_group || null;
-      if (namespace) {
-        args.channel_group = namespace + ':*';
-      }
-
       this.channelGroup(args, callback);
     }
   }, {
@@ -145,62 +133,6 @@ var _class = function () {
 
       args.mode = 'remove';
       this.channelGroup(args, callback);
-    }
-  }, {
-    key: 'listNamespaces',
-    value: function listNamespaces(args, callback) {
-      var url = ['namespace'];
-      this.__CR(args, callback, url, {});
-    }
-  }, {
-    key: 'removeNamespace',
-    value: function removeNamespace(args, callback) {
-      var url = ['namespace', args['namespace'], 'remove'];
-      this.__CR(args, callback, url, {});
-    }
-  }, {
-    key: 'cloak',
-    value: function cloak(args, callback) {
-      if (typeof args.cloak === 'undefined') {
-        callback(this._config.isCloakEnabled());
-        return;
-      }
-      this._config.setCloakConfig(args['cloak']);
-      this.channelGroup(args, callback);
-    }
-
-    // a private function to do the heavy lifting of channel-group operations
-
-  }, {
-    key: '__CR',
-    value: function __CR(args, argumentCallback, url1, data) {
-      var callback = args.callback || argumentCallback;
-      var err = args.error || this._error;
-      var jsonp = this._jsonp_cb();
-
-      data = data || {};
-
-      if (!data.auth) {
-        data.auth = args.auth_key || this._keychain.getAuthKey();
-      }
-
-      var url = [this._networking.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey()];
-
-      url.push.apply(url, url1);
-
-      if (jsonp) data.callback = jsonp;
-
-      this._networking.abstractXDR({
-        callback: jsonp,
-        data: this._networking.prepareParams(data),
-        success: function success(response) {
-          _responders2.default.callback(response, callback, err);
-        },
-        fail: function fail(response) {
-          _responders2.default.error(response, err);
-        },
-        url: url
-      });
     }
   }]);
 

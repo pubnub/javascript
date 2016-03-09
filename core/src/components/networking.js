@@ -4,12 +4,8 @@ import Keychain from './keychain.js';
 const utils = require('../utils');
 
 
-type commonXDRObject = {
-  data: Object, callback: Function, success: Function, fail: Function
-};
-type abstractedXDRObject = {
-  data: Object, callback: Function, success: Function, fail: Function, url: Array<string>
-};
+type commonXDRObject = { data: Object, callback: Function, success: Function, fail: Function };
+
 
 export default class {
 
@@ -105,7 +101,24 @@ export default class {
     this._xdr({ data, callback, success, fail, url });
   }
 
-  provisionDeviceForPush(deviceId: String, { data, callback, success, fail }: commonXDRObject) {
+  performChannelGroupOperation(channelGroup: string, mode: string, { data, callback, success, fail }: commonXDRObject) {
+    let url = [
+      this.getStandardOrigin(), 'v1', 'channel-registration',
+      'sub-key', this._keychain.getSubscribeKey(), 'channel-group'
+    ];
+
+    if (channelGroup && channelGroup !== '*') {
+      url.push(channelGroup);
+    }
+
+    if (mode === 'remove') {
+      url.push('remove');
+    }
+
+    this._xdr({ data, callback, success, fail, url });
+  }
+
+  provisionDeviceForPush(deviceId: string, { data, callback, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'push', 'sub-key',
       this._keychain.getSubscribeKey(), 'devices', deviceId
@@ -175,10 +188,6 @@ export default class {
       url.push(',');
     }
 
-    this._xdr({ data, callback, success, fail, url });
-  }
-
-  abstractXDR({ data, callback, success, fail, url }: abstractedXDRObject) {
     this._xdr({ data, callback, success, fail, url });
   }
 

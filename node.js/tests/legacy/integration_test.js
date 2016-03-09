@@ -83,6 +83,7 @@ describe('Pubnub', function () {
             }
         });
 
+        /*
         pubnub.channel_group_list_namespaces({
             callback: function (r) {
                 var namespaces = r.namespaces;
@@ -94,6 +95,7 @@ describe('Pubnub', function () {
                 }
             }
         });
+        */
     });
 
     after(function () {
@@ -2253,8 +2255,6 @@ describe('Pubnub', function () {
         });
 
         it("should return correct state for multiple uuids in single channel", function (done) {
-            console.log(channel);
-
             var ch = channel + '-' + 'here-now-' + get_random();
 
             pubnub_pres.state({
@@ -2463,7 +2463,7 @@ describe('Pubnub', function () {
                 });
             });
 
-            it('should be able to add channels to channel group with namespace', function (done) {
+            it.skip('should be able to add channels to channel group with namespace', function (done) {
                 var unique_suffix = Date.now();
                 var channels = 'a,b,c';
                 var namespace = 'ns' + unique_suffix;
@@ -2544,7 +2544,7 @@ describe('Pubnub', function () {
                 });
             });
 
-            it('should be able to remove channels to channel group with namespace', function (done) {
+            it.skip('should be able to remove channels to channel group with namespace', function (done) {
                 var unique_suffix = get_random();
                 var channels = 'a,b,c';
                 var namespace = 'ns' + unique_suffix;
@@ -2622,7 +2622,7 @@ describe('Pubnub', function () {
                 });
             });
 
-            it('should be able to get all channel groups with namespace', function (done) {
+            it.skip('should be able to get all channel groups with namespace', function (done) {
                 var unique_suffix = Date.now();
                 var channels = 'a,b,c';
                 var namespace = 'ns' + unique_suffix;
@@ -2690,7 +2690,7 @@ describe('Pubnub', function () {
         });
 
         describe('#channel_group_remove_namespace()', function () {
-            it('should be able to remove namespace', function (done) {
+            it.skip('should be able to remove namespace', function (done) {
                 var unique_suffix = Date.now();
                 var channels = 'a,b,c';
                 var namespace = 'ns' + unique_suffix;

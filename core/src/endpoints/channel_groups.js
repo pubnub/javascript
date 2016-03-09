@@ -32,17 +32,18 @@ export default class {
 
   // generic function to handle all channel group operations
   channelGroup(args: Object, argumentCallback: Function) {
-    var ns_ch = args.channel_group;
-    var callback = argumentCallback || args.callback;
-    var channels = args.channels || args.channel;
-    var channel_group;
-    var url = [];
-    var data = {};
-    var mode = args.mode || 'add';
+    let ns_ch = args.channel_group;
+    let callback = args.callback || argumentCallback;
+    let channels = args.channels || args.channel;
+    let channel_group = '';
 
+    let data = {};
+    let mode = args.mode || 'add';
+    let err = args.error || this._error;
+    let jsonp = this._jsonp_cb();
 
     if (ns_ch) {
-      var ns_ch_a = ns_ch.split(':');
+      let ns_ch_a = ns_ch.split(':');
 
       if (ns_ch_a.length > 1) {
         channel_group = ns_ch_a[1];
@@ -51,22 +52,29 @@ export default class {
       }
     }
 
-    url.push('channel-group');
-
-    if (channel_group && channel_group !== '*') {
-      url.push(channel_group);
-    }
-
     if (channels) {
       if (utils.isArray(channels)) {
         channels = channels.join(',');
       }
       data[mode] = channels;
-    } else {
-      if (mode === 'remove') url.push('remove');
     }
 
-    this.__CR(args, callback, url, data);
+    if (!data.auth) {
+      data.auth = args.auth_key || this._keychain.getAuthKey();
+    }
+
+    if (jsonp) data.callback = jsonp;
+
+    this._networking.performChannelGroupOperation(channel_group, mode, {
+      callback: jsonp,
+      data: this._networking.prepareParams(data),
+      success: function (response) {
+        Responders.callback(response, callback, err);
+      },
+      fail: function (response) {
+        Responders.error(response, err);
+      }
+    });
   }
 
   listChannels(args: Object, callback: Function) {
@@ -84,13 +92,6 @@ export default class {
   }
 
   listGroups(args: Object, callback: Function) {
-    let namespace;
-
-    namespace = args.namespace || args.ns || args.channel_group || null;
-    if (namespace) {
-      args.channel_group = namespace + ':*';
-    }
-
     this.channelGroup(args, callback);
   }
 
@@ -107,39 +108,4 @@ export default class {
     args.mode = 'remove';
     this.channelGroup(args, callback);
   }
-
-  // a private function to do the heavy lifting of channel-group operations
-  __CR(args: Object, argumentCallback: Function, url1: Array<string>, data: Object) {
-    let callback = args.callback || argumentCallback;
-    let err = args.error || this._error;
-    let jsonp = this._jsonp_cb();
-
-    data = data || {};
-
-    if (!data.auth) {
-      data.auth = args.auth_key || this._keychain.getAuthKey();
-    }
-
-    let url = [
-      this._networking.getStandardOrigin(), 'v1', 'channel-registration',
-      'sub-key', this._keychain.getSubscribeKey()
-    ];
-
-    url.push.apply(url, url1);
-
-    if (jsonp) data.callback = jsonp;
-
-    this._networking.abstractXDR({
-      callback: jsonp,
-      data: this._networking.prepareParams(data),
-      success: function (response) {
-        Responders.callback(response, callback, err);
-      },
-      fail: function (response) {
-        Responders.error(response, err);
-      },
-      url: url
-    });
-  }
-
 }

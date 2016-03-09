@@ -163,6 +163,102 @@ describe('#components/networking', () => {
     });
   });
 
+
+  describe('#performChannelGroupOperation', () => {
+    it('passes arguments to the xdr module', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.performChannelGroupOperation('cg1', 'add', {
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, [
+        'http://origin1.pubnub.com', 'v1', 'channel-registration', 'sub-key', 'subKey',
+        'channel-group', 'cg1'
+      ]);
+    });
+
+    it('passes arguments to the xdr module', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.performChannelGroupOperation('', 'add', {
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, [
+        'http://origin1.pubnub.com', 'v1', 'channel-registration', 'sub-key', 'subKey',
+        'channel-group'
+      ]);
+    });
+
+    it('passes arguments to the xdr module when removing channels', () => {
+      let xdrStub = sinon.stub();
+      let successStub = sinon.stub();
+      let failStub = sinon.stub();
+      let callbackStub = sinon.stub();
+      let data = { my: 'object' };
+
+      let keychain = new Keychain()
+        .setSubscribeKey('subKey')
+        .setPublishKey('pubKey');
+
+      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+
+      networkingComponent.performChannelGroupOperation('cg1', 'remove', {
+        fail: failStub,
+        success: successStub,
+        callback: callbackStub,
+        data: data
+      });
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, data);
+      assert.deepEqual(xdrStub.args[0][0].success, successStub);
+      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, [
+        'http://origin1.pubnub.com', 'v1', 'channel-registration', 'sub-key', 'subKey',
+        'channel-group', 'cg1', 'remove'
+      ]);
+    });
+  });
+
   describe('#fetchTime', () => {
     it('passes arguments to the xdr module', () => {
       let xdrStub = sinon.stub();
