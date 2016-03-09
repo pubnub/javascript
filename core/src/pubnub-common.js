@@ -142,7 +142,7 @@ function PN_API(setup) {
     .setInstanceIdConfig(setup.instance_id || false);
 
   config
-    .setHeartbeatInterval(setup.heartbeat_interval || (config.getPresnceTimeout() / 2) - 1);
+    .setHeartbeatInterval(setup.heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
 
   let stateStorage = new State();
 

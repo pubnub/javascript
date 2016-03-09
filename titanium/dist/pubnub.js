@@ -963,7 +963,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, _error)).setInstanceIdConfig(setup.instance_id || false);
 
-	  config.setHeartbeatInterval(setup.heartbeat_interval || config.getPresnceTimeout() / 2 - 1);
+	  config.setHeartbeatInterval(setup.heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
 
 	  var stateStorage = new _state2.default();
 
@@ -1004,7 +1004,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var TIMETOKEN = 0;
 	  var RESUMED = false;
 	  var SUB_ERROR = function SUB_ERROR() {};
-	  var STATE = {};
 	  var PRESENCE_HB_TIMEOUT = null;
 	  var PRESENCE_HB_RUNNING = false;
 	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
@@ -1104,6 +1103,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    where_now: function where_now(args, callback) {
 	      presenceEndpoints.whereNow(args, callback);
+	    },
+	    presence_heartbeat: function presence_heartbeat(args) {
+	      presenceEndpoints.heartbeat(args);
+	    },
+	    state: function state(args, callback) {
+	      presenceEndpoints.performState(args, callback);
 	    },
 	    grant: function grant(args, callback) {
 	      accessEndpoints.performGrant(args, callback);
@@ -1423,7 +1428,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        utils.each(existingChannels.concat(presenceChannels), function (channel) {
 	          if (stateStorage.containsChannel(channel)) stateStorage.addChannel(channel, 0);
-	          if (channel in STATE) delete STATE[channel];
+	          if (stateStorage.isInPresenceState(channel)) stateStorage.removeFromPresenceState(channel);
 	        });
 
 	        var CB_CALLED = true;
@@ -1455,7 +1460,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
 	          if (stateStorage.containsChannelGroup(channelGroup)) stateStorage.addChannelGroup(channelGroup, 0);
-	          if (channelGroup in STATE) delete STATE[channelGroup];
+	          if (stateStorage.isInPresenceState(channelGroup)) stateStorage.removeFromPresenceState(channelGroup);
 	        });
 
 	        var CB_CALLED = true;
@@ -1536,9 +1541,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	          if (state) {
 	            if (channel in state) {
-	              STATE[channel] = state[channel];
+	              stateStorage.addToPresenceState(channel, state[channel]);
 	            } else {
-	              STATE[channel] = state;
+	              stateStorage.addToPresenceState(channel, state);
 	            }
 	          }
 
@@ -1691,8 +1696,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          data['channel-group'] = channel_groups;
 	        }
 
-	        var st = JSON.stringify(STATE);
-	        if (st.length > 2) data['state'] = JSON.stringify(STATE);
+	        var st = JSON.stringify(stateStorage.getPresenceState());
+	        if (st.length > 2) data['state'] = JSON.stringify(stateStorage.getPresenceState());
 
 	        if (config.getPresenceTimeout()) {
 	          data['heartbeat'] = config.getPresenceTimeout();
@@ -1840,66 +1845,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      CONNECT();
 	    },
 
-	    state: function state(args, callback) {
-	      var callback = args['callback'] || callback || function (r) {};
-	      var err = args['error'] || function () {};
-	      var auth_key = args['auth_key'] || keychain.getAuthKey();
-	      var jsonp = jsonp_cb();
-	      var state = args['state'];
-	      var uuid = args['uuid'] || keychain.getUUID();
-	      var channel = args['channel'];
-	      var channel_group = args['channel_group'];
-	      var url;
-	      var data = networking.prepareParams({ auth: auth_key });
-
-	      // Make sure we have a Channel
-	      if (!keychain.getSubscribeKey()) return _error('Missing Subscribe Key');
-	      if (!uuid) return _error('Missing UUID');
-	      if (!channel && !channel_group) return _error('Missing Channel');
-
-	      if (jsonp != '0') {
-	        data['callback'] = jsonp;
-	      }
-
-	      if (typeof channel != 'undefined' && stateStorage.getChannel(channel) && stateStorage.getChannel(channel).subscribed) {
-	        if (state) STATE[channel] = state;
-	      }
-
-	      if (typeof channel_group != 'undefined' && stateStorage.getChannelGroup(channel_group) && stateStorage.getChannelGroup(channel_group).subscribed) {
-	        if (state) STATE[channel_group] = state;
-	        data['channel-group'] = channel_group;
-
-	        if (!channel) {
-	          channel = ',';
-	        }
-	      }
-
-	      data['state'] = JSON.stringify(state);
-
-	      if (config.isInstanceIdEnabled()) {
-	        data['instanceid'] = keychain.getInstanceId();
-	      }
-
-	      if (state) {
-	        url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid, 'data'];
-	      } else {
-	        url = [networking.getStandardOrigin(), 'v2', 'presence', 'sub-key', keychain.getSubscribeKey(), 'channel', channel, 'uuid', utils.encode(uuid)];
-	      }
-
-	      xdr({
-	        callback: jsonp,
-	        data: networking.prepareParams(data),
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        },
-	        url: url
-
-	      });
-	    },
-
 	    /*
 	     PUBNUB.revoke({
 	     channel  : 'my_chat',
@@ -1929,49 +1874,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    get_subscribed_channels: function get_subscribed_channels() {
 	      return stateStorage.generate_channel_list(true);
-	    },
-
-	    presence_heartbeat: function presence_heartbeat(args) {
-	      var callback = args['callback'] || function () {};
-	      var err = args['error'] || function () {};
-	      var jsonp = jsonp_cb();
-	      var data = { uuid: keychain.getUUID(), auth: keychain.getAuthKey() };
-
-	      var st = JSON.stringify(STATE);
-	      if (st.length > 2) data['state'] = JSON.stringify(STATE);
-
-	      if (config.getPresenceTimeout() > 0 && config.getPresenceTimeout() < 320) {
-	        data['heartbeat'] = config.getPresenceTimeout();
-	      }
-
-	      if (jsonp != '0') {
-	        data['callback'] = jsonp;
-	      }
-
-	      var channels = utils.encode(stateStorage.generate_channel_list(true).join(','));
-	      var channel_groups = stateStorage.generate_channel_group_list(true).join(',');
-
-	      if (!channels) channels = ',';
-	      if (channel_groups) data['channel-group'] = channel_groups;
-
-	      if (config.isInstanceIdEnabled()) {
-	        data['instanceid'] = keychain.getInstanceId();
-	      }
-
-	      if (config.isRequestIdEnabled()) {
-	        data['requestid'] = utils.generateUUID();
-	      }
-
-	      networking.performHeartbeat(channels, {
-	        callback: jsonp,
-	        data: networking.prepareParams(data),
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        }
-	      });
 	    },
 
 	    stop_timers: function stop_timers() {
@@ -2490,12 +2392,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
 	    }
 	  }, {
-	    key: 'performAudit',
-	    value: function performAudit(_ref6) {
+	    key: 'performState',
+	    value: function performState(state, channel, uuid, _ref6) {
 	      var data = _ref6.data;
 	      var callback = _ref6.callback;
 	      var success = _ref6.success;
 	      var fail = _ref6.fail;
+
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channel];
+
+	      if (state) {
+	        url.push('uuid', uuid, 'data');
+	      } else {
+	        url.push('uuid', utils.encode(uuid));
+	      }
+
+	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url });
+	    }
+	  }, {
+	    key: 'performAudit',
+	    value: function performAudit(_ref7) {
+	      var data = _ref7.data;
+	      var callback = _ref7.callback;
+	      var success = _ref7.success;
+	      var fail = _ref7.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -2503,11 +2423,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchReplay',
-	    value: function fetchReplay(source, destination, _ref7) {
-	      var data = _ref7.data;
-	      var callback = _ref7.callback;
-	      var success = _ref7.success;
-	      var fail = _ref7.fail;
+	    value: function fetchReplay(source, destination, _ref8) {
+	      var data = _ref8.data;
+	      var callback = _ref8.callback;
+	      var success = _ref8.success;
+	      var fail = _ref8.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
@@ -2515,11 +2435,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchTime',
-	    value: function fetchTime(jsonp, _ref8) {
-	      var data = _ref8.data;
-	      var callback = _ref8.callback;
-	      var success = _ref8.success;
-	      var fail = _ref8.fail;
+	    value: function fetchTime(jsonp, _ref9) {
+	      var data = _ref9.data;
+	      var callback = _ref9.callback;
+	      var success = _ref9.success;
+	      var fail = _ref9.fail;
 
 	      var url = [this.getStandardOrigin(), 'time', jsonp];
 
@@ -2527,11 +2447,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchWhereNow',
-	    value: function fetchWhereNow(uuid, _ref9) {
-	      var data = _ref9.data;
-	      var callback = _ref9.callback;
-	      var success = _ref9.success;
-	      var fail = _ref9.fail;
+	    value: function fetchWhereNow(uuid, _ref10) {
+	      var data = _ref10.data;
+	      var callback = _ref10.callback;
+	      var success = _ref10.success;
+	      var fail = _ref10.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
 
@@ -2539,11 +2459,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchHereNow',
-	    value: function fetchHereNow(channel, channel_group, _ref10) {
-	      var data = _ref10.data;
-	      var callback = _ref10.callback;
-	      var success = _ref10.success;
-	      var fail = _ref10.fail;
+	    value: function fetchHereNow(channel, channel_group, _ref11) {
+	      var data = _ref11.data;
+	      var callback = _ref11.callback;
+	      var success = _ref11.success;
+	      var fail = _ref11.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 
@@ -3066,6 +2986,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._channelStorage = {};
 	    this._channelGroupStorage = {};
+	    this._presenceState = {};
 	  }
 
 	  _createClass(_class, [{
@@ -3097,6 +3018,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'addChannelGroup',
 	    value: function addChannelGroup(name, metadata) {
 	      this._channelGroupStorage[name] = metadata;
+	    }
+	  }, {
+	    key: 'addToPresenceState',
+	    value: function addToPresenceState(key, value) {
+	      this._presenceState[key] = value;
+	    }
+	  }, {
+	    key: 'isInPresenceState',
+	    value: function isInPresenceState(key) {
+	      return key in this._presenceState;
+	    }
+	  }, {
+	    key: 'removeFromPresenceState',
+	    value: function removeFromPresenceState(key) {
+	      delete this._presenceState[key];
+	    }
+	  }, {
+	    key: 'getPresenceState',
+	    value: function getPresenceState() {
+	      return this._presenceState;
 	    }
 
 	    /**
@@ -4047,9 +3988,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
+	var _state = __webpack_require__(13);
+
+	var _state2 = _interopRequireDefault(_state);
+
 	var _responders = __webpack_require__(14);
 
 	var _responders2 = _interopRequireDefault(_responders);
+
+	var _utils = __webpack_require__(10);
+
+	var _utils2 = _interopRequireDefault(_utils);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4060,6 +4009,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var networking = _ref.networking;
 	    var config = _ref.config;
 	    var keychain = _ref.keychain;
+	    var state = _ref.state;
 	    var jsonp_cb = _ref.jsonp_cb;
 	    var error = _ref.error;
 
@@ -4068,6 +4018,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._networking = networking;
 	    this._config = config;
 	    this._keychain = keychain;
+	    this._state = state;
 	    this._jsonp_cb = jsonp_cb;
 	    this._error = error;
 	  }
@@ -4138,6 +4089,111 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      this._networking.fetchWhereNow(uuid, {
+	        callback: jsonp,
+	        data: this._networking.prepareParams(data),
+	        success: function success(response) {
+	          _responders2.default.callback(response, callback, err);
+	        },
+	        fail: function fail(response) {
+	          _responders2.default.error(response, err);
+	        }
+	      });
+	    }
+	  }, {
+	    key: 'heartbeat',
+	    value: function heartbeat(args) {
+	      var callback = args.callback || function () {};
+	      var err = args.error || function () {};
+	      var jsonp = this._jsonp_cb();
+	      var data = {
+	        uuid: this._keychain.getUUID(),
+	        auth: this._keychain.getAuthKey()
+	      };
+
+	      var st = JSON.stringify(this._state.getPresenceState());
+	      if (st.length > 2) {
+	        data.state = JSON.stringify(this._state.getPresenceState());
+	      }
+
+	      if (this._config.getPresenceTimeout() > 0 && this._config.getPresenceTimeout() < 320) {
+	        data.heartbeat = this._config.getPresenceTimeout();
+	      }
+
+	      if (jsonp !== 0) {
+	        data.callback = jsonp;
+	      }
+
+	      var channels = _utils2.default.encode(this._state.generate_channel_list(true).join(','));
+	      var channel_groups = this._state.generate_channel_group_list(true).join(',');
+
+	      if (!channels) channels = ',';
+	      if (channel_groups) data['channel-group'] = channel_groups;
+
+	      if (this._config.isInstanceIdEnabled()) {
+	        data.instanceid = this._keychain.getInstanceId();
+	      }
+
+	      if (this._config.isRequestIdEnabled()) {
+	        data.requestid = _utils2.default.generateUUID();
+	      }
+
+	      this._networking.performHeartbeat(channels, {
+	        callback: jsonp,
+	        data: this._networking.prepareParams(data),
+	        success: function success(response) {
+	          _responders2.default.callback(response, callback, err);
+	        },
+	        fail: function fail(response) {
+	          _responders2.default.error(response, err);
+	        }
+	      });
+	    }
+	  }, {
+	    key: 'performState',
+	    value: function performState(args, argumentCallback) {
+	      var callback = args.callback || argumentCallback || function () {};
+	      var err = args.error || function () {};
+	      var auth_key = args.auth_key || this._keychain.getAuthKey();
+	      var jsonp = this._jsonp_cb();
+	      var state = args.state;
+	      var uuid = args.uuid || this._keychain.getUUID();
+	      var channel = args.channel;
+	      var channel_group = args.channel_group;
+	      var data = this._networking.prepareParams({ auth: auth_key });
+
+	      // Make sure we have a Channel
+	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+	      if (!uuid) return this._error('Missing UUID');
+	      if (!channel && !channel_group) return this._error('Missing Channel');
+
+	      if (jsonp !== 0) {
+	        data['callback'] = jsonp;
+	      }
+
+	      if (typeof channel !== 'undefined' && this._state.getChannel(channel) && this._state.getChannel(channel).subscribed) {
+	        if (state) {
+	          this._state.addToPresenceState(channel, state);
+	        }
+	      }
+
+	      if (typeof channel_group !== 'undefined' && this._state.getChannelGroup(channel_group) && this._state.getChannelGroup(channel_group).subscribed) {
+	        if (state) {
+	          this._state.addToPresenceState(channel_group, state);
+	        }
+	        data['channel-group'] = channel_group;
+
+	        if (!channel) {
+	          channel = ',';
+	        }
+	      }
+
+	      data.state = JSON.stringify(state);
+
+	      if (this._config.isInstanceIdEnabled()) {
+	        data['instanceid'] = this._keychain.getInstanceId();
+	      }
+
+	      this._networking.performState(state, channel, uuid, {
 	        callback: jsonp,
 	        data: this._networking.prepareParams(data),
 	        success: function success(response) {

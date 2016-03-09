@@ -20,6 +20,7 @@ var _class = function () {
 
     this._channelStorage = {};
     this._channelGroupStorage = {};
+    this._presenceState = {};
   }
 
   _createClass(_class, [{
@@ -51,6 +52,26 @@ var _class = function () {
     key: 'addChannelGroup',
     value: function addChannelGroup(name, metadata) {
       this._channelGroupStorage[name] = metadata;
+    }
+  }, {
+    key: 'addToPresenceState',
+    value: function addToPresenceState(key, value) {
+      this._presenceState[key] = value;
+    }
+  }, {
+    key: 'isInPresenceState',
+    value: function isInPresenceState(key) {
+      return key in this._presenceState;
+    }
+  }, {
+    key: 'removeFromPresenceState',
+    value: function removeFromPresenceState(key) {
+      delete this._presenceState[key];
+    }
+  }, {
+    key: 'getPresenceState',
+    value: function getPresenceState() {
+      return this._presenceState;
     }
 
     /**

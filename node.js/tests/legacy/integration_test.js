@@ -58,8 +58,8 @@ function get_random(max) {
     return Math.floor((Math.random() * (max || 1000000000) + 1))
 }
 
-namespaces = [];
-groups = [];
+var namespaces = [];
+var groups = [];
 
 describe('Pubnub', function () {
     this.timeout(180000);
