@@ -14,7 +14,7 @@ const mocha = require('gulp-mocha');
 const runSequence = require('run-sequence');
 
 gulp.task('clean', function () {
-  return gulp.src(['lib/', 'distributable'], { read: false })
+  return gulp.src(['lib/', 'dist'], { read: false })
     .pipe(clean());
 });
 
@@ -42,7 +42,7 @@ gulp.task('compile_web', ['babel'], function () {
     ],
     externals: [],
   }))
-  .pipe(gulp.dest('distributable/web'));
+  .pipe(gulp.dest('dist/web'));
 });
 
 gulp.task('compile_titanium', ['babel'], function () {
@@ -65,7 +65,7 @@ gulp.task('compile_titanium', ['babel'], function () {
     ],
     externals: [],
   }))
-  .pipe(gulp.dest('distributable/titanium'));
+  .pipe(gulp.dest('dist/titanium'));
 });
 
 gulp.task('compile_parse', ['babel'], function () {
@@ -88,14 +88,14 @@ gulp.task('compile_parse', ['babel'], function () {
     ],
     externals: [],
   }))
-  .pipe(gulp.dest('distributable/parse'));
+  .pipe(gulp.dest('dist/parse'));
 });
 
 gulp.task('uglify', ['webpack'], function () {
-  return gulp.src('distributable/web/pubnub.js')
+  return gulp.src('dist/web/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
     .pipe(rename('pubnub.min.css'))
-    .pipe(gulp.dest('distributable/web'));
+    .pipe(gulp.dest('dist/web'));
 });
 
 gulp.task('lint', ['webpack'], function () {

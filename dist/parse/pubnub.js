@@ -4222,6 +4222,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"node-uuid": "1.4.7",
 			"phantomjs-prebuilt": "2.1.4",
 			"proxyquire": "1.7.4",
+			"run-sequence": "^1.1.5",
 			"sinon": "^1.17.3",
 			"uglify-js": "^2.6.2",
 			"underscore": "1.7.0",
