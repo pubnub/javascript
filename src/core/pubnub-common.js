@@ -6,6 +6,7 @@ import Networking from './components/networking';
 import Keychain from './components/keychain';
 import Config from './components/config';
 import State from './components/state';
+import PublishQueue from './components/publish_queue';
 
 import Responders from './presenters/responders';
 
@@ -16,6 +17,7 @@ import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ReplyEndpoint from './endpoints/replay';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
+import PubSubEndpoints from './endpoints/pubsub';
 
 let packageJSON = require('../../package.json');
 let defaultConfiguration = require('../../defaults.json');
@@ -24,7 +26,6 @@ let utils = require('./utils');
 let NOW = 1;
 let READY = false;
 let READY_BUFFER = [];
-let PRESENCE_SUFFIX = '-pnpres';
 let DEF_WINDOWING = 10; // MILLISECONDS.
 let DEF_TIMEOUT = 15000; // MILLISECONDS.
 let DEF_SUB_TIMEOUT = 310; // SECONDS.
@@ -51,7 +52,7 @@ function ready() {
 }
 
 function PNmessage(args) {
-  var msg = args || { apns: {} };
+  let msg = args || { apns: {} };
 
   msg['getPubnubMessage'] = function () {
     var m: Object = {};
@@ -103,14 +104,27 @@ function PNmessage(args) {
   return msg;
 }
 
-function PN_API(setup) {
+type setupObject = {
+  use_send_beacon: ?boolean, // configuration on beacon usage
+  sendBeacon: ?Function, // executes a call against the Beacon API
+  publish_key: ?string, // API key required for publishing
+  subscribe_key: string, // API key required to subscribe
+  cipher_key: string, // decryption keys
+  origin: ?string, // an optional FQDN which will recieve calls from the SDK.
+  xdr: Function, // function which executes HTTP calls
+  hmac_SHA256: Function // hashing function required for Access Manager
+}
+
+function PN_API(setup: setupObject) {
+  let useSendBeacon = (typeof setup.use_send_beacon !== 'undefined') ? setup.use_send_beacon : true;
+  let sendBeacon = (useSendBeacon) ? setup.sendBeacon : null;
   let { xdr } = setup;
   let db = setup.db || { get: function () {}, set: function () {} };
   let error = setup.error || function () {};
   let hmac_SHA256 = setup.hmac_SHA256;
   let crypto_obj = setup.crypto_obj || {
-    encrypt(a, key) { return a; },
-    decrypt(b, key) { return b; }
+    encrypt(a) { return a; },
+    decrypt(b) { return b; },
   };
 
   let keychain = new Keychain()
@@ -132,6 +146,7 @@ function PN_API(setup) {
   let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
     .setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, error))
+    .setSupressLeaveEvents(setup.noleave || 0)
     .setInstanceIdConfig(setup.instance_id || false);
 
   config
@@ -140,7 +155,10 @@ function PN_API(setup) {
   let stateStorage = new State();
 
   let networking = new Networking(setup.xdr, keychain, setup.ssl, setup.origin)
+    .addBeaconDispatcher(sendBeacon)
     .setCoreParams(setup.params || {});
+
+  let publishQueue = new PublishQueue({ networking });
 
   // initialize the encryption and decryption logic
   function encrypt(input, key) {
@@ -161,43 +179,34 @@ function PN_API(setup) {
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
   let replayEndpoint = new ReplyEndpoint({ keychain, networking, error });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ keychain, networking, config, error });
+  let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, publishQueue, state: stateStorage });
 
-  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
-  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
-  var KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
-  var TIME_CHECK = setup['timecheck'] || 0;
-  var NOLEAVE = setup['noleave'] || 0;
-  var SSL = setup['ssl'] ? 's' : '';
-  var CONNECT = function () {
+  let SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
+  let SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
+  let KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
+  let TIME_CHECK = setup['timecheck'] || 0;
+  let CONNECT = function () {
   };
-  var PUB_QUEUE = [];
-  var TIME_DRIFT = 0;
-  var SUB_CALLBACK = 0;
-  var SUB_CHANNEL = 0;
-  var SUB_RECEIVER = 0;
-  var SUB_RESTORE = setup['restore'] || 0;
-  var SUB_BUFF_WAIT = 0;
-  var TIMETOKEN = 0;
-  var RESUMED = false;
-  var SUB_ERROR = function () {
+  let PUB_QUEUE = [];
+  let TIME_DRIFT = 0;
+  let SUB_CALLBACK = 0;
+  let SUB_CHANNEL = 0;
+  let SUB_RECEIVER = 0;
+  let SUB_RESTORE = setup['restore'] || 0;
+  let TIMETOKEN = 0;
+  let RESUMED = false;
+  let SUB_ERROR = function () {
   };
-  var PRESENCE_HB_TIMEOUT = null;
-  var PRESENCE_HB_RUNNING = false;
-  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
-  var COMPATIBLE_35 = setup['compatible_3.5'] || false;
-  var _is_online = setup['_is_online'] || function () { return 1;};
-  var shutdown = setup['shutdown'];
-  var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
-  var sendBeacon = (use_send_beacon) ? setup['sendBeacon'] : null;
-  var _poll_timer;
-  var _poll_timer2;
+  let PRESENCE_HB_TIMEOUT = null;
+  let PRESENCE_HB_RUNNING = false;
+  let NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
+  let _is_online = setup['_is_online'] || function () { return 1;};
+  let shutdown = setup['shutdown'];
+  let _poll_timer;
+  let _poll_timer2;
 
-  if (config.getPresenceTimeout() === 2) config.setHeartbeatInterval(1);
-
-
-  function error_common(message, callback) {
-    callback && callback({ error: message || 'error occurred' });
-    error && error(message);
+  if (config.getPresenceTimeout() === 2) {
+    config.setHeartbeatInterval(1);
   }
 
   function _presence_heartbeat() {
@@ -224,18 +233,6 @@ function PN_API(setup) {
 
   function start_presence_heartbeat() {
     !PRESENCE_HB_RUNNING && _presence_heartbeat();
-  }
-
-  function publish(next) {
-    if (NO_WAIT_FOR_PENDING) {
-      if (!PUB_QUEUE.length) return;
-    } else {
-      if (next) PUB_QUEUE.sending = 0;
-      if (PUB_QUEUE.sending || !PUB_QUEUE.length) return;
-      PUB_QUEUE.sending = 1;
-    }
-
-    xdr(PUB_QUEUE.shift());
   }
 
   function each_channel_group(callback) {
@@ -271,7 +268,7 @@ function PN_API(setup) {
   }
 
   // Announce Leave Event
-  var SELF = {
+  let SELF = {
     history(args: Object, callback: Function) { historyEndpoint.fetchHistory(args, callback); },
 
     time(callback: Function) { timeEndpoint.fetchTime(callback); },
@@ -308,111 +305,6 @@ function PN_API(setup) {
       channelGroupEndpoints.removeChannel(args, callback);
     },
 
-    LEAVE: function (channel, blocking, auth_key, callback, error) {
-      var data: Object = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
-      var origin = networking.nextOrigin(false);
-      var callback = callback || function () {};
-      var err = error || function () {};
-      var url;
-      var params;
-
-      // Prevent Leaving a Presence Channel
-      if (channel.indexOf(PRESENCE_SUFFIX) > 0) return true;
-
-
-      if (COMPATIBLE_35) {
-        if (!SSL) return false;
-      }
-
-      if (NOLEAVE) return false;
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      url = [
-        origin, 'v2', 'presence', 'sub_key',
-        keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave'
-      ];
-
-      params = networking.prepareParams(data);
-
-
-      if (sendBeacon) {
-        var url_string = utils.buildURL(url, params);
-        if (sendBeacon(url_string)) {
-          callback && callback({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
-          return true;
-        }
-      }
-
-
-      xdr({
-        blocking: blocking || SSL,
-        data: params,
-        success: function (response) {
-          Responders.callback(response, callback, err);
-        },
-        fail: function (response) {
-          Responders.error(response, err);
-        },
-        url: url
-      });
-      return true;
-    },
-
-    LEAVE_GROUP: function (channel_group, blocking, auth_key, callback, error) {
-      var data: Object = { uuid: keychain.getUUID(), auth: auth_key || keychain.getAuthKey() };
-      var origin = networking.nextOrigin(false);
-      var url;
-      var params;
-      var callback = callback || function () {};
-      var err = error || function () {};
-
-      // Prevent Leaving a Presence Channel Group
-      if (channel_group.indexOf(PRESENCE_SUFFIX) > 0) return true;
-
-      if (COMPATIBLE_35) {
-        if (!SSL) return false;
-      }
-
-      if (NOLEAVE) return false;
-
-      if (channel_group && channel_group.length > 0) data['channel-group'] = channel_group;
-
-      if (config.isInstanceIdEnabled()) {
-        data['instanceid'] = keychain.getInstanceId();
-      }
-
-      url = [
-        origin, 'v2', 'presence', 'sub_key',
-        keychain.getSubscribeKey(), 'channel', utils.encode(','), 'leave'
-      ];
-
-      params = networking.prepareParams(data);
-
-      if (sendBeacon) {
-        var url_string = utils.buildURL(url, params);
-        if (sendBeacon(url_string)) {
-          callback && callback({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
-          return true;
-        }
-      }
-
-      xdr({
-        blocking: blocking || SSL,
-        data: params,
-        success: (response) => {
-          Responders.callback(response, callback, err);
-        },
-        fail: (response) => {
-          Responders.error(response, err);
-        },
-        url: url,
-      });
-      return true;
-    },
-
     set_resumed: function (resumed) {
       RESUMED = resumed;
     },
@@ -440,7 +332,7 @@ function PN_API(setup) {
     set_heartbeat: function (heartbeat, heartbeat_interval) {
       config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
       config.setHeartbeatInterval(heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
-      if (config.getPresenceTimeout() == 2) {
+      if (config.getPresenceTimeout() === 2) {
         config.setHeartbeatInterval(1);
       }
       CONNECT();
@@ -462,7 +354,7 @@ function PN_API(setup) {
 
     getGcmMessageObject: function (obj) {
       return {
-        data: obj
+        data: obj,
       };
     },
 
@@ -488,154 +380,17 @@ function PN_API(setup) {
       CONNECT();
     },
 
-    /*
-     PUBNUB.publish({
-     channel : 'my_chat_channel',
-     message : 'hello!'
-     });
-     */
-    publish: function (args, callback) {
-      var msg = args['message'];
-      if (!msg) return error('Missing Message');
-
-      var callback = callback || args['callback'] || msg['callback'] || args['success'] || function () {};
-      var channel = args['channel'] || msg['channel'];
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var cipher_key = args['cipher_key'];
-      var err = args['error'] || msg['error'] || function () {};
-      var post = args['post'] || false;
-      var store = ('store_in_history' in args) ? args['store_in_history'] : true;
-      var add_msg = 'push';
-      var params: Object = { uuid: keychain.getUUID(), auth: auth_key };
-      var url;
-
-      if (args['prepend']) add_msg = 'unshift';
-
-      if (!channel) return error('Missing Channel');
-      if (!keychain.getPublishKey()) return error('Missing Publish Key');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-
-      if (msg['getPubnubMessage']) {
-        msg = msg['getPubnubMessage']();
-      }
-
-      // If trying to send Object
-      msg = JSON.stringify(encrypt(msg, cipher_key));
-
-      // Create URL
-      url = [
-        networking.getStandardOrigin(), 'publish',
-        keychain.getPublishKey(), keychain.getSubscribeKey(),
-        0, utils.encode(channel),
-        0, utils.encode(msg)
-      ];
-
-      if (!store) params['store'] = '0';
-
-      if (config.isInstanceIdEnabled()) {
-        params['instanceid'] = keychain.getInstanceId();
-      }
-
-      // Queue Message Send
-      PUB_QUEUE[add_msg]({
-        url: url,
-        data: networking.prepareParams(params),
-        fail: function (response) {
-          Responders.error(response, err);
-          publish(1);
-        },
-        success: function (response) {
-          Responders.callback(response, callback, err);
-          publish(1);
-        },
-        mode: (post) ? 'POST' : 'GET'
-      });
-
-      // Send Message
-      publish();
+    publish(args: Object, callback: Function) {
+      pubsubEndpoints.performPublish(args, callback);
     },
 
-    /*
-     PUBNUB.unsubscribe({ channel : 'my_chat' });
-     */
-    unsubscribe: function (args, callback) {
-      var channelArg = args['channel'];
-      var channelGroupArg = args['channel_group'];
-      var auth_key = args['auth_key'] || keychain.getAuthKey();
-      var callback = callback || args['callback'] || function () {};
-      var err = args['error'] || function () {};
 
+    unsubscribe(args: Object, callback: Function) {
       TIMETOKEN = 0;
       SUB_RESTORE = 1;   // REVISIT !!!!
 
-      if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
-      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
+      pubsubEndpoints.performUnsubscribe(args, callback);
 
-      if (channelArg) {
-        var channels = utils.isArray(channelArg) ? channelArg : ('' + channelArg).split(',');
-        var existingChannels = [];
-        var presenceChannels = [];
-
-        utils.each(channels, function (channel) {
-          if (stateStorage.getChannel(channel)) existingChannels.push(channel);
-        });
-
-        // if we do not have any channels to unsubscribe from, trigger a callback.
-        if (existingChannels.length == 0) {
-          callback({ action: 'leave' });
-          return;
-        }
-
-        // Prepare presence channels
-        utils.each(existingChannels, function (channel) {
-          presenceChannels.push(channel + PRESENCE_SUFFIX);
-        });
-
-        utils.each(existingChannels.concat(presenceChannels), function (channel) {
-          if (stateStorage.containsChannel(channel)) stateStorage.addChannel(channel, 0);
-          if (stateStorage.isInPresenceState(channel)) stateStorage.removeFromPresenceState(channel);
-        });
-
-        var CB_CALLED = true;
-        if (READY) {
-          CB_CALLED = SELF['LEAVE'](existingChannels.join(','), 0, auth_key, callback, err);
-        }
-        if (!CB_CALLED) callback({ action: 'leave' });
-      }
-
-      if (channelGroupArg) {
-        var channelGroups = utils.isArray(channelGroupArg) ? channelGroupArg : ('' + channelGroupArg).split(',');
-        var existingChannelGroups = [];
-        var presenceChannelGroups = [];
-
-        utils.each(channelGroups, function (channelGroup) {
-          if (stateStorage.getChannelGroup(channelGroup)) existingChannelGroups.push(channelGroup);
-        });
-
-        // if we do not have any channel groups to unsubscribe from, trigger a callback.
-        if (existingChannelGroups.length == 0) {
-          callback({ action: 'leave' });
-          return;
-        }
-
-        // Prepare presence channels
-        utils.each(existingChannelGroups, function (channelGroup) {
-          presenceChannelGroups.push(channelGroup + PRESENCE_SUFFIX);
-        });
-
-        utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-          if (stateStorage.containsChannelGroup(channelGroup)) stateStorage.addChannelGroup(channelGroup, 0);
-          if (stateStorage.isInPresenceState(channelGroup)) stateStorage.removeFromPresenceState(channelGroup);
-        });
-
-        var CB_CALLED = true;
-        if (READY) {
-          CB_CALLED = SELF['LEAVE_GROUP'](existingChannelGroups.join(','), 0, auth_key, callback, err);
-        }
-        if (!CB_CALLED) callback({ action: 'leave' });
-      }
-
-      // Reset Connection if Count Less
       CONNECT();
     },
 
@@ -702,7 +457,7 @@ function PN_API(setup) {
               cipher_key: args['cipher_key'],
               connect: connect,
               disconnect: disconnect,
-              reconnect: reconnect
+              reconnect: reconnect,
             });
 
             if (state) {
@@ -718,9 +473,9 @@ function PN_API(setup) {
 
             // Subscribe Presence Channel
             SELF['subscribe']({
-              channel: channel + PRESENCE_SUFFIX,
+              channel: channel + defaultConfiguration.PRESENCE_SUFFIX,
               callback: presence,
-              restore: restore
+              restore: restore,
             });
 
             // Presence Subscribed?
@@ -737,10 +492,10 @@ function PN_API(setup) {
                     action: 'join',
                     uuid: uid,
                     timestamp: Math.floor(utils.rnow() / 1000),
-                    occupancy: here['occupancy'] || 1
+                    occupancy: here['occupancy'] || 1,
                   }, here, channel);
                 });
-              }
+              },
             });
           });
       }
@@ -760,7 +515,7 @@ function PN_API(setup) {
               cipher_key: args['cipher_key'],
               connect: connect,
               disconnect: disconnect,
-              reconnect: reconnect
+              reconnect: reconnect,
             });
 
             // Presence Enabled?
@@ -768,10 +523,10 @@ function PN_API(setup) {
 
             // Subscribe Presence Channel
             SELF['subscribe']({
-              channel_group: channel_group + PRESENCE_SUFFIX,
+              channel_group: channel_group + defaultConfiguration.PRESENCE_SUFFIX,
               callback: presence,
               restore: restore,
-              auth_key: keychain.getAuthKey()
+              auth_key: keychain.getAuthKey(),
             });
 
             // Presence Subscribed?
@@ -788,10 +543,10 @@ function PN_API(setup) {
                     action: 'join',
                     uuid: uid,
                     timestamp: Math.floor(utils.rnow() / 1000),
-                    occupancy: here['occupancy'] || 1
+                    occupancy: here['occupancy'] || 1,
                   }, here, channel_group);
                 });
-              }
+              },
             });
           });
       }
@@ -995,9 +750,9 @@ function PN_API(setup) {
                 var r = [
                   chobj
                     .callback || SUB_CALLBACK,
-                  channel.split(PRESENCE_SUFFIX)[0]
+                  channel.split(defaultConfiguration.PRESENCE_SUFFIX)[0],
                 ];
-                channel2 && r.push(channel2.split(PRESENCE_SUFFIX)[0]);
+                channel2 && r.push(channel2.split(defaultConfiguration.PRESENCE_SUFFIX)[0]);
                 return r;
               };
             })();
@@ -1011,7 +766,7 @@ function PN_API(setup) {
             });
 
             utils.timeout(_connect, windowing);
-          }
+          },
         });
       }
 
@@ -1157,5 +912,5 @@ module.exports = {
   supplant: utils.supplant,
   now: utils.rnow,
   updater: utils.updater,
-  map: utils.map
+  map: utils.map,
 };

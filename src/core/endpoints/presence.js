@@ -7,6 +7,7 @@ import State from '../components/state';
 import Responders from '../presenters/responders';
 
 import utils from '../utils';
+import constants from '../../../defaults.json';
 
 type presenceConstruct = {
   networking: Networking,
@@ -34,12 +35,15 @@ export default class {
   hereNow(args: Object, argumentCallback: Function) {
     let callback = args.callback || argumentCallback;
     let err = args.error || function () {};
-    let auth_key = args.auth_key || this._keychain.getAuthKey();
+    let authkey = args.auth_key || this._keychain.getAuthKey();
     let channel = args.channel;
-    let channel_group = args.channel_group;
+    let channelGroup = args.channel_group;
     let uuids = ('uuids' in args) ? args.uuids : true;
     let state = args.state;
-    let data: Object = { uuid: this._keychain.getUUID(), auth: auth_key };
+    let data = {
+      uuid: this._keychain.getUUID(),
+      auth: authkey,
+    };
 
     if (!uuids) data.disable_uuids = 1;
     if (state) data.state = 1;
@@ -48,20 +52,20 @@ export default class {
     if (!callback) return this._error('Missing Callback');
     if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
 
-    if (channel_group) {
-      data['channel-group'] = channel_group;
+    if (channelGroup) {
+      data['channel-group'] = channelGroup;
     }
 
     if (this._config.isInstanceIdEnabled()) {
       data.instanceid = this._keychain.getInstanceId();
     }
 
-    this._networking.fetchHereNow(channel, channel_group, {
+    this._networking.fetchHereNow(channel, channelGroup, {
       data: this._networking.prepareParams(data),
-      success: function (response) {
+      success(response) {
         Responders.callback(response, callback, err);
       },
-      fail: function (response) {
+      fail(response) {
         Responders.error(response, err);
       },
     });
@@ -70,9 +74,11 @@ export default class {
   whereNow(args: Object, argumentCallback: Function) {
     let callback = args.callback || argumentCallback;
     let err = args.error || function () {};
-    let auth_key = args.auth_key || this._keychain.getAuthKey();
+    let authKey = args.auth_key || this._keychain.getAuthKey();
     let uuid = args.uuid || this._keychain.getUUID();
-    let data: Object = { auth: auth_key };
+    let data = {
+      auth: authKey,
+    };
 
     // Make sure we have a Channel
     if (!callback) return this._error('Missing Callback');
@@ -84,10 +90,10 @@ export default class {
 
     this._networking.fetchWhereNow(uuid, {
       data: this._networking.prepareParams(data),
-      success: function (response) {
+      success(response) {
         Responders.callback(response, callback, err);
       },
-      fail: function (response) {
+      fail(response) {
         Responders.error(response, err);
       },
     });
@@ -111,10 +117,10 @@ export default class {
     }
 
     let channels = utils.encode(this._state.generate_channel_list(true).join(','));
-    let channel_groups = this._state.generate_channel_group_list(true).join(',');
+    let channelGroups = this._state.generate_channel_group_list(true).join(',');
 
     if (!channels) channels = ',';
-    if (channel_groups) data['channel-group'] = channel_groups;
+    if (channelGroups) data['channel-group'] = channelGroups;
 
     if (this._config.isInstanceIdEnabled()) {
       data.instanceid = this._keychain.getInstanceId();
@@ -126,10 +132,10 @@ export default class {
 
     this._networking.performHeartbeat(channels, {
       data: this._networking.prepareParams(data),
-      success: function (response) {
+      success(response) {
         Responders.callback(response, callback, err);
       },
-      fail: function (response) {
+      fail(response) {
         Responders.error(response, err);
       },
     });
@@ -138,17 +144,17 @@ export default class {
   performState(args: Object, argumentCallback: Function) {
     let callback = args.callback || argumentCallback || function () {};
     let err = args.error || function () {};
-    let auth_key = args.auth_key || this._keychain.getAuthKey();
+    let authKey = args.auth_key || this._keychain.getAuthKey();
     let state = args.state;
     let uuid = args.uuid || this._keychain.getUUID();
     let channel = args.channel;
-    let channel_group = args.channel_group;
-    let data = this._networking.prepareParams({ auth: auth_key });
+    let channelGroup = args.channel_group;
+    let data = this._networking.prepareParams({ auth: authKey });
 
     // Make sure we have a Channel
     if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
     if (!uuid) return this._error('Missing UUID');
-    if (!channel && !channel_group) return this._error('Missing Channel');
+    if (!channel && !channelGroup) return this._error('Missing Channel');
 
     if (typeof channel !== 'undefined'
       && this._state.getChannel(channel)
@@ -158,14 +164,14 @@ export default class {
       }
     }
 
-    if (typeof channel_group !== 'undefined'
-      && this._state.getChannelGroup(channel_group)
-      && this._state.getChannelGroup(channel_group).subscribed
+    if (typeof channelGroup !== 'undefined'
+      && this._state.getChannelGroup(channelGroup)
+      && this._state.getChannelGroup(channelGroup).subscribed
     ) {
       if (state) {
-        this._state.addToPresenceState(channel_group, state);
+        this._state.addToPresenceState(channelGroup, state);
       }
-      data['channel-group'] = channel_group;
+      data['channel-group'] = channelGroup;
 
       if (!channel) {
         channel = ',';
@@ -180,10 +186,84 @@ export default class {
 
     this._networking.performState(state, channel, uuid, {
       data: this._networking.prepareParams(data),
-      success: function (response) {
+      success(response) {
         Responders.callback(response, callback, err);
       },
-      fail: function (response) {
+      fail(response) {
+        Responders.error(response, err);
+      },
+    });
+  }
+
+  announceChannelLeave(channel: string, authKey: string, argCallback: Function, error: Function) {
+    let data = {
+      uuid: this._keychain.getUUID(),
+      auth: authKey || this._keychain.getAuthKey(),
+    };
+
+    let callback = argCallback || function () {};
+    let err = error || function () {};
+
+    // Prevent Leaving a Presence Channel
+    if (channel.indexOf(constants.PRESENCE_SUFFIX) > 0) {
+      return true;
+    }
+
+    /* TODO move me to unsubscribe */
+    if (this._config.isSuppressingLeaveEvents()) {
+      return false;
+    }
+
+    if (this._config.isInstanceIdEnabled()) {
+      data.instanceid = this._keychain.getInstanceId();
+    }
+    /* TODO: move me to unsubscribe */
+
+    this._networking.performChannelLeave(channel, {
+      data: this._networking.prepareParams(data),
+      success(response) {
+        Responders.callback(response, callback, err);
+      },
+      fail(response) {
+        Responders.error(response, err);
+      },
+    });
+  }
+
+  announceChannelGroupLeave(channelGroup: string, authKey: string, argCallback: Function, error: Function) {
+    let data = {
+      uuid: this._keychain.getUUID(),
+      auth: authKey || this._keychain.getAuthKey(),
+    };
+
+    let callback = argCallback || function () {};
+    let err = error || function () {};
+
+    // Prevent Leaving a Presence Channel Group
+    if (channelGroup.indexOf(constants.PRESENCE_SUFFIX) > 0) {
+      return true;
+    }
+
+    if (this._config.isSuppressingLeaveEvents()) {
+      return false;
+    }
+
+    /* TODO move me to unsubscribe */
+    if (channelGroup && channelGroup.length > 0) {
+      data['channel-group'] = channelGroup;
+    }
+
+    if (this._config.isInstanceIdEnabled()) {
+      data.instanceid = this._keychain.getInstanceId();
+    }
+    /* TODO move me to unsubscribe */
+
+    this._networking.performChannelGroupLeave({
+      data: this._networking.prepareParams(data),
+      success: (response) => {
+        Responders.callback(response, callback, err);
+      },
+      fail: (response) => {
         Responders.error(response, err);
       },
     });

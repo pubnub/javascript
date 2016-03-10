@@ -26,6 +26,12 @@ export default class {
   */
   _heartbeatInterval: number;
 
+  /*
+    configuration to supress leave events; when a presence leave is performed
+    this configuration will disallow the leave event from happening
+  */
+  _suppressLeaveEvents: boolean;
+
   constructor() {
     this._instanceId = false;
     this._requestId = false;
@@ -51,12 +57,21 @@ export default class {
     return this;
   }
 
+  setSupressLeaveEvents(configValue: boolean): this {
+    this._suppressLeaveEvents = configValue;
+    return this;
+  }
+
   isInstanceIdEnabled(): boolean {
     return this._instanceId;
   }
 
   isRequestIdEnabled(): boolean {
     return this._requestId;
+  }
+
+  isSuppressingLeaveEvents(): boolean {
+    return this._suppressLeaveEvents;
   }
 
   getHeartbeatInterval(): number {

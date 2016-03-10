@@ -19,3 +19,7 @@ rules:
 
   object-shorthand: 0
   camelcase: 0
+  dot-notation: 0
+  no-var: 0
+  guard-for-in: 0
+  block-scoped-var: 0

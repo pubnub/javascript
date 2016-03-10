@@ -9,6 +9,11 @@ export default class {
 
   _presenceState: Object;
 
+  /*
+    a relic mutex to keep track if the client is ready
+  */
+  _ready: boolean;
+
   constructor() {
     this._channelStorage = {};
     this._channelGroupStorage = {};
@@ -53,6 +58,14 @@ export default class {
 
   getPresenceState(): Object {
     return this._presenceState;
+  }
+
+  setIsReady(readyValue: boolean) {
+    this._ready = readyValue;
+  }
+
+  getIsReady(): boolean {
+    return this._ready;
   }
 
   /**

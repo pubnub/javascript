@@ -4,12 +4,13 @@ import Keychain from './keychain.js';
 const utils = require('../utils');
 
 
-type commonXDRObject = { data: Object, success: Function, fail: Function };
-
+type commonXDR = { data: Object, success: Function, fail: Function };
+type typedXDR = { data: Object, success: Function, fail: Function, method: string };
 
 export default class {
 
   _xdr: Function;
+  _sendBeacon: Function;
   _keychain: Keychain;
 
   _maxSubDomain: number;
@@ -44,6 +45,11 @@ export default class {
 
   addCoreParam(key: string, value: any) {
     this._coreParams[key] = value;
+  }
+
+  addBeaconDispatcher(sendBeacon: Function): this {
+    this._sendBeacon = sendBeacon;
+    return this;
   }
 
   /*
@@ -92,7 +98,7 @@ export default class {
   }
 
   // method based URL's
-  fetchHistory(channel: string, { data, success, fail }: commonXDRObject) {
+  fetchHistory(channel: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v2', 'history', 'sub-key',
       this._keychain.getSubscribeKey(), 'channel', utils.encode(channel),
@@ -101,7 +107,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performChannelGroupOperation(channelGroup: string, mode: string, { data, success, fail }: commonXDRObject) {
+  performChannelGroupOperation(channelGroup: string, mode: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v1', 'channel-registration',
       'sub-key', this._keychain.getSubscribeKey(), 'channel-group',
@@ -118,7 +124,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  provisionDeviceForPush(deviceId: string, { data, success, fail }: commonXDRObject) {
+  provisionDeviceForPush(deviceId: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v1', 'push', 'sub-key',
       this._keychain.getSubscribeKey(), 'devices', deviceId,
@@ -127,7 +133,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performGrant({ data, success, fail }: commonXDRObject) {
+  performGrant({ data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'grant',
       'sub-key', this._keychain.getSubscribeKey(),
@@ -136,7 +142,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performHeartbeat(channels: string, { data, success, fail }: commonXDRObject) {
+  performHeartbeat(channels: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub-key', this._keychain.getSubscribeKey(),
@@ -147,7 +153,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performState(state: string, channel: string, uuid: string, { data, success, fail }: commonXDRObject) {
+  performState(state: string, channel: string, uuid: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub-key', this._keychain.getSubscribeKey(),
@@ -163,7 +169,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performAudit({ data, success, fail }: commonXDRObject) {
+  performAudit({ data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'audit',
       'sub-key', this._keychain.getSubscribeKey(),
@@ -172,7 +178,39 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  fetchReplay(source: string, destination: string, { data, success, fail }: commonXDRObject) {
+  performChannelLeave(channel: string, { data, success, fail }: commonXDR) {
+    let origin = this.nextOrigin(false);
+    let url = [
+      origin, 'v2', 'presence', 'sub_key',
+      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave',
+    ];
+
+    if (this._sendBeacon) {
+      if (this._sendBeacon(utils.buildURL(url, data))) {
+        success({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
+      }
+    } else {
+      this._xdr({ data, success, fail, url });
+    }
+  }
+
+  performChannelGroupLeave({ data, success, fail }: commonXDR) {
+    let origin = this.nextOrigin(false);
+    let url = [
+      origin, 'v2', 'presence', 'sub_key',
+      this._keychain.getSubscribeKey(), 'channel', utils.encode(','), 'leave',
+    ];
+
+    if (typeof(this._sendBeacon) !== 'undefined') {
+      if (this._sendBeacon(utils.buildURL(url, data))) {
+        success({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
+      }
+    } else {
+      this._xdr({ data, success, fail, url });
+    }
+  }
+
+  fetchReplay(source: string, destination: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v1', 'replay',
       this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination,
@@ -181,7 +219,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  fetchTime({ data, success, fail }: commonXDRObject) {
+  fetchTime({ data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'time', 0,
     ];
@@ -189,7 +227,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  fetchWhereNow(uuid: string, { data, success, fail }: commonXDRObject) {
+  fetchWhereNow(uuid: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub_key', this._keychain.getSubscribeKey(),
@@ -199,7 +237,7 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  fetchHereNow(channel: string, channel_group: string, { data, success, fail }: commonXDRObject) {
+  fetchHereNow(channel: string, channelGroup: string, { data, success, fail }: commonXDR) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub_key', this._keychain.getSubscribeKey(),
@@ -210,12 +248,23 @@ export default class {
       url.push(utils.encode(channel));
     }
 
-    if (channel_group && !channel) {
+    if (channelGroup && !channel) {
       url.push('channel');
       url.push(',');
     }
 
     this._xdr({ data, success, fail, url });
+  }
+
+  performPublish(channel: string, msg: string, { data, callback, success, fail, mode }: typedXDR) {
+    let url = [
+      this.getStandardOrigin(), 'publish',
+      this._keychain.getPublishKey(), this._keychain.getSubscribeKey(),
+      0, utils.encode(channel),
+      0, utils.encode(msg),
+    ];
+
+    this._xdr({ data, callback, success, fail, url, mode });
   }
 
   getOrigin(): string {

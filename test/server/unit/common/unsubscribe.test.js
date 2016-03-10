@@ -22,12 +22,12 @@ describe('#unsubscribe', function () {
       error: fixture.errorStub
     });
 
-    fixture.stubbedLeave = sinon.stub(fixture.pubnubInstance.__PN, 'LEAVE', function (channel, int, authKey, callback) {
+    fixture.stubbedLeave = sinon.stub(fixture.pubnubInstance.__PN, 'LEAVE', function (channel, authKey, callback) {
       callback();
       return true;
     });
 
-    fixture.stubbedLeaveGroup = sinon.stub(fixture.pubnubInstance.__PN, 'LEAVE_GROUP', function (channel, int, authKey, callback) {
+    fixture.stubbedLeaveGroup = sinon.stub(fixture.pubnubInstance.__PN, 'LEAVE_GROUP', function (channel, authKey, callback) {
       callback();
       return true;
     });
