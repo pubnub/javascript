@@ -44,7 +44,19 @@ describe('core initalization', () => {
           return this;
         }
 
+        setPresenceTimeout(config) {
+          assert.equal(config, 0);
+          return this;
+        }
+
+        setHeartbeatInterval(config) {
+          assert.equal(config, -1);
+          return this;
+        }
+
         isInstanceIdEnabled() { return false; }
+        getPresenceTimeout() { return 0; }
+        getHeartbeatInterval() { return -1; }
 
       }
     });
