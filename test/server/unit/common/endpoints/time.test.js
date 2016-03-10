@@ -13,7 +13,6 @@ describe('time endpoints', () => {
   let networking;
   let config;
   let keychain;
-  let jsonp_cb = () => 'im-jsonp';
   let get_url_params = function (data) {
     return data;
   };
@@ -30,11 +29,10 @@ describe('time endpoints', () => {
   it('calls networking #fetchTime', () => {
     let fetchTimeStub = sinon.stub(networking, 'fetchTime');
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, jsonp_cb, get_url_params });
+    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
     timeEndpoint.fetchTime();
     assert.equal(fetchTimeStub.called, 1);
-    assert.equal(fetchTimeStub.args[0][0], 'im-jsonp');
-    assert.deepEqual(fetchTimeStub.args[0][1].data, { uuid: 'uuidKey', auth: 'authKey' });
+    assert.deepEqual(fetchTimeStub.args[0][0].data, { uuid: 'uuidKey', auth: 'authKey' });
   });
 
   it('calls networking #fetchTime with instanceId', () => {
@@ -42,25 +40,24 @@ describe('time endpoints', () => {
     let fetchTimeStub = sinon.stub(networking, 'fetchTime');
     let prepareParams = sinon.stub(networking, 'prepareParams').returns({ prepared: 'params' });
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, jsonp_cb, get_url_params });
+    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
     timeEndpoint.fetchTime();
     assert.equal(fetchTimeStub.called, 1);
-    assert.equal(fetchTimeStub.args[0][0], 'im-jsonp');
-    assert.deepEqual(fetchTimeStub.args[0][1].data, { prepared: 'params' });
+    assert.deepEqual(fetchTimeStub.args[0][0].data, { prepared: 'params' });
     assert.equal(prepareParams.called, 1);
     assert.deepEqual(prepareParams.args[0][0], {
       uuid: 'uuidKey',
       auth: 'authKey',
-      instanceid: 'instanceId'
+      instanceid: 'instanceId',
     });
   });
 
   it('calls the callback function when time is fetched', (done) => {
-    sinon.stub(networking, 'fetchTime', (jsonp, { success }) => {
+    sinon.stub(networking, 'fetchTime', ({ success }) => {
       success([14570763868573725]);
     });
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, jsonp_cb, get_url_params });
+    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
     timeEndpoint.fetchTime((response) => {
       assert.equal(response, 14570763868573725);
       done();
@@ -68,11 +65,11 @@ describe('time endpoints', () => {
   });
 
   it('calls the callback function when fetch failed', (done) => {
-    sinon.stub(networking, 'fetchTime', (jsonp, { fail }) => {
+    sinon.stub(networking, 'fetchTime', ({ fail }) => {
       fail();
     });
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, jsonp_cb, get_url_params });
+    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
     timeEndpoint.fetchTime((response) => {
       assert.equal(response, 0);
       done();

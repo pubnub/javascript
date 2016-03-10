@@ -24,14 +24,12 @@ describe('channel groups endpoints', () => {
 
   let successMock;
   let failMock;
-  let jsonp_cb = () => 'im-jsonp';
   let xdrMock;
 
   beforeEach(() => {
     networking = new Networking();
     config = new Config();
     error = sinon.stub();
-    jsonp_cb = () => 'im-jsonp';
     successMock = sinon.stub();
     failMock = sinon.stub();
 
@@ -49,136 +47,14 @@ describe('channel groups endpoints', () => {
     respondersClass.error = failMock;
 
     proxiedInstance = proxyquire('../../../../../core/src/endpoints/channel_groups', {
-      '../presenters/responders': respondersClass
+      '../presenters/responders': respondersClass,
     }).default;
   });
 
   describe('#channelGroup', () => {
     it('uses the default auth key from keychain', () => {
       let args = {};
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the custom auth key from params', () => {
-      let args = { auth_key: 'customAuth' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'customAuth', callback: 'im-jsonp' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the mode from args variable', () => {
-      let args = { mode: 'remove' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'remove');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channel group param', () => {
-      let args = { channel_group: 'cg1' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp' };
-      assert.deepEqual(xdrMock.args[0][0], 'cg1');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channel group param when namespaced', () => {
-      let args = { channel_group: 'cg1:abcd' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp' };
-      assert.deepEqual(xdrMock.args[0][0], 'abcd');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channel param', () => {
-      let args = { channel: 'ch1,ch2' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp', add: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channels param', () => {
-      let args = { channels: 'ch1,ch2' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp', add: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channel param w/ array', () => {
-      let args = { channel: ['ch1', 'ch2'] };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp', add: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channels param', () => {
-      let args = { channels: ['ch1', 'ch2'] };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp', add: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channel param w/ array when removing', () => {
-      let args = { channel: ['ch1', 'ch2'], mode: 'remove' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp', remove: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'remove');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('uses the channels param when removing', () => {
-      let args = { channels: ['ch1', 'ch2'], mode: 'remove' };
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
-      endpointInstance.channelGroup(args, null);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { auth: 'authKey', callback: 'im-jsonp', remove: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'remove');
-      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
-    });
-
-    it('skips jsonp if it is disabled', () => {
-      jsonp_cb = function () { return 0; };
-      let args = {};
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup(args, null);
       assert.equal(xdrMock.called, 1);
       let expectedResponse = { auth: 'authKey' };
@@ -187,11 +63,120 @@ describe('channel groups endpoints', () => {
       assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
     });
 
+    it('uses the custom auth key from params', () => {
+      let args = { auth_key: 'customAuth' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'customAuth' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the mode from args variable', () => {
+      let args = { mode: 'remove' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'remove');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channel group param', () => {
+      let args = { channel_group: 'cg1' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey' };
+      assert.deepEqual(xdrMock.args[0][0], 'cg1');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channel group param when namespaced', () => {
+      let args = { channel_group: 'cg1:abcd' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey' };
+      assert.deepEqual(xdrMock.args[0][0], 'abcd');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channel param', () => {
+      let args = { channel: 'ch1,ch2' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey', add: 'ch1,ch2' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channels param', () => {
+      let args = { channels: 'ch1,ch2' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey', add: 'ch1,ch2' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channel param w/ array', () => {
+      let args = { channel: ['ch1', 'ch2'] };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey', add: 'ch1,ch2' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channels param', () => {
+      let args = { channels: ['ch1', 'ch2'] };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey', add: 'ch1,ch2' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'add');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channel param w/ array when removing', () => {
+      let args = { channel: ['ch1', 'ch2'], mode: 'remove' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey', remove: 'ch1,ch2' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'remove');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
+    it('uses the channels param when removing', () => {
+      let args = { channels: ['ch1', 'ch2'], mode: 'remove' };
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
+      endpointInstance.channelGroup(args, null);
+      assert.equal(xdrMock.called, 1);
+      let expectedResponse = { auth: 'authKey', remove: 'ch1,ch2' };
+      assert.deepEqual(xdrMock.args[0][0], '');
+      assert.deepEqual(xdrMock.args[0][1], 'remove');
+      assert.deepEqual(xdrMock.args[0][2].data, expectedResponse);
+    });
+
     it('massages params with the prepareParams function', () => {
-      jsonp_cb = () => 0;
       let prepareParams = sinon.stub(networking, 'prepareParams').returns({ prepared: 'params' });
       let args = {};
-      let cgEndpoint = new proxiedInstance({ networking, config, keychain, jsonp_cb, error });
+      let cgEndpoint = new proxiedInstance({ networking, config, keychain, error });
       cgEndpoint.channelGroup(args, () => {});
       assert.equal(xdrMock.called, 1);
       assert.equal(xdrMock.args[0][0], '');
@@ -203,7 +188,7 @@ describe('channel groups endpoints', () => {
     describe('on success', () => {
       it('calls the Responders.callback back on success with argument callback', () => {
         let args = { uuid: 'passed-uuid', auth_key: 'custom-auth-key' };
-        let cgEndpoint = new proxiedInstance({ networking, config, keychain, jsonp_cb, error });
+        let cgEndpoint = new proxiedInstance({ networking, config, keychain, error });
         let callbackStub = sinon.stub();
         cgEndpoint.channelGroup(args, callbackStub);
 
@@ -215,7 +200,7 @@ describe('channel groups endpoints', () => {
 
       it('calls the Responders.callback back on success with args callback', () => {
         let args = { uuid: 'passed-uuid', auth_key: 'custom-auth-key' };
-        let cgEndpoint = new proxiedInstance({ networking, config, keychain, jsonp_cb, error });
+        let cgEndpoint = new proxiedInstance({ networking, config, keychain, error });
         let callbackStub = sinon.stub();
         args.callback = callbackStub;
         cgEndpoint.channelGroup(args);
@@ -229,7 +214,7 @@ describe('channel groups endpoints', () => {
       it('uses the error function provided in args', () => {
         let errorStub = sinon.stub();
         let args = { uuid: 'passed-uuid', auth_key: 'custom-auth-key', error: errorStub };
-        let cgEndpoint = new proxiedInstance({ networking, config, keychain, jsonp_cb, error });
+        let cgEndpoint = new proxiedInstance({ networking, config, keychain, error });
         cgEndpoint.channelGroup(args, () => {});
 
         xdrMock.args[0][2].success('success-response');
@@ -243,7 +228,7 @@ describe('channel groups endpoints', () => {
       it('uses the error function provided in args', () => {
         let errorStub = sinon.stub();
         let args = { uuid: 'passed-uuid', auth_key: 'custom-auth-key', error: errorStub };
-        let cgEndpoint = new proxiedInstance({ networking, config, keychain, jsonp_cb, error });
+        let cgEndpoint = new proxiedInstance({ networking, config, keychain, error });
         cgEndpoint.channelGroup(args, () => {});
 
         xdrMock.args[0][2].fail('fail-response');
@@ -254,7 +239,7 @@ describe('channel groups endpoints', () => {
 
       it('swallows the error if error is not provided', () => {
         let args = { uuid: 'passed-uuid', auth_key: 'custom-auth-key' };
-        let cgEndpoint = new proxiedInstance({ networking, config, keychain, jsonp_cb, error });
+        let cgEndpoint = new proxiedInstance({ networking, config, keychain, error });
         cgEndpoint.channelGroup(args, () => {});
 
         xdrMock.args[0][2].fail('fail-response');
@@ -269,7 +254,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.listGroups(args, callback);
       assert.equal(channelGroupStub.called, 1);
@@ -282,7 +267,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.listChannels(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -294,7 +279,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { channel_group: 'ma-channel-group', a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.listChannels(args, callback);
       assert.equal(channelGroupStub.called, 1);
@@ -307,7 +292,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeGroup(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -319,7 +304,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { channel_group: 'my-cg', channel: 'ma-channel', a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeGroup(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -332,7 +317,7 @@ describe('channel groups endpoints', () => {
       const args = { channel_group: 'ma-channel-group', a: 10, b: 15 };
       const expectedArgs = { channel_group: 'ma-channel-group', a: 10, b: 15, mode: 'remove' };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeGroup(args, callback);
       assert.equal(channelGroupStub.called, 1);
@@ -347,7 +332,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.addChannel(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -359,7 +344,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { channel_group: 'my-cg', a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.addChannel(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -371,7 +356,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { channel_group: 'ma-channel-group', channel: 'channel1', a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.addChannel(args, callback);
       assert.equal(channelGroupStub.called, 1);
@@ -384,7 +369,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { channel_group: 'ma-channel-group', channels: 'channel1', a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.addChannel(args, callback);
       assert.equal(channelGroupStub.called, 1);
@@ -399,7 +384,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeChannel(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -411,7 +396,7 @@ describe('channel groups endpoints', () => {
       let channelGroupStub = sinon.stub();
       const args = { channel_group: 'my-cg', a: 10, b: 15 };
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeChannel(args, callback);
       assert.equal(channelGroupStub.called, false);
@@ -424,7 +409,7 @@ describe('channel groups endpoints', () => {
       const args = { channel_group: 'ma-channel-group', channel: 'channel1', a: 10, b: 15 };
       const outputArgs = _.extend(args, { remove: 'true' });
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeChannel(outputArgs, callback);
       assert.equal(channelGroupStub.called, 1);
@@ -438,7 +423,7 @@ describe('channel groups endpoints', () => {
       const args = { channel_group: 'ma-channel-group', channels: 'channel1', a: 10, b: 15 };
       const outputArgs = _.extend(args, { remove: 'true' });
       const callback = sinon.stub();
-      let endpointInstance = new proxiedInstance({ networking, keychain, config, error, jsonp_cb });
+      let endpointInstance = new proxiedInstance({ networking, keychain, config, error });
       endpointInstance.channelGroup = channelGroupStub;
       endpointInstance.removeChannel(args, callback);
       assert.equal(channelGroupStub.called, 1);

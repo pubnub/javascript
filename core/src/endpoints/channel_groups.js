@@ -11,7 +11,6 @@ type channelGroupConstruct = {
   networking: Networking,
   config: Config,
   keychain: Keychain,
-  jsonp_cb: Function,
   error: Function,
 };
 
@@ -19,14 +18,12 @@ export default class {
   _networking: Networking;
   _keychain: Keychain;
   _config: Config;
-  _jsonp_cb: Function;
   _error: Function;
 
-  constructor({ networking, keychain, config, jsonp_cb, error}: channelGroupConstruct) {
+  constructor({ networking, keychain, config, error}: channelGroupConstruct) {
     this._networking = networking;
     this._keychain = keychain;
     this._config = config;
-    this._jsonp_cb = jsonp_cb;
     this._error = error;
   }
 
@@ -40,7 +37,6 @@ export default class {
     let data = {};
     let mode = args.mode || 'add';
     let err = args.error || this._error;
-    let jsonp = this._jsonp_cb();
 
     if (ns_ch) {
       let ns_ch_a = ns_ch.split(':');
@@ -63,10 +59,7 @@ export default class {
       data.auth = args.auth_key || this._keychain.getAuthKey();
     }
 
-    if (jsonp) data.callback = jsonp;
-
     this._networking.performChannelGroupOperation(channel_group, mode, {
-      callback: jsonp,
       data: this._networking.prepareParams(data),
       success: function (response) {
         Responders.callback(response, callback, err);

@@ -9,7 +9,6 @@ type pushConstruct = {
   networking: Networking,
   config: Config,
   keychain: Keychain,
-  jsonp_cb: Function,
   error: Function
 };
 
@@ -17,13 +16,11 @@ export default class {
   _networking: Networking;
   _keychain: Keychain;
   _config: Config;
-  _jsonp_cb: Function;
   _error: Function;
 
-  constructor({ networking, keychain, jsonp_cb, error, config }: pushConstruct) {
+  constructor({ networking, keychain, error, config }: pushConstruct) {
     this._networking = networking;
     this._keychain = keychain;
-    this._jsonp_cb = jsonp_cb;
     this._error = error;
     this._config = config;
   }
@@ -34,7 +31,6 @@ export default class {
     let callback = args.callback || function () {};
     let auth_key = args.auth_key || this._keychain.getAuthKey();
     let err = args.error || function () {};
-    let jsonp = this._jsonp_cb();
 
     if (!device_id) return this._error('Missing Device ID (device_id)');
     if (!gw_type) return this._error('Missing GW Type (gw_type: gcm or apns)');
@@ -56,14 +52,13 @@ export default class {
     }
 
     this._networking.provisionDeviceForPush(device_id, {
-      callback: jsonp,
       data: params,
       success: function (response) {
         Responders.callback(response, callback, err);
       },
       fail: function (response) {
         Responders.error(response, err);
-      }
+      },
     });
   }
 }

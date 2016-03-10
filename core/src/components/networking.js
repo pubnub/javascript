@@ -4,7 +4,7 @@ import Keychain from './keychain.js';
 const utils = require('../utils');
 
 
-type commonXDRObject = { data: Object, callback: Function, success: Function, fail: Function };
+type commonXDRObject = { data: Object, success: Function, fail: Function };
 
 
 export default class {
@@ -92,19 +92,19 @@ export default class {
   }
 
   // method based URL's
-  fetchHistory(channel: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchHistory(channel: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v2', 'history', 'sub-key',
-      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)
+      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel),
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  performChannelGroupOperation(channelGroup: string, mode: string, { data, callback, success, fail }: commonXDRObject) {
+  performChannelGroupOperation(channelGroup: string, mode: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'channel-registration',
-      'sub-key', this._keychain.getSubscribeKey(), 'channel-group'
+      'sub-key', this._keychain.getSubscribeKey(), 'channel-group',
     ];
 
     if (channelGroup && channelGroup !== '*') {
@@ -115,43 +115,43 @@ export default class {
       url.push('remove');
     }
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  provisionDeviceForPush(deviceId: string, { data, callback, success, fail }: commonXDRObject) {
+  provisionDeviceForPush(deviceId: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'push', 'sub-key',
-      this._keychain.getSubscribeKey(), 'devices', deviceId
+      this._keychain.getSubscribeKey(), 'devices', deviceId,
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  performGrant({ data, callback, success, fail }: commonXDRObject) {
+  performGrant({ data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'grant',
-      'sub-key', this._keychain.getSubscribeKey()
+      'sub-key', this._keychain.getSubscribeKey(),
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  performHeartbeat(channels: string, { data, callback, success, fail }: commonXDRObject) {
+  performHeartbeat(channels: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub-key', this._keychain.getSubscribeKey(),
       'channel', channels,
-      'heartbeat'
+      'heartbeat',
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  performState(state: string, channel: string, uuid: string, { data, callback, success, fail }: commonXDRObject) {
+  performState(state: string, channel: string, uuid: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub-key', this._keychain.getSubscribeKey(),
-      'channel', channel
+      'channel', channel,
     ];
 
     if (state) {
@@ -160,49 +160,49 @@ export default class {
       url.push('uuid', utils.encode(uuid));
     }
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  performAudit({ data, callback, success, fail }: commonXDRObject) {
+  performAudit({ data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'audit',
-      'sub-key', this._keychain.getSubscribeKey()
+      'sub-key', this._keychain.getSubscribeKey(),
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  fetchReplay(source: string, destination: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchReplay(source: string, destination: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v1', 'replay',
-      this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination
+      this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination,
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  fetchTime(jsonp: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchTime({ data, success, fail }: commonXDRObject) {
     let url = [
-      this.getStandardOrigin(), 'time', jsonp
+      this.getStandardOrigin(), 'time', 0,
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  fetchWhereNow(uuid: string, { data, callback, success, fail }: commonXDRObject) {
+  fetchWhereNow(uuid: string, { data, success, fail }: commonXDRObject) {
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub_key', this._keychain.getSubscribeKey(),
-      'uuid', utils.encode(uuid)
+      'uuid', utils.encode(uuid),
     ];
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
-  fetchHereNow(channel: string, channel_group: string, { data, callback, success, fail }: commonXDRObject) {
-    var url = [
+  fetchHereNow(channel: string, channel_group: string, { data, success, fail }: commonXDRObject) {
+    let url = [
       this.getStandardOrigin(), 'v2', 'presence',
-      'sub_key', this._keychain.getSubscribeKey()
+      'sub_key', this._keychain.getSubscribeKey(),
     ];
 
     if (channel) {
@@ -215,7 +215,7 @@ export default class {
       url.push(',');
     }
 
-    this._xdr({ data, callback, success, fail, url });
+    this._xdr({ data, success, fail, url });
   }
 
   getOrigin(): string {

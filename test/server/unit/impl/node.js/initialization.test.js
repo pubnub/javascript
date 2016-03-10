@@ -1,8 +1,8 @@
 /* global describe, beforeEach, it */
 /* eslint no-console: 0 */
 
-var pubnub = require('../../../../../node.js/pubnub.js');
-var assert = require('assert');
+let pubnub = require('../../../../../node.js/pubnub.js');
+let assert = require('assert');
 
 
 describe('PubNub Initalization', function () {
@@ -17,7 +17,7 @@ describe('PubNub Initalization', function () {
   });
 
   it('should contain the cryptography functions inside the instance', function () {
-    var pubnubInstance = pubnub.init({
+    let pubnubInstance = pubnub.init({
       publish_key: 'abc',
       subscribe_key: 'abc',
       ssl: true,
@@ -30,7 +30,7 @@ describe('PubNub Initalization', function () {
   });
 
   it('should return the version from the package.json', function () {
-    var pubnubInstance = pubnub.init({
+    let pubnubInstance = pubnub.init({
       publish_key: 'abc',
       subscribe_key: 'abc',
       ssl: true,

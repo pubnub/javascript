@@ -17,14 +17,11 @@ describe('push endpoints', () => {
   let proxiedInstance;
   let successMock;
   let failMock;
-  let jsonp_cb;
 
   beforeEach(() => {
     networking = new Networking();
     config = new Config();
     error = sinon.stub();
-    jsonp_cb = () => 'im-jsonp';
-
     successMock = sinon.stub();
     failMock = sinon.stub();
 
@@ -40,7 +37,7 @@ describe('push endpoints', () => {
     respondersClass.error = failMock;
 
     proxiedInstance = proxyquire('../../../../../core/src/endpoints/push', {
-      '../presenters/responders': respondersClass
+      '../presenters/responders': respondersClass,
     }).default;
   });
 
@@ -52,8 +49,7 @@ describe('push endpoints', () => {
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
         assert.equal(error.called, 1);
@@ -62,14 +58,13 @@ describe('push endpoints', () => {
 
       it('errors if gw_type is missing', () => {
         let args = {
-          device_id: 'device1'
+          device_id: 'device1',
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
         assert.equal(error.called, 1);
@@ -79,14 +74,13 @@ describe('push endpoints', () => {
       it('errors if op is missing', () => {
         let args = {
           device_id: 'device1',
-          gw_type: 'apn'
+          gw_type: 'apn',
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
         assert.equal(error.called, 1);
@@ -97,14 +91,13 @@ describe('push endpoints', () => {
         let args = {
           device_id: 'device1',
           gw_type: 'apn',
-          op: 'add'
+          op: 'add',
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
         assert.equal(error.called, 1);
@@ -116,15 +109,14 @@ describe('push endpoints', () => {
           device_id: 'device1',
           gw_type: 'apn',
           op: 'add',
-          channel: 'channel'
+          channel: 'channel',
         };
         keychain.setPublishKey('');
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
         assert.equal(error.called, 1);
@@ -136,15 +128,14 @@ describe('push endpoints', () => {
           device_id: 'device1',
           gw_type: 'apn',
           op: 'add',
-          channel: 'channel'
+          channel: 'channel',
         };
         keychain.setSubscribeKey('');
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
         assert.equal(error.called, 1);
@@ -153,21 +144,19 @@ describe('push endpoints', () => {
     });
 
     it('uses auth-key passed if exists', () => {
-      jsonp_cb = () => 0;
       let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
       let args = {
         device_id: 'device1',
         gw_type: 'pushType',
         op: 'add',
         channel: 'channel',
-        auth_key: 'customAuth'
+        auth_key: 'customAuth',
       };
       let pushEndpoint = new proxiedInstance({
         networking,
         config,
         keychain,
-        jsonp_cb,
-        error
+        error,
       });
       pushEndpoint.provisionDevice(args, () => {});
       assert.equal(pushStub.called, 1);
@@ -176,12 +165,11 @@ describe('push endpoints', () => {
         auth: 'customAuth',
         uuid: 'uuidKey',
         add: 'channel',
-        type: 'pushType'
+        type: 'pushType',
       });
     });
 
     it('supports remove operation', () => {
-      jsonp_cb = () => 0;
       let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
       let args = {
         device_id: 'device1',
@@ -193,8 +181,7 @@ describe('push endpoints', () => {
         networking,
         config,
         keychain,
-        jsonp_cb,
-        error
+        error,
       });
       pushEndpoint.provisionDevice(args, () => {});
       assert.equal(pushStub.called, 1);
@@ -203,32 +190,8 @@ describe('push endpoints', () => {
         auth: 'authKey',
         uuid: 'uuidKey',
         remove: 'channel',
-        type: 'pushType'
+        type: 'pushType',
       });
-    });
-
-    it('passes jsonp_cb', () => {
-      jsonp_cb = function () {
-        return 'jsonp-cb';
-      };
-      let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
-      let args = {
-        device_id: 'device1',
-        gw_type: 'pushType',
-        op: 'remove',
-        channel: 'channel'
-      };
-      let pushEndpoint = new proxiedInstance({
-        networking,
-        config,
-        keychain,
-        jsonp_cb,
-        error
-      });
-      pushEndpoint.provisionDevice(args, () => {});
-      assert.equal(pushStub.called, 1);
-      assert.equal(pushStub.args[0][0], 'device1');
-      assert.deepEqual(pushStub.args[0][1].callback, 'jsonp-cb');
     });
 
     it('uses instance id if enabled from args', () => {
@@ -238,14 +201,13 @@ describe('push endpoints', () => {
         device_id: 'device1',
         gw_type: 'pushType',
         op: 'remove',
-        channel: 'channel'
+        channel: 'channel',
       };
       let pushEndpoint = new proxiedInstance({
         networking,
         config,
         keychain,
-        jsonp_cb,
-        error
+        error,
       });
       pushEndpoint.provisionDevice(args, () => {});
       assert.equal(pushStub.called, 1);
@@ -255,7 +217,7 @@ describe('push endpoints', () => {
         instanceid: 'instanceId',
         remove: 'channel',
         type: 'pushType',
-        uuid: 'uuidKey'
+        uuid: 'uuidKey',
       });
     });
 
@@ -266,14 +228,13 @@ describe('push endpoints', () => {
           device_id: 'device1',
           gw_type: 'pushType',
           op: 'remove',
-          channel: 'channel'
+          channel: 'channel',
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         let callbackStub = sinon.stub();
         args.callback = callbackStub;
@@ -293,14 +254,13 @@ describe('push endpoints', () => {
           gw_type: 'pushType',
           op: 'remove',
           channel: 'channel',
-          error: errorStub
+          error: errorStub,
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
 
@@ -320,14 +280,13 @@ describe('push endpoints', () => {
           gw_type: 'pushType',
           op: 'remove',
           channel: 'channel',
-          error: errorStub
+          error: errorStub,
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
 
@@ -343,14 +302,13 @@ describe('push endpoints', () => {
           device_id: 'device1',
           gw_type: 'pushType',
           op: 'remove',
-          channel: 'channel'
+          channel: 'channel',
         };
         let pushEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         pushEndpoint.provisionDevice(args, () => {});
 

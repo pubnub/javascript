@@ -22,7 +22,6 @@ describe('history endpoints', () => {
   let failMock;
   let decryptMock;
   let fetchHistoryMock;
-  let jsonp_cb = () => 'im-jsonp';
 
   beforeEach(() => {
     networking = new Networking();
@@ -46,7 +45,7 @@ describe('history endpoints', () => {
     respondersClass.error = failMock;
 
     proxiedInstance = proxyquire('../../../../../core/src/endpoints/history', {
-      '../presenters/responders': respondersClass
+      '../presenters/responders': respondersClass,
     }).default;
   });
 
@@ -61,7 +60,7 @@ describe('history endpoints', () => {
         cipher_key: 'cipher_key',
         start: 'start',
         end: 'end',
-        include_token: 'include_token'
+        include_token: 'include_token',
       };
 
       defaultArgsOutput = {
@@ -70,17 +69,15 @@ describe('history endpoints', () => {
         end: 'end',
         auth: 'authKey',
         stringtoken: 'true',
-        callback: 'im-jsonp',
         include_token: 'true',
-        reverse: 'false'
+        reverse: 'false',
       };
 
       instance = new proxiedInstance({
         keychain,
         networking,
-        jsonp_cb,
         decrypt: decryptMock,
-        error
+        error,
       });
     });
 
@@ -181,25 +178,6 @@ describe('history endpoints', () => {
       assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
     });
 
-    it('omits jsonp if 0 is passed', () => {
-      jsonp_cb = () => 0;
-      delete defaultArgsOutput.callback;
-      let callbackMock = sinon.stub();
-      defaultArgsInput.reverse = 'reverse-true';
-      defaultArgsOutput.reverse = 'reverse-true';
-      let localInstance = new proxiedInstance({
-        keychain,
-        networking,
-        jsonp_cb,
-        decrypt: decryptMock,
-        error
-      });
-      localInstance.fetchHistory(defaultArgsInput, callbackMock);
-
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
-    });
-
     describe('callbacks and delgation to networking', () => {
       it('executs #prepareParamsMock to prepare params', () => {
         let callbackMock = sinon.stub();
@@ -229,7 +207,7 @@ describe('history endpoints', () => {
         assert.equal(stubbedModifier.called, 1);
         assert.deepEqual(stubbedModifier.args[0], [
           'success-response', defaultArgsInput.error, callbackMock,
-          defaultArgsInput.include_token, defaultArgsInput.cipher_key
+          defaultArgsInput.include_token, defaultArgsInput.cipher_key,
         ]);
       });
 
@@ -245,7 +223,7 @@ describe('history endpoints', () => {
         assert.equal(stubbedModifier.called, 1);
         assert.deepEqual(stubbedModifier.args[0], [
           'success-response', defaultArgsInput.error, callbackMock,
-          defaultArgsInput.include_token, defaultArgsInput.cipher_key
+          defaultArgsInput.include_token, defaultArgsInput.cipher_key,
         ]);
       });
     });
@@ -265,9 +243,8 @@ describe('history endpoints', () => {
       instance = new proxiedInstance({
         keychain,
         networking,
-        jsonp_cb,
         decrypt: decryptMock,
-        error
+        error,
       });
     });
 

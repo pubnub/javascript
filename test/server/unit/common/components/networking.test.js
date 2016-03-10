@@ -268,7 +268,7 @@ describe('#components/networking', () => {
       let data = { my: 'object' };
       let networkingComponent = new Networking(xdrStub, new Keychain(), undefined, 'origin1.pubnub.com');
 
-      networkingComponent.fetchTime('0', {
+      networkingComponent.fetchTime({
         fail: failStub,
         success: successStub,
         callback: callbackStub,

@@ -55,7 +55,6 @@ var _pubnub_subscribe = function (pubnub, args, config) {
 var _pubnub_init = function (args, config, pn) {
   if (config) {
     args.ssl = config.ssl;
-    args.jsonp = config.jsonp;
     // args.cipher_key = config.cipher_key;
   }
   if (pn) {
@@ -68,7 +67,6 @@ var _pubnub_init = function (args, config, pn) {
 var _pubnub = function (args, config, pn) {
   if (config) {
     args.ssl = config.ssl;
-    args.jsonp = config.jsonp;
     // args.cipher_key = config.cipher_key;
   }
   if (pn) {

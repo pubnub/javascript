@@ -110,6 +110,7 @@ module.exports = function (grunt) {
         src: 'test/server/integration/',
         options: {
           scriptPath: require.resolve('isparta/bin/isparta'),
+          istanbulOptions: ['--v'],
           coverageFolder: 'coverage/integration',
           mask: '**/*.test.js',
           print: 'none',
@@ -119,6 +120,7 @@ module.exports = function (grunt) {
         src: 'test/server/unit',
         options: {
           scriptPath: require.resolve('isparta/bin/isparta'),
+          istanbulOptions: ['--v'],
           mochaOptions: ['--bail', '--require', 'babel-core/register'],
           coverageFolder: 'coverage/unit',
           mask: '**/*.test.js',
@@ -129,6 +131,7 @@ module.exports = function (grunt) {
         src: 'test/release',
         options: {
           scriptPath: require.resolve('isparta/bin/isparta'),
+          istanbulOptions: ['--v'],
           mochaOptions: ['--bail', '--require', 'babel-core/register'],
           coverageFolder: 'coverage/release',
           mask: '**/*.test.js',
@@ -139,6 +142,7 @@ module.exports = function (grunt) {
         src: 'node.js/tests/legacy',
         options: {
           scriptPath: require.resolve('isparta/bin/isparta'),
+          istanbulOptions: ['--v'],
           coverageFolder: 'coverage/old',
           mask: 'integration_test.js',
           print: 'none',

@@ -7,7 +7,6 @@ import Responders from '../presenters/responders';
 type historyConstruct = {
   networking: Networking,
   keychain: Keychain,
-  jsonp_cb: Function,
   error: Function,
   decrypt: Function
 };
@@ -15,14 +14,12 @@ type historyConstruct = {
 export default class {
   _networking: Networking;
   _keychain: Keychain;
-  _jsonp_cb: Function;
   _error: Function;
   _decrypt: Function;
 
-  constructor({ networking, keychain, jsonp_cb, error, decrypt }: historyConstruct) {
+  constructor({ networking, keychain, error, decrypt }: historyConstruct) {
     this._networking = networking;
     this._keychain = keychain;
-    this._jsonp_cb = jsonp_cb;
     this._error = error;
     this._decrypt = decrypt;
   }
@@ -40,7 +37,6 @@ export default class {
     let end = args.end;
     let include_token = args.include_token;
     let string_msg_token = args.string_message_token || false;
-    let jsonp = this._jsonp_cb();
 
     // Make sure we have a Channel
     if (!channel && !channel_group) return this._error('Missing Channel');
@@ -51,7 +47,7 @@ export default class {
       stringtoken: 'true',
       count: count,
       reverse: reverse,
-      auth: auth_key
+      auth: auth_key,
     };
 
     if (channel_group) {
@@ -60,7 +56,7 @@ export default class {
         channel = ',';
       }
     }
-    if (jsonp) params.callback = jsonp;
+
     if (start) params.start = start;
     if (end) params.end = end;
     if (include_token) params.include_token = 'true';
@@ -68,35 +64,34 @@ export default class {
 
     // Send Message
     this._networking.fetchHistory(channel, {
-      callback: jsonp,
       data: this._networking.prepareParams(params),
       success: (response) => {
         this._handleHistoryResponse(response, err, callback, include_token, cipher_key);
       },
       fail: (response) => {
         Responders.error(response, err);
-      }
+      },
     });
   }
 
   _handleHistoryResponse(response: Object, err: Function, callback: Function, include_token: boolean, cipher_key: string) {
-    if (typeof response === 'object' && response['error']) {
+    if (typeof response === 'object' && response.error) {
       err({ message: response.message, payload: response.payload });
       return;
     }
-    var messages = response[0];
-    var decrypted_messages = [];
-    for (var a = 0; a < messages.length; a++) {
+    let messages = response[0];
+    let decrypted_messages = [];
+    for (let a = 0; a < messages.length; a++) {
       if (include_token) {
         let new_message = this._decrypt(messages[a].message, cipher_key);
-        var timetoken = messages[a].timetoken;
+        let timetoken = messages[a].timetoken;
         try {
           decrypted_messages.push({ message: JSON.parse(new_message), timetoken: timetoken });
         } catch (e) {
           decrypted_messages.push(({ message: new_message, timetoken: timetoken }));
         }
       } else {
-        var new_message = this._decrypt(messages[a], cipher_key);
+        let new_message = this._decrypt(messages[a], cipher_key);
         try {
           decrypted_messages.push(JSON.parse(new_message));
         } catch (e) {

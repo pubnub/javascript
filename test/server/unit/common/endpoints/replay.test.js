@@ -17,14 +17,11 @@ describe('replay endpoints', () => {
   let proxiedInstance;
   let successMock;
   let failMock;
-  let jsonp_cb;
 
   beforeEach(() => {
     networking = new Networking();
     config = new Config();
     error = sinon.stub();
-    jsonp_cb = () => 'im-jsonp';
-
     successMock = sinon.stub();
     failMock = sinon.stub();
 
@@ -40,7 +37,7 @@ describe('replay endpoints', () => {
     respondersClass.error = failMock;
 
     proxiedInstance = proxyquire('../../../../../core/src/endpoints/replay', {
-      '../presenters/responders': respondersClass
+      '../presenters/responders': respondersClass,
     }).default;
   });
 
@@ -52,8 +49,7 @@ describe('replay endpoints', () => {
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         replayEndpoint.performReplay(args, () => {});
         assert.equal(error.called, 1);
@@ -62,14 +58,13 @@ describe('replay endpoints', () => {
 
       it('errors if gw_type is missing', () => {
         let args = {
-          source: 'source1'
+          source: 'source1',
         };
         let replayEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         replayEndpoint.performReplay(args, () => {});
         assert.equal(error.called, 1);
@@ -79,15 +74,14 @@ describe('replay endpoints', () => {
       it('errors if publish key is missing', () => {
         let args = {
           source: 'source1',
-          destination: 'destination1'
+          destination: 'destination1',
         };
         keychain.setPublishKey('');
         let replayEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         replayEndpoint.performReplay(args, () => {});
         assert.equal(error.called, 1);
@@ -97,15 +91,14 @@ describe('replay endpoints', () => {
       it('errors if subscribe key is missing', () => {
         let args = {
           source: 'source1',
-          destination: 'destination1'
+          destination: 'destination1',
         };
         keychain.setSubscribeKey('');
         let replayEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         replayEndpoint.performReplay(args, () => {});
         assert.equal(error.called, 1);
@@ -114,31 +107,28 @@ describe('replay endpoints', () => {
     });
 
     it('uses auth-key passed if exists', () => {
-      jsonp_cb = () => 0;
       let replayStub = sinon.stub(networking, 'fetchReplay');
       let args = {
         source: 'source1',
         destination: 'destination1',
-        auth_key: 'customAuth'
+        auth_key: 'customAuth',
       };
       let replayEndpoint = new proxiedInstance({
         networking,
         config,
         keychain,
-        jsonp_cb,
-        error
+        error,
       });
       replayEndpoint.performReplay(args, () => {});
       assert.equal(replayStub.called, 1);
       assert.equal(replayStub.args[0][0], 'source1');
       assert.equal(replayStub.args[0][1], 'destination1');
       assert.deepEqual(replayStub.args[0][2].data, {
-        auth: 'customAuth'
+        auth: 'customAuth',
       });
     });
 
     it('passes thru stop, reverse, start, end, limit', () => {
-      jsonp_cb = () => 0;
       let replayStub = sinon.stub(networking, 'fetchReplay');
       let args = {
         source: 'source1',
@@ -146,14 +136,13 @@ describe('replay endpoints', () => {
         stop: 'stopparam',
         start: 'startparam',
         reverse: 'reverse-param',
-        limit: 'limit-param'
+        limit: 'limit-param',
       };
       let replayEndpoint = new proxiedInstance({
         networking,
         config,
         keychain,
-        jsonp_cb,
-        error
+        error,
       });
       replayEndpoint.performReplay(args, () => {});
       assert.equal(replayStub.called, 1);
@@ -164,26 +153,24 @@ describe('replay endpoints', () => {
         count: 'limit-param',
         reverse: 'true',
         start: 'startparam',
-        stop: 'all'
+        stop: 'all',
       });
     });
 
     it('omits reverse if not passed in params', () => {
-      jsonp_cb = () => 0;
       let replayStub = sinon.stub(networking, 'fetchReplay');
       let args = {
         source: 'source1',
         destination: 'destination1',
         stop: 'stopparam',
         start: 'startparam',
-        limit: 'limit-param'
+        limit: 'limit-param',
       };
       let replayEndpoint = new proxiedInstance({
         networking,
         config,
         keychain,
-        jsonp_cb,
-        error
+        error,
       });
       replayEndpoint.performReplay(args, () => {});
       assert.equal(replayStub.called, 1);
@@ -193,32 +180,8 @@ describe('replay endpoints', () => {
         auth: 'authKey',
         count: 'limit-param',
         start: 'startparam',
-        stop: 'all'
+        stop: 'all',
       });
-    });
-
-    it('passes jsonp_cb', () => {
-      jsonp_cb = function () {
-        return 'jsonp-cb';
-      };
-      let replayStub = sinon.stub(networking, 'fetchReplay');
-      let args = {
-        source: 'source1',
-        destination: 'destination1',
-        stop: 'stopparam',
-        start: 'startparam',
-        limit: 'limit-param'
-      };
-      let replayEndpoint = new proxiedInstance({
-        networking,
-        config,
-        keychain,
-        jsonp_cb,
-        error
-      });
-      replayEndpoint.performReplay(args, () => {});
-      assert.equal(replayStub.called, 1);
-      assert.deepEqual(replayStub.args[0][2].callback, 'jsonp-cb');
     });
 
     describe('on success', () => {
@@ -229,14 +192,13 @@ describe('replay endpoints', () => {
           destination: 'destination1',
           stop: 'stopparam',
           start: 'startparam',
-          limit: 'limit-param'
+          limit: 'limit-param',
         };
         let replayEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         let callbackStub = sinon.stub();
         args.callback = callbackStub;
@@ -257,14 +219,13 @@ describe('replay endpoints', () => {
           stop: 'stopparam',
           start: 'startparam',
           limit: 'limit-param',
-          error: errorStub
+          error: errorStub,
         };
         let replayEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         replayEndpoint.performReplay(args, () => {});
 
@@ -285,14 +246,13 @@ describe('replay endpoints', () => {
           stop: 'stopparam',
           start: 'startparam',
           limit: 'limit-param',
-          error: errorStub
+          error: errorStub,
         };
         let replayEndpoint = new proxiedInstance({
           networking,
           config,
           keychain,
-          jsonp_cb,
-          error
+          error,
         });
         replayEndpoint.performReplay(args, errorStub);
 

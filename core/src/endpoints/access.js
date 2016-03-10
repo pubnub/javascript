@@ -11,7 +11,6 @@ type accessConstruct = {
   networking: Networking,
   config: Config,
   keychain: Keychain,
-  jsonp_cb: Function,
   error: Function,
   hmac_SHA256: Function
 };
@@ -20,15 +19,13 @@ export default class {
   _networking: Networking;
   _config: Config;
   _keychain: Keychain;
-  _jsonp_cb: Function;
   _error: Function;
   _hmac_SHA256: Function;
 
-  constructor({ networking, config, keychain, jsonp_cb, error, hmac_SHA256 }: accessConstruct) {
+  constructor({ networking, config, keychain, error, hmac_SHA256 }: accessConstruct) {
     this._networking = networking;
     this._keychain = keychain;
     this._config = config;
-    this._jsonp_cb = jsonp_cb;
     this._error = error;
     this._hmac_SHA256 = hmac_SHA256;
   }
@@ -38,7 +35,6 @@ export default class {
     let err = args.error || function () {};
     let channel = args.channel || args.channels;
     let channel_group = args.channel_group;
-    let jsonp = this._jsonp_cb();
     let ttl = args.ttl;
     let r = (args.read) ? '1' : '0';
     let w = (args.write) ? '1' : '0';
@@ -75,9 +71,6 @@ export default class {
       data['channel-group'] = channel_group;
     }
 
-    if (jsonp !== 0) {
-      data.callback = jsonp;
-    }
     if (ttl || ttl === 0) data.ttl = ttl;
 
     if (auth_key) data.auth = auth_key;
@@ -88,7 +81,7 @@ export default class {
 
     sign_input += utils._get_pam_sign_input_from_params(data);
 
-    var signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
+    let signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
 
     signature = signature.replace(/\+/g, '-');
     signature = signature.replace(/\//g, '_');
@@ -96,14 +89,13 @@ export default class {
     data.signature = signature;
 
     this._networking.performGrant({
-      callback: jsonp,
       data: data,
       success: function (response) {
         Responders.callback(response, callback, err);
       },
       fail: function (response) {
         Responders.error(response, err);
-      }
+      },
     });
   }
 
@@ -113,7 +105,6 @@ export default class {
     let channel = args.channel;
     let channel_group = args.channel_group;
     let auth_key = args.auth_key;
-    let jsonp = this._jsonp_cb();
 
     // Make sure we have a Channel
     if (!callback) return this._error('Missing Callback');
@@ -127,9 +118,6 @@ export default class {
       'audit' + '\n';
 
     let data: Object = { timestamp: timestamp };
-    if (jsonp !== 0) {
-      data.callback = jsonp;
-    }
 
     if (typeof channel !== 'undefined' && channel !== null && channel.length > 0) {
       data.channel = channel;
@@ -147,21 +135,20 @@ export default class {
 
     sign_input += utils._get_pam_sign_input_from_params(data);
 
-    var signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
+    let signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
 
     signature = signature.replace(/\+/g, '-');
     signature = signature.replace(/\//g, '_');
 
     data.signature = signature;
     this._networking.performAudit({
-      callback: jsonp,
       data: data,
       success: function (response) {
         Responders.callback(response, callback, err);
       },
       fail: function (response) {
         Responders.error(response, err);
-      }
+      },
     });
   }
 

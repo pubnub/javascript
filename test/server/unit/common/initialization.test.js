@@ -22,7 +22,7 @@ describe('core initalization', () => {
       hmac_SHA256() {
         return 'this-is-hmac';
       },
-      xdr: function () {}
+      xdr: function () {},
     };
   });
 
@@ -58,7 +58,7 @@ describe('core initalization', () => {
         getPresenceTimeout() { return 0; }
         getHeartbeatInterval() { return -1; }
 
-      }
+      },
     });
 
     proxiedCore.PN_API(commonSettings);
@@ -123,7 +123,7 @@ describe('core initalization', () => {
         getSecretKey() {return 'secKey';}
         getInstanceId() {return 'instanceID';}
         getUUID() {return 'UUID';}
-      }
+      },
     });
 
     proxiedCore.PN_API(commonSettings);
@@ -198,7 +198,7 @@ describe('core initalization', () => {
         getSecretKey() {return 'secKey';}
         getInstanceId() {return 'instanceID';}
         getUUID() {return 'UUID';}
-      }
+      },
     });
 
     proxiedCore.PN_API(commonSettings);
@@ -286,7 +286,7 @@ describe('core initalization', () => {
         getSecretKey() {return 'secKey';}
         getInstanceId() {return 'instanceID';}
         getUUID() {return 'UUID';}
-      }
+      },
     });
 
     proxiedCore.PN_API(commonSettings);
@@ -322,7 +322,7 @@ describe('core initalization', () => {
           _passedParams = params;
           return this;
         }
-      }
+      },
     });
 
     proxiedCore.PN_API(commonSettings);
@@ -334,26 +334,23 @@ describe('core initalization', () => {
       let _networking;
       let _keychain;
       let _config;
-      let _jsonp_cb;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/time': class {
-          constructor({ networking, config, keychain, jsonp_cb }) {
+          constructor({ networking, config, keychain }) {
             _networking = networking;
             _config = config;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
           }
 
           fetchTime() { }
 
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
       assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
       assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
       assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
-      assert(_jsonp_cb);
     });
 
     it('mounts the time endpoint', () => {
@@ -361,7 +358,7 @@ describe('core initalization', () => {
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/time': class {
           fetchTime(callback) { _mockedArgs = callback; }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -376,15 +373,13 @@ describe('core initalization', () => {
       let _networking;
       let _keychain;
       let _config;
-      let _jsonp_cb;
       let _error;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/channel_groups': class {
-          constructor({ networking, config, keychain, jsonp_cb, error }) {
+          constructor({ networking, config, keychain, error }) {
             _networking = networking;
             _config = config;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
             _error = error;
           }
 
@@ -394,14 +389,13 @@ describe('core initalization', () => {
           listChannels() { }
           addChannel() { }
           removeChannel() { }
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
       assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
       assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
       assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
-      assert(_jsonp_cb);
       assert(_error);
     });
 
@@ -414,7 +408,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -433,7 +427,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -452,7 +446,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -471,7 +465,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -490,7 +484,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -509,7 +503,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -525,22 +519,20 @@ describe('core initalization', () => {
       let _networking;
       let _keychain;
       let _config;
-      let _jsonp_cb;
       let _error;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/presence': class {
-          constructor({ networking, config, keychain, jsonp_cb, error }) {
+          constructor({ networking, config, keychain, error }) {
             _networking = networking;
             _config = config;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
             _error = error;
           }
 
           whereNow() { }
           hereNow() { }
 
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
@@ -548,7 +540,6 @@ describe('core initalization', () => {
       assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
       assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
       assert(_error);
-      assert(_jsonp_cb);
     });
 
     it('mounts the whereNow endpoint', () => {
@@ -560,7 +551,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -579,7 +570,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -594,29 +585,26 @@ describe('core initalization', () => {
     it('intializes the historyEndpoints class', () => {
       let _networking;
       let _keychain;
-      let _jsonp_cb;
       let _error;
       let _decrypt;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/history': class {
-          constructor({ networking, keychain, jsonp_cb, error, decrypt }) {
+          constructor({ networking, keychain, error, decrypt }) {
             _networking = networking;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
             _error = error;
             _decrypt = decrypt;
           }
 
           fetchHistory() { }
 
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
       assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
       assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
       assert(_error);
-      assert(_jsonp_cb);
       assert(_decrypt);
     });
 
@@ -629,7 +617,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -644,27 +632,24 @@ describe('core initalization', () => {
     it('intializes the replayEndpoints class', () => {
       let _networking;
       let _keychain;
-      let _jsonp_cb;
       let _error;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/replay': class {
-          constructor({ networking, keychain, jsonp_cb, error }) {
+          constructor({ networking, keychain, error }) {
             _networking = networking;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
             _error = error;
           }
 
           performReplay() { }
 
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
       assert.equal(_networking.getOrigin(), 'https://customOrigin.origin.com');
       assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
       assert(_error);
-      assert(_jsonp_cb);
     });
 
     it('mounts the replay endpoint', () => {
@@ -676,7 +661,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -692,21 +677,19 @@ describe('core initalization', () => {
       let _networking;
       let _keychain;
       let _config;
-      let _jsonp_cb;
       let _error;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/push': class {
-          constructor({ networking, keychain, jsonp_cb, error, config }) {
+          constructor({ networking, keychain, error, config }) {
             _networking = networking;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
             _config = config;
             _error = error;
           }
 
           provisionDevice() { }
 
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
@@ -714,7 +697,6 @@ describe('core initalization', () => {
       assert.equal(_keychain.getSubscribeKey(), commonSettings.subscribe_key);
       assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
       assert(_error);
-      assert(_jsonp_cb);
     });
 
     it('mounts the provisionDevice endpoint', () => {
@@ -724,7 +706,7 @@ describe('core initalization', () => {
           provisionDevice(args) {
             _mockedArgs = args;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -738,16 +720,14 @@ describe('core initalization', () => {
     it('intializes the accessEndpoints class', () => {
       let _networking;
       let _keychain;
-      let _jsonp_cb;
       let _error;
       let _config;
       let _hmac_SHA256;
       let proxiedCore = proxyquire('../../../../core/src/pubnub-common.js', {
         './endpoints/access': class {
-          constructor({ networking, keychain, jsonp_cb, error, config, hmac_SHA256 }) {
+          constructor({ networking, keychain, error, config, hmac_SHA256 }) {
             _networking = networking;
             _keychain = keychain;
-            _jsonp_cb = jsonp_cb;
             _error = error;
             _config = config;
             _hmac_SHA256 = hmac_SHA256;
@@ -756,7 +736,7 @@ describe('core initalization', () => {
           performGrant() { }
           performAudit() { }
 
-        }
+        },
       });
 
       proxiedCore.PN_API(commonSettings);
@@ -765,7 +745,6 @@ describe('core initalization', () => {
       assert.equal(_config.isInstanceIdEnabled(), 'instanceIdConfig');
       assert.equal(_hmac_SHA256(), 'this-is-hmac');
       assert(_error);
-      assert(_jsonp_cb);
     });
 
     it('mounts the grant endpoint', () => {
@@ -777,7 +756,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
@@ -796,7 +775,7 @@ describe('core initalization', () => {
             _mockedArgs = args;
             _mockedCallback = callback;
           }
-        }
+        },
       });
 
       let pubnubInstance = proxiedCore.PN_API(commonSettings);
