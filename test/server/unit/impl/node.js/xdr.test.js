@@ -161,5 +161,23 @@ describe('#xdr', function () {
         body: ''
       });
     });
+
+    it('support additional headers', function () {
+      var proxy = { hostname: 'moose.com', port: 1337, headers: { h1: 'header1', h2: 'header2' } };
+      var xdrInstance = XDR.createInstance('testing1', proxy, false);
+      var xdrSetup = { data: {}, ssl: true, url: ['https://pubsub.pubnub.com', 'time', 0] };
+
+      xdrInstance.request(xdrSetup);
+
+      assert.deepEqual(httpsMock.args[0][0], {
+        hostname: 'moose.com',
+        port: 1337,
+        path: 'http://pubsub.pubnub.com/time/0?pnsdk=testing1',
+        headers: { Host: 'pubsub.pubnub.com', h1: 'header1', h2: 'header2' },
+        method: 'GET',
+        keepAlive: false,
+        body: ''
+      });
+    });
   });
 });

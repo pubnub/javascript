@@ -1,4 +1,7 @@
 
+3-10-16 * 3.14.3
+ - add support of passing headers via proxy
+
 3-1-16 * 3.14.0
  - introduction of keychain class to support internal storage of key
  - refactoring of origin calculations and handling
