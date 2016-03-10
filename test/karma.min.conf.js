@@ -1,4 +1,4 @@
-var parentConfig = require('../karma.conf.js');
+var parentConfig = require('./karma.conf.js');
 
 module.exports = function(config) {
   var config = parentConfig(config);
