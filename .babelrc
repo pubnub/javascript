@@ -4,5 +4,5 @@
         "transform-class-properties",
         "transform-flow-strip-types"
     ],
-    sourceMaps: true
+    "sourceMaps": true
 }

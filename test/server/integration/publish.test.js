@@ -28,7 +28,7 @@ describe('#publish()', function () {
   });
 
   beforeEach(function () {
-    itFixtures.pubnub = PUBNUB.init({
+    itFixtures.pubnub = PUBNUB({
       publish_key: fileFixtures.publishKey, // 'demo',
       subscribe_key: fileFixtures.subscribeKey, // 'demo',
       uuid: fileFixtures.uuid,
@@ -36,7 +36,7 @@ describe('#publish()', function () {
       build_u: true
     });
 
-    itFixtures.pubnub_enc = PUBNUB.init({
+    itFixtures.pubnub_enc = PUBNUB({
       publish_key: fileFixtures.publishKey, // 'demo',
       subscribe_key: fileFixtures.subscribeKey, // 'demo',
       uuid: fileFixtures.uuid,

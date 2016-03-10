@@ -19,7 +19,7 @@ describe('#state()', function () {
   });
 
   beforeEach(function () {
-    itFixtures.pubnub = PUBNUB.init({
+    itFixtures.pubnub = PUBNUB({
       publish_key: fileFixtures.publishKey, // 'demo',
       subscribe_key: fileFixtures.subscribeKey, // 'demo',
       uuid: fileFixtures.uuid,

@@ -121,25 +121,25 @@ describe('#here_now', function () {
     var ch2 = ch + '-2';
     var ch3 = ch + '-3';
 
-    var pubnub_pres = PUBNUB.init({
+    var pubnub_pres = PUBNUB({
       origin: 'pubsub.pubnub.com',
       publish_key: fileFixtures.publishKey,
       subscribe_key: fileFixtures.subscribeKey,
       uuid: uuid
     });
-    var pubnub_pres_1 = PUBNUB.init({
+    var pubnub_pres_1 = PUBNUB({
       origin: 'pubsub.pubnub.com',
       publish_key: fileFixtures.publishKey,
       subscribe_key: fileFixtures.subscribeKey,
       uuid: uuid1
     });
-    var pubnub_pres_2 = PUBNUB.init({
+    var pubnub_pres_2 = PUBNUB({
       origin: 'pubsub.pubnub.com',
       publish_key: fileFixtures.publishKey,
       subscribe_key: fileFixtures.subscribeKey,
       uuid: uuid2
     });
-    var pubnub_pres_3 = PUBNUB.init({
+    var pubnub_pres_3 = PUBNUB({
       origin: 'pubsub.pubnub.com',
       publish_key: fileFixtures.publishKey,
       subscribe_key: fileFixtures.subscribeKey,

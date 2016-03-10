@@ -1,11 +1,5 @@
 /* @flow */
 
-/* eslint camelcase: 0, no-use-before-define: 0, no-unused-expressions: 0  */
-/* eslint eqeqeq: 0, one-var: 0 */
-/* eslint no-redeclare: 0 */
-/* eslint guard-for-in: 0 */
-/* eslint block-scoped-var: 0 space-return-throw-case: 0, no-unused-vars: 0 */
-
 import uuidGenerator from 'uuid';
 
 import Networking from './components/networking';
@@ -23,21 +17,21 @@ import AccessEndpoints from './endpoints/access';
 import ReplyEndpoint from './endpoints/replay';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
 
-var packageJSON = require('../../package.json');
-var defaultConfiguration = require('../defaults.json');
-var utils = require('./utils');
+let packageJSON = require('../../package.json');
+let defaultConfiguration = require('../defaults.json');
+let utils = require('./utils');
 
-var NOW = 1;
-var READY = false;
-var READY_BUFFER = [];
-var PRESENCE_SUFFIX = '-pnpres';
-var DEF_WINDOWING = 10; // MILLISECONDS.
-var DEF_TIMEOUT = 15000; // MILLISECONDS.
-var DEF_SUB_TIMEOUT = 310; // SECONDS.
-var DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
-var SECOND = 1000; // A THOUSAND MILLISECONDS.
+let NOW = 1;
+let READY = false;
+let READY_BUFFER = [];
+let PRESENCE_SUFFIX = '-pnpres';
+let DEF_WINDOWING = 10; // MILLISECONDS.
+let DEF_TIMEOUT = 15000; // MILLISECONDS.
+let DEF_SUB_TIMEOUT = 310; // SECONDS.
+let DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
+let SECOND = 1000; // A THOUSAND MILLISECONDS.
 
-var SDK_VER = packageJSON.version;
+let SDK_VER = packageJSON.version;
 
 /**
  * UTILITIES

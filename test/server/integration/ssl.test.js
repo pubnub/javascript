@@ -43,7 +43,7 @@ describe('When SSL mode', function () {
 
   describe('is enabled', function () {
     beforeEach(function () {
-      itFixtures.pubnub = PUBNUB.init({
+      itFixtures.pubnub = PUBNUB({
         publish_key: fileFixtures.publishKey,
         subscribe_key: fileFixtures.subscribeKey,
         ssl: true,
@@ -78,12 +78,12 @@ describe('When SSL mode', function () {
 
   describe('is disabled', function () {
     beforeEach(function () {
-      itFixtures.pubnub = PUBNUB.init({
+      itFixtures.pubnub = PUBNUB({
         publish_key: fileFixtures.publishKey,
         subscribe_key: fileFixtures.subscribeKey,
         ssl: false,
         origin: fileFixtures.origin,
-        uuid: fileFixtures.uuid
+        uuid: fileFixtures.uuid,
       });
     });
 

@@ -38,7 +38,7 @@ var Buffer = require('buffer').Buffer;
 var packageJSON = require('../../package.json');
 var pubNubCore = require('../../core/lib/pubnub-common.js');
 
-var PNSDK = 'PubNub-JS-' + PLATFORM + '/' + packageJSON.version;
+var PNSDK = 'PubNub-JS-' + 'Parse' + '/' + packageJSON.version;
 
 /**
  * UTIL LOCALS

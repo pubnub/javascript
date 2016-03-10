@@ -59,9 +59,9 @@ var _pubnub_init = function (args, config, pn) {
     // args.cipher_key = config.cipher_key;
   }
   if (pn) {
-    return pn.init(args);
+    return pn(args);
   } else {
-    return PUBNUB.init(args);
+    return PUBNUB(args);
   }
 };
 

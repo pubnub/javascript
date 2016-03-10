@@ -39,7 +39,7 @@ var pubNubCore = require('../../core/lib/pubnub-common.js');
 /**
  * UTIL LOCALS
  */
-var PNSDK = 'PubNub-JS-' + PLATFORM + '/' + packageJSON.version;
+var PNSDK = 'PubNub-JS-' + 'Titanium' + '/' + packageJSON.version;
 
 /**
  * LOCAL STORAGE OR COOKIE

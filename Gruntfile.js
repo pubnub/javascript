@@ -1,6 +1,8 @@
+/* eslint no-var: 0 */
+
 var webpack = require('webpack');
 
-var WEBPACKED_PLATFORMS = ['web', 'modern', 'parse', 'titanium'];
+var WEBPACKED_PLATFORMS = ['web', 'parse', 'titanium'];
 
 function registerWebpackBuilding(grunt) {
   var compileTargets = ['clean:core', 'babel:core'];
@@ -8,7 +10,7 @@ function registerWebpackBuilding(grunt) {
   WEBPACKED_PLATFORMS.forEach(function (platform) {
     var actions = [];
 
-    ['clean', 'webpack', 'replace', 'uglify'].forEach(function (utility) {
+    ['clean', 'webpack', 'uglify'].forEach(function (utility) {
       actions.push(utility + ':' + platform);
     });
 
@@ -16,7 +18,7 @@ function registerWebpackBuilding(grunt) {
     grunt.registerTask('compile:' + platform, actions);
   });
 
-  compileTargets = compileTargets.concat('copy', 'eslint', 'flow');
+  compileTargets = compileTargets.concat('eslint', 'flow');
 
   grunt.registerTask('_compile', compileTargets);
 }
@@ -26,21 +28,21 @@ function webpackCommonBuilder(folderName, baseFolder, externals) {
     entry: './' + baseFolder + '/lib/platform.js',
     module: {
       loaders: [
-        { test: /\.json/, loader: 'json' }
-      ]
+        { test: /\.json/, loader: 'json' },
+      ],
     },
     output: {
       path: './' + folderName + '/dist',
       filename: 'pubnub.js',
       library: 'PUBNUB',
-      libraryTarget: 'umd'
+      libraryTarget: 'umd',
     },
     plugins: [
       new webpack.BannerPlugin(require('./package.json').version + ' / ' + folderName, {
-        raw: false, entryOnly: true
-      })
+        raw: false, entryOnly: true,
+      }),
     ],
-    externals: externals
+    externals: externals,
   };
 }
 
@@ -48,11 +50,11 @@ function webpackCommonBuilder(folderName, baseFolder, externals) {
 function createCleanRules() {
   var preparedRules = {
     core: 'core/lib',
-    coverage: 'coverage'
+    coverage: 'coverage',
   };
 
   WEBPACKED_PLATFORMS.forEach(function (platform) {
-    preparedRules[platform] = [platform + '/dist', platform + '/pubnub.js', platform + '/pubnub.min.js'];
+    preparedRules[platform] = [platform + '/dist'];
   });
 
   return preparedRules;
@@ -62,8 +64,8 @@ function createUglifyRules() {
   var preparedRules = {
     options: {
       mangle: true,
-      compress: true
-    }
+      compress: true,
+    },
   };
 
   WEBPACKED_PLATFORMS.forEach(function (platform) {
@@ -86,25 +88,22 @@ module.exports = function (grunt) {
     uglify: createUglifyRules(),
     webpack: {
       web: webpackCommonBuilder('web', 'web', []),
-      modern: webpackCommonBuilder('modern', 'modern', []),
       parse: webpackCommonBuilder('parse', 'parse', ['crypto', 'buffer']),
-      titanium: webpackCommonBuilder('titanium', 'titanium', [])
+      titanium: webpackCommonBuilder('titanium', 'titanium', []),
     },
     //
 
     env: {
       lockdown: {
-        VCR_MODE: 'playback'
+        VCR_MODE: 'playback',
       },
       record: {
-        VCR_MODE: 'cache'
-      }
+        VCR_MODE: 'cache',
+      },
     },
     karma: {
       webFull: { configFile: 'web/tests/karma.conf.js' },
       webMin: { configFile: 'web/tests/karma.min.conf.js' },
-      modernFull: { configFile: 'modern/tests/karma.conf.js' },
-      modernMin: { configFile: 'modern/tests/karma.min.conf.js' }
     },
     mocha_istanbul: {
       coverage_integration: {
@@ -113,8 +112,8 @@ module.exports = function (grunt) {
           scriptPath: require.resolve('isparta/bin/isparta'),
           coverageFolder: 'coverage/integration',
           mask: '**/*.test.js',
-          print: 'none'
-        }
+          print: 'none',
+        },
       },
       coverage_unit: {
         src: 'test/server/unit',
@@ -123,8 +122,8 @@ module.exports = function (grunt) {
           mochaOptions: ['--bail', '--require', 'babel-core/register'],
           coverageFolder: 'coverage/unit',
           mask: '**/*.test.js',
-          print: 'none'
-        }
+          print: 'none',
+        },
       },
       coverage_release: {
         src: 'test/release',
@@ -133,8 +132,8 @@ module.exports = function (grunt) {
           mochaOptions: ['--bail', '--require', 'babel-core/register'],
           coverageFolder: 'coverage/release',
           mask: '**/*.test.js',
-          print: 'none'
-        }
+          print: 'none',
+        },
       },
       old: {
         src: 'node.js/tests/legacy',
@@ -142,17 +141,17 @@ module.exports = function (grunt) {
           scriptPath: require.resolve('isparta/bin/isparta'),
           coverageFolder: 'coverage/old',
           mask: 'integration_test.js',
-          print: 'none'
-        }
-      }
+          print: 'none',
+        },
+      },
     },
     flow: {
       app: {
         src: '.',
         options: {
-          background: false
-        }
-      }
+          background: false,
+        },
+      },
     },
     babel: {
       core: {
@@ -162,68 +161,22 @@ module.exports = function (grunt) {
             cwd: 'core/src/',
             src: ['**/*.js'],
             dest: 'core/lib/',
-            ext: '.js'
-          }
-        ]
-      }
+            ext: '.js',
+          },
+        ],
+      },
     },
     eslint: {
       target: [
         'node.js/*.js',
         'node.js/lib/*.js',
-        'modern/lib/**/*.js',
         'parse/lib/**/*.js',
         'titanium/lib/**/*.js',
         'web/lib/**/*.js',
         'core/src/**/*.js',
-        'test/**/*.js'
-      ]
+        'test/**/*.js',
+      ],
     },
-    replace: {
-      web: {
-        src: ['web/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Web\''
-        }]
-      },
-      modern: {
-        src: ['modern/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Modern\''
-        }]
-      },
-      parse: {
-        src: ['parse/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Parse\''
-        }]
-      },
-      titanium: {
-        src: ['titanium/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Titanium\''
-        }]
-      }
-    },
-    copy: {
-      main: {
-        files: [
-          // includes files within path
-          { src: ['modern/dist/pubnub.js'], dest: 'modern/pubnub.js' },
-          { src: ['modern/dist/pubnub.min.js'], dest: 'modern/pubnub.min.js' },
-          { src: ['web/dist/pubnub.js'], dest: 'web/pubnub.js' },
-          { src: ['web/dist/pubnub.min.js'], dest: 'web/pubnub.min.js' }
-        ]
-      }
-    }
   });
 
 
