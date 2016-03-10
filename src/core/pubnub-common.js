@@ -411,7 +411,6 @@ function PN_API(setup: setupObject) {
       var SUB_ERROR = args['error'] || SUB_ERROR || function () {};
       var idlecb = args['idle'] || function () {};
       var presence = args['presence'] || 0;
-      var noheresync = args['noheresync'] || 0;
       var backfill = args['backfill'] || 0;
       var timetoken = args['timetoken'] || 0;
       var sub_timeout = args['timeout'] || SUB_TIMEOUT;
@@ -480,23 +479,6 @@ function PN_API(setup: setupObject) {
 
             // Presence Subscribed?
             if (settings.subscribed) return;
-
-            // See Who's Here Now?
-            if (noheresync) return;
-            SELF['here_now']({
-              channel: channel,
-              data: networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
-              callback: function (here) {
-                utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
-                  presence({
-                    action: 'join',
-                    uuid: uid,
-                    timestamp: Math.floor(utils.rnow() / 1000),
-                    occupancy: here['occupancy'] || 1,
-                  }, here, channel);
-                });
-              },
-            });
           });
       }
 
@@ -531,23 +513,6 @@ function PN_API(setup: setupObject) {
 
             // Presence Subscribed?
             if (settings.subscribed) return;
-
-            // See Who's Here Now?
-            if (noheresync) return;
-            SELF['here_now']({
-              channel_group: channel_group,
-              data: networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() }),
-              callback: function (here) {
-                utils.each('uuids' in here ? here['uuids'] : [], function (uid) {
-                  presence({
-                    action: 'join',
-                    uuid: uid,
-                    timestamp: Math.floor(utils.rnow() / 1000),
-                    occupancy: here['occupancy'] || 1,
-                  }, here, channel_group);
-                });
-              },
-            });
           });
       }
 
