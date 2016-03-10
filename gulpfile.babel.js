@@ -115,13 +115,13 @@ gulp.task('flow', function (cb) {
 
 gulp.task('karma_client_full', function (done) {
   new Karma({
-    configFile: __dirname + '/test/karma.conf.js',
+    configFile: __dirname + '/test/karma.full.conf.js',
   }, done).start();
 });
 
 gulp.task('karma_client_min', function (done) {
   new Karma({
-    configFile: __dirname + '/test/karma.conf.js',
+    configFile: __dirname + '/test/karma.min.conf.js',
   }, done).start();
 });
 
