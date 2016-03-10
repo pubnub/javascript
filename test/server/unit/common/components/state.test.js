@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import State from '../../../../../core/src/components/state';
+import State from '../../../../../src/core/components/state';
 import assert from 'assert';
 
 describe('#components/state', () => {

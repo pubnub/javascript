@@ -1,10 +1,10 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import TimeEndpoint from '../../../../../core/src/endpoints/time';
-import Networking from '../../../../../core/src/components/networking';
-import Config from '../../../../../core/src/components/config';
-import Keychain from '../../../../../core/src/components/keychain';
+import TimeEndpoint from '../../../../../src/core/endpoints/time';
+import Networking from '../../../../../src/core/components/networking';
+import Config from '../../../../../src/core/components/config';
+import Keychain from '../../../../../src/core/components/keychain';
 
 const assert = require('assert');
 const sinon = require('sinon');

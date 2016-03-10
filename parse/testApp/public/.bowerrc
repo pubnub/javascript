@@ -1,5 +1,0 @@
-{
-  "scripts": {
-    "preinstall": "cp ../../pubnub.js ../cloud/"
-  }
-}

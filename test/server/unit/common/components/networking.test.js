@@ -1,10 +1,10 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Keychain from '../../../../../core/src/components/keychain';
-import Networking from '../../../../../core/src/components/networking';
+import Keychain from '../../../../../src/core/components/keychain';
+import Networking from '../../../../../src/core/components/networking';
 
-const utils = require('../../../../../core/src/utils');
+const utils = require('../../../../../src/core/utils');
 const assert = require('assert');
 const sinon = require('sinon');
 

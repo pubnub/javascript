@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Keychain from '../../../../../core/src/components/keychain';
+import Keychain from '../../../../../src/core/components/keychain';
 const assert = require('assert');
 
 

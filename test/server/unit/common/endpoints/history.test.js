@@ -5,8 +5,8 @@
   - error || blackhole x 2
 */
 
-import Networking from '../../../../../core/src/components/networking';
-import Keychain from '../../../../../core/src/components/keychain';
+import Networking from '../../../../../src/core/components/networking';
+import Keychain from '../../../../../src/core/components/keychain';
 
 const assert = require('assert');
 const sinon = require('sinon');

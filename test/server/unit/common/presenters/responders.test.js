@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Responders from '../../../../../core/src/presenters/responders';
+import Responders from '../../../../../src/core/presenters/responders';
 const assert = require('assert');
 
 

@@ -1,7 +1,7 @@
 /* global describe, it, before, after, beforeEach */
 
 var assert = require('assert');
-var PUBNUB = require('../../../node.js/pubnub.js');
+var PUBNUB = require('../../../lib/node.js/pubnub.js');
 var testUtils = require('../utils');
 
 describe('#state()', function () {

@@ -6,7 +6,7 @@ var https = require('https');
 var sinon = require('sinon');
 var assert = require('assert');
 
-var XDR = require('../../../../../node.js/lib/xdr');
+var XDR = require('../../../../../lib/node.js/lib/xdr');
 
 describe('#xdr', function () {
   var httpMock;

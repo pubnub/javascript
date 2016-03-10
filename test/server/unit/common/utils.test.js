@@ -5,7 +5,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 const uuid = require('uuid');
 
-import utils from '../../../../core/src/utils';
+import utils from '../../../../src/core/utils';
 
 describe('utils', () => {
   describe('#_get_pam_sign_input_from_params', () => {

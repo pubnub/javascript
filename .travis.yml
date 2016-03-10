@@ -8,10 +8,10 @@ node_js:
   - '5'
 
 before_install:
-  npm install -g grunt-cli
+  npm install --global gulp-cli
 
 install:
-  cd node.js && npm install
+  npm install
 
 script:
-  grunt test
+  gulp test

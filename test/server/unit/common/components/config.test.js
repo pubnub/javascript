@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Config from '../../../../../core/src/components/config';
+import Config from '../../../../../src/core/components/config';
 const assert = require('assert');
 
 

@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it */
 /* eslint no-console: 0 */
 
-let pubnub = require('../../../../../node.js/pubnub.js');
+let pubnub = require('../../../../../lib/node.js/pubnub');
 let assert = require('assert');
 
 

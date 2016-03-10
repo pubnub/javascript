@@ -5,9 +5,9 @@
   - error || blackhole x 2
 */
 
-import Networking from '../../../../../core/src/components/networking';
-import Keychain from '../../../../../core/src/components/keychain';
-import Config from '../../../../../core/src/components/config';
+import Networking from '../../../../../src/core/components/networking';
+import Keychain from '../../../../../src/core/components/keychain';
+import Config from '../../../../../src/core/components/config';
 import _ from 'lodash';
 
 const assert = require('assert');
