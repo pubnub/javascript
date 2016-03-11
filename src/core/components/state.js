@@ -74,7 +74,7 @@ export default class {
    * generate_channel_list(channels_object);
    * nopresence (==include-presence) == false --> presence True
    */
-  generate_channel_list(nopresence: boolean): Array<string> {
+  getChannels(nopresence: boolean): Array<string> {
     let list: Array<string> = [];
     utils.each(this._channelStorage, function (channel, status) {
       if (nopresence) {
@@ -93,7 +93,7 @@ export default class {
    * ==================================
    * generate_channel_group_list(channels_groups object);
    */
-  generate_channel_group_list(nopresence: boolean): Array<string> {
+  getChannelGroups(nopresence: boolean): Array<string> {
     let list: Array<string> = [];
     utils.each(this._channelGroupStorage, function (channel_group, status) {
       if (nopresence) {

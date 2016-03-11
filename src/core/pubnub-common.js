@@ -7,6 +7,7 @@ import Keychain from './components/keychain';
 import Config from './components/config';
 import State from './components/state';
 import PublishQueue from './components/publish_queue';
+import PresenceHeartbeat from './components/presence_heartbeat';
 
 import Responders from './presenters/responders';
 
@@ -20,7 +21,7 @@ import ChannelGroupEndpoints from './endpoints/channel_groups';
 import PubSubEndpoints from './endpoints/pubsub';
 
 let packageJSON = require('../../package.json');
-let defaultConfiguration = require('../../defaults.json');
+let constants = require('../../defaults.json');
 let utils = require('./utils');
 
 let NOW = 1;
@@ -30,7 +31,6 @@ let DEF_WINDOWING = 10; // MILLISECONDS.
 let DEF_TIMEOUT = 15000; // MILLISECONDS.
 let DEF_SUB_TIMEOUT = 310; // SECONDS.
 let DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
-let SECOND = 1000; // A THOUSAND MILLISECONDS.
 
 let SDK_VER = packageJSON.version;
 
@@ -181,13 +181,14 @@ function PN_API(setup: setupObject) {
   let channelGroupEndpoints = new ChannelGroupEndpoints({ keychain, networking, config, error });
   let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, publishQueue, state: stateStorage });
 
+  let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints, error);
+
   let SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
-  let SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * SECOND;
-  let KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * SECOND;
+  let SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * constants.SECOND;
+  let KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * constants.SECOND;
   let TIME_CHECK = setup['timecheck'] || 0;
   let CONNECT = function () {
   };
-  let PUB_QUEUE = [];
   let TIME_DRIFT = 0;
   let SUB_CALLBACK = 0;
   let SUB_CHANNEL = 0;
@@ -197,8 +198,6 @@ function PN_API(setup: setupObject) {
   let RESUMED = false;
   let SUB_ERROR = function () {
   };
-  let PRESENCE_HB_TIMEOUT = null;
-  let PRESENCE_HB_RUNNING = false;
   let NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
   let _is_online = setup['_is_online'] || function () { return 1;};
   let shutdown = setup['shutdown'];
@@ -207,32 +206,6 @@ function PN_API(setup: setupObject) {
 
   if (config.getPresenceTimeout() === 2) {
     config.setHeartbeatInterval(1);
-  }
-
-  function _presence_heartbeat() {
-    clearTimeout(PRESENCE_HB_TIMEOUT);
-
-    if (!config.getHeartbeatInterval() || config.getHeartbeatInterval() >= 500 ||
-      config.getHeartbeatInterval() < 1 ||
-      (!stateStorage.generate_channel_list(true).length && !stateStorage.generate_channel_group_list(true).length)) {
-      PRESENCE_HB_RUNNING = false;
-      return;
-    }
-
-    PRESENCE_HB_RUNNING = true;
-    SELF['presence_heartbeat']({
-      callback: function (r) {
-        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (config.getHeartbeatInterval()) * SECOND);
-      },
-      error: function (e) {
-        error && error('Presence Heartbeat unable to reach Pubnub servers.' + JSON.stringify(e));
-        PRESENCE_HB_TIMEOUT = utils.timeout(_presence_heartbeat, (config.getHeartbeatInterval()) * SECOND);
-      }
-    });
-  }
-
-  function start_presence_heartbeat() {
-    !PRESENCE_HB_RUNNING && _presence_heartbeat();
   }
 
   function each_channel_group(callback) {
@@ -336,7 +309,8 @@ function PN_API(setup: setupObject) {
         config.setHeartbeatInterval(1);
       }
       CONNECT();
-      _presence_heartbeat();
+
+      presenceHeartbeat.start();
     },
 
     get_heartbeat_interval: function () {
@@ -345,7 +319,7 @@ function PN_API(setup: setupObject) {
 
     set_heartbeat_interval: function (heartbeat_interval) {
       config.setHeartbeatInterval(heartbeat_interval);
-      _presence_heartbeat();
+      presenceHeartbeat.start();
     },
 
     get_version: function () {
@@ -472,7 +446,7 @@ function PN_API(setup: setupObject) {
 
             // Subscribe Presence Channel
             SELF['subscribe']({
-              channel: channel + defaultConfiguration.PRESENCE_SUFFIX,
+              channel: channel + constants.PRESENCE_SUFFIX,
               callback: presence,
               restore: restore,
             });
@@ -505,7 +479,7 @@ function PN_API(setup: setupObject) {
 
             // Subscribe Presence Channel
             SELF['subscribe']({
-              channel_group: channel_group + defaultConfiguration.PRESENCE_SUFFIX,
+              channel_group: channel_group + constants.PRESENCE_SUFFIX,
               callback: presence,
               restore: restore,
               auth_key: keychain.getAuthKey(),
@@ -530,7 +504,7 @@ function PN_API(setup: setupObject) {
           // Re-test Connection
           utils.timeout(function () {
             SELF['time'](_test_connection);
-          }, SECOND);
+          }, constants.SECOND);
         }
 
         // Disconnect & Reconnect
@@ -595,7 +569,8 @@ function PN_API(setup: setupObject) {
           data['instanceid'] = keychain.getInstanceId();
         }
 
-        start_presence_heartbeat();
+        presenceHeartbeat.start();
+
         SUB_RECEIVER = xdr({
           timeout: sub_timeout,
           fail: function (response) {
@@ -619,7 +594,7 @@ function PN_API(setup: setupObject) {
             // Check for Errors
             if (!messages || (typeof messages == 'object' && 'error' in messages && messages['error'])) {
               SUB_ERROR(messages);
-              return utils.timeout(CONNECT, SECOND);
+              return utils.timeout(CONNECT, constants.SECOND);
             }
 
             // User Idle Callback
@@ -715,9 +690,9 @@ function PN_API(setup: setupObject) {
                 var r = [
                   chobj
                     .callback || SUB_CALLBACK,
-                  channel.split(defaultConfiguration.PRESENCE_SUFFIX)[0],
+                  channel.split(constants.PRESENCE_SUFFIX)[0],
                 ];
-                channel2 && r.push(channel2.split(defaultConfiguration.PRESENCE_SUFFIX)[0]);
+                channel2 && r.push(channel2.split(constants.PRESENCE_SUFFIX)[0]);
                 return r;
               };
             })();
@@ -781,7 +756,7 @@ function PN_API(setup: setupObject) {
     stop_timers: function () {
       clearTimeout(_poll_timer);
       clearTimeout(_poll_timer2);
-      clearTimeout(PRESENCE_HB_TIMEOUT);
+      presenceHeartbeat.stop();
     },
 
     shutdown: function () {
@@ -810,7 +785,7 @@ function PN_API(setup: setupObject) {
   function _poll_online() {
     _is_online() || _reset_offline(1, { error: 'Offline. Please check your network settings.' });
     _poll_timer && clearTimeout(_poll_timer);
-    _poll_timer = utils.timeout(_poll_online, SECOND);
+    _poll_timer = utils.timeout(_poll_online, constants.SECOND);
   }
 
   function _poll_online2() {
@@ -835,9 +810,9 @@ function PN_API(setup: setupObject) {
     clearTimeout(_poll_timer2);
   }
 
-  _poll_timer = utils.timeout(_poll_online, SECOND);
+  _poll_timer = utils.timeout(_poll_online, constants.SECOND);
   _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (config.getHeartbeatInterval() - 3) * SECOND);
+  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (config.getHeartbeatInterval() - 3) * constants.SECOND);
 
   // Detect Age of Message
   function detect_latency(tt) {
@@ -872,7 +847,7 @@ module.exports = {
   build_url: utils.buildURL,
   each: utils.each,
   uuid: utils.generateUUID,
-  URLBIT: defaultConfiguration.URLBIT,
+  URLBIT: constants.URLBIT,
   grep: utils.grep,
   supplant: utils.supplant,
   now: utils.rnow,

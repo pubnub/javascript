@@ -23,3 +23,6 @@ rules:
   no-var: 0
   guard-for-in: 0
   block-scoped-var: 0
+  no-redeclare: 0
+  comma-dangle: 0
+  no-shadow: 0

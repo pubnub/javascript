@@ -3,5 +3,6 @@
   "URLBIT": "/",
   "defaultHeartbeatInterval": 30,
   "minimumHeartbeatInterval": 5,
-  "PRESENCE_SUFFIX": "-pnpres"
+  "PRESENCE_SUFFIX": "-pnpres",
+  "SECOND": 1000
 }
