@@ -23,7 +23,7 @@ export default class {
 
   _coreParams: Object; /* items that must be passed with each request. */
 
-  constructor(xdr: Function, keychain: Keychain, ssl: boolean = false, origin: string = 'pubsub.pubnub.com') {
+  constructor(xdr: Function, keychain: Keychain, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
     this._xdr = xdr;
     this._keychain = keychain;
 

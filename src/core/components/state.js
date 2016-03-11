@@ -107,4 +107,36 @@ export default class {
     return list.sort();
   }
 
+  each_channel_group(callback: Function) {
+    var count = 0;
+
+    utils.each(this.getChannelGroups(), function (channel_group) {
+      var chang = this.getChannelGroup(channel_group);
+
+      if (!chang) return;
+
+      count++;
+      (callback || function () {
+      })(chang);
+    });
+
+    return count;
+  }
+
+  each_channel(callback: Function) {
+    var count = 0;
+
+    utils.each(this.getChannels(), function (channel) {
+      var chan = this.getChannel(channel);
+
+      if (!chan) return;
+
+      count++;
+      (callback || function () {
+      })(chan);
+    });
+
+    return count;
+  }
+
 }

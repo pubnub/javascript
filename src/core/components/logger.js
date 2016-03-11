@@ -20,7 +20,6 @@ class moduleLogger {
 
 
 export default {
-
   getLogger(moduleName: string) {
     return new moduleLogger(moduleName);
   },

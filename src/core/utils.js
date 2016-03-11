@@ -5,13 +5,17 @@ import uuidGenerator from 'uuid';
 /* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
 let defaultConfiguration = require('../../defaults.json');
-let REPL = /{([\w\-]+)}/g;
+let NOW = 1;
 
-function rnow() {
+function rnow(): number {
   return +new Date;
 }
 
-function isArray(arg) {
+function unique(): string {
+  return 'x' + ++NOW + '' + (+new Date);
+}
+
+function isArray(arg: Object): boolean {
   return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === 'number');
   // return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
 }
@@ -21,7 +25,7 @@ function isArray(arg) {
  * ====
  * each( [1,2,3], function(item) { } )
  */
-function each(o, f) {
+function each(o: Object, f: Function) {
   if (!o || !f) {
     return;
   }
@@ -44,21 +48,23 @@ function each(o, f) {
  * ======
  * var encoded_data = encode('path');
  */
-function encode(path) { return encodeURIComponent(path); }
+function encode(path: string): string {
+  return encodeURIComponent(path);
+}
 
 /**
  * Build Url
  * =======
  *
  */
-function buildURL(urlComponents, urlParams) {
+function buildURL(urlComponents: Array<string>, urlParams: Object): string {
   var url = urlComponents.join(defaultConfiguration.URLBIT);
   var params = [];
 
   if (!urlParams) return url;
 
   each(urlParams, function (key, value) {
-    var valueStr = (typeof value === 'object') ? JSON['stringify'](value) : value;
+    var valueStr = (typeof value === 'object') ? JSON.stringify(value) : value;
     (typeof value !== 'undefined' &&
       value !== null && encode(valueStr).length > 0
     ) && params.push(key + '=' + encode(valueStr));
@@ -66,51 +72,6 @@ function buildURL(urlComponents, urlParams) {
 
   url += '?' + params.join(defaultConfiguration.PARAMSBIT);
   return url;
-}
-
-/**
- * UPDATER
- * =======
- * var timestamp = unique();
- */
-function updater(fun, rate) {
-  var timeout;
-  var last = 0;
-  var runnit = function () {
-    if (last + rate > rnow()) {
-      clearTimeout(timeout);
-      timeout = setTimeout(runnit, rate);
-    } else {
-      last = rnow();
-      fun();
-    }
-  };
-
-  return runnit;
-}
-
-/**
- * GREP
- * ====
- * var list = grep( [1,2,3], function(item) { return item % 2 } )
- */
-function grep(list, fun) {
-  var fin = [];
-  each(list || [], function (l) {
-    fun(l) && fin.push(l);
-  });
-  return fin;
-}
-
-/**
- * SUPPLANT
- * ========
- * var text = supplant( 'Hello {name}!', { name : 'John' } )
- */
-function supplant(str, values) {
-  return str.replace(REPL, function (_, match) {
-    return values[match] || _;
-  });
 }
 
 /**
@@ -213,17 +174,15 @@ module.exports = {
   buildURL: buildURL,
   encode: encode,
   each: each,
-  updater: updater,
   rnow: rnow,
   isArray: isArray,
   map: map,
   pamEncode: pamEncode,
   generateUUID: generateUUID,
   timeout: timeout,
-  supplant: supplant,
-  grep: grep,
   _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
   _object_to_key_list_sorted: _object_to_key_list_sorted,
   _object_to_key_list: _object_to_key_list,
-  validateHeartbeat: validateHeartbeat
+  validateHeartbeat: validateHeartbeat,
+  unique: unique
 };

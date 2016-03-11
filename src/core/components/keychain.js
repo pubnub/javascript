@@ -3,7 +3,7 @@
 export default class {
 
   _subscribeKey: string;
-  _publishKey: string;
+  _publishKey: ?string;
   _authKey: string;
   _instanceId: string;
   _secretKey: string;
@@ -25,7 +25,7 @@ export default class {
     return this;
   }
 
-  setPublishKey(publishkey: string): this {
+  setPublishKey(publishkey: ?string): this {
     this._publishKey = publishkey;
     return this;
   }

@@ -5,6 +5,8 @@ import Networking from '../../../../../src/core/components/networking';
 import Config from '../../../../../src/core/components/config';
 import Keychain from '../../../../../src/core/components/keychain';
 
+import Responders from '../../../../../src/core/presenters/responders';
+
 const assert = require('assert');
 const sinon = require('sinon');
 const proxyquire = require('proxyquire').noCallThru();
@@ -13,17 +15,20 @@ describe('push endpoints', () => {
   let networking;
   let config;
   let keychain;
-  let error;
+
   let proxiedInstance;
+  let pushEndpoint;
+
   let successMock;
   let failMock;
+  let validateMock;
 
   beforeEach(() => {
     networking = new Networking();
     config = new Config();
-    error = sinon.stub();
     successMock = sinon.stub();
     failMock = sinon.stub();
+    validateMock = sinon.stub();
 
     keychain = new Keychain()
       .setPublishKey('pubKey')
@@ -32,157 +37,94 @@ describe('push endpoints', () => {
       .setUUID('uuidKey')
       .setInstanceId('instanceId');
 
-    let respondersClass = class {};
-    respondersClass.callback = successMock;
-    respondersClass.error = failMock;
+    let respondersClass = Responders;
+    respondersClass.prototype.callback = successMock;
+    respondersClass.prototype.error = failMock;
+    respondersClass.prototype.validationError = validateMock;
 
-    proxiedInstance = proxyquire('../../../../../core/src/endpoints/push', {
+    proxiedInstance = proxyquire('../../../../../src/core/endpoints/push', {
       '../presenters/responders': respondersClass,
     }).default;
+
+    pushEndpoint = new proxiedInstance({ networking, config, keychain });
   });
 
   describe('#provisionDevice', () => {
     describe('verifies required information exists', () => {
       it('errors if device id is missing', () => {
         let args = {};
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
         pushEndpoint.provisionDevice(args, () => {});
-        assert.equal(error.called, 1);
-        assert.equal(error.args[0][0], 'Missing Device ID (device_id)');
+        assert.equal(validateMock.called, 1);
+        assert.equal(validateMock.args[0][1], 'Missing Device ID (device)');
       });
 
       it('errors if gw_type is missing', () => {
         let args = {
-          device_id: 'device1',
+          device: 'device1',
         };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
         pushEndpoint.provisionDevice(args, () => {});
-        assert.equal(error.called, 1);
-        assert.equal(error.args[0][0], 'Missing GW Type (gw_type: gcm or apns)');
+        assert.equal(validateMock.called, 1);
+        assert.equal(validateMock.args[0][1], 'Missing GW Type (pushGateway: gcm or apns)');
       });
 
-      it('errors if op is missing', () => {
+      it('errors if operation is missing', () => {
         let args = {
-          device_id: 'device1',
-          gw_type: 'apn',
+          device: 'device1',
+          pushGateway: 'apn',
         };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
         pushEndpoint.provisionDevice(args, () => {});
-        assert.equal(error.called, 1);
-        assert.equal(error.args[0][0], 'Missing GW Operation (op: add or remove)');
+        assert.equal(validateMock.called, 1);
+        assert.equal(validateMock.args[0][1], 'Missing GW Operation (operation: add or remove)');
       });
 
       it('errors if channel is missing', () => {
         let args = {
-          device_id: 'device1',
-          gw_type: 'apn',
-          op: 'add',
+          device: 'device1',
+          pushGateway: 'apn',
+          operation: 'add',
         };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
+
         pushEndpoint.provisionDevice(args, () => {});
-        assert.equal(error.called, 1);
-        assert.equal(error.args[0][0], 'Missing gw destination Channel (channel)');
+        assert.equal(validateMock.called, 1);
+        assert.equal(validateMock.args[0][1], 'Missing gw destination Channel (channel)');
       });
 
       it('errors if publish key is missing', () => {
         let args = {
-          device_id: 'device1',
-          gw_type: 'apn',
-          op: 'add',
+          device: 'device1',
+          pushGateway: 'apn',
+          operation: 'add',
           channel: 'channel',
         };
         keychain.setPublishKey('');
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
         pushEndpoint.provisionDevice(args, () => {});
-        assert.equal(error.called, 1);
-        assert.equal(error.args[0][0], 'Missing Publish Key');
+        assert.equal(validateMock.called, 1);
+        assert.equal(validateMock.args[0][1], 'Missing Publish Key');
       });
 
       it('errors if subscribe key is missing', () => {
         let args = {
-          device_id: 'device1',
-          gw_type: 'apn',
-          op: 'add',
+          device: 'device1',
+          pushGateway: 'apn',
+          operation: 'add',
           channel: 'channel',
         };
         keychain.setSubscribeKey('');
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
         pushEndpoint.provisionDevice(args, () => {});
-        assert.equal(error.called, 1);
-        assert.equal(error.args[0][0], 'Missing Subscribe Key');
-      });
-    });
-
-    it('uses auth-key passed if exists', () => {
-      let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
-      let args = {
-        device_id: 'device1',
-        gw_type: 'pushType',
-        op: 'add',
-        channel: 'channel',
-        auth_key: 'customAuth',
-      };
-      let pushEndpoint = new proxiedInstance({
-        networking,
-        config,
-        keychain,
-        error,
-      });
-      pushEndpoint.provisionDevice(args, () => {});
-      assert.equal(pushStub.called, 1);
-      assert.equal(pushStub.args[0][0], 'device1');
-      assert.deepEqual(pushStub.args[0][1].data, {
-        auth: 'customAuth',
-        uuid: 'uuidKey',
-        add: 'channel',
-        type: 'pushType',
+        assert.equal(validateMock.called, 1);
+        assert.equal(validateMock.args[0][1], 'Missing Subscribe Key');
       });
     });
 
     it('supports remove operation', () => {
       let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
       let args = {
-        device_id: 'device1',
-        gw_type: 'pushType',
-        op: 'remove',
+        device: 'device1',
+        pushGateway: 'pushType',
+        operation: 'remove',
         channel: 'channel',
       };
-      let pushEndpoint = new proxiedInstance({
-        networking,
-        config,
-        keychain,
-        error,
-      });
+
       pushEndpoint.provisionDevice(args, () => {});
       assert.equal(pushStub.called, 1);
       assert.equal(pushStub.args[0][0], 'device1');
@@ -194,21 +136,36 @@ describe('push endpoints', () => {
       });
     });
 
+    it('passes params to the networking class', () => {
+      let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
+      let args = {
+        device: 'device1',
+        pushGateway: 'pushType',
+        operation: 'remove',
+        channel: 'channel',
+      };
+
+      pushEndpoint.provisionDevice(args, () => {});
+      assert.equal(pushStub.called, 1);
+      assert.equal(pushStub.args[0][0], 'device1');
+      assert.deepEqual(pushStub.args[0][1].data, {
+        auth: 'authKey',
+        remove: 'channel',
+        type: 'pushType',
+        uuid: 'uuidKey',
+      });
+    });
+
     it('uses instance id if enabled from args', () => {
       config.setInstanceIdConfig(true);
       let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
       let args = {
-        device_id: 'device1',
-        gw_type: 'pushType',
-        op: 'remove',
+        device: 'device1',
+        pushGateway: 'pushType',
+        operation: 'remove',
         channel: 'channel',
       };
-      let pushEndpoint = new proxiedInstance({
-        networking,
-        config,
-        keychain,
-        error,
-      });
+
       pushEndpoint.provisionDevice(args, () => {});
       assert.equal(pushStub.called, 1);
       assert.equal(pushStub.args[0][0], 'device1');
@@ -225,96 +182,37 @@ describe('push endpoints', () => {
       it('calls the Responders.callback back on success with args callback', () => {
         let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
         let args = {
-          device_id: 'device1',
-          gw_type: 'pushType',
-          op: 'remove',
+          device: 'device1',
+          pushGateway: 'pushType',
+          operation: 'remove',
           channel: 'channel',
         };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
         let callbackStub = sinon.stub();
-        args.callback = callbackStub;
-        pushEndpoint.provisionDevice(args);
+        pushEndpoint.provisionDevice(args, callbackStub);
 
         pushStub.args[0][1].success('success-response');
         assert.equal(successMock.called, 1);
         assert.equal(successMock.args[0][0], 'success-response');
         assert.deepEqual(successMock.args[0][1], callbackStub);
       });
-
-      it('uses the error function provided in args', () => {
-        let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
-        let errorStub = sinon.stub();
-        let args = {
-          device_id: 'device1',
-          gw_type: 'pushType',
-          op: 'remove',
-          channel: 'channel',
-          error: errorStub,
-        };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
-        pushEndpoint.provisionDevice(args, () => {});
-
-        pushStub.args[0][1].success('success-response');
-        assert.equal(successMock.called, 1);
-        assert.equal(successMock.args[0][0], 'success-response');
-        assert.deepEqual(successMock.args[0][2], errorStub);
-      });
     });
 
     describe('on error', () => {
       it('uses the error function provided in args', () => {
         let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
-        let errorStub = sinon.stub();
         let args = {
-          device_id: 'device1',
-          gw_type: 'pushType',
-          op: 'remove',
-          channel: 'channel',
-          error: errorStub,
+          device: 'device1',
+          pushGateway: 'pushType',
+          operation: 'remove',
+          channel: 'channel'
         };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
-        pushEndpoint.provisionDevice(args, () => {});
+        let callbackStub = sinon.stub();
+        pushEndpoint.provisionDevice(args, callbackStub);
 
         pushStub.args[0][1].fail('fail-response');
         assert.equal(failMock.called, 1);
         assert.equal(failMock.args[0][0], 'fail-response');
-        assert.deepEqual(failMock.args[0][1], errorStub);
-      });
-
-      it('swallows the error if error is not provided', () => {
-        let pushStub = sinon.stub(networking, 'provisionDeviceForPush');
-        let args = {
-          device_id: 'device1',
-          gw_type: 'pushType',
-          op: 'remove',
-          channel: 'channel',
-        };
-        let pushEndpoint = new proxiedInstance({
-          networking,
-          config,
-          keychain,
-          error,
-        });
-        pushEndpoint.provisionDevice(args, () => {});
-
-        pushStub.args[0][1].fail('fail-response');
-        assert.equal(failMock.called, 1);
-        assert.equal(failMock.args[0][0], 'fail-response');
+        assert.deepEqual(failMock.args[0][1], callbackStub);
       });
     });
   });

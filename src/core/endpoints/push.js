@@ -12,38 +12,69 @@ type pushConstruct = {
   error: Function
 };
 
+type provisionDeviceArgs = {
+  operation: 'add' | 'remove',
+  pushGateway: 'gcm' | 'apns',
+  device: string,
+  channel: string
+};
+
+type createNotificationArgs = {
+  operation: 'add' | 'remove',
+  pushGateway: 'gcm' | 'apns',
+  device: string,
+  channel: string
+};
+
 export default class {
   _networking: Networking;
   _keychain: Keychain;
   _config: Config;
-  _error: Function;
+  _responders: Responders;
 
-  constructor({ networking, keychain, error, config }: pushConstruct) {
+  constructor({ networking, keychain, config }: pushConstruct) {
     this._networking = networking;
     this._keychain = keychain;
-    this._error = error;
     this._config = config;
+    this._responders = new Responders('endpoints/push');
   }
 
-  provisionDevice(args: Object) {
-    let { op, gw_type, device_id, channel } = args;
+  provisionDevice(args: provisionDeviceArgs, callback: Function) {
+    let { operation, pushGateway, device, channel } = args;
 
-    let callback = args.callback || function () {};
-    let auth_key = args.auth_key || this._keychain.getAuthKey();
-    let err = args.error || function () {};
+    if (!device) {
+      return this._responders.validationError(callback, 'Missing Device ID (device)');
+    }
 
-    if (!device_id) return this._error('Missing Device ID (device_id)');
-    if (!gw_type) return this._error('Missing GW Type (gw_type: gcm or apns)');
-    if (!op) return this._error('Missing GW Operation (op: add or remove)');
-    if (!channel) return this._error('Missing gw destination Channel (channel)');
-    if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+    if (!pushGateway) {
+      return this._responders.validationError(callback, 'Missing GW Type (pushGateway: gcm or apns)');
+    }
 
-    let params: Object = { uuid: this._keychain.getUUID(), auth: auth_key, type: gw_type };
+    if (!operation) {
+      return this._responders.validationError(callback, 'Missing GW Operation (operation: add or remove)');
+    }
 
-    if (op === 'add') {
+    if (!channel) {
+      return this._responders.validationError(callback, 'Missing gw destination Channel (channel)');
+    }
+
+    if (!this._keychain.getPublishKey()) {
+      return this._responders.validationError(callback, 'Missing Publish Key');
+    }
+
+    if (!this._keychain.getSubscribeKey()) {
+      return this._responders.validationError(callback, 'Missing Subscribe Key');
+    }
+
+    let params: Object = {
+      uuid: this._keychain.getUUID(),
+      auth: this._keychain.getAuthKey(),
+      type: pushGateway
+    };
+
+    if (operation === 'add') {
       params.add = channel;
-    } else if (op === 'remove') {
+    } else if (operation === 'remove') {
       params.remove = channel;
     }
 
@@ -51,14 +82,19 @@ export default class {
       params.instanceid = this._keychain.getInstanceId();
     }
 
-    this._networking.provisionDeviceForPush(device_id, {
+    this._networking.provisionDeviceForPush(device, {
       data: params,
-      success: function (response) {
-        Responders.callback(response, callback, err);
+      success: (response) => {
+        this._responders.callback(response, callback);
       },
-      fail: function (response) {
-        Responders.error(response, err);
+      fail: (response) => {
+        this._responders.error(response, callback);
       },
     });
   }
+
+  createNotification(args: createNotificationArgs, callback: Function) {
+
+  }
+
 }
