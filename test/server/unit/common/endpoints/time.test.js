@@ -1,77 +1,49 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
+import assert from 'assert';
+import sinon from 'sinon';
+
 import TimeEndpoint from '../../../../../src/core/endpoints/time';
 import Networking from '../../../../../src/core/components/networking';
-import Config from '../../../../../src/core/components/config';
-import Keychain from '../../../../../src/core/components/keychain';
-
-const assert = require('assert');
-const sinon = require('sinon');
 
 describe('time endpoints', () => {
   let networking;
-  let config;
-  let keychain;
-  let get_url_params = function (data) {
-    return data;
-  };
 
   beforeEach(() => {
     networking = new Networking();
-    config = new Config();
-    keychain = new Keychain()
-      .setAuthKey('authKey')
-      .setUUID('uuidKey')
-      .setInstanceId('instanceId');
   });
 
   it('calls networking #fetchTime', () => {
-    let fetchTimeStub = sinon.stub(networking, 'fetchTime');
+    const fetchTimeStub = sinon.stub(networking, 'fetchTime');
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
+    const timeEndpoint = new TimeEndpoint({ networking });
     timeEndpoint.fetchTime();
     assert.equal(fetchTimeStub.called, 1);
-    assert.deepEqual(fetchTimeStub.args[0][0].data, { uuid: 'uuidKey', auth: 'authKey' });
-  });
-
-  it('calls networking #fetchTime with instanceId', () => {
-    config.setInstanceIdConfig(true);
-    let fetchTimeStub = sinon.stub(networking, 'fetchTime');
-    let prepareParams = sinon.stub(networking, 'prepareParams').returns({ prepared: 'params' });
-
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
-    timeEndpoint.fetchTime();
-    assert.equal(fetchTimeStub.called, 1);
-    assert.deepEqual(fetchTimeStub.args[0][0].data, { prepared: 'params' });
-    assert.equal(prepareParams.called, 1);
-    assert.deepEqual(prepareParams.args[0][0], {
-      uuid: 'uuidKey',
-      auth: 'authKey',
-      instanceid: 'instanceId',
-    });
   });
 
   it('calls the callback function when time is fetched', (done) => {
-    sinon.stub(networking, 'fetchTime', ({ success }) => {
-      success([14570763868573725]);
+    sinon.stub(networking, 'fetchTime', (callback) => {
+      callback(null, [14570763868573725]);
     });
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
-    timeEndpoint.fetchTime((response) => {
-      assert.equal(response, 14570763868573725);
+    const timeEndpoint = new TimeEndpoint({ networking });
+    timeEndpoint.fetchTime((err, response) => {
+      assert.equal(err, null);
+      assert.deepEqual(response, 14570763868573725);
       done();
     });
   });
 
   it('calls the callback function when fetch failed', (done) => {
-    sinon.stub(networking, 'fetchTime', ({ fail }) => {
-      fail();
+    sinon.stub(networking, 'fetchTime', (callback) => {
+      callback({ some: 'horribleError' }, null);
     });
 
-    let timeEndpoint = new TimeEndpoint({ networking, config, keychain, get_url_params });
-    timeEndpoint.fetchTime((response) => {
-      assert.equal(response, 0);
+    const timeEndpoint = new TimeEndpoint({ networking });
+    timeEndpoint.fetchTime((err, response) => {
+      assert.equal(response, null);
+      assert.deepEqual(err, { some: 'horribleError' });
       done();
     });
   });

@@ -8,7 +8,7 @@ import PublishQueue from '../components/publish_queue';
 
 import PresenceEndpoints from './presence';
 
-import Responders from './presenters/responders';
+import Responders from '../presenters/responders';
 
 import utils from '../utils';
 import constants from '../../../defaults.json';

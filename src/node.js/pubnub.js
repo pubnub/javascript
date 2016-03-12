@@ -30,7 +30,9 @@
  THE SOFTWARE.
  --------------------------------------------------------------------------- */
 
-var pubNubCore = require('../core/pubnub-common.js');
+import pubNubCore from '../core/pubnub-common.js';
+
+
 var XDR = require('./lib/xdr');
 var packageJSON = require('../../package.json');
 var crypto = require('crypto');
@@ -88,7 +90,7 @@ var CREATE_PUBNUB = function (setup) {
     return CREATE_PUBNUB(setup);
   };
 
-  var PN = pubNubCore.PN_API(setup);
+  var PN = pubNubCore(setup);
 
   for (var prop in PN) {
     if (PN.hasOwnProperty(prop)) {
@@ -104,16 +106,10 @@ var CREATE_PUBNUB = function (setup) {
   SELF.__PN = PN;
   //
 
-  SELF.ready();
+  // SELF.ready();
 
 
   return SELF;
 };
 
-CREATE_PUBNUB.init = CREATE_PUBNUB;
-CREATE_PUBNUB.unique = pubNubCore.unique;
-CREATE_PUBNUB.secure = CREATE_PUBNUB;
-CREATE_PUBNUB.crypto_obj = require('./lib/crypto-wrapper');
-
 module.exports = CREATE_PUBNUB;
-module.exports.PNmessage = pubNubCore.PNmessage;

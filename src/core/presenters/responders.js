@@ -1,12 +1,9 @@
 /* @flow */
-
-import _pick from 'lodash/pick';
-
 export default class {
 
   _componentName: string;
 
-  constructors(componenetName: string) {
+  constructor(componenetName: string) {
     this._componentName = componenetName;
   }
 
@@ -37,14 +34,14 @@ export default class {
     }
   }
 
-  validationError(callback: Function, message: string) {
-    this._createError(callback, { message }, 'validationError');
+  validationError(message: string): Object {
+    return this._createError({ message }, 'validationError');
   }
 
-  _createError(callback: Function, errorPayload: Object, type: string) {
+  _createError(errorPayload: Object, type: string): Object {
     errorPayload.component = this._componentName;
     errorPayload.type = type;
-    callback(1, errorPayload);
+    return errorPayload;
   }
 
 }

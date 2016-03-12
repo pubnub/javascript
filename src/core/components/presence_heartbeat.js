@@ -3,7 +3,6 @@
 import Config from './config';
 import State from './state';
 import presenceEndpoints from '../endpoints/presence';
-import _range from 'lodash/range';
 import Logger from './logger';
 import EventEmitter from 'event-emitter';
 

@@ -57,118 +57,46 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var packageJSON = __webpack_require__(1);
-	var pubNubCore = __webpack_require__(2);
-	var crypto_obj = __webpack_require__(40);
-	var CryptoJS = __webpack_require__(41);
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 
-	/**
-	 * UTIL LOCALS
-	 */
-	var PNSDK = 'PubNub-JS-' + 'consumer' + '/' + packageJSON.version;
+	exports.default = function (setup) {
+	  setup.db = db;
+	  setup.error = setup.error;
+	  setup.hmac_SHA256 = get_hmac_SHA256;
+	  setup.crypto_obj = crypto_obj();
+	  setup._is_online = _is_online;
+	  setup.sendBeacon = sendBeacon;
+
+	  var PN = (0, _pubnubCommon2.default)(setup);
+
+	  window.addEventListener('beforeunload', PN.unloadTriggered());
+	  window.addEventListener('offline', PN.offlineTriggered());
+
+	  return PN;
+	};
+
+	var _pubnubCommon = __webpack_require__(1);
+
+	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var crypto_obj = __webpack_require__(50);
+	var CryptoJS = __webpack_require__(51);
 
 	/**
 	 * LOCAL STORAGE
 	 */
-	var db = function () {
-	  var ls = typeof localStorage !== 'undefined' && localStorage;
-	  return {
-	    get: function get(key) {
-	      try {
-	        if (ls) return ls.getItem(key);
-	        if (document.cookie.indexOf(key) === -1) return null;
-	        return ((document.cookie || '').match(RegExp(key + '=([^;]+)')) || [])[1] || null;
-	      } catch (e) {
-	        return;
-	      }
-	    },
-	    set: function set(key, value) {
-	      try {
-	        if (ls) return ls.setItem(key, value) && 0;
-	        document.cookie = key + '=' + value + '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
-	      } catch (e) {
-	        return;
-	      }
-	    }
-	  };
-	}();
-
-	/**
-	 * CORS XHR Request
-	 * ================
-	 *  xdr({
-	 *     url     : ['http://www.blah.com/url'],
-	 *     success : function(response) {},
-	 *     fail    : function() {}
-	 *  });
-	 */
-	function xdr(setup) {
-	  var xhr;
-	  var timer;
-	  var complete = 0;
-	  var loaded = 0;
-	  var async = true; /* do not allow sync operations in modern builds */
-	  var xhrtme = setup.timeout || pubNubCore.DEF_TIMEOUT;
-	  var data = setup.data || {};
-	  var fail = setup.fail || function () {};
-	  var success = setup.success || function () {};
-
-	  var done = function done(failed, response) {
-	    if (complete) return;
-	    complete = 1;
-
-	    clearTimeout(timer);
-
-	    if (xhr) {
-	      xhr.onerror = xhr.onload = null;
-	      if (xhr.abort) xhr.abort();
-	      xhr = null;
-	    }
-
-	    if (failed) fail(response);
-	  };
-
-	  var finished = function finished() {
-	    if (loaded) return;
-	    var response;
-	    loaded = 1;
-
-	    clearTimeout(timer);
-
-	    try {
-	      response = JSON.parse(xhr.responseText);
-	    } catch (r) {
-	      return done(1);
-	    }
-
-	    success(response);
-	  };
-
-	  timer = pubNubCore.timeout(function () {
-	    done(1);
-	  }, xhrtme);
-
-	  // Send
-	  try {
-	    xhr = typeof XDomainRequest !== 'undefined' && new XDomainRequest() || new XMLHttpRequest();
-
-	    xhr.onerror = xhr.onabort = function () {
-	      done(1, xhr.responseText || { error: 'Network Connection Error' });
-	    };
-	    xhr.onload = xhr.onloadend = finished;
-
-	    data.pnsdk = PNSDK;
-	    var url = pubNubCore.build_url(setup.url, data);
-	    xhr.open('GET', url, async);
-	    if (async) xhr.timeout = xhrtme;
-	    xhr.send();
-	  } catch (eee) {
-	    done(1, { error: 'XHR Failed', stacktrace: eee });
+	var db = {
+	  get: function get(key) {
+	    return localStorage.getItem(key);
+	  },
+	  set: function set(key, data) {
+	    return localStorage.setItem(key, data);
 	  }
-
-	  // Return 'done'
-	  return done;
-	}
+	};
 
 	function get_hmac_SHA256(data, key) {
 	  var hash = CryptoJS['HmacSHA256'](data, key);
@@ -177,333 +105,121 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Test Connection State
 	function _is_online() {
-	  if (!('onLine' in navigator)) return 1;
-	  try {
-	    return navigator['onLine'];
-	  } catch (e) {
+	  // if onLine is not supported, return true.
+	  if (!('onLine' in navigator)) {
 	    return true;
 	  }
+
+	  return navigator.onLine;
 	}
 
 	function sendBeacon(url) {
-	  if (!('sendBeacon' in navigator)) return false;
-
-	  return navigator['sendBeacon'](url);
-	}
-
-	/**
-	 * ERROR
-	 * ===
-	 * error('message');
-	 */
-	function error(message) {
-	  console.error(message); // eslint-disable-line no-console
-	}
-
-	/* =-====================================================================-= */
-	/* =-====================================================================-= */
-	/* =-=========================     PUBNUB     ===========================-= */
-	/* =-====================================================================-= */
-	/* =-====================================================================-= */
-
-	function CREATE_PUBNUB(setup) {
-	  setup.db = db;
-	  setup.xdr = xdr;
-	  setup.error = setup.error || error;
-	  setup.hmac_SHA256 = get_hmac_SHA256;
-	  setup.crypto_obj = crypto_obj();
-	  setup._is_online = _is_online;
-	  setup.sendBeacon = sendBeacon;
-	  setup.params = { pnsdk: PNSDK };
-
-	  var SELF = function SELF(setup) {
-	    return CREATE_PUBNUB(setup);
-	  };
-
-	  var PN = pubNubCore.PN_API(setup);
-	  for (var prop in PN) {
-	    if (PN.hasOwnProperty(prop)) {
-	      SELF[prop] = PN[prop];
-	    }
+	  if (navigator && 'sendBeacon' in navigator) {
+	    navigator.sendBeacon(url);
+	  } else {
+	    return false;
 	  }
-
-	  SELF.init = SELF;
-	  SELF.crypto_obj = crypto_obj();
-	  SELF.PNmessage = pubNubCore.PNmessage;
-
-	  window.addEventListener('beforeunload', function () {
-	    SELF['each-channel'](function (ch) {
-	      SELF['LEAVE'](ch.name, 0);
-	    });
-	    return true;
-	  });
-
-	  SELF.ready();
-
-	  window.addEventListener('offline', SELF['offline']);
-
-	  return SELF;
 	}
-
-	CREATE_PUBNUB.PNmessage = pubNubCore.PNmessage;
-
-	module.exports = CREATE_PUBNUB;
 
 /***/ },
 /* 1 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"name": "pubnub",
-		"preferGlobal": false,
-		"version": "4.0.0-beta1",
-		"author": "PubNub <support@pubnub.com>",
-		"description": "Publish & Subscribe Real-time Messaging with PubNub",
-		"contributors": [
-			{
-				"name": "Stephen Blum",
-				"email": "stephen@pubnub.com"
-			}
-		],
-		"bin": {},
-		"scripts": {
-			"test": "grunt test --force"
-		},
-		"main": "./node.js/pubnub.js",
-		"browser": "./modern/dist/pubnub.js",
-		"repository": {
-			"type": "git",
-			"url": "git://github.com/pubnub/javascript.git"
-		},
-		"keywords": [
-			"cloud",
-			"publish",
-			"subscribe",
-			"websockets",
-			"comet",
-			"bosh",
-			"xmpp",
-			"real-time",
-			"messaging"
-		],
-		"dependencies": {
-			"agentkeepalive": "~0.2",
-			"bunyan": "^1.5.1",
-			"lodash": "^4.1.0",
-			"loglevel": "^1.4.0",
-			"uuid": "^2.0.1"
-		},
-		"noAnalyze": false,
-		"devDependencies": {
-			"babel-core": "^6.6.5",
-			"babel-eslint": "5.0.0",
-			"babel-plugin-transform-class-properties": "^6.6.0",
-			"babel-plugin-transform-flow-strip-types": "^6.6.5",
-			"babel-preset-es2015": "^6.6.0",
-			"babel-register": "^6.6.5",
-			"chai": "3.5.0",
-			"eslint": "2.2.0",
-			"eslint-config-airbnb": "6.0.2",
-			"eslint-plugin-flowtype": "2.1.0",
-			"eslint-plugin-mocha": "2.0.0",
-			"eslint-plugin-react": "4.1.0",
-			"flow-bin": "^0.22.1",
-			"gulp": "^3.9.1",
-			"gulp-babel": "^6.1.2",
-			"gulp-clean": "^0.3.2",
-			"gulp-exec": "^2.1.2",
-			"gulp-flowtype": "^0.4.9",
-			"gulp-mocha": "^2.2.0",
-			"gulp-rename": "^1.2.2",
-			"gulp-webpack": "^1.5.0",
-			"imports-loader": "0.6.5",
-			"isparta": "4.0.0",
-			"json-loader": "0.5.4",
-			"karma": "0.13.21",
-			"karma-chai": "0.1.0",
-			"karma-mocha": "^0.2.2",
-			"karma-phantomjs-launcher": "1.0.0",
-			"karma-spec-reporter": "0.0.24",
-			"load-grunt-tasks": "^3.4.1",
-			"mocha": "2.4.5",
-			"node-uuid": "1.4.7",
-			"phantomjs-prebuilt": "2.1.4",
-			"proxyquire": "1.7.4",
-			"run-sequence": "^1.1.5",
-			"sinon": "^1.17.3",
-			"uglify-js": "^2.6.2",
-			"underscore": "1.7.0",
-			"webpack": "^1.12.14",
-			"webpack-dev-server": "1.14.1"
-		},
-		"bundleDependencies": [],
-		"license": "MIT",
-		"engine": {
-			"node": ">=0.8"
-		}
-	};
-
-/***/ },
-/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = createInstance;
 
-	var _uuid = __webpack_require__(3);
+	var _uuid = __webpack_require__(2);
 
 	var _uuid2 = _interopRequireDefault(_uuid);
 
-	var _networking = __webpack_require__(5);
+	var _eventEmitter = __webpack_require__(4);
+
+	var _eventEmitter2 = _interopRequireDefault(_eventEmitter);
+
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _keychain = __webpack_require__(6);
+	var _keychain = __webpack_require__(27);
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
-	var _config = __webpack_require__(9);
+	var _config = __webpack_require__(29);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _state = __webpack_require__(10);
+	var _state = __webpack_require__(32);
 
 	var _state2 = _interopRequireDefault(_state);
 
-	var _publish_queue = __webpack_require__(11);
+	var _publish_queue = __webpack_require__(33);
 
 	var _publish_queue2 = _interopRequireDefault(_publish_queue);
 
-	var _responders = __webpack_require__(12);
+	var _presence_heartbeat = __webpack_require__(34);
+
+	var _presence_heartbeat2 = _interopRequireDefault(_presence_heartbeat);
+
+	var _connectivity = __webpack_require__(38);
+
+	var _connectivity2 = _interopRequireDefault(_connectivity);
+
+	var _responders = __webpack_require__(28);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _time = __webpack_require__(32);
+	var _time = __webpack_require__(39);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(33);
+	var _presence = __webpack_require__(35);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(34);
+	var _history = __webpack_require__(40);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(35);
+	var _push = __webpack_require__(41);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(36);
+	var _access = __webpack_require__(45);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _replay = __webpack_require__(37);
+	var _replay = __webpack_require__(46);
 
 	var _replay2 = _interopRequireDefault(_replay);
 
-	var _channel_groups = __webpack_require__(38);
+	var _channel_groups = __webpack_require__(47);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _pubsub = __webpack_require__(39);
+	var _pubsub = __webpack_require__(48);
 
 	var _pubsub2 = _interopRequireDefault(_pubsub);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var packageJSON = __webpack_require__(1);
-	var constants = __webpack_require__(8);
-	var utils = __webpack_require__(7);
+	var packageJSON = __webpack_require__(49);
+	var constants = __webpack_require__(31);
+	var utils = __webpack_require__(30);
 
-	var NOW = 1;
-	var READY = false;
-	var READY_BUFFER = [];
 	var DEF_WINDOWING = 10; // MILLISECONDS.
 	var DEF_TIMEOUT = 15000; // MILLISECONDS.
 	var DEF_SUB_TIMEOUT = 310; // SECONDS.
 	var DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
 
-	var SDK_VER = packageJSON.version;
-
-	/**
-	 * UTILITIES
-	 */
-	function unique() {
-	  return 'x' + ++NOW + '' + +new Date();
-	}
-
-	// PUBNUB READY TO CONNECT
-	function ready() {
-	  if (READY) return;
-	  READY = 1;
-	  utils.each(READY_BUFFER, function (connect) {
-	    connect();
-	  });
-	}
-
-	function PNmessage(args) {
-	  var msg = args || { apns: {} };
-
-	  msg['getPubnubMessage'] = function () {
-	    var m = {};
-
-	    if (Object.keys(msg['apns']).length) {
-	      m['pn_apns'] = {
-	        aps: {
-	          alert: msg['apns']['alert'],
-	          badge: msg['apns']['badge']
-	        }
-	      };
-	      for (var k in msg['apns']) {
-	        m['pn_apns'][k] = msg['apns'][k];
-	      }
-	      var exclude1 = ['badge', 'alert'];
-	      for (var k in exclude1) {
-	        delete m['pn_apns'][exclude1[k]];
-	      }
-	    }
-
-	    if (msg['gcm']) {
-	      m['pn_gcm'] = {
-	        data: msg['gcm']
-	      };
-	    }
-
-	    for (var k in msg) {
-	      m[k] = msg[k];
-	    }
-	    var exclude = ['apns', 'gcm', 'publish', 'channel', 'callback', 'error'];
-	    for (var k in exclude) {
-	      delete m[exclude[k]];
-	    }
-
-	    return m;
-	  };
-	  msg['publish'] = function () {
-	    var m = msg.getPubnubMessage();
-
-	    if (msg['pubnub'] && msg['channel']) {
-	      msg['pubnub'].publish({
-	        message: m,
-	        channel: msg['channel'],
-	        callback: msg['callback'],
-	        error: msg['error']
-	      });
-	    }
-	  };
-	  return msg;
-	}
-
-	// hashing function required for Access Manager
-
-
-	function PN_API(setup) {
+	// function to call when pubnub is shutting down.
+	function createInstance(setup) {
+	  var shutdown = setup.shutdown;
 	  var useSendBeacon = typeof setup.use_send_beacon !== 'undefined' ? setup.use_send_beacon : true;
 	  var sendBeacon = useSendBeacon ? setup.sendBeacon : null;
-	  var xdr = setup.xdr;
-
 	  var db = setup.db || { get: function get() {}, set: function set() {} };
 	  var error = setup.error || function () {};
 	  var hmac_SHA256 = setup.hmac_SHA256;
@@ -523,13 +239,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // write the new key to storage
 	  db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
 
-	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, error)).setSupressLeaveEvents(setup.noleave || 0).setInstanceIdConfig(setup.instance_id || false);
+	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, error)).setSupressLeaveEvents(setup.noleave || 0)
+	  // .setSubscribeWindow(+setup.windowing || DEF_WINDOWING)
+	  // .setSubscribeTimeout((+setup.timeout || DEF_SUB_TIMEOUT) * constants.SECOND)
+	  .setInstanceIdConfig(setup.instance_id || false);
 
 	  config.setHeartbeatInterval(setup.heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
 
 	  var stateStorage = new _state2.default();
 
-	  var networking = new _networking2.default(setup.xdr, keychain, setup.ssl, setup.origin).addBeaconDispatcher(sendBeacon).setCoreParams(setup.params || {});
+	  var networking = new _networking2.default(config, keychain, setup.ssl, setup.origin).addBeaconDispatcher(sendBeacon)
+	  // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
+	  .setCoreParams(setup.params || {});
 
 	  var publishQueue = new _publish_queue2.default({ networking: networking });
 
@@ -542,6 +263,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) || crypto_obj['decrypt'](input, keychain.getCipherKey()) || input;
 	  }
 
+	  var eventEmitter = (0, _eventEmitter2.default)({});
+
 	  // initalize the endpoints
 	  var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking });
 	  var pushEndpoint = new _push2.default({ keychain: keychain, config: config, networking: networking, error: error });
@@ -552,143 +275,91 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroupEndpoints = new _channel_groups2.default({ keychain: keychain, networking: networking, config: config, error: error });
 	  var pubsubEndpoints = new _pubsub2.default({ keychain: keychain, networking: networking, presenceEndpoints: presenceEndpoints, error: error, config: config, publishQueue: publishQueue, state: stateStorage });
 
-	  var presenceHeartbeat = new _publish_queue2.default(config, stateStorage, presenceEndpoints, error);
-
-	  var SUB_WINDOWING = +setup['windowing'] || DEF_WINDOWING;
-	  var SUB_TIMEOUT = (+setup['timeout'] || DEF_SUB_TIMEOUT) * constants.SECOND;
-	  var KEEPALIVE = (+setup['keepalive'] || DEF_KEEPALIVE) * constants.SECOND;
-	  var TIME_CHECK = setup['timecheck'] || 0;
-	  var CONNECT = function CONNECT() {};
-	  var TIME_DRIFT = 0;
-	  var SUB_CALLBACK = 0;
-	  var SUB_CHANNEL = 0;
-	  var SUB_RECEIVER = 0;
-	  var SUB_RESTORE = setup['restore'] || 0;
-	  var TIMETOKEN = 0;
-	  var RESUMED = false;
-	  var SUB_ERROR = function SUB_ERROR() {};
-	  var NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'];
-	  var _is_online = setup['_is_online'] || function () {
-	    return 1;
-	  };
-	  var _shutdown = setup['shutdown'];
-	  var _poll_timer = void 0;
-	  var _poll_timer2 = void 0;
+	  var presenceHeartbeat = new _presence_heartbeat2.default(config, stateStorage, presenceEndpoints, eventEmitter, error);
+	  var connectivity = new _connectivity2.default({ eventEmitter: eventEmitter, networking: networking, timeEndpoint: timeEndpoint });
 
 	  if (config.getPresenceTimeout() === 2) {
 	    config.setHeartbeatInterval(1);
 	  }
 
-	  function each_channel_group(callback) {
-	    var count = 0;
-
-	    utils.each(stateStorage.generate_channel_group_list(), function (channel_group) {
-	      var chang = stateStorage.getChannelGroup(channel_group);
-
-	      if (!chang) return;
-
-	      count++;
-	      (callback || function () {})(chang);
-	    });
-
-	    return count;
-	  }
-
-	  function each_channel(callback) {
-	    var count = 0;
-
-	    utils.each(stateStorage.generate_channel_list(), function (channel) {
-	      var chan = stateStorage.getChannel(channel);
-
-	      if (!chan) return;
-
-	      count++;
-	      (callback || function () {})(chan);
-	    });
-
-	    return count;
-	  }
-
 	  // Announce Leave Event
 	  var SELF = {
-	    history: function history(args, callback) {
-	      historyEndpoint.fetchHistory(args, callback);
+	    history: historyEndpoint.fetchHistory.bind(historyEndpoint),
+	    replay: function replay(args, callback) {
+	      replayEndpoint.performReplay(args, callback);
 	    },
 	    time: function time(callback) {
 	      timeEndpoint.fetchTime(callback);
 	    },
-	    here_now: function here_now(args, callback) {
-	      presenceEndpoints.hereNow(args, callback);
-	    },
-	    where_now: function where_now(args, callback) {
-	      presenceEndpoints.whereNow(args, callback);
-	    },
-	    presence_heartbeat: function presence_heartbeat(args) {
-	      presenceEndpoints.heartbeat(args);
-	    },
-	    state: function state(args, callback) {
-	      presenceEndpoints.performState(args, callback);
-	    },
-	    grant: function grant(args, callback) {
-	      accessEndpoints.performGrant(args, callback);
-	    },
-	    audit: function audit(args, callback) {
-	      accessEndpoints.performAudit(args, callback);
-	    },
-	    mobile_gw_provision: function mobile_gw_provision(args) {
-	      pushEndpoint.provisionDevice(args);
-	    },
-	    replay: function replay(args, callback) {
-	      replayEndpoint.performReplay(args, callback);
-	    },
 
 
-	    // channel groups related
-	    channel_group: function channel_group(args, callback) {
-	      channelGroupEndpoints.channelGroup(args, callback);
-	    },
-	    channel_group_list_groups: function channel_group_list_groups(args, callback) {
-	      channelGroupEndpoints.listGroups(args, callback);
-	    },
-	    channel_group_remove_group: function channel_group_remove_group(args, callback) {
-	      channelGroupEndpoints.removeGroup(args, callback);
-	    },
-	    channel_group_list_channels: function channel_group_list_channels(args, callback) {
-	      channelGroupEndpoints.listChannels(args, callback);
-	    },
-	    channel_group_add_channel: function channel_group_add_channel(args, callback) {
-	      channelGroupEndpoints.addChannel(args, callback);
-	    },
-	    channel_group_remove_channel: function channel_group_remove_channel(args, callback) {
-	      channelGroupEndpoints.removeChannel(args, callback);
+	    presence: {
+	      hereNow: function hereNow(args, callback) {
+	        presenceEndpoints.hereNow(args, callback);
+	      },
+	      whereNow: function whereNow(args, callback) {
+	        presenceEndpoints.whereNow(args, callback);
+	      },
+	      state: function state(args, callback) {
+	        presenceEndpoints.performState(args, callback);
+	      }
 	    },
 
-
-	    set_resumed: function set_resumed(resumed) {
-	      RESUMED = resumed;
+	    accessManager: {
+	      grant: function grant(args, callback) {
+	        accessEndpoints.performGrant(args, callback);
+	      },
+	      audit: function audit(args, callback) {
+	        accessEndpoints.performAudit(args, callback);
+	      }
 	    },
 
-	    get_cipher_key: function get_cipher_key() {
+	    push: {
+	      provisionDevice: function provisionDevice(args) {
+	        pushEndpoint.provisionDevice(args);
+	      },
+	      sendPushNotification: function sendPushNotification(args) {
+	        return args;
+	      }
+	    },
+
+	    channelGroups: {
+	      listGroups: function listGroups(args, callback) {
+	        channelGroupEndpoints.listGroups(args, callback);
+	      },
+	      deleteGroup: function deleteGroup(args, callback) {
+	        channelGroupEndpoints.removeGroup(args, callback);
+	      },
+	      listChannels: function listChannels(args, callback) {
+	        channelGroupEndpoints.listChannels(args, callback);
+	      },
+	      addChannel: function addChannel(args, callback) {
+	        channelGroupEndpoints.addChannel(args, callback);
+	      },
+	      removeChannel: function removeChannel(args, callback) {
+	        channelGroupEndpoints.removeChannel(args, callback);
+	      }
+	    },
+
+	    getCipherKey: function getCipherKey() {
 	      return keychain.getCipherKey();
 	    },
-
-	    set_cipher_key: function set_cipher_key(key) {
+	    setCipherKey: function setCipherKey(key) {
 	      keychain.setCipherKey(key);
 	    },
-
-	    raw_encrypt: function raw_encrypt(input, key) {
+	    rawEncrypt: function rawEncrypt(input, key) {
 	      return encrypt(input, key);
 	    },
-
-	    raw_decrypt: function raw_decrypt(input, key) {
+	    rawDecrypt: function rawDecrypt(input, key) {
 	      return decrypt(input, key);
 	    },
 
-	    get_heartbeat: function get_heartbeat() {
+
+	    getHeartbeat: function getHeartbeat() {
 	      return config.getPresenceTimeout();
 	    },
 
-	    set_heartbeat: function set_heartbeat(heartbeat, heartbeat_interval) {
+	    setHeartbeat: function setHeartbeat(heartbeat, heartbeat_interval) {
 	      config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
 	      config.setHeartbeatInterval(heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
 	      if (config.getPresenceTimeout() === 2) {
@@ -696,28 +367,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      CONNECT();
 
-	      presenceHeartbeat.start();
+	      // emit the event
+	      eventEmitter.emit('presenceHeartbeatChanged');
 	    },
 
-	    get_heartbeat_interval: function get_heartbeat_interval() {
+	    getHeartbeatInterval: function getHeartbeatInterval() {
 	      return config.getHeartbeatInterval();
 	    },
-
-	    set_heartbeat_interval: function set_heartbeat_interval(heartbeat_interval) {
+	    setHeartbeatInterval: function setHeartbeatInterval(heartbeat_interval) {
 	      config.setHeartbeatInterval(heartbeat_interval);
-	      presenceHeartbeat.start();
+	      eventEmitter.emit('presenceHeartbeatChanged');
 	    },
-
 	    get_version: function get_version() {
-	      return SDK_VER;
+	      return packageJSON.version;
 	    },
-
 	    getGcmMessageObject: function getGcmMessageObject(obj) {
 	      return {
 	        data: obj
 	      };
 	    },
-
 	    getApnsMessageObject: function getApnsMessageObject(obj) {
 	      var x = {
 	        aps: { badge: 1, alert: '' }
@@ -727,19 +395,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      return x;
 	    },
-
-	    _add_param: function _add_param(key, val) {
+	    _addParam: function _addParam(key, val) {
 	      networking.addCoreParam(key, val);
 	    },
-
-	    /*
-	     PUBNUB.auth('AJFLKAJSDKLA');
-	     */
 	    auth: function auth(_auth) {
 	      keychain.setAuthKey(_auth);
 	      CONNECT();
 	    },
-
 	    publish: function publish(args, callback) {
 	      pubsubEndpoints.performPublish(args, callback);
 	    },
@@ -753,474 +415,60 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 
-	    /*
-	     PUBNUB.subscribe({
-	     channel  : 'my_chat'
-	     callback : function(message) { }
-	     });
-	     */
-	    subscribe: function subscribe(args, callback) {
-	      var channel = args['channel'];
-	      var channel_group = args['channel_group'];
-	      var callback = callback || args['callback'];
-	      var callback = callback || args['message'];
-	      var connect = args['connect'] || function () {};
-	      var reconnect = args['reconnect'] || function () {};
-	      var disconnect = args['disconnect'] || function () {};
-	      var SUB_ERROR = args['error'] || SUB_ERROR || function () {};
-	      var idlecb = args['idle'] || function () {};
-	      var presence = args['presence'] || 0;
-	      var backfill = args['backfill'] || 0;
-	      var timetoken = args['timetoken'] || 0;
-	      var sub_timeout = args['timeout'] || SUB_TIMEOUT;
-	      var windowing = args['windowing'] || SUB_WINDOWING;
-	      var state = args['state'];
-	      var heartbeat = args['heartbeat'] || args['pnexpires'];
-	      var heartbeat_interval = args['heartbeat_interval'];
-	      var restore = args['restore'] || SUB_RESTORE;
+	    subscribe: function subscribe(args, callback) {},
 
-	      keychain.setAuthKey(args['auth_key'] || keychain.getAuthKey());
-
-	      // Restore Enabled?
-	      SUB_RESTORE = restore;
-
-	      // Always Reset the TT
-	      TIMETOKEN = timetoken;
-
-	      // Make sure we have a Channel
-	      if (!channel && !channel_group) {
-	        return error('Missing Channel');
-	      }
-
-	      if (!callback) return error('Missing Callback');
-	      if (!keychain.getSubscribeKey()) return error('Missing Subscribe Key');
-
-	      if (heartbeat || heartbeat === 0 || heartbeat_interval || heartbeat_interval === 0) {
-	        SELF['set_heartbeat'](heartbeat, heartbeat_interval);
-	      }
-
-	      // Setup Channel(s)
-	      if (channel) {
-	        utils.each((channel.join ? channel.join(',') : '' + channel).split(','), function (channel) {
-	          var settings = stateStorage.getChannel(channel) || {};
-
-	          // Store Channel State
-	          stateStorage.addChannel(SUB_CHANNEL = channel, {
-	            name: channel,
-	            connected: settings.connected,
-	            disconnected: settings.disconnected,
-	            subscribed: 1,
-	            callback: SUB_CALLBACK = callback,
-	            cipher_key: args['cipher_key'],
-	            connect: connect,
-	            disconnect: disconnect,
-	            reconnect: reconnect
-	          });
-
-	          if (state) {
-	            if (channel in state) {
-	              stateStorage.addToPresenceState(channel, state[channel]);
-	            } else {
-	              stateStorage.addToPresenceState(channel, state);
-	            }
-	          }
-
-	          // Presence Enabled?
-	          if (!presence) return;
-
-	          // Subscribe Presence Channel
-	          SELF['subscribe']({
-	            channel: channel + constants.PRESENCE_SUFFIX,
-	            callback: presence,
-	            restore: restore
-	          });
-
-	          // Presence Subscribed?
-	          if (settings.subscribed) return;
-	        });
-	      }
-
-	      // Setup Channel Groups
-	      if (channel_group) {
-	        utils.each((channel_group.join ? channel_group.join(',') : '' + channel_group).split(','), function (channel_group) {
-	          var settings = stateStorage.getChannelGroup(channel_group) || {};
-
-	          stateStorage.addChannelGroup(channel_group, {
-	            name: channel_group,
-	            connected: settings.connected,
-	            disconnected: settings.disconnected,
-	            subscribed: 1,
-	            callback: SUB_CALLBACK = callback,
-	            cipher_key: args['cipher_key'],
-	            connect: connect,
-	            disconnect: disconnect,
-	            reconnect: reconnect
-	          });
-
-	          // Presence Enabled?
-	          if (!presence) return;
-
-	          // Subscribe Presence Channel
-	          SELF['subscribe']({
-	            channel_group: channel_group + constants.PRESENCE_SUFFIX,
-	            callback: presence,
-	            restore: restore,
-	            auth_key: keychain.getAuthKey()
-	          });
-
-	          // Presence Subscribed?
-	          if (settings.subscribed) return;
-	        });
-	      }
-
-	      // Test Network Connection
-	      function _test_connection(success) {
-	        if (success) {
-	          // Begin Next Socket Connection
-	          utils.timeout(CONNECT, windowing);
-	        } else {
-	          // New Origin on Failed Connection
-	          networking.shiftStandardOrigin(true);
-	          networking.shiftSubscribeOrigin(true);
-
-	          // Re-test Connection
-	          utils.timeout(function () {
-	            SELF['time'](_test_connection);
-	          }, constants.SECOND);
-	        }
-
-	        // Disconnect & Reconnect
-	        each_channel(function (channel) {
-	          // Reconnect
-	          if (success && channel.disconnected) {
-	            channel.disconnected = 0;
-	            return channel.reconnect(channel.name);
-	          }
-
-	          // Disconnect
-	          if (!success && !channel.disconnected) {
-	            channel.disconnected = 1;
-	            channel.disconnect(channel.name);
-	          }
-	        });
-
-	        // Disconnect & Reconnect for channel groups
-	        each_channel_group(function (channel_group) {
-	          // Reconnect
-	          if (success && channel_group.disconnected) {
-	            channel_group.disconnected = 0;
-	            return channel_group.reconnect(channel_group.name);
-	          }
-
-	          // Disconnect
-	          if (!success && !channel_group.disconnected) {
-	            channel_group.disconnected = 1;
-	            channel_group.disconnect(channel_group.name);
-	          }
-	        });
-	      }
-
-	      // Evented Subscribe
-	      function _connect() {
-	        var channels = stateStorage.generate_channel_list().join(',');
-	        var channel_groups = stateStorage.generate_channel_group_list().join(',');
-
-	        // Stop Connection
-	        if (!channels && !channel_groups) return;
-
-	        if (!channels) channels = ',';
-
-	        // Connect to PubNub Subscribe Servers
-	        _reset_offline();
-
-	        var data = networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() });
-
-	        if (channel_groups) {
-	          data['channel-group'] = channel_groups;
-	        }
-
-	        var st = JSON.stringify(stateStorage.getPresenceState());
-	        if (st.length > 2) data['state'] = JSON.stringify(stateStorage.getPresenceState());
-
-	        if (config.getPresenceTimeout()) {
-	          data['heartbeat'] = config.getPresenceTimeout();
-	        }
-
-	        if (config.isInstanceIdEnabled()) {
-	          data['instanceid'] = keychain.getInstanceId();
-	        }
-
-	        presenceHeartbeat.start();
-
-	        SUB_RECEIVER = xdr({
-	          timeout: sub_timeout,
-	          fail: function fail(response) {
-	            if (response && response['error'] && response['service']) {
-	              _responders2.default.error(response, SUB_ERROR);
-	              _test_connection(false);
-	            } else {
-	              SELF['time'](function (success) {
-	                !success && _responders2.default.error(response, SUB_ERROR);
-	                _test_connection(success);
-	              });
-	            }
-	          },
-	          data: networking.prepareParams(data),
-	          url: [networking.getSubscribeOrigin(), 'subscribe', keychain.getSubscribeKey(), utils.encode(channels), 0, TIMETOKEN],
-	          success: function success(messages) {
-	            // Check for Errors
-	            if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
-	              SUB_ERROR(messages);
-	              return utils.timeout(CONNECT, constants.SECOND);
-	            }
-
-	            // User Idle Callback
-	            idlecb(messages[1]);
-
-	            // Restore Previous Connection Point if Needed
-	            TIMETOKEN = !TIMETOKEN && SUB_RESTORE && db['get'](keychain.getSubscribeKey()) || messages[1];
-
-	            /*
-	             // Connect
-	             each_channel_registry(function(registry){
-	             if (registry.connected) return;
-	             registry.connected = 1;
-	             registry.connect(channel.name);
-	             });
-	             */
-
-	            // Connect
-	            each_channel(function (channel) {
-	              if (channel.connected) return;
-	              channel.connected = 1;
-	              channel.connect(channel.name);
-	            });
-
-	            // Connect for channel groups
-	            each_channel_group(function (channel_group) {
-	              if (channel_group.connected) return;
-	              channel_group.connected = 1;
-	              channel_group.connect(channel_group.name);
-	            });
-
-	            if (RESUMED && !SUB_RESTORE) {
-	              TIMETOKEN = 0;
-	              RESUMED = false;
-	              // Update Saved Timetoken
-	              db['set'](keychain.getSubscribeKey(), 0);
-	              utils.timeout(_connect, windowing);
-	              return;
-	            }
-
-	            // Invoke Memory Catchup and Receive Up to 100
-	            // Previous Messages from the Queue.
-	            if (backfill) {
-	              TIMETOKEN = 10000;
-	              backfill = 0;
-	            }
-
-	            // Update Saved Timetoken
-	            db['set'](keychain.getSubscribeKey(), messages[1]);
-
-	            // Route Channel <---> Callback for Message
-	            var next_callback = function () {
-	              var channels = '';
-	              var channels2 = '';
-
-	              if (messages.length > 3) {
-	                channels = messages[3];
-	                channels2 = messages[2];
-	              } else if (messages.length > 2) {
-	                channels = messages[2];
-	              } else {
-	                channels = utils.map(stateStorage.generate_channel_list(), function (chan) {
-	                  return utils.map(Array(messages[0].length).join(',').split(','), function () {
-	                    return chan;
-	                  });
-	                }).join(',');
-	              }
-
-	              var list = channels.split(',');
-	              var list2 = channels2 ? channels2.split(',') : [];
-
-	              return function () {
-	                var channel = list.shift() || SUB_CHANNEL;
-	                var channel2 = list2.shift();
-
-	                var chobj = {};
-
-	                if (channel2) {
-	                  if (channel && channel.indexOf('-pnpres') >= 0 && channel2.indexOf('-pnpres') < 0) {
-	                    channel2 += '-pnpres';
-	                  }
-	                  chobj = stateStorage.getChannelGroup(channel2) || stateStorage.getChannel(channel2) || { callback: function callback() {} };
-	                } else {
-	                  chobj = stateStorage.getChannel(channel);
-	                }
-
-	                var r = [chobj.callback || SUB_CALLBACK, channel.split(constants.PRESENCE_SUFFIX)[0]];
-	                channel2 && r.push(channel2.split(constants.PRESENCE_SUFFIX)[0]);
-	                return r;
-	              };
-	            }();
-
-	            var latency = detect_latency(+messages[1]);
-	            utils.each(messages[0], function (msg) {
-	              var next = next_callback();
-	              var decrypted_msg = decrypt(msg, stateStorage.getChannel(next[1]) ? stateStorage.getChannel(next[1])['cipher_key'] : null);
-	              next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
-	            });
-
-	            utils.timeout(_connect, windowing);
-	          }
-	        });
-	      }
-
-	      CONNECT = function CONNECT() {
-	        _reset_offline();
-	        utils.timeout(_connect, windowing);
-	      };
-
-	      // Reduce Status Flicker
-	      if (!READY) return READY_BUFFER.push(CONNECT);
-
-	      // Connect Now
-	      CONNECT();
-	    },
-
-	    /*
-	     PUBNUB.revoke({
-	     channel  : 'my_chat',
-	     callback : fun,
-	     error    : fun,
-	     auth_key : '3y8uiajdklytowsj'
-	     });
-	     */
 	    revoke: function revoke(args, callback) {
 	      args['read'] = false;
 	      args['write'] = false;
 	      SELF['grant'](args, callback);
 	    },
 
-	    set_uuid: function set_uuid(uuid) {
+	    setUUID: function setUUID(uuid) {
 	      keychain.setUUID(uuid);
 	      CONNECT();
 	    },
 
-	    get_uuid: function get_uuid() {
+	    getUUID: function getUUID() {
 	      return keychain.getUUID();
 	    },
 
-	    isArray: function isArray(arg) {
-	      return utils.isArray(arg);
-	    },
-
-	    get_subscribed_channels: function get_subscribed_channels() {
+	    getSubscribedChannels: function getSubscribedChannels() {
 	      return stateStorage.generate_channel_list(true);
 	    },
 
-	    stop_timers: function stop_timers() {
-	      clearTimeout(_poll_timer);
-	      clearTimeout(_poll_timer2);
+	    stopTimers: function stopTimers() {
+	      connectivity.stop();
 	      presenceHeartbeat.stop();
 	    },
 
-	    shutdown: function shutdown() {
-	      SELF['stop_timers']();
-	      _shutdown && _shutdown();
-	    },
+	    shutdown: function (_shutdown) {
+	      function shutdown() {
+	        return _shutdown.apply(this, arguments);
+	      }
 
-	    // Expose PUBNUB Functions
-	    xdr: xdr,
-	    ready: ready,
-	    db: db,
-	    uuid: utils.generateUUID,
-	    map: utils.map,
-	    each: utils.each,
-	    'each-channel': each_channel,
-	    grep: utils.grep,
-	    offline: function offline() {
-	      _reset_offline(1, { message: 'Offline. Please check your network settings.' });
-	    },
-	    supplant: utils.supplant,
-	    now: utils.rnow,
-	    unique: unique,
-	    updater: utils.updater
+	      shutdown.toString = function () {
+	        return _shutdown.toString();
+	      };
+
+	      return shutdown;
+	    }(function () {
+	      SELF.stopTimers();
+	      if (shutdown) shutdown();
+	    })
 	  };
 
-	  function _poll_online() {
-	    _is_online() || _reset_offline(1, { error: 'Offline. Please check your network settings.' });
-	    _poll_timer && clearTimeout(_poll_timer);
-	    _poll_timer = utils.timeout(_poll_online, constants.SECOND);
-	  }
-
-	  function _poll_online2() {
-	    if (!TIME_CHECK) return;
-	    SELF['time'](function (success) {
-	      detect_time_detla(function () {}, success);
-	      success || _reset_offline(1, {
-	        error: 'Heartbeat failed to connect to Pubnub Servers.' + 'Please check your network settings.'
-	      });
-	      _poll_timer2 && clearTimeout(_poll_timer2);
-	      _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-	    });
-	  }
-
-	  function _reset_offline(err, msg) {
-	    SUB_RECEIVER && SUB_RECEIVER(err, msg);
-	    SUB_RECEIVER = null;
-
-	    clearTimeout(_poll_timer);
-	    clearTimeout(_poll_timer2);
-	  }
-
-	  _poll_timer = utils.timeout(_poll_online, constants.SECOND);
-	  _poll_timer2 = utils.timeout(_poll_online2, KEEPALIVE);
-	  PRESENCE_HB_TIMEOUT = utils.timeout(start_presence_heartbeat, (config.getHeartbeatInterval() - 3) * constants.SECOND);
-
-	  // Detect Age of Message
-	  function detect_latency(tt) {
-	    var adjusted_time = utils.rnow() - TIME_DRIFT;
-	    return adjusted_time - tt / 10000;
-	  }
-
-	  detect_time_detla();
-	  function detect_time_detla(cb, time) {
-	    var stime = utils.rnow();
-
-	    time && calculate(time) || SELF['time'](calculate);
-
-	    function calculate(time) {
-	      if (!time) return;
-	      var ptime = time / 10000;
-	      var latency = (utils.rnow() - stime) / 2;
-	      TIME_DRIFT = utils.rnow() - (ptime + latency);
-	      cb && cb(TIME_DRIFT);
-	    }
-	  }
+	  /*
+	    create the connectivity element last, this will signal to other elements
+	    that the SDK is connected to internet.
+	  */
+	  // connectivity.start();
+	  // presenceHeartbeat.start();
 
 	  return SELF;
 	}
 
-	module.exports = {
-	  PN_API: PN_API,
-	  unique: unique,
-	  PNmessage: PNmessage,
-	  DEF_TIMEOUT: DEF_TIMEOUT,
-	  timeout: utils.timeout,
-	  build_url: utils.buildURL,
-	  each: utils.each,
-	  uuid: utils.generateUUID,
-	  URLBIT: constants.URLBIT,
-	  grep: utils.grep,
-	  supplant: utils.supplant,
-	  now: utils.rnow,
-	  updater: utils.updater,
-	  map: utils.map
-	};
-
 /***/ },
-/* 3 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//     uuid.js
@@ -1231,7 +479,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Unique ID creation requires a high quality random # generator.  We feature
 	// detect to determine the best RNG source, normalizing to a function that
 	// returns 128-bits of randomness, since that's what's usually required
-	var _rng = __webpack_require__(4);
+	var _rng = __webpack_require__(3);
 
 	// Maps for number <-> hex string conversion
 	var _byteToHex = [];
@@ -1409,7 +657,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -1447,7 +695,402 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var d        = __webpack_require__(5)
+	  , callable = __webpack_require__(18)
+
+	  , apply = Function.prototype.apply, call = Function.prototype.call
+	  , create = Object.create, defineProperty = Object.defineProperty
+	  , defineProperties = Object.defineProperties
+	  , hasOwnProperty = Object.prototype.hasOwnProperty
+	  , descriptor = { configurable: true, enumerable: false, writable: true }
+
+	  , on, once, off, emit, methods, descriptors, base;
+
+	on = function (type, listener) {
+		var data;
+
+		callable(listener);
+
+		if (!hasOwnProperty.call(this, '__ee__')) {
+			data = descriptor.value = create(null);
+			defineProperty(this, '__ee__', descriptor);
+			descriptor.value = null;
+		} else {
+			data = this.__ee__;
+		}
+		if (!data[type]) data[type] = listener;
+		else if (typeof data[type] === 'object') data[type].push(listener);
+		else data[type] = [data[type], listener];
+
+		return this;
+	};
+
+	once = function (type, listener) {
+		var once, self;
+
+		callable(listener);
+		self = this;
+		on.call(this, type, once = function () {
+			off.call(self, type, once);
+			apply.call(listener, this, arguments);
+		});
+
+		once.__eeOnceListener__ = listener;
+		return this;
+	};
+
+	off = function (type, listener) {
+		var data, listeners, candidate, i;
+
+		callable(listener);
+
+		if (!hasOwnProperty.call(this, '__ee__')) return this;
+		data = this.__ee__;
+		if (!data[type]) return this;
+		listeners = data[type];
+
+		if (typeof listeners === 'object') {
+			for (i = 0; (candidate = listeners[i]); ++i) {
+				if ((candidate === listener) ||
+						(candidate.__eeOnceListener__ === listener)) {
+					if (listeners.length === 2) data[type] = listeners[i ? 0 : 1];
+					else listeners.splice(i, 1);
+				}
+			}
+		} else {
+			if ((listeners === listener) ||
+					(listeners.__eeOnceListener__ === listener)) {
+				delete data[type];
+			}
+		}
+
+		return this;
+	};
+
+	emit = function (type) {
+		var i, l, listener, listeners, args;
+
+		if (!hasOwnProperty.call(this, '__ee__')) return;
+		listeners = this.__ee__[type];
+		if (!listeners) return;
+
+		if (typeof listeners === 'object') {
+			l = arguments.length;
+			args = new Array(l - 1);
+			for (i = 1; i < l; ++i) args[i - 1] = arguments[i];
+
+			listeners = listeners.slice();
+			for (i = 0; (listener = listeners[i]); ++i) {
+				apply.call(listener, this, args);
+			}
+		} else {
+			switch (arguments.length) {
+			case 1:
+				call.call(listeners, this);
+				break;
+			case 2:
+				call.call(listeners, this, arguments[1]);
+				break;
+			case 3:
+				call.call(listeners, this, arguments[1], arguments[2]);
+				break;
+			default:
+				l = arguments.length;
+				args = new Array(l - 1);
+				for (i = 1; i < l; ++i) {
+					args[i - 1] = arguments[i];
+				}
+				apply.call(listeners, this, args);
+			}
+		}
+	};
+
+	methods = {
+		on: on,
+		once: once,
+		off: off,
+		emit: emit
+	};
+
+	descriptors = {
+		on: d(on),
+		once: d(once),
+		off: d(off),
+		emit: d(emit)
+	};
+
+	base = defineProperties({}, descriptors);
+
+	module.exports = exports = function (o) {
+		return (o == null) ? create(base) : defineProperties(Object(o), descriptors);
+	};
+	exports.methods = methods;
+
+
+/***/ },
 /* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var assign        = __webpack_require__(6)
+	  , normalizeOpts = __webpack_require__(13)
+	  , isCallable    = __webpack_require__(14)
+	  , contains      = __webpack_require__(15)
+
+	  , d;
+
+	d = module.exports = function (dscr, value/*, options*/) {
+		var c, e, w, options, desc;
+		if ((arguments.length < 2) || (typeof dscr !== 'string')) {
+			options = value;
+			value = dscr;
+			dscr = null;
+		} else {
+			options = arguments[2];
+		}
+		if (dscr == null) {
+			c = w = true;
+			e = false;
+		} else {
+			c = contains.call(dscr, 'c');
+			e = contains.call(dscr, 'e');
+			w = contains.call(dscr, 'w');
+		}
+
+		desc = { value: value, configurable: c, enumerable: e, writable: w };
+		return !options ? desc : assign(normalizeOpts(options), desc);
+	};
+
+	d.gs = function (dscr, get, set/*, options*/) {
+		var c, e, options, desc;
+		if (typeof dscr !== 'string') {
+			options = set;
+			set = get;
+			get = dscr;
+			dscr = null;
+		} else {
+			options = arguments[3];
+		}
+		if (get == null) {
+			get = undefined;
+		} else if (!isCallable(get)) {
+			options = get;
+			get = set = undefined;
+		} else if (set == null) {
+			set = undefined;
+		} else if (!isCallable(set)) {
+			options = set;
+			set = undefined;
+		}
+		if (dscr == null) {
+			c = true;
+			e = false;
+		} else {
+			c = contains.call(dscr, 'c');
+			e = contains.call(dscr, 'e');
+		}
+
+		desc = { get: get, set: set, configurable: c, enumerable: e };
+		return !options ? desc : assign(normalizeOpts(options), desc);
+	};
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(7)()
+		? Object.assign
+		: __webpack_require__(8);
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = function () {
+		var assign = Object.assign, obj;
+		if (typeof assign !== 'function') return false;
+		obj = { foo: 'raz' };
+		assign(obj, { bar: 'dwa' }, { trzy: 'trzy' });
+		return (obj.foo + obj.bar + obj.trzy) === 'razdwatrzy';
+	};
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var keys  = __webpack_require__(9)
+	  , value = __webpack_require__(12)
+
+	  , max = Math.max;
+
+	module.exports = function (dest, src/*, …srcn*/) {
+		var error, i, l = max(arguments.length, 2), assign;
+		dest = Object(value(dest));
+		assign = function (key) {
+			try { dest[key] = src[key]; } catch (e) {
+				if (!error) error = e;
+			}
+		};
+		for (i = 1; i < l; ++i) {
+			src = arguments[i];
+			keys(src).forEach(assign);
+		}
+		if (error !== undefined) throw error;
+		return dest;
+	};
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(10)()
+		? Object.keys
+		: __webpack_require__(11);
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = function () {
+		try {
+			Object.keys('primitive');
+			return true;
+		} catch (e) { return false; }
+	};
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	var keys = Object.keys;
+
+	module.exports = function (object) {
+		return keys(object == null ? object : Object(object));
+	};
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = function (value) {
+		if (value == null) throw new TypeError("Cannot use null or undefined");
+		return value;
+	};
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	var forEach = Array.prototype.forEach, create = Object.create;
+
+	var process = function (src, obj) {
+		var key;
+		for (key in src) obj[key] = src[key];
+	};
+
+	module.exports = function (options/*, …options*/) {
+		var result = create(null);
+		forEach.call(arguments, function (options) {
+			if (options == null) return;
+			process(Object(options), result);
+		});
+		return result;
+	};
+
+
+/***/ },
+/* 14 */
+/***/ function(module, exports) {
+
+	// Deprecated
+
+	'use strict';
+
+	module.exports = function (obj) { return typeof obj === 'function'; };
+
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(16)()
+		? String.prototype.contains
+		: __webpack_require__(17);
+
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	var str = 'razdwatrzy';
+
+	module.exports = function () {
+		if (typeof str.contains !== 'function') return false;
+		return ((str.contains('dwa') === true) && (str.contains('foo') === false));
+	};
+
+
+/***/ },
+/* 17 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	var indexOf = String.prototype.indexOf;
+
+	module.exports = function (searchString/*, position*/) {
+		return indexOf.call(this, searchString, arguments[1]) > -1;
+	};
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = function (fn) {
+		if (typeof fn !== 'function') throw new TypeError(fn + " is not a function");
+		return fn;
+	};
+
+
+/***/ },
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1456,29 +1099,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _keychain = __webpack_require__(6);
+	var _superagent = __webpack_require__(20);
+
+	var _superagent2 = _interopRequireDefault(_superagent);
+
+	var _keychain = __webpack_require__(27);
 
 	var _keychain2 = _interopRequireDefault(_keychain);
+
+	var _responders = __webpack_require__(28);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	var _config = __webpack_require__(29);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _utils = __webpack_require__(30);
+
+	var _utils2 = _interopRequireDefault(_utils);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var utils = __webpack_require__(7);
-
 	var _class = function () {
-	  /* items that must be passed with each request. */
-
-	  function _class(xdr, keychain) {
+	  function _class(config, keychain) {
 	    var ssl = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
 	    var origin = arguments.length <= 3 || arguments[3] === undefined ? 'pubsub.pubnub.com' : arguments[3];
 
 	    _classCallCheck(this, _class);
 
-	    this._xdr = xdr;
+	    this._config = config;
 	    this._keychain = keychain;
+	    this._r = new _responders2.default('#networking');
 
 	    this._maxSubDomain = 20;
 	    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
@@ -1489,7 +1147,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // create initial origins
 	    this.shiftStandardOrigin(false);
 	    this.shiftSubscribeOrigin(false);
-	  }
+	  } /* items that must be passed with each request. */
 
 	  _createClass(_class, [{
 	    key: 'setCoreParams',
@@ -1515,11 +1173,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  }, {
 	    key: 'prepareParams',
-	    value: function prepareParams(data) {
-	      if (!data) data = {};
-	      utils.each(this._coreParams, function (key, value) {
-	        if (!(key in data)) data[key] = value;
-	      });
+	    value: function prepareParams() {
+	      var data = {};
+
+	      if (this._config.isInstanceIdEnabled()) {
+	        data.instanceid = this._keychain.getInstanceId();
+	      }
+
 	      return data;
 	    }
 	  }, {
@@ -1533,7 +1193,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var newSubDomain = void 0;
 
 	      if (failover) {
-	        newSubDomain = utils.generateUUID().split('-')[0];
+	        newSubDomain = _utils2.default.generateUUID().split('-')[0];
 	      } else {
 	        this._currentSubDomain = this._currentSubDomain + 1;
 
@@ -1572,21 +1232,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  }, {
 	    key: 'fetchHistory',
-	    value: function fetchHistory(channel, _ref) {
-	      var data = _ref.data;
-	      var success = _ref.success;
-	      var fail = _ref.fail;
+	    value: function fetchHistory(channel, data, callback) {
+	      if (!this._keychain.getSubscribeKey()) {
+	        return callback(this._r.validationError('Missing Subscribe Key'));
+	      }
 
-	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', utils.encode(channel)];
+	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(channel)];
 
-	      this._xdr({ data: data, success: success, fail: fail, url: url });
+	      if (this._keychain.getAuthKey()) {
+	        data.auth = this._keychain.getAuthKey();
+	      }
+
+	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'performChannelGroupOperation',
-	    value: function performChannelGroupOperation(channelGroup, mode, _ref2) {
-	      var data = _ref2.data;
-	      var success = _ref2.success;
-	      var fail = _ref2.fail;
+	    value: function performChannelGroupOperation(channelGroup, mode, _ref) {
+	      var data = _ref.data;
+	      var success = _ref.success;
+	      var fail = _ref.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey(), 'channel-group'];
 
@@ -1602,21 +1266,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'provisionDeviceForPush',
-	    value: function provisionDeviceForPush(deviceId, _ref3) {
-	      var data = _ref3.data;
-	      var success = _ref3.success;
-	      var fail = _ref3.fail;
-
+	    value: function provisionDeviceForPush(deviceId, data) {
 	      var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._keychain.getSubscribeKey(), 'devices', deviceId];
 
-	      this._xdr({ data: data, success: success, fail: fail, url: url });
+	      data.uuid = this._keychain.getUUID();
+	      data.auth = this._keychain.getAuthKey();
+
+	      return this._xdr({ data: data, url: url });
 	    }
 	  }, {
 	    key: 'performGrant',
-	    value: function performGrant(_ref4) {
-	      var data = _ref4.data;
-	      var success = _ref4.success;
-	      var fail = _ref4.fail;
+	    value: function performGrant(_ref2) {
+	      var data = _ref2.data;
+	      var success = _ref2.success;
+	      var fail = _ref2.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -1624,10 +1287,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performHeartbeat',
-	    value: function performHeartbeat(channels, _ref5) {
-	      var data = _ref5.data;
-	      var success = _ref5.success;
-	      var fail = _ref5.fail;
+	    value: function performHeartbeat(channels, _ref3) {
+	      var data = _ref3.data;
+	      var success = _ref3.success;
+	      var fail = _ref3.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'];
 
@@ -1635,27 +1298,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performState',
-	    value: function performState(state, channel, uuid, _ref6) {
-	      var data = _ref6.data;
-	      var success = _ref6.success;
-	      var fail = _ref6.fail;
+	    value: function performState(state, channel, uuid, _ref4) {
+	      var data = _ref4.data;
+	      var success = _ref4.success;
+	      var fail = _ref4.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channel];
 
 	      if (state) {
 	        url.push('uuid', uuid, 'data');
 	      } else {
-	        url.push('uuid', utils.encode(uuid));
+	        url.push('uuid', _utils2.default.encode(uuid));
 	      }
 
 	      this._xdr({ data: data, success: success, fail: fail, url: url });
 	    }
 	  }, {
 	    key: 'performAudit',
-	    value: function performAudit(_ref7) {
-	      var data = _ref7.data;
-	      var success = _ref7.success;
-	      var fail = _ref7.fail;
+	    value: function performAudit(_ref5) {
+	      var data = _ref5.data;
+	      var success = _ref5.success;
+	      var fail = _ref5.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -1663,16 +1326,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performChannelLeave',
-	    value: function performChannelLeave(channel, _ref8) {
-	      var data = _ref8.data;
-	      var success = _ref8.success;
-	      var fail = _ref8.fail;
+	    value: function performChannelLeave(channel, _ref6) {
+	      var data = _ref6.data;
+	      var success = _ref6.success;
+	      var fail = _ref6.fail;
 
 	      var origin = this.nextOrigin(false);
-	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave'];
+	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(channel), 'leave'];
 
 	      if (this._sendBeacon) {
-	        if (this._sendBeacon(utils.buildURL(url, data))) {
+	        if (this._sendBeacon(_utils2.default.buildURL(url, data))) {
 	          success({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
 	        }
 	      } else {
@@ -1681,16 +1344,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performChannelGroupLeave',
-	    value: function performChannelGroupLeave(_ref9) {
-	      var data = _ref9.data;
-	      var success = _ref9.success;
-	      var fail = _ref9.fail;
+	    value: function performChannelGroupLeave(_ref7) {
+	      var data = _ref7.data;
+	      var success = _ref7.success;
+	      var fail = _ref7.fail;
 
 	      var origin = this.nextOrigin(false);
-	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', utils.encode(','), 'leave'];
+	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(','), 'leave'];
 
 	      if (typeof this._sendBeacon !== 'undefined') {
-	        if (this._sendBeacon(utils.buildURL(url, data))) {
+	        if (this._sendBeacon(_utils2.default.buildURL(url, data))) {
 	          success({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
 	        }
 	      } else {
@@ -1699,10 +1362,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchReplay',
-	    value: function fetchReplay(source, destination, _ref10) {
-	      var data = _ref10.data;
-	      var success = _ref10.success;
-	      var fail = _ref10.fail;
+	    value: function fetchReplay(source, destination, _ref8) {
+	      var data = _ref8.data;
+	      var success = _ref8.success;
+	      var fail = _ref8.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
 
@@ -1710,38 +1373,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchTime',
-	    value: function fetchTime(_ref11) {
-	      var data = _ref11.data;
-	      var success = _ref11.success;
-	      var fail = _ref11.fail;
-
+	    value: function fetchTime(callback) {
+	      var data = this.prepareParams();
 	      var url = [this.getStandardOrigin(), 'time', 0];
 
-	      this._xdr({ data: data, success: success, fail: fail, url: url });
+	      if (this._keychain.getUUID()) {
+	        data.uuid = this._keychain.getUUID();
+	      }
+
+	      if (this._keychain.getAuthKey()) {
+	        data.auth = this._keychain.getAuthKey();
+	      }
+
+	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'fetchWhereNow',
-	    value: function fetchWhereNow(uuid, _ref12) {
-	      var data = _ref12.data;
-	      var success = _ref12.success;
-	      var fail = _ref12.fail;
+	    value: function fetchWhereNow(uuid, _ref9) {
+	      var data = _ref9.data;
+	      var success = _ref9.success;
+	      var fail = _ref9.fail;
 
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', utils.encode(uuid)];
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', _utils2.default.encode(uuid)];
 
 	      this._xdr({ data: data, success: success, fail: fail, url: url });
 	    }
 	  }, {
 	    key: 'fetchHereNow',
-	    value: function fetchHereNow(channel, channelGroup, _ref13) {
-	      var data = _ref13.data;
-	      var success = _ref13.success;
-	      var fail = _ref13.fail;
+	    value: function fetchHereNow(channel, channelGroup, _ref10) {
+	      var data = _ref10.data;
+	      var success = _ref10.success;
+	      var fail = _ref10.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 
 	      if (channel) {
 	        url.push('channel');
-	        url.push(utils.encode(channel));
+	        url.push(_utils2.default.encode(channel));
 	      }
 
 	      if (channelGroup && !channel) {
@@ -1753,14 +1421,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performPublish',
-	    value: function performPublish(channel, msg, _ref14) {
-	      var data = _ref14.data;
-	      var callback = _ref14.callback;
-	      var success = _ref14.success;
-	      var fail = _ref14.fail;
-	      var mode = _ref14.mode;
+	    value: function performPublish(channel, msg, _ref11) {
+	      var data = _ref11.data;
+	      var callback = _ref11.callback;
+	      var success = _ref11.success;
+	      var fail = _ref11.fail;
+	      var mode = _ref11.mode;
 
-	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, utils.encode(channel), 0, utils.encode(msg)];
+	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, _utils2.default.encode(channel), 0, _utils2.default.encode(msg)];
 
 	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url, mode: mode });
 	    }
@@ -1779,6 +1447,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function getSubscribeOrigin() {
 	      return this._subscribeOrigin;
 	    }
+	  }, {
+	    key: '_xdr',
+	    value: function _xdr(_ref12) {
+	      var data = _ref12.data;
+	      var url = _ref12.url;
+	      var callback = _ref12.callback;
+
+	      _superagent2.default.get(url.join('/')).query(data).type('json')
+	      // .timeout(this._requestTimeout)
+	      .end(function (err, resp) {
+	        if (err) return callback(err, null);
+
+	        if ((typeof resp === 'undefined' ? 'undefined' : _typeof(resp)) === 'object' && resp.error) {
+	          callback(resp.error, null);
+	          return;
+	        }
+
+	        callback(null, JSON.parse(resp.text));
+	      });
+	    }
 	  }]);
 
 	  return _class;
@@ -1787,7 +1475,1499 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 6 */
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Module dependencies.
+	 */
+
+	var Emitter = __webpack_require__(21);
+	var reduce = __webpack_require__(22);
+	var requestBase = __webpack_require__(23);
+	var isObject = __webpack_require__(24);
+
+	/**
+	 * Root reference for iframes.
+	 */
+
+	var root;
+	if (typeof window !== 'undefined') { // Browser window
+	  root = window;
+	} else if (typeof self !== 'undefined') { // Web Worker
+	  root = self;
+	} else { // Other environments
+	  root = this;
+	}
+
+	/**
+	 * Noop.
+	 */
+
+	function noop(){};
+
+	/**
+	 * Check if `obj` is a host object,
+	 * we don't want to serialize these :)
+	 *
+	 * TODO: future proof, move to compoent land
+	 *
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	function isHost(obj) {
+	  var str = {}.toString.call(obj);
+
+	  switch (str) {
+	    case '[object File]':
+	    case '[object Blob]':
+	    case '[object FormData]':
+	      return true;
+	    default:
+	      return false;
+	  }
+	}
+
+	/**
+	 * Expose `request`.
+	 */
+
+	var request = module.exports = __webpack_require__(26).bind(null, Request);
+
+	/**
+	 * Determine XHR.
+	 */
+
+	request.getXHR = function () {
+	  if (root.XMLHttpRequest
+	      && (!root.location || 'file:' != root.location.protocol
+	          || !root.ActiveXObject)) {
+	    return new XMLHttpRequest;
+	  } else {
+	    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+	    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
+	    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
+	    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+	  }
+	  return false;
+	};
+
+	/**
+	 * Removes leading and trailing whitespace, added to support IE.
+	 *
+	 * @param {String} s
+	 * @return {String}
+	 * @api private
+	 */
+
+	var trim = ''.trim
+	  ? function(s) { return s.trim(); }
+	  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
+
+	/**
+	 * Serialize the given `obj`.
+	 *
+	 * @param {Object} obj
+	 * @return {String}
+	 * @api private
+	 */
+
+	function serialize(obj) {
+	  if (!isObject(obj)) return obj;
+	  var pairs = [];
+	  for (var key in obj) {
+	    if (null != obj[key]) {
+	      pushEncodedKeyValuePair(pairs, key, obj[key]);
+	        }
+	      }
+	  return pairs.join('&');
+	}
+
+	/**
+	 * Helps 'serialize' with serializing arrays.
+	 * Mutates the pairs array.
+	 *
+	 * @param {Array} pairs
+	 * @param {String} key
+	 * @param {Mixed} val
+	 */
+
+	function pushEncodedKeyValuePair(pairs, key, val) {
+	  if (Array.isArray(val)) {
+	    return val.forEach(function(v) {
+	      pushEncodedKeyValuePair(pairs, key, v);
+	    });
+	  }
+	  pairs.push(encodeURIComponent(key)
+	    + '=' + encodeURIComponent(val));
+	}
+
+	/**
+	 * Expose serialization method.
+	 */
+
+	 request.serializeObject = serialize;
+
+	 /**
+	  * Parse the given x-www-form-urlencoded `str`.
+	  *
+	  * @param {String} str
+	  * @return {Object}
+	  * @api private
+	  */
+
+	function parseString(str) {
+	  var obj = {};
+	  var pairs = str.split('&');
+	  var parts;
+	  var pair;
+
+	  for (var i = 0, len = pairs.length; i < len; ++i) {
+	    pair = pairs[i];
+	    parts = pair.split('=');
+	    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+	  }
+
+	  return obj;
+	}
+
+	/**
+	 * Expose parser.
+	 */
+
+	request.parseString = parseString;
+
+	/**
+	 * Default MIME type map.
+	 *
+	 *     superagent.types.xml = 'application/xml';
+	 *
+	 */
+
+	request.types = {
+	  html: 'text/html',
+	  json: 'application/json',
+	  xml: 'application/xml',
+	  urlencoded: 'application/x-www-form-urlencoded',
+	  'form': 'application/x-www-form-urlencoded',
+	  'form-data': 'application/x-www-form-urlencoded'
+	};
+
+	/**
+	 * Default serialization map.
+	 *
+	 *     superagent.serialize['application/xml'] = function(obj){
+	 *       return 'generated xml here';
+	 *     };
+	 *
+	 */
+
+	 request.serialize = {
+	   'application/x-www-form-urlencoded': serialize,
+	   'application/json': JSON.stringify
+	 };
+
+	 /**
+	  * Default parsers.
+	  *
+	  *     superagent.parse['application/xml'] = function(str){
+	  *       return { object parsed from str };
+	  *     };
+	  *
+	  */
+
+	request.parse = {
+	  'application/x-www-form-urlencoded': parseString,
+	  'application/json': JSON.parse
+	};
+
+	/**
+	 * Parse the given header `str` into
+	 * an object containing the mapped fields.
+	 *
+	 * @param {String} str
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function parseHeader(str) {
+	  var lines = str.split(/\r?\n/);
+	  var fields = {};
+	  var index;
+	  var line;
+	  var field;
+	  var val;
+
+	  lines.pop(); // trailing CRLF
+
+	  for (var i = 0, len = lines.length; i < len; ++i) {
+	    line = lines[i];
+	    index = line.indexOf(':');
+	    field = line.slice(0, index).toLowerCase();
+	    val = trim(line.slice(index + 1));
+	    fields[field] = val;
+	  }
+
+	  return fields;
+	}
+
+	/**
+	 * Check if `mime` is json or has +json structured syntax suffix.
+	 *
+	 * @param {String} mime
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	function isJSON(mime) {
+	  return /[\/+]json\b/.test(mime);
+	}
+
+	/**
+	 * Return the mime type for the given `str`.
+	 *
+	 * @param {String} str
+	 * @return {String}
+	 * @api private
+	 */
+
+	function type(str){
+	  return str.split(/ *; */).shift();
+	};
+
+	/**
+	 * Return header field parameters.
+	 *
+	 * @param {String} str
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function params(str){
+	  return reduce(str.split(/ *; */), function(obj, str){
+	    var parts = str.split(/ *= */)
+	      , key = parts.shift()
+	      , val = parts.shift();
+
+	    if (key && val) obj[key] = val;
+	    return obj;
+	  }, {});
+	};
+
+	/**
+	 * Initialize a new `Response` with the given `xhr`.
+	 *
+	 *  - set flags (.ok, .error, etc)
+	 *  - parse header
+	 *
+	 * Examples:
+	 *
+	 *  Aliasing `superagent` as `request` is nice:
+	 *
+	 *      request = superagent;
+	 *
+	 *  We can use the promise-like API, or pass callbacks:
+	 *
+	 *      request.get('/').end(function(res){});
+	 *      request.get('/', function(res){});
+	 *
+	 *  Sending data can be chained:
+	 *
+	 *      request
+	 *        .post('/user')
+	 *        .send({ name: 'tj' })
+	 *        .end(function(res){});
+	 *
+	 *  Or passed to `.send()`:
+	 *
+	 *      request
+	 *        .post('/user')
+	 *        .send({ name: 'tj' }, function(res){});
+	 *
+	 *  Or passed to `.post()`:
+	 *
+	 *      request
+	 *        .post('/user', { name: 'tj' })
+	 *        .end(function(res){});
+	 *
+	 * Or further reduced to a single call for simple cases:
+	 *
+	 *      request
+	 *        .post('/user', { name: 'tj' }, function(res){});
+	 *
+	 * @param {XMLHTTPRequest} xhr
+	 * @param {Object} options
+	 * @api private
+	 */
+
+	function Response(req, options) {
+	  options = options || {};
+	  this.req = req;
+	  this.xhr = this.req.xhr;
+	  // responseText is accessible only if responseType is '' or 'text' and on older browsers
+	  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
+	     ? this.xhr.responseText
+	     : null;
+	  this.statusText = this.req.xhr.statusText;
+	  this.setStatusProperties(this.xhr.status);
+	  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
+	  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
+	  // getResponseHeader still works. so we get content-type even if getting
+	  // other headers fails.
+	  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
+	  this.setHeaderProperties(this.header);
+	  this.body = this.req.method != 'HEAD'
+	    ? this.parseBody(this.text ? this.text : this.xhr.response)
+	    : null;
+	}
+
+	/**
+	 * Get case-insensitive `field` value.
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api public
+	 */
+
+	Response.prototype.get = function(field){
+	  return this.header[field.toLowerCase()];
+	};
+
+	/**
+	 * Set header related properties:
+	 *
+	 *   - `.type` the content type without params
+	 *
+	 * A response of "Content-Type: text/plain; charset=utf-8"
+	 * will provide you with a `.type` of "text/plain".
+	 *
+	 * @param {Object} header
+	 * @api private
+	 */
+
+	Response.prototype.setHeaderProperties = function(header){
+	  // content-type
+	  var ct = this.header['content-type'] || '';
+	  this.type = type(ct);
+
+	  // params
+	  var obj = params(ct);
+	  for (var key in obj) this[key] = obj[key];
+	};
+
+	/**
+	 * Parse the given body `str`.
+	 *
+	 * Used for auto-parsing of bodies. Parsers
+	 * are defined on the `superagent.parse` object.
+	 *
+	 * @param {String} str
+	 * @return {Mixed}
+	 * @api private
+	 */
+
+	Response.prototype.parseBody = function(str){
+	  var parse = request.parse[this.type];
+	  return parse && str && (str.length || str instanceof Object)
+	    ? parse(str)
+	    : null;
+	};
+
+	/**
+	 * Set flags such as `.ok` based on `status`.
+	 *
+	 * For example a 2xx response will give you a `.ok` of __true__
+	 * whereas 5xx will be __false__ and `.error` will be __true__. The
+	 * `.clientError` and `.serverError` are also available to be more
+	 * specific, and `.statusType` is the class of error ranging from 1..5
+	 * sometimes useful for mapping respond colors etc.
+	 *
+	 * "sugar" properties are also defined for common cases. Currently providing:
+	 *
+	 *   - .noContent
+	 *   - .badRequest
+	 *   - .unauthorized
+	 *   - .notAcceptable
+	 *   - .notFound
+	 *
+	 * @param {Number} status
+	 * @api private
+	 */
+
+	Response.prototype.setStatusProperties = function(status){
+	  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+	  if (status === 1223) {
+	    status = 204;
+	  }
+
+	  var type = status / 100 | 0;
+
+	  // status / class
+	  this.status = this.statusCode = status;
+	  this.statusType = type;
+
+	  // basics
+	  this.info = 1 == type;
+	  this.ok = 2 == type;
+	  this.clientError = 4 == type;
+	  this.serverError = 5 == type;
+	  this.error = (4 == type || 5 == type)
+	    ? this.toError()
+	    : false;
+
+	  // sugar
+	  this.accepted = 202 == status;
+	  this.noContent = 204 == status;
+	  this.badRequest = 400 == status;
+	  this.unauthorized = 401 == status;
+	  this.notAcceptable = 406 == status;
+	  this.notFound = 404 == status;
+	  this.forbidden = 403 == status;
+	};
+
+	/**
+	 * Return an `Error` representative of this response.
+	 *
+	 * @return {Error}
+	 * @api public
+	 */
+
+	Response.prototype.toError = function(){
+	  var req = this.req;
+	  var method = req.method;
+	  var url = req.url;
+
+	  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
+	  var err = new Error(msg);
+	  err.status = this.status;
+	  err.method = method;
+	  err.url = url;
+
+	  return err;
+	};
+
+	/**
+	 * Expose `Response`.
+	 */
+
+	request.Response = Response;
+
+	/**
+	 * Initialize a new `Request` with the given `method` and `url`.
+	 *
+	 * @param {String} method
+	 * @param {String} url
+	 * @api public
+	 */
+
+	function Request(method, url) {
+	  var self = this;
+	  this._query = this._query || [];
+	  this.method = method;
+	  this.url = url;
+	  this.header = {}; // preserves header name case
+	  this._header = {}; // coerces header names to lowercase
+	  this.on('end', function(){
+	    var err = null;
+	    var res = null;
+
+	    try {
+	      res = new Response(self);
+	    } catch(e) {
+	      err = new Error('Parser is unable to parse the response');
+	      err.parse = true;
+	      err.original = e;
+	      // issue #675: return the raw response if the response parsing fails
+	      err.rawResponse = self.xhr && self.xhr.responseText ? self.xhr.responseText : null;
+	      // issue #876: return the http status code if the response parsing fails
+	      err.statusCode = self.xhr && self.xhr.status ? self.xhr.status : null;
+	      return self.callback(err);
+	    }
+
+	    self.emit('response', res);
+
+	    if (err) {
+	      return self.callback(err, res);
+	    }
+
+	    if (res.status >= 200 && res.status < 300) {
+	      return self.callback(err, res);
+	    }
+
+	    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
+	    new_err.original = err;
+	    new_err.response = res;
+	    new_err.status = res.status;
+
+	    self.callback(new_err, res);
+	  });
+	}
+
+	/**
+	 * Mixin `Emitter` and `requestBase`.
+	 */
+
+	Emitter(Request.prototype);
+	for (var key in requestBase) {
+	  Request.prototype[key] = requestBase[key];
+	}
+
+	/**
+	 * Abort the request, and clear potential timeout.
+	 *
+	 * @return {Request}
+	 * @api public
+	 */
+
+	Request.prototype.abort = function(){
+	  if (this.aborted) return;
+	  this.aborted = true;
+	  this.xhr.abort();
+	  this.clearTimeout();
+	  this.emit('abort');
+	  return this;
+	};
+
+	/**
+	 * Set Content-Type to `type`, mapping values from `request.types`.
+	 *
+	 * Examples:
+	 *
+	 *      superagent.types.xml = 'application/xml';
+	 *
+	 *      request.post('/')
+	 *        .type('xml')
+	 *        .send(xmlstring)
+	 *        .end(callback);
+	 *
+	 *      request.post('/')
+	 *        .type('application/xml')
+	 *        .send(xmlstring)
+	 *        .end(callback);
+	 *
+	 * @param {String} type
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.type = function(type){
+	  this.set('Content-Type', request.types[type] || type);
+	  return this;
+	};
+
+	/**
+	 * Set responseType to `val`. Presently valid responseTypes are 'blob' and 
+	 * 'arraybuffer'.
+	 *
+	 * Examples:
+	 *
+	 *      req.get('/')
+	 *        .responseType('blob')
+	 *        .end(callback);
+	 *
+	 * @param {String} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.responseType = function(val){
+	  this._responseType = val;
+	  return this;
+	};
+
+	/**
+	 * Set Accept to `type`, mapping values from `request.types`.
+	 *
+	 * Examples:
+	 *
+	 *      superagent.types.json = 'application/json';
+	 *
+	 *      request.get('/agent')
+	 *        .accept('json')
+	 *        .end(callback);
+	 *
+	 *      request.get('/agent')
+	 *        .accept('application/json')
+	 *        .end(callback);
+	 *
+	 * @param {String} accept
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.accept = function(type){
+	  this.set('Accept', request.types[type] || type);
+	  return this;
+	};
+
+	/**
+	 * Set Authorization field value with `user` and `pass`.
+	 *
+	 * @param {String} user
+	 * @param {String} pass
+	 * @param {Object} options with 'type' property 'auto' or 'basic' (default 'basic')
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.auth = function(user, pass, options){
+	  if (!options) {
+	    options = {
+	      type: 'basic'
+	    }
+	  }
+
+	  switch (options.type) {
+	    case 'basic':
+	      var str = btoa(user + ':' + pass);
+	      this.set('Authorization', 'Basic ' + str);
+	    break;
+
+	    case 'auto':
+	      this.username = user;
+	      this.password = pass;
+	    break;
+	  }
+	  return this;
+	};
+
+	/**
+	* Add query-string `val`.
+	*
+	* Examples:
+	*
+	*   request.get('/shoes')
+	*     .query('size=10')
+	*     .query({ color: 'blue' })
+	*
+	* @param {Object|String} val
+	* @return {Request} for chaining
+	* @api public
+	*/
+
+	Request.prototype.query = function(val){
+	  if ('string' != typeof val) val = serialize(val);
+	  if (val) this._query.push(val);
+	  return this;
+	};
+
+	/**
+	 * Queue the given `file` as an attachment to the specified `field`,
+	 * with optional `filename`.
+	 *
+	 * ``` js
+	 * request.post('/upload')
+	 *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
+	 *   .end(callback);
+	 * ```
+	 *
+	 * @param {String} field
+	 * @param {Blob|File} file
+	 * @param {String} filename
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.attach = function(field, file, filename){
+	  if (!this._formData) this._formData = new root.FormData();
+	  this._formData.append(field, file, filename || file.name);
+	  return this;
+	};
+
+	/**
+	 * Send `data` as the request body, defaulting the `.type()` to "json" when
+	 * an object is given.
+	 *
+	 * Examples:
+	 *
+	 *       // manual json
+	 *       request.post('/user')
+	 *         .type('json')
+	 *         .send('{"name":"tj"}')
+	 *         .end(callback)
+	 *
+	 *       // auto json
+	 *       request.post('/user')
+	 *         .send({ name: 'tj' })
+	 *         .end(callback)
+	 *
+	 *       // manual x-www-form-urlencoded
+	 *       request.post('/user')
+	 *         .type('form')
+	 *         .send('name=tj')
+	 *         .end(callback)
+	 *
+	 *       // auto x-www-form-urlencoded
+	 *       request.post('/user')
+	 *         .type('form')
+	 *         .send({ name: 'tj' })
+	 *         .end(callback)
+	 *
+	 *       // defaults to x-www-form-urlencoded
+	  *      request.post('/user')
+	  *        .send('name=tobi')
+	  *        .send('species=ferret')
+	  *        .end(callback)
+	 *
+	 * @param {String|Object} data
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.send = function(data){
+	  var obj = isObject(data);
+	  var type = this._header['content-type'];
+
+	  // merge
+	  if (obj && isObject(this._data)) {
+	    for (var key in data) {
+	      this._data[key] = data[key];
+	    }
+	  } else if ('string' == typeof data) {
+	    if (!type) this.type('form');
+	    type = this._header['content-type'];
+	    if ('application/x-www-form-urlencoded' == type) {
+	      this._data = this._data
+	        ? this._data + '&' + data
+	        : data;
+	    } else {
+	      this._data = (this._data || '') + data;
+	    }
+	  } else {
+	    this._data = data;
+	  }
+
+	  if (!obj || isHost(data)) return this;
+	  if (!type) this.type('json');
+	  return this;
+	};
+
+	/**
+	 * Invoke the callback with `err` and `res`
+	 * and handle arity check.
+	 *
+	 * @param {Error} err
+	 * @param {Response} res
+	 * @api private
+	 */
+
+	Request.prototype.callback = function(err, res){
+	  var fn = this._callback;
+	  this.clearTimeout();
+	  fn(err, res);
+	};
+
+	/**
+	 * Invoke callback with x-domain error.
+	 *
+	 * @api private
+	 */
+
+	Request.prototype.crossDomainError = function(){
+	  var err = new Error('Request has been terminated\nPossible causes: the network is offline, Origin is not allowed by Access-Control-Allow-Origin, the page is being unloaded, etc.');
+	  err.crossDomain = true;
+
+	  err.status = this.status;
+	  err.method = this.method;
+	  err.url = this.url;
+
+	  this.callback(err);
+	};
+
+	/**
+	 * Invoke callback with timeout error.
+	 *
+	 * @api private
+	 */
+
+	Request.prototype.timeoutError = function(){
+	  var timeout = this._timeout;
+	  var err = new Error('timeout of ' + timeout + 'ms exceeded');
+	  err.timeout = timeout;
+	  this.callback(err);
+	};
+
+	/**
+	 * Enable transmission of cookies with x-domain requests.
+	 *
+	 * Note that for this to work the origin must not be
+	 * using "Access-Control-Allow-Origin" with a wildcard,
+	 * and also must set "Access-Control-Allow-Credentials"
+	 * to "true".
+	 *
+	 * @api public
+	 */
+
+	Request.prototype.withCredentials = function(){
+	  this._withCredentials = true;
+	  return this;
+	};
+
+	/**
+	 * Initiate request, invoking callback `fn(res)`
+	 * with an instanceof `Response`.
+	 *
+	 * @param {Function} fn
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.end = function(fn){
+	  var self = this;
+	  var xhr = this.xhr = request.getXHR();
+	  var query = this._query.join('&');
+	  var timeout = this._timeout;
+	  var data = this._formData || this._data;
+
+	  // store callback
+	  this._callback = fn || noop;
+
+	  // state change
+	  xhr.onreadystatechange = function(){
+	    if (4 != xhr.readyState) return;
+
+	    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
+	    // result in the error "Could not complete the operation due to error c00c023f"
+	    var status;
+	    try { status = xhr.status } catch(e) { status = 0; }
+
+	    if (0 == status) {
+	      if (self.timedout) return self.timeoutError();
+	      if (self.aborted) return;
+	      return self.crossDomainError();
+	    }
+	    self.emit('end');
+	  };
+
+	  // progress
+	  var handleProgress = function(e){
+	    if (e.total > 0) {
+	      e.percent = e.loaded / e.total * 100;
+	    }
+	    e.direction = 'download';
+	    self.emit('progress', e);
+	  };
+	  if (this.hasListeners('progress')) {
+	    xhr.onprogress = handleProgress;
+	  }
+	  try {
+	    if (xhr.upload && this.hasListeners('progress')) {
+	      xhr.upload.onprogress = handleProgress;
+	    }
+	  } catch(e) {
+	    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+	    // Reported here:
+	    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
+	  }
+
+	  // timeout
+	  if (timeout && !this._timer) {
+	    this._timer = setTimeout(function(){
+	      self.timedout = true;
+	      self.abort();
+	    }, timeout);
+	  }
+
+	  // querystring
+	  if (query) {
+	    query = request.serializeObject(query);
+	    this.url += ~this.url.indexOf('?')
+	      ? '&' + query
+	      : '?' + query;
+	  }
+
+	  // initiate request
+	  if (this.username && this.password) {
+	    xhr.open(this.method, this.url, true, this.username, this.password);
+	  } else {
+	    xhr.open(this.method, this.url, true);
+	  }
+
+	  // CORS
+	  if (this._withCredentials) xhr.withCredentials = true;
+
+	  // body
+	  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
+	    // serialize stuff
+	    var contentType = this._header['content-type'];
+	    var serialize = this._parser || request.serialize[contentType ? contentType.split(';')[0] : ''];
+	    if (!serialize && isJSON(contentType)) serialize = request.serialize['application/json'];
+	    if (serialize) data = serialize(data);
+	  }
+
+	  // set header fields
+	  for (var field in this.header) {
+	    if (null == this.header[field]) continue;
+	    xhr.setRequestHeader(field, this.header[field]);
+	  }
+
+	  if (this._responseType) {
+	    xhr.responseType = this._responseType;
+	  }
+
+	  // send stuff
+	  this.emit('request', this);
+
+	  // IE11 xhr.send(undefined) sends 'undefined' string as POST payload (instead of nothing)
+	  // We need null here if data is undefined
+	  xhr.send(typeof data !== 'undefined' ? data : null);
+	  return this;
+	};
+
+
+	/**
+	 * Expose `Request`.
+	 */
+
+	request.Request = Request;
+
+	/**
+	 * GET `url` with optional callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed|Function} data or fn
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.get = function(url, data, fn){
+	  var req = request('GET', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.query(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * HEAD `url` with optional callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed|Function} data or fn
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.head = function(url, data, fn){
+	  var req = request('HEAD', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * DELETE `url` with optional callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	function del(url, fn){
+	  var req = request('DELETE', url);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	request['del'] = del;
+	request['delete'] = del;
+
+	/**
+	 * PATCH `url` with optional `data` and callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed} data
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.patch = function(url, data, fn){
+	  var req = request('PATCH', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * POST `url` with optional `data` and callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed} data
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.post = function(url, data, fn){
+	  var req = request('POST', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * PUT `url` with optional `data` and callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed|Function} data or fn
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.put = function(url, data, fn){
+	  var req = request('PUT', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+
+/***/ },
+/* 21 */
+/***/ function(module, exports) {
+
+	
+	/**
+	 * Expose `Emitter`.
+	 */
+
+	module.exports = Emitter;
+
+	/**
+	 * Initialize a new `Emitter`.
+	 *
+	 * @api public
+	 */
+
+	function Emitter(obj) {
+	  if (obj) return mixin(obj);
+	};
+
+	/**
+	 * Mixin the emitter properties.
+	 *
+	 * @param {Object} obj
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function mixin(obj) {
+	  for (var key in Emitter.prototype) {
+	    obj[key] = Emitter.prototype[key];
+	  }
+	  return obj;
+	}
+
+	/**
+	 * Listen on the given `event` with `fn`.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.on =
+	Emitter.prototype.addEventListener = function(event, fn){
+	  this._callbacks = this._callbacks || {};
+	  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
+	    .push(fn);
+	  return this;
+	};
+
+	/**
+	 * Adds an `event` listener that will be invoked a single
+	 * time then automatically removed.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.once = function(event, fn){
+	  function on() {
+	    this.off(event, on);
+	    fn.apply(this, arguments);
+	  }
+
+	  on.fn = fn;
+	  this.on(event, on);
+	  return this;
+	};
+
+	/**
+	 * Remove the given callback for `event` or all
+	 * registered callbacks.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.off =
+	Emitter.prototype.removeListener =
+	Emitter.prototype.removeAllListeners =
+	Emitter.prototype.removeEventListener = function(event, fn){
+	  this._callbacks = this._callbacks || {};
+
+	  // all
+	  if (0 == arguments.length) {
+	    this._callbacks = {};
+	    return this;
+	  }
+
+	  // specific event
+	  var callbacks = this._callbacks['$' + event];
+	  if (!callbacks) return this;
+
+	  // remove all handlers
+	  if (1 == arguments.length) {
+	    delete this._callbacks['$' + event];
+	    return this;
+	  }
+
+	  // remove specific handler
+	  var cb;
+	  for (var i = 0; i < callbacks.length; i++) {
+	    cb = callbacks[i];
+	    if (cb === fn || cb.fn === fn) {
+	      callbacks.splice(i, 1);
+	      break;
+	    }
+	  }
+	  return this;
+	};
+
+	/**
+	 * Emit `event` with the given args.
+	 *
+	 * @param {String} event
+	 * @param {Mixed} ...
+	 * @return {Emitter}
+	 */
+
+	Emitter.prototype.emit = function(event){
+	  this._callbacks = this._callbacks || {};
+	  var args = [].slice.call(arguments, 1)
+	    , callbacks = this._callbacks['$' + event];
+
+	  if (callbacks) {
+	    callbacks = callbacks.slice(0);
+	    for (var i = 0, len = callbacks.length; i < len; ++i) {
+	      callbacks[i].apply(this, args);
+	    }
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Return array of callbacks for `event`.
+	 *
+	 * @param {String} event
+	 * @return {Array}
+	 * @api public
+	 */
+
+	Emitter.prototype.listeners = function(event){
+	  this._callbacks = this._callbacks || {};
+	  return this._callbacks['$' + event] || [];
+	};
+
+	/**
+	 * Check if this emitter has `event` handlers.
+	 *
+	 * @param {String} event
+	 * @return {Boolean}
+	 * @api public
+	 */
+
+	Emitter.prototype.hasListeners = function(event){
+	  return !! this.listeners(event).length;
+	};
+
+
+/***/ },
+/* 22 */
+/***/ function(module, exports) {
+
+	
+	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Module of mixed-in functions shared between node and client code
+	 */
+	var isObject = __webpack_require__(24);
+
+	var FormData = __webpack_require__(25); // browserify compatible
+
+	/**
+	 * Clear previous timeout.
+	 *
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	exports.clearTimeout = function _clearTimeout(){
+	  this._timeout = 0;
+	  clearTimeout(this._timer);
+	  return this;
+	};
+
+	/**
+	 * Force given parser
+	 *
+	 * Sets the body parser no matter type.
+	 *
+	 * @param {Function}
+	 * @api public
+	 */
+
+	exports.parse = function parse(fn){
+	  this._parser = fn;
+	  return this;
+	};
+
+	/**
+	 * Set timeout to `ms`.
+	 *
+	 * @param {Number} ms
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	exports.timeout = function timeout(ms){
+	  this._timeout = ms;
+	  return this;
+	};
+
+	/**
+	 * Faux promise support
+	 *
+	 * @param {Function} fulfill
+	 * @param {Function} reject
+	 * @return {Request}
+	 */
+
+	exports.then = function then(fulfill, reject) {
+	  return this.end(function(err, res) {
+	    err ? reject(err) : fulfill(res);
+	  });
+	}
+
+	/**
+	 * Allow for extension
+	 */
+
+	exports.use = function use(fn) {
+	  fn(this);
+	  return this;
+	}
+
+
+	/**
+	 * Get request header `field`.
+	 * Case-insensitive.
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api public
+	 */
+
+	exports.get = function(field){
+	  return this._header[field.toLowerCase()];
+	};
+
+	/**
+	 * Get case-insensitive header `field` value.
+	 * This is a deprecated internal API. Use `.get(field)` instead.
+	 *
+	 * (getHeader is no longer used internally by the superagent code base)
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api private
+	 * @deprecated
+	 */
+
+	exports.getHeader = exports.get;
+
+	/**
+	 * Set header `field` to `val`, or multiple fields with one object.
+	 * Case-insensitive.
+	 *
+	 * Examples:
+	 *
+	 *      req.get('/')
+	 *        .set('Accept', 'application/json')
+	 *        .set('X-API-Key', 'foobar')
+	 *        .end(callback);
+	 *
+	 *      req.get('/')
+	 *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
+	 *        .end(callback);
+	 *
+	 * @param {String|Object} field
+	 * @param {String} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	exports.set = function(field, val){
+	  if (isObject(field)) {
+	    for (var key in field) {
+	      this.set(key, field[key]);
+	    }
+	    return this;
+	  }
+	  this._header[field.toLowerCase()] = val;
+	  this.header[field] = val;
+	  return this;
+	};
+
+	/**
+	 * Remove header `field`.
+	 * Case-insensitive.
+	 *
+	 * Example:
+	 *
+	 *      req.get('/')
+	 *        .unset('User-Agent')
+	 *        .end(callback);
+	 *
+	 * @param {String} field
+	 */
+	exports.unset = function(field){
+	  delete this._header[field.toLowerCase()];
+	  delete this.header[field];
+	  return this;
+	};
+
+	/**
+	 * Write the field `name` and `val` for "multipart/form-data"
+	 * request bodies.
+	 *
+	 * ``` js
+	 * request.post('/upload')
+	 *   .field('foo', 'bar')
+	 *   .end(callback);
+	 * ```
+	 *
+	 * @param {String} name
+	 * @param {String|Blob|File|Buffer|fs.ReadStream} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+	exports.field = function(name, val) {
+	  if (!this._formData) this._formData = new FormData();
+	  this._formData.append(name, val);
+	  return this;
+	};
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports) {
+
+	/**
+	 * Check if `obj` is an object.
+	 *
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	function isObject(obj) {
+	  return null != obj && 'object' == typeof obj;
+	}
+
+	module.exports = isObject;
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports) {
+
+	module.exports = FormData;
+
+/***/ },
+/* 26 */
+/***/ function(module, exports) {
+
+	// The node and browser modules expose versions of this with the
+	// appropriate constructor function bound as first argument
+	/**
+	 * Issue a request:
+	 *
+	 * Examples:
+	 *
+	 *    request('GET', '/users').end(callback)
+	 *    request('/users').end(callback)
+	 *    request('/users', callback)
+	 *
+	 * @param {String} method
+	 * @param {String|Function} url or callback
+	 * @return {Request}
+	 * @api public
+	 */
+
+	function request(RequestConstructor, method, url) {
+	  // callback
+	  if ('function' == typeof url) {
+	    return new RequestConstructor('GET', method).end(url);
+	  }
+
+	  // url first
+	  if (2 == arguments.length) {
+	    return new RequestConstructor('GET', method);
+	  }
+
+	  return new RequestConstructor(method, url);
+	}
+
+	module.exports = request;
+
+
+/***/ },
+/* 27 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1893,259 +3073,78 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/* 28 */
+/***/ function(module, exports) {
 
 	'use strict';
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-	var _uuid = __webpack_require__(3);
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _uuid2 = _interopRequireDefault(_uuid);
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	var _class = function () {
+	  function _class(componenetName) {
+	    _classCallCheck(this, _class);
 
-	/* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
-
-	var defaultConfiguration = __webpack_require__(8);
-	var REPL = /{([\w\-]+)}/g;
-
-	function rnow() {
-	  return +new Date();
-	}
-
-	function isArray(arg) {
-	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === 'number');
-	  // return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
-	}
-
-	/**
-	 * EACH
-	 * ====
-	 * each( [1,2,3], function(item) { } )
-	 */
-	function each(o, f) {
-	  if (!o || !f) {
-	    return;
+	    this._componentName = componenetName;
 	  }
 
-	  if (isArray(o)) {
-	    for (var i = 0, l = o.length; i < l;) {
-	      f.call(o[i], o[i], i++);
+	  _createClass(_class, [{
+	    key: 'callback',
+	    value: function callback(response, _callback) {
+	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object') {
+	        if (response.error) {
+	          this.error(response, _callback);
+	          return;
+	        }
+	        if (response.payload) {
+	          if (response.next_page) {
+	            if (_callback) _callback(response.payload, response.next_page);
+	          } else {
+	            if (_callback) _callback(response.payload);
+	          }
+	          return;
+	        }
+	      }
+	      if (_callback) _callback(response);
 	    }
-	  } else {
-	    for (var i in o) {
-	      o.hasOwnProperty && o.hasOwnProperty(i) && f.call(o[i], i, o[i]);
+	  }, {
+	    key: 'error',
+	    value: function error(response, callback) {
+	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object' && response.error) {
+	        var preparedData = _pick(response, ['message', 'payload']);
+	        return this._createError(callback, preparedData, 'httpResultError');
+	      } else {
+	        return this._createError(callback, { message: response }, 'httpResultError');
+	      }
 	    }
-	  }
-	}
-
-	/**
-	 * ENCODE
-	 * ======
-	 * var encoded_data = encode('path');
-	 */
-	function encode(path) {
-	  return encodeURIComponent(path);
-	}
-
-	/**
-	 * Build Url
-	 * =======
-	 *
-	 */
-	function buildURL(urlComponents, urlParams) {
-	  var url = urlComponents.join(defaultConfiguration.URLBIT);
-	  var params = [];
-
-	  if (!urlParams) return url;
-
-	  each(urlParams, function (key, value) {
-	    var valueStr = (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' ? JSON['stringify'](value) : value;
-	    typeof value !== 'undefined' && value !== null && encode(valueStr).length > 0 && params.push(key + '=' + encode(valueStr));
-	  });
-
-	  url += '?' + params.join(defaultConfiguration.PARAMSBIT);
-	  return url;
-	}
-
-	/**
-	 * UPDATER
-	 * =======
-	 * var timestamp = unique();
-	 */
-	function updater(fun, rate) {
-	  var timeout;
-	  var last = 0;
-	  var runnit = function runnit() {
-	    if (last + rate > rnow()) {
-	      clearTimeout(timeout);
-	      timeout = setTimeout(runnit, rate);
-	    } else {
-	      last = rnow();
-	      fun();
+	  }, {
+	    key: 'validationError',
+	    value: function validationError(message) {
+	      return this._createError({ message: message }, 'validationError');
 	    }
-	  };
-
-	  return runnit;
-	}
-
-	/**
-	 * GREP
-	 * ====
-	 * var list = grep( [1,2,3], function(item) { return item % 2 } )
-	 */
-	function grep(list, fun) {
-	  var fin = [];
-	  each(list || [], function (l) {
-	    fun(l) && fin.push(l);
-	  });
-	  return fin;
-	}
-
-	/**
-	 * SUPPLANT
-	 * ========
-	 * var text = supplant( 'Hello {name}!', { name : 'John' } )
-	 */
-	function supplant(str, values) {
-	  return str.replace(REPL, function (_, match) {
-	    return values[match] || _;
-	  });
-	}
-
-	/**
-	 * timeout
-	 * =======
-	 * timeout( function(){}, 100 );
-	 */
-	function timeout(fun, wait) {
-	  if (typeof setTimeout === 'undefined') {
-	    return;
-	  }
-
-	  return setTimeout(fun, wait);
-	}
-
-	/**
-	 * uuid
-	 * ====
-	 * var my_uuid = generateUUID();
-	 */
-	function generateUUID(callback) {
-	  var u = _uuid2.default.v4();
-	  if (callback) callback(u);
-	  return u;
-	}
-
-	/**
-	 * MAP
-	 * ===
-	 * var list = map( [1,2,3], function(item) { return item + 1 } )
-	 */
-	function map(list, fun) {
-	  var fin = [];
-	  each(list || [], function (k, v) {
-	    fin.push(fun(k, v));
-	  });
-	  return fin;
-	}
-
-	function pamEncode(str) {
-	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
-	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-	  });
-	}
-
-	function _object_to_key_list(o) {
-	  var l = [];
-	  each(o, function (key) {
-	    l.push(key);
-	  });
-	  return l;
-	}
-
-	function _object_to_key_list_sorted(o) {
-	  return _object_to_key_list(o).sort();
-	}
-
-	function _get_pam_sign_input_from_params(params) {
-	  var l = _object_to_key_list_sorted(params);
-	  return map(l, function (paramKey) {
-	    return paramKey + '=' + pamEncode(params[paramKey]);
-	  }).join('&');
-	}
-
-	function validateHeartbeat(heartbeat, cur_heartbeat, error) {
-	  var err = false;
-
-	  if (typeof heartbeat === 'undefined') {
-	    return cur_heartbeat;
-	  }
-
-	  if (typeof heartbeat === 'number') {
-	    if (heartbeat > defaultConfiguration._minimumHeartbeatInterval || heartbeat === 0) {
-	      err = false;
-	    } else {
-	      err = true;
+	  }, {
+	    key: '_createError',
+	    value: function _createError(errorPayload, type) {
+	      errorPayload.component = this._componentName;
+	      errorPayload.type = type;
+	      return errorPayload;
 	    }
-	  } else if (typeof heartbeat === 'boolean') {
-	    if (!heartbeat) {
-	      return 0;
-	    } else {
-	      return defaultConfiguration._defaultHeartbeatInterval;
-	    }
-	  } else {
-	    err = true;
-	  }
+	  }]);
 
-	  if (err) {
-	    if (error) {
-	      var errorMessage = 'Presence Heartbeat value invalid. Valid range ( x >';
-	      errorMessage += defaultConfiguration._minimumHeartbeatInterval + ' or x = 0). Current Value : ';
-	      errorMessage += cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
+	  return _class;
+	}();
 
-	      error(errorMessage);
-	    }
-	    return cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
-	  } else return heartbeat;
-	}
-
-	module.exports = {
-	  buildURL: buildURL,
-	  encode: encode,
-	  each: each,
-	  updater: updater,
-	  rnow: rnow,
-	  isArray: isArray,
-	  map: map,
-	  pamEncode: pamEncode,
-	  generateUUID: generateUUID,
-	  timeout: timeout,
-	  supplant: supplant,
-	  grep: grep,
-	  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
-	  _object_to_key_list_sorted: _object_to_key_list_sorted,
-	  _object_to_key_list: _object_to_key_list,
-	  validateHeartbeat: validateHeartbeat
-	};
+	exports.default = _class;
 
 /***/ },
-/* 8 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"PARAMSBIT": "&",
-		"URLBIT": "/",
-		"defaultHeartbeatInterval": 30,
-		"minimumHeartbeatInterval": 5,
-		"PRESENCE_SUFFIX": "-pnpres",
-		"SECOND": 1000
-	};
-
-/***/ },
-/* 9 */
+/* 29 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -2257,7 +3256,216 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 10 */
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+	var _uuid = __webpack_require__(2);
+
+	var _uuid2 = _interopRequireDefault(_uuid);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
+
+	var defaultConfiguration = __webpack_require__(31);
+	var NOW = 1;
+
+	function rnow() {
+	  return +new Date();
+	}
+
+	function unique() {
+	  return 'x' + ++NOW + '' + +new Date();
+	}
+
+	function isArray(arg) {
+	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === 'number');
+	  // return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
+	}
+
+	/**
+	 * EACH
+	 * ====
+	 * each( [1,2,3], function(item) { } )
+	 */
+	function each(o, f) {
+	  if (!o || !f) {
+	    return;
+	  }
+
+	  if (isArray(o)) {
+	    for (var i = 0, l = o.length; i < l;) {
+	      f.call(o[i], o[i], i++);
+	    }
+	  } else {
+	    for (var i in o) {
+	      o.hasOwnProperty && o.hasOwnProperty(i) && f.call(o[i], i, o[i]);
+	    }
+	  }
+	}
+
+	/**
+	 * ENCODE
+	 * ======
+	 * var encoded_data = encode('path');
+	 */
+	function encode(path) {
+	  return encodeURIComponent(path);
+	}
+
+	/**
+	 * Build Url
+	 * =======
+	 *
+	 */
+	function buildURL(urlComponents, urlParams) {
+	  var url = urlComponents.join(defaultConfiguration.URLBIT);
+	  var params = [];
+
+	  if (!urlParams) return url;
+
+	  each(urlParams, function (key, value) {
+	    var valueStr = (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' ? JSON.stringify(value) : value;
+	    typeof value !== 'undefined' && value !== null && encode(valueStr).length > 0 && params.push(key + '=' + encode(valueStr));
+	  });
+
+	  url += '?' + params.join(defaultConfiguration.PARAMSBIT);
+	  return url;
+	}
+
+	/**
+	 * timeout
+	 * =======
+	 * timeout( function(){}, 100 );
+	 */
+	function timeout(fun, wait) {
+	  if (typeof setTimeout === 'undefined') {
+	    return;
+	  }
+
+	  return setTimeout(fun, wait);
+	}
+
+	/**
+	 * uuid
+	 * ====
+	 * var my_uuid = generateUUID();
+	 */
+	function generateUUID(callback) {
+	  var u = _uuid2.default.v4();
+	  if (callback) callback(u);
+	  return u;
+	}
+
+	/**
+	 * MAP
+	 * ===
+	 * var list = map( [1,2,3], function(item) { return item + 1 } )
+	 */
+	function map(list, fun) {
+	  var fin = [];
+	  each(list || [], function (k, v) {
+	    fin.push(fun(k, v));
+	  });
+	  return fin;
+	}
+
+	function pamEncode(str) {
+	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
+	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+	  });
+	}
+
+	function _object_to_key_list(o) {
+	  var l = [];
+	  each(o, function (key) {
+	    l.push(key);
+	  });
+	  return l;
+	}
+
+	function _object_to_key_list_sorted(o) {
+	  return _object_to_key_list(o).sort();
+	}
+
+	function _get_pam_sign_input_from_params(params) {
+	  var l = _object_to_key_list_sorted(params);
+	  return map(l, function (paramKey) {
+	    return paramKey + '=' + pamEncode(params[paramKey]);
+	  }).join('&');
+	}
+
+	function validateHeartbeat(heartbeat, cur_heartbeat, error) {
+	  var err = false;
+
+	  if (typeof heartbeat === 'undefined') {
+	    return cur_heartbeat;
+	  }
+
+	  if (typeof heartbeat === 'number') {
+	    if (heartbeat > defaultConfiguration._minimumHeartbeatInterval || heartbeat === 0) {
+	      err = false;
+	    } else {
+	      err = true;
+	    }
+	  } else if (typeof heartbeat === 'boolean') {
+	    if (!heartbeat) {
+	      return 0;
+	    } else {
+	      return defaultConfiguration._defaultHeartbeatInterval;
+	    }
+	  } else {
+	    err = true;
+	  }
+
+	  if (err) {
+	    if (error) {
+	      var errorMessage = 'Presence Heartbeat value invalid. Valid range ( x >';
+	      errorMessage += defaultConfiguration._minimumHeartbeatInterval + ' or x = 0). Current Value : ';
+	      errorMessage += cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
+
+	      error(errorMessage);
+	    }
+	    return cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
+	  } else return heartbeat;
+	}
+
+	module.exports = {
+	  buildURL: buildURL,
+	  encode: encode,
+	  each: each,
+	  rnow: rnow,
+	  isArray: isArray,
+	  map: map,
+	  pamEncode: pamEncode,
+	  generateUUID: generateUUID,
+	  timeout: timeout,
+	  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
+	  _object_to_key_list_sorted: _object_to_key_list_sorted,
+	  _object_to_key_list: _object_to_key_list,
+	  validateHeartbeat: validateHeartbeat,
+	  unique: unique
+	};
+
+/***/ },
+/* 31 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"PARAMSBIT": "&",
+		"URLBIT": "/",
+		"defaultHeartbeatInterval": 30,
+		"minimumHeartbeatInterval": 5,
+		"PRESENCE_SUFFIX": "-pnpres",
+		"SECOND": 1000
+	};
+
+/***/ },
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2268,7 +3476,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _utils = __webpack_require__(7);
+	var _utils = __webpack_require__(30);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -2395,6 +3603,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	      return list.sort();
 	    }
+	  }, {
+	    key: 'each_channel_group',
+	    value: function each_channel_group(callback) {
+	      var count = 0;
+
+	      _utils2.default.each(this.getChannelGroups(), function (channel_group) {
+	        var chang = this.getChannelGroup(channel_group);
+
+	        if (!chang) return;
+
+	        count++;
+	        (callback || function () {})(chang);
+	      });
+
+	      return count;
+	    }
+	  }, {
+	    key: 'each_channel',
+	    value: function each_channel(callback) {
+	      var count = 0;
+
+	      _utils2.default.each(this.getChannels(), function (channel) {
+	        var chan = this.getChannel(channel);
+
+	        if (!chan) return;
+
+	        count++;
+	        (callback || function () {})(chan);
+	      });
+
+	      return count;
+	    }
 	  }]);
 
 	  return _class;
@@ -2403,7 +3643,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 11 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2414,7 +3654,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(5);
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -2485,7 +3725,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 12 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2494,849 +3734,111 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* flow */
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _pick2 = __webpack_require__(13);
-
-	var _pick3 = _interopRequireDefault(_pick2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class() {
-	    _classCallCheck(this, _class);
-	  }
-
-	  _createClass(_class, null, [{
-	    key: 'callback',
-	    value: function callback(response, _callback, err) {
-	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object') {
-	        if (response.error) {
-	          var preparedData = (0, _pick3.default)(response, ['message', 'payload']);
-	          if (err) err(preparedData);
-	          return;
-	        }
-	        if (response.payload) {
-	          if (response.next_page) {
-	            if (_callback) _callback(response.payload, response.next_page);
-	          } else {
-	            if (_callback) _callback(response.payload);
-	          }
-	          return;
-	        }
-	      }
-	      if (_callback) _callback(response);
-	    }
-	  }, {
-	    key: 'error',
-	    value: function error(response, err) {
-	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object' && response.error) {
-	        var preparedData = (0, _pick3.default)(response, ['message', 'payload']);
-	        if (err) return err(preparedData);
-	      } else {
-	        if (err) return err(response);
-	      }
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseFlatten = __webpack_require__(14),
-	    basePick = __webpack_require__(26),
-	    rest = __webpack_require__(28);
-
-	/**
-	 * Creates an object composed of the picked `object` properties.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Object
-	 * @param {Object} object The source object.
-	 * @param {...(string|string[])} [props] The property names to pick, specified
-	 *  individually or in arrays.
-	 * @returns {Object} Returns the new object.
-	 * @example
-	 *
-	 * var object = { 'a': 1, 'b': '2', 'c': 3 };
-	 *
-	 * _.pick(object, ['a', 'c']);
-	 * // => { 'a': 1, 'c': 3 }
-	 */
-	var pick = rest(function(object, props) {
-	  return object == null ? {} : basePick(object, baseFlatten(props, 1));
-	});
-
-	module.exports = pick;
-
-
-/***/ },
-/* 14 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var arrayPush = __webpack_require__(15),
-	    isArguments = __webpack_require__(16),
-	    isArray = __webpack_require__(25),
-	    isArrayLikeObject = __webpack_require__(17);
-
-	/**
-	 * The base implementation of `_.flatten` with support for restricting flattening.
-	 *
-	 * @private
-	 * @param {Array} array The array to flatten.
-	 * @param {number} depth The maximum recursion depth.
-	 * @param {boolean} [isStrict] Restrict flattening to arrays-like objects.
-	 * @param {Array} [result=[]] The initial result value.
-	 * @returns {Array} Returns the new flattened array.
-	 */
-	function baseFlatten(array, depth, isStrict, result) {
-	  result || (result = []);
-
-	  var index = -1,
-	      length = array.length;
-
-	  while (++index < length) {
-	    var value = array[index];
-	    if (depth > 0 && isArrayLikeObject(value) &&
-	        (isStrict || isArray(value) || isArguments(value))) {
-	      if (depth > 1) {
-	        // Recursively flatten arrays (susceptible to call stack limits).
-	        baseFlatten(value, depth - 1, isStrict, result);
-	      } else {
-	        arrayPush(result, value);
-	      }
-	    } else if (!isStrict) {
-	      result[result.length] = value;
-	    }
-	  }
-	  return result;
-	}
-
-	module.exports = baseFlatten;
-
-
-/***/ },
-/* 15 */
-/***/ function(module, exports) {
-
-	/**
-	 * Appends the elements of `values` to `array`.
-	 *
-	 * @private
-	 * @param {Array} array The array to modify.
-	 * @param {Array} values The values to append.
-	 * @returns {Array} Returns `array`.
-	 */
-	function arrayPush(array, values) {
-	  var index = -1,
-	      length = values.length,
-	      offset = array.length;
-
-	  while (++index < length) {
-	    array[offset + index] = values[index];
-	  }
-	  return array;
-	}
-
-	module.exports = arrayPush;
-
-
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isArrayLikeObject = __webpack_require__(17);
-
-	/** `Object#toString` result references. */
-	var argsTag = '[object Arguments]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
-
-	/**
-	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
-	 * of values.
-	 */
-	var objectToString = objectProto.toString;
-
-	/** Built-in value references. */
-	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-
-	/**
-	 * Checks if `value` is likely an `arguments` object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
-	 * @example
-	 *
-	 * _.isArguments(function() { return arguments; }());
-	 * // => true
-	 *
-	 * _.isArguments([1, 2, 3]);
-	 * // => false
-	 */
-	function isArguments(value) {
-	  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
-	  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
-	    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
-	}
-
-	module.exports = isArguments;
-
-
-/***/ },
-/* 17 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isArrayLike = __webpack_require__(18),
-	    isObjectLike = __webpack_require__(24);
-
-	/**
-	 * This method is like `_.isArrayLike` except that it also checks if `value`
-	 * is an object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
-	 * @example
-	 *
-	 * _.isArrayLikeObject([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isArrayLikeObject(document.body.children);
-	 * // => true
-	 *
-	 * _.isArrayLikeObject('abc');
-	 * // => false
-	 *
-	 * _.isArrayLikeObject(_.noop);
-	 * // => false
-	 */
-	function isArrayLikeObject(value) {
-	  return isObjectLike(value) && isArrayLike(value);
-	}
-
-	module.exports = isArrayLikeObject;
-
-
-/***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var getLength = __webpack_require__(19),
-	    isFunction = __webpack_require__(21),
-	    isLength = __webpack_require__(23);
-
-	/**
-	 * Checks if `value` is array-like. A value is considered array-like if it's
-	 * not a function and has a `value.length` that's an integer greater than or
-	 * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
-	 * @example
-	 *
-	 * _.isArrayLike([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isArrayLike(document.body.children);
-	 * // => true
-	 *
-	 * _.isArrayLike('abc');
-	 * // => true
-	 *
-	 * _.isArrayLike(_.noop);
-	 * // => false
-	 */
-	function isArrayLike(value) {
-	  return value != null && isLength(getLength(value)) && !isFunction(value);
-	}
-
-	module.exports = isArrayLike;
-
-
-/***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseProperty = __webpack_require__(20);
-
-	/**
-	 * Gets the "length" property value of `object`.
-	 *
-	 * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
-	 * that affects Safari on at least iOS 8.1-8.3 ARM64.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {*} Returns the "length" value.
-	 */
-	var getLength = baseProperty('length');
-
-	module.exports = getLength;
-
-
-/***/ },
-/* 20 */
-/***/ function(module, exports) {
-
-	/**
-	 * The base implementation of `_.property` without support for deep paths.
-	 *
-	 * @private
-	 * @param {string} key The key of the property to get.
-	 * @returns {Function} Returns the new function.
-	 */
-	function baseProperty(key) {
-	  return function(object) {
-	    return object == null ? undefined : object[key];
-	  };
-	}
-
-	module.exports = baseProperty;
-
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isObject = __webpack_require__(22);
-
-	/** `Object#toString` result references. */
-	var funcTag = '[object Function]',
-	    genTag = '[object GeneratorFunction]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/**
-	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
-	 * of values.
-	 */
-	var objectToString = objectProto.toString;
-
-	/**
-	 * Checks if `value` is classified as a `Function` object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
-	 * @example
-	 *
-	 * _.isFunction(_);
-	 * // => true
-	 *
-	 * _.isFunction(/abc/);
-	 * // => false
-	 */
-	function isFunction(value) {
-	  // The use of `Object#toString` avoids issues with the `typeof` operator
-	  // in Safari 8 which returns 'object' for typed array and weak map constructors,
-	  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
-	  var tag = isObject(value) ? objectToString.call(value) : '';
-	  return tag == funcTag || tag == genTag;
-	}
-
-	module.exports = isFunction;
-
-
-/***/ },
-/* 22 */
-/***/ function(module, exports) {
-
-	/**
-	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
-	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
-	 * @example
-	 *
-	 * _.isObject({});
-	 * // => true
-	 *
-	 * _.isObject([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isObject(_.noop);
-	 * // => true
-	 *
-	 * _.isObject(null);
-	 * // => false
-	 */
-	function isObject(value) {
-	  var type = typeof value;
-	  return !!value && (type == 'object' || type == 'function');
-	}
-
-	module.exports = isObject;
-
-
-/***/ },
-/* 23 */
-/***/ function(module, exports) {
-
-	/** Used as references for various `Number` constants. */
-	var MAX_SAFE_INTEGER = 9007199254740991;
-
-	/**
-	 * Checks if `value` is a valid array-like length.
-	 *
-	 * **Note:** This function is loosely based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
-	 * @example
-	 *
-	 * _.isLength(3);
-	 * // => true
-	 *
-	 * _.isLength(Number.MIN_VALUE);
-	 * // => false
-	 *
-	 * _.isLength(Infinity);
-	 * // => false
-	 *
-	 * _.isLength('3');
-	 * // => false
-	 */
-	function isLength(value) {
-	  return typeof value == 'number' &&
-	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-	}
-
-	module.exports = isLength;
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports) {
-
-	/**
-	 * Checks if `value` is object-like. A value is object-like if it's not `null`
-	 * and has a `typeof` result of "object".
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
-	 * @example
-	 *
-	 * _.isObjectLike({});
-	 * // => true
-	 *
-	 * _.isObjectLike([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isObjectLike(_.noop);
-	 * // => false
-	 *
-	 * _.isObjectLike(null);
-	 * // => false
-	 */
-	function isObjectLike(value) {
-	  return !!value && typeof value == 'object';
-	}
-
-	module.exports = isObjectLike;
-
-
-/***/ },
-/* 25 */
-/***/ function(module, exports) {
-
-	/**
-	 * Checks if `value` is classified as an `Array` object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @type {Function}
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
-	 * @example
-	 *
-	 * _.isArray([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isArray(document.body.children);
-	 * // => false
-	 *
-	 * _.isArray('abc');
-	 * // => false
-	 *
-	 * _.isArray(_.noop);
-	 * // => false
-	 */
-	var isArray = Array.isArray;
-
-	module.exports = isArray;
-
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var arrayReduce = __webpack_require__(27);
-
-	/**
-	 * The base implementation of `_.pick` without support for individual
-	 * property names.
-	 *
-	 * @private
-	 * @param {Object} object The source object.
-	 * @param {string[]} props The property names to pick.
-	 * @returns {Object} Returns the new object.
-	 */
-	function basePick(object, props) {
-	  object = Object(object);
-	  return arrayReduce(props, function(result, key) {
-	    if (key in object) {
-	      result[key] = object[key];
-	    }
-	    return result;
-	  }, {});
-	}
-
-	module.exports = basePick;
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports) {
-
-	/**
-	 * A specialized version of `_.reduce` for arrays without support for
-	 * iteratee shorthands.
-	 *
-	 * @private
-	 * @param {Array} array The array to iterate over.
-	 * @param {Function} iteratee The function invoked per iteration.
-	 * @param {*} [accumulator] The initial value.
-	 * @param {boolean} [initAccum] Specify using the first element of `array` as the initial value.
-	 * @returns {*} Returns the accumulated value.
-	 */
-	function arrayReduce(array, iteratee, accumulator, initAccum) {
-	  var index = -1,
-	      length = array.length;
-
-	  if (initAccum && length) {
-	    accumulator = array[++index];
-	  }
-	  while (++index < length) {
-	    accumulator = iteratee(accumulator, array[index], index, array);
-	  }
-	  return accumulator;
-	}
-
-	module.exports = arrayReduce;
-
-
-/***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var apply = __webpack_require__(29),
-	    toInteger = __webpack_require__(30);
-
-	/** Used as the `TypeError` message for "Functions" methods. */
-	var FUNC_ERROR_TEXT = 'Expected a function';
-
-	/* Built-in method references for those with the same name as other `lodash` methods. */
-	var nativeMax = Math.max;
-
-	/**
-	 * Creates a function that invokes `func` with the `this` binding of the
-	 * created function and arguments from `start` and beyond provided as an array.
-	 *
-	 * **Note:** This method is based on the [rest parameter](https://mdn.io/rest_parameters).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Function
-	 * @param {Function} func The function to apply a rest parameter to.
-	 * @param {number} [start=func.length-1] The start position of the rest parameter.
-	 * @returns {Function} Returns the new function.
-	 * @example
-	 *
-	 * var say = _.rest(function(what, names) {
-	 *   return what + ' ' + _.initial(names).join(', ') +
-	 *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
-	 * });
-	 *
-	 * say('hello', 'fred', 'barney', 'pebbles');
-	 * // => 'hello fred, barney, & pebbles'
-	 */
-	function rest(func, start) {
-	  if (typeof func != 'function') {
-	    throw new TypeError(FUNC_ERROR_TEXT);
-	  }
-	  start = nativeMax(start === undefined ? (func.length - 1) : toInteger(start), 0);
-	  return function() {
-	    var args = arguments,
-	        index = -1,
-	        length = nativeMax(args.length - start, 0),
-	        array = Array(length);
-
-	    while (++index < length) {
-	      array[index] = args[start + index];
-	    }
-	    switch (start) {
-	      case 0: return func.call(this, array);
-	      case 1: return func.call(this, args[0], array);
-	      case 2: return func.call(this, args[0], args[1], array);
-	    }
-	    var otherArgs = Array(start + 1);
-	    index = -1;
-	    while (++index < start) {
-	      otherArgs[index] = args[index];
-	    }
-	    otherArgs[start] = array;
-	    return apply(func, this, otherArgs);
-	  };
-	}
-
-	module.exports = rest;
-
-
-/***/ },
-/* 29 */
-/***/ function(module, exports) {
-
-	/**
-	 * A faster alternative to `Function#apply`, this function invokes `func`
-	 * with the `this` binding of `thisArg` and the arguments of `args`.
-	 *
-	 * @private
-	 * @param {Function} func The function to invoke.
-	 * @param {*} thisArg The `this` binding of `func`.
-	 * @param {...*} args The arguments to invoke `func` with.
-	 * @returns {*} Returns the result of `func`.
-	 */
-	function apply(func, thisArg, args) {
-	  var length = args.length;
-	  switch (length) {
-	    case 0: return func.call(thisArg);
-	    case 1: return func.call(thisArg, args[0]);
-	    case 2: return func.call(thisArg, args[0], args[1]);
-	    case 3: return func.call(thisArg, args[0], args[1], args[2]);
-	  }
-	  return func.apply(thisArg, args);
-	}
-
-	module.exports = apply;
-
-
-/***/ },
-/* 30 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var toNumber = __webpack_require__(31);
-
-	/** Used as references for various `Number` constants. */
-	var INFINITY = 1 / 0,
-	    MAX_INTEGER = 1.7976931348623157e+308;
-
-	/**
-	 * Converts `value` to an integer.
-	 *
-	 * **Note:** This function is loosely based on [`ToInteger`](http://www.ecma-international.org/ecma-262/6.0/#sec-tointeger).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to convert.
-	 * @returns {number} Returns the converted integer.
-	 * @example
-	 *
-	 * _.toInteger(3);
-	 * // => 3
-	 *
-	 * _.toInteger(Number.MIN_VALUE);
-	 * // => 0
-	 *
-	 * _.toInteger(Infinity);
-	 * // => 1.7976931348623157e+308
-	 *
-	 * _.toInteger('3');
-	 * // => 3
-	 */
-	function toInteger(value) {
-	  if (!value) {
-	    return value === 0 ? value : 0;
-	  }
-	  value = toNumber(value);
-	  if (value === INFINITY || value === -INFINITY) {
-	    var sign = (value < 0 ? -1 : 1);
-	    return sign * MAX_INTEGER;
-	  }
-	  var remainder = value % 1;
-	  return value === value ? (remainder ? value - remainder : value) : 0;
-	}
-
-	module.exports = toInteger;
-
-
-/***/ },
-/* 31 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isFunction = __webpack_require__(21),
-	    isObject = __webpack_require__(22);
-
-	/** Used as references for various `Number` constants. */
-	var NAN = 0 / 0;
-
-	/** Used to match leading and trailing whitespace. */
-	var reTrim = /^\s+|\s+$/g;
-
-	/** Used to detect bad signed hexadecimal string values. */
-	var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
-
-	/** Used to detect binary string values. */
-	var reIsBinary = /^0b[01]+$/i;
-
-	/** Used to detect octal string values. */
-	var reIsOctal = /^0o[0-7]+$/i;
-
-	/** Built-in method references without a dependency on `root`. */
-	var freeParseInt = parseInt;
-
-	/**
-	 * Converts `value` to a number.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to process.
-	 * @returns {number} Returns the number.
-	 * @example
-	 *
-	 * _.toNumber(3);
-	 * // => 3
-	 *
-	 * _.toNumber(Number.MIN_VALUE);
-	 * // => 5e-324
-	 *
-	 * _.toNumber(Infinity);
-	 * // => Infinity
-	 *
-	 * _.toNumber('3');
-	 * // => 3
-	 */
-	function toNumber(value) {
-	  if (isObject(value)) {
-	    var other = isFunction(value.valueOf) ? value.valueOf() : value;
-	    value = isObject(other) ? (other + '') : other;
-	  }
-	  if (typeof value != 'string') {
-	    return value === 0 ? value : +value;
-	  }
-	  value = value.replace(reTrim, '');
-	  var isBinary = reIsBinary.test(value);
-	  return (isBinary || reIsOctal.test(value))
-	    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-	    : (reIsBadHex.test(value) ? NAN : +value);
-	}
-
-	module.exports = toNumber;
-
-
-/***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(5);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(9);
+	var _config = __webpack_require__(29);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _keychain = __webpack_require__(6);
+	var _state = __webpack_require__(32);
 
-	var _keychain2 = _interopRequireDefault(_keychain);
+	var _state2 = _interopRequireDefault(_state);
+
+	var _presence = __webpack_require__(35);
+
+	var _presence2 = _interopRequireDefault(_presence);
+
+	var _logger = __webpack_require__(36);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	var _eventEmitter = __webpack_require__(4);
+
+	var _eventEmitter2 = _interopRequireDefault(_eventEmitter);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _class = function () {
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var config = _ref.config;
-	    var keychain = _ref.keychain;
+	var constants = __webpack_require__(31);
+	var logger = _logger2.default.getLogger('component/presenceHeartbeat');
 
+	var _class = function () {
+	  function _class(config, state, presence, eventEmitter, error) {
 	    _classCallCheck(this, _class);
 
-	    this._networking = networking;
+	    this._error = error;
+	    this._state = state;
 	    this._config = config;
-	    this._keychain = keychain;
+	    this._presence = presence;
+	    logger.debug('init', { config: config, state: state, presence: presence, error: error });
+
+	    /*
+	      listen to two events:
+	        1) internetConnected: call presence.
+	        2) presenceHeartbeatChanged: change the rate at which we are heartbeating
+	        3) subscriptionChange: channel / channel group was adjusted
+	        4) internetDisconnected: do not bother calling presence.
+	    */
+	    eventEmitter.on('internetConnected', this.__start);
+	    eventEmitter.on('internetDisconnected', this.__stop);
+	    eventEmitter.on('presenceHeartbeatChanged', this.__start);
+	    eventEmitter.on('subscriptionChange', this.__start);
 	  }
 
-	  _createClass(_class, [{
-	    key: 'fetchTime',
-	    value: function fetchTime(callback) {
-	      var data = {
-	        uuid: this._keychain.getUUID(),
-	        auth: this._keychain.getAuthKey()
-	      };
+	  /**
+	    removes scheduled presence heartbeat executions and executes
+	    a new presence heartbeat with the new interval
+	  */
 
-	      if (this._config.isInstanceIdEnabled()) {
-	        data.instanceid = this._keychain.getInstanceId();
+
+	  _createClass(_class, [{
+	    key: '__start',
+	    value: function __start() {
+	      logger.debug('(re-)starting presence heartbeat');
+	      this.__start();
+	      this.__periodicHeartbeat();
+	    }
+
+	    /**
+	      remove presence heartbeat schedules;
+	    */
+
+	  }, {
+	    key: '__stop',
+	    value: function __stop() {
+	      logger.debug('stopping presence heartbeat');
+	      clearTimeout(this._intervalId);
+	      this._intervalId = null;
+	    }
+	  }, {
+	    key: '__periodicHeartbeat',
+	    value: function __periodicHeartbeat() {
+	      var timeoutInterval = this._config.getHeartbeatInterval() * constants.SECOND;
+
+	      // if the heartbeat interval is not within the allowed range, exit early
+	      if (!_range(this._config.getHeartbeatInterval(), 1, 501)) {
+	        logger.debug('interval is greater than 500 or below 1; aborting');
+	        return;
 	      }
 
-	      var onSuccess = function onSuccess(response) {
-	        callback(response[0]);
-	      };
+	      // if there are no active channel / channel groups, bail out.
+	      if (!this._state.getChannels(true).length && !this._state.getChannelGroups(true).length) {
+	        logger.debug('there are no channels / channel groups to heartbeat; aborting');
+	        return;
+	      }
 
-	      var onFail = function onFail() {
-	        callback(0);
-	      };
+	      this._presence.heartbeat({
+	        callback: function callback() {
+	          this._intervalId = setTimeout(this._presence_heartbeat, timeoutInterval);
+	        },
+	        error: function error(e) {
+	          if (this._error) {
+	            this._error('Presence Heartbeat unable to reach Pubnub servers', e);
+	          }
 
-	      this._networking.fetchTime({
-	        data: this._networking.prepareParams(data),
-	        success: onSuccess,
-	        fail: onFail
+	          this._intervalId = setTimeout(this._presence_heartbeat, timeoutInterval);
+	        }
 	      });
 	    }
 	  }]);
@@ -3347,7 +3849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 33 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3358,31 +3860,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(5);
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _config = __webpack_require__(9);
+	var _config = __webpack_require__(29);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _keychain = __webpack_require__(6);
+	var _keychain = __webpack_require__(27);
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
-	var _state = __webpack_require__(10);
+	var _state = __webpack_require__(32);
 
 	var _state2 = _interopRequireDefault(_state);
 
-	var _responders = __webpack_require__(12);
+	var _responders = __webpack_require__(28);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _utils = __webpack_require__(7);
+	var _utils = __webpack_require__(30);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
-	var _defaults = __webpack_require__(8);
+	var _defaults = __webpack_require__(31);
 
 	var _defaults2 = _interopRequireDefault(_defaults);
 
@@ -3653,236 +4155,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(5);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _keychain = __webpack_require__(6);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	var _responders = __webpack_require__(12);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var keychain = _ref.keychain;
-	    var error = _ref.error;
-	    var decrypt = _ref.decrypt;
-
-	    _classCallCheck(this, _class);
-
-	    this._networking = networking;
-	    this._keychain = keychain;
-	    this._error = error;
-	    this._decrypt = decrypt;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'fetchHistory',
-	    value: function fetchHistory(args, argumentCallback) {
-	      var _this = this;
-
-	      var callback = args.callback || argumentCallback;
-	      var count = args.count || args.limit || 100;
-	      var reverse = args.reverse || 'false';
-	      var err = args.error || function () {};
-	      var auth_key = args.auth_key || this._keychain.getAuthKey();
-	      var cipher_key = args.cipher_key;
-	      var channel = args.channel;
-	      var channel_group = args.channel_group;
-	      var start = args.start;
-	      var end = args.end;
-	      var include_token = args.include_token;
-	      var string_msg_token = args.string_message_token || false;
-
-	      // Make sure we have a Channel
-	      if (!channel && !channel_group) return this._error('Missing Channel');
-	      if (!callback) return this._error('Missing Callback');
-	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-
-	      var params = {
-	        stringtoken: 'true',
-	        count: count,
-	        reverse: reverse,
-	        auth: auth_key
-	      };
-
-	      if (channel_group) {
-	        params['channel-group'] = channel_group;
-	        if (!channel) {
-	          channel = ',';
-	        }
-	      }
-
-	      if (start) params.start = start;
-	      if (end) params.end = end;
-	      if (include_token) params.include_token = 'true';
-	      if (string_msg_token) params.string_message_token = 'true';
-
-	      // Send Message
-	      this._networking.fetchHistory(channel, {
-	        data: this._networking.prepareParams(params),
-	        success: function success(response) {
-	          _this._handleHistoryResponse(response, err, callback, include_token, cipher_key);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        }
-	      });
-	    }
-	  }, {
-	    key: '_handleHistoryResponse',
-	    value: function _handleHistoryResponse(response, err, callback, include_token, cipher_key) {
-	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object' && response.error) {
-	        err({ message: response.message, payload: response.payload });
-	        return;
-	      }
-	      var messages = response[0];
-	      var decrypted_messages = [];
-	      for (var a = 0; a < messages.length; a++) {
-	        if (include_token) {
-	          var new_message = this._decrypt(messages[a].message, cipher_key);
-	          var timetoken = messages[a].timetoken;
-	          try {
-	            decrypted_messages.push({ message: JSON.parse(new_message), timetoken: timetoken });
-	          } catch (e) {
-	            decrypted_messages.push({ message: new_message, timetoken: timetoken });
-	          }
-	        } else {
-	          var _new_message = this._decrypt(messages[a], cipher_key);
-	          try {
-	            decrypted_messages.push(JSON.parse(_new_message));
-	          } catch (e) {
-	            decrypted_messages.push(_new_message);
-	          }
-	        }
-	      }
-	      callback([decrypted_messages, response[1], response[2]]);
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(5);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _keychain = __webpack_require__(6);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	var _config = __webpack_require__(9);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _responders = __webpack_require__(12);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var keychain = _ref.keychain;
-	    var error = _ref.error;
-	    var config = _ref.config;
-
-	    _classCallCheck(this, _class);
-
-	    this._networking = networking;
-	    this._keychain = keychain;
-	    this._error = error;
-	    this._config = config;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'provisionDevice',
-	    value: function provisionDevice(args) {
-	      var op = args.op;
-	      var gw_type = args.gw_type;
-	      var device_id = args.device_id;
-	      var channel = args.channel;
-
-
-	      var callback = args.callback || function () {};
-	      var auth_key = args.auth_key || this._keychain.getAuthKey();
-	      var err = args.error || function () {};
-
-	      if (!device_id) return this._error('Missing Device ID (device_id)');
-	      if (!gw_type) return this._error('Missing GW Type (gw_type: gcm or apns)');
-	      if (!op) return this._error('Missing GW Operation (op: add or remove)');
-	      if (!channel) return this._error('Missing gw destination Channel (channel)');
-	      if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-
-	      var params = { uuid: this._keychain.getUUID(), auth: auth_key, type: gw_type };
-
-	      if (op === 'add') {
-	        params.add = channel;
-	      } else if (op === 'remove') {
-	        params.remove = channel;
-	      }
-
-	      if (this._config.isInstanceIdEnabled()) {
-	        params.instanceid = this._keychain.getInstanceId();
-	      }
-
-	      this._networking.provisionDeviceForPush(device_id, {
-	        data: params,
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        }
-	      });
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -3894,23 +4166,2999 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(5);
+	var _loglevel = __webpack_require__(37);
+
+	var _loglevel2 = _interopRequireDefault(_loglevel);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var moduleLogger = function () {
+	  function moduleLogger() {
+	    _classCallCheck(this, moduleLogger);
+	  }
+
+	  _createClass(moduleLogger, [{
+	    key: '__commonLogger',
+	    value: function __commonLogger(level, payload) {
+	      _loglevel2.default[level]({
+	        component: this._moduleName,
+	        data: payload,
+	        timestamp: new Date()
+	      });
+	    }
+	  }, {
+	    key: 'error',
+	    value: function error(payload) {
+	      this.__commonLogger('error', payload);
+	    }
+	  }, {
+	    key: 'debug',
+	    value: function debug(payload) {
+	      this.__commonLogger('debug', payload);
+	    }
+	  }]);
+
+	  return moduleLogger;
+	}();
+
+	exports.default = {
+	  getLogger: function getLogger(moduleName) {
+	    return new moduleLogger(moduleName);
+	  }
+	};
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*
+	* loglevel - https://github.com/pimterry/loglevel
+	*
+	* Copyright (c) 2013 Tim Perry
+	* Licensed under the MIT license.
+	*/
+	(function (root, definition) {
+	    "use strict";
+	    if (typeof module === 'object' && module.exports && "function" === 'function') {
+	        module.exports = definition();
+	    } else if (true) {
+	        !(__WEBPACK_AMD_DEFINE_FACTORY__ = (definition), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    } else {
+	        root.log = definition();
+	    }
+	}(this, function () {
+	    "use strict";
+	    var noop = function() {};
+	    var undefinedType = "undefined";
+
+	    function realMethod(methodName) {
+	        if (typeof console === undefinedType) {
+	            return false; // We can't build a real method without a console to log to
+	        } else if (console[methodName] !== undefined) {
+	            return bindMethod(console, methodName);
+	        } else if (console.log !== undefined) {
+	            return bindMethod(console, 'log');
+	        } else {
+	            return noop;
+	        }
+	    }
+
+	    function bindMethod(obj, methodName) {
+	        var method = obj[methodName];
+	        if (typeof method.bind === 'function') {
+	            return method.bind(obj);
+	        } else {
+	            try {
+	                return Function.prototype.bind.call(method, obj);
+	            } catch (e) {
+	                // Missing bind shim or IE8 + Modernizr, fallback to wrapping
+	                return function() {
+	                    return Function.prototype.apply.apply(method, [obj, arguments]);
+	                };
+	            }
+	        }
+	    }
+
+	    // these private functions always need `this` to be set properly
+
+	    function enableLoggingWhenConsoleArrives(methodName, level, loggerName) {
+	        return function () {
+	            if (typeof console !== undefinedType) {
+	                replaceLoggingMethods.call(this, level, loggerName);
+	                this[methodName].apply(this, arguments);
+	            }
+	        };
+	    }
+
+	    function replaceLoggingMethods(level, loggerName) {
+	        /*jshint validthis:true */
+	        for (var i = 0; i < logMethods.length; i++) {
+	            var methodName = logMethods[i];
+	            this[methodName] = (i < level) ?
+	                noop :
+	                this.methodFactory(methodName, level, loggerName);
+	        }
+	    }
+
+	    function defaultMethodFactory(methodName, level, loggerName) {
+	        /*jshint validthis:true */
+	        return realMethod(methodName) ||
+	               enableLoggingWhenConsoleArrives.apply(this, arguments);
+	    }
+
+	    var logMethods = [
+	        "trace",
+	        "debug",
+	        "info",
+	        "warn",
+	        "error"
+	    ];
+
+	    function Logger(name, defaultLevel, factory) {
+	      var self = this;
+	      var currentLevel;
+	      var storageKey = "loglevel";
+	      if (name) {
+	        storageKey += ":" + name;
+	      }
+
+	      function persistLevelIfPossible(levelNum) {
+	          var levelName = (logMethods[levelNum] || 'silent').toUpperCase();
+
+	          // Use localStorage if available
+	          try {
+	              window.localStorage[storageKey] = levelName;
+	              return;
+	          } catch (ignore) {}
+
+	          // Use session cookie as fallback
+	          try {
+	              window.document.cookie =
+	                encodeURIComponent(storageKey) + "=" + levelName + ";";
+	          } catch (ignore) {}
+	      }
+
+	      function getPersistedLevel() {
+	          var storedLevel;
+
+	          try {
+	              storedLevel = window.localStorage[storageKey];
+	          } catch (ignore) {}
+
+	          if (typeof storedLevel === undefinedType) {
+	              try {
+	                  var cookie = window.document.cookie;
+	                  var location = cookie.indexOf(
+	                      encodeURIComponent(storageKey) + "=");
+	                  if (location) {
+	                      storedLevel = /^([^;]+)/.exec(cookie.slice(location))[1];
+	                  }
+	              } catch (ignore) {}
+	          }
+
+	          // If the stored level is not valid, treat it as if nothing was stored.
+	          if (self.levels[storedLevel] === undefined) {
+	              storedLevel = undefined;
+	          }
+
+	          return storedLevel;
+	      }
+
+	      /*
+	       *
+	       * Public API
+	       *
+	       */
+
+	      self.levels = { "TRACE": 0, "DEBUG": 1, "INFO": 2, "WARN": 3,
+	          "ERROR": 4, "SILENT": 5};
+
+	      self.methodFactory = factory || defaultMethodFactory;
+
+	      self.getLevel = function () {
+	          return currentLevel;
+	      };
+
+	      self.setLevel = function (level, persist) {
+	          if (typeof level === "string" && self.levels[level.toUpperCase()] !== undefined) {
+	              level = self.levels[level.toUpperCase()];
+	          }
+	          if (typeof level === "number" && level >= 0 && level <= self.levels.SILENT) {
+	              currentLevel = level;
+	              if (persist !== false) {  // defaults to true
+	                  persistLevelIfPossible(level);
+	              }
+	              replaceLoggingMethods.call(self, level, name);
+	              if (typeof console === undefinedType && level < self.levels.SILENT) {
+	                  return "No console available for logging";
+	              }
+	          } else {
+	              throw "log.setLevel() called with invalid level: " + level;
+	          }
+	      };
+
+	      self.setDefaultLevel = function (level) {
+	          if (!getPersistedLevel()) {
+	              self.setLevel(level, false);
+	          }
+	      };
+
+	      self.enableAll = function(persist) {
+	          self.setLevel(self.levels.TRACE, persist);
+	      };
+
+	      self.disableAll = function(persist) {
+	          self.setLevel(self.levels.SILENT, persist);
+	      };
+
+	      // Initialize with the right level
+	      var initialLevel = getPersistedLevel();
+	      if (initialLevel == null) {
+	          initialLevel = defaultLevel == null ? "WARN" : defaultLevel;
+	      }
+	      self.setLevel(initialLevel, false);
+	    }
+
+	    /*
+	     *
+	     * Package-level API
+	     *
+	     */
+
+	    var defaultLogger = new Logger();
+
+	    var _loggersByName = {};
+	    defaultLogger.getLogger = function getLogger(name) {
+	        if (typeof name !== "string" || name === "") {
+	          throw new TypeError("You must supply a name when creating a logger.");
+	        }
+
+	        var logger = _loggersByName[name];
+	        if (!logger) {
+	          logger = _loggersByName[name] = new Logger(
+	            name, defaultLogger.getLevel(), defaultLogger.methodFactory);
+	        }
+	        return logger;
+	    };
+
+	    // Grab the current global log variable in case of overwrite
+	    var _log = (typeof window !== undefinedType) ? window.log : undefined;
+	    defaultLogger.noConflict = function() {
+	        if (typeof window !== undefinedType &&
+	               window.log === defaultLogger) {
+	            window.log = _log;
+	        }
+
+	        return defaultLogger;
+	    };
+
+	    return defaultLogger;
+	}));
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _eventEmitter = __webpack_require__(4);
+
+	var _eventEmitter2 = _interopRequireDefault(_eventEmitter);
+
+	var _utils = __webpack_require__(30);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _config = __webpack_require__(9);
+	var _logger = __webpack_require__(36);
 
-	var _config2 = _interopRequireDefault(_config);
+	var _logger2 = _interopRequireDefault(_logger);
 
-	var _keychain = __webpack_require__(6);
+	var _time = __webpack_require__(39);
 
-	var _keychain2 = _interopRequireDefault(_keychain);
+	var _time2 = _interopRequireDefault(_time);
 
-	var _responders = __webpack_require__(12);
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var logger = _logger2.default.getLogger('component/Connectivity');
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var eventEmitter = _ref.eventEmitter;
+	    var networking = _ref.networking;
+	    var timeEndpoint = _ref.timeEndpoint;
+
+	    _classCallCheck(this, _class);
+
+	    this._eventEmitter = eventEmitter;
+	    this._networking = networking;
+	    this._timeEndpoint = timeEndpoint;
+
+	    /* listen to failed HttpEvents */
+	    this._eventEmitter.on('unreachableHTTP', this.__onUnreachableHTTP);
+	  }
+
+	  // Detect Age of Message
+
+
+	  _createClass(_class, [{
+	    key: 'detect_latency',
+	    value: function detect_latency(tt) {
+	      var adjusted_time = _utils2.default.rnow() - this._timeDrift;
+	      return adjusted_time - tt / 10000;
+	    }
+	  }, {
+	    key: 'start',
+	    value: function start() {
+	      this.__detect_time_delta(function () {}, null);
+	    }
+	  }, {
+	    key: 'stop',
+	    value: function stop() {}
+	  }, {
+	    key: '__onUnreachableHTTP',
+	    value: function __onUnreachableHTTP() {
+	      console.log('HTTP FAILED');
+	    }
+	  }, {
+	    key: '__poll_online',
+	    value: function __poll_online() {
+	      _is_online() || _reset_offline(1, { error: 'Offline. Please check your network settings.' });
+	      _poll_timer && clearTimeout(_poll_timer);
+	      _poll_timer = _utils2.default.timeout(_poll_online, constants.SECOND);
+	    }
+	  }, {
+	    key: '__poll_online2',
+	    value: function __poll_online2() {
+	      SELF['time'](function (success) {
+	        detect_time_detla(function () {}, success);
+	        success || _reset_offline(1, {
+	          error: 'Heartbeat failed to connect to Pubnub Servers.' + 'Please check your network settings.'
+	        });
+	        _poll_timer2 && clearTimeout(_poll_timer2);
+	        _poll_timer2 = _utils2.default.timeout(_poll_online2, KEEPALIVE);
+	      });
+	    }
+	  }, {
+	    key: '__detect_time_delta',
+	    value: function __detect_time_delta(cb, time) {
+	      var _this = this;
+
+	      var stime = _utils2.default.rnow();
+
+	      var calculate = function calculate(time) {
+	        if (!time) return;
+	        var ptime = time / 10000;
+	        var latency = (_utils2.default.rnow() - stime) / 2;
+	        _this._timeDrift = _utils2.default.rnow() - (ptime + latency);
+	        if (cb) cb(_this._timeDrift);
+	      };
+
+	      if (time) {
+	        calculate(time);
+	      } else {
+	        this._timeEndpoint.fetchTime(calculate);
+	      }
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	/*
+	// Test Network Connection
+	function _test_connection(success) {
+	  if (success) {
+	    // Begin Next Socket Connection
+	    utils.timeout(CONNECT, windowing);
+	  } else {
+	    // New Origin on Failed Connection
+	    networking.shiftStandardOrigin(true);
+	    networking.shiftSubscribeOrigin(true);
+
+	    // Re-test Connection
+	    utils.timeout(function () {
+	      SELF['time'](_test_connection);
+	    }, constants.SECOND);
+	  }
+
+	  // Disconnect & Reconnect
+	  each_channel(function (channel) {
+	    // Reconnect
+	    if (success && channel.disconnected) {
+	      channel.disconnected = 0;
+	      return channel.reconnect(channel.name);
+	    }
+
+	    // Disconnect
+	    if (!success && !channel.disconnected) {
+	      channel.disconnected = 1;
+	      channel.disconnect(channel.name);
+	    }
+	  });
+
+	  // Disconnect & Reconnect for channel groups
+	  each_channel_group(function (channel_group) {
+	    // Reconnect
+	    if (success && channel_group.disconnected) {
+	      channel_group.disconnected = 0;
+	      return channel_group.reconnect(channel_group.name);
+	    }
+
+	    // Disconnect
+	    if (!success && !channel_group.disconnected) {
+	      channel_group.disconnected = 1;
+	      channel_group.disconnect(channel_group.name);
+	    }
+	  });
+	}
+	*/
+
+
+	exports.default = _class;
+
+/***/ },
+/* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(19);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+
+	    _classCallCheck(this, _class);
+
+	    this._networking = networking;
+	  }
+
+	  _createClass(_class, [{
+	    key: 'fetchTime',
+	    value: function fetchTime(callback) {
+	      this._networking.fetchTime(function (err, response) {
+	        if (err) return callback(err);
+	        callback(null, response[0]);
+	      });
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(19);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _responders = __webpack_require__(28);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _utils = __webpack_require__(7);
+	var _logger = __webpack_require__(36);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	// include time token for each history call
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+	    var decrypt = _ref.decrypt;
+
+	    _classCallCheck(this, _class);
+
+	    this._networking = networking;
+	    this._decrypt = decrypt;
+	    this._r = new _responders2.default('#endpoints/history');
+	  }
+
+	  _createClass(_class, [{
+	    key: 'fetchHistory',
+	    value: function fetchHistory(args, callback) {
+	      var _this = this;
+
+	      var channel = args.channel;
+	      var channelGroup = args.channelGroup;
+	      var cipherKey = args.cipherKey;
+	      var start = args.start;
+	      var end = args.end;
+	      var includeToken = args.includeToken;
+
+
+	      var count = args.count || args.limit || 100;
+	      var reverse = args.reverse || 'false';
+	      var returnStringifiedTimetokens = args.returnStringifiedTimetokens || false;
+
+	      if (!channel && !channelGroup) {
+	        return callback(this._r.validationError('Missing channel and/or channel group'));
+	      }
+
+	      if (!callback) {
+	        return this._l.error('Missing Callback');
+	      }
+
+	      var params = { count: count, reverse: reverse, stringtoken: 'true' };
+
+	      if (channelGroup) {
+	        params['channel-group'] = channelGroup;
+	        if (!channel) {
+	          channel = ',';
+	        }
+	      }
+
+	      if (start) params.start = start;
+	      if (end) params.end = end;
+	      if (includeToken) params.includeToken = 'true';
+	      if (returnStringifiedTimetokens) params.string_message_token = 'true';
+
+	      // Send Message
+	      this._networking.fetchHistory(channel, params, function (err, resp) {
+	        if (err) return callback(err, null);
+	        callback(null, _this._parseResponse(resp, includeToken, cipherKey));
+	      });
+	    }
+	  }, {
+	    key: '_parseResponse',
+	    value: function _parseResponse(response, includeToken, cipherKey) {
+	      var _this2 = this;
+
+	      var messages = response[0];
+	      var decryptedMessages = [];
+	      messages.forEach(function (message) {
+	        var decryptedMessage = _this2._decrypt(message, cipherKey);
+	        var timetoken = message.timetoken;
+
+
+	        if (includeToken) {
+	          try {
+	            decryptedMessages.push({ timetoken: timetoken, message: JSON.parse(decryptedMessage) });
+	          } catch (e) {
+	            decryptedMessages.push({ timetoken: timetoken, message: decryptedMessage });
+	          }
+	        } else {
+	          try {
+	            decryptedMessages.push(JSON.parse(decryptedMessage));
+	          } catch (e) {
+	            decryptedMessages.push(decryptedMessage);
+	          }
+	        }
+	      });
+	      return [decryptedMessages, response[1], response[2]];
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(19);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _keychain = __webpack_require__(27);
+
+	var _keychain2 = _interopRequireDefault(_keychain);
+
+	var _responders = __webpack_require__(28);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	var _Q = __webpack_require__(42);
+
+	var _Q2 = _interopRequireDefault(_Q);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var checkParam = function checkParam(_checkParam, message) {
+	  var q = _Q2.default.defer();
+
+	  if (_checkParam) {
+	    q.resolve();
+	  } else {
+	    q.reject(message);
+	  }
+
+	  return q.promise;
+	};
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+
+	    _classCallCheck(this, _class);
+
+	    this._networking = networking;
+	    this._r = new _responders2.default('endpoints/push');
+	  }
+
+	  _createClass(_class, [{
+	    key: 'addDevice',
+	    value: function addDevice(_ref2) {
+	      var pushGateway = _ref2.pushGateway;
+	      var device = _ref2.device;
+	      var channel = _ref2.channel;
+
+	      var payload = { operation: 'add', pushGateway: pushGateway, device: device, channel: channel };
+	      return this.__provisionDevice(payload);
+	    }
+	  }, {
+	    key: 'removeDevice',
+	    value: function removeDevice(_ref3) {
+	      var pushGateway = _ref3.pushGateway;
+	      var device = _ref3.device;
+	      var channel = _ref3.channel;
+
+	      var payload = { operation: 'remove', pushGateway: pushGateway, device: device, channel: channel };
+	      return this.__provisionDevice(payload);
+	    }
+	  }, {
+	    key: '__provisionDevice',
+	    value: function __provisionDevice(_ref4) {
+	      var _this = this;
+
+	      var operation = _ref4.operation;
+	      var pushGateway = _ref4.pushGateway;
+	      var device = _ref4.device;
+	      var channel = _ref4.channel;
+
+	      var q = _Q2.default.defer();
+
+	      checkParam(device, 'Missing Device ID (device)').then(checkParam(pushGateway, 'Missing GW Type (pushGateway: gcm or apns)')).then(checkParam(operation, 'Missing GW Operation (operation: add or remove)')).then(checkParam(channel, 'Missing gw destination Channel (channel)')).then(checkParam(this._networking.validateSubscribeKey(), 'Missing Subscribe Key')).then(checkParam(this._networking.validatePublishKey(), 'Missing Publish Key')).fail(function (error) {
+	        q.reject(_this._r.validationError(error));
+	      });
+
+	      return q.promise;
+
+	      /*
+	      let data: Object = {
+	        type: pushGateway
+	      };
+	       switch (operation) {
+	        case 'add': data.add = channel; break;
+	        case 'remove': data.remove = channel; break;
+	        default:
+	      }
+	       this._networking.provisionDeviceForPush(device, data)
+	        .then((response) => q.resolve(this._r.callback(response)))
+	        .fail((response) => q.fail(this._r.error(response)));
+	      });
+	      */
+	    }
+	  }, {
+	    key: 'createNotification',
+	    value: function createNotification() {
+	      // return callback;
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+
+/***/ },
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process, setImmediate) {// vim:ts=4:sts=4:sw=4:
+	/*!
+	 *
+	 * Copyright 2009-2012 Kris Kowal under the terms of the MIT
+	 * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+	 *
+	 * With parts by Tyler Close
+	 * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
+	 * at http://www.opensource.org/licenses/mit-license.html
+	 * Forked at ref_send.js version: 2009-05-11
+	 *
+	 * With parts by Mark Miller
+	 * Copyright (C) 2011 Google Inc.
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 * http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 *
+	 */
+
+	(function (definition) {
+	    "use strict";
+
+	    // This file will function properly as a <script> tag, or a module
+	    // using CommonJS and NodeJS or RequireJS module formats.  In
+	    // Common/Node/RequireJS, the module exports the Q API and when
+	    // executed as a simple <script>, it creates a Q global instead.
+
+	    // Montage Require
+	    if (typeof bootstrap === "function") {
+	        bootstrap("promise", definition);
+
+	    // CommonJS
+	    } else if (true) {
+	        module.exports = definition();
+
+	    // RequireJS
+	    } else if (typeof define === "function" && define.amd) {
+	        define(definition);
+
+	    // SES (Secure EcmaScript)
+	    } else if (typeof ses !== "undefined") {
+	        if (!ses.ok()) {
+	            return;
+	        } else {
+	            ses.makeQ = definition;
+	        }
+
+	    // <script>
+	    } else if (typeof window !== "undefined" || typeof self !== "undefined") {
+	        // Prefer window over self for add-on scripts. Use self for
+	        // non-windowed contexts.
+	        var global = typeof window !== "undefined" ? window : self;
+
+	        // Get the `window` object, save the previous Q global
+	        // and initialize Q as a global.
+	        var previousQ = global.Q;
+	        global.Q = definition();
+
+	        // Add a noConflict function so Q can be removed from the
+	        // global namespace.
+	        global.Q.noConflict = function () {
+	            global.Q = previousQ;
+	            return this;
+	        };
+
+	    } else {
+	        throw new Error("This environment was not anticipated by Q. Please file a bug.");
+	    }
+
+	})(function () {
+	"use strict";
+
+	var hasStacks = false;
+	try {
+	    throw new Error();
+	} catch (e) {
+	    hasStacks = !!e.stack;
+	}
+
+	// All code after this point will be filtered from stack traces reported
+	// by Q.
+	var qStartingLine = captureLine();
+	var qFileName;
+
+	// shims
+
+	// used for fallback in "allResolved"
+	var noop = function () {};
+
+	// Use the fastest possible means to execute a task in a future turn
+	// of the event loop.
+	var nextTick =(function () {
+	    // linked list of tasks (single, with head node)
+	    var head = {task: void 0, next: null};
+	    var tail = head;
+	    var flushing = false;
+	    var requestTick = void 0;
+	    var isNodeJS = false;
+	    // queue for late tasks, used by unhandled rejection tracking
+	    var laterQueue = [];
+
+	    function flush() {
+	        /* jshint loopfunc: true */
+	        var task, domain;
+
+	        while (head.next) {
+	            head = head.next;
+	            task = head.task;
+	            head.task = void 0;
+	            domain = head.domain;
+
+	            if (domain) {
+	                head.domain = void 0;
+	                domain.enter();
+	            }
+	            runSingle(task, domain);
+
+	        }
+	        while (laterQueue.length) {
+	            task = laterQueue.pop();
+	            runSingle(task);
+	        }
+	        flushing = false;
+	    }
+	    // runs a single function in the async queue
+	    function runSingle(task, domain) {
+	        try {
+	            task();
+
+	        } catch (e) {
+	            if (isNodeJS) {
+	                // In node, uncaught exceptions are considered fatal errors.
+	                // Re-throw them synchronously to interrupt flushing!
+
+	                // Ensure continuation if the uncaught exception is suppressed
+	                // listening "uncaughtException" events (as domains does).
+	                // Continue in next event to avoid tick recursion.
+	                if (domain) {
+	                    domain.exit();
+	                }
+	                setTimeout(flush, 0);
+	                if (domain) {
+	                    domain.enter();
+	                }
+
+	                throw e;
+
+	            } else {
+	                // In browsers, uncaught exceptions are not fatal.
+	                // Re-throw them asynchronously to avoid slow-downs.
+	                setTimeout(function () {
+	                    throw e;
+	                }, 0);
+	            }
+	        }
+
+	        if (domain) {
+	            domain.exit();
+	        }
+	    }
+
+	    nextTick = function (task) {
+	        tail = tail.next = {
+	            task: task,
+	            domain: isNodeJS && process.domain,
+	            next: null
+	        };
+
+	        if (!flushing) {
+	            flushing = true;
+	            requestTick();
+	        }
+	    };
+
+	    if (typeof process === "object" &&
+	        process.toString() === "[object process]" && process.nextTick) {
+	        // Ensure Q is in a real Node environment, with a `process.nextTick`.
+	        // To see through fake Node environments:
+	        // * Mocha test runner - exposes a `process` global without a `nextTick`
+	        // * Browserify - exposes a `process.nexTick` function that uses
+	        //   `setTimeout`. In this case `setImmediate` is preferred because
+	        //    it is faster. Browserify's `process.toString()` yields
+	        //   "[object Object]", while in a real Node environment
+	        //   `process.nextTick()` yields "[object process]".
+	        isNodeJS = true;
+
+	        requestTick = function () {
+	            process.nextTick(flush);
+	        };
+
+	    } else if (typeof setImmediate === "function") {
+	        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
+	        if (typeof window !== "undefined") {
+	            requestTick = setImmediate.bind(window, flush);
+	        } else {
+	            requestTick = function () {
+	                setImmediate(flush);
+	            };
+	        }
+
+	    } else if (typeof MessageChannel !== "undefined") {
+	        // modern browsers
+	        // http://www.nonblocking.io/2011/06/windownexttick.html
+	        var channel = new MessageChannel();
+	        // At least Safari Version 6.0.5 (8536.30.1) intermittently cannot create
+	        // working message ports the first time a page loads.
+	        channel.port1.onmessage = function () {
+	            requestTick = requestPortTick;
+	            channel.port1.onmessage = flush;
+	            flush();
+	        };
+	        var requestPortTick = function () {
+	            // Opera requires us to provide a message payload, regardless of
+	            // whether we use it.
+	            channel.port2.postMessage(0);
+	        };
+	        requestTick = function () {
+	            setTimeout(flush, 0);
+	            requestPortTick();
+	        };
+
+	    } else {
+	        // old browsers
+	        requestTick = function () {
+	            setTimeout(flush, 0);
+	        };
+	    }
+	    // runs a task after all other tasks have been run
+	    // this is useful for unhandled rejection tracking that needs to happen
+	    // after all `then`d tasks have been run.
+	    nextTick.runAfter = function (task) {
+	        laterQueue.push(task);
+	        if (!flushing) {
+	            flushing = true;
+	            requestTick();
+	        }
+	    };
+	    return nextTick;
+	})();
+
+	// Attempt to make generics safe in the face of downstream
+	// modifications.
+	// There is no situation where this is necessary.
+	// If you need a security guarantee, these primordials need to be
+	// deeply frozen anyway, and if you don’t need a security guarantee,
+	// this is just plain paranoid.
+	// However, this **might** have the nice side-effect of reducing the size of
+	// the minified code by reducing x.call() to merely x()
+	// See Mark Miller’s explanation of what this does.
+	// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
+	var call = Function.call;
+	function uncurryThis(f) {
+	    return function () {
+	        return call.apply(f, arguments);
+	    };
+	}
+	// This is equivalent, but slower:
+	// uncurryThis = Function_bind.bind(Function_bind.call);
+	// http://jsperf.com/uncurrythis
+
+	var array_slice = uncurryThis(Array.prototype.slice);
+
+	var array_reduce = uncurryThis(
+	    Array.prototype.reduce || function (callback, basis) {
+	        var index = 0,
+	            length = this.length;
+	        // concerning the initial value, if one is not provided
+	        if (arguments.length === 1) {
+	            // seek to the first value in the array, accounting
+	            // for the possibility that is is a sparse array
+	            do {
+	                if (index in this) {
+	                    basis = this[index++];
+	                    break;
+	                }
+	                if (++index >= length) {
+	                    throw new TypeError();
+	                }
+	            } while (1);
+	        }
+	        // reduce
+	        for (; index < length; index++) {
+	            // account for the possibility that the array is sparse
+	            if (index in this) {
+	                basis = callback(basis, this[index], index);
+	            }
+	        }
+	        return basis;
+	    }
+	);
+
+	var array_indexOf = uncurryThis(
+	    Array.prototype.indexOf || function (value) {
+	        // not a very good shim, but good enough for our one use of it
+	        for (var i = 0; i < this.length; i++) {
+	            if (this[i] === value) {
+	                return i;
+	            }
+	        }
+	        return -1;
+	    }
+	);
+
+	var array_map = uncurryThis(
+	    Array.prototype.map || function (callback, thisp) {
+	        var self = this;
+	        var collect = [];
+	        array_reduce(self, function (undefined, value, index) {
+	            collect.push(callback.call(thisp, value, index, self));
+	        }, void 0);
+	        return collect;
+	    }
+	);
+
+	var object_create = Object.create || function (prototype) {
+	    function Type() { }
+	    Type.prototype = prototype;
+	    return new Type();
+	};
+
+	var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
+
+	var object_keys = Object.keys || function (object) {
+	    var keys = [];
+	    for (var key in object) {
+	        if (object_hasOwnProperty(object, key)) {
+	            keys.push(key);
+	        }
+	    }
+	    return keys;
+	};
+
+	var object_toString = uncurryThis(Object.prototype.toString);
+
+	function isObject(value) {
+	    return value === Object(value);
+	}
+
+	// generator related shims
+
+	// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
+	function isStopIteration(exception) {
+	    return (
+	        object_toString(exception) === "[object StopIteration]" ||
+	        exception instanceof QReturnValue
+	    );
+	}
+
+	// FIXME: Remove this helper and Q.return once ES6 generators are in
+	// SpiderMonkey.
+	var QReturnValue;
+	if (typeof ReturnValue !== "undefined") {
+	    QReturnValue = ReturnValue;
+	} else {
+	    QReturnValue = function (value) {
+	        this.value = value;
+	    };
+	}
+
+	// long stack traces
+
+	var STACK_JUMP_SEPARATOR = "From previous event:";
+
+	function makeStackTraceLong(error, promise) {
+	    // If possible, transform the error stack trace by removing Node and Q
+	    // cruft, then concatenating with the stack trace of `promise`. See #57.
+	    if (hasStacks &&
+	        promise.stack &&
+	        typeof error === "object" &&
+	        error !== null &&
+	        error.stack &&
+	        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+	    ) {
+	        var stacks = [];
+	        for (var p = promise; !!p; p = p.source) {
+	            if (p.stack) {
+	                stacks.unshift(p.stack);
+	            }
+	        }
+	        stacks.unshift(error.stack);
+
+	        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
+	        error.stack = filterStackString(concatedStacks);
+	    }
+	}
+
+	function filterStackString(stackString) {
+	    var lines = stackString.split("\n");
+	    var desiredLines = [];
+	    for (var i = 0; i < lines.length; ++i) {
+	        var line = lines[i];
+
+	        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
+	            desiredLines.push(line);
+	        }
+	    }
+	    return desiredLines.join("\n");
+	}
+
+	function isNodeFrame(stackLine) {
+	    return stackLine.indexOf("(module.js:") !== -1 ||
+	           stackLine.indexOf("(node.js:") !== -1;
+	}
+
+	function getFileNameAndLineNumber(stackLine) {
+	    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
+	    // In IE10 function name can have spaces ("Anonymous function") O_o
+	    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
+	    if (attempt1) {
+	        return [attempt1[1], Number(attempt1[2])];
+	    }
+
+	    // Anonymous functions: "at filename:lineNumber:columnNumber"
+	    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
+	    if (attempt2) {
+	        return [attempt2[1], Number(attempt2[2])];
+	    }
+
+	    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
+	    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
+	    if (attempt3) {
+	        return [attempt3[1], Number(attempt3[2])];
+	    }
+	}
+
+	function isInternalFrame(stackLine) {
+	    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
+
+	    if (!fileNameAndLineNumber) {
+	        return false;
+	    }
+
+	    var fileName = fileNameAndLineNumber[0];
+	    var lineNumber = fileNameAndLineNumber[1];
+
+	    return fileName === qFileName &&
+	        lineNumber >= qStartingLine &&
+	        lineNumber <= qEndingLine;
+	}
+
+	// discover own file name and line number range for filtering stack
+	// traces
+	function captureLine() {
+	    if (!hasStacks) {
+	        return;
+	    }
+
+	    try {
+	        throw new Error();
+	    } catch (e) {
+	        var lines = e.stack.split("\n");
+	        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
+	        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
+	        if (!fileNameAndLineNumber) {
+	            return;
+	        }
+
+	        qFileName = fileNameAndLineNumber[0];
+	        return fileNameAndLineNumber[1];
+	    }
+	}
+
+	function deprecate(callback, name, alternative) {
+	    return function () {
+	        if (typeof console !== "undefined" &&
+	            typeof console.warn === "function") {
+	            console.warn(name + " is deprecated, use " + alternative +
+	                         " instead.", new Error("").stack);
+	        }
+	        return callback.apply(callback, arguments);
+	    };
+	}
+
+	// end of shims
+	// beginning of real work
+
+	/**
+	 * Constructs a promise for an immediate reference, passes promises through, or
+	 * coerces promises from different systems.
+	 * @param value immediate reference or promise
+	 */
+	function Q(value) {
+	    // If the object is already a Promise, return it directly.  This enables
+	    // the resolve function to both be used to created references from objects,
+	    // but to tolerably coerce non-promises to promises.
+	    if (value instanceof Promise) {
+	        return value;
+	    }
+
+	    // assimilate thenables
+	    if (isPromiseAlike(value)) {
+	        return coerce(value);
+	    } else {
+	        return fulfill(value);
+	    }
+	}
+	Q.resolve = Q;
+
+	/**
+	 * Performs a task in a future turn of the event loop.
+	 * @param {Function} task
+	 */
+	Q.nextTick = nextTick;
+
+	/**
+	 * Controls whether or not long stack traces will be on
+	 */
+	Q.longStackSupport = false;
+
+	// enable long stacks if Q_DEBUG is set
+	if (typeof process === "object" && process && process.env && process.env.Q_DEBUG) {
+	    Q.longStackSupport = true;
+	}
+
+	/**
+	 * Constructs a {promise, resolve, reject} object.
+	 *
+	 * `resolve` is a callback to invoke with a more resolved value for the
+	 * promise. To fulfill the promise, invoke `resolve` with any value that is
+	 * not a thenable. To reject the promise, invoke `resolve` with a rejected
+	 * thenable, or invoke `reject` with the reason directly. To resolve the
+	 * promise to another thenable, thus putting it in the same state, invoke
+	 * `resolve` with that other thenable.
+	 */
+	Q.defer = defer;
+	function defer() {
+	    // if "messages" is an "Array", that indicates that the promise has not yet
+	    // been resolved.  If it is "undefined", it has been resolved.  Each
+	    // element of the messages array is itself an array of complete arguments to
+	    // forward to the resolved promise.  We coerce the resolution value to a
+	    // promise using the `resolve` function because it handles both fully
+	    // non-thenable values and other thenables gracefully.
+	    var messages = [], progressListeners = [], resolvedPromise;
+
+	    var deferred = object_create(defer.prototype);
+	    var promise = object_create(Promise.prototype);
+
+	    promise.promiseDispatch = function (resolve, op, operands) {
+	        var args = array_slice(arguments);
+	        if (messages) {
+	            messages.push(args);
+	            if (op === "when" && operands[1]) { // progress operand
+	                progressListeners.push(operands[1]);
+	            }
+	        } else {
+	            Q.nextTick(function () {
+	                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
+	            });
+	        }
+	    };
+
+	    // XXX deprecated
+	    promise.valueOf = function () {
+	        if (messages) {
+	            return promise;
+	        }
+	        var nearerValue = nearer(resolvedPromise);
+	        if (isPromise(nearerValue)) {
+	            resolvedPromise = nearerValue; // shorten chain
+	        }
+	        return nearerValue;
+	    };
+
+	    promise.inspect = function () {
+	        if (!resolvedPromise) {
+	            return { state: "pending" };
+	        }
+	        return resolvedPromise.inspect();
+	    };
+
+	    if (Q.longStackSupport && hasStacks) {
+	        try {
+	            throw new Error();
+	        } catch (e) {
+	            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
+	            // accessor around; that causes memory leaks as per GH-111. Just
+	            // reify the stack trace as a string ASAP.
+	            //
+	            // At the same time, cut off the first line; it's always just
+	            // "[object Promise]\n", as per the `toString`.
+	            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+	        }
+	    }
+
+	    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
+	    // consolidating them into `become`, since otherwise we'd create new
+	    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
+
+	    function become(newPromise) {
+	        resolvedPromise = newPromise;
+	        promise.source = newPromise;
+
+	        array_reduce(messages, function (undefined, message) {
+	            Q.nextTick(function () {
+	                newPromise.promiseDispatch.apply(newPromise, message);
+	            });
+	        }, void 0);
+
+	        messages = void 0;
+	        progressListeners = void 0;
+	    }
+
+	    deferred.promise = promise;
+	    deferred.resolve = function (value) {
+	        if (resolvedPromise) {
+	            return;
+	        }
+
+	        become(Q(value));
+	    };
+
+	    deferred.fulfill = function (value) {
+	        if (resolvedPromise) {
+	            return;
+	        }
+
+	        become(fulfill(value));
+	    };
+	    deferred.reject = function (reason) {
+	        if (resolvedPromise) {
+	            return;
+	        }
+
+	        become(reject(reason));
+	    };
+	    deferred.notify = function (progress) {
+	        if (resolvedPromise) {
+	            return;
+	        }
+
+	        array_reduce(progressListeners, function (undefined, progressListener) {
+	            Q.nextTick(function () {
+	                progressListener(progress);
+	            });
+	        }, void 0);
+	    };
+
+	    return deferred;
+	}
+
+	/**
+	 * Creates a Node-style callback that will resolve or reject the deferred
+	 * promise.
+	 * @returns a nodeback
+	 */
+	defer.prototype.makeNodeResolver = function () {
+	    var self = this;
+	    return function (error, value) {
+	        if (error) {
+	            self.reject(error);
+	        } else if (arguments.length > 2) {
+	            self.resolve(array_slice(arguments, 1));
+	        } else {
+	            self.resolve(value);
+	        }
+	    };
+	};
+
+	/**
+	 * @param resolver {Function} a function that returns nothing and accepts
+	 * the resolve, reject, and notify functions for a deferred.
+	 * @returns a promise that may be resolved with the given resolve and reject
+	 * functions, or rejected by a thrown exception in resolver
+	 */
+	Q.Promise = promise; // ES6
+	Q.promise = promise;
+	function promise(resolver) {
+	    if (typeof resolver !== "function") {
+	        throw new TypeError("resolver must be a function.");
+	    }
+	    var deferred = defer();
+	    try {
+	        resolver(deferred.resolve, deferred.reject, deferred.notify);
+	    } catch (reason) {
+	        deferred.reject(reason);
+	    }
+	    return deferred.promise;
+	}
+
+	promise.race = race; // ES6
+	promise.all = all; // ES6
+	promise.reject = reject; // ES6
+	promise.resolve = Q; // ES6
+
+	// XXX experimental.  This method is a way to denote that a local value is
+	// serializable and should be immediately dispatched to a remote upon request,
+	// instead of passing a reference.
+	Q.passByCopy = function (object) {
+	    //freeze(object);
+	    //passByCopies.set(object, true);
+	    return object;
+	};
+
+	Promise.prototype.passByCopy = function () {
+	    //freeze(object);
+	    //passByCopies.set(object, true);
+	    return this;
+	};
+
+	/**
+	 * If two promises eventually fulfill to the same value, promises that value,
+	 * but otherwise rejects.
+	 * @param x {Any*}
+	 * @param y {Any*}
+	 * @returns {Any*} a promise for x and y if they are the same, but a rejection
+	 * otherwise.
+	 *
+	 */
+	Q.join = function (x, y) {
+	    return Q(x).join(y);
+	};
+
+	Promise.prototype.join = function (that) {
+	    return Q([this, that]).spread(function (x, y) {
+	        if (x === y) {
+	            // TODO: "===" should be Object.is or equiv
+	            return x;
+	        } else {
+	            throw new Error("Can't join: not the same: " + x + " " + y);
+	        }
+	    });
+	};
+
+	/**
+	 * Returns a promise for the first of an array of promises to become settled.
+	 * @param answers {Array[Any*]} promises to race
+	 * @returns {Any*} the first promise to be settled
+	 */
+	Q.race = race;
+	function race(answerPs) {
+	    return promise(function (resolve, reject) {
+	        // Switch to this once we can assume at least ES5
+	        // answerPs.forEach(function (answerP) {
+	        //     Q(answerP).then(resolve, reject);
+	        // });
+	        // Use this in the meantime
+	        for (var i = 0, len = answerPs.length; i < len; i++) {
+	            Q(answerPs[i]).then(resolve, reject);
+	        }
+	    });
+	}
+
+	Promise.prototype.race = function () {
+	    return this.then(Q.race);
+	};
+
+	/**
+	 * Constructs a Promise with a promise descriptor object and optional fallback
+	 * function.  The descriptor contains methods like when(rejected), get(name),
+	 * set(name, value), post(name, args), and delete(name), which all
+	 * return either a value, a promise for a value, or a rejection.  The fallback
+	 * accepts the operation name, a resolver, and any further arguments that would
+	 * have been forwarded to the appropriate method above had a method been
+	 * provided with the proper name.  The API makes no guarantees about the nature
+	 * of the returned object, apart from that it is usable whereever promises are
+	 * bought and sold.
+	 */
+	Q.makePromise = Promise;
+	function Promise(descriptor, fallback, inspect) {
+	    if (fallback === void 0) {
+	        fallback = function (op) {
+	            return reject(new Error(
+	                "Promise does not support operation: " + op
+	            ));
+	        };
+	    }
+	    if (inspect === void 0) {
+	        inspect = function () {
+	            return {state: "unknown"};
+	        };
+	    }
+
+	    var promise = object_create(Promise.prototype);
+
+	    promise.promiseDispatch = function (resolve, op, args) {
+	        var result;
+	        try {
+	            if (descriptor[op]) {
+	                result = descriptor[op].apply(promise, args);
+	            } else {
+	                result = fallback.call(promise, op, args);
+	            }
+	        } catch (exception) {
+	            result = reject(exception);
+	        }
+	        if (resolve) {
+	            resolve(result);
+	        }
+	    };
+
+	    promise.inspect = inspect;
+
+	    // XXX deprecated `valueOf` and `exception` support
+	    if (inspect) {
+	        var inspected = inspect();
+	        if (inspected.state === "rejected") {
+	            promise.exception = inspected.reason;
+	        }
+
+	        promise.valueOf = function () {
+	            var inspected = inspect();
+	            if (inspected.state === "pending" ||
+	                inspected.state === "rejected") {
+	                return promise;
+	            }
+	            return inspected.value;
+	        };
+	    }
+
+	    return promise;
+	}
+
+	Promise.prototype.toString = function () {
+	    return "[object Promise]";
+	};
+
+	Promise.prototype.then = function (fulfilled, rejected, progressed) {
+	    var self = this;
+	    var deferred = defer();
+	    var done = false;   // ensure the untrusted promise makes at most a
+	                        // single call to one of the callbacks
+
+	    function _fulfilled(value) {
+	        try {
+	            return typeof fulfilled === "function" ? fulfilled(value) : value;
+	        } catch (exception) {
+	            return reject(exception);
+	        }
+	    }
+
+	    function _rejected(exception) {
+	        if (typeof rejected === "function") {
+	            makeStackTraceLong(exception, self);
+	            try {
+	                return rejected(exception);
+	            } catch (newException) {
+	                return reject(newException);
+	            }
+	        }
+	        return reject(exception);
+	    }
+
+	    function _progressed(value) {
+	        return typeof progressed === "function" ? progressed(value) : value;
+	    }
+
+	    Q.nextTick(function () {
+	        self.promiseDispatch(function (value) {
+	            if (done) {
+	                return;
+	            }
+	            done = true;
+
+	            deferred.resolve(_fulfilled(value));
+	        }, "when", [function (exception) {
+	            if (done) {
+	                return;
+	            }
+	            done = true;
+
+	            deferred.resolve(_rejected(exception));
+	        }]);
+	    });
+
+	    // Progress propagator need to be attached in the current tick.
+	    self.promiseDispatch(void 0, "when", [void 0, function (value) {
+	        var newValue;
+	        var threw = false;
+	        try {
+	            newValue = _progressed(value);
+	        } catch (e) {
+	            threw = true;
+	            if (Q.onerror) {
+	                Q.onerror(e);
+	            } else {
+	                throw e;
+	            }
+	        }
+
+	        if (!threw) {
+	            deferred.notify(newValue);
+	        }
+	    }]);
+
+	    return deferred.promise;
+	};
+
+	Q.tap = function (promise, callback) {
+	    return Q(promise).tap(callback);
+	};
+
+	/**
+	 * Works almost like "finally", but not called for rejections.
+	 * Original resolution value is passed through callback unaffected.
+	 * Callback may return a promise that will be awaited for.
+	 * @param {Function} callback
+	 * @returns {Q.Promise}
+	 * @example
+	 * doSomething()
+	 *   .then(...)
+	 *   .tap(console.log)
+	 *   .then(...);
+	 */
+	Promise.prototype.tap = function (callback) {
+	    callback = Q(callback);
+
+	    return this.then(function (value) {
+	        return callback.fcall(value).thenResolve(value);
+	    });
+	};
+
+	/**
+	 * Registers an observer on a promise.
+	 *
+	 * Guarantees:
+	 *
+	 * 1. that fulfilled and rejected will be called only once.
+	 * 2. that either the fulfilled callback or the rejected callback will be
+	 *    called, but not both.
+	 * 3. that fulfilled and rejected will not be called in this turn.
+	 *
+	 * @param value      promise or immediate reference to observe
+	 * @param fulfilled  function to be called with the fulfilled value
+	 * @param rejected   function to be called with the rejection exception
+	 * @param progressed function to be called on any progress notifications
+	 * @return promise for the return value from the invoked callback
+	 */
+	Q.when = when;
+	function when(value, fulfilled, rejected, progressed) {
+	    return Q(value).then(fulfilled, rejected, progressed);
+	}
+
+	Promise.prototype.thenResolve = function (value) {
+	    return this.then(function () { return value; });
+	};
+
+	Q.thenResolve = function (promise, value) {
+	    return Q(promise).thenResolve(value);
+	};
+
+	Promise.prototype.thenReject = function (reason) {
+	    return this.then(function () { throw reason; });
+	};
+
+	Q.thenReject = function (promise, reason) {
+	    return Q(promise).thenReject(reason);
+	};
+
+	/**
+	 * If an object is not a promise, it is as "near" as possible.
+	 * If a promise is rejected, it is as "near" as possible too.
+	 * If it’s a fulfilled promise, the fulfillment value is nearer.
+	 * If it’s a deferred promise and the deferred has been resolved, the
+	 * resolution is "nearer".
+	 * @param object
+	 * @returns most resolved (nearest) form of the object
+	 */
+
+	// XXX should we re-do this?
+	Q.nearer = nearer;
+	function nearer(value) {
+	    if (isPromise(value)) {
+	        var inspected = value.inspect();
+	        if (inspected.state === "fulfilled") {
+	            return inspected.value;
+	        }
+	    }
+	    return value;
+	}
+
+	/**
+	 * @returns whether the given object is a promise.
+	 * Otherwise it is a fulfilled value.
+	 */
+	Q.isPromise = isPromise;
+	function isPromise(object) {
+	    return object instanceof Promise;
+	}
+
+	Q.isPromiseAlike = isPromiseAlike;
+	function isPromiseAlike(object) {
+	    return isObject(object) && typeof object.then === "function";
+	}
+
+	/**
+	 * @returns whether the given object is a pending promise, meaning not
+	 * fulfilled or rejected.
+	 */
+	Q.isPending = isPending;
+	function isPending(object) {
+	    return isPromise(object) && object.inspect().state === "pending";
+	}
+
+	Promise.prototype.isPending = function () {
+	    return this.inspect().state === "pending";
+	};
+
+	/**
+	 * @returns whether the given object is a value or fulfilled
+	 * promise.
+	 */
+	Q.isFulfilled = isFulfilled;
+	function isFulfilled(object) {
+	    return !isPromise(object) || object.inspect().state === "fulfilled";
+	}
+
+	Promise.prototype.isFulfilled = function () {
+	    return this.inspect().state === "fulfilled";
+	};
+
+	/**
+	 * @returns whether the given object is a rejected promise.
+	 */
+	Q.isRejected = isRejected;
+	function isRejected(object) {
+	    return isPromise(object) && object.inspect().state === "rejected";
+	}
+
+	Promise.prototype.isRejected = function () {
+	    return this.inspect().state === "rejected";
+	};
+
+	//// BEGIN UNHANDLED REJECTION TRACKING
+
+	// This promise library consumes exceptions thrown in handlers so they can be
+	// handled by a subsequent promise.  The exceptions get added to this array when
+	// they are created, and removed when they are handled.  Note that in ES6 or
+	// shimmed environments, this would naturally be a `Set`.
+	var unhandledReasons = [];
+	var unhandledRejections = [];
+	var reportedUnhandledRejections = [];
+	var trackUnhandledRejections = true;
+
+	function resetUnhandledRejections() {
+	    unhandledReasons.length = 0;
+	    unhandledRejections.length = 0;
+
+	    if (!trackUnhandledRejections) {
+	        trackUnhandledRejections = true;
+	    }
+	}
+
+	function trackRejection(promise, reason) {
+	    if (!trackUnhandledRejections) {
+	        return;
+	    }
+	    if (typeof process === "object" && typeof process.emit === "function") {
+	        Q.nextTick.runAfter(function () {
+	            if (array_indexOf(unhandledRejections, promise) !== -1) {
+	                process.emit("unhandledRejection", reason, promise);
+	                reportedUnhandledRejections.push(promise);
+	            }
+	        });
+	    }
+
+	    unhandledRejections.push(promise);
+	    if (reason && typeof reason.stack !== "undefined") {
+	        unhandledReasons.push(reason.stack);
+	    } else {
+	        unhandledReasons.push("(no stack) " + reason);
+	    }
+	}
+
+	function untrackRejection(promise) {
+	    if (!trackUnhandledRejections) {
+	        return;
+	    }
+
+	    var at = array_indexOf(unhandledRejections, promise);
+	    if (at !== -1) {
+	        if (typeof process === "object" && typeof process.emit === "function") {
+	            Q.nextTick.runAfter(function () {
+	                var atReport = array_indexOf(reportedUnhandledRejections, promise);
+	                if (atReport !== -1) {
+	                    process.emit("rejectionHandled", unhandledReasons[at], promise);
+	                    reportedUnhandledRejections.splice(atReport, 1);
+	                }
+	            });
+	        }
+	        unhandledRejections.splice(at, 1);
+	        unhandledReasons.splice(at, 1);
+	    }
+	}
+
+	Q.resetUnhandledRejections = resetUnhandledRejections;
+
+	Q.getUnhandledReasons = function () {
+	    // Make a copy so that consumers can't interfere with our internal state.
+	    return unhandledReasons.slice();
+	};
+
+	Q.stopUnhandledRejectionTracking = function () {
+	    resetUnhandledRejections();
+	    trackUnhandledRejections = false;
+	};
+
+	resetUnhandledRejections();
+
+	//// END UNHANDLED REJECTION TRACKING
+
+	/**
+	 * Constructs a rejected promise.
+	 * @param reason value describing the failure
+	 */
+	Q.reject = reject;
+	function reject(reason) {
+	    var rejection = Promise({
+	        "when": function (rejected) {
+	            // note that the error has been handled
+	            if (rejected) {
+	                untrackRejection(this);
+	            }
+	            return rejected ? rejected(reason) : this;
+	        }
+	    }, function fallback() {
+	        return this;
+	    }, function inspect() {
+	        return { state: "rejected", reason: reason };
+	    });
+
+	    // Note that the reason has not been handled.
+	    trackRejection(rejection, reason);
+
+	    return rejection;
+	}
+
+	/**
+	 * Constructs a fulfilled promise for an immediate reference.
+	 * @param value immediate reference
+	 */
+	Q.fulfill = fulfill;
+	function fulfill(value) {
+	    return Promise({
+	        "when": function () {
+	            return value;
+	        },
+	        "get": function (name) {
+	            return value[name];
+	        },
+	        "set": function (name, rhs) {
+	            value[name] = rhs;
+	        },
+	        "delete": function (name) {
+	            delete value[name];
+	        },
+	        "post": function (name, args) {
+	            // Mark Miller proposes that post with no name should apply a
+	            // promised function.
+	            if (name === null || name === void 0) {
+	                return value.apply(void 0, args);
+	            } else {
+	                return value[name].apply(value, args);
+	            }
+	        },
+	        "apply": function (thisp, args) {
+	            return value.apply(thisp, args);
+	        },
+	        "keys": function () {
+	            return object_keys(value);
+	        }
+	    }, void 0, function inspect() {
+	        return { state: "fulfilled", value: value };
+	    });
+	}
+
+	/**
+	 * Converts thenables to Q promises.
+	 * @param promise thenable promise
+	 * @returns a Q promise
+	 */
+	function coerce(promise) {
+	    var deferred = defer();
+	    Q.nextTick(function () {
+	        try {
+	            promise.then(deferred.resolve, deferred.reject, deferred.notify);
+	        } catch (exception) {
+	            deferred.reject(exception);
+	        }
+	    });
+	    return deferred.promise;
+	}
+
+	/**
+	 * Annotates an object such that it will never be
+	 * transferred away from this process over any promise
+	 * communication channel.
+	 * @param object
+	 * @returns promise a wrapping of that object that
+	 * additionally responds to the "isDef" message
+	 * without a rejection.
+	 */
+	Q.master = master;
+	function master(object) {
+	    return Promise({
+	        "isDef": function () {}
+	    }, function fallback(op, args) {
+	        return dispatch(object, op, args);
+	    }, function () {
+	        return Q(object).inspect();
+	    });
+	}
+
+	/**
+	 * Spreads the values of a promised array of arguments into the
+	 * fulfillment callback.
+	 * @param fulfilled callback that receives variadic arguments from the
+	 * promised array
+	 * @param rejected callback that receives the exception if the promise
+	 * is rejected.
+	 * @returns a promise for the return value or thrown exception of
+	 * either callback.
+	 */
+	Q.spread = spread;
+	function spread(value, fulfilled, rejected) {
+	    return Q(value).spread(fulfilled, rejected);
+	}
+
+	Promise.prototype.spread = function (fulfilled, rejected) {
+	    return this.all().then(function (array) {
+	        return fulfilled.apply(void 0, array);
+	    }, rejected);
+	};
+
+	/**
+	 * The async function is a decorator for generator functions, turning
+	 * them into asynchronous generators.  Although generators are only part
+	 * of the newest ECMAScript 6 drafts, this code does not cause syntax
+	 * errors in older engines.  This code should continue to work and will
+	 * in fact improve over time as the language improves.
+	 *
+	 * ES6 generators are currently part of V8 version 3.19 with the
+	 * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
+	 * for longer, but under an older Python-inspired form.  This function
+	 * works on both kinds of generators.
+	 *
+	 * Decorates a generator function such that:
+	 *  - it may yield promises
+	 *  - execution will continue when that promise is fulfilled
+	 *  - the value of the yield expression will be the fulfilled value
+	 *  - it returns a promise for the return value (when the generator
+	 *    stops iterating)
+	 *  - the decorated function returns a promise for the return value
+	 *    of the generator or the first rejected promise among those
+	 *    yielded.
+	 *  - if an error is thrown in the generator, it propagates through
+	 *    every following yield until it is caught, or until it escapes
+	 *    the generator function altogether, and is translated into a
+	 *    rejection for the promise returned by the decorated generator.
+	 */
+	Q.async = async;
+	function async(makeGenerator) {
+	    return function () {
+	        // when verb is "send", arg is a value
+	        // when verb is "throw", arg is an exception
+	        function continuer(verb, arg) {
+	            var result;
+
+	            // Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+	            // engine that has a deployed base of browsers that support generators.
+	            // However, SM's generators use the Python-inspired semantics of
+	            // outdated ES6 drafts.  We would like to support ES6, but we'd also
+	            // like to make it possible to use generators in deployed browsers, so
+	            // we also support Python-style generators.  At some point we can remove
+	            // this block.
+
+	            if (typeof StopIteration === "undefined") {
+	                // ES6 Generators
+	                try {
+	                    result = generator[verb](arg);
+	                } catch (exception) {
+	                    return reject(exception);
+	                }
+	                if (result.done) {
+	                    return Q(result.value);
+	                } else {
+	                    return when(result.value, callback, errback);
+	                }
+	            } else {
+	                // SpiderMonkey Generators
+	                // FIXME: Remove this case when SM does ES6 generators.
+	                try {
+	                    result = generator[verb](arg);
+	                } catch (exception) {
+	                    if (isStopIteration(exception)) {
+	                        return Q(exception.value);
+	                    } else {
+	                        return reject(exception);
+	                    }
+	                }
+	                return when(result, callback, errback);
+	            }
+	        }
+	        var generator = makeGenerator.apply(this, arguments);
+	        var callback = continuer.bind(continuer, "next");
+	        var errback = continuer.bind(continuer, "throw");
+	        return callback();
+	    };
+	}
+
+	/**
+	 * The spawn function is a small wrapper around async that immediately
+	 * calls the generator and also ends the promise chain, so that any
+	 * unhandled errors are thrown instead of forwarded to the error
+	 * handler. This is useful because it's extremely common to run
+	 * generators at the top-level to work with libraries.
+	 */
+	Q.spawn = spawn;
+	function spawn(makeGenerator) {
+	    Q.done(Q.async(makeGenerator)());
+	}
+
+	// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
+	/**
+	 * Throws a ReturnValue exception to stop an asynchronous generator.
+	 *
+	 * This interface is a stop-gap measure to support generator return
+	 * values in older Firefox/SpiderMonkey.  In browsers that support ES6
+	 * generators like Chromium 29, just use "return" in your generator
+	 * functions.
+	 *
+	 * @param value the return value for the surrounding generator
+	 * @throws ReturnValue exception with the value.
+	 * @example
+	 * // ES6 style
+	 * Q.async(function* () {
+	 *      var foo = yield getFooPromise();
+	 *      var bar = yield getBarPromise();
+	 *      return foo + bar;
+	 * })
+	 * // Older SpiderMonkey style
+	 * Q.async(function () {
+	 *      var foo = yield getFooPromise();
+	 *      var bar = yield getBarPromise();
+	 *      Q.return(foo + bar);
+	 * })
+	 */
+	Q["return"] = _return;
+	function _return(value) {
+	    throw new QReturnValue(value);
+	}
+
+	/**
+	 * The promised function decorator ensures that any promise arguments
+	 * are settled and passed as values (`this` is also settled and passed
+	 * as a value).  It will also ensure that the result of a function is
+	 * always a promise.
+	 *
+	 * @example
+	 * var add = Q.promised(function (a, b) {
+	 *     return a + b;
+	 * });
+	 * add(Q(a), Q(B));
+	 *
+	 * @param {function} callback The function to decorate
+	 * @returns {function} a function that has been decorated.
+	 */
+	Q.promised = promised;
+	function promised(callback) {
+	    return function () {
+	        return spread([this, all(arguments)], function (self, args) {
+	            return callback.apply(self, args);
+	        });
+	    };
+	}
+
+	/**
+	 * sends a message to a value in a future turn
+	 * @param object* the recipient
+	 * @param op the name of the message operation, e.g., "when",
+	 * @param args further arguments to be forwarded to the operation
+	 * @returns result {Promise} a promise for the result of the operation
+	 */
+	Q.dispatch = dispatch;
+	function dispatch(object, op, args) {
+	    return Q(object).dispatch(op, args);
+	}
+
+	Promise.prototype.dispatch = function (op, args) {
+	    var self = this;
+	    var deferred = defer();
+	    Q.nextTick(function () {
+	        self.promiseDispatch(deferred.resolve, op, args);
+	    });
+	    return deferred.promise;
+	};
+
+	/**
+	 * Gets the value of a property in a future turn.
+	 * @param object    promise or immediate reference for target object
+	 * @param name      name of property to get
+	 * @return promise for the property value
+	 */
+	Q.get = function (object, key) {
+	    return Q(object).dispatch("get", [key]);
+	};
+
+	Promise.prototype.get = function (key) {
+	    return this.dispatch("get", [key]);
+	};
+
+	/**
+	 * Sets the value of a property in a future turn.
+	 * @param object    promise or immediate reference for object object
+	 * @param name      name of property to set
+	 * @param value     new value of property
+	 * @return promise for the return value
+	 */
+	Q.set = function (object, key, value) {
+	    return Q(object).dispatch("set", [key, value]);
+	};
+
+	Promise.prototype.set = function (key, value) {
+	    return this.dispatch("set", [key, value]);
+	};
+
+	/**
+	 * Deletes a property in a future turn.
+	 * @param object    promise or immediate reference for target object
+	 * @param name      name of property to delete
+	 * @return promise for the return value
+	 */
+	Q.del = // XXX legacy
+	Q["delete"] = function (object, key) {
+	    return Q(object).dispatch("delete", [key]);
+	};
+
+	Promise.prototype.del = // XXX legacy
+	Promise.prototype["delete"] = function (key) {
+	    return this.dispatch("delete", [key]);
+	};
+
+	/**
+	 * Invokes a method in a future turn.
+	 * @param object    promise or immediate reference for target object
+	 * @param name      name of method to invoke
+	 * @param value     a value to post, typically an array of
+	 *                  invocation arguments for promises that
+	 *                  are ultimately backed with `resolve` values,
+	 *                  as opposed to those backed with URLs
+	 *                  wherein the posted value can be any
+	 *                  JSON serializable object.
+	 * @return promise for the return value
+	 */
+	// bound locally because it is used by other methods
+	Q.mapply = // XXX As proposed by "Redsandro"
+	Q.post = function (object, name, args) {
+	    return Q(object).dispatch("post", [name, args]);
+	};
+
+	Promise.prototype.mapply = // XXX As proposed by "Redsandro"
+	Promise.prototype.post = function (name, args) {
+	    return this.dispatch("post", [name, args]);
+	};
+
+	/**
+	 * Invokes a method in a future turn.
+	 * @param object    promise or immediate reference for target object
+	 * @param name      name of method to invoke
+	 * @param ...args   array of invocation arguments
+	 * @return promise for the return value
+	 */
+	Q.send = // XXX Mark Miller's proposed parlance
+	Q.mcall = // XXX As proposed by "Redsandro"
+	Q.invoke = function (object, name /*...args*/) {
+	    return Q(object).dispatch("post", [name, array_slice(arguments, 2)]);
+	};
+
+	Promise.prototype.send = // XXX Mark Miller's proposed parlance
+	Promise.prototype.mcall = // XXX As proposed by "Redsandro"
+	Promise.prototype.invoke = function (name /*...args*/) {
+	    return this.dispatch("post", [name, array_slice(arguments, 1)]);
+	};
+
+	/**
+	 * Applies the promised function in a future turn.
+	 * @param object    promise or immediate reference for target function
+	 * @param args      array of application arguments
+	 */
+	Q.fapply = function (object, args) {
+	    return Q(object).dispatch("apply", [void 0, args]);
+	};
+
+	Promise.prototype.fapply = function (args) {
+	    return this.dispatch("apply", [void 0, args]);
+	};
+
+	/**
+	 * Calls the promised function in a future turn.
+	 * @param object    promise or immediate reference for target function
+	 * @param ...args   array of application arguments
+	 */
+	Q["try"] =
+	Q.fcall = function (object /* ...args*/) {
+	    return Q(object).dispatch("apply", [void 0, array_slice(arguments, 1)]);
+	};
+
+	Promise.prototype.fcall = function (/*...args*/) {
+	    return this.dispatch("apply", [void 0, array_slice(arguments)]);
+	};
+
+	/**
+	 * Binds the promised function, transforming return values into a fulfilled
+	 * promise and thrown errors into a rejected one.
+	 * @param object    promise or immediate reference for target function
+	 * @param ...args   array of application arguments
+	 */
+	Q.fbind = function (object /*...args*/) {
+	    var promise = Q(object);
+	    var args = array_slice(arguments, 1);
+	    return function fbound() {
+	        return promise.dispatch("apply", [
+	            this,
+	            args.concat(array_slice(arguments))
+	        ]);
+	    };
+	};
+	Promise.prototype.fbind = function (/*...args*/) {
+	    var promise = this;
+	    var args = array_slice(arguments);
+	    return function fbound() {
+	        return promise.dispatch("apply", [
+	            this,
+	            args.concat(array_slice(arguments))
+	        ]);
+	    };
+	};
+
+	/**
+	 * Requests the names of the owned properties of a promised
+	 * object in a future turn.
+	 * @param object    promise or immediate reference for target object
+	 * @return promise for the keys of the eventually settled object
+	 */
+	Q.keys = function (object) {
+	    return Q(object).dispatch("keys", []);
+	};
+
+	Promise.prototype.keys = function () {
+	    return this.dispatch("keys", []);
+	};
+
+	/**
+	 * Turns an array of promises into a promise for an array.  If any of
+	 * the promises gets rejected, the whole array is rejected immediately.
+	 * @param {Array*} an array (or promise for an array) of values (or
+	 * promises for values)
+	 * @returns a promise for an array of the corresponding values
+	 */
+	// By Mark Miller
+	// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
+	Q.all = all;
+	function all(promises) {
+	    return when(promises, function (promises) {
+	        var pendingCount = 0;
+	        var deferred = defer();
+	        array_reduce(promises, function (undefined, promise, index) {
+	            var snapshot;
+	            if (
+	                isPromise(promise) &&
+	                (snapshot = promise.inspect()).state === "fulfilled"
+	            ) {
+	                promises[index] = snapshot.value;
+	            } else {
+	                ++pendingCount;
+	                when(
+	                    promise,
+	                    function (value) {
+	                        promises[index] = value;
+	                        if (--pendingCount === 0) {
+	                            deferred.resolve(promises);
+	                        }
+	                    },
+	                    deferred.reject,
+	                    function (progress) {
+	                        deferred.notify({ index: index, value: progress });
+	                    }
+	                );
+	            }
+	        }, void 0);
+	        if (pendingCount === 0) {
+	            deferred.resolve(promises);
+	        }
+	        return deferred.promise;
+	    });
+	}
+
+	Promise.prototype.all = function () {
+	    return all(this);
+	};
+
+	/**
+	 * Returns the first resolved promise of an array. Prior rejected promises are
+	 * ignored.  Rejects only if all promises are rejected.
+	 * @param {Array*} an array containing values or promises for values
+	 * @returns a promise fulfilled with the value of the first resolved promise,
+	 * or a rejected promise if all promises are rejected.
+	 */
+	Q.any = any;
+
+	function any(promises) {
+	    if (promises.length === 0) {
+	        return Q.resolve();
+	    }
+
+	    var deferred = Q.defer();
+	    var pendingCount = 0;
+	    array_reduce(promises, function (prev, current, index) {
+	        var promise = promises[index];
+
+	        pendingCount++;
+
+	        when(promise, onFulfilled, onRejected, onProgress);
+	        function onFulfilled(result) {
+	            deferred.resolve(result);
+	        }
+	        function onRejected() {
+	            pendingCount--;
+	            if (pendingCount === 0) {
+	                deferred.reject(new Error(
+	                    "Can't get fulfillment value from any promise, all " +
+	                    "promises were rejected."
+	                ));
+	            }
+	        }
+	        function onProgress(progress) {
+	            deferred.notify({
+	                index: index,
+	                value: progress
+	            });
+	        }
+	    }, undefined);
+
+	    return deferred.promise;
+	}
+
+	Promise.prototype.any = function () {
+	    return any(this);
+	};
+
+	/**
+	 * Waits for all promises to be settled, either fulfilled or
+	 * rejected.  This is distinct from `all` since that would stop
+	 * waiting at the first rejection.  The promise returned by
+	 * `allResolved` will never be rejected.
+	 * @param promises a promise for an array (or an array) of promises
+	 * (or values)
+	 * @return a promise for an array of promises
+	 */
+	Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
+	function allResolved(promises) {
+	    return when(promises, function (promises) {
+	        promises = array_map(promises, Q);
+	        return when(all(array_map(promises, function (promise) {
+	            return when(promise, noop, noop);
+	        })), function () {
+	            return promises;
+	        });
+	    });
+	}
+
+	Promise.prototype.allResolved = function () {
+	    return allResolved(this);
+	};
+
+	/**
+	 * @see Promise#allSettled
+	 */
+	Q.allSettled = allSettled;
+	function allSettled(promises) {
+	    return Q(promises).allSettled();
+	}
+
+	/**
+	 * Turns an array of promises into a promise for an array of their states (as
+	 * returned by `inspect`) when they have all settled.
+	 * @param {Array[Any*]} values an array (or promise for an array) of values (or
+	 * promises for values)
+	 * @returns {Array[State]} an array of states for the respective values.
+	 */
+	Promise.prototype.allSettled = function () {
+	    return this.then(function (promises) {
+	        return all(array_map(promises, function (promise) {
+	            promise = Q(promise);
+	            function regardless() {
+	                return promise.inspect();
+	            }
+	            return promise.then(regardless, regardless);
+	        }));
+	    });
+	};
+
+	/**
+	 * Captures the failure of a promise, giving an oportunity to recover
+	 * with a callback.  If the given promise is fulfilled, the returned
+	 * promise is fulfilled.
+	 * @param {Any*} promise for something
+	 * @param {Function} callback to fulfill the returned promise if the
+	 * given promise is rejected
+	 * @returns a promise for the return value of the callback
+	 */
+	Q.fail = // XXX legacy
+	Q["catch"] = function (object, rejected) {
+	    return Q(object).then(void 0, rejected);
+	};
+
+	Promise.prototype.fail = // XXX legacy
+	Promise.prototype["catch"] = function (rejected) {
+	    return this.then(void 0, rejected);
+	};
+
+	/**
+	 * Attaches a listener that can respond to progress notifications from a
+	 * promise's originating deferred. This listener receives the exact arguments
+	 * passed to ``deferred.notify``.
+	 * @param {Any*} promise for something
+	 * @param {Function} callback to receive any progress notifications
+	 * @returns the given promise, unchanged
+	 */
+	Q.progress = progress;
+	function progress(object, progressed) {
+	    return Q(object).then(void 0, void 0, progressed);
+	}
+
+	Promise.prototype.progress = function (progressed) {
+	    return this.then(void 0, void 0, progressed);
+	};
+
+	/**
+	 * Provides an opportunity to observe the settling of a promise,
+	 * regardless of whether the promise is fulfilled or rejected.  Forwards
+	 * the resolution to the returned promise when the callback is done.
+	 * The callback can return a promise to defer completion.
+	 * @param {Any*} promise
+	 * @param {Function} callback to observe the resolution of the given
+	 * promise, takes no arguments.
+	 * @returns a promise for the resolution of the given promise when
+	 * ``fin`` is done.
+	 */
+	Q.fin = // XXX legacy
+	Q["finally"] = function (object, callback) {
+	    return Q(object)["finally"](callback);
+	};
+
+	Promise.prototype.fin = // XXX legacy
+	Promise.prototype["finally"] = function (callback) {
+	    callback = Q(callback);
+	    return this.then(function (value) {
+	        return callback.fcall().then(function () {
+	            return value;
+	        });
+	    }, function (reason) {
+	        // TODO attempt to recycle the rejection with "this".
+	        return callback.fcall().then(function () {
+	            throw reason;
+	        });
+	    });
+	};
+
+	/**
+	 * Terminates a chain of promises, forcing rejections to be
+	 * thrown as exceptions.
+	 * @param {Any*} promise at the end of a chain of promises
+	 * @returns nothing
+	 */
+	Q.done = function (object, fulfilled, rejected, progress) {
+	    return Q(object).done(fulfilled, rejected, progress);
+	};
+
+	Promise.prototype.done = function (fulfilled, rejected, progress) {
+	    var onUnhandledError = function (error) {
+	        // forward to a future turn so that ``when``
+	        // does not catch it and turn it into a rejection.
+	        Q.nextTick(function () {
+	            makeStackTraceLong(error, promise);
+	            if (Q.onerror) {
+	                Q.onerror(error);
+	            } else {
+	                throw error;
+	            }
+	        });
+	    };
+
+	    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
+	    var promise = fulfilled || rejected || progress ?
+	        this.then(fulfilled, rejected, progress) :
+	        this;
+
+	    if (typeof process === "object" && process && process.domain) {
+	        onUnhandledError = process.domain.bind(onUnhandledError);
+	    }
+
+	    promise.then(void 0, onUnhandledError);
+	};
+
+	/**
+	 * Causes a promise to be rejected if it does not get fulfilled before
+	 * some milliseconds time out.
+	 * @param {Any*} promise
+	 * @param {Number} milliseconds timeout
+	 * @param {Any*} custom error message or Error object (optional)
+	 * @returns a promise for the resolution of the given promise if it is
+	 * fulfilled before the timeout, otherwise rejected.
+	 */
+	Q.timeout = function (object, ms, error) {
+	    return Q(object).timeout(ms, error);
+	};
+
+	Promise.prototype.timeout = function (ms, error) {
+	    var deferred = defer();
+	    var timeoutId = setTimeout(function () {
+	        if (!error || "string" === typeof error) {
+	            error = new Error(error || "Timed out after " + ms + " ms");
+	            error.code = "ETIMEDOUT";
+	        }
+	        deferred.reject(error);
+	    }, ms);
+
+	    this.then(function (value) {
+	        clearTimeout(timeoutId);
+	        deferred.resolve(value);
+	    }, function (exception) {
+	        clearTimeout(timeoutId);
+	        deferred.reject(exception);
+	    }, deferred.notify);
+
+	    return deferred.promise;
+	};
+
+	/**
+	 * Returns a promise for the given value (or promised value), some
+	 * milliseconds after it resolved. Passes rejections immediately.
+	 * @param {Any*} promise
+	 * @param {Number} milliseconds
+	 * @returns a promise for the resolution of the given promise after milliseconds
+	 * time has elapsed since the resolution of the given promise.
+	 * If the given promise rejects, that is passed immediately.
+	 */
+	Q.delay = function (object, timeout) {
+	    if (timeout === void 0) {
+	        timeout = object;
+	        object = void 0;
+	    }
+	    return Q(object).delay(timeout);
+	};
+
+	Promise.prototype.delay = function (timeout) {
+	    return this.then(function (value) {
+	        var deferred = defer();
+	        setTimeout(function () {
+	            deferred.resolve(value);
+	        }, timeout);
+	        return deferred.promise;
+	    });
+	};
+
+	/**
+	 * Passes a continuation to a Node function, which is called with the given
+	 * arguments provided as an array, and returns a promise.
+	 *
+	 *      Q.nfapply(FS.readFile, [__filename])
+	 *      .then(function (content) {
+	 *      })
+	 *
+	 */
+	Q.nfapply = function (callback, args) {
+	    return Q(callback).nfapply(args);
+	};
+
+	Promise.prototype.nfapply = function (args) {
+	    var deferred = defer();
+	    var nodeArgs = array_slice(args);
+	    nodeArgs.push(deferred.makeNodeResolver());
+	    this.fapply(nodeArgs).fail(deferred.reject);
+	    return deferred.promise;
+	};
+
+	/**
+	 * Passes a continuation to a Node function, which is called with the given
+	 * arguments provided individually, and returns a promise.
+	 * @example
+	 * Q.nfcall(FS.readFile, __filename)
+	 * .then(function (content) {
+	 * })
+	 *
+	 */
+	Q.nfcall = function (callback /*...args*/) {
+	    var args = array_slice(arguments, 1);
+	    return Q(callback).nfapply(args);
+	};
+
+	Promise.prototype.nfcall = function (/*...args*/) {
+	    var nodeArgs = array_slice(arguments);
+	    var deferred = defer();
+	    nodeArgs.push(deferred.makeNodeResolver());
+	    this.fapply(nodeArgs).fail(deferred.reject);
+	    return deferred.promise;
+	};
+
+	/**
+	 * Wraps a NodeJS continuation passing function and returns an equivalent
+	 * version that returns a promise.
+	 * @example
+	 * Q.nfbind(FS.readFile, __filename)("utf-8")
+	 * .then(console.log)
+	 * .done()
+	 */
+	Q.nfbind =
+	Q.denodeify = function (callback /*...args*/) {
+	    var baseArgs = array_slice(arguments, 1);
+	    return function () {
+	        var nodeArgs = baseArgs.concat(array_slice(arguments));
+	        var deferred = defer();
+	        nodeArgs.push(deferred.makeNodeResolver());
+	        Q(callback).fapply(nodeArgs).fail(deferred.reject);
+	        return deferred.promise;
+	    };
+	};
+
+	Promise.prototype.nfbind =
+	Promise.prototype.denodeify = function (/*...args*/) {
+	    var args = array_slice(arguments);
+	    args.unshift(this);
+	    return Q.denodeify.apply(void 0, args);
+	};
+
+	Q.nbind = function (callback, thisp /*...args*/) {
+	    var baseArgs = array_slice(arguments, 2);
+	    return function () {
+	        var nodeArgs = baseArgs.concat(array_slice(arguments));
+	        var deferred = defer();
+	        nodeArgs.push(deferred.makeNodeResolver());
+	        function bound() {
+	            return callback.apply(thisp, arguments);
+	        }
+	        Q(bound).fapply(nodeArgs).fail(deferred.reject);
+	        return deferred.promise;
+	    };
+	};
+
+	Promise.prototype.nbind = function (/*thisp, ...args*/) {
+	    var args = array_slice(arguments, 0);
+	    args.unshift(this);
+	    return Q.nbind.apply(void 0, args);
+	};
+
+	/**
+	 * Calls a method of a Node-style object that accepts a Node-style
+	 * callback with a given array of arguments, plus a provided callback.
+	 * @param object an object that has the named method
+	 * @param {String} name name of the method of object
+	 * @param {Array} args arguments to pass to the method; the callback
+	 * will be provided by Q and appended to these arguments.
+	 * @returns a promise for the value or error
+	 */
+	Q.nmapply = // XXX As proposed by "Redsandro"
+	Q.npost = function (object, name, args) {
+	    return Q(object).npost(name, args);
+	};
+
+	Promise.prototype.nmapply = // XXX As proposed by "Redsandro"
+	Promise.prototype.npost = function (name, args) {
+	    var nodeArgs = array_slice(args || []);
+	    var deferred = defer();
+	    nodeArgs.push(deferred.makeNodeResolver());
+	    this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
+	    return deferred.promise;
+	};
+
+	/**
+	 * Calls a method of a Node-style object that accepts a Node-style
+	 * callback, forwarding the given variadic arguments, plus a provided
+	 * callback argument.
+	 * @param object an object that has the named method
+	 * @param {String} name name of the method of object
+	 * @param ...args arguments to pass to the method; the callback will
+	 * be provided by Q and appended to these arguments.
+	 * @returns a promise for the value or error
+	 */
+	Q.nsend = // XXX Based on Mark Miller's proposed "send"
+	Q.nmcall = // XXX Based on "Redsandro's" proposal
+	Q.ninvoke = function (object, name /*...args*/) {
+	    var nodeArgs = array_slice(arguments, 2);
+	    var deferred = defer();
+	    nodeArgs.push(deferred.makeNodeResolver());
+	    Q(object).dispatch("post", [name, nodeArgs]).fail(deferred.reject);
+	    return deferred.promise;
+	};
+
+	Promise.prototype.nsend = // XXX Based on Mark Miller's proposed "send"
+	Promise.prototype.nmcall = // XXX Based on "Redsandro's" proposal
+	Promise.prototype.ninvoke = function (name /*...args*/) {
+	    var nodeArgs = array_slice(arguments, 1);
+	    var deferred = defer();
+	    nodeArgs.push(deferred.makeNodeResolver());
+	    this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
+	    return deferred.promise;
+	};
+
+	/**
+	 * If a function would like to support both Node continuation-passing-style and
+	 * promise-returning-style, it can end its internal promise chain with
+	 * `nodeify(nodeback)`, forwarding the optional nodeback argument.  If the user
+	 * elects to use a nodeback, the result will be sent there.  If they do not
+	 * pass a nodeback, they will receive the result promise.
+	 * @param object a result (or a promise for a result)
+	 * @param {Function} nodeback a Node.js-style callback
+	 * @returns either the promise or nothing
+	 */
+	Q.nodeify = nodeify;
+	function nodeify(object, nodeback) {
+	    return Q(object).nodeify(nodeback);
+	}
+
+	Promise.prototype.nodeify = function (nodeback) {
+	    if (nodeback) {
+	        this.then(function (value) {
+	            Q.nextTick(function () {
+	                nodeback(null, value);
+	            });
+	        }, function (error) {
+	            Q.nextTick(function () {
+	                nodeback(error);
+	            });
+	        });
+	    } else {
+	        return this;
+	    }
+	};
+
+	Q.noConflict = function() {
+	    throw new Error("Q.noConflict only works when Q is used as a global");
+	};
+
+	// All code before this point will be filtered from stack traces.
+	var qEndingLine = captureLine();
+
+	return Q;
+
+	});
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(43), __webpack_require__(44).setImmediate))
+
+/***/ },
+/* 43 */
+/***/ function(module, exports) {
+
+	// shim for using process in browser
+
+	var process = module.exports = {};
+	var queue = [];
+	var draining = false;
+	var currentQueue;
+	var queueIndex = -1;
+
+	function cleanUpNextTick() {
+	    draining = false;
+	    if (currentQueue.length) {
+	        queue = currentQueue.concat(queue);
+	    } else {
+	        queueIndex = -1;
+	    }
+	    if (queue.length) {
+	        drainQueue();
+	    }
+	}
+
+	function drainQueue() {
+	    if (draining) {
+	        return;
+	    }
+	    var timeout = setTimeout(cleanUpNextTick);
+	    draining = true;
+
+	    var len = queue.length;
+	    while(len) {
+	        currentQueue = queue;
+	        queue = [];
+	        while (++queueIndex < len) {
+	            if (currentQueue) {
+	                currentQueue[queueIndex].run();
+	            }
+	        }
+	        queueIndex = -1;
+	        len = queue.length;
+	    }
+	    currentQueue = null;
+	    draining = false;
+	    clearTimeout(timeout);
+	}
+
+	process.nextTick = function (fun) {
+	    var args = new Array(arguments.length - 1);
+	    if (arguments.length > 1) {
+	        for (var i = 1; i < arguments.length; i++) {
+	            args[i - 1] = arguments[i];
+	        }
+	    }
+	    queue.push(new Item(fun, args));
+	    if (queue.length === 1 && !draining) {
+	        setTimeout(drainQueue, 0);
+	    }
+	};
+
+	// v8 likes predictible objects
+	function Item(fun, array) {
+	    this.fun = fun;
+	    this.array = array;
+	}
+	Item.prototype.run = function () {
+	    this.fun.apply(null, this.array);
+	};
+	process.title = 'browser';
+	process.browser = true;
+	process.env = {};
+	process.argv = [];
+	process.version = ''; // empty string to avoid regexp issues
+	process.versions = {};
+
+	function noop() {}
+
+	process.on = noop;
+	process.addListener = noop;
+	process.once = noop;
+	process.off = noop;
+	process.removeListener = noop;
+	process.removeAllListeners = noop;
+	process.emit = noop;
+
+	process.binding = function (name) {
+	    throw new Error('process.binding is not supported');
+	};
+
+	process.cwd = function () { return '/' };
+	process.chdir = function (dir) {
+	    throw new Error('process.chdir is not supported');
+	};
+	process.umask = function() { return 0; };
+
+
+/***/ },
+/* 44 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(43).nextTick;
+	var apply = Function.prototype.apply;
+	var slice = Array.prototype.slice;
+	var immediateIds = {};
+	var nextImmediateId = 0;
+
+	// DOM APIs, for completeness
+
+	exports.setTimeout = function() {
+	  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+	};
+	exports.setInterval = function() {
+	  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+	};
+	exports.clearTimeout =
+	exports.clearInterval = function(timeout) { timeout.close(); };
+
+	function Timeout(id, clearFn) {
+	  this._id = id;
+	  this._clearFn = clearFn;
+	}
+	Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+	Timeout.prototype.close = function() {
+	  this._clearFn.call(window, this._id);
+	};
+
+	// Does not start the time, just sets up the members needed.
+	exports.enroll = function(item, msecs) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = msecs;
+	};
+
+	exports.unenroll = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = -1;
+	};
+
+	exports._unrefActive = exports.active = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+
+	  var msecs = item._idleTimeout;
+	  if (msecs >= 0) {
+	    item._idleTimeoutId = setTimeout(function onTimeout() {
+	      if (item._onTimeout)
+	        item._onTimeout();
+	    }, msecs);
+	  }
+	};
+
+	// That's not how node.js implements it but the exposed api is the same.
+	exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
+	  var id = nextImmediateId++;
+	  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
+
+	  immediateIds[id] = true;
+
+	  nextTick(function onNextTick() {
+	    if (immediateIds[id]) {
+	      // fn.call() is faster so we optimize for the common use-case
+	      // @see http://jsperf.com/call-apply-segu
+	      if (args) {
+	        fn.apply(null, args);
+	      } else {
+	        fn.call(null);
+	      }
+	      // Prevent ids from leaking
+	      exports.clearImmediate(id);
+	    }
+	  });
+
+	  return id;
+	};
+
+	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
+	  delete immediateIds[id];
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(44).setImmediate, __webpack_require__(44).clearImmediate))
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(19);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _config = __webpack_require__(29);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _keychain = __webpack_require__(27);
+
+	var _keychain2 = _interopRequireDefault(_keychain);
+
+	var _responders = __webpack_require__(28);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	var _utils = __webpack_require__(30);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4063,7 +7311,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 37 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4074,15 +7322,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(5);
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _keychain = __webpack_require__(6);
+	var _keychain = __webpack_require__(27);
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
-	var _responders = __webpack_require__(12);
+	var _responders = __webpack_require__(28);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
@@ -4154,7 +7402,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 38 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4165,23 +7413,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(5);
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _keychain = __webpack_require__(6);
+	var _keychain = __webpack_require__(27);
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
-	var _config = __webpack_require__(9);
+	var _config = __webpack_require__(29);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _responders = __webpack_require__(12);
+	var _responders = __webpack_require__(28);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _utils = __webpack_require__(7);
+	var _utils = __webpack_require__(30);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4295,7 +7543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 39 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4304,41 +7552,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(5);
+	var _networking = __webpack_require__(19);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _config = __webpack_require__(9);
+	var _config = __webpack_require__(29);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _keychain = __webpack_require__(6);
+	var _keychain = __webpack_require__(27);
 
 	var _keychain2 = _interopRequireDefault(_keychain);
 
-	var _state = __webpack_require__(10);
+	var _state = __webpack_require__(32);
 
 	var _state2 = _interopRequireDefault(_state);
 
-	var _publish_queue = __webpack_require__(11);
+	var _publish_queue = __webpack_require__(33);
 
 	var _publish_queue2 = _interopRequireDefault(_publish_queue);
 
-	var _presence = __webpack_require__(33);
+	var _presence = __webpack_require__(35);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _responders = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./presenters/responders\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+	var _responders = __webpack_require__(28);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _utils = __webpack_require__(7);
+	var _utils = __webpack_require__(30);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
-	var _defaults = __webpack_require__(8);
+	var _defaults = __webpack_require__(31);
 
 	var _defaults2 = _interopRequireDefault(_defaults);
 
@@ -4439,6 +7689,213 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.__publish(false);
 	    }
 	  }, {
+	    key: 'subscribe',
+	    value: function subscribe(args, subscribeCallback, presenceCallback) {
+	      var _this2 = this;
+
+	      var channel = args.channel;
+	      var channelGroup = args.channel_group;
+	      var timetoken = args.timetoken || 0;
+	      var cipherKey = args.cipher_key;
+
+	      var sub_timeout = args.timeout || SUB_TIMEOUT;
+	      var windowing = args.windowing || SUB_WINDOWING;
+
+	      // Make sure we have a Channel
+	      if (!channel && !channelGroup) {
+	        return this._error('Missing Channel');
+	      }
+
+	      if (!subscribeCallback) {
+	        return this._error('Missing Callback');
+	      }
+	      if (!this._keychain.getSubscribeKey()) {
+	        return this._error('Missing Subscribe Key');
+	      }
+
+	      // Setup Channel(s)
+	      if (channel) {
+	        var channelList = (channel.join ? channel.join(',') : '' + channel).split(',');
+	        _utils2.default.each(channelList, function (channel) {
+	          _this2.__subscribeToChannel(channel, cipherKey, subscribeCallback, presenceCallback);
+	        });
+	      }
+
+	      // Setup Channel Groups
+	      if (channelGroup) {
+	        var ChannelGroupList = (channelGroup.join ? channelGroup.join(',') : '' + channelGroup).split(',');
+	        _utils2.default.each(ChannelGroupList, function (channelGroup) {
+	          _this2.__subscribeToChannelGroup(channelGroup, cipherKey, subscribeCallback, presenceCallback);
+	        });
+	      }
+	    }
+	  }, {
+	    key: '__restartSubscribeLoop',
+	    value: function __restartSubscribeLoop() {
+	      var channels = this._state.generate_channel_list().join(',');
+	      var channel_groups = stateStorage.generate_channel_group_list().join(',');
+
+	      // Stop Connection
+	      if (!channels && !channel_groups) return;
+
+	      if (!channels) channels = ',';
+
+	      // Connect to PubNub Subscribe Servers
+	      _reset_offline();
+
+	      var data = networking.prepareParams({ uuid: keychain.getUUID(), auth: keychain.getAuthKey() });
+
+	      if (channel_groups) {
+	        data['channel-group'] = channel_groups;
+	      }
+
+	      var st = JSON.stringify(stateStorage.getPresenceState());
+	      if (st.length > 2) data['state'] = JSON.stringify(stateStorage.getPresenceState());
+
+	      if (config.getPresenceTimeout()) {
+	        data['heartbeat'] = config.getPresenceTimeout();
+	      }
+
+	      if (config.isInstanceIdEnabled()) {
+	        data['instanceid'] = keychain.getInstanceId();
+	      }
+
+	      SUB_RECEIVER = xdr({
+	        timeout: sub_timeout,
+	        fail: function fail(response) {
+	          if (response && response['error'] && response['service']) {
+	            _responders2.default.error(response, SUB_ERROR);
+	            _test_connection(false);
+	          } else {
+	            SELF['time'](function (success) {
+	              !success && _responders2.default.error(response, SUB_ERROR);
+	              _test_connection(success);
+	            });
+	          }
+	        },
+	        data: networking.prepareParams(data),
+	        url: [networking.getSubscribeOrigin(), 'subscribe', keychain.getSubscribeKey(), _utils2.default.encode(channels), 0, TIMETOKEN],
+	        success: function success(messages) {
+	          // Check for Errors
+	          if (!messages || (typeof messages === 'undefined' ? 'undefined' : _typeof(messages)) == 'object' && 'error' in messages && messages['error']) {
+	            SUB_ERROR(messages);
+	            return _utils2.default.timeout(CONNECT, _defaults2.default.SECOND);
+	          }
+
+	          // Restore Previous Connection Point if Needed
+	          TIMETOKEN = !TIMETOKEN && SUB_RESTORE && db['get'](keychain.getSubscribeKey()) || messages[1];
+
+	          /*
+	           // Connect
+	           each_channel_registry(function(registry){
+	           if (registry.connected) return;
+	           registry.connected = 1;
+	           registry.connect(channel.name);
+	           });
+	           */
+
+	          // Route Channel <---> Callback for Message
+	          /*
+	          var next_callback = (function () {
+	            var channels = '';
+	            var channels2 = '';
+	             if (messages.length > 3) {
+	              channels = messages[3];
+	              channels2 = messages[2];
+	            } else if (messages.length > 2) {
+	              channels = messages[2];
+	            } else {
+	              channels = utils.map(
+	                this._state.getChannels(), function (chan) {
+	                  return utils.map(
+	                    Array(messages[0].length)
+	                      .join(',').split(','),
+	                    function () {
+	                      return chan;
+	                    }
+	                  );
+	                }).join(',');
+	            }
+	             var list = channels.split(',');
+	            var list2 = (channels2) ? channels2.split(',') : [];
+	             return function () {
+	              var channel = list.shift() || SUB_CHANNEL;
+	              var channel2 = list2.shift();
+	               var chobj = {};
+	               if (channel2) {
+	                if (channel && channel.indexOf('-pnpres') >= 0
+	                  && channel2.indexOf('-pnpres') < 0) {
+	                  channel2 += '-pnpres';
+	                }
+	                chobj = stateStorage.getChannelGroup(channel2) || stateStorage.getChannel(channel2) || { callback: function () {} };
+	              } else {
+	                chobj = stateStorage.getChannel(channel);
+	              }
+	               var r = [
+	                chobj
+	                  .callback || SUB_CALLBACK,
+	                channel.split(constants.PRESENCE_SUFFIX)[0],
+	              ];
+	              channel2 && r.push(channel2.split(constants.PRESENCE_SUFFIX)[0]);
+	              return r;
+	            };
+	          })();
+	          */
+
+	          var latency = _utils2.default.detect_latency(+messages[1]);
+	          _utils2.default.each(messages[0], function (msg) {
+	            var next = next_callback();
+	            var decrypted_msg = decrypt(msg, stateStorage.getChannel(next[1]) ? stateStorage.getChannel(next[1])['cipher_key'] : null);
+	            next[0] && next[0](decrypted_msg, messages, next[2] || next[1], latency, next[1]);
+	          });
+
+	          _utils2.default.timeout(_connect, windowing);
+	        }
+	      });
+	    }
+	  }, {
+	    key: '__subscribeToChannel',
+	    value: function __subscribeToChannel(channelName, cipherKey, subscribeCallback, presenceCallback) {
+	      this._state.addChannel(channelName, {
+	        name: channelName,
+	        subscribed: 1,
+	        callback: subscribeCallback,
+	        cipher_key: cipherKey
+	      });
+
+	      // Presence Enabled?
+	      if (!presenceCallback) {
+	        return;
+	      }
+
+	      this._state.addChannel(channelName, {
+	        name: channelName + _defaults2.default.PRESENCE_SUFFIX,
+	        subscribed: 1,
+	        callback: presenceCallback
+	      });
+	    }
+	  }, {
+	    key: '__subscribeToChannelGroup',
+	    value: function __subscribeToChannelGroup(channelGroupName, cipherKey, subscribeCallback, presenceCallback) {
+	      this._state.addChannelGroup(channelGroupName, {
+	        name: channelGroupName,
+	        subscribed: 1,
+	        callback: subscribeCallback,
+	        cipher_key: cipherKey
+	      });
+
+	      // Presence Enabled?
+	      if (!presenceCallback) {
+	        return;
+	      }
+
+	      this._state.addChannel(channelGroupName, {
+	        name: channelGroupName + _defaults2.default.PRESENCE_SUFFIX,
+	        subscribed: 1,
+	        callback: presenceCallback
+	      });
+	    }
+	  }, {
 	    key: 'performUnsubscribe',
 	    value: function performUnsubscribe(args, argCallback) {
 	      var channelArg = args['channel'];
@@ -4487,7 +7944,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	        });
 
-	        this._presence.performChannelLeave(existingChannels.join(','), authKey, callback, err);
+	        this._presence.announceChannelLeave(existingChannels.join(','), authKey, callback, err);
 	      }
 
 	      if (channelGroupArg) {
@@ -4521,7 +7978,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	        });
 
-	        this._presence.performChannelGroupLeave(existingChannelGroups.join(','), authKey, callback, err);
+	        this._presence.announceChannelGroupLeave(existingChannelGroups.join(','), authKey, callback, err);
 	      }
 	    }
 	  }]);
@@ -4532,12 +7989,108 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 40 */
+/* 49 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"name": "pubnub",
+		"preferGlobal": false,
+		"version": "4.0.0-beta1",
+		"author": "PubNub <support@pubnub.com>",
+		"description": "Publish & Subscribe Real-time Messaging with PubNub",
+		"contributors": [
+			{
+				"name": "Stephen Blum",
+				"email": "stephen@pubnub.com"
+			}
+		],
+		"bin": {},
+		"scripts": {
+			"test": "grunt test --force"
+		},
+		"main": "./node.js/pubnub.js",
+		"browser": "./modern/dist/pubnub.js",
+		"repository": {
+			"type": "git",
+			"url": "git://github.com/pubnub/javascript.git"
+		},
+		"keywords": [
+			"cloud",
+			"publish",
+			"subscribe",
+			"websockets",
+			"comet",
+			"bosh",
+			"xmpp",
+			"real-time",
+			"messaging"
+		],
+		"dependencies": {
+			"agentkeepalive": "~0.2",
+			"event-emitter": "^0.3.4",
+			"lodash": "^4.1.0",
+			"loglevel": "^1.4.0",
+			"q": "^1.4.1",
+			"sinon-as-promised": "^4.0.0",
+			"superagent": "^1.8.0",
+			"uuid": "^2.0.1"
+		},
+		"noAnalyze": false,
+		"devDependencies": {
+			"babel-core": "^6.6.5",
+			"babel-eslint": "5.0.0",
+			"babel-plugin-transform-class-properties": "^6.6.0",
+			"babel-plugin-transform-flow-strip-types": "^6.6.5",
+			"babel-preset-es2015": "^6.6.0",
+			"babel-register": "^6.6.5",
+			"chai": "^3.5.0",
+			"chai-as-promised": "^5.2.0",
+			"eslint": "2.2.0",
+			"eslint-config-airbnb": "6.0.2",
+			"eslint-plugin-flowtype": "2.1.0",
+			"eslint-plugin-mocha": "2.0.0",
+			"eslint-plugin-react": "4.1.0",
+			"flow-bin": "^0.22.1",
+			"gulp": "^3.9.1",
+			"gulp-babel": "^6.1.2",
+			"gulp-clean": "^0.3.2",
+			"gulp-exec": "^2.1.2",
+			"gulp-flowtype": "^0.4.9",
+			"gulp-mocha": "^2.2.0",
+			"gulp-rename": "^1.2.2",
+			"gulp-webpack": "^1.5.0",
+			"imports-loader": "0.6.5",
+			"json-loader": "0.5.4",
+			"karma": "0.13.21",
+			"karma-chai": "0.1.0",
+			"karma-mocha": "^0.2.2",
+			"karma-phantomjs-launcher": "1.0.0",
+			"karma-spec-reporter": "0.0.24",
+			"mocha": "2.4.5",
+			"node-uuid": "1.4.7",
+			"phantomjs-prebuilt": "2.1.4",
+			"proxyquire": "1.7.4",
+			"run-sequence": "^1.1.5",
+			"sinon": "^1.17.3",
+			"uglify-js": "^2.6.2",
+			"underscore": "1.7.0",
+			"webpack": "^1.12.14",
+			"webpack-dev-server": "1.14.1"
+		},
+		"bundleDependencies": [],
+		"license": "MIT",
+		"engine": {
+			"node": ">=0.8"
+		}
+	};
+
+/***/ },
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* eslint camelcase: 0 eqeqeq: 0 */
 
-	var CryptoJS = __webpack_require__(41);
+	var CryptoJS = __webpack_require__(51);
 
 	function crypto_obj() {
 	  function SHA256(s) {
@@ -4639,7 +8192,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 41 */
+/* 51 */
 /***/ function(module, exports) {
 
 	/*

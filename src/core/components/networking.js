@@ -1,17 +1,20 @@
 /* @flow */
 
+import superagent from 'superagent';
+
 import Keychain from './keychain.js';
-const utils = require('../utils');
+import Responders from '../presenters/responders';
+import Config from './config.js';
+import utils from '../utils';
 
-
-type commonXDR = { data: Object, success: Function, fail: Function };
+type commonXDR = { data: Object, callback: Function };
 type typedXDR = { data: Object, success: Function, fail: Function, method: string };
+type superagentPayload = { data: Object, url: Array<string | number>, callback: Function};
 
 export default class {
-
-  _xdr: Function;
   _sendBeacon: Function;
   _keychain: Keychain;
+  _config: Config;
 
   _maxSubDomain: number;
   _currentSubDomain: number;
@@ -21,11 +24,16 @@ export default class {
 
   _providedFQDN: string;
 
+  _requestTimeout: number;
+
   _coreParams: Object; /* items that must be passed with each request. */
 
-  constructor(xdr: Function, keychain: Keychain, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
-    this._xdr = xdr;
+  _r: Responders;
+
+  constructor(config: Config, keychain: Keychain, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
+    this._config = config;
     this._keychain = keychain;
+    this._r = new Responders('#networking');
 
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
@@ -55,11 +63,13 @@ export default class {
   /*
     Fuses the provided endpoint specific params (from data) with instance params
   */
-  prepareParams(data: Object): Object {
-    if (!data) data = {};
-    utils.each(this._coreParams, function (key, value) {
-      if (!(key in data)) data[key] = value;
-    });
+  prepareParams(): Object {
+    let data: Object = {};
+
+    if (this._config.isInstanceIdEnabled()) {
+      data.instanceid = this._keychain.getInstanceId();
+    }
+
     return data;
   }
 
@@ -98,13 +108,21 @@ export default class {
   }
 
   // method based URL's
-  fetchHistory(channel: string, { data, success, fail }: commonXDR) {
+  fetchHistory(channel: string, data: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
     let url = [
       this.getStandardOrigin(), 'v2', 'history', 'sub-key',
       this._keychain.getSubscribeKey(), 'channel', utils.encode(channel),
     ];
 
-    this._xdr({ data, success, fail, url });
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    this._xdr({ data, callback, url });
   }
 
   performChannelGroupOperation(channelGroup: string, mode: string, { data, success, fail }: commonXDR) {
@@ -124,13 +142,16 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  provisionDeviceForPush(deviceId: string, { data, success, fail }: commonXDR) {
+  provisionDeviceForPush(deviceId: string, data: Object): Q.Promise {
     let url = [
       this.getStandardOrigin(), 'v1', 'push', 'sub-key',
       this._keychain.getSubscribeKey(), 'devices', deviceId,
     ];
 
-    this._xdr({ data, success, fail, url });
+    data.uuid = this._keychain.getUUID();
+    data.auth = this._keychain.getAuthKey();
+
+    return this._xdr({ data, url });
   }
 
   performGrant({ data, success, fail }: commonXDR) {
@@ -219,12 +240,19 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  fetchTime({ data, success, fail }: commonXDR) {
-    let url = [
-      this.getStandardOrigin(), 'time', 0,
-    ];
+  fetchTime(callback: Function) {
+    let data = this.prepareParams();
+    let url = [this.getStandardOrigin(), 'time', 0];
 
-    this._xdr({ data, success, fail, url });
+    if (this._keychain.getUUID()) {
+      data.uuid = this._keychain.getUUID();
+    }
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    this._xdr({ data, callback, url });
   }
 
   fetchWhereNow(uuid: string, { data, success, fail }: commonXDR) {
@@ -277,6 +305,24 @@ export default class {
 
   getSubscribeOrigin(): string {
     return this._subscribeOrigin;
+  }
+
+  _xdr({ data, url, callback}: superagentPayload) {
+    superagent
+      .get(url.join('/'))
+      .query(data)
+      .type('json')
+      // .timeout(this._requestTimeout)
+      .end(function (err, resp) {
+        if (err) return callback(err, null);
+
+        if (typeof resp === 'object' && resp.error) {
+          callback(resp.error, null);
+          return;
+        }
+
+        callback(null, JSON.parse(resp.text));
+      });
   }
 
 }

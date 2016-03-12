@@ -1,7 +1,6 @@
 /* @flow */
 
 import uuidGenerator from 'uuid';
-import _bind from 'lodash/bind';
 import EventEmitter from 'event-emitter';
 
 import Networking from './components/networking';
@@ -40,13 +39,12 @@ type setupObject = {
   subscribe_key: string, // API key required to subscribe
   cipher_key: string, // decryption keys
   origin: ?string, // an optional FQDN which will recieve calls from the SDK.
-  xdr: Function, // function which executes HTTP calls
   hmac_SHA256: Function, // hashing function required for Access Manager
   ssl: boolean, // is SSL enabled?
   shutdown: Function // function to call when pubnub is shutting down.
 }
 
-export default function (setup: setupObject): Object {
+export default function createInstance(setup: setupObject): Object {
   let shutdown = setup.shutdown;
   let useSendBeacon = (typeof setup.use_send_beacon !== 'undefined') ? setup.use_send_beacon : true;
   let sendBeacon = (useSendBeacon) ? setup.sendBeacon : null;
@@ -78,8 +76,8 @@ export default function (setup: setupObject): Object {
     .setRequestIdConfig(setup.use_request_id || false)
     .setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, error))
     .setSupressLeaveEvents(setup.noleave || 0)
-    .setSubscribeWindow(+setup.windowing || DEF_WINDOWING)
-    .setSubscribeTimeout((+setup.timeout || DEF_SUB_TIMEOUT) * constants.SECOND)
+    // .setSubscribeWindow(+setup.windowing || DEF_WINDOWING)
+    // .setSubscribeTimeout((+setup.timeout || DEF_SUB_TIMEOUT) * constants.SECOND)
     .setInstanceIdConfig(setup.instance_id || false);
 
   config
@@ -87,8 +85,9 @@ export default function (setup: setupObject): Object {
 
   let stateStorage = new State();
 
-  let networking = new Networking(setup.xdr, keychain, setup.ssl, setup.origin)
+  let networking = new Networking(config, keychain, setup.ssl, setup.origin)
     .addBeaconDispatcher(sendBeacon)
+    // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
     .setCoreParams(setup.params || {});
 
   let publishQueue = new PublishQueue({ networking });
@@ -125,7 +124,7 @@ export default function (setup: setupObject): Object {
 
   // Announce Leave Event
   let SELF = {
-    history: _bind(historyEndpoint.fetchHistory, historyEndpoint),
+    history: historyEndpoint.fetchHistory.bind(historyEndpoint),
     replay(args: Object, callback: Function) { replayEndpoint.performReplay(args, callback); },
     time(callback: Function) { timeEndpoint.fetchTime(callback); },
 
@@ -272,8 +271,8 @@ export default function (setup: setupObject): Object {
     create the connectivity element last, this will signal to other elements
     that the SDK is connected to internet.
   */
-  connectivity.start();
-  presenceHeartbeat.start();
+  // connectivity.start();
+  // presenceHeartbeat.start();
 
   return SELF;
 }

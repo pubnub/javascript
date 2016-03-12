@@ -94,7 +94,7 @@ gulp.task('compile_parse', ['babel'], function () {
 gulp.task('uglify', ['webpack'], function () {
   return gulp.src('dist/web/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
-    .pipe(rename('pubnub.min.css'))
+    .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/web'));
 });
 

@@ -6,51 +6,41 @@
 */
 
 import Networking from '../../../../../src/core/components/networking';
-import Keychain from '../../../../../src/core/components/keychain';
+import Responders from '../../../../../src/core/presenters/responders';
 
-const assert = require('assert');
-const sinon = require('sinon');
-const proxyquire = require('proxyquire').noCallThru();
+import assert from 'assert';
+import sinon from 'sinon';
+import proxyquire from 'proxyquire';
+import loglevel from 'loglevel'
+
+loglevel.disableAll();
 
 describe('history endpoints', () => {
   let networking;
-  let keychain;
-  let error;
-  let proxiedInstance;
-  let successMock;
-  let prepareParamsMock;
-  let failMock;
-  let decryptMock;
-  let fetchHistoryMock;
+  let instance;
+  let decryptStub;
+  let validateResponderStub;
+  let fetchHistoryStub;
+  let callbackStub;
 
   beforeEach(() => {
     networking = new Networking();
-    error = sinon.stub();
-    decryptMock = sinon.stub().returnsArg(0);
+    decryptStub = sinon.stub().returnsArg(0);
+    callbackStub = sinon.stub();
+    validateResponderStub = sinon.stub().returns('validationError');
+    fetchHistoryStub = sinon.stub(networking, 'fetchHistory');
 
-    successMock = sinon.stub();
-    failMock = sinon.stub();
+    const respondersClass = Responders;
+    respondersClass.prototype.validationError = validateResponderStub;
 
-    fetchHistoryMock = sinon.stub(networking, 'fetchHistory');
-    prepareParamsMock = sinon.spy(networking, 'prepareParams');
-
-    keychain = new Keychain()
-      .setSubscribeKey('subKey')
-      .setAuthKey('authKey')
-      .setUUID('uuidKey')
-      .setInstanceId('instanceId');
-
-    let respondersClass = class {};
-    respondersClass.callback = successMock;
-    respondersClass.error = failMock;
-
-    proxiedInstance = proxyquire('../../../../../core/src/endpoints/history', {
+    const proxy = proxyquire('../../../../../src/core/endpoints/history', {
       '../presenters/responders': respondersClass,
     }).default;
+
+    instance = new proxy({ networking, decrypt: decryptStub });
   });
 
   describe('#fetchHistory', () => {
-    let instance;
     let defaultArgsInput;
     let defaultArgsOutput;
 
@@ -72,31 +62,17 @@ describe('history endpoints', () => {
         include_token: 'true',
         reverse: 'false',
       };
-
-      instance = new proxiedInstance({
-        keychain,
-        networking,
-        decrypt: decryptMock,
-        error,
-      });
     });
 
     it('errors out if channel or channel-group is not provided', () => {
-      let callbackMock = sinon.stub();
-      instance.fetchHistory({}, callbackMock);
-      assert.equal(error.args[0][0], 'Missing Channel');
+      instance.fetchHistory({}, callbackStub);
+      assert.equal(callbackStub.args[0][0], 'validationError');
+      assert.equal(validateResponderStub.args[0][0], 'Missing channel and/or channel group');
     });
 
     it('errors out if callback is not defined', () => {
       instance.fetchHistory({ channel: 'ch1' });
-      assert.equal(error.args[0][0], 'Missing Callback');
-    });
-
-    it('errors out if subkey is not defined', () => {
-      keychain.setSubscribeKey('');
-      let callbackMock = sinon.stub();
-      instance.fetchHistory({ channel: 'ch1' }, callbackMock);
-      assert.equal(error.args[0][0], 'Missing Subscribe Key');
+      assert.equal(fetchHistoryStub.callCount, 0);
     });
 
     it('passes through args', () => {

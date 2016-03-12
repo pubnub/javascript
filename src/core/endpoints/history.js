@@ -1,57 +1,56 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import Keychain from '../components/keychain';
 import Responders from '../presenters/responders';
+import Logger from '../components/logger';
 
 type historyConstruct = {
   networking: Networking,
-  keychain: Keychain,
-  error: Function,
   decrypt: Function
 };
 
+type fetchHistoryArguments = {
+  channel: string, // fetch history from a channel
+  channelGroup: string, // fetch history from channel groups
+  cipherKey: string, // key required to decrypt history.
+  start: number, // start timetoken for history fetching
+  end: number, // end timetoken for history feting
+  includeToken: boolean // include time token for each history call
+}
+
 export default class {
   _networking: Networking;
-  _keychain: Keychain;
-  _error: Function;
   _decrypt: Function;
+  _r: Responders;
+  _l: Logger;
 
-  constructor({ networking, keychain, error, decrypt }: historyConstruct) {
+  constructor({ networking, decrypt }: historyConstruct) {
     this._networking = networking;
-    this._keychain = keychain;
-    this._error = error;
     this._decrypt = decrypt;
+    this._r = new Responders('#endpoints/history');
+    this._l = Logger.getLogger('#endpoints/history');
   }
 
-  fetchHistory(args: Object, argumentCallback: Function) {
-    let callback = args.callback || argumentCallback;
-    let count = args.count || args.limit || 100;
-    let reverse = args.reverse || 'false';
-    let err = args.error || function () {};
-    let auth_key = args.auth_key || this._keychain.getAuthKey();
-    let cipher_key = args.cipher_key;
-    let channel = args.channel;
-    let channel_group = args.channel_group;
-    let start = args.start;
-    let end = args.end;
-    let include_token = args.include_token;
-    let string_msg_token = args.string_message_token || false;
+  fetchHistory(args: fetchHistoryArguments, callback: Function) {
+    let { channel } = args;
+    const { channelGroup, cipherKey, start, end, includeToken } = args;
 
-    // Make sure we have a Channel
-    if (!channel && !channel_group) return this._error('Missing Channel');
-    if (!callback) return this._error('Missing Callback');
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+    const count = args.count || args.limit || 100;
+    const reverse = args.reverse || 'false';
+    const returnStringifiedTimetokens = args.returnStringifiedTimetokens || false;
 
-    let params: Object = {
-      stringtoken: 'true',
-      count: count,
-      reverse: reverse,
-      auth: auth_key,
-    };
+    if (!channel && !channelGroup) {
+      return callback(this._r.validationError('Missing channel and/or channel group'));
+    }
 
-    if (channel_group) {
-      params['channel-group'] = channel_group;
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
+
+    const params: Object = { count, reverse, stringtoken: 'true' };
+
+    if (channelGroup) {
+      params['channel-group'] = channelGroup;
       if (!channel) {
         channel = ',';
       }
@@ -59,47 +58,37 @@ export default class {
 
     if (start) params.start = start;
     if (end) params.end = end;
-    if (include_token) params.include_token = 'true';
-    if (string_msg_token) params.string_message_token = 'true';
+    if (includeToken) params.includeToken = 'true';
+    if (returnStringifiedTimetokens) params.string_message_token = 'true';
 
     // Send Message
-    this._networking.fetchHistory(channel, {
-      data: this._networking.prepareParams(params),
-      success: (response) => {
-        this._handleHistoryResponse(response, err, callback, include_token, cipher_key);
-      },
-      fail: (response) => {
-        Responders.error(response, err);
-      },
+    this._networking.fetchHistory(channel, params, (err, resp) => {
+      if (err) return callback(err, null);
+      callback(null, this._parseResponse(resp, includeToken, cipherKey));
     });
   }
 
-  _handleHistoryResponse(response: Object, err: Function, callback: Function, include_token: boolean, cipher_key: string) {
-    if (typeof response === 'object' && response.error) {
-      err({ message: response.message, payload: response.payload });
-      return;
-    }
-    let messages = response[0];
-    let decrypted_messages = [];
-    for (let a = 0; a < messages.length; a++) {
-      if (include_token) {
-        let new_message = this._decrypt(messages[a].message, cipher_key);
-        let timetoken = messages[a].timetoken;
+  _parseResponse(response: Object, includeToken: boolean, cipherKey: string): Array<any> {
+    const messages = response[0];
+    const decryptedMessages = [];
+    messages.forEach((message) => {
+      const decryptedMessage = this._decrypt(message, cipherKey);
+      const { timetoken } = message;
+
+      if (includeToken) {
         try {
-          decrypted_messages.push({ message: JSON.parse(new_message), timetoken: timetoken });
+          decryptedMessages.push({ timetoken, message: JSON.parse(decryptedMessage) });
         } catch (e) {
-          decrypted_messages.push(({ message: new_message, timetoken: timetoken }));
+          decryptedMessages.push(({ timetoken, message: decryptedMessage }));
         }
       } else {
-        let new_message = this._decrypt(messages[a], cipher_key);
         try {
-          decrypted_messages.push(JSON.parse(new_message));
+          decryptedMessages.push(JSON.parse(decryptedMessage));
         } catch (e) {
-          decrypted_messages.push((new_message));
+          decryptedMessages.push((decryptedMessage));
         }
       }
-    }
-    callback([decrypted_messages, response[1], response[2]]);
+    });
+    return [decryptedMessages, response[1], response[2]];
   }
-
 }
