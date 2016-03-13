@@ -14,7 +14,7 @@ export default class {
     this._networking = networking;
   }
 
-  fetchTime(callback: Function) {
+  fetch(callback: Function) {
     this._networking.fetchTime((err, response) => {
       if (err) return callback(err);
       callback(null, response[0]);

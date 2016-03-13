@@ -299,41 +299,42 @@ describe('#components/networking', () => {
     });
 
     it('passes arguments to the xdr module without UUID keys', () => {
-      let expectedData = { base: 'params'};
+      let expectedData = { base: 'params' };
 
       networking.fetchTime(callbackStub);
 
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0], { data: expectedData, callback: callbackStub, url: expectedURL });
     });
-
   });
 
-  describe.skip('#fetchHistory', () => {
+  describe('#fetchHistory', () => {
+    let config;
+    let keychain;
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey');
+      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr');
+      validationErrorStub = sinon.stub();
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking._r.validationError = validationErrorStub;
+    });
+
     it('passes arguments to the xdr module', () => {
-      let xdrStub = sinon.stub();
-      let successStub = sinon.stub();
-      let failStub = sinon.stub();
-      let callbackStub = sinon.stub();
       let data = { my: 'object' };
-
-      let keychain = new Keychain()
-        .setSubscribeKey('subKey')
-        .setPublishKey('pubKey');
-
-      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
-
-      networkingComponent.fetchHistory('mychannel', {
-        fail: failStub,
-        success: successStub,
-        callback: callbackStub,
-        data: data
-      });
+      networking.fetchHistory('mychannel', data, callbackStub);
 
       assert.equal(xdrStub.callCount, 1);
-      assert.deepEqual(xdrStub.args[0][0].data, data);
-      assert.deepEqual(xdrStub.args[0][0].success, successStub);
-      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params' });
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'history',
         'sub-key', 'subKey', 'channel', 'mychannel']);
@@ -341,11 +342,22 @@ describe('#components/networking', () => {
 
     it('errors out if subkey is not defined', () => {
       keychain.setSubscribeKey('');
-      let callbackMock = sinon.stub();
-      instance.fetchHistory({ channel: 'ch1' }, callbackMock);
-      assert.equal(error.args[0][0], 'Missing Subscribe Key');
+      networking.fetchHistory({ channel: 'ch1' }, {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
     });
 
+    it('uses auth-key from keychain if provided', () => {
+      let data = { my: 'object' };
+      keychain.setAuthKey('myAuthKey');
+      networking.fetchHistory('mychannel', data, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
+    });
+
+    it('executs #prepareParamsMock to prepare params', () => {
+      networking.fetchHistory('mychannel1', {}, callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+    });
   });
 
   describe.skip('#fetchWhereNow', () => {
@@ -620,4 +632,15 @@ describe('#components/networking', () => {
         'sub-key', 'subKey', 'devices', 'device1']);
     });
   });
+
+  describe('#_xhr', () => {
+    it('triggers error if payload contains an error and is an object', () => {
+      let payload = { error: true, message: 'message', payload: 'payload' };
+      instance._handleHistoryResponse(payload, err, callback, false, 'cipherKey');
+
+      assert.equal(err.called, 1);
+      assert.deepEqual(err.args[0][0], { message: 'message', payload: 'payload' });
+    });
+  })
+
 });

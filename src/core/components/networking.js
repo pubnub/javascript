@@ -63,8 +63,12 @@ export default class {
   /*
     Fuses the provided endpoint specific params (from data) with instance params
   */
-  prepareParams(): Object {
-    let data: Object = {};
+  prepareParams(data: Object): Object {
+    if (!data) data = {};
+
+    utils.each(this._coreParams, function (key, value) {
+      if (!(key in data)) data[key] = value;
+    });
 
     if (this._config.isInstanceIdEnabled()) {
       data.instanceid = this._keychain.getInstanceId();
@@ -108,7 +112,7 @@ export default class {
   }
 
   // method based URL's
-  fetchHistory(channel: string, data: Object, callback: Function) {
+  fetchHistory(channel: string, incomingData: Object, callback: Function) {
     if (!this._keychain.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
@@ -117,6 +121,8 @@ export default class {
       this.getStandardOrigin(), 'v2', 'history', 'sub-key',
       this._keychain.getSubscribeKey(), 'channel', utils.encode(channel),
     ];
+
+    let data = this.prepareParams(incomingData);
 
     if (this._keychain.getAuthKey()) {
       data.auth = this._keychain.getAuthKey();
@@ -241,7 +247,7 @@ export default class {
   }
 
   fetchTime(callback: Function) {
-    let data = this.prepareParams();
+    let data = this.prepareParams({});
     let url = [this.getStandardOrigin(), 'time', 0];
 
     if (this._keychain.getUUID()) {

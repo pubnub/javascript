@@ -12,19 +12,15 @@ import PublishQueue from './components/publish_queue';
 import PresenceHeartbeat from './components/presence_heartbeat';
 import Connectivity from './components/connectivity';
 
-import Responders from './presenters/responders';
-
 import TimeEndpoint from './endpoints/time';
 import PresenceEndpoints from './endpoints/presence';
 import HistoryEndpoint from './endpoints/history';
 import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
-import ReplyEndpoint from './endpoints/replay';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
 import PubSubEndpoints from './endpoints/pubsub';
 
 let packageJSON = require('../../package.json');
-let constants = require('../../defaults.json');
 let utils = require('./utils');
 
 let DEF_WINDOWING = 10; // MILLISECONDS.
@@ -106,12 +102,13 @@ export default function createInstance(setup: setupObject): Object {
   let eventEmitter = EventEmitter({});
 
   // initalize the endpoints
-  let timeEndpoint = new TimeEndpoint({ keychain, config, networking });
+  let timeEndpoint = new TimeEndpoint({ networking });
+  let historyEndpoint = new HistoryEndpoint({ networking, decrypt });
+
   let pushEndpoint = new PushEndpoint({ keychain, config, networking, error });
   let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, error, state: stateStorage });
-  let historyEndpoint = new HistoryEndpoint({ keychain, networking, error, decrypt });
+
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
-  let replayEndpoint = new ReplyEndpoint({ keychain, networking, error });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ keychain, networking, config, error });
   let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, publishQueue, state: stateStorage });
 
@@ -122,21 +119,22 @@ export default function createInstance(setup: setupObject): Object {
     config.setHeartbeatInterval(1);
   }
 
-  // Announce Leave Event
   let SELF = {
-    history: historyEndpoint.fetchHistory.bind(historyEndpoint),
-    replay(args: Object, callback: Function) { replayEndpoint.performReplay(args, callback); },
-    time(callback: Function) { timeEndpoint.fetchTime(callback); },
+
+    accessManager: {
+      grant: accessEndpoints.grant.bind(accessEndpoints),
+      audit: accessEndpoints.audit.bind(accessEndpoints),
+      revoke: accessEndpoints.revoke.bind(accessEndpoints),
+    },
+
+    history: historyEndpoint.fetch.bind(historyEndpoint),
+    time: timeEndpoint.fetch.bind(timeEndpoint),
+    publish: pubsubEndpoints.publish.bind(pushEndpoint),
 
     presence: {
       hereNow(args: Object, callback: Function) { presenceEndpoints.hereNow(args, callback); },
       whereNow(args: Object, callback: Function) { presenceEndpoints.whereNow(args, callback); },
       state(args:Object, callback: Function) { presenceEndpoints.performState(args, callback); },
-    },
-
-    accessManager: {
-      grant(args: Object, callback: Function) { accessEndpoints.performGrant(args, callback); },
-      audit(args: Object, callback: Function) { accessEndpoints.performAudit(args, callback); },
     },
 
     push: {
@@ -160,23 +158,24 @@ export default function createInstance(setup: setupObject): Object {
       keychain.setCipherKey(key);
     },
 
-    rawEncrypt(input: string, key: string): string { return encrypt(input, key); },
+    rawEncrypt(input: string, key: string): string {
+      return encrypt(input, key);
+    },
 
     rawDecrypt(input: string, key: string): string {
       return decrypt(input, key);
     },
 
-    getHeartbeat: function () {
+    getHeartbeat() {
       return config.getPresenceTimeout();
     },
 
-    setHeartbeat: function (heartbeat, heartbeat_interval) {
+    setHeartbeat(heartbeat, heartbeat_interval) {
       config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
       config.setHeartbeatInterval(heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
       if (config.getPresenceTimeout() === 2) {
         config.setHeartbeatInterval(1);
       }
-      CONNECT();
 
       // emit the event
       eventEmitter.emit('presenceHeartbeatChanged');
@@ -186,38 +185,22 @@ export default function createInstance(setup: setupObject): Object {
       return config.getHeartbeatInterval();
     },
 
-    setHeartbeatInterval(heartbeat_interval) {
-      config.setHeartbeatInterval(heartbeat_interval);
+    setHeartbeatInterval(heartbeatInterval) {
+      config.setHeartbeatInterval(heartbeatInterval);
       eventEmitter.emit('presenceHeartbeatChanged');
     },
 
-    get_version() {
+    getVersion() {
       return packageJSON.version;
     },
 
-    getGcmMessageObject(obj) {
-      return {
-        data: obj,
-      };
-    },
-
-    getApnsMessageObject(obj) {
-      var x = {
-        aps: { badge: 1, alert: '' }
-      };
-      for (var k in obj) {
-        k[x] = obj[k];
-      }
-      return x;
-    },
-
-    _addParam(key, val) {
+    addParam(key: string, val: any) {
       networking.addCoreParam(key, val);
     },
 
-    auth(auth) {
+    setAuthKey(auth) {
       keychain.setAuthKey(auth);
-      CONNECT();
+      eventEmitter.emit('keychainChanged');
     },
 
     publish(args: Object, callback: Function) {
@@ -237,31 +220,26 @@ export default function createInstance(setup: setupObject): Object {
 
     },
 
-    revoke: function (args, callback) {
-      args['read'] = false;
-      args['write'] = false;
-      SELF['grant'](args, callback);
-    },
 
-    setUUID: function (uuid) {
+    setUUID(uuid) {
       keychain.setUUID(uuid);
-      CONNECT();
+      eventEmitter.emit('keychainChanged');
     },
 
-    getUUID: function () {
+    getUUID() {
       return keychain.getUUID();
     },
 
-    getSubscribedChannels: function () {
+    getSubscribedChannels() {
       return stateStorage.generate_channel_list(true);
     },
 
-    stopTimers: function () {
+    stopTimers() {
       connectivity.stop();
       presenceHeartbeat.stop();
     },
 
-    shutdown: function () {
+    shutdown() {
       SELF.stopTimers();
       if (shutdown) shutdown();
     }

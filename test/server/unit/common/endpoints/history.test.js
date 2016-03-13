@@ -11,7 +11,7 @@ import Responders from '../../../../../src/core/presenters/responders';
 import assert from 'assert';
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
-import loglevel from 'loglevel'
+import loglevel from 'loglevel';
 
 loglevel.disableAll();
 
@@ -47,17 +47,16 @@ describe('history endpoints', () => {
     beforeEach(() => {
       defaultArgsInput = {
         channel: 'ch1',
-        cipher_key: 'cipher_key',
+        cipherKey: 'cipher_key',
         start: 'start',
         end: 'end',
-        include_token: 'include_token',
+        includeToken: 'include_token',
       };
 
       defaultArgsOutput = {
         count: 100,
         start: 'start',
         end: 'end',
-        auth: 'authKey',
         stringtoken: 'true',
         include_token: 'true',
         reverse: 'false',
@@ -76,131 +75,86 @@ describe('history endpoints', () => {
     });
 
     it('passes through args', () => {
-      let callbackMock = sinon.stub();
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
-    });
-
-    it('uses auth-key from params if provided', () => {
-      let callbackMock = sinon.stub();
-      defaultArgsInput.auth_key = 'auth-key-params';
-      defaultArgsOutput.auth = 'auth-key-params';
-      instance.fetchHistory(defaultArgsInput, callbackMock);
-
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], 'ch1');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     it('uses string_message_token from params if provided', () => {
-      let callbackMock = sinon.stub();
-      defaultArgsInput.string_message_token = 'string_message_token-true';
+      defaultArgsInput.stringMessageToken = 'string_message_token-true';
       defaultArgsOutput.string_message_token = 'true';
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], 'ch1');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     it('uses reverse from params if provided', () => {
-      let callbackMock = sinon.stub();
       defaultArgsInput.reverse = 'reverse-true';
       defaultArgsOutput.reverse = 'reverse-true';
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], 'ch1');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     it('uses count from params if provided', () => {
-      let callbackMock = sinon.stub();
       defaultArgsInput.count = 25;
       defaultArgsOutput.count = 25;
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], 'ch1');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     it('uses limit from params if provided', () => {
-      let callbackMock = sinon.stub();
       defaultArgsInput.limit = 25;
       defaultArgsOutput.count = 25;
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], 'ch1');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     it('uses channel-group from params if provided', () => {
-      let callbackMock = sinon.stub();
-      defaultArgsInput.channel_group = 'cg1,cg2,cg3';
+      defaultArgsInput.channelGroup = 'cg1,cg2,cg3';
       defaultArgsOutput['channel-group'] = 'cg1,cg2,cg3';
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], 'ch1');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], 'ch1');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     it('uses , for channels if not provided', () => {
-      let callbackMock = sinon.stub();
       delete defaultArgsInput.channel;
-      defaultArgsInput.channel_group = 'cg1,cg2,cg3';
+      defaultArgsInput.channelGroup = 'cg1,cg2,cg3';
       defaultArgsOutput['channel-group'] = 'cg1,cg2,cg3';
-      instance.fetchHistory(defaultArgsInput, callbackMock);
+      instance.fetchHistory(defaultArgsInput, callbackStub);
 
-      assert.equal(fetchHistoryMock.args[0][0], ',');
-      assert.deepEqual(fetchHistoryMock.args[0][1].data, defaultArgsOutput);
+      assert.equal(fetchHistoryStub.args[0][0], ',');
+      assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
     });
 
     describe('callbacks and delgation to networking', () => {
-      it('executs #prepareParamsMock to prepare params', () => {
-        let callbackMock = sinon.stub();
-        instance.fetchHistory(defaultArgsInput, callbackMock);
-        assert.equal(prepareParamsMock.called, true);
-      });
-
       it('executes the #error responder if on error', () => {
-        let callbackMock = sinon.stub();
-        defaultArgsInput.error = sinon.stub();
-        instance.fetchHistory(defaultArgsInput, callbackMock);
+        instance.fetchHistory(defaultArgsInput, callbackStub);
 
-        fetchHistoryMock.args[0][1].fail('fail-response');
-        assert.equal(failMock.called, 1);
-        assert.equal(failMock.args[0][0], 'fail-response');
-        assert.deepEqual(failMock.args[0][1], defaultArgsInput.error);
+        fetchHistoryStub.args[0][2]('fail-response', null);
+        assert.equal(callbackStub.called, 1);
+        assert.deepEqual(callbackStub.args[0], ['fail-response', null]);
       });
 
       it('executes the callback', () => {
-        let callbackMock = sinon.stub();
-        defaultArgsInput.error = sinon.stub();
-        instance.fetchHistory(defaultArgsInput, callbackMock);
+        instance.fetchHistory(defaultArgsInput, callbackStub);
 
-        let stubbedModifier = sinon.stub(instance, '_handleHistoryResponse');
-        fetchHistoryMock.args[0][1].success('success-response');
+        let stubbedModifier = sinon.stub(instance, '_parseResponse').returns('prparedData');
+        fetchHistoryStub.args[0][2](null, 'success-response');
 
         assert.equal(stubbedModifier.called, 1);
-        assert.deepEqual(stubbedModifier.args[0], [
-          'success-response', defaultArgsInput.error, callbackMock,
-          defaultArgsInput.include_token, defaultArgsInput.cipher_key,
-        ]);
-      });
-
-      it('executes the callback passed from args', () => {
-        let callbackMock = sinon.stub();
-        defaultArgsInput.error = sinon.stub();
-        defaultArgsInput.callback = callbackMock;
-        instance.fetchHistory(defaultArgsInput);
-
-        let stubbedModifier = sinon.stub(instance, '_handleHistoryResponse');
-        fetchHistoryMock.args[0][1].success('success-response');
-
-        assert.equal(stubbedModifier.called, 1);
-        assert.deepEqual(stubbedModifier.args[0], [
-          'success-response', defaultArgsInput.error, callbackMock,
-          defaultArgsInput.include_token, defaultArgsInput.cipher_key,
-        ]);
+        assert.equal(callbackStub.called, 1);
+        assert.deepEqual(stubbedModifier.args[0], ['success-response', 'include_token', 'cipher_key']);
+        assert.deepEqual(callbackStub.args[0], [null, 'prparedData']);
       });
     });
   });
@@ -208,30 +162,7 @@ describe('history endpoints', () => {
   // we are testing a private method here, but the function is very dense and
   // needs further deconstruction. To make sure we do not regress, this test suite
   // covers decryption methods.
-  describe('#_handleHistoryResponse', () => {
-    let err;
-    let callback;
-    let instance;
-
-    beforeEach(() => {
-      err = sinon.stub();
-      callback = sinon.stub();
-      instance = new proxiedInstance({
-        keychain,
-        networking,
-        decrypt: decryptMock,
-        error,
-      });
-    });
-
-    it('triggers error if payload contains an error and is an object', () => {
-      let payload = { error: true, message: 'message', payload: 'payload' };
-      instance._handleHistoryResponse(payload, err, callback, false, 'cipherKey');
-
-      assert.equal(err.called, 1);
-      assert.deepEqual(err.args[0][0], { message: 'message', payload: 'payload' });
-    });
-
+  describe('#_parseResponse', () => {
     describe('include_token = true', () => {
       it('hits the callback with correct raw data', () => {
         let message1 = { message: 'm1', timetoken: 't1' };
@@ -239,13 +170,13 @@ describe('history endpoints', () => {
         let messagePayload = [message1, message2];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        instance._handleHistoryResponse(combinedPayload, err, callback, true, 'cipherKey');
-        assert.equal(callback.called, 1);
-        assert.equal(decryptMock.callCount, 2);
-        assert.equal(decryptMock.args[0][1], 'cipherKey');
-        assert.deepEqual(decryptMock.args[0][0], 'm1');
-        assert.deepEqual(decryptMock.args[1][0], 'm2');
-        assert.deepEqual(callback.args[0], [[[message1, message2], 'firstElement', 'secondElement']]);
+        let resp = instance._parseResponse(combinedPayload, true, 'cipherKey');
+
+        assert.equal(decryptStub.callCount, 2);
+        assert.equal(decryptStub.args[0][1], 'cipherKey');
+        assert.deepEqual(decryptStub.args[0][0], 'm1');
+        assert.deepEqual(decryptStub.args[1][0], 'm2');
+        assert.deepEqual(resp, [[message1, message2], 'firstElement', 'secondElement']);
       });
 
       it('hits the callback with correct json data', () => {
@@ -256,13 +187,13 @@ describe('history endpoints', () => {
         let messagePayload = [message1, message2];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        instance._handleHistoryResponse(combinedPayload, err, callback, true, 'cipherKey');
-        assert.equal(callback.called, 1);
-        assert.equal(decryptMock.callCount, 2);
-        assert.equal(decryptMock.args[0][1], 'cipherKey');
-        assert.deepEqual(decryptMock.args[0][0], '{"complex": "payload1"}');
-        assert.deepEqual(decryptMock.args[1][0], '{"complex": "payload2"}');
-        assert.deepEqual(callback.args[0], [[[message1Output, message2Output], 'firstElement', 'secondElement']]);
+        let resp = instance._parseResponse(combinedPayload, true, 'cipherKey');
+        assert.equal(decryptStub.callCount, 2);
+        assert.equal(decryptStub.args[0][1], 'cipherKey');
+        assert.deepEqual(decryptStub.args[0][0], '{"complex": "payload1"}');
+        assert.deepEqual(decryptStub.args[1][0], '{"complex": "payload2"}');
+
+        assert.deepEqual(resp, [[message1Output, message2Output], 'firstElement', 'secondElement']);
       });
     });
 
@@ -271,13 +202,12 @@ describe('history endpoints', () => {
         let messagePayload = ['m1', 'm2'];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        instance._handleHistoryResponse(combinedPayload, err, callback, false, 'cipherKey');
-        assert.equal(callback.called, 1);
-        assert.equal(decryptMock.callCount, 2);
-        assert.equal(decryptMock.args[0][1], 'cipherKey');
-        assert.deepEqual(decryptMock.args[0][0], 'm1');
-        assert.deepEqual(decryptMock.args[1][0], 'm2');
-        assert.deepEqual(callback.args[0], [[['m1', 'm2'], 'firstElement', 'secondElement']]);
+        let resp = instance._parseResponse(combinedPayload, false, 'cipherKey');
+        assert.equal(decryptStub.callCount, 2);
+        assert.equal(decryptStub.args[0][1], 'cipherKey');
+        assert.deepEqual(decryptStub.args[0][0], 'm1');
+        assert.deepEqual(decryptStub.args[1][0], 'm2');
+        assert.deepEqual(resp, [['m1', 'm2'], 'firstElement', 'secondElement']);
       });
 
       it('hits the callback with correct json data', () => {
@@ -288,13 +218,12 @@ describe('history endpoints', () => {
         let messagePayload = [message1, message2];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        instance._handleHistoryResponse(combinedPayload, err, callback, false, 'cipherKey');
-        assert.equal(callback.called, 1);
-        assert.equal(decryptMock.callCount, 2);
-        assert.equal(decryptMock.args[0][1], 'cipherKey');
-        assert.deepEqual(decryptMock.args[0][0], '{"complex": "payload1"}');
-        assert.deepEqual(decryptMock.args[1][0], '{"complex": "payload2"}');
-        assert.deepEqual(callback.args[0], [[[message1Output, message2Output], 'firstElement', 'secondElement']]);
+        let resp = instance._parseResponse(combinedPayload, false, 'cipherKey');
+        assert.equal(decryptStub.callCount, 2);
+        assert.equal(decryptStub.args[0][1], 'cipherKey');
+        assert.deepEqual(decryptStub.args[0][0], '{"complex": "payload1"}');
+        assert.deepEqual(decryptStub.args[1][0], '{"complex": "payload2"}');
+        assert.deepEqual(resp, [[message1Output, message2Output], 'firstElement', 'secondElement']);
       });
     });
   });

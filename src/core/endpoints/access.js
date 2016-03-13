@@ -30,7 +30,13 @@ export default class {
     this._hmac_SHA256 = hmac_SHA256;
   }
 
-  performGrant(args: Object, argumentCallback: Function) {
+  revoke(args: Object, argumentCallback: Function) {
+    args['read'] = false;
+    args['write'] = false;
+    SELF['grant'](args, callback);
+  }
+
+  grant(args: Object, argumentCallback: Function) {
     let callback = args.callback || argumentCallback;
     let err = args.error || function () {};
     let channel = args.channel || args.channels;
@@ -99,7 +105,7 @@ export default class {
     });
   }
 
-  performAudit(args: Object, argumentCallback: Function) {
+  audit(args: Object, argumentCallback: Function) {
     let callback = args.callback || argumentCallback;
     let err = args.error || function () {};
     let channel = args.channel;

@@ -16,6 +16,8 @@ rules:
   new-cap: 0
   consistent-return: 0
 
+  prefer-const: 0
+
   guard-for-in: 0
   block-scoped-var: 0
   no-redeclare: 0

@@ -15,7 +15,8 @@ type fetchHistoryArguments = {
   cipherKey: string, // key required to decrypt history.
   start: number, // start timetoken for history fetching
   end: number, // end timetoken for history feting
-  includeToken: boolean // include time token for each history call
+  includeToken: boolean, // include time token for each history call
+  stringMessageToken: boolean // TODO:
 }
 
 export default class {
@@ -31,13 +32,13 @@ export default class {
     this._l = Logger.getLogger('#endpoints/history');
   }
 
-  fetchHistory(args: fetchHistoryArguments, callback: Function) {
+  fetch(args: fetchHistoryArguments, callback: Function) {
     let { channel } = args;
     const { channelGroup, cipherKey, start, end, includeToken } = args;
 
     const count = args.count || args.limit || 100;
     const reverse = args.reverse || 'false';
-    const returnStringifiedTimetokens = args.returnStringifiedTimetokens || false;
+    const stringMessageToken = args.stringMessageToken || false;
 
     if (!channel && !channelGroup) {
       return callback(this._r.validationError('Missing channel and/or channel group'));
@@ -58,8 +59,8 @@ export default class {
 
     if (start) params.start = start;
     if (end) params.end = end;
-    if (includeToken) params.includeToken = 'true';
-    if (returnStringifiedTimetokens) params.string_message_token = 'true';
+    if (includeToken) params.include_token = 'true';
+    if (stringMessageToken) params.string_message_token = 'true';
 
     // Send Message
     this._networking.fetchHistory(channel, params, (err, resp) => {
@@ -71,17 +72,17 @@ export default class {
   _parseResponse(response: Object, includeToken: boolean, cipherKey: string): Array<any> {
     const messages = response[0];
     const decryptedMessages = [];
-    messages.forEach((message) => {
-      const decryptedMessage = this._decrypt(message, cipherKey);
-      const { timetoken } = message;
-
+    messages.forEach((payload) => {
       if (includeToken) {
+        const decryptedMessage = this._decrypt(payload.message, cipherKey);
+        const { timetoken } = payload;
         try {
           decryptedMessages.push({ timetoken, message: JSON.parse(decryptedMessage) });
         } catch (e) {
           decryptedMessages.push(({ timetoken, message: decryptedMessage }));
         }
       } else {
+        const decryptedMessage = this._decrypt(payload, cipherKey);
         try {
           decryptedMessages.push(JSON.parse(decryptedMessage));
         } catch (e) {

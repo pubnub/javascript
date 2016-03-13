@@ -50,3 +50,19 @@ function PNmessage(args) {
   };
   return msg;
 }
+
+getGcmMessageObject(obj) {
+  return {
+    data: obj,
+  };
+},
+
+getApnsMessageObject(obj) {
+  var x = {
+    aps: { badge: 1, alert: '' }
+  };
+  for (var k in obj) {
+    k[x] = obj[k];
+  }
+  return x;
+},
