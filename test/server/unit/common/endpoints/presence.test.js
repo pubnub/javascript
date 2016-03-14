@@ -22,7 +22,7 @@ describe('presence endpoints', () => {
   let validateResponderStub;
 
   beforeEach(() => {
-    networking = new Networking();
+    networking = new Networking({});
     state = new State();
     callbackStub = sinon.stub();
 

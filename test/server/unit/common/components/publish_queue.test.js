@@ -11,7 +11,7 @@ describe('#components/publishing_queue', () => {
   let networking;
 
   beforeEach(() => {
-    networking = new Networking();
+    networking = new Networking({});
   });
 
   it('calls to sendNext when a new item is inserted', () => {
@@ -126,9 +126,7 @@ describe('#components/publishing_queue', () => {
     it('passes arguments to the callback function', () => {
       sendNextStub = sinon.stub(publishQueue, '_sendNext');
       networkingStub.args[0][4]('error', 'response');
-      assert.equal(callbackStub.callCount, 2);
+      assert.deepEqual(callbackStub.args[0], ['error', 'response']);
     });
-
-  })
-
-})
+  });
+});

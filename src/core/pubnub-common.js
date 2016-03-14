@@ -54,6 +54,17 @@ export default function createInstance(setup: setupObject): Object {
     decrypt(b) { return b; },
   };
 
+  // initialize the encryption and decryption logic
+  function encrypt(input, key) {
+    return crypto_obj.encrypt(input, key || keychain.getCipherKey()) || input;
+  }
+
+  function decrypt(input, key) {
+    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) ||
+      crypto_obj['decrypt'](input, keychain.getCipherKey()) ||
+      input;
+  }
+
   let keychain = new Keychain()
     .setInstanceId(uuidGenerator.v4())
     .setAuthKey(setup.authKey || '')
@@ -83,31 +94,19 @@ export default function createInstance(setup: setupObject): Object {
 
   let stateStorage = new State();
 
-  let networking = new Networking(config, keychain, setup.ssl, setup.origin)
+  let networking = new Networking({ config, keychain, encrypt }, setup.ssl, setup.origin)
     .addBeaconDispatcher(sendBeacon)
     // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
     .setCoreParams(setup.params || {});
 
   let publishQueue = new PublishQueue({ networking });
-
-  // initialize the encryption and decryption logic
-  function encrypt(input, key) {
-    return crypto_obj.encrypt(input, key || keychain.getCipherKey()) || input;
-  }
-
-  function decrypt(input, key) {
-    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) ||
-      crypto_obj['decrypt'](input, keychain.getCipherKey()) ||
-      input;
-  }
-
   let eventEmitter = EventEmitter({});
 
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ networking });
   let historyEndpoint = new HistoryEndpoint({ networking, decrypt });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
-  let publishEndpoints = new PublishEndpoints({ publishQueue, encrypt });
+  let publishEndpoints = new PublishEndpoints({ publishQueue });
   let pushEndpoints = new PushEndpoint({ networking, publishQueue });
 
   let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, error, state: stateStorage });

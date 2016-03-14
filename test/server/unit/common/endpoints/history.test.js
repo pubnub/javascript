@@ -20,7 +20,7 @@ describe('history endpoints', () => {
   let callbackStub;
 
   beforeEach(() => {
-    networking = new Networking();
+    networking = new Networking({});
     decryptStub = sinon.stub().returnsArg(0);
     callbackStub = sinon.stub();
     validateResponderStub = sinon.stub().returns('validationError');

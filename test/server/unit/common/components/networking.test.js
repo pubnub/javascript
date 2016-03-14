@@ -177,7 +177,7 @@ describe('#components/networking', () => {
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -258,7 +258,7 @@ describe('#components/networking', () => {
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain();
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -307,7 +307,7 @@ describe('#components/networking', () => {
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey');
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -356,11 +356,13 @@ describe('#components/networking', () => {
     let callbackStub;
     let xdrStub;
     let postXDRStub;
+    let encryptStub;
 
     beforeEach(() => {
       config = new Config();
+      encryptStub = sinon.stub().returnsArg(0);
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain, encrypt: encryptStub }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -368,6 +370,18 @@ describe('#components/networking', () => {
       validationErrorStub = sinon.stub();
       prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
       networking._r.validationError = validationErrorStub;
+    });
+
+    it('uses encrypt method with cipher key passed', () => {
+      keychain.setCipherKey('maCipherKey');
+      networking.performPublish('mychannel', { hi: 'there' }, {}, 'GET', callbackStub);
+      assert.deepEqual(encryptStub.args[0], [{ hi: 'there' }, 'maCipherKey']);
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params' });
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'publish',
+        'pubKey', 'subKey', 0, 'mychannel', 0, '%5Bobject%20Object%5D']);
     });
 
     it('passes arguments to the xdr module', () => {
@@ -427,7 +441,7 @@ describe('#components/networking', () => {
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -485,7 +499,7 @@ describe('#components/networking', () => {
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -627,7 +641,7 @@ describe('#components/networking', () => {
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
-      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');

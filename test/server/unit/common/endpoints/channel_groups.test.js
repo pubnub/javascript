@@ -22,7 +22,7 @@ describe('channel groups endpoints', () => {
   let xdrMock;
 
   beforeEach(() => {
-    networking = new Networking();
+    networking = new Networking({});
     validateResponderStub = sinon.stub().returns('validationError');
     xdrMock = sinon.stub(networking, 'performChannelGroupOperation');
     callbackStub = sinon.stub();

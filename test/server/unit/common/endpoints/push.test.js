@@ -20,7 +20,7 @@ describe('push endpoints', () => {
   let validateMock;
 
   beforeEach(() => {
-    networking = new Networking();
+    networking = new Networking({});
     publishQueue = new PublishQueue({ networking });
     callbackStub = sinon.stub();
     validateMock = sinon.stub().returns('vaidateResponder');

@@ -15,14 +15,12 @@ loglevel.disableAll();
 describe('publish endpoints', () => {
   let publishQueue;
   let instance;
-  let encryptStub;
   let validateResponderStub;
   let queueItemStub;
   let callbackStub;
 
   beforeEach(() => {
-    publishQueue = new PublishQueue({ networking: new Networking() });
-    encryptStub = sinon.stub().returnsArg(0);
+    publishQueue = new PublishQueue({ networking: new Networking({}) });
     callbackStub = sinon.stub();
     validateResponderStub = sinon.stub().returns('validationError');
     queueItemStub = sinon.stub(publishQueue, 'queueItem');
@@ -34,7 +32,7 @@ describe('publish endpoints', () => {
       '../presenters/responders': respondersClass,
     }).default;
 
-    instance = new proxy({ publishQueue, encrypt: encryptStub });
+    instance = new proxy({ publishQueue });
   });
 
   it('errors if message is not provided', () => {
@@ -49,11 +47,6 @@ describe('publish endpoints', () => {
     assert.equal(validateResponderStub.args[0][0], 'Missing Channel');
   });
 
-  it('uses encrypt method with cipher key passed', () => {
-    instance.publish({ message: 'hello!', channel: 'ch1', cipherKey: 'cipherKey' }, callbackStub);
-    assert.deepEqual(encryptStub.args[0], ['hello!', 'cipherKey']);
-  });
-
   it('enqueues a message to be sent by the queue', () => {
     instance.publish({ message: 'hello!', channel: 'ch1' }, callbackStub);
 
@@ -61,7 +54,7 @@ describe('publish endpoints', () => {
 
     assert.equal(publishItem.channel, 'ch1');
     assert.equal(publishItem.httpMethod, 'GET');
-    assert.equal(publishItem.payload, '"hello!"');
+    assert.equal(publishItem.payload, 'hello!');
     assert.deepEqual(publishItem.params, {});
     assert.deepEqual(publishItem.callback, callbackStub);
   });
@@ -73,7 +66,7 @@ describe('publish endpoints', () => {
 
     assert.equal(publishItem.channel, 'ch1');
     assert.equal(publishItem.httpMethod, 'GET');
-    assert.equal(publishItem.payload, '"hello!"');
+    assert.equal(publishItem.payload, 'hello!');
     assert.deepEqual(publishItem.params, { store: '0' });
     assert.deepEqual(publishItem.callback, callbackStub);
   });
@@ -85,7 +78,7 @@ describe('publish endpoints', () => {
 
     assert.equal(publishItem.channel, 'ch1');
     assert.equal(publishItem.httpMethod, 'POST');
-    assert.equal(publishItem.payload, '"hello!"');
+    assert.equal(publishItem.payload, 'hello!');
     assert.deepEqual(publishItem.params, { meta: '{\"this\":\"meta\"}' });
     assert.deepEqual(publishItem.callback, callbackStub);
   });
@@ -97,7 +90,7 @@ describe('publish endpoints', () => {
 
     assert.equal(publishItem.channel, 'ch1');
     assert.equal(publishItem.httpMethod, 'POST');
-    assert.equal(publishItem.payload, '"hello!"');
+    assert.equal(publishItem.payload, 'hello!');
     assert.deepEqual(publishItem.params, {});
     assert.deepEqual(publishItem.callback, callbackStub);
   });

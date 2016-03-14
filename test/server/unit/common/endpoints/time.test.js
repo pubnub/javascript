@@ -11,7 +11,7 @@ describe('time endpoints', () => {
   let networking;
 
   beforeEach(() => {
-    networking = new Networking();
+    networking = new Networking({});
   });
 
   it('calls networking #fetchTime', () => {

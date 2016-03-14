@@ -14,10 +14,20 @@ type superagentPayload = {
   callback: Function,
 };
 
+type networkingModules = {
+  encrypt: Function,
+  keychain: Keychain,
+  config: Config
+}
+
+type publishPayload = Object | string | number | boolean;
+
 export default class {
   _sendBeacon: Function;
+
   _keychain: Keychain;
   _config: Config;
+  _encrypt: Function;
 
   _maxSubDomain: number;
   _currentSubDomain: number;
@@ -33,9 +43,10 @@ export default class {
 
   _r: Responders;
 
-  constructor(config: Config, keychain: Keychain, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
+  constructor({ config, keychain, encrypt }: networkingModules, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
     this._config = config;
     this._keychain = keychain;
+    this._encrypt = encrypt
     this._r = new Responders('#networking');
 
     this._maxSubDomain = 20;
@@ -331,7 +342,7 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  performPublish(channel: string, msg: string, incomingData: Object, mode: string, callback: Function) {
+  performPublish(channel: string, msg: publishPayload, incomingData: Object, mode: string, callback: Function) {
     if (!this._keychain.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
@@ -339,6 +350,9 @@ export default class {
     if (!this._keychain.getPublishKey()) {
       return callback(this._r.validationError('Missing Publish Key'));
     }
+
+    let encryptedMessage = this._encrypt(msg, this._keychain.getCipherKey());
+    encryptedMessage = JSON.stringify(encryptedMessage);
 
     let url = [
       this.getStandardOrigin(), 'publish',

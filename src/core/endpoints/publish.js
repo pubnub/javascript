@@ -5,34 +5,30 @@ import Responders from '../presenters/responders';
 import Logger from '../components/logger';
 
 type publishConstruct = {
-  encrypt: Function,
   publishQueue: PublishQueue
 };
 
 type publishArguments = {
   message: Object | string | number | boolean, // the contents of the dispatch
   channel: string, // the destination of our dispatch
-  cipherKey: string, // if the message is to be encrypted, use this key.
   sendByPost: boolean | null, // use POST when dispatching the message
   storeInHistory: boolean | null, // store the published message in remote history
   meta: Object // psv2 supports filtering by metadata
 }
 
 export default class {
-  _encrypt: Function;
   _publishQueue: PublishQueue;
   _r: Responders;
   _l: Logger;
 
-  constructor({ encrypt, publishQueue }: publishConstruct) {
-    this._encrypt = encrypt;
+  constructor({ publishQueue }: publishConstruct) {
     this._publishQueue = publishQueue;
     this._r = new Responders('#endpoints/publish');
     this._l = Logger.getLogger('#endpoints/publish');
   }
 
   publish(args: publishArguments, callback: Function) {
-    const { message, channel, meta, cipherKey, sendByPost = false, storeInHistory = true } = args;
+    const { message, channel, meta, sendByPost = false, storeInHistory = true } = args;
 
     if (!message) {
       return callback(this._r.validationError('Missing Message'));
@@ -53,7 +49,7 @@ export default class {
       params.meta = JSON.stringify(meta);
     }
 
-    publishItem.payload = JSON.stringify(this._encrypt(message, cipherKey));
+    publishItem.payload = message;
     publishItem.channel = channel;
     publishItem.params = params;
     publishItem.httpMethod = (sendByPost) ? 'POST' : 'GET';

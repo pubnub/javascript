@@ -4,7 +4,7 @@ import Networking from './networking';
 
 type queueConstruct = {
   networking: Networking,
-  parallelPublish: boolean, // disable one-at-a-time publishing queue and publish on call.
+  parallelPublish: ?boolean, // disable one-at-a-time publishing queue and publish on call.
 };
 
 class PublishItem {
@@ -12,7 +12,7 @@ class PublishItem {
   callback: Function;
   httpMethod: string;
   channel: string;
-  payload: string;
+  payload: Object | string | number | boolean;
 }
 
 export default class {
