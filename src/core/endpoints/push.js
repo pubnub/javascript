@@ -1,13 +1,12 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import Keychain from '../components/keychain';
+import PublishQueue from '../components/publish_queue';
 import Responders from '../presenters/responders';
-import Q from 'Q';
 
 type pushConstruct = {
   networking: Networking,
-  keychain: Keychain
+  publishQueue: PublishQueue
 };
 
 type provisionDeviceArgs = {
@@ -17,83 +16,69 @@ type provisionDeviceArgs = {
   channel: string
 };
 
-type addDeviceArgs = {
+type modifyDeviceArgs = {
   pushGateway: 'gcm' | 'apns',
   device: string,
   channel: string
-};
-
-type createNotificationArgs = {
-  operation: 'add' | 'remove',
-  pushGateway: 'gcm' | 'apns',
-  device: string,
-  channel: string
-};
-
-let checkParam = function (checkParam: string | boolean, message: string) {
-  const q = Q.defer();
-
-  if (checkParam) {
-    q.resolve();
-  } else {
-    q.reject(message);
-  }
-
-  return q.promise;
 };
 
 export default class {
   _networking: Networking;
+  _publishQueue: PublishQueue;
   _r: Responders;
 
-  constructor({ networking }: pushConstruct) {
+  constructor({ networking, publishQueue }: pushConstruct) {
     this._networking = networking;
+    this._publishQueue = publishQueue;
     this._r = new Responders('endpoints/push');
   }
 
-  addDevice({ pushGateway, device, channel }: addDeviceArgs): Q.Promise {
+  addDevice(args: modifyDeviceArgs, callback: Function) {
+    let { pushGateway, device, channel } = args;
     const payload = { operation: 'add', pushGateway, device, channel };
-    return this.__provisionDevice(payload);
+    this.__provisionDevice(payload, callback);
   }
 
-  removeDevice({ pushGateway, device, channel }: addDeviceArgs): Q.Promise {
+  removeDevice(args: modifyDeviceArgs, callback: Function) {
+    let { pushGateway, device, channel } = args;
     const payload = { operation: 'remove', pushGateway, device, channel };
-    return this.__provisionDevice(payload);
+    this.__provisionDevice(payload, callback);
   }
 
-  __provisionDevice({ operation, pushGateway, device, channel }: provisionDeviceArgs): Q.Promise {
-    const q = Q.defer();
+  sendNotification() {
+    // no-op
+  }
 
-    checkParam(device, 'Missing Device ID (device)')
-      .then(checkParam(pushGateway, 'Missing GW Type (pushGateway: gcm or apns)'))
-      .then(checkParam(operation, 'Missing GW Operation (operation: add or remove)'))
-      .then(checkParam(channel, 'Missing gw destination Channel (channel)'))
-      .then(checkParam(this._networking.validateSubscribeKey(), 'Missing Subscribe Key'))
-      .then(checkParam(this._networking.validatePublishKey(), 'Missing Publish Key'))
-      .fail((error) => { q.reject(this._r.validationError(error)); })
+  __provisionDevice(args: provisionDeviceArgs, callback: Function) {
+    let { operation, pushGateway, device, channel } = args;
 
-    return q.promise;
+    if (!device) {
+      return callback(this._r.validationError('Missing Device ID (device)'));
+    }
 
-    /*
+    if (!pushGateway) {
+      return callback(this._r.validationError('Missing GW Type (pushGateway: gcm or apns)'));
+    }
+
+    if (!operation) {
+      return callback(this._r.validationError('Missing GW Operation (operation: add or remove)'));
+    }
+
+    if (!channel) {
+      return callback(this._r.validationError('Missing gw destination Channel (channel)'));
+    }
+
     let data: Object = {
       type: pushGateway
     };
 
-    switch (operation) {
-      case 'add': data.add = channel; break;
-      case 'remove': data.remove = channel; break;
-      default:
+    if (operation === 'add') {
+      data.add = channel;
+    } else if (operation === 'remove') {
+      data.remove = channel;
     }
 
-    this._networking.provisionDeviceForPush(device, data)
-      .then((response) => q.resolve(this._r.callback(response)))
-      .fail((response) => q.fail(this._r.error(response)));
-  });
-  */
-  }
-
-  createNotification() {
-    // return callback;
+    this._networking.provisionDeviceForPush(device, data, callback);
   }
 
 }

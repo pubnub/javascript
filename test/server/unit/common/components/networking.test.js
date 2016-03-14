@@ -615,31 +615,59 @@ describe('#components/networking', () => {
     });
   });
 
-  describe.skip('#provisionDeviceForPush', () => {
-    it('passes arguments to the xdr module', () => {
-      let xdrStub = sinon.stub();
-      let successStub = sinon.stub();
-      let failStub = sinon.stub();
-      let callbackStub = sinon.stub();
+  describe('#provisionDeviceForPush', () => {
+    let config;
+    let keychain;
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr');
+      validationErrorStub = sinon.stub();
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking._r.validationError = validationErrorStub;
+    });
+
+    it('errors out if subkey is not defined', () => {
+      keychain.setSubscribeKey('');
+      networking.provisionDeviceForPush('mychannel', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
+    });
+
+    it('errors out if pubkey is not defined', () => {
+      keychain.setPublishKey('');
+      networking.provisionDeviceForPush('mychannel', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Publish Key');
+    });
+
+
+    it('uses auth-key, uuid from keychain', () => {
       let data = { my: 'object' };
+      keychain.setAuthKey('myAuthKey');
+      networking.provisionDeviceForPush('mychannel', data, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', uuid: 'keychainUUID' });
+    });
 
-      let keychain = new Keychain()
-        .setSubscribeKey('subKey')
-        .setPublishKey('pubKey');
+    it('executs #prepareParamsMock to prepare params', () => {
+      networking.provisionDeviceForPush('mychannel', {}, callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+    });
 
-      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
-
-      networkingComponent.provisionDeviceForPush('device1', {
-        fail: failStub,
-        success: successStub,
-        callback: callbackStub,
-        data: data
-      });
+    it('passes arguments to the xdr module', () => {
+      keychain.setAuthKey('myAuthKey');
+      networking.provisionDeviceForPush('device1', {}, callbackStub);
 
       assert.equal(xdrStub.callCount, 1);
-      assert.deepEqual(xdrStub.args[0][0].data, data);
-      assert.deepEqual(xdrStub.args[0][0].success, successStub);
-      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', uuid: 'keychainUUID' });
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v1', 'push',
         'sub-key', 'subKey', 'devices', 'device1']);

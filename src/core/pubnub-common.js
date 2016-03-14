@@ -108,8 +108,8 @@ export default function createInstance(setup: setupObject): Object {
   let historyEndpoint = new HistoryEndpoint({ networking, decrypt });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
   let publishEndpoints = new PublishEndpoints({ publishQueue, encrypt });
+  let pushEndpoints = new PushEndpoint({ networking, publishQueue });
 
-  let pushEndpoint = new PushEndpoint({ keychain, config, networking, error });
   let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, error, state: stateStorage });
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
@@ -150,12 +150,13 @@ export default function createInstance(setup: setupObject): Object {
       setState: presenceEndpoints.setState.bind(presenceEndpoints),
     },
 
-    // dark zone
-
     push: {
-      provisionDevice(args: Object) { pushEndpoint.provisionDevice(args); },
-      sendPushNotification(args: Object) { return args;}
+      addDevice: pushEndpoints.addDevice.bind(pushEndpoints),
+      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
+      sendNotification: pushEndpoints.sendNotification.bind(pushEndpoints),
     },
+
+    // dark zone
 
     unsubscribe(args: Object, callback: Function) {
       TIMETOKEN = 0;

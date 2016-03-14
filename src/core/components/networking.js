@@ -161,16 +161,25 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  provisionDeviceForPush(deviceId: string, data: Object): Q.Promise {
+  provisionDeviceForPush(deviceId: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    if (!this._keychain.getPublishKey()) {
+      return callback(this._r.validationError('Missing Publish Key'));
+    }
+
     let url = [
       this.getStandardOrigin(), 'v1', 'push', 'sub-key',
       this._keychain.getSubscribeKey(), 'devices', deviceId,
     ];
+    let data = this.prepareParams(incomingData);
 
     data.uuid = this._keychain.getUUID();
     data.auth = this._keychain.getAuthKey();
 
-    return this._xdr({ data, url });
+    this._xdr({ data, url, callback });
   }
 
   performGrant({ data, success, fail }: commonXDR) {
