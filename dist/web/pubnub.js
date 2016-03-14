@@ -263,14 +263,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // initalize the endpoints
 	  var timeEndpoint = new _time2.default({ networking: networking });
 	  var historyEndpoint = new _history2.default({ networking: networking, decrypt: decrypt });
+	  var channelGroupEndpoints = new _channel_groups2.default({ networking: networking });
+	  var publishEndpoints = new _publish2.default({ publishQueue: publishQueue, encrypt: encrypt });
 
 	  var pushEndpoint = new _push2.default({ keychain: keychain, config: config, networking: networking, error: error });
 	  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, error: error, state: stateStorage });
 
 	  var accessEndpoints = new _access2.default({ keychain: keychain, config: config, networking: networking, error: error, hmac_SHA256: hmac_SHA256 });
-	  var channelGroupEndpoints = new _channel_groups2.default({ keychain: keychain, networking: networking, config: config, error: error });
-
-	  var publishEndpoints = new _publish2.default({ publishQueue: publishQueue, encrypt: encrypt });
 
 	  var pubsubEndpoints = new _pubsub2.default({ keychain: keychain, networking: networking, presenceEndpoints: presenceEndpoints, error: error, config: config, state: stateStorage });
 
@@ -287,6 +286,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      grant: accessEndpoints.grant.bind(accessEndpoints),
 	      audit: accessEndpoints.audit.bind(accessEndpoints),
 	      revoke: accessEndpoints.revoke.bind(accessEndpoints)
+	    },
+
+	    channelGroups: {
+	      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
+	      deleteGroup: channelGroupEndpoints.removeGroup.bind(channelGroupEndpoints),
+	      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
+	      addChannel: channelGroupEndpoints.addChannel.bind(channelGroupEndpoints),
+	      removeChannel: channelGroupEndpoints.addChannel.bind(channelGroupEndpoints)
 	    },
 
 	    history: historyEndpoint.fetch.bind(historyEndpoint),
@@ -314,23 +321,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    },
 
-	    channelGroups: {
-	      listGroups: function listGroups(args, callback) {
-	        channelGroupEndpoints.listGroups(args, callback);
-	      },
-	      deleteGroup: function deleteGroup(args, callback) {
-	        channelGroupEndpoints.removeGroup(args, callback);
-	      },
-	      listChannels: function listChannels(args, callback) {
-	        channelGroupEndpoints.listChannels(args, callback);
-	      },
-	      addChannel: function addChannel(args, callback) {
-	        channelGroupEndpoints.addChannel(args, callback);
-	      },
-	      removeChannel: function removeChannel(args, callback) {
-	        channelGroupEndpoints.removeChannel(args, callback);
-	      }
+	    unsubscribe: function unsubscribe(args, callback) {
+	      TIMETOKEN = 0;
+	      SUB_RESTORE = 1; // REVISIT !!!!
+
+	      pubsubEndpoints.performUnsubscribe(args, callback);
+
+	      CONNECT();
 	    },
+
+
+	    subscribe: function subscribe(args, callback) {},
 
 	    getCipherKey: function getCipherKey() {
 	      return keychain.getCipherKey();
@@ -374,18 +375,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      keychain.setAuthKey(auth);
 	      eventEmitter.emit('keychainChanged');
 	    },
-	    unsubscribe: function unsubscribe(args, callback) {
-	      TIMETOKEN = 0;
-	      SUB_RESTORE = 1; // REVISIT !!!!
-
-	      pubsubEndpoints.performUnsubscribe(args, callback);
-
-	      CONNECT();
-	    },
-
-
-	    subscribe: function subscribe(args, callback) {},
-
 	    setUUID: function setUUID(uuid) {
 	      keychain.setUUID(uuid);
 	      eventEmitter.emit('keychainChanged');
@@ -1212,10 +1201,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performChannelGroupOperation',
-	    value: function performChannelGroupOperation(channelGroup, mode, _ref) {
-	      var data = _ref.data;
-	      var success = _ref.success;
-	      var fail = _ref.fail;
+	    value: function performChannelGroupOperation(channelGroup, mode, incomingData, callback) {
+	      if (!this._keychain.getSubscribeKey()) {
+	        return callback(this._r.validationError('Missing Subscribe Key'));
+	      }
 
 	      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey(), 'channel-group'];
 
@@ -1227,7 +1216,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url.push('remove');
 	      }
 
-	      this._xdr({ data: data, success: success, fail: fail, url: url });
+	      var data = this.prepareParams(incomingData);
+
+	      if (this._keychain.getAuthKey()) {
+	        data.auth = this._keychain.getAuthKey();
+	      }
+
+	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'provisionDeviceForPush',
@@ -1241,10 +1236,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performGrant',
-	    value: function performGrant(_ref2) {
-	      var data = _ref2.data;
-	      var success = _ref2.success;
-	      var fail = _ref2.fail;
+	    value: function performGrant(_ref) {
+	      var data = _ref.data;
+	      var success = _ref.success;
+	      var fail = _ref.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -1252,10 +1247,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performHeartbeat',
-	    value: function performHeartbeat(channels, _ref3) {
-	      var data = _ref3.data;
-	      var success = _ref3.success;
-	      var fail = _ref3.fail;
+	    value: function performHeartbeat(channels, _ref2) {
+	      var data = _ref2.data;
+	      var success = _ref2.success;
+	      var fail = _ref2.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'];
 
@@ -1263,10 +1258,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performState',
-	    value: function performState(state, channel, uuid, _ref4) {
-	      var data = _ref4.data;
-	      var success = _ref4.success;
-	      var fail = _ref4.fail;
+	    value: function performState(state, channel, uuid, _ref3) {
+	      var data = _ref3.data;
+	      var success = _ref3.success;
+	      var fail = _ref3.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channel];
 
@@ -1280,10 +1275,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performAudit',
-	    value: function performAudit(_ref5) {
-	      var data = _ref5.data;
-	      var success = _ref5.success;
-	      var fail = _ref5.fail;
+	    value: function performAudit(_ref4) {
+	      var data = _ref4.data;
+	      var success = _ref4.success;
+	      var fail = _ref4.fail;
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
@@ -1291,10 +1286,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performChannelLeave',
-	    value: function performChannelLeave(channel, _ref6) {
-	      var data = _ref6.data;
-	      var success = _ref6.success;
-	      var fail = _ref6.fail;
+	    value: function performChannelLeave(channel, _ref5) {
+	      var data = _ref5.data;
+	      var success = _ref5.success;
+	      var fail = _ref5.fail;
 
 	      var origin = this.nextOrigin(false);
 	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(channel), 'leave'];
@@ -1309,10 +1304,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performChannelGroupLeave',
-	    value: function performChannelGroupLeave(_ref7) {
-	      var data = _ref7.data;
-	      var success = _ref7.success;
-	      var fail = _ref7.fail;
+	    value: function performChannelGroupLeave(_ref6) {
+	      var data = _ref6.data;
+	      var success = _ref6.success;
+	      var fail = _ref6.fail;
 
 	      var origin = this.nextOrigin(false);
 	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(','), 'leave'];
@@ -1324,17 +1319,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      } else {
 	        this._xdr({ data: data, success: success, fail: fail, url: url });
 	      }
-	    }
-	  }, {
-	    key: 'fetchReplay',
-	    value: function fetchReplay(source, destination, _ref8) {
-	      var data = _ref8.data;
-	      var success = _ref8.success;
-	      var fail = _ref8.fail;
-
-	      var url = [this.getStandardOrigin(), 'v1', 'replay', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination];
-
-	      this._xdr({ data: data, success: success, fail: fail, url: url });
 	    }
 	  }, {
 	    key: 'fetchTime',
@@ -1354,10 +1338,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchWhereNow',
-	    value: function fetchWhereNow(uuid, _ref9) {
-	      var data = _ref9.data;
-	      var success = _ref9.success;
-	      var fail = _ref9.fail;
+	    value: function fetchWhereNow(uuid, _ref7) {
+	      var data = _ref7.data;
+	      var success = _ref7.success;
+	      var fail = _ref7.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'uuid', _utils2.default.encode(uuid)];
 
@@ -1365,10 +1349,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'fetchHereNow',
-	    value: function fetchHereNow(channel, channelGroup, _ref10) {
-	      var data = _ref10.data;
-	      var success = _ref10.success;
-	      var fail = _ref10.fail;
+	    value: function fetchHereNow(channel, channelGroup, _ref8) {
+	      var data = _ref8.data;
+	      var success = _ref8.success;
+	      var fail = _ref8.fail;
 
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey()];
 
@@ -1430,20 +1414,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: '_postXDR',
-	    value: function _postXDR(_ref11) {
-	      var data = _ref11.data;
-	      var url = _ref11.url;
-	      var callback = _ref11.callback;
+	    value: function _postXDR(_ref9) {
+	      var data = _ref9.data;
+	      var url = _ref9.url;
+	      var callback = _ref9.callback;
 
 	      var superagentConstruct = _superagent2.default.post(url.join('/')).query(data);
 	      this._abstractedXDR(superagentConstruct, callback);
 	    }
 	  }, {
 	    key: '_xdr',
-	    value: function _xdr(_ref12) {
-	      var data = _ref12.data;
-	      var url = _ref12.url;
-	      var callback = _ref12.callback;
+	    value: function _xdr(_ref10) {
+	      var data = _ref10.data;
+	      var url = _ref10.url;
+	      var callback = _ref10.callback;
 
 	      var superagentConstruct = _superagent2.default.get(url.join('/')).query(data);
 	      this._abstractedXDR(superagentConstruct, callback);
@@ -7349,13 +7333,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _keychain = __webpack_require__(27);
+	var _logger = __webpack_require__(36);
 
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	var _config = __webpack_require__(29);
-
-	var _config2 = _interopRequireDefault(_config);
+	var _logger2 = _interopRequireDefault(_logger);
 
 	var _responders = __webpack_require__(28);
 
@@ -7372,16 +7352,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _class = function () {
 	  function _class(_ref) {
 	    var networking = _ref.networking;
-	    var keychain = _ref.keychain;
-	    var config = _ref.config;
-	    var error = _ref.error;
 
 	    _classCallCheck(this, _class);
 
 	    this._networking = networking;
-	    this._keychain = keychain;
-	    this._config = config;
-	    this._error = error;
+	    this._r = new _responders2.default('#endpoints/history');
+	    this._l = _logger2.default.getLogger('#endpoints/history');
 	  }
 
 	  // generic function to handle all channel group operations
@@ -7389,23 +7365,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  _createClass(_class, [{
 	    key: 'channelGroup',
-	    value: function channelGroup(args, argumentCallback) {
-	      var ns_ch = args.channel_group;
-	      var callback = args.callback || argumentCallback;
+	    value: function channelGroup(args, callback) {
+	      var providedChannelGroupName = args.channelGroup;
 	      var channels = args.channels || args.channel;
-	      var channel_group = '';
+	      var effectiveChannelGroupName = '';
 
 	      var data = {};
 	      var mode = args.mode || 'add';
-	      var err = args.error || this._error;
 
-	      if (ns_ch) {
-	        var ns_ch_a = ns_ch.split(':');
+	      if (providedChannelGroupName) {
+	        var splitChannelGroupName = providedChannelGroupName.split(':');
 
-	        if (ns_ch_a.length > 1) {
-	          channel_group = ns_ch_a[1];
+	        if (splitChannelGroupName.length > 1) {
+	          effectiveChannelGroupName = splitChannelGroupName[1];
 	        } else {
-	          channel_group = ns_ch_a[0];
+	          effectiveChannelGroupName = splitChannelGroupName[0];
 	        }
 	      }
 
@@ -7416,32 +7390,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data[mode] = channels;
 	      }
 
-	      if (!data.auth) {
-	        data.auth = args.auth_key || this._keychain.getAuthKey();
-	      }
-
-	      this._networking.performChannelGroupOperation(channel_group, mode, {
-	        data: this._networking.prepareParams(data),
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        }
-	      });
+	      this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
 	    }
 	  }, {
 	    key: 'listChannels',
 	    value: function listChannels(args, callback) {
-	      if (!args.channel_group) return this._error('Missing Channel Group');
+	      if (!args.channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+
 	      this.channelGroup(args, callback);
 	    }
 	  }, {
 	    key: 'removeGroup',
 	    value: function removeGroup(args, callback) {
 	      var errorMessage = 'Use channel_group_remove_channel if you want to remove a channel from a group.';
-	      if (!args.channel_group) return this._error('Missing Channel Group');
-	      if (args.channel) return this._error(errorMessage);
+	      if (!args.channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+
+	      if (args.channel) {
+	        return callback(this._r.validationError(errorMessage));
+	      }
 
 	      args.mode = 'remove';
 	      this.channelGroup(args, callback);
@@ -7454,15 +7424,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'addChannel',
 	    value: function addChannel(args, callback) {
-	      if (!args.channel_group) return this._error('Missing Channel Group');
-	      if (!args.channel && !args.channels) return this._error('Missing Channel');
+	      if (!args.channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+
+	      if (!args.channel && !args.channels) {
+	        return callback(this._r.validationError('Missing Channel'));
+	      }
 	      this.channelGroup(args, callback);
 	    }
 	  }, {
 	    key: 'removeChannel',
 	    value: function removeChannel(args, callback) {
-	      if (!args.channel_group) return this._error('Missing Channel Group');
-	      if (!args.channel && !args.channels) return this._error('Missing Channel');
+	      if (!args.channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+	      if (!args.channel && !args.channels) {
+	        return callback(this._r.validationError('Missing Channel'));
+	      }
 
 	      args.mode = 'remove';
 	      this.channelGroup(args, callback);

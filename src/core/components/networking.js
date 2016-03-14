@@ -134,7 +134,11 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  performChannelGroupOperation(channelGroup: string, mode: string, { data, success, fail }: commonXDR) {
+  performChannelGroupOperation(channelGroup: string, mode: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
     let url = [
       this.getStandardOrigin(), 'v1', 'channel-registration',
       'sub-key', this._keychain.getSubscribeKey(), 'channel-group',
@@ -148,7 +152,13 @@ export default class {
       url.push('remove');
     }
 
-    this._xdr({ data, success, fail, url });
+    let data = this.prepareParams(incomingData);
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    this._xdr({ data, callback, url });
   }
 
   provisionDeviceForPush(deviceId: string, data: Object): Q.Promise {
@@ -238,15 +248,6 @@ export default class {
     } else {
       this._xdr({ data, success, fail, url });
     }
-  }
-
-  fetchReplay(source: string, destination: string, { data, success, fail }: commonXDR) {
-    let url = [
-      this.getStandardOrigin(), 'v1', 'replay',
-      this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), source, destination,
-    ];
-
-    this._xdr({ data, success, fail, url });
   }
 
   fetchTime(callback: Function) {

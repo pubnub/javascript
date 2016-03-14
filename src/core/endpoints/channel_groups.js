@@ -1,50 +1,48 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import Keychain from '../components/keychain';
-import Config from '../components/config';
+import Logger from '../components/logger';
 import Responders from '../presenters/responders';
 
 import utils from '../utils';
 
 type channelGroupConstruct = {
   networking: Networking,
-  config: Config,
-  keychain: Keychain,
-  error: Function,
 };
+
+type channelGroupParams = {
+  channelGroup: string,
+  channels: ?Array<string> | ?string,
+  channel: ?string
+}
 
 export default class {
   _networking: Networking;
-  _keychain: Keychain;
-  _config: Config;
-  _error: Function;
+  _r: Responders;
+  _l: Logger;
 
-  constructor({ networking, keychain, config, error}: channelGroupConstruct) {
+  constructor({ networking }: channelGroupConstruct) {
     this._networking = networking;
-    this._keychain = keychain;
-    this._config = config;
-    this._error = error;
+    this._r = new Responders('#endpoints/history');
+    this._l = Logger.getLogger('#endpoints/history');
   }
 
   // generic function to handle all channel group operations
-  channelGroup(args: Object, argumentCallback: Function) {
-    let ns_ch = args.channel_group;
-    let callback = args.callback || argumentCallback;
+  channelGroup(args: channelGroupParams, callback: Function) {
+    let providedChannelGroupName = args.channelGroup;
     let channels = args.channels || args.channel;
-    let channel_group = '';
+    let effectiveChannelGroupName = '';
 
     let data = {};
     let mode = args.mode || 'add';
-    let err = args.error || this._error;
 
-    if (ns_ch) {
-      let ns_ch_a = ns_ch.split(':');
+    if (providedChannelGroupName) {
+      let splitChannelGroupName = providedChannelGroupName.split(':');
 
-      if (ns_ch_a.length > 1) {
-        channel_group = ns_ch_a[1];
+      if (splitChannelGroupName.length > 1) {
+        effectiveChannelGroupName = splitChannelGroupName[1];
       } else {
-        channel_group = ns_ch_a[0];
+        effectiveChannelGroupName = splitChannelGroupName[0];
       }
     }
 
@@ -55,30 +53,26 @@ export default class {
       data[mode] = channels;
     }
 
-    if (!data.auth) {
-      data.auth = args.auth_key || this._keychain.getAuthKey();
-    }
-
-    this._networking.performChannelGroupOperation(channel_group, mode, {
-      data: this._networking.prepareParams(data),
-      success: function (response) {
-        Responders.callback(response, callback, err);
-      },
-      fail: function (response) {
-        Responders.error(response, err);
-      }
-    });
+    this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
   }
 
   listChannels(args: Object, callback: Function) {
-    if (!args.channel_group) return this._error('Missing Channel Group');
+    if (!args.channelGroup) {
+      return callback(this._r.validationError('Missing Channel Group'));
+    }
+
     this.channelGroup(args, callback);
   }
 
   removeGroup(args: Object, callback: Function) {
     const errorMessage = 'Use channel_group_remove_channel if you want to remove a channel from a group.';
-    if (!args.channel_group) return this._error('Missing Channel Group');
-    if (args.channel) return this._error(errorMessage);
+    if (!args.channelGroup) {
+      return callback(this._r.validationError('Missing Channel Group'));
+    }
+
+    if (args.channel) {
+      return callback(this._r.validationError(errorMessage));
+    }
 
     args.mode = 'remove';
     this.channelGroup(args, callback);
@@ -89,14 +83,23 @@ export default class {
   }
 
   addChannel(args: Object, callback: Function) {
-    if (!args.channel_group) return this._error('Missing Channel Group');
-    if (!args.channel && !args.channels) return this._error('Missing Channel');
+    if (!args.channelGroup) {
+      return callback(this._r.validationError('Missing Channel Group'));
+    }
+
+    if (!args.channel && !args.channels) {
+      return callback(this._r.validationError('Missing Channel'));
+    }
     this.channelGroup(args, callback);
   }
 
   removeChannel(args: Object, callback: Function) {
-    if (!args.channel_group) return this._error('Missing Channel Group');
-    if (!args.channel && !args.channels) return this._error('Missing Channel');
+    if (!args.channelGroup) {
+      return callback(this._r.validationError('Missing Channel Group'));
+    }
+    if (!args.channel && !args.channels) {
+      return callback(this._r.validationError('Missing Channel'));
+    }
 
     args.mode = 'remove';
     this.channelGroup(args, callback);

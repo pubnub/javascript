@@ -165,31 +165,56 @@ describe('#components/networking', () => {
   });
 
 
-  describe.skip('#performChannelGroupOperation', () => {
-    it('passes arguments to the xdr module', () => {
-      let xdrStub = sinon.stub();
-      let successStub = sinon.stub();
-      let failStub = sinon.stub();
-      let callbackStub = sinon.stub();
+  describe('#performChannelGroupOperation', () => {
+    let config;
+    let keychain;
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+    let postXDRStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
+      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr');
+      postXDRStub = sinon.stub(networking, '_postXDR');
+      validationErrorStub = sinon.stub();
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking._r.validationError = validationErrorStub;
+    });
+
+    it('errors out if subkey is not defined', () => {
+      keychain.setSubscribeKey('');
+      networking.performChannelGroupOperation('cg1', 'add', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
+    });
+
+
+    it('uses auth-key from keychain if provided', () => {
       let data = { my: 'object' };
+      keychain.setAuthKey('myAuthKey');
+      networking.performChannelGroupOperation('cg1', 'add', data, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
+    });
 
-      let keychain = new Keychain()
-        .setSubscribeKey('subKey')
-        .setPublishKey('pubKey');
+    it('executs #prepareParamsMock to prepare params', () => {
+      networking.performChannelGroupOperation('cg1', 'add', {}, callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+    });
 
-      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
+    it('passes arguments to the xdr module', () => {
+      let expectedData = { base: 'params' };
 
-      networkingComponent.performChannelGroupOperation('cg1', 'add', {
-        fail: failStub,
-        success: successStub,
-        callback: callbackStub,
-        data: data
-      });
+      networking.performChannelGroupOperation('cg1', 'add', {}, callbackStub)
 
       assert.equal(xdrStub.callCount, 1);
-      assert.deepEqual(xdrStub.args[0][0].data, data);
-      assert.deepEqual(xdrStub.args[0][0].success, successStub);
-      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].data, expectedData);
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, [
         'http://origin1.pubnub.com', 'v1', 'channel-registration', 'sub-key', 'subKey',
@@ -197,30 +222,12 @@ describe('#components/networking', () => {
       ]);
     });
 
-    it('passes arguments to the xdr module', () => {
-      let xdrStub = sinon.stub();
-      let successStub = sinon.stub();
-      let failStub = sinon.stub();
-      let callbackStub = sinon.stub();
-      let data = { my: 'object' };
-
-      let keychain = new Keychain()
-        .setSubscribeKey('subKey')
-        .setPublishKey('pubKey');
-
-      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
-
-      networkingComponent.performChannelGroupOperation('', 'add', {
-        fail: failStub,
-        success: successStub,
-        callback: callbackStub,
-        data: data
-      });
+    it('passes arguments to the xdr module when channel-group is not passed', () => {
+      let expectedData = { base: 'params' };
+      networking.performChannelGroupOperation('', 'add', {}, callbackStub);
 
       assert.equal(xdrStub.callCount, 1);
-      assert.deepEqual(xdrStub.args[0][0].data, data);
-      assert.deepEqual(xdrStub.args[0][0].success, successStub);
-      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].data, expectedData);
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, [
         'http://origin1.pubnub.com', 'v1', 'channel-registration', 'sub-key', 'subKey',
@@ -229,29 +236,11 @@ describe('#components/networking', () => {
     });
 
     it('passes arguments to the xdr module when removing channels', () => {
-      let xdrStub = sinon.stub();
-      let successStub = sinon.stub();
-      let failStub = sinon.stub();
-      let callbackStub = sinon.stub();
-      let data = { my: 'object' };
-
-      let keychain = new Keychain()
-        .setSubscribeKey('subKey')
-        .setPublishKey('pubKey');
-
-      let networkingComponent = new Networking(xdrStub, keychain, undefined, 'origin1.pubnub.com');
-
-      networkingComponent.performChannelGroupOperation('cg1', 'remove', {
-        fail: failStub,
-        success: successStub,
-        callback: callbackStub,
-        data: data
-      });
+      let expectedData = { base: 'params' };
+      networking.performChannelGroupOperation('cg1', 'remove', {}, callbackStub);
 
       assert.equal(xdrStub.callCount, 1);
-      assert.deepEqual(xdrStub.args[0][0].data, data);
-      assert.deepEqual(xdrStub.args[0][0].success, successStub);
-      assert.deepEqual(xdrStub.args[0][0].fail, failStub);
+      assert.deepEqual(xdrStub.args[0][0].data, expectedData);
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, [
         'http://origin1.pubnub.com', 'v1', 'channel-registration', 'sub-key', 'subKey',

@@ -106,14 +106,13 @@ export default function createInstance(setup: setupObject): Object {
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ networking });
   let historyEndpoint = new HistoryEndpoint({ networking, decrypt });
+  let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
+  let publishEndpoints = new PublishEndpoints({ publishQueue, encrypt });
 
   let pushEndpoint = new PushEndpoint({ keychain, config, networking, error });
   let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, error, state: stateStorage });
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
-  let channelGroupEndpoints = new ChannelGroupEndpoints({ keychain, networking, config, error });
-
-  let publishEndpoints = new PublishEndpoints({ publishQueue, encrypt });
 
   let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, state: stateStorage });
 
@@ -132,6 +131,14 @@ export default function createInstance(setup: setupObject): Object {
       revoke: accessEndpoints.revoke.bind(accessEndpoints),
     },
 
+    channelGroups: {
+      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
+      deleteGroup: channelGroupEndpoints.removeGroup.bind(channelGroupEndpoints),
+      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
+      addChannel: channelGroupEndpoints.addChannel.bind(channelGroupEndpoints),
+      removeChannel: channelGroupEndpoints.addChannel.bind(channelGroupEndpoints)
+    },
+
     history: historyEndpoint.fetch.bind(historyEndpoint),
     time: timeEndpoint.fetch.bind(timeEndpoint),
     publish: publishEndpoints.publish.bind(publishEndpoints),
@@ -147,12 +154,17 @@ export default function createInstance(setup: setupObject): Object {
       sendPushNotification(args: Object) { return args;}
     },
 
-    channelGroups: {
-      listGroups(args: Object, callback: Function) { channelGroupEndpoints.listGroups(args, callback); },
-      deleteGroup(args: Object, callback: Function) { channelGroupEndpoints.removeGroup(args, callback); },
-      listChannels(args: Object, callback: Function) { channelGroupEndpoints.listChannels(args, callback); },
-      addChannel(args: Object, callback: Function) { channelGroupEndpoints.addChannel(args, callback); },
-      removeChannel(args: Object, callback: Function) { channelGroupEndpoints.removeChannel(args, callback); },
+    unsubscribe(args: Object, callback: Function) {
+      TIMETOKEN = 0;
+      SUB_RESTORE = 1;   // REVISIT !!!!
+
+      pubsubEndpoints.performUnsubscribe(args, callback);
+
+      CONNECT();
+    },
+
+    subscribe: function (args, callback) {
+
     },
 
     getCipherKey() {
@@ -207,20 +219,6 @@ export default function createInstance(setup: setupObject): Object {
       keychain.setAuthKey(auth);
       eventEmitter.emit('keychainChanged');
     },
-
-    unsubscribe(args: Object, callback: Function) {
-      TIMETOKEN = 0;
-      SUB_RESTORE = 1;   // REVISIT !!!!
-
-      pubsubEndpoints.performUnsubscribe(args, callback);
-
-      CONNECT();
-    },
-
-    subscribe: function (args, callback) {
-
-    },
-
 
     setUUID(uuid) {
       keychain.setUUID(uuid);
