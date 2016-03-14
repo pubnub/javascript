@@ -35,7 +35,7 @@ describe('push endpoints', () => {
     instance = new proxy({ networking, publishQueue });
   });
 
-  describe('#addDevice', () => {
+  describe('#addDeviceToChannel', () => {
     it('calls #__provisionDevice', () => {
       const args = {
         device: 'device1',
@@ -45,14 +45,14 @@ describe('push endpoints', () => {
       const expectedArgs = _.extend({}, { operation: 'add' }, args);
       const provisionStub = sinon.stub(instance, '__provisionDevice');
 
-      instance.addDevice(args);
+      instance.addDeviceToChannel(args);
 
       assert.equal(provisionStub.called, 1);
       assert.deepEqual(provisionStub.args[0][0], expectedArgs);
     });
   });
 
-  describe('#removeDevice', () => {
+  describe('#removeDeviceFromChannel', () => {
     it('calls #__provisionDevice', () => {
       let args = {
         device: 'device1',
@@ -62,7 +62,7 @@ describe('push endpoints', () => {
       const expectedArgs = _.extend({}, { operation: 'remove' }, args);
       const provisionStub = sinon.stub(instance, '__provisionDevice');
 
-      instance.removeDevice(args);
+      instance.removeDeviceFromChannel(args);
 
       assert.equal(provisionStub.called, 1);
       assert.deepEqual(provisionStub.args[0][0], expectedArgs);

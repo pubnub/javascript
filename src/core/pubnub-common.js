@@ -151,8 +151,8 @@ export default function createInstance(setup: setupObject): Object {
     },
 
     push: {
-      addDevice: pushEndpoints.addDevice.bind(pushEndpoints),
-      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
+      addDeviceToChannel: pushEndpoints.addDeviceToChannel.bind(pushEndpoints),
+      removeDeviceFromChannel: pushEndpoints.removeDeviceFromChannel.bind(pushEndpoints),
       sendNotification: pushEndpoints.sendNotification.bind(pushEndpoints),
     },
 

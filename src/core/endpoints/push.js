@@ -33,13 +33,13 @@ export default class {
     this._r = new Responders('endpoints/push');
   }
 
-  addDevice(args: modifyDeviceArgs, callback: Function) {
+  addDeviceToChannel(args: modifyDeviceArgs, callback: Function) {
     let { pushGateway, device, channel } = args;
     const payload = { operation: 'add', pushGateway, device, channel };
     this.__provisionDevice(payload, callback);
   }
 
-  removeDevice(args: modifyDeviceArgs, callback: Function) {
+  removeDeviceFromChannel(args: modifyDeviceArgs, callback: Function) {
     let { pushGateway, device, channel } = args;
     const payload = { operation: 'remove', pushGateway, device, channel };
     this.__provisionDevice(payload, callback);
