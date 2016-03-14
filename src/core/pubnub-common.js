@@ -150,9 +150,9 @@ export default function createInstance(setup: setupObject): Object {
     },
 
     push: {
-      addDeviceToChannel: pushEndpoints.addDeviceToChannel.bind(pushEndpoints),
-      removeDeviceFromChannel: pushEndpoints.removeDeviceFromChannel.bind(pushEndpoints),
-      sendNotification: pushEndpoints.sendNotification.bind(pushEndpoints),
+      addDeviceToPushChannel: pushEndpoints.addDeviceToPushChannel.bind(pushEndpoints),
+      removeDeviceFromPushChannel: pushEndpoints.removeDeviceFromPushChannel.bind(pushEndpoints),
+      send: pushEndpoints.send.bind(pushEndpoints),
     },
 
     // dark zone

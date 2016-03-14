@@ -18,12 +18,15 @@ describe('push endpoints', () => {
 
   let callbackStub;
   let validateMock;
+  let queueItemStub;
 
   beforeEach(() => {
     networking = new Networking({});
     publishQueue = new PublishQueue({ networking });
     callbackStub = sinon.stub();
     validateMock = sinon.stub().returns('vaidateResponder');
+
+    queueItemStub = sinon.stub(publishQueue, 'queueItem');
 
     let respondersClass = Responders;
     respondersClass.prototype.validationError = validateMock;
@@ -35,7 +38,7 @@ describe('push endpoints', () => {
     instance = new proxy({ networking, publishQueue });
   });
 
-  describe('#addDeviceToChannel', () => {
+  describe('#addDeviceToPushChannel', () => {
     it('calls #__provisionDevice', () => {
       const args = {
         device: 'device1',
@@ -45,14 +48,14 @@ describe('push endpoints', () => {
       const expectedArgs = _.extend({}, { operation: 'add' }, args);
       const provisionStub = sinon.stub(instance, '__provisionDevice');
 
-      instance.addDeviceToChannel(args);
+      instance.addDeviceToPushChannel(args, callbackStub);
 
       assert.equal(provisionStub.called, 1);
-      assert.deepEqual(provisionStub.args[0][0], expectedArgs);
+      assert.deepEqual(provisionStub.args[0], [expectedArgs, callbackStub]);
     });
   });
 
-  describe('#removeDeviceFromChannel', () => {
+  describe('#removeDeviceFromPushChannel', () => {
     it('calls #__provisionDevice', () => {
       let args = {
         device: 'device1',
@@ -62,10 +65,46 @@ describe('push endpoints', () => {
       const expectedArgs = _.extend({}, { operation: 'remove' }, args);
       const provisionStub = sinon.stub(instance, '__provisionDevice');
 
-      instance.removeDeviceFromChannel(args);
+      instance.removeDeviceFromPushChannel(args, callbackStub);
 
       assert.equal(provisionStub.called, 1);
-      assert.deepEqual(provisionStub.args[0][0], expectedArgs);
+      assert.deepEqual(provisionStub.args[0], [expectedArgs, callbackStub]);
+    });
+  });
+
+  describe('#send', () => {
+    it('errors if channel is not passed', () => {
+      let args = {};
+      instance.send(args, callbackStub);
+      assert.equal(validateMock.called, 1);
+      assert.equal(callbackStub.args[0][0], 'vaidateResponder');
+      assert.equal(validateMock.args[0][0], 'Missing Push Channel (channel)');
+    });
+
+    it('errors if none of the payloads are passed', () => {
+      let args = { channel: 'push-channel' };
+      instance.send(args, callbackStub);
+      assert.equal(validateMock.called, 1);
+      assert.equal(callbackStub.args[0][0], 'vaidateResponder');
+      assert.equal(validateMock.args[0][0], 'Missing Push Payload (apns, gcm, mpns)');
+    });
+
+    it('adds an item to the publish queue', () => {
+      let args = {
+        channel: 'channel1',
+        apns: 'apns',
+        gcm: 'gcm',
+        mpns: 'mpns'
+      };
+
+      instance.send(args, callbackStub);
+      let queueItem = queueItemStub.args[0][0];
+
+      assert.deepEqual(queueItem.payload, { pn_apns: 'apns', pn_gcm: 'gcm', pn_mpns: 'mpns' });
+      assert.equal(queueItem.httpMethod, 'GET');
+      assert.equal(queueItem.channel, 'channel1');
+      assert.deepEqual(queueItem.params, {});
+      assert.deepEqual(queueItem.callback, callbackStub);
     });
   });
 
