@@ -144,10 +144,13 @@ export default function createInstance(setup: setupObject): Object {
     publish: publishEndpoints.publish.bind(publishEndpoints),
 
     presence: {
-      hereNow(args: Object, callback: Function) { presenceEndpoints.hereNow(args, callback); },
-      whereNow(args: Object, callback: Function) { presenceEndpoints.whereNow(args, callback); },
-      state(args:Object, callback: Function) { presenceEndpoints.performState(args, callback); },
+      hereNow: presenceEndpoints.hereNow.bind(presenceEndpoints),
+      whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
+      getState: presenceEndpoints.getState.bind(presenceEndpoints),
+      setState: presenceEndpoints.setState.bind(presenceEndpoints),
     },
+
+    // dark zone
 
     push: {
       provisionDevice(args: Object) { pushEndpoint.provisionDevice(args); },

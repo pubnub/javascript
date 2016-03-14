@@ -265,17 +265,45 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  fetchWhereNow(uuid: string, { data, success, fail }: commonXDR) {
+  fetchWhereNow(uuid: string | null, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    let data: Object = this.prepareParams({});
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    if (!uuid) {
+      uuid = this._keychain.getUUID();
+    }
+
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub_key', this._keychain.getSubscribeKey(),
       'uuid', utils.encode(uuid),
     ];
 
-    this._xdr({ data, success, fail, url });
+    this._xdr({ data, callback, url });
   }
 
-  fetchHereNow(channel: string, channelGroup: string, { data, success, fail }: commonXDR) {
+  fetchHereNow(channel: string, channelGroup: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    let data = this.prepareParams(incomingData);
+
+    if (this._keychain.getUUID()) {
+      data.uuid = this._keychain.getUUID();
+    }
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub_key', this._keychain.getSubscribeKey(),
@@ -291,7 +319,7 @@ export default class {
       url.push(',');
     }
 
-    this._xdr({ data, success, fail, url });
+    this._xdr({ data, callback, url });
   }
 
   performPublish(channel: string, msg: string, incomingData: Object, mode: string, callback: Function) {
@@ -325,10 +353,6 @@ export default class {
     } else {
       this._xdr({ data, callback, url });
     }
-  }
-
-  getOrigin(): string {
-    return this._providedFQDN;
   }
 
   getStandardOrigin(): string {

@@ -1,9 +1,8 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import Config from '../components/config';
-import Keychain from '../components/keychain';
 import State from '../components/state';
+import Logger from '../components/logger';
 import Responders from '../presenters/responders';
 
 import utils from '../utils';
@@ -11,92 +10,68 @@ import constants from '../../../defaults.json';
 
 type presenceConstruct = {
   networking: Networking,
-  config: Config,
   state: State,
-  keychain: Keychain,
-  error: Function
 };
+
+type hereNowArguments = {
+  channel: string,
+  channelGroup: string,
+  uuids: ?boolean,
+  state: ?boolean
+}
+
+type whereNowArguments = {
+  uuid: string,
+}
 
 export default class {
   _networking: Networking;
-  _config: Config;
   _state: State;
-  _keychain: Keychain;
-  _error: Function;
+  _r: Responders;
+  _l: Logger;
 
-  constructor({ networking, config, keychain, state, error }: presenceConstruct) {
+  constructor({ networking, state }: presenceConstruct) {
     this._networking = networking;
-    this._config = config;
-    this._keychain = keychain;
     this._state = state;
-    this._error = error;
+    this._r = new Responders('#endpoints/presence');
+    this._l = Logger.getLogger('#endpoints/presence');
   }
 
-  hereNow(args: Object, argumentCallback: Function) {
-    let callback = args.callback || argumentCallback;
-    let err = args.error || function () {};
-    let authkey = args.auth_key || this._keychain.getAuthKey();
-    let channel = args.channel;
-    let channelGroup = args.channel_group;
-    let uuids = ('uuids' in args) ? args.uuids : true;
-    let state = args.state;
-    let data = {
-      uuid: this._keychain.getUUID(),
-      auth: authkey,
-    };
+  hereNow(args: hereNowArguments, callback: Function) {
+    let { channel, channelGroup, uuids = true, state } = args;
+    let data = {};
 
     if (!uuids) data.disable_uuids = 1;
     if (state) data.state = 1;
 
     // Make sure we have a Channel
-    if (!callback) return this._error('Missing Callback');
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
 
     if (channelGroup) {
       data['channel-group'] = channelGroup;
     }
 
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
-    }
-
-    this._networking.fetchHereNow(channel, channelGroup, {
-      data: this._networking.prepareParams(data),
-      success(response) {
-        Responders.callback(response, callback, err);
-      },
-      fail(response) {
-        Responders.error(response, err);
-      },
-    });
+    this._networking.fetchHereNow(channel, channelGroup, data, callback);
   }
 
-  whereNow(args: Object, argumentCallback: Function) {
-    let callback = args.callback || argumentCallback;
-    let err = args.error || function () {};
-    let authKey = args.auth_key || this._keychain.getAuthKey();
-    let uuid = args.uuid || this._keychain.getUUID();
-    let data = {
-      auth: authKey,
-    };
+  whereNow(args: whereNowArguments, callback: Function) {
+    let { uuid } = args;
 
-    // Make sure we have a Channel
-    if (!callback) return this._error('Missing Callback');
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
+    if (!callback) {
+      return this._l.error('Missing Callback');
     }
 
-    this._networking.fetchWhereNow(uuid, {
-      data: this._networking.prepareParams(data),
-      success(response) {
-        Responders.callback(response, callback, err);
-      },
-      fail(response) {
-        Responders.error(response, err);
-      },
-    });
+    this._networking.fetchWhereNow(uuid, callback);
+  }
+
+  getState() {
+    // no-op
+  }
+
+  setState() {
+    // no-op
   }
 
   heartbeat(args: Object) {
