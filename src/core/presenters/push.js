@@ -1,3 +1,4 @@
+/*
 function PNmessage(args) {
   let msg = args || { apns: {} };
 
@@ -66,3 +67,4 @@ getApnsMessageObject(obj) {
   }
   return x;
 },
+*/

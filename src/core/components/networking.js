@@ -8,8 +8,11 @@ import Config from './config.js';
 import utils from '../utils';
 
 type commonXDR = { data: Object, callback: Function };
-type typedXDR = { data: Object, success: Function, fail: Function, method: string };
-type superagentPayload = { data: Object, url: Array<string | number>, callback: Function};
+type superagentPayload = {
+  data: Object,
+  url: Array<string | number>,
+  callback: Function,
+};
 
 export default class {
   _sendBeacon: Function;
@@ -290,7 +293,15 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performPublish(channel: string, msg: string, { data, callback, success, fail, mode }: typedXDR) {
+  performPublish(channel: string, msg: string, incomingData: Object, mode: string, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    if (!this._keychain.getPublishKey()) {
+      return callback(this._r.validationError('Missing Publish Key'));
+    }
+
     let url = [
       this.getStandardOrigin(), 'publish',
       this._keychain.getPublishKey(), this._keychain.getSubscribeKey(),
@@ -298,7 +309,21 @@ export default class {
       0, utils.encode(msg),
     ];
 
-    this._xdr({ data, callback, success, fail, url, mode });
+    let data = this.prepareParams(incomingData);
+
+    if (this._keychain.getUUID()) {
+      data.uuid = this._keychain.getUUID();
+    }
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    if (mode === 'POST') {
+      this._postXDR({ data, callback, url });
+    } else {
+      this._xdr({ data, callback, url });
+    }
   }
 
   getOrigin(): string {
@@ -313,12 +338,23 @@ export default class {
     return this._subscribeOrigin;
   }
 
+  _postXDR({ data, url, callback}: superagentPayload) {
+    let superagentConstruct = superagent
+      .post(url.join('/'))
+      .query(data);
+    this._abstractedXDR(superagentConstruct, callback);
+  }
+
   _xdr({ data, url, callback}: superagentPayload) {
-    superagent
+    let superagentConstruct = superagent
       .get(url.join('/'))
-      .query(data)
+      .query(data);
+    this._abstractedXDR(superagentConstruct, callback);
+  }
+
+  _abstractedXDR(superagentConstruct: superagent, callback: Function) {
+    superagentConstruct
       .type('json')
-      // .timeout(this._requestTimeout)
       .end(function (err, resp) {
         if (err) return callback(err, null);
 
@@ -330,5 +366,4 @@ export default class {
         callback(null, JSON.parse(resp.text));
       });
   }
-
 }

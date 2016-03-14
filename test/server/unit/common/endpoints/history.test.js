@@ -1,9 +1,5 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
-/*
-  - callback multiplexing x 2
-  - error || blackhole x 2
-*/
 
 import Networking from '../../../../../src/core/components/networking';
 import Responders from '../../../../../src/core/presenters/responders';

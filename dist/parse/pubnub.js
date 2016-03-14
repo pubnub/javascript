@@ -4287,10 +4287,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _connectivity2 = _interopRequireDefault(_connectivity);
 
-	var _responders = __webpack_require__(52);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
 	var _time = __webpack_require__(63);
 
 	var _time2 = _interopRequireDefault(_time);
@@ -4311,22 +4307,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _replay = __webpack_require__(69);
-
-	var _replay2 = _interopRequireDefault(_replay);
-
-	var _channel_groups = __webpack_require__(70);
+	var _channel_groups = __webpack_require__(69);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _pubsub = __webpack_require__(71);
+	var _pubsub = __webpack_require__(70);
 
 	var _pubsub2 = _interopRequireDefault(_pubsub);
+
+	var _publish = __webpack_require__(71);
+
+	var _publish2 = _interopRequireDefault(_publish);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var packageJSON = __webpack_require__(24);
-	var constants = __webpack_require__(55);
 	var utils = __webpack_require__(54);
 
 	var DEF_WINDOWING = 10; // MILLISECONDS.
@@ -4351,7 +4346,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  };
 
-	  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.auth_key || '').setSecretKey(setup.secret_key || '').setSubscribeKey(setup.subscribe_key).setPublishKey(setup.publish_key).setCipherKey(setup.cipher_key);
+	  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.authKey || '').setSecretKey(setup.secretKey || '').setSubscribeKey(setup.subscribeKey).setPublishKey(setup.publishKey).setCipherKey(setup.cipherKey);
 
 	  keychain.setUUID(setup.uuid || !setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || _uuid2.default.v4());
 
@@ -4385,14 +4380,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var eventEmitter = (0, _eventEmitter2.default)({});
 
 	  // initalize the endpoints
-	  var timeEndpoint = new _time2.default({ keychain: keychain, config: config, networking: networking });
+	  var timeEndpoint = new _time2.default({ networking: networking });
+	  var historyEndpoint = new _history2.default({ networking: networking, decrypt: decrypt });
+
 	  var pushEndpoint = new _push2.default({ keychain: keychain, config: config, networking: networking, error: error });
 	  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, error: error, state: stateStorage });
-	  var historyEndpoint = new _history2.default({ keychain: keychain, networking: networking, error: error, decrypt: decrypt });
+
 	  var accessEndpoints = new _access2.default({ keychain: keychain, config: config, networking: networking, error: error, hmac_SHA256: hmac_SHA256 });
-	  var replayEndpoint = new _replay2.default({ keychain: keychain, networking: networking, error: error });
 	  var channelGroupEndpoints = new _channel_groups2.default({ keychain: keychain, networking: networking, config: config, error: error });
-	  var pubsubEndpoints = new _pubsub2.default({ keychain: keychain, networking: networking, presenceEndpoints: presenceEndpoints, error: error, config: config, publishQueue: publishQueue, state: stateStorage });
+
+	  var publishEndpoints = new _publish2.default({ publishQueue: publishQueue, encrypt: encrypt });
+
+	  var pubsubEndpoints = new _pubsub2.default({ keychain: keychain, networking: networking, presenceEndpoints: presenceEndpoints, error: error, config: config, state: stateStorage });
 
 	  var presenceHeartbeat = new _presence_heartbeat2.default(config, stateStorage, presenceEndpoints, eventEmitter, error);
 	  var connectivity = new _connectivity2.default({ eventEmitter: eventEmitter, networking: networking, timeEndpoint: timeEndpoint });
@@ -4401,16 +4400,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    config.setHeartbeatInterval(1);
 	  }
 
-	  // Announce Leave Event
 	  var SELF = {
-	    history: historyEndpoint.fetchHistory.bind(historyEndpoint),
-	    replay: function replay(args, callback) {
-	      replayEndpoint.performReplay(args, callback);
-	    },
-	    time: function time(callback) {
-	      timeEndpoint.fetchTime(callback);
+
+	    accessManager: {
+	      grant: accessEndpoints.grant.bind(accessEndpoints),
+	      audit: accessEndpoints.audit.bind(accessEndpoints),
+	      revoke: accessEndpoints.revoke.bind(accessEndpoints)
 	    },
 
+	    history: historyEndpoint.fetch.bind(historyEndpoint),
+	    time: timeEndpoint.fetch.bind(timeEndpoint),
+	    publish: publishEndpoints.publish.bind(publishEndpoints),
 
 	    presence: {
 	      hereNow: function hereNow(args, callback) {
@@ -4421,15 +4421,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      },
 	      state: function state(args, callback) {
 	        presenceEndpoints.performState(args, callback);
-	      }
-	    },
-
-	    accessManager: {
-	      grant: function grant(args, callback) {
-	        accessEndpoints.performGrant(args, callback);
-	      },
-	      audit: function audit(args, callback) {
-	        accessEndpoints.performAudit(args, callback);
 	      }
 	    },
 
@@ -4472,57 +4463,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	    rawDecrypt: function rawDecrypt(input, key) {
 	      return decrypt(input, key);
 	    },
-
-
 	    getHeartbeat: function getHeartbeat() {
 	      return config.getPresenceTimeout();
 	    },
-
 	    setHeartbeat: function setHeartbeat(heartbeat, heartbeat_interval) {
 	      config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
 	      config.setHeartbeatInterval(heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
 	      if (config.getPresenceTimeout() === 2) {
 	        config.setHeartbeatInterval(1);
 	      }
-	      CONNECT();
 
 	      // emit the event
 	      eventEmitter.emit('presenceHeartbeatChanged');
 	    },
-
 	    getHeartbeatInterval: function getHeartbeatInterval() {
 	      return config.getHeartbeatInterval();
 	    },
-	    setHeartbeatInterval: function setHeartbeatInterval(heartbeat_interval) {
-	      config.setHeartbeatInterval(heartbeat_interval);
+	    setHeartbeatInterval: function setHeartbeatInterval(heartbeatInterval) {
+	      config.setHeartbeatInterval(heartbeatInterval);
 	      eventEmitter.emit('presenceHeartbeatChanged');
 	    },
-	    get_version: function get_version() {
+	    getVersion: function getVersion() {
 	      return packageJSON.version;
 	    },
-	    getGcmMessageObject: function getGcmMessageObject(obj) {
-	      return {
-	        data: obj
-	      };
-	    },
-	    getApnsMessageObject: function getApnsMessageObject(obj) {
-	      var x = {
-	        aps: { badge: 1, alert: '' }
-	      };
-	      for (var k in obj) {
-	        k[x] = obj[k];
-	      }
-	      return x;
-	    },
-	    _addParam: function _addParam(key, val) {
+	    addParam: function addParam(key, val) {
 	      networking.addCoreParam(key, val);
 	    },
-	    auth: function auth(_auth) {
-	      keychain.setAuthKey(_auth);
-	      CONNECT();
-	    },
-	    publish: function publish(args, callback) {
-	      pubsubEndpoints.performPublish(args, callback);
+	    setAuthKey: function setAuthKey(auth) {
+	      keychain.setAuthKey(auth);
+	      eventEmitter.emit('keychainChanged');
 	    },
 	    unsubscribe: function unsubscribe(args, callback) {
 	      TIMETOKEN = 0;
@@ -4536,30 +4505,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    subscribe: function subscribe(args, callback) {},
 
-	    revoke: function revoke(args, callback) {
-	      args['read'] = false;
-	      args['write'] = false;
-	      SELF['grant'](args, callback);
-	    },
-
 	    setUUID: function setUUID(uuid) {
 	      keychain.setUUID(uuid);
-	      CONNECT();
+	      eventEmitter.emit('keychainChanged');
 	    },
-
 	    getUUID: function getUUID() {
 	      return keychain.getUUID();
 	    },
-
 	    getSubscribedChannels: function getSubscribedChannels() {
 	      return stateStorage.generate_channel_list(true);
 	    },
-
 	    stopTimers: function stopTimers() {
 	      connectivity.stop();
 	      presenceHeartbeat.stop();
 	    },
-
 	    shutdown: function (_shutdown) {
 	      function shutdown() {
 	        return _shutdown.apply(this, arguments);
@@ -5292,8 +5251,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  }, {
 	    key: 'prepareParams',
-	    value: function prepareParams() {
-	      var data = {};
+	    value: function prepareParams(data) {
+	      if (!data) data = {};
+
+	      _utils2.default.each(this._coreParams, function (key, value) {
+	        if (!(key in data)) data[key] = value;
+	      });
 
 	      if (this._config.isInstanceIdEnabled()) {
 	        data.instanceid = this._keychain.getInstanceId();
@@ -5351,12 +5314,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  }, {
 	    key: 'fetchHistory',
-	    value: function fetchHistory(channel, data, callback) {
+	    value: function fetchHistory(channel, incomingData, callback) {
 	      if (!this._keychain.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
 	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(channel)];
+
+	      var data = this.prepareParams(incomingData);
 
 	      if (this._keychain.getAuthKey()) {
 	        data.auth = this._keychain.getAuthKey();
@@ -5493,7 +5458,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'fetchTime',
 	    value: function fetchTime(callback) {
-	      var data = this.prepareParams();
+	      var data = this.prepareParams({});
 	      var url = [this.getStandardOrigin(), 'time', 0];
 
 	      if (this._keychain.getUUID()) {
@@ -5540,16 +5505,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performPublish',
-	    value: function performPublish(channel, msg, _ref11) {
-	      var data = _ref11.data;
-	      var callback = _ref11.callback;
-	      var success = _ref11.success;
-	      var fail = _ref11.fail;
-	      var mode = _ref11.mode;
+	    value: function performPublish(channel, msg, incomingData, mode, callback) {
+	      if (!this._keychain.getSubscribeKey()) {
+	        return callback(this._r.validationError('Missing Subscribe Key'));
+	      }
+
+	      if (!this._keychain.getPublishKey()) {
+	        return callback(this._r.validationError('Missing Publish Key'));
+	      }
 
 	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, _utils2.default.encode(channel), 0, _utils2.default.encode(msg)];
 
-	      this._xdr({ data: data, callback: callback, success: success, fail: fail, url: url, mode: mode });
+	      var data = this.prepareParams(incomingData);
+
+	      if (this._keychain.getUUID()) {
+	        data.uuid = this._keychain.getUUID();
+	      }
+
+	      if (this._keychain.getAuthKey()) {
+	        data.auth = this._keychain.getAuthKey();
+	      }
+
+	      if (mode === 'POST') {
+	        this._postXDR({ data: data, callback: callback, url: url });
+	      } else {
+	        this._xdr({ data: data, callback: callback, url: url });
+	      }
 	    }
 	  }, {
 	    key: 'getOrigin',
@@ -5567,15 +5548,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this._subscribeOrigin;
 	    }
 	  }, {
+	    key: '_postXDR',
+	    value: function _postXDR(_ref11) {
+	      var data = _ref11.data;
+	      var url = _ref11.url;
+	      var callback = _ref11.callback;
+
+	      var superagentConstruct = _superagent2.default.post(url.join('/')).query(data);
+	      this._abstractedXDR(superagentConstruct, callback);
+	    }
+	  }, {
 	    key: '_xdr',
 	    value: function _xdr(_ref12) {
 	      var data = _ref12.data;
 	      var url = _ref12.url;
 	      var callback = _ref12.callback;
 
-	      _superagent2.default.get(url.join('/')).query(data).type('json')
-	      // .timeout(this._requestTimeout)
-	      .end(function (err, resp) {
+	      var superagentConstruct = _superagent2.default.get(url.join('/')).query(data);
+	      this._abstractedXDR(superagentConstruct, callback);
+	    }
+	  }, {
+	    key: '_abstractedXDR',
+	    value: function _abstractedXDR(superagentConstruct, callback) {
+	      superagentConstruct.type('json').end(function (err, resp) {
 	        if (err) return callback(err, null);
 
 	        if ((typeof resp === 'undefined' ? 'undefined' : _typeof(resp)) === 'object' && resp.error) {
@@ -7781,6 +7776,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+	// disable one-at-a-time publishing queue and publish on call.
+
 	var PublishItem = function PublishItem() {
 	  _classCallCheck(this, PublishItem);
 	};
@@ -7788,53 +7785,70 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _class = function () {
 	  function _class(_ref) {
 	    var networking = _ref.networking;
+	    var _ref$parallelPublish = _ref.parallelPublish;
+	    var parallelPublish = _ref$parallelPublish === undefined ? false : _ref$parallelPublish;
 
 	    _classCallCheck(this, _class);
 
 	    this._publishQueue = [];
 	    this._networking = networking;
+	    this._parallelPublish = parallelPublish;
+	    this._isSending = false;
 	  }
 
 	  _createClass(_class, [{
-	    key: 'createQueueable',
-	    value: function createQueueable() {
+	    key: 'newQueueable',
+	    value: function newQueueable() {
 	      return new PublishItem();
 	    }
 	  }, {
-	    key: 'queuePublishItem',
-	    value: function queuePublishItem(publishItem) {
+	    key: 'queueItem',
+	    value: function queueItem(publishItem) {
 	      this._publishQueue.push(publishItem);
+	      this._sendNext();
 	    }
 	  }, {
-	    key: 'sendOneMessage',
-	    value: function sendOneMessage() {
-	      var publish = this._publishQueue.shift();
+	    key: '_sendNext',
+	    value: function _sendNext() {
+	      // if we have nothing to send, return right away.
+	      if (this._publishQueue.length === 0) {
+	        return;
+	      }
 
-	      this._networking.performPublish(publish.channel, publish.payload, {
-	        mode: publish.httpMethod,
-	        success: publish.onSuccess,
-	        fail: publish.onFail,
-	        data: this._networking.prepareParams(publish.params)
-	      });
-	    }
+	      // if parallel publish is enabled, always send.
+	      if (this._parallelPublish) {
+	        return this.__publishNext();
+	      }
 
-	    //
+	      // if something is sending, wait for it to finish up.
+	      if (this._isSending) {
+	        return;
+	      }
 
-	  }, {
-	    key: 'getQueueLength',
-	    value: function getQueueLength() {
-	      return this._publishQueue.length;
+	      this._isSending = true;
+	      this.__publishNext();
 	    }
 	  }, {
-	    key: 'setIsSending',
-	    value: function setIsSending(sendingValue) {
-	      this._isSending = sendingValue;
-	      return this;
-	    }
-	  }, {
-	    key: 'isSending',
-	    value: function isSending() {
-	      return this._isSending;
+	    key: '__publishNext',
+	    value: function __publishNext() {
+	      var _this = this;
+
+	      var _publishQueue$shift = this._publishQueue.shift();
+
+	      var channel = _publishQueue$shift.channel;
+	      var payload = _publishQueue$shift.payload;
+	      var params = _publishQueue$shift.params;
+	      var httpMethod = _publishQueue$shift.httpMethod;
+	      var callback = _publishQueue$shift.callback;
+
+
+	      var onPublish = function onPublish(err, response) {
+	        _this._isSending = false;
+	        _this._sendNext();
+	        callback(err, response);
+	      };
+
+	      this._networking.performPublish(channel, payload, params, httpMethod, onPublish);
 	    }
 	  }]);
 
@@ -8294,8 +8308,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var moduleLogger = function () {
-	  function moduleLogger() {
+	  function moduleLogger(moduleName) {
 	    _classCallCheck(this, moduleLogger);
+
+	    this._moduleName = moduleName;
 	  }
 
 	  _createClass(moduleLogger, [{
@@ -8760,8 +8776,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
-	    key: 'fetchTime',
-	    value: function fetchTime(callback) {
+	    key: 'fetch',
+	    value: function fetch(callback) {
 	      this._networking.fetchTime(function (err, response) {
 	        if (err) return callback(err);
 	        callback(null, response[0]);
@@ -8802,8 +8818,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	// include time token for each history call
-
+	// TODO:
 	var _class = function () {
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -8814,11 +8829,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._networking = networking;
 	    this._decrypt = decrypt;
 	    this._r = new _responders2.default('#endpoints/history');
+	    this._l = _logger2.default.getLogger('#endpoints/history');
 	  }
 
 	  _createClass(_class, [{
-	    key: 'fetchHistory',
-	    value: function fetchHistory(args, callback) {
+	    key: 'fetch',
+	    value: function fetch(args, callback) {
 	      var _this = this;
 
 	      var channel = args.channel;
@@ -8831,7 +8847,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var count = args.count || args.limit || 100;
 	      var reverse = args.reverse || 'false';
-	      var returnStringifiedTimetokens = args.returnStringifiedTimetokens || false;
+	      var stringMessageToken = args.stringMessageToken || false;
 
 	      if (!channel && !channelGroup) {
 	        return callback(this._r.validationError('Missing channel and/or channel group'));
@@ -8852,8 +8868,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (start) params.start = start;
 	      if (end) params.end = end;
-	      if (includeToken) params.includeToken = 'true';
-	      if (returnStringifiedTimetokens) params.string_message_token = 'true';
+	      if (includeToken) params.include_token = 'true';
+	      if (stringMessageToken) params.string_message_token = 'true';
 
 	      // Send Message
 	      this._networking.fetchHistory(channel, params, function (err, resp) {
@@ -8868,22 +8884,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var messages = response[0];
 	      var decryptedMessages = [];
-	      messages.forEach(function (message) {
-	        var decryptedMessage = _this2._decrypt(message, cipherKey);
-	        var timetoken = message.timetoken;
-
-
+	      messages.forEach(function (payload) {
 	        if (includeToken) {
+	          var decryptedMessage = _this2._decrypt(payload.message, cipherKey);
+	          var timetoken = payload.timetoken;
+
 	          try {
 	            decryptedMessages.push({ timetoken: timetoken, message: JSON.parse(decryptedMessage) });
 	          } catch (e) {
 	            decryptedMessages.push({ timetoken: timetoken, message: decryptedMessage });
 	          }
 	        } else {
+	          var _decryptedMessage = _this2._decrypt(payload, cipherKey);
 	          try {
-	            decryptedMessages.push(JSON.parse(decryptedMessage));
+	            decryptedMessages.push(JSON.parse(_decryptedMessage));
 	          } catch (e) {
-	            decryptedMessages.push(decryptedMessage);
+	            decryptedMessages.push(_decryptedMessage);
 	          }
 	        }
 	      });
@@ -11206,8 +11222,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
-	    key: 'performGrant',
-	    value: function performGrant(args, argumentCallback) {
+	    key: 'revoke',
+	    value: function revoke(args, argumentCallback) {
+	      args['read'] = false;
+	      args['write'] = false;
+	      SELF['grant'](args, callback);
+	    }
+	  }, {
+	    key: 'grant',
+	    value: function grant(args, argumentCallback) {
 	      var callback = args.callback || argumentCallback;
 	      var err = args.error || function () {};
 	      var channel = args.channel || args.channels;
@@ -11274,8 +11297,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    }
 	  }, {
-	    key: 'performAudit',
-	    value: function performAudit(args, argumentCallback) {
+	    key: 'audit',
+	    value: function audit(args, argumentCallback) {
 	      var callback = args.callback || argumentCallback;
 	      var err = args.error || function () {};
 	      var channel = args.channel;
@@ -11334,97 +11357,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 69 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(43);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _keychain = __webpack_require__(51);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	var _responders = __webpack_require__(52);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var keychain = _ref.keychain;
-	    var error = _ref.error;
-
-	    _classCallCheck(this, _class);
-
-	    this._networking = networking;
-	    this._keychain = keychain;
-	    this._error = error;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'performReplay',
-	    value: function performReplay(args, argumentCallback) {
-	      var stop = args.stop;
-	      var start = args.start;
-	      var end = args.end;
-	      var reverse = args.reverse;
-	      var limit = args.limit;
-	      var source = args.source;
-
-
-	      var callback = argumentCallback || args.callback || function () {};
-	      var auth_key = args.auth_key || this._keychain.getAuthKey();
-	      var destination = args.destination;
-	      var err = args.error || function () {};
-	      var data = {};
-
-	      // Check User Input
-	      if (!source) return this._error('Missing Source Channel');
-	      if (!destination) return this._error('Missing Destination Channel');
-	      if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-
-	      // Setup URL Params
-	      if (stop) data.stop = 'all';
-	      if (reverse) data.reverse = 'true';
-	      if (start) data.start = start;
-	      if (end) data.end = end;
-	      if (limit) data.count = limit;
-
-	      data.auth = auth_key;
-
-	      // Start (or Stop) Replay!
-	      this._networking.fetchReplay(source, destination, {
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail() {
-	          callback([0, 'Disconnected']);
-	        },
-	        data: this._networking.prepareParams(data)
-	      });
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
-/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -11565,7 +11497,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 71 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -11640,80 +11572,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
-	    key: '__publish',
-	    value: function __publish(next) {
-	      if (NO_WAIT_FOR_PENDING) {
-	        if (!PUB_QUEUE.length) return;
-	      } else {
-	        if (next) PUB_QUEUE.sending = 0;
-	        if (PUB_QUEUE.sending || !PUB_QUEUE.length) return;
-	        PUB_QUEUE.sending = 1;
-	      }
-
-	      xdr(PUB_QUEUE.shift());
-	    }
-	  }, {
-	    key: 'performPublish',
-	    value: function performPublish(args, argCallback) {
-	      var _this = this;
-
-	      var msg = args.message;
-	      if (!msg) return this._error('Missing Message');
-
-	      var callback = argCallback || args.callback || function () {};
-	      var channel = args.channel;
-	      var authKey = args.auth_key || this._keychain.getAuthKey();
-	      var cipher_key = args.cipher_key;
-	      var err = args.error || function () {};
-	      var post = args.post || false;
-	      var store = args.store_in_history || true;
-	      var params = {
-	        uuid: this._keychain.getUUID(),
-	        auth: authKey
-	      };
-
-	      if (!channel) return this._error('Missing Channel');
-	      if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-
-	      if (msg['getPubnubMessage']) {
-	        msg = msg['getPubnubMessage']();
-	      }
-
-	      // If trying to send Object
-	      msg = JSON.stringify(encrypt(msg, cipher_key));
-
-	      if (!store) {
-	        params.store = '0';
-	      }
-
-	      if (this._config.isInstanceIdEnabled()) {
-	        params.instanceid = this._keychain.getInstanceId();
-	      }
-
-	      var publishItem = this._publishQueue.createQueueable();
-	      publishItem.channel = channel;
-	      publishItem.params = params;
-	      publishItem.httpMethod = post ? 'POST' : 'GET';
-	      publishItem.onFail = function (response) {
-	        _responders2.default.error(response, err);
-	        _this.__publish(true);
-	      };
-	      publishItem.onSuccess = function (response) {
-	        _responders2.default.callback(response, callback, err);
-	        _this.__publish(true);
-	      };
-
-	      // Queue Message Send
-	      this._publishQueue.queuePublishItem(publishItem);
-
-	      // Send Message
-	      this.__publish(false);
-	    }
-	  }, {
 	    key: 'subscribe',
 	    value: function subscribe(args, subscribeCallback, presenceCallback) {
-	      var _this2 = this;
+	      var _this = this;
 
 	      var channel = args.channel;
 	      var channelGroup = args.channel_group;
@@ -11739,7 +11600,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (channel) {
 	        var channelList = (channel.join ? channel.join(',') : '' + channel).split(',');
 	        _utils2.default.each(channelList, function (channel) {
-	          _this2.__subscribeToChannel(channel, cipherKey, subscribeCallback, presenceCallback);
+	          _this.__subscribeToChannel(channel, cipherKey, subscribeCallback, presenceCallback);
 	        });
 	      }
 
@@ -11747,7 +11608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (channelGroup) {
 	        var ChannelGroupList = (channelGroup.join ? channelGroup.join(',') : '' + channelGroup).split(',');
 	        _utils2.default.each(ChannelGroupList, function (channelGroup) {
-	          _this2.__subscribeToChannelGroup(channelGroup, cipherKey, subscribeCallback, presenceCallback);
+	          _this.__subscribeToChannelGroup(channelGroup, cipherKey, subscribeCallback, presenceCallback);
 	        });
 	      }
 	    }
@@ -12002,6 +11863,92 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        this._presence.announceChannelGroupLeave(existingChannelGroups.join(','), authKey, callback, err);
 	      }
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+
+/***/ },
+/* 71 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _publish_queue = __webpack_require__(57);
+
+	var _publish_queue2 = _interopRequireDefault(_publish_queue);
+
+	var _responders = __webpack_require__(52);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	var _logger = __webpack_require__(60);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	// store the published message in remote history
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var encrypt = _ref.encrypt;
+	    var publishQueue = _ref.publishQueue;
+
+	    _classCallCheck(this, _class);
+
+	    this._encrypt = encrypt;
+	    this._publishQueue = publishQueue;
+	    this._r = new _responders2.default('#endpoints/publish');
+	    this._l = _logger2.default.getLogger('#endpoints/publish');
+	  }
+
+	  _createClass(_class, [{
+	    key: 'publish',
+	    value: function publish(args, callback) {
+	      var message = args.message;
+	      var channel = args.channel;
+	      var cipherKey = args.cipherKey;
+	      var _args$sendByPost = args.sendByPost;
+	      var sendByPost = _args$sendByPost === undefined ? false : _args$sendByPost;
+	      var _args$storeInHistory = args.storeInHistory;
+	      var storeInHistory = _args$storeInHistory === undefined ? true : _args$storeInHistory;
+
+
+	      if (!message) {
+	        return callback(this._r.validationError('Missing Message'));
+	      }
+
+	      if (!channel) {
+	        return callback(this._r.validationError('Missing Channel'));
+	      }
+
+	      var params = {};
+	      var publishItem = this._publishQueue.newQueueable();
+
+	      if (!storeInHistory) {
+	        params.store = '0';
+	      }
+
+	      publishItem.payload = JSON.stringify(this._encrypt(message, cipherKey));
+	      publishItem.channel = channel;
+	      publishItem.params = params;
+	      publishItem.httpMethod = sendByPost ? 'POST' : 'GET';
+	      publishItem.callback = callback;
+
+	      // Queue Message Send
+	      this._publishQueue.queueItem(publishItem);
 	    }
 	  }]);
 

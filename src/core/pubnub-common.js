@@ -18,7 +18,9 @@ import HistoryEndpoint from './endpoints/history';
 import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
+
 import PubSubEndpoints from './endpoints/pubsub';
+import PublishEndpoints from './endpoints/publish';
 
 let packageJSON = require('../../package.json');
 let utils = require('./utils');
@@ -31,9 +33,9 @@ let DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
 type setupObject = {
   use_send_beacon: ?boolean, // configuration on beacon usage
   sendBeacon: ?Function, // executes a call against the Beacon API
-  publish_key: ?string, // API key required for publishing
-  subscribe_key: string, // API key required to subscribe
-  cipher_key: string, // decryption keys
+  publishKey: ?string, // API key required for publishing
+  subscribeKey: string, // API key required to subscribe
+  cipherKey: string, // decryption keys
   origin: ?string, // an optional FQDN which will recieve calls from the SDK.
   hmac_SHA256: Function, // hashing function required for Access Manager
   ssl: boolean, // is SSL enabled?
@@ -54,11 +56,11 @@ export default function createInstance(setup: setupObject): Object {
 
   let keychain = new Keychain()
     .setInstanceId(uuidGenerator.v4())
-    .setAuthKey(setup.auth_key || '')
-    .setSecretKey(setup.secret_key || '')
-    .setSubscribeKey(setup.subscribe_key)
-    .setPublishKey(setup.publish_key)
-    .setCipherKey(setup.cipher_key);
+    .setAuthKey(setup.authKey || '')
+    .setSecretKey(setup.secretKey || '')
+    .setSubscribeKey(setup.subscribeKey)
+    .setPublishKey(setup.publishKey)
+    .setCipherKey(setup.cipherKey);
 
   keychain.setUUID(
     setup.uuid ||
@@ -110,7 +112,10 @@ export default function createInstance(setup: setupObject): Object {
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ keychain, networking, config, error });
-  let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, publishQueue, state: stateStorage });
+
+  let publishEndpoints = new PublishEndpoints({ publishQueue, encrypt });
+
+  let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, state: stateStorage });
 
   let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints, eventEmitter, error);
   let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
@@ -129,7 +134,7 @@ export default function createInstance(setup: setupObject): Object {
 
     history: historyEndpoint.fetch.bind(historyEndpoint),
     time: timeEndpoint.fetch.bind(timeEndpoint),
-    publish: pubsubEndpoints.publish.bind(pushEndpoint),
+    publish: publishEndpoints.publish.bind(publishEndpoints),
 
     presence: {
       hereNow(args: Object, callback: Function) { presenceEndpoints.hereNow(args, callback); },
@@ -201,10 +206,6 @@ export default function createInstance(setup: setupObject): Object {
     setAuthKey(auth) {
       keychain.setAuthKey(auth);
       eventEmitter.emit('keychainChanged');
-    },
-
-    publish(args: Object, callback: Function) {
-      pubsubEndpoints.performPublish(args, callback);
     },
 
     unsubscribe(args: Object, callback: Function) {

@@ -360,6 +360,74 @@ describe('#components/networking', () => {
     });
   });
 
+  describe('#performPublish', () => {
+    let config;
+    let keychain;
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+    let postXDRStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
+      networking = new Networking(config, keychain, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr');
+      postXDRStub = sinon.stub(networking, '_postXDR');
+      validationErrorStub = sinon.stub();
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking._r.validationError = validationErrorStub;
+    });
+
+    it('passes arguments to the xdr module', () => {
+      let data = { my: 'object' };
+      networking.performPublish('mychannel', 'ma-payload', data, 'GET', callbackStub);
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params' });
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'publish',
+        'pubKey', 'subKey', 0, 'mychannel', 0, 'ma-payload']);
+    });
+
+    it('errors out if subkey is not defined', () => {
+      keychain.setSubscribeKey('');
+      networking.performPublish('mychannel', 'my-payload', {}, 'GET', callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
+    });
+
+    it('errors out if pubkey is not defined', () => {
+      keychain.setPublishKey('');
+      networking.performPublish('mychannel', 'my-payload', {}, 'GET', callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Publish Key');
+    });
+
+    it('uses auth-key from keychain if provided', () => {
+      let data = { my: 'object' };
+      keychain.setAuthKey('myAuthKey');
+      networking.performPublish('mychannel', 'my-payload', data, 'GET', callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
+    });
+
+    it('executes call against the POST interfaces', () => {
+      let data = { my: 'object' };
+      keychain.setAuthKey('myAuthKey');
+      networking.performPublish('mychannel', 'my-payload', data, 'POST', callbackStub);
+      assert.equal(postXDRStub.callCount, 1);
+      assert.deepEqual(postXDRStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
+    });
+
+    it('executs #prepareParamsMock to prepare params', () => {
+      networking.performPublish('mychannel', 'my-payload', {}, 'GET', callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+    });
+  });
+
   describe.skip('#fetchWhereNow', () => {
     it('passes arguments to the xdr module', () => {
       let xdrStub = sinon.stub();

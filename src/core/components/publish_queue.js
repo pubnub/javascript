@@ -4,12 +4,12 @@ import Networking from './networking';
 
 type queueConstruct = {
   networking: Networking,
+  parallelPublish: boolean, // disable one-at-a-time publishing queue and publish on call.
 };
 
 class PublishItem {
   params: Object;
-  onFail: Function;
-  onSuccess: Function;
+  callback: Function;
   httpMethod: string;
   channel: string;
   payload: string;
@@ -20,44 +20,54 @@ export default class {
   _networking: Networking;
   _publishQueue: Array<PublishItem>;
   _isSending: boolean;
+  _parallelPublish: boolean;
 
-  constructor({ networking }: queueConstruct) {
+  constructor({ networking, parallelPublish = false }: queueConstruct) {
     this._publishQueue = [];
     this._networking = networking;
+    this._parallelPublish = parallelPublish;
+    this._isSending = false;
   }
 
-  createQueueable(): PublishItem {
+  newQueueable(): PublishItem {
     return new PublishItem();
   }
 
-  queuePublishItem(publishItem: PublishItem) {
+  queueItem(publishItem: PublishItem) {
     this._publishQueue.push(publishItem);
+    this._sendNext();
   }
 
-  sendOneMessage() {
-    let publish = this._publishQueue.shift();
+  _sendNext() {
+    // if we have nothing to send, return right away.
+    if (this._publishQueue.length === 0) {
+      return;
+    }
 
-    this._networking.performPublish(publish.channel, publish.payload, {
-      mode: publish.httpMethod,
-      success: publish.onSuccess,
-      fail: publish.onFail,
-      data: this._networking.prepareParams(publish.params),
-    });
+    // if parallel publish is enabled, always send.
+    if (this._parallelPublish) {
+      return this.__publishNext();
+    }
+
+    // if something is sending, wait for it to finish up.
+    if (this._isSending) {
+      return;
+    }
+
+    this._isSending = true;
+    this.__publishNext();
   }
 
-  //
+  __publishNext() {
+    let { channel, payload, params, httpMethod, callback } = this._publishQueue.shift();
 
-  getQueueLength(): number {
-    return this._publishQueue.length;
-  }
+    let onPublish = (err: Object, response: Object) => {
+      this._isSending = false;
+      this._sendNext();
+      callback(err, response);
+    };
 
-  setIsSending(sendingValue: boolean): this {
-    this._isSending = sendingValue;
-    return this;
-  }
-
-  isSending(): boolean {
-    return this._isSending;
+    this._networking.performPublish(channel, payload, params, httpMethod, onPublish);
   }
 
 }
