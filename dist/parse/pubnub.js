@@ -11860,6 +11860,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _publish_queue = __webpack_require__(57);
@@ -11878,7 +11880,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	// store the published message in remote history
+	// psv2 supports filtering by metadata
 
 	var _class = function () {
 	  function _class(_ref) {
@@ -11898,6 +11900,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function publish(args, callback) {
 	      var message = args.message;
 	      var channel = args.channel;
+	      var meta = args.meta;
 	      var cipherKey = args.cipherKey;
 	      var _args$sendByPost = args.sendByPost;
 	      var sendByPost = _args$sendByPost === undefined ? false : _args$sendByPost;
@@ -11918,6 +11921,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (!storeInHistory) {
 	        params.store = '0';
+	      }
+
+	      if (meta && (typeof meta === 'undefined' ? 'undefined' : _typeof(meta)) === 'object') {
+	        params.meta = JSON.stringify(meta);
 	      }
 
 	      publishItem.payload = JSON.stringify(this._encrypt(message, cipherKey));

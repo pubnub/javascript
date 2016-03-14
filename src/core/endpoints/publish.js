@@ -14,7 +14,8 @@ type publishArguments = {
   channel: string, // the destination of our dispatch
   cipherKey: string, // if the message is to be encrypted, use this key.
   sendByPost: boolean | null, // use POST when dispatching the message
-  storeInHistory: boolean | null // store the published message in remote history
+  storeInHistory: boolean | null, // store the published message in remote history
+  meta: Object // psv2 supports filtering by metadata
 }
 
 export default class {
@@ -31,7 +32,7 @@ export default class {
   }
 
   publish(args: publishArguments, callback: Function) {
-    const { message, channel, cipherKey, sendByPost = false, storeInHistory = true } = args;
+    const { message, channel, meta, cipherKey, sendByPost = false, storeInHistory = true } = args;
 
     if (!message) {
       return callback(this._r.validationError('Missing Message'));
@@ -46,6 +47,10 @@ export default class {
 
     if (!storeInHistory) {
       params.store = '0';
+    }
+
+    if (meta && typeof meta === 'object') {
+      params.meta = JSON.stringify(meta);
     }
 
     publishItem.payload = JSON.stringify(this._encrypt(message, cipherKey));

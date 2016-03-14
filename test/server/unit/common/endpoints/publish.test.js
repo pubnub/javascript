@@ -78,6 +78,18 @@ describe('publish endpoints', () => {
     assert.deepEqual(publishItem.callback, callbackStub);
   });
 
+  it('supports publishing with meta param', () => {
+    instance.publish({ message: 'hello!', channel: 'ch1', sendByPost: true, meta: { this: 'meta' } }, callbackStub);
+
+    let publishItem = queueItemStub.args[0][0];
+
+    assert.equal(publishItem.channel, 'ch1');
+    assert.equal(publishItem.httpMethod, 'POST');
+    assert.equal(publishItem.payload, '"hello!"');
+    assert.deepEqual(publishItem.params, { meta: '{\"this\":\"meta\"}' });
+    assert.deepEqual(publishItem.callback, callbackStub);
+  });
+
   it('supports publishing via POST', () => {
     instance.publish({ message: 'hello!', channel: 'ch1', sendByPost: true }, callbackStub);
 
@@ -89,5 +101,4 @@ describe('publish endpoints', () => {
     assert.deepEqual(publishItem.params, {});
     assert.deepEqual(publishItem.callback, callbackStub);
   });
-
 });
