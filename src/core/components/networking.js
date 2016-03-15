@@ -193,11 +193,32 @@ export default class {
     this._xdr({ data, url, callback });
   }
 
-  performGrant({ data, success, fail }: commonXDR) {
+  performGrant(authKey: string, data: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+    if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
+    if (!this._keychain.getSecretKey()) return this._error('Missing Secret Key');
+
+    let sign_input = this._keychain.getSubscribeKey() + '\n' +
+      this._keychain.getPublishKey() + '\n' +
+      'grant' + '\n';
+
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'grant',
       'sub-key', this._keychain.getSubscribeKey(),
     ];
+
+    data = this._networking.prepareParams(data);
+
+    if (!auth_key) delete data.auth;
+
+    sign_input += utils._get_pam_sign_input_from_params(data);
+
+    let signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
+
+    signature = signature.replace(/\+/g, '-');
+    signature = signature.replace(/\//g, '_');
+
+    data.signature = signature;
 
     this._xdr({ data, success, fail, url });
   }
@@ -229,7 +250,31 @@ export default class {
     this._xdr({ data, success, fail, url });
   }
 
-  performAudit({ data, success, fail }: commonXDR) {
+  performAudit(authKey: string, data: Object, callback: Function) {
+    let auth_key = args.auth_key;
+    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
+    if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
+    if (!this._keychain.getSecretKey()) return this._error('Missing Secret Key');
+
+    let sign_input = this._keychain.getSubscribeKey() + '\n' +
+      this._keychain.getPublishKey() + '\n' +
+      'audit' + '\n';
+
+    if (auth_key) data.auth = auth_key;
+
+    data = this._networking.prepareParams(data);
+
+    if (!auth_key) delete data.auth;
+
+    sign_input += utils._get_pam_sign_input_from_params(data);
+
+    let signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
+
+    signature = signature.replace(/\+/g, '-');
+    signature = signature.replace(/\//g, '_');
+
+    data.signature = signature;
+
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'audit',
       'sub-key', this._keychain.getSubscribeKey(),
@@ -348,8 +393,6 @@ export default class {
     }
 
     let data: Object = this.prepareParams(incomingData);
-    console.log(incomingData);
-    console.log(data);
 
     let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
       this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', this._keychain.getUUID(), 'data'];
