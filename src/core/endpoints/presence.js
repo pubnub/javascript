@@ -24,6 +24,18 @@ type whereNowArguments = {
   uuid: string,
 }
 
+type getStateArguments = {
+  uuid: string,
+  channel: string,
+  channelGroup: string
+}
+
+type setStateArguments = {
+  channel: string,
+  channelGroup: string,
+  state: Object | string | number | boolean
+}
+
 export default class {
   _networking: Networking;
   _state: State;
@@ -66,12 +78,88 @@ export default class {
     this._networking.fetchWhereNow(uuid, callback);
   }
 
-  getState() {
-    // no-op
+  getState(args: getStateArguments, callback: Function) {
+    let { uuid, channel, channelGroup } = args;
+    let data: Object = {};
+
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
+
+    if (!channel && !channelGroup) {
+      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+    }
+
+    if (channelGroup) {
+      data['channel-group'] = channelGroup;
+    }
+
+    if (!channel) {
+      channel = ',';
+    }
+
+    this._networking.fetchState(uuid, channel, data, callback);
   }
 
-  setState() {
-    // no-op
+  setState(args: setStateArguments, callback: Function) {
+    let { state, channel, channelGroup } = args;
+    let data: Object = {};
+    let channelsWithPresence: Array<string> = [];
+    let channelGroupsWithPresence: Array<string> = [];
+
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
+
+    if (!channel && !channelGroup) {
+      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+    }
+
+    if (!state) {
+      return callback(this._r.validationError('State must be supplied'));
+    }
+
+    data.state = state;
+
+    if (channel) {
+      let channelList = (channel.join ? channel.join(',') : '' + channel).split(',');
+      channelList.forEach((channel) => {
+        if (this._state.getChannel(channel)) {
+          this._state.addToPresenceState(channel, state);
+          channelsWithPresence.push(channel);
+        }
+      });
+    }
+
+    if (channelGroup) {
+      let channelGroupList = (channelGroup.join ? channelGroup.join(',') : '' + channelGroup).split(',');
+      channelGroupList.forEach((channel) => {
+        if (this._state.getChannelGroup(channel)) {
+          this._state.addToPresenceState(channel, state);
+          channelGroupsWithPresence.push(channel);
+        }
+      });
+    }
+
+    if (channelsWithPresence.length === 0 && channelGroupsWithPresence.length === 0) {
+      return callback(this._r.validationError('No subscriptions exists for the states'));
+    }
+
+    if (channelGroupsWithPresence.length > 0) {
+      data['channel-group'] = channelGroupsWithPresence.join(',');
+    }
+
+    if (channelsWithPresence.length === 0) {
+      channel = ',';
+    } else {
+      channel = channelsWithPresence.join(',');
+    }
+
+    this._networking.setState(channel, data, (err: Object, response: Object) => {
+      if (err) return callback(err, response);
+      this._state.announcePresenceChange();
+      return callback(err, response);
+    });
   }
 
   heartbeat(args: Object) {
@@ -106,60 +194,6 @@ export default class {
     }
 
     this._networking.performHeartbeat(channels, {
-      data: this._networking.prepareParams(data),
-      success(response) {
-        Responders.callback(response, callback, err);
-      },
-      fail(response) {
-        Responders.error(response, err);
-      },
-    });
-  }
-
-  performState(args: Object, argumentCallback: Function) {
-    let callback = args.callback || argumentCallback || function () {};
-    let err = args.error || function () {};
-    let authKey = args.auth_key || this._keychain.getAuthKey();
-    let state = args.state;
-    let uuid = args.uuid || this._keychain.getUUID();
-    let channel = args.channel;
-    let channelGroup = args.channel_group;
-    let data = this._networking.prepareParams({ auth: authKey });
-
-    // Make sure we have a Channel
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-    if (!uuid) return this._error('Missing UUID');
-    if (!channel && !channelGroup) return this._error('Missing Channel');
-
-    if (typeof channel !== 'undefined'
-      && this._state.getChannel(channel)
-      && this._state.getChannel(channel).subscribed) {
-      if (state) {
-        this._state.addToPresenceState(channel, state);
-      }
-    }
-
-    if (typeof channelGroup !== 'undefined'
-      && this._state.getChannelGroup(channelGroup)
-      && this._state.getChannelGroup(channelGroup).subscribed
-    ) {
-      if (state) {
-        this._state.addToPresenceState(channelGroup, state);
-      }
-      data['channel-group'] = channelGroup;
-
-      if (!channel) {
-        channel = ',';
-      }
-    }
-
-    data.state = JSON.stringify(state);
-
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
-    }
-
-    this._networking.performState(state, channel, uuid, {
       data: this._networking.prepareParams(data),
       success(response) {
         Responders.callback(response, callback, err);

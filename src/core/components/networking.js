@@ -302,7 +302,7 @@ export default class {
 
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
-      'sub_key', this._keychain.getSubscribeKey(),
+      'sub-key', this._keychain.getSubscribeKey(),
       'uuid', utils.encode(uuid),
     ];
 
@@ -326,7 +326,7 @@ export default class {
 
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
-      'sub_key', this._keychain.getSubscribeKey(),
+      'sub-key', this._keychain.getSubscribeKey(),
     ];
 
     if (channel) {
@@ -337,6 +337,47 @@ export default class {
     if (channelGroup && !channel) {
       url.push('channel');
       url.push(',');
+    }
+
+    this._xdr({ data, callback, url });
+  }
+
+  setState(channel: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    let data: Object = this.prepareParams(incomingData);
+    console.log(incomingData);
+    console.log(data);
+
+    let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
+      this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', this._keychain.getUUID(), 'data'];
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    data.state = JSON.stringify(data.state);
+
+    this._xdr({ data, callback, url });
+  }
+
+  fetchState(uuid: string, channel: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    if (!uuid) {
+      uuid = this._keychain.getUUID();
+    }
+
+    let data: Object = this.prepareParams(incomingData);
+    let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
+      this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
     }
 
     this._xdr({ data, callback, url });

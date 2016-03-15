@@ -20,6 +20,7 @@ describe('presence endpoints', () => {
   let callbackStub;
   let xdrMock;
   let validateResponderStub;
+  let announcePresenceChangeStub;
 
   beforeEach(() => {
     networking = new Networking({});
@@ -27,6 +28,7 @@ describe('presence endpoints', () => {
     callbackStub = sinon.stub();
 
     validateResponderStub = sinon.stub().returns('validationError');
+    announcePresenceChangeStub = sinon.stub(state, 'announcePresenceChange');
 
     let respondersClass = Responders;
     respondersClass.prototype.validationError = validateResponderStub;
@@ -156,6 +158,171 @@ describe('presence endpoints', () => {
 
         xdrMock.args[0][1]('error', null);
         assert.equal(callbackStub.called, 1);
+        assert.deepEqual(callbackStub.args[0], ['error', null]);
+      });
+    });
+  });
+
+  describe('#getState', () => {
+    beforeEach(() => {
+      xdrMock = sinon.stub(networking, 'fetchState');
+    });
+
+    it('errors if callback is not passed', () => {
+      let logSpy = sinon.spy(instance._l, 'error');
+      instance.getState({});
+      assert.equal(logSpy.called, 1);
+      assert.equal(logSpy.args[0][0], 'Missing Callback');
+    });
+
+    it('errors if no channels, channel groups are passed', () => {
+      instance.getState({}, callbackStub);
+      assert.equal(callbackStub.args[0][0], 'validationError');
+      assert.equal(validateResponderStub.args[0][0], 'Channel or Channel Group must be supplied');
+    });
+
+    it('supports passing of channels', () => {
+      instance.getState({ channel: 'ch1' }, callbackStub);
+      assert.deepEqual(xdrMock.args[0], [null, 'ch1', {}, callbackStub]);
+    });
+
+    it('supports passing of channel groups', () => {
+      instance.getState({ channelGroup: 'cg1' }, callbackStub);
+      assert.deepEqual(xdrMock.args[0], [null, ',', { 'channel-group': 'cg1' }, callbackStub]);
+    });
+
+    it('supports passing of channels and channel groups', () => {
+      instance.getState({ channel: 'ch1', channelGroup: 'cg1' }, callbackStub);
+      assert.deepEqual(xdrMock.args[0], [null, 'ch1', { 'channel-group': 'cg1' }, callbackStub]);
+    });
+
+    it('supports passing of uuid', () => {
+      instance.getState({ uuid: 'my-uuid', channel: 'ch1', channelGroup: 'cg1' }, callbackStub);
+      assert.deepEqual(xdrMock.args[0], ['my-uuid', 'ch1', { 'channel-group': 'cg1' }, callbackStub]);
+    });
+
+    describe('on success', () => {
+      it('calls the Responders.callback back on success with argument callback', () => {
+        instance.getState({ channelGroup: 'cg1' }, callbackStub);
+        xdrMock.args[0][3](null, 'success-response');
+        assert.equal(callbackStub.called, 1);
+        assert.deepEqual(callbackStub.args[0], [null, 'success-response']);
+      });
+    });
+
+    describe('on error', () => {
+      it('uses the error function provided in args', () => {
+        instance.getState({ channelGroup: 'cg1' }, callbackStub);
+
+        xdrMock.args[0][3]('error', null);
+        assert.equal(callbackStub.called, 1);
+        assert.deepEqual(callbackStub.args[0], ['error', null]);
+      });
+    });
+  });
+
+  describe('#setState', () => {
+    beforeEach(() => {
+      xdrMock = sinon.stub(networking, 'setState');
+    });
+
+    it('errors if callback is not passed', () => {
+      let logSpy = sinon.spy(instance._l, 'error');
+      instance.setState({});
+      assert.equal(logSpy.called, 1);
+      assert.equal(logSpy.args[0][0], 'Missing Callback');
+    });
+
+    it('errors if no channels, channel groups are passed', () => {
+      instance.setState({}, callbackStub);
+      assert.equal(callbackStub.args[0][0], 'validationError');
+      assert.equal(validateResponderStub.args[0][0], 'Channel or Channel Group must be supplied');
+    });
+
+    it('errors if state is not passed', () => {
+      instance.setState({ channel: 'ch1' }, callbackStub);
+      assert.equal(callbackStub.args[0][0], 'validationError');
+      assert.equal(validateResponderStub.args[0][0], 'State must be supplied');
+    });
+
+    it('errors if channel is not in state', () => {
+      instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+      assert.equal(callbackStub.args[0][0], 'validationError');
+      assert.equal(validateResponderStub.args[0][0], 'No subscriptions exists for the states');
+    });
+
+    it('supports passing of channel', () => {
+      state.addChannel('ch1', {});
+      instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], 'ch1');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' } });
+    });
+
+    it('supports passing of channels which do not exist', () => {
+      state.addChannel('ch1', {});
+      instance.setState({ channel: 'ch1,ch2', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], 'ch1');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' } });
+    });
+
+    it('supports passing of channels', () => {
+      state.addChannel('ch1', {});
+      state.addChannel('ch2', {});
+      instance.setState({ channel: 'ch1,ch2', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], 'ch1,ch2');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' } });
+    });
+
+    it('supports passing of channel group', () => {
+      state.addChannelGroup('cg1', {});
+      instance.setState({ channelGroup: 'cg1', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], ',');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1' });
+    });
+
+    it('supports passing of channel groups with some non existing', () => {
+      state.addChannelGroup('cg1', {});
+      instance.setState({ channelGroup: 'cg1,cg2', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], ',');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1' });
+    });
+
+    it('supports passing of channel groups', () => {
+      state.addChannelGroup('cg1', {});
+      state.addChannelGroup('cg2', {});
+      instance.setState({ channelGroup: 'cg1,cg2', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], ',');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1,cg2' });
+    });
+
+    it('supports passing of channel groups and channels', () => {
+      state.addChannelGroup('cg1', {});
+      state.addChannelGroup('cg2', {});
+      state.addChannel('ch1', {});
+      state.addChannel('ch2', {});
+      instance.setState({ channel: 'ch1,ch2', channelGroup: 'cg1,cg2', state: { my: 'state' } }, callbackStub);
+      assert.equal(xdrMock.args[0][0], 'ch1,ch2');
+      assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1,cg2' });
+    });
+
+    describe('on success', () => {
+      it('calls callback and asks state to announce presence update', () => {
+        state.addChannel('ch1', {});
+        instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+        xdrMock.args[0][2](null, 'success-response');
+        assert.equal(callbackStub.called, 1);
+        assert.equal(announcePresenceChangeStub.callCount, 1);
+        assert.deepEqual(callbackStub.args[0], [null, 'success-response']);
+      });
+    });
+
+    describe('on error', () => {
+      it('uses the error function provided in args', () => {
+        state.addChannel('ch1', {});
+        instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+        xdrMock.args[0][2]('error', null);
+        assert.equal(callbackStub.called, 1);
+        assert.equal(announcePresenceChangeStub.callCount, 0);
         assert.deepEqual(callbackStub.args[0], ['error', null]);
       });
     });
