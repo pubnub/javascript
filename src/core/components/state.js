@@ -51,6 +51,14 @@ export default class {
     return key in this._presenceState;
   }
 
+  removeChannel(key: string) {
+    delete this._channelStorage[key];
+  }
+
+  removeChannelGroup(key: string) {
+    delete this._channelGroupStorage[key];
+  }
+
   removeFromPresenceState(key: string) {
     delete this._presenceState[key];
   }

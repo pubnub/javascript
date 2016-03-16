@@ -19,10 +19,11 @@ import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
 
-import SubscribeEndpoints from './endpoints/pubsub';
+import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
 
 let packageJSON = require('../../package.json');
+import { callbackStruct } from '../../flow_interfaces';
 let utils = require('./utils');
 
 let DEF_WINDOWING = 10; // MILLISECONDS.
@@ -39,7 +40,11 @@ type setupObject = {
   origin: ?string, // an optional FQDN which will recieve calls from the SDK.
   hmac_SHA256: Function, // hashing function required for Access Manager
   ssl: boolean, // is SSL enabled?
-  shutdown: Function // function to call when pubnub is shutting down.
+  shutdown: Function, // function to call when pubnub is shutting down.
+
+  onStatus: Function, // function to call when a status shows up.
+  onPresence: Function, // function to call when new presence data shows up
+  onMessage: Function, // function to call when a new presence shows up
 }
 
 export default function createInstance(setup: setupObject): Object {
@@ -64,6 +69,12 @@ export default function createInstance(setup: setupObject): Object {
       crypto_obj['decrypt'](input, keychain.getCipherKey()) ||
       input;
   }
+
+  let callbacksConstruct: callbackStruct = {
+    onMessage: setup.onMessage,
+    onStatus: setup.onStatus,
+    onPresence: setup.onPresence
+  };
 
   let keychain = new Keychain()
     .setInstanceId(uuidGenerator.v4())
@@ -113,7 +124,7 @@ export default function createInstance(setup: setupObject): Object {
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
 
-  let subscribeEndpoints = new SubscribeEndpoints({ keychain, networking, presenceEndpoints, error, config, state: stateStorage });
+  let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacksConstruct, config, state: stateStorage });
 
   let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints, eventEmitter, error);
   let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });

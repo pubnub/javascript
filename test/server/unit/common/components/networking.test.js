@@ -11,33 +11,47 @@ const sinon = require('sinon');
 
 
 describe('#components/networking', () => {
-  it.skip('creates a class with default origin', () => {
-    var networking = new Networking(() => {}, new Keychain());
-    assert.equal(networking.getOrigin(), 'http://pubsub.pubnub.com');
+  let config;
+  let keychain;
+
+  beforeEach(() => {
+    config = new Config();
+    keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
   });
 
-  it.skip('creates a class with enabled SSL FQDN', () => {
-    var networking = new Networking(() => {}, new Keychain(), true);
-    assert.equal(networking.getOrigin(), 'https://pubsub.pubnub.com');
+  it('creates a class with default origin', () => {
+    let networking = new Networking({ config, keychain }, undefined, undefined);
+    assert.equal(networking._providedFQDN, 'http://pubsub.pubnub.com');
   });
 
-  it.skip('creates a class with disabled SSL FQDN', () => {
-    var networking = new Networking(() => {}, new Keychain(), false);
-    assert.equal(networking.getOrigin(), 'http://pubsub.pubnub.com');
+  it('creates a class with enabled SSL FQDN', () => {
+    let networking = new Networking({ config, keychain }, true);
+    assert.equal(networking._providedFQDN, 'https://pubsub.pubnub.com');
   });
 
-  it.skip('creates a class with enabled SSL and custom domain', () => {
-    var networking = new Networking(() => {}, new Keychain(), true, 'custom.domain.com');
-    assert.equal(networking.getOrigin(), 'https://custom.domain.com');
+  it('creates a class with disabled SSL FQDN', () => {
+    let networking = new Networking({ config, keychain }, false);
+    assert.equal(networking._providedFQDN, 'http://pubsub.pubnub.com');
   });
 
-  it.skip('creates a class with disabled SSL FQDN and custom domain', () => {
-    var networking = new Networking(() => {}, new Keychain(), false, 'custom.domain.com');
-    assert.equal(networking.getOrigin(), 'http://custom.domain.com');
+  it('creates a class with enabled SSL and custom domain', () => {
+    let networking = new Networking({ config, keychain }, true, 'custom.domain.com');
+    assert.equal(networking._providedFQDN, 'https://custom.domain.com');
   });
 
-  describe.skip('#nextOrigin', () => {
+  it('creates a class with disabled SSL FQDN and custom domain', () => {
+    let networking = new Networking({ config, keychain }, false, 'custom.domain.com');
+    assert.equal(networking._providedFQDN, 'http://custom.domain.com');
+  });
+
+  describe('#nextOrigin', () => {
+    let config;
+    let keychain;
+
     beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
+
       sinon.stub(Math, 'random', function () {
         return 0.8;
       });
@@ -53,23 +67,20 @@ describe('#components/networking', () => {
     });
 
     it('it does not operate on non pubsub domains', () => {
-      var networking = new Networking(() => {}, new Keychain(), null, 'custom.url.com');
-
+      let networking = new Networking({ config, keychain }, null, 'custom.url.com');
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://custom.url.com');
     });
 
     it('applies the next subdomain if default url is used', () => {
-      var networking = new Networking(() => {}, new Keychain(), null, 'pubsub.pubnub.com');
-
+      let networking = new Networking({ config, keychain }, null, 'pubsub.pubnub.com');
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
     });
 
     // assuming MAX=20 inside the configurations, this test is not isolated.
     it('applies the next subdomain if default url is used and resets over', () => {
-      var networking = new Networking(() => {}, new Keychain(), null, 'pubsub.pubnub.com');
-
+      let networking = new Networking({ config, keychain }, null, 'pubsub.pubnub.com');
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
       newDomain = networking.nextOrigin(false);
@@ -85,7 +96,7 @@ describe('#components/networking', () => {
     });
 
     it('supports failover', () => {
-      var networking = new Networking(() => {}, new Keychain(), undefined, 'pubsub.pubnub.com');
+      let networking = new Networking({ config, keychain }, undefined, 'pubsub.pubnub.com');
       let newDomain = networking.nextOrigin(true);
       assert.equal(newDomain, 'http://ps5f0651fc.pubnub.com');
 
@@ -101,8 +112,16 @@ describe('#components/networking', () => {
   });
 
   describe('#shiftStandardOrigin', () => {
+    let config;
+    let keychain;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
+    });
+
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
-      let networking = new Networking(() => {}, new Keychain(), undefined, undefined);
+      let networking = new Networking({ config, keychain }, undefined, undefined);
 
       sinon.stub(networking, 'nextOrigin', function () {
         return 'sample-url';
@@ -487,6 +506,70 @@ describe('#components/networking', () => {
     });
   });
 
+  describe('#performLeave', () => {
+    let config;
+    let keychain;
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr');
+      validationErrorStub = sinon.stub();
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking._r.validationError = validationErrorStub;
+    });
+
+    it('errors out if subkey is not defined', () => {
+      keychain.setSubscribeKey('');
+      networking.performLeave('uuid', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
+    });
+
+    it('uses auth-key from keychain if provided', () => {
+      keychain.setAuthKey('myAuthKey');
+      networking.performLeave('uuid', {}, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', uuid: 'keychainUUID' });
+    });
+
+    it('executs #prepareParamsMock to prepare params', () => {
+      networking.performLeave('uuid', { arg: '10' }, callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+      assert.deepEqual(prepareParamsStub.args[0][0], { arg: '10' });
+    });
+
+    it('passes arguments if the beacon interface is in-place');
+
+    it('returns error if trying to leave a presence channel', () => {
+      networking.performLeave('ch1-pnpres', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Trying to unsubscribe from presence on channel');
+      assert.deepEqual(callbackStub.called, 1);
+    });
+    it('returns error if trying to leave a presence channel group', () => {
+      networking.performLeave(',', { 'channel-group': 'cg1-pnpres' }, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Trying to unsubscribe from presence on channel groups');
+      assert.deepEqual(callbackStub.called, 1);
+    });
+
+    it('passes arguments to the xdr module', () => {
+      networking.performLeave('ch1', {}, callbackStub);
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'presence',
+        'sub_key', 'subKey', 'channel', 'ch1', 'leave']);
+    });
+  });
+
   describe('#fetchState', () => {
     let config;
     let keychain;
@@ -815,5 +898,4 @@ describe('#components/networking', () => {
       assert.deepEqual(err.args[0][0], { message: 'message', payload: 'payload' });
     });
   })
-
 });

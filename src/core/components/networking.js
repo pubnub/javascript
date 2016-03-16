@@ -293,6 +293,8 @@ export default class {
       return callback(this._r.validationError('Trying to unsubscribe from presence on channel'));
     }
 
+    console.log(incomingData);
+
     if (incomingData['channel-group'] && incomingData['channel-group'].indexOf(constants.PRESENCE_SUFFIX) > 0) {
       return callback(this._r.validationError('Trying to unsubscribe from presence on channel groups'));
     }
@@ -318,38 +320,6 @@ export default class {
       }
     } else {
       this._xdr({ data, callback, url });
-    }
-  }
-
-  performChannelLeave(channel: string, { data, success, fail }: commonXDR) {
-    let origin = this.nextOrigin(false);
-    let url = [
-      origin, 'v2', 'presence', 'sub_key',
-      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave',
-    ];
-
-    if (this._sendBeacon) {
-      if (this._sendBeacon(utils.buildURL(url, data))) {
-        success({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
-      }
-    } else {
-      this._xdr({ data, success, fail, url });
-    }
-  }
-
-  performChannelGroupLeave({ data, success, fail }: commonXDR) {
-    let origin = this.nextOrigin(false);
-    let url = [
-      origin, 'v2', 'presence', 'sub_key',
-      this._keychain.getSubscribeKey(), 'channel', utils.encode(','), 'leave',
-    ];
-
-    if (typeof(this._sendBeacon) !== 'undefined') {
-      if (this._sendBeacon(utils.buildURL(url, data))) {
-        success({ status: 200, action: 'leave', message: 'OK', service: 'Presence' });
-      }
-    } else {
-      this._xdr({ data, success, fail, url });
     }
   }
 

@@ -2,11 +2,7 @@
 
 import Networking from '../components/networking';
 import Config from '../components/config';
-import Keychain from '../components/keychain';
 import State from '../components/state';
-import PublishQueue from '../components/publish_queue';
-
-import PresenceEndpoints from './presence';
 
 import Responders from '../presenters/responders';
 import Logger from '../components/logger';
@@ -14,134 +10,111 @@ import Logger from '../components/logger';
 import utils from '../utils';
 import constants from '../../../defaults.json';
 
+import { callbackStruct } from '../../../flow_interfaces';
+
 type pubSubConstruct = {
   networking: Networking,
   state: State,
-  keychain: Keychain,
-  error: Function,
   config: Config,
-  publishQueue: PublishQueue,
-  presenceEndpoints: PresenceEndpoints,
 };
 
 type unsubscribeArguments = {
-  channel: string | Array<string>,
-  channelGroup: string | Array<string>;
+  channels: Array<string>,
+  channelGroups: Array<string>;
 }
 
 export default class {
   _networking: Networking;
   _config: Config;
   _state: State;
-  _keychain: Keychain;
-  _presence: PresenceEndpoints;
-  _error: Function;
-  _publishQueue: PublishQueue;
+  _callbacksConstruct: callbackStruct;
 
   _r: Responders;
   _l: Logger;
 
   _subscribeIntervalId: number | null;
 
-  constructor({ networking, config, keychain, presenceEndpoints, publishQueue, state, error }: pubSubConstruct) {
+  constructor({ networking, config, state, callbacks }: pubSubConstruct) {
     this._networking = networking;
     this._config = config;
-    this._keychain = keychain;
     this._state = state;
-    this._error = error;
-    this._presence = presenceEndpoints;
-    this._publishQueue = publishQueue;
+    this._callbacks = callbacks;
 
     this._r = new Responders('#endpoints/subscribe');
     this._l = Logger.getLogger('#endpoints/subscribe');
   }
 
-  unsubscribe(args: unsubscribeArguments, callback: Function) {
-    let { channel, channelGroup } = args;
+  unsubscribe(args: unsubscribeArguments) {
+    let { onStatus } = this._callbacks;
+    let { channels = [], channelGroups = [] } = args;
     let existingChannels = []; // matching channels to unsubscribe
     let existingChannelGroups = []; // matching channel groups to unsubscribe
-    let presenceChannels = []; // matching presence channels to unsubscribe
-    let presenceChannelGroups = []; // matching presence channel groups to unsubscribe
     let data = {};
-    let stringifiedChannelParam;
 
-    if (!channel && !channelGroup) {
-      return callback(this._r.validationError('Missing Channel or Channel Group'));
+    // Make sure we have a Channel
+    if (!onStatus) {
+      return this._l.error('Missing onStatus Callback');
     }
 
-    // TODO
-    // Prevent Leaving a Presence Channel
-
-    /* TODO move me to unsubscribe */
-    if (this._config.isSuppressingLeaveEvents()) {
-      return false;
+    if (channels.length === 0 && channelGroups.length === 0) {
+      return onStatus(this._r.validationError('Missing Channel or Channel Group'));
     }
-    // / TODO
 
-    if (channel) {
-      let channels = utils.isArray(channel) ? channel : ('' + channel).split(',');
-
-      utils.each(channels, function (channel) {
-        if (this._state.getChannel(channel)) {
+    if (channels) {
+      channels.forEach((channel) => {
+        if (this._state.containsChannel(channel)) {
           existingChannels.push(channel);
         }
       });
-
-      // Prepare presence channels
-      utils.each(existingChannels, function (channel) {
-        presenceChannels.push(channel + constants.PRESENCE_SUFFIX);
-      });
     }
 
-    if (channelGroup) {
-      let channelGroups = utils.isArray(channelGroup) ? channelGroup : ('' + channelGroup).split(',');
-
-      utils.each(channelGroups, function (channelGroup) {
-        if (this._state.getChannelGroup(channelGroup)) {
+    if (channelGroups) {
+      channelGroups.forEach((channelGroup) => {
+        if (this._state.containsChannelGroup(channelGroup)) {
           existingChannelGroups.push(channelGroup);
         }
       });
-
-      // Prepare presence channels
-      utils.each(existingChannelGroups, function (channelGroup) {
-        presenceChannelGroups.push(channelGroup + constants.PRESENCE_SUFFIX);
-      });
     }
 
-      // if we do not have any channels && channel groups to unsubscribe
-      // trigger a callback
-      if (existingChannels.length === 0 && existingChannelGroups.length === 0 ) {
-        return callback(this._r.validationError('already unsubscribed from all channels'));
-      }
-
-      if (existingChannels.length > 0){
-        stringifiedChannelParam = existingChannels.join(',');
-      } else {
-        stringifiedChannelParam = ',';
-      }
-
-      if (existingChannelGroups.length > 0) {
-        data['channel-group'] = existingChannelGroups.join(',');
-      }
-
-      this._networking.performUnsubscribe(stringifiedChannelParam, (err, response) => {
-        utils.each(existingChannels.concat(presenceChannels), function (channel) {
-          this._state.removeChannel(channel);
-          this._state.removeFromPresenceState(channel);
-        });
-
-        utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-          this._state.removeChannelGroup(channelGroup);
-          this._state.removeFromPresenceState(channelGroup);
-        });
-
-        this._state.announceSubscriptionChange();
-        callback(err, response);
-      });
+    // if NO channels && channel groups to unsubscribe, trigger a callback
+    if (existingChannels.length === 0 && existingChannelGroups.length === 0) {
+      return onStatus(this._r.validationError('already unsubscribed from all channel / channel groups'));
     }
+
+    let stringifiedChannelParam = existingChannels.length > 0 ? existingChannels.join(',') : ',';
+
+    if (existingChannelGroups.length > 0) {
+      data['channel-group'] = existingChannelGroups.join(',');
+    }
+
+    this._networking.performLeave(stringifiedChannelParam, data, (err, response) => {
+      if (err) return onStatus(err, null);
+
+      this._postUnsubscribeCleanup(existingChannels, existingChannelGroups);
+      this._state.setSubscribeTimeToken(0);
+      this._state.announceSubscriptionChange();
+      onStatus(null, { action: 'unsubscribe', status: 'finished', response });
+    });
   }
 
-  subscribe(args: Object, subscribeCallback: Function, presenceCallback: Function) {
+  _postUnsubscribeCleanup(channels: Array<string>, channelGroups: Array<string>) {
+    channels.forEach((channel) => {
+      this._state.removeChannel(channel);
+      this._state.removeFromPresenceState(channel + constants.PRESENCE_SUFFIX);
+    });
+
+    channelGroups.forEach((channelGroup) => {
+      this._state.removeChannelGroup(channelGroup);
+      this._state.removeFromPresenceState(channelGroup + constants.PRESENCE_SUFFIX);
+    });
+  }
+
+  subscribe() {
+    // NO-OP
+  }
+
+  /*
+  subscribe(args: subscribeArguments, callback: Function) {
     let channel = args.channel;
     let channelGroup = args.channel_group;
     let timetoken = args.timetoken || 0;
@@ -178,6 +151,7 @@ export default class {
       });
     }
   }
+  */
 
   __restartSubscribeLoop() {
     let channels = this._state.generate_channel_list().join(',');
