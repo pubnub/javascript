@@ -19,7 +19,7 @@ import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
 
-import PubSubEndpoints from './endpoints/pubsub';
+import SubscribeEndpoints from './endpoints/pubsub';
 import PublishEndpoints from './endpoints/publish';
 
 let packageJSON = require('../../package.json');
@@ -113,7 +113,7 @@ export default function createInstance(setup: setupObject): Object {
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
 
-  let pubsubEndpoints = new PubSubEndpoints({ keychain, networking, presenceEndpoints, error, config, state: stateStorage });
+  let subscribeEndpoints = new SubscribeEndpoints({ keychain, networking, presenceEndpoints, error, config, state: stateStorage });
 
   let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints, eventEmitter, error);
   let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
@@ -140,7 +140,10 @@ export default function createInstance(setup: setupObject): Object {
 
     history: historyEndpoint.fetch.bind(historyEndpoint),
     time: timeEndpoint.fetch.bind(timeEndpoint),
+
     publish: publishEndpoints.publish.bind(publishEndpoints),
+    subscribe: subscribeEndpoints.subscribe.bind(subscribeEndpoints),
+    unsubscribe: subscribeEndpoints.unsubscribe.bind(subscribeEndpoints),
 
     presence: {
       hereNow: presenceEndpoints.hereNow.bind(presenceEndpoints),
@@ -153,21 +156,6 @@ export default function createInstance(setup: setupObject): Object {
       addDeviceToPushChannel: pushEndpoints.addDeviceToPushChannel.bind(pushEndpoints),
       removeDeviceFromPushChannel: pushEndpoints.removeDeviceFromPushChannel.bind(pushEndpoints),
       send: pushEndpoints.send.bind(pushEndpoints),
-    },
-
-    // dark zone
-
-    unsubscribe(args: Object, callback: Function) {
-      TIMETOKEN = 0;
-      SUB_RESTORE = 1;   // REVISIT !!!!
-
-      pubsubEndpoints.performUnsubscribe(args, callback);
-
-      CONNECT();
-    },
-
-    subscribe: function (args, callback) {
-
     },
 
     getCipherKey() {

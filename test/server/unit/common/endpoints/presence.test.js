@@ -20,7 +20,7 @@ describe('presence endpoints', () => {
   let callbackStub;
   let xdrMock;
   let validateResponderStub;
-  let announcePresenceChangeStub;
+  let announceStateChangeStub;
 
   beforeEach(() => {
     networking = new Networking({});
@@ -28,7 +28,7 @@ describe('presence endpoints', () => {
     callbackStub = sinon.stub();
 
     validateResponderStub = sinon.stub().returns('validationError');
-    announcePresenceChangeStub = sinon.stub(state, 'announcePresenceChange');
+    announceStateChangeStub = sinon.stub(state, 'announceStateChange');
 
     let respondersClass = Responders;
     respondersClass.prototype.validationError = validateResponderStub;
@@ -311,7 +311,7 @@ describe('presence endpoints', () => {
         instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
         xdrMock.args[0][2](null, 'success-response');
         assert.equal(callbackStub.called, 1);
-        assert.equal(announcePresenceChangeStub.callCount, 1);
+        assert.equal(announceStateChangeStub.callCount, 1);
         assert.deepEqual(callbackStub.args[0], [null, 'success-response']);
       });
     });
@@ -322,7 +322,7 @@ describe('presence endpoints', () => {
         instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
         xdrMock.args[0][2]('error', null);
         assert.equal(callbackStub.called, 1);
-        assert.equal(announcePresenceChangeStub.callCount, 0);
+        assert.equal(announceStateChangeStub.callCount, 0);
         assert.deepEqual(callbackStub.args[0], ['error', null]);
       });
     });

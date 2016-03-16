@@ -5,6 +5,7 @@ import superagent from 'superagent';
 import Keychain from './keychain.js';
 import Responders from '../presenters/responders';
 import Config from './config.js';
+import constants from '../../../defaults.json';
 import utils from '../utils';
 
 type commonXDR = { data: Object, callback: Function };
@@ -46,7 +47,7 @@ export default class {
   constructor({ config, keychain, encrypt }: networkingModules, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
     this._config = config;
     this._keychain = keychain;
-    this._encrypt = encrypt
+    this._encrypt = encrypt;
     this._r = new Responders('#networking');
 
     this._maxSubDomain = 20;
@@ -281,6 +282,43 @@ export default class {
     ];
 
     this._xdr({ data, success, fail, url });
+  }
+
+  performLeave(channel: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    if (channel.indexOf(constants.PRESENCE_SUFFIX) > 0) {
+      return callback(this._r.validationError('Trying to unsubscribe from presence on channel'));
+    }
+
+    if (incomingData['channel-group'] && incomingData['channel-group'].indexOf(constants.PRESENCE_SUFFIX) > 0) {
+      return callback(this._r.validationError('Trying to unsubscribe from presence on channel groups'));
+    }
+
+    let data = this.prepareParams(incomingData);
+    let origin = this.nextOrigin(false);
+    let url = [
+      origin, 'v2', 'presence', 'sub_key',
+      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave',
+    ];
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    if (this._keychain.getUUID()) {
+      data.uuid = this._keychain.getUUID();
+    }
+
+    if (this._sendBeacon) {
+      if (this._sendBeacon(utils.buildURL(url, data))) {
+        callback(null, { status: 200, action: 'leave', message: 'OK', service: 'Presence' });
+      }
+    } else {
+      this._xdr({ data, callback, url });
+    }
   }
 
   performChannelLeave(channel: string, { data, success, fail }: commonXDR) {

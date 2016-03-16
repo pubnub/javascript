@@ -9,6 +9,7 @@ import PublishQueue from '../components/publish_queue';
 import PresenceEndpoints from './presence';
 
 import Responders from '../presenters/responders';
+import Logger from '../components/logger';
 
 import utils from '../utils';
 import constants from '../../../defaults.json';
@@ -23,6 +24,11 @@ type pubSubConstruct = {
   presenceEndpoints: PresenceEndpoints,
 };
 
+type unsubscribeArguments = {
+  channel: string | Array<string>,
+  channelGroup: string | Array<string>;
+}
+
 export default class {
   _networking: Networking;
   _config: Config;
@@ -31,6 +37,9 @@ export default class {
   _presence: PresenceEndpoints;
   _error: Function;
   _publishQueue: PublishQueue;
+
+  _r: Responders;
+  _l: Logger;
 
   _subscribeIntervalId: number | null;
 
@@ -42,6 +51,94 @@ export default class {
     this._error = error;
     this._presence = presenceEndpoints;
     this._publishQueue = publishQueue;
+
+    this._r = new Responders('#endpoints/subscribe');
+    this._l = Logger.getLogger('#endpoints/subscribe');
+  }
+
+  unsubscribe(args: unsubscribeArguments, callback: Function) {
+    let { channel, channelGroup } = args;
+    let existingChannels = []; // matching channels to unsubscribe
+    let existingChannelGroups = []; // matching channel groups to unsubscribe
+    let presenceChannels = []; // matching presence channels to unsubscribe
+    let presenceChannelGroups = []; // matching presence channel groups to unsubscribe
+    let data = {};
+    let stringifiedChannelParam;
+
+    if (!channel && !channelGroup) {
+      return callback(this._r.validationError('Missing Channel or Channel Group'));
+    }
+
+    // TODO
+    // Prevent Leaving a Presence Channel
+
+    /* TODO move me to unsubscribe */
+    if (this._config.isSuppressingLeaveEvents()) {
+      return false;
+    }
+    // / TODO
+
+    if (channel) {
+      let channels = utils.isArray(channel) ? channel : ('' + channel).split(',');
+
+      utils.each(channels, function (channel) {
+        if (this._state.getChannel(channel)) {
+          existingChannels.push(channel);
+        }
+      });
+
+      // Prepare presence channels
+      utils.each(existingChannels, function (channel) {
+        presenceChannels.push(channel + constants.PRESENCE_SUFFIX);
+      });
+    }
+
+    if (channelGroup) {
+      let channelGroups = utils.isArray(channelGroup) ? channelGroup : ('' + channelGroup).split(',');
+
+      utils.each(channelGroups, function (channelGroup) {
+        if (this._state.getChannelGroup(channelGroup)) {
+          existingChannelGroups.push(channelGroup);
+        }
+      });
+
+      // Prepare presence channels
+      utils.each(existingChannelGroups, function (channelGroup) {
+        presenceChannelGroups.push(channelGroup + constants.PRESENCE_SUFFIX);
+      });
+    }
+
+      // if we do not have any channels && channel groups to unsubscribe
+      // trigger a callback
+      if (existingChannels.length === 0 && existingChannelGroups.length === 0 ) {
+        return callback(this._r.validationError('already unsubscribed from all channels'));
+      }
+
+      if (existingChannels.length > 0){
+        stringifiedChannelParam = existingChannels.join(',');
+      } else {
+        stringifiedChannelParam = ',';
+      }
+
+      if (existingChannelGroups.length > 0) {
+        data['channel-group'] = existingChannelGroups.join(',');
+      }
+
+      this._networking.performUnsubscribe(stringifiedChannelParam, (err, response) => {
+        utils.each(existingChannels.concat(presenceChannels), function (channel) {
+          this._state.removeChannel(channel);
+          this._state.removeFromPresenceState(channel);
+        });
+
+        utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
+          this._state.removeChannelGroup(channelGroup);
+          this._state.removeFromPresenceState(channelGroup);
+        });
+
+        this._state.announceSubscriptionChange();
+        callback(err, response);
+      });
+    }
   }
 
   subscribe(args: Object, subscribeCallback: Function, presenceCallback: Function) {
@@ -255,91 +352,6 @@ export default class {
       subscribed: 1,
       callback: presenceCallback,
     });
-  }
-
-  performUnsubscribe(args: Object, argCallback: Function) {
-    var channelArg = args['channel'];
-    var channelGroupArg = args['channel_group'];
-    var authKey = args.auth_key || this._keychain.getAuthKey();
-    var callback = argCallback || args.callback || function () {};
-    var err = args.error || function () {};
-
-    if (!channelArg && !channelGroupArg) {
-      return this._error('Missing Channel or Channel Group');
-    }
-
-    if (!this._keychain.getSubscribeKey()) {
-      return this._error('Missing Subscribe Key');
-    }
-
-    if (channelArg) {
-      var channels = utils.isArray(channelArg) ? channelArg : ('' + channelArg).split(',');
-      var existingChannels = [];
-      var presenceChannels = [];
-
-      utils.each(channels, function (channel) {
-        if (this._state.getChannel(channel)) {
-          existingChannels.push(channel);
-        }
-      });
-
-      // if we do not have any channels to unsubscribe from, trigger a callback.
-      if (existingChannels.length === 0) {
-        callback({ action: 'leave' });
-        return;
-      }
-
-      // Prepare presence channels
-      utils.each(existingChannels, function (channel) {
-        presenceChannels.push(channel + constants.PRESENCE_SUFFIX);
-      });
-
-      utils.each(existingChannels.concat(presenceChannels), function (channel) {
-        if (this._state.containsChannel(channel)) {
-          this._state.removeChannel(channel);
-        }
-
-        if (this._state.isInPresenceState(channel)) {
-          this._state.removeFromPresenceState(channel);
-        }
-      });
-
-      this._presence.announceChannelLeave(existingChannels.join(','), authKey, callback, err);
-    }
-
-    if (channelGroupArg) {
-      var channelGroups = utils.isArray(channelGroupArg) ? channelGroupArg : ('' + channelGroupArg).split(',');
-      var existingChannelGroups = [];
-      var presenceChannelGroups = [];
-
-      utils.each(channelGroups, function (channelGroup) {
-        if (this._state.getChannelGroup(channelGroup)) {
-          existingChannelGroups.push(channelGroup);
-        }
-      });
-
-      // if we do not have any channel groups to unsubscribe from, trigger a callback.
-      if (existingChannelGroups.length === 0) {
-        callback({ action: 'leave' });
-        return;
-      }
-
-      // Prepare presence channels
-      utils.each(existingChannelGroups, function (channelGroup) {
-        presenceChannelGroups.push(channelGroup + constants.PRESENCE_SUFFIX);
-      });
-
-      utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-        if (this._state.containsChannelGroup(channelGroup)) {
-          this._state.removeChannelGroup(channelGroup);
-        }
-        if (this._state.isInPresenceState(channelGroup)) {
-          this._state.removeFromPresenceState(channelGroup);
-        }
-      });
-
-      this._presence.announceChannelGroupLeave(existingChannelGroups.join(','), authKey, callback, err);
-    }
   }
 
 }

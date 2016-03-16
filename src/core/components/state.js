@@ -9,6 +9,10 @@ export default class {
 
   _presenceState: Object;
 
+  // this number gets sent on all subscribe calls to indicate the starting Point
+  // of information polling.
+  _subscribeTimeToken: number;
+
   constructor() {
     this._channelStorage = {};
     this._channelGroupStorage = {};
@@ -55,7 +59,19 @@ export default class {
     return this._presenceState;
   }
 
-  announcePresenceChange() {
+  setSubscribeTimeToken(newTimeToken: number) {
+    this._subscribeTimeToken = newTimeToken;
+  }
+
+  getSubscribeTimeToken() {
+    return this._subscribeTimeToken;
+  }
+
+  announceStateChange() {
+    // TODO
+  }
+
+  announceSubscriptionChange() {
     // TODO
   }
 

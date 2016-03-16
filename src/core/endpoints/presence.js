@@ -157,7 +157,7 @@ export default class {
 
     this._networking.setState(channel, data, (err: Object, response: Object) => {
       if (err) return callback(err, response);
-      this._state.announcePresenceChange();
+      this._state.announceStateChange();
       return callback(err, response);
     });
   }
@@ -199,80 +199,6 @@ export default class {
         Responders.callback(response, callback, err);
       },
       fail(response) {
-        Responders.error(response, err);
-      },
-    });
-  }
-
-  announceChannelLeave(channel: string, authKey: string, argCallback: Function, error: Function) {
-    let data = {
-      uuid: this._keychain.getUUID(),
-      auth: authKey || this._keychain.getAuthKey(),
-    };
-
-    let callback = argCallback || function () {};
-    let err = error || function () {};
-
-    // Prevent Leaving a Presence Channel
-    if (channel.indexOf(constants.PRESENCE_SUFFIX) > 0) {
-      return true;
-    }
-
-    /* TODO move me to unsubscribe */
-    if (this._config.isSuppressingLeaveEvents()) {
-      return false;
-    }
-
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
-    }
-    /* TODO: move me to unsubscribe */
-
-    this._networking.performChannelLeave(channel, {
-      data: this._networking.prepareParams(data),
-      success(response) {
-        Responders.callback(response, callback, err);
-      },
-      fail(response) {
-        Responders.error(response, err);
-      },
-    });
-  }
-
-  announceChannelGroupLeave(channelGroup: string, authKey: string, argCallback: Function, error: Function) {
-    let data = {
-      uuid: this._keychain.getUUID(),
-      auth: authKey || this._keychain.getAuthKey(),
-    };
-
-    let callback = argCallback || function () {};
-    let err = error || function () {};
-
-    // Prevent Leaving a Presence Channel Group
-    if (channelGroup.indexOf(constants.PRESENCE_SUFFIX) > 0) {
-      return true;
-    }
-
-    if (this._config.isSuppressingLeaveEvents()) {
-      return false;
-    }
-
-    /* TODO move me to unsubscribe */
-    if (channelGroup && channelGroup.length > 0) {
-      data['channel-group'] = channelGroup;
-    }
-
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
-    }
-    /* TODO move me to unsubscribe */
-
-    this._networking.performChannelGroupLeave({
-      data: this._networking.prepareParams(data),
-      success: (response) => {
-        Responders.callback(response, callback, err);
-      },
-      fail: (response) => {
         Responders.error(response, err);
       },
     });
