@@ -1,7 +1,6 @@
 /* @flow */
 
 import uuidGenerator from 'uuid';
-import EventEmitter from 'event-emitter';
 
 import Networking from './components/networking';
 import Keychain from './components/keychain';
@@ -10,7 +9,8 @@ import State from './components/state';
 import PublishQueue from './components/publish_queue';
 
 import PresenceHeartbeat from './components/presence_heartbeat';
-import Connectivity from './components/connectivity';
+
+import Subscriber from './iterators/subscriber';
 
 import TimeEndpoint from './endpoints/time';
 import PresenceEndpoints from './endpoints/presence';
@@ -23,7 +23,7 @@ import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
 
 let packageJSON = require('../../package.json');
-import { callbackStruct } from '../../flow_interfaces';
+import { callbackStruct } from './flow_interfaces';
 let utils = require('./utils');
 
 let DEF_WINDOWING = 10; // MILLISECONDS.
@@ -70,7 +70,7 @@ export default function createInstance(setup: setupObject): Object {
       input;
   }
 
-  let callbacksConstruct: callbackStruct = {
+  let callbacks: callbackStruct = {
     onMessage: setup.onMessage,
     onStatus: setup.onStatus,
     onPresence: setup.onPresence
@@ -105,13 +105,11 @@ export default function createInstance(setup: setupObject): Object {
 
   let stateStorage = new State();
 
-  let networking = new Networking({ config, keychain, encrypt }, setup.ssl, setup.origin)
-    .addBeaconDispatcher(sendBeacon)
+  let networking = new Networking({ config, keychain, encrypt, sendBeacon }, setup.ssl, setup.origin)
     // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
-    .setCoreParams(setup.params || {});
 
   let publishQueue = new PublishQueue({ networking });
-  let eventEmitter = EventEmitter({});
+  let subscriber = new Subscriber({ networking, state: stateStorage });
 
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ networking });
@@ -124,10 +122,10 @@ export default function createInstance(setup: setupObject): Object {
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
 
-  let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacksConstruct, config, state: stateStorage });
+  let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config, state: stateStorage });
 
-  let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints, eventEmitter, error);
-  let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
+  let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints);
+  // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
 
   if (config.getPresenceTimeout() === 2) {
     config.setHeartbeatInterval(1);
@@ -197,7 +195,7 @@ export default function createInstance(setup: setupObject): Object {
       }
 
       // emit the event
-      eventEmitter.emit('presenceHeartbeatChanged');
+      // eventEmitter.emit('presenceHeartbeatChanged');
     },
 
     getHeartbeatInterval() {
@@ -206,7 +204,7 @@ export default function createInstance(setup: setupObject): Object {
 
     setHeartbeatInterval(heartbeatInterval) {
       config.setHeartbeatInterval(heartbeatInterval);
-      eventEmitter.emit('presenceHeartbeatChanged');
+      // eventEmitter.emit('presenceHeartbeatChanged');
     },
 
     getVersion() {
@@ -219,12 +217,12 @@ export default function createInstance(setup: setupObject): Object {
 
     setAuthKey(auth) {
       keychain.setAuthKey(auth);
-      eventEmitter.emit('keychainChanged');
+      // eventEmitter.emit('keychainChanged');
     },
 
     setUUID(uuid) {
       keychain.setUUID(uuid);
-      eventEmitter.emit('keychainChanged');
+      // eventEmitter.emit('keychainChanged');
     },
 
     getUUID() {
@@ -236,7 +234,7 @@ export default function createInstance(setup: setupObject): Object {
     },
 
     stopTimers() {
-      connectivity.stop();
+      // connectivity.stop();
       presenceHeartbeat.stop();
     },
 
@@ -251,7 +249,7 @@ export default function createInstance(setup: setupObject): Object {
     that the SDK is connected to internet.
   */
   // connectivity.start();
-  // presenceHeartbeat.start();
+  subscriber.start();
 
   return SELF;
 }

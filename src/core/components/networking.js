@@ -5,10 +5,8 @@ import superagent from 'superagent';
 import Keychain from './keychain.js';
 import Responders from '../presenters/responders';
 import Config from './config.js';
-import constants from '../../../defaults.json';
 import utils from '../utils';
 
-type commonXDR = { data: Object, callback: Function };
 type superagentPayload = {
   data: Object,
   url: Array<string | number>,
@@ -18,7 +16,8 @@ type superagentPayload = {
 type networkingModules = {
   encrypt: Function,
   keychain: Keychain,
-  config: Config
+  config: Config,
+  sendBeacon: Function
 }
 
 type publishPayload = Object | string | number | boolean;
@@ -44,10 +43,13 @@ export default class {
 
   _r: Responders;
 
-  constructor({ config, keychain, encrypt }: networkingModules, ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
+  constructor({ config, keychain, encrypt, sendBeacon }: networkingModules,
+      ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
     this._config = config;
     this._keychain = keychain;
     this._encrypt = encrypt;
+    this._sendBeacon = sendBeacon;
+
     this._r = new Responders('#networking');
 
     this._maxSubDomain = 20;
@@ -68,11 +70,6 @@ export default class {
 
   addCoreParam(key: string, value: any) {
     this._coreParams[key] = value;
-  }
-
-  addBeaconDispatcher(sendBeacon: Function): this {
-    this._sendBeacon = sendBeacon;
-    return this;
   }
 
   /*
@@ -221,10 +218,16 @@ export default class {
 
     data.signature = signature;
 
-    this._xdr({ data, success, fail, url });
+    this._xdr({ data, callback, url });
   }
 
-  performHeartbeat(channels: string, { data, success, fail }: commonXDR) {
+  performHeartbeat(channels: string, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    let data = this.prepareParams(incomingData);
+
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
       'sub-key', this._keychain.getSubscribeKey(),
@@ -232,23 +235,7 @@ export default class {
       'heartbeat',
     ];
 
-    this._xdr({ data, success, fail, url });
-  }
-
-  performState(state: string, channel: string, uuid: string, { data, success, fail }: commonXDR) {
-    let url = [
-      this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._keychain.getSubscribeKey(),
-      'channel', channel,
-    ];
-
-    if (state) {
-      url.push('uuid', uuid, 'data');
-    } else {
-      url.push('uuid', utils.encode(uuid));
-    }
-
-    this._xdr({ data, success, fail, url });
+    this._xdr({ data, callback, url });
   }
 
   performAudit(authKey: string, data: Object, callback: Function) {
@@ -287,16 +274,6 @@ export default class {
   performLeave(channel: string, incomingData: Object, callback: Function) {
     if (!this._keychain.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    if (channel.indexOf(constants.PRESENCE_SUFFIX) > 0) {
-      return callback(this._r.validationError('Trying to unsubscribe from presence on channel'));
-    }
-
-    console.log(incomingData);
-
-    if (incomingData['channel-group'] && incomingData['channel-group'].indexOf(constants.PRESENCE_SUFFIX) > 0) {
-      return callback(this._r.validationError('Trying to unsubscribe from presence on channel groups'));
     }
 
     let data = this.prepareParams(incomingData);
@@ -470,6 +447,30 @@ export default class {
     }
   }
 
+  performSubscribe(channels: string, timetoken: number, incomingData: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    let url = [
+      this.getSubscribeOrigin(), 'subscribe',
+      this._keychain.getSubscribeKey(), utils.encode(channels),
+      0, timetoken
+    ];
+
+    let data = this.prepareParams(incomingData);
+
+    if (this._keychain.getUUID()) {
+      data.uuid = this._keychain.getUUID();
+    }
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    return this._xdr({ data, callback, url });
+  }
+
   getStandardOrigin(): string {
     return this._standardOrigin;
   }
@@ -482,18 +483,18 @@ export default class {
     let superagentConstruct = superagent
       .post(url.join('/'))
       .query(data);
-    this._abstractedXDR(superagentConstruct, callback);
+    return this._abstractedXDR(superagentConstruct, callback);
   }
 
   _xdr({ data, url, callback}: superagentPayload) {
     let superagentConstruct = superagent
       .get(url.join('/'))
       .query(data);
-    this._abstractedXDR(superagentConstruct, callback);
+    return this._abstractedXDR(superagentConstruct, callback);
   }
 
   _abstractedXDR(superagentConstruct: superagent, callback: Function) {
-    superagentConstruct
+    return superagentConstruct
       .type('json')
       .end(function (err, resp) {
         if (err) return callback(err, null);

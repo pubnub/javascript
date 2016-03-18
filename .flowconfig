@@ -6,6 +6,6 @@
 .*/test/.*
 
 [libs]
-./flow_interfaces.js
+./core/src/flow_interfaces.js
 
 [options]

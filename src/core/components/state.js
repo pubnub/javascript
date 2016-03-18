@@ -1,22 +1,30 @@
 /* @flow */
 
-import utils from '../utils';
+import EventEmitter from 'event-emitter';
 
 export default class {
 
   _channelStorage: Object;
   _channelGroupStorage: Object;
 
+  // state storage for each channel:
+  // key: channel / channel group
+  // value: json object of data
   _presenceState: Object;
 
   // this number gets sent on all subscribe calls to indicate the starting Point
   // of information polling.
-  _subscribeTimeToken: number;
+  _subscribeTimeToken: string;
+
+  _eventEmitter: EventEmitter;
 
   constructor() {
     this._channelStorage = {};
     this._channelGroupStorage = {};
     this._presenceState = {};
+
+    this._eventEmitter = new EventEmitter();
+    this.__subscribeTimeToken = '0';
   }
 
   containsChannel(name: string): boolean {
@@ -39,28 +47,21 @@ export default class {
     this._channelStorage[name] = metadata;
   }
 
+  removeChannel(key: string) {
+    delete this._channelStorage[key];
+  }
+
   addChannelGroup(name: string, metadata: Object) {
     this._channelGroupStorage[name] = metadata;
   }
 
-  addToPresenceState(key: string, value: Object) {
-    this._presenceState[key] = value;
-  }
-
-  isInPresenceState(key: string): boolean {
-    return key in this._presenceState;
-  }
-
-  removeChannel(key: string) {
-    delete this._channelStorage[key];
-  }
 
   removeChannelGroup(key: string) {
     delete this._channelGroupStorage[key];
   }
 
-  removeFromPresenceState(key: string) {
-    delete this._presenceState[key];
+  addToPresenceState(key: string, value: Object) {
+    this._presenceState[key] = value;
   }
 
   getPresenceState(): Object {
@@ -75,83 +76,33 @@ export default class {
     return this._subscribeTimeToken;
   }
 
+  // event emitters
+
+  onStateChange(callback: Function) {
+    this._eventEmitter.on('onStateChange', callback);
+  }
+
+  onSubscriptionChange(callback: Function) {
+    this._eventEmitter.on('onSubscriptionChange', callback);
+  }
+
   announceStateChange() {
-    // TODO
+    this._eventEmitter.emit('onStateChange');
   }
 
   announceSubscriptionChange() {
-    // TODO
+    this.__subscribeTimeToken = 0;
+    this._eventEmitter.emit('onSubscriptionChange');
   }
 
-  /**
-   * Generate Subscription Channel List
-   * ==================================
-   * generate_channel_list(channels_object);
-   * nopresence (==include-presence) == false --> presence True
-   */
-  getChannels(nopresence: boolean): Array<string> {
-    let list: Array<string> = [];
-    utils.each(this._channelStorage, function (channel, status) {
-      if (nopresence) {
-        if (channel.search('-pnpres') < 0) {
-          if (status.subscribed) list.push(channel);
-        }
-      } else {
-        if (status.subscribed) list.push(channel);
-      }
-    });
-    return list.sort();
+  // end event emitting.
+
+  getSubscribedChannels() {
+    return Object.keys(this._channelStorage);
   }
 
-  /**
-   * Generate Subscription Channel Groups List
-   * ==================================
-   * generate_channel_group_list(channels_groups object);
-   */
-  getChannelGroups(nopresence: boolean): Array<string> {
-    let list: Array<string> = [];
-    utils.each(this._channelGroupStorage, function (channel_group, status) {
-      if (nopresence) {
-        if (channel_group.search('-pnpres') < 0) {
-          if (status.subscribed) list.push(channel_group);
-        }
-      } else {
-        if (status.subscribed) list.push(channel_group);
-      }
-    });
-    return list.sort();
-  }
-
-  each_channel_group(callback: Function) {
-    var count = 0;
-
-    utils.each(this.getChannelGroups(), function (channel_group) {
-      var chang = this.getChannelGroup(channel_group);
-
-      if (!chang) return;
-
-      count++;
-      (callback || function () {
-      })(chang);
-    });
-
-    return count;
-  }
-
-  each_channel(callback: Function) {
-    var count = 0;
-
-    utils.each(this.getChannels(), function (channel) {
-      var chan = this.getChannel(channel);
-
-      if (!chan) return;
-
-      count++;
-      (callback || function () {
-      })(chan);
-    });
-
-    return count;
+  getSubscribedChannelGroups() {
+    return Object.keys(this._channelGroupStorage);
   }
 
 }

@@ -6,7 +6,6 @@ import Logger from '../components/logger';
 import Responders from '../presenters/responders';
 
 import utils from '../utils';
-import constants from '../../../defaults.json';
 
 type presenceConstruct = {
   networking: Networking,

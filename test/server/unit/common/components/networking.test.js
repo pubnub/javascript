@@ -548,17 +548,6 @@ describe('#components/networking', () => {
 
     it('passes arguments if the beacon interface is in-place');
 
-    it('returns error if trying to leave a presence channel', () => {
-      networking.performLeave('ch1-pnpres', {}, callbackStub);
-      assert.equal(validationErrorStub.args[0][0], 'Trying to unsubscribe from presence on channel');
-      assert.deepEqual(callbackStub.called, 1);
-    });
-    it('returns error if trying to leave a presence channel group', () => {
-      networking.performLeave(',', { 'channel-group': 'cg1-pnpres' }, callbackStub);
-      assert.equal(validationErrorStub.args[0][0], 'Trying to unsubscribe from presence on channel groups');
-      assert.deepEqual(callbackStub.called, 1);
-    });
-
     it('passes arguments to the xdr module', () => {
       networking.performLeave('ch1', {}, callbackStub);
 
@@ -567,6 +556,67 @@ describe('#components/networking', () => {
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'presence',
         'sub_key', 'subKey', 'channel', 'ch1', 'leave']);
+    });
+  });
+
+  describe('#performSubscribe', () => {
+    let config;
+    let keychain;
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr').returns('xdrModule');
+      validationErrorStub = sinon.stub();
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking._r.validationError = validationErrorStub;
+    });
+
+    it('errors out if subkey is not defined', () => {
+      keychain.setSubscribeKey('');
+      networking.performSubscribe('uuid', 'timetoken', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
+    });
+
+    it('uses auth-key from keychain if provided', () => {
+      keychain.setAuthKey('myAuthKey');
+      networking.performSubscribe('uuid', 'timetoken', {}, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', uuid: 'keychainUUID' });
+    });
+
+    it('uses keychain uuid if uuid is not provided', () => {
+      networking.performSubscribe('ch1', 'timetoken', {}, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'subscribe',
+        'subKey', 'ch1', '0', 'timetoken']);
+    });
+
+    it('executs #prepareParamsMock to prepare params', () => {
+      networking.performSubscribe('uuid', 'timetoken', { arg: '10' }, callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+      assert.deepEqual(prepareParamsStub.args[0][0], { arg: '10' });
+    });
+
+    it('passes arguments to the xdr module', () => {
+      let xdrInstance = networking.performSubscribe('ch1', 'timetoken', { arg: '10' }, callbackStub);
+
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
+      assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'subscribe',
+        'subKey', 'ch1', '0', 'timetoken']);
+
+      assert.equal(xdrInstance, 'xdrModule');
     });
   });
 
