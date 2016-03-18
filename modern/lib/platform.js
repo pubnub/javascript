@@ -289,7 +289,7 @@ function CREATE_PUBNUB(setup) {
   SELF.crypto_obj = crypto_obj();
   SELF.WS = WS;
   SELF.PNmessage = pubNubCore.PNmessage;
-  SELF.supplent = pubNubCore.supplant;
+  SELF.supplant = pubNubCore.supplant;
 
   if (typeof(window) !== 'undefined') {
     bind('beforeunload', window, function () {
@@ -335,7 +335,7 @@ CREATE_PUBNUB.events = events;
 CREATE_PUBNUB.map = pubNubCore.map;
 CREATE_PUBNUB.each = pubNubCore.each;
 CREATE_PUBNUB.grep = pubNubCore.grep;
-CREATE_PUBNUB.supplent = pubNubCore.supplant;
+CREATE_PUBNUB.supplant = pubNubCore.supplant;
 CREATE_PUBNUB.now = pubNubCore.now;
 CREATE_PUBNUB.unique = pubNubCore.unique;
 CREATE_PUBNUB.updater = pubNubCore.updater;
