@@ -53,6 +53,10 @@ export default function createInstance(setup: setupObject): Object {
   let sendBeacon = (useSendBeacon) ? setup.sendBeacon : null;
   let db = setup.db || { get: function () {}, set: function () {} };
   let error = setup.error || function () {};
+
+  let subscribeTimeout = setup.subscribeTimeout;
+  let transactionalTimeout = setup.transactionalTimeout;
+
   let hmac_SHA256 = setup.hmac_SHA256;
   let crypto_obj = setup.crypto_obj || {
     encrypt(a) { return a; },
@@ -102,6 +106,11 @@ export default function createInstance(setup: setupObject): Object {
 
   config
     .setHeartbeatInterval(setup.heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
+
+  // set timeout to how long a transaction request will wait for the server (default 15 seconds)
+  config.transactionalRequestTimeout = parseInt(setup.transactionalRequestTimeout, 2) || 15 * 1000;
+  // set timeout to how long a subscribe event loop will run (default 310 seconds)
+  config.subscribeRequestTimeout = parseInt(setup.subscribeRequestTimeout, 2) || 310 * 1000;
 
   let stateStorage = new State();
 

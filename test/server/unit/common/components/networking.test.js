@@ -601,6 +601,16 @@ describe('#components/networking', () => {
         'subKey', 'ch1', '0', 'timetoken']);
     });
 
+    it('passes the config timeout', () => {
+      config.subscribeRequestTimeout = 1337;
+      networking.performSubscribe('ch1', 'timetoken', {}, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.equal(xdrStub.args[0][0].timeout, 1337);
+      assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'subscribe',
+        'subKey', 'ch1', '0', 'timetoken']);
+    });
+
     it('executs #prepareParamsMock to prepare params', () => {
       networking.performSubscribe('uuid', 'timetoken', { arg: '10' }, callbackStub);
       assert.equal(prepareParamsStub.called, true);

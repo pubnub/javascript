@@ -32,6 +32,16 @@ export default class {
   */
   _suppressLeaveEvents: boolean;
 
+  /*
+    how long to wait for the server when running the subscribe loop
+  */
+  subscribeRequestTimeout: number;
+
+  /*
+    how long to wait for the server when making transactional requests
+  */
+  transactionalRequestTimeout: number;
+
   constructor() {
     this._instanceId = false;
     this._requestId = false;

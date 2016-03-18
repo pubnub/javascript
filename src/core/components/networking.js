@@ -11,6 +11,7 @@ type superagentPayload = {
   data: Object,
   url: Array<string | number>,
   callback: Function,
+  timeout: ?number
 };
 
 type networkingModules = {
@@ -468,7 +469,9 @@ export default class {
       data.auth = this._keychain.getAuthKey();
     }
 
-    return this._xdr({ data, callback, url });
+    const timeout = this._config.subscribeRequestTimeout;
+
+    return this._xdr({ data, callback, url, timeout });
   }
 
   getStandardOrigin(): string {
@@ -479,16 +482,20 @@ export default class {
     return this._subscribeOrigin;
   }
 
-  _postXDR({ data, url, callback}: superagentPayload) {
+  _postXDR({ data, url, timeout, callback}: superagentPayload) {
     let superagentConstruct = superagent
       .post(url.join('/'))
+      .timeout(timeout || this._config.transactionalRequestTimeout)
       .query(data);
     return this._abstractedXDR(superagentConstruct, callback);
   }
 
-  _xdr({ data, url, callback}: superagentPayload) {
+  _xdr({ data, url, timeout, callback}: superagentPayload) {
+    console.log('timeout', timeout);
+
     let superagentConstruct = superagent
       .get(url.join('/'))
+      .timeout(timeout || this._config.transactionalRequestTimeout)
       .query(data);
     return this._abstractedXDR(superagentConstruct, callback);
   }
