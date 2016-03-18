@@ -289,6 +289,7 @@ function CREATE_PUBNUB(setup) {
   SELF.crypto_obj = crypto_obj();
   SELF.WS = WS;
   SELF.PNmessage = pubNubCore.PNmessage;
+  SELF.supplent = pubNubCore.supplant;
 
   if (typeof(window) !== 'undefined') {
     bind('beforeunload', window, function () {

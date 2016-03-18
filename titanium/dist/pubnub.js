@@ -1,4 +1,4 @@
-/*! 3.14.3 / titanium */
+/*! 3.14.4 / titanium */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -685,7 +685,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.14.3",
+		"version": "3.14.4",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -2909,6 +2909,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * timeout( function(){}, 100 );
 	 */
 	function timeout(fun, wait) {
+	  if (typeof setTimeout === 'undefined') {
+	    return;
+	  }
+
 	  return setTimeout(fun, wait);
 	}
 

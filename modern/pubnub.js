@@ -1,4 +1,4 @@
-/*! 3.14.3 / modern */
+/*! 3.14.4 / modern */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -346,6 +346,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  SELF.crypto_obj = crypto_obj();
 	  SELF.WS = WS;
 	  SELF.PNmessage = pubNubCore.PNmessage;
+	  SELF.supplent = pubNubCore.supplant;
 
 	  if (typeof(window) !== 'undefined') {
 	    bind('beforeunload', window, function () {
@@ -406,7 +407,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.14.3",
+		"version": "3.14.4",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -2630,6 +2631,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * timeout( function(){}, 100 );
 	 */
 	function timeout(fun, wait) {
+	  if (typeof setTimeout === 'undefined') {
+	    return;
+	  }
+
 	  return setTimeout(fun, wait);
 	}
 

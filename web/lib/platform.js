@@ -340,6 +340,7 @@ var CREATE_PUBNUB = function (setup) {
   SELF['crypto_obj'] = crypto_obj(); // export to instance
   SELF['WS'] = WS;
   SELF['PNmessage'] = pubNubCore.PNmessage;
+  SELF['supplent'] = pubNubCore.supplant;
 
 
   // Add Leave Functions
