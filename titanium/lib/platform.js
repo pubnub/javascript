@@ -1,8 +1,6 @@
 /* globals window, console, PLATFORM, Ti */
 /* eslint no-unused-expressions: 0, no-console: 0, camelcase: 0, curly: 0, no-redeclare: 0 */
 
-require('imports?this=>window!../../core/polyfill/json.js');
-
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');
 var packageJSON = require('../../package.json');
 var pubNubCore = require('../../core/src/pubnub-common.js');
