@@ -3,6 +3,7 @@
 import superagent from 'superagent';
 
 import Keychain from './keychain.js';
+import Crypto from './cryptography/index';
 import Responders from '../presenters/responders';
 import Config from './config.js';
 import utils from '../utils';
@@ -15,7 +16,7 @@ type superagentPayload = {
 };
 
 type networkingModules = {
-  encrypt: Function,
+  crypto: Crypto,
   keychain: Keychain,
   config: Config,
   sendBeacon: Function
@@ -28,7 +29,7 @@ export default class {
 
   _keychain: Keychain;
   _config: Config;
-  _encrypt: Function;
+  _crypto: Crypto;
 
   _maxSubDomain: number;
   _currentSubDomain: number;
@@ -44,11 +45,11 @@ export default class {
 
   _r: Responders;
 
-  constructor({ config, keychain, encrypt, sendBeacon }: networkingModules,
+  constructor({ config, keychain, crypto, sendBeacon }: networkingModules,
       ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
     this._config = config;
     this._keychain = keychain;
-    this._encrypt = encrypt;
+    this._crypto = crypto;
     this._sendBeacon = sendBeacon;
 
     this._r = new Responders('#networking');
@@ -421,14 +422,14 @@ export default class {
       return callback(this._r.validationError('Missing Publish Key'));
     }
 
-    let encryptedMessage = this._encrypt(msg, this._keychain.getCipherKey());
-    encryptedMessage = JSON.stringify(encryptedMessage);
+    let stringifiedMessage = JSON.stringify(msg);
+    let encryptedMessage = this._crypto.encrypt(stringifiedMessage);
 
     let url = [
       this.getStandardOrigin(), 'publish',
       this._keychain.getPublishKey(), this._keychain.getSubscribeKey(),
       0, utils.encode(channel),
-      0, utils.encode(msg),
+      0, utils.encode(encryptedMessage),
     ];
 
     let data = this.prepareParams(incomingData);
@@ -491,8 +492,6 @@ export default class {
   }
 
   _xdr({ data, url, timeout, callback}: superagentPayload) {
-    console.log('timeout', timeout);
-
     let superagentConstruct = superagent
       .get(url.join('/'))
       .timeout(timeout || this._config.transactionalRequestTimeout)

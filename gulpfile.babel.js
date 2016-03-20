@@ -99,7 +99,7 @@ gulp.task('uglify', ['webpack'], function () {
 });
 
 gulp.task('lint', ['webpack'], function () {
-  return gulp.src(['src/**/*.js', 'test/**/*.js','!test/server/monolith.test.js'])
+  return gulp.src(['src/**/*.js', 'test/**/*.js', '!test/server/monolith.test.js'])
       .pipe(eslint())
       .pipe(eslint.format())
       .pipe(eslint.failAfterError());

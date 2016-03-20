@@ -42,6 +42,12 @@ export default class {
   */
   transactionalRequestTimeout: number;
 
+  /*
+    use send beacon API when unsubscribing.
+    https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
+  */
+  useSendBeacon: boolean;
+
   constructor() {
     this._instanceId = false;
     this._requestId = false;

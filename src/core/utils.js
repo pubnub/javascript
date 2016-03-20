@@ -49,6 +49,8 @@ function each(o: Object, f: Function) {
  * var encoded_data = encode('path');
  */
 function encode(path: string): string {
+  console.log(path, encodeURIComponent(path))
+
   return encodeURIComponent(path);
 }
 

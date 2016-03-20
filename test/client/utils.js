@@ -57,6 +57,9 @@ var _pubnub_init = function (args, config, pn) {
     args.ssl = config.ssl;
     // args.cipher_key = config.cipher_key;
   }
+
+  console.log(PUBNUB);
+
   if (pn) {
     return pn(args);
   } else {
@@ -69,6 +72,9 @@ var _pubnub = function (args, config, pn) {
     args.ssl = config.ssl;
     // args.cipher_key = config.cipher_key;
   }
+
+  console.log(PUBNUB);
+
   if (pn) {
     return pn(args);
   } else {

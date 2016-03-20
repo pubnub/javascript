@@ -3,6 +3,7 @@
 
 import Networking from '../../../../../src/core/components/networking';
 import Responders from '../../../../../src/core/presenters/responders';
+import Crypto from '../../../../../src/core/components/cryptography/index';
 
 import assert from 'assert';
 import sinon from 'sinon';
@@ -14,14 +15,14 @@ loglevel.disableAll();
 describe('history endpoints', () => {
   let networking;
   let instance;
-  let decryptStub;
+  let cryptoStub;
   let validateResponderStub;
   let fetchHistoryStub;
   let callbackStub;
 
   beforeEach(() => {
+    cryptoStub = new Crypto({});
     networking = new Networking({});
-    decryptStub = sinon.stub().returnsArg(0);
     callbackStub = sinon.stub();
     validateResponderStub = sinon.stub().returns('validationError');
     fetchHistoryStub = sinon.stub(networking, 'fetchHistory');
@@ -33,7 +34,7 @@ describe('history endpoints', () => {
       '../presenters/responders': respondersClass,
     }).default;
 
-    instance = new proxy({ networking, decrypt: decryptStub });
+    instance = new proxy({ networking, crypto: cryptoStub });
   });
 
   describe('#fetchHistory', () => {
@@ -43,7 +44,6 @@ describe('history endpoints', () => {
     beforeEach(() => {
       defaultArgsInput = {
         channel: 'ch1',
-        cipherKey: 'cipher_key',
         start: 'start',
         end: 'end',
         includeToken: 'include_token',
@@ -60,18 +60,18 @@ describe('history endpoints', () => {
     });
 
     it('errors out if channel or channel-group is not provided', () => {
-      instance.fetchHistory({}, callbackStub);
+      instance.fetch({}, callbackStub);
       assert.equal(callbackStub.args[0][0], 'validationError');
       assert.equal(validateResponderStub.args[0][0], 'Missing channel and/or channel group');
     });
 
     it('errors out if callback is not defined', () => {
-      instance.fetchHistory({ channel: 'ch1' });
+      instance.fetch({ channel: 'ch1' });
       assert.equal(fetchHistoryStub.callCount, 0);
     });
 
     it('passes through args', () => {
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], 'ch1');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -80,7 +80,7 @@ describe('history endpoints', () => {
     it('uses string_message_token from params if provided', () => {
       defaultArgsInput.stringMessageToken = 'string_message_token-true';
       defaultArgsOutput.string_message_token = 'true';
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], 'ch1');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -89,7 +89,7 @@ describe('history endpoints', () => {
     it('uses reverse from params if provided', () => {
       defaultArgsInput.reverse = 'reverse-true';
       defaultArgsOutput.reverse = 'reverse-true';
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], 'ch1');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -98,7 +98,7 @@ describe('history endpoints', () => {
     it('uses count from params if provided', () => {
       defaultArgsInput.count = 25;
       defaultArgsOutput.count = 25;
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], 'ch1');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -107,7 +107,7 @@ describe('history endpoints', () => {
     it('uses limit from params if provided', () => {
       defaultArgsInput.limit = 25;
       defaultArgsOutput.count = 25;
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], 'ch1');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -116,7 +116,7 @@ describe('history endpoints', () => {
     it('uses channel-group from params if provided', () => {
       defaultArgsInput.channelGroup = 'cg1,cg2,cg3';
       defaultArgsOutput['channel-group'] = 'cg1,cg2,cg3';
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], 'ch1');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -126,7 +126,7 @@ describe('history endpoints', () => {
       delete defaultArgsInput.channel;
       defaultArgsInput.channelGroup = 'cg1,cg2,cg3';
       defaultArgsOutput['channel-group'] = 'cg1,cg2,cg3';
-      instance.fetchHistory(defaultArgsInput, callbackStub);
+      instance.fetch(defaultArgsInput, callbackStub);
 
       assert.equal(fetchHistoryStub.args[0][0], ',');
       assert.deepEqual(fetchHistoryStub.args[0][1], defaultArgsOutput);
@@ -134,7 +134,7 @@ describe('history endpoints', () => {
 
     describe('callbacks and delgation to networking', () => {
       it('executes the #error responder if on error', () => {
-        instance.fetchHistory(defaultArgsInput, callbackStub);
+        instance.fetch(defaultArgsInput, callbackStub);
 
         fetchHistoryStub.args[0][2]('fail-response', null);
         assert.equal(callbackStub.called, 1);
@@ -142,14 +142,14 @@ describe('history endpoints', () => {
       });
 
       it('executes the callback', () => {
-        instance.fetchHistory(defaultArgsInput, callbackStub);
+        instance.fetch(defaultArgsInput, callbackStub);
 
         let stubbedModifier = sinon.stub(instance, '_parseResponse').returns('prparedData');
         fetchHistoryStub.args[0][2](null, 'success-response');
 
         assert.equal(stubbedModifier.called, 1);
         assert.equal(callbackStub.called, 1);
-        assert.deepEqual(stubbedModifier.args[0], ['success-response', 'include_token', 'cipher_key']);
+        assert.deepEqual(stubbedModifier.args[0], ['success-response', 'include_token']);
         assert.deepEqual(callbackStub.args[0], [null, 'prparedData']);
       });
     });
@@ -161,21 +161,22 @@ describe('history endpoints', () => {
   describe('#_parseResponse', () => {
     describe('include_token = true', () => {
       it('hits the callback with correct raw data', () => {
+        let decryptStub = sinon.stub(cryptoStub, 'decrypt').returnsArg(0);
         let message1 = { message: 'm1', timetoken: 't1' };
         let message2 = { message: 'm2', timetoken: 't2' };
         let messagePayload = [message1, message2];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        let resp = instance._parseResponse(combinedPayload, true, 'cipherKey');
+        let resp = instance._parseResponse(combinedPayload, true);
 
         assert.equal(decryptStub.callCount, 2);
-        assert.equal(decryptStub.args[0][1], 'cipherKey');
         assert.deepEqual(decryptStub.args[0][0], 'm1');
         assert.deepEqual(decryptStub.args[1][0], 'm2');
         assert.deepEqual(resp, [[message1, message2], 'firstElement', 'secondElement']);
       });
 
       it('hits the callback with correct json data', () => {
+        let decryptStub = sinon.stub(cryptoStub, 'decrypt').returnsArg(0);
         let message1 = { message: '{"complex": "payload1"}', timetoken: 't1' };
         let message1Output = { message: { complex: 'payload1' }, timetoken: 't1' };
         let message2 = { message: '{"complex": "payload2"}', timetoken: 't2' };
@@ -183,9 +184,9 @@ describe('history endpoints', () => {
         let messagePayload = [message1, message2];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        let resp = instance._parseResponse(combinedPayload, true, 'cipherKey');
+        let resp = instance._parseResponse(combinedPayload, true);
         assert.equal(decryptStub.callCount, 2);
-        assert.equal(decryptStub.args[0][1], 'cipherKey');
+        assert.equal(decryptStub.args[0][1]);
         assert.deepEqual(decryptStub.args[0][0], '{"complex": "payload1"}');
         assert.deepEqual(decryptStub.args[1][0], '{"complex": "payload2"}');
 
@@ -195,18 +196,19 @@ describe('history endpoints', () => {
 
     describe('include_token = false', () => {
       it('hits the callback with correct raw data', () => {
+        let decryptStub = sinon.stub(cryptoStub, 'decrypt').returnsArg(0);
         let messagePayload = ['m1', 'm2'];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        let resp = instance._parseResponse(combinedPayload, false, 'cipherKey');
+        let resp = instance._parseResponse(combinedPayload, false);
         assert.equal(decryptStub.callCount, 2);
-        assert.equal(decryptStub.args[0][1], 'cipherKey');
         assert.deepEqual(decryptStub.args[0][0], 'm1');
         assert.deepEqual(decryptStub.args[1][0], 'm2');
         assert.deepEqual(resp, [['m1', 'm2'], 'firstElement', 'secondElement']);
       });
 
       it('hits the callback with correct json data', () => {
+        let decryptStub = sinon.stub(cryptoStub, 'decrypt').returnsArg(0);
         let message1 = '{"complex": "payload1"}';
         let message1Output = { complex: 'payload1' };
         let message2 = '{"complex": "payload2"}';
@@ -214,9 +216,9 @@ describe('history endpoints', () => {
         let messagePayload = [message1, message2];
         let combinedPayload = [messagePayload, 'firstElement', 'secondElement'];
 
-        let resp = instance._parseResponse(combinedPayload, false, 'cipherKey');
+        let resp = instance._parseResponse(combinedPayload, false);
+
         assert.equal(decryptStub.callCount, 2);
-        assert.equal(decryptStub.args[0][1], 'cipherKey');
         assert.deepEqual(decryptStub.args[0][0], '{"complex": "payload1"}');
         assert.deepEqual(decryptStub.args[1][0], '{"complex": "payload2"}');
         assert.deepEqual(resp, [[message1Output, message2Output], 'firstElement', 'secondElement']);

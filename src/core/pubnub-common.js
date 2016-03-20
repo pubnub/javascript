@@ -7,6 +7,7 @@ import Keychain from './components/keychain';
 import Config from './components/config';
 import State from './components/state';
 import PublishQueue from './components/publish_queue';
+import Crypto from './components/cryptography/index';
 
 import PresenceHeartbeat from './components/presence_heartbeat';
 
@@ -32,47 +33,32 @@ let DEF_SUB_TIMEOUT = 310; // SECONDS.
 let DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
 
 type setupObject = {
-  use_send_beacon: ?boolean, // configuration on beacon usage
-  sendBeacon: ?Function, // executes a call against the Beacon API
+  useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing
   subscribeKey: string, // API key required to subscribe
   cipherKey: string, // decryption keys
   origin: ?string, // an optional FQDN which will recieve calls from the SDK.
-  hmac_SHA256: Function, // hashing function required for Access Manager
   ssl: boolean, // is SSL enabled?
   shutdown: Function, // function to call when pubnub is shutting down.
+
+  sendBeacon: ?Function, // executes a call against the Beacon API
+  useSendBeacon: ?boolean, // enable, disable usage of send beacons
+
+  navigatorOnlineCheck: Function, // a function which abstracts out navigator.onLine
 
   onStatus: Function, // function to call when a status shows up.
   onPresence: Function, // function to call when new presence data shows up
   onMessage: Function, // function to call when a new presence shows up
+
+  subscribeRequestTimeout: ?number, // how long to wait for subscribe requst
+  transactionalRequestTimeout: ?number, // how long to wait for transactional requests
+
+  db: Function // get / set implementation to store data
+
 }
 
 export default function createInstance(setup: setupObject): Object {
-  let shutdown = setup.shutdown;
-  let useSendBeacon = (typeof setup.use_send_beacon !== 'undefined') ? setup.use_send_beacon : true;
-  let sendBeacon = (useSendBeacon) ? setup.sendBeacon : null;
-  let db = setup.db || { get: function () {}, set: function () {} };
-  let error = setup.error || function () {};
-
-  let subscribeTimeout = setup.subscribeTimeout;
-  let transactionalTimeout = setup.transactionalTimeout;
-
-  let hmac_SHA256 = setup.hmac_SHA256;
-  let crypto_obj = setup.crypto_obj || {
-    encrypt(a) { return a; },
-    decrypt(b) { return b; },
-  };
-
-  // initialize the encryption and decryption logic
-  function encrypt(input, key) {
-    return crypto_obj.encrypt(input, key || keychain.getCipherKey()) || input;
-  }
-
-  function decrypt(input, key) {
-    return crypto_obj['decrypt'](input, key || keychain.getCipherKey()) ||
-      crypto_obj['decrypt'](input, keychain.getCipherKey()) ||
-      input;
-  }
+  let { sendBeacon, db, shutdown } = setup;
 
   let callbacks: callbackStruct = {
     onMessage: setup.onMessage,
@@ -98,7 +84,7 @@ export default function createInstance(setup: setupObject): Object {
 
   let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
-    .setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0, error))
+    .setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0))
     .setSupressLeaveEvents(setup.noleave || 0)
     // .setSubscribeWindow(+setup.windowing || DEF_WINDOWING)
     // .setSubscribeTimeout((+setup.timeout || DEF_SUB_TIMEOUT) * constants.SECOND)
@@ -108,28 +94,31 @@ export default function createInstance(setup: setupObject): Object {
     .setHeartbeatInterval(setup.heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
 
   // set timeout to how long a transaction request will wait for the server (default 15 seconds)
-  config.transactionalRequestTimeout = parseInt(setup.transactionalRequestTimeout, 2) || 15 * 1000;
+  config.transactionalRequestTimeout = setup.transactionalRequestTimeout || 15 * 1000;
   // set timeout to how long a subscribe event loop will run (default 310 seconds)
-  config.subscribeRequestTimeout = parseInt(setup.subscribeRequestTimeout, 2) || 310 * 1000;
+  config.subscribeRequestTimeout = setup.subscribeRequestTimeout || 310 * 1000;
+  // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
+  config.useSendBeacon = setup.useSendBeacon || true;
 
   let stateStorage = new State();
+  let crypto = new Crypto({ keychain });
 
-  let networking = new Networking({ config, keychain, encrypt, sendBeacon }, setup.ssl, setup.origin)
+  let networking = new Networking({ config, keychain, crypto, sendBeacon }, setup.ssl, setup.origin)
     // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
 
   let publishQueue = new PublishQueue({ networking });
-  let subscriber = new Subscriber({ networking, state: stateStorage });
+  let subscriber = new Subscriber({ networking, state: stateStorage, callbacks });
 
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ networking });
-  let historyEndpoint = new HistoryEndpoint({ networking, decrypt });
+  let historyEndpoint = new HistoryEndpoint({ networking, crypto });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
   let publishEndpoints = new PublishEndpoints({ publishQueue });
   let pushEndpoints = new PushEndpoint({ networking, publishQueue });
 
-  let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, error, state: stateStorage });
+  let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, state: stateStorage });
 
-  let accessEndpoints = new AccessEndpoints({ keychain, config, networking, error, hmac_SHA256 });
+  let accessEndpoints = new AccessEndpoints({ keychain, config, networking });
 
   let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config, state: stateStorage });
 

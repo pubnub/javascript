@@ -4,6 +4,7 @@
 import Keychain from '../../../../../src/core/components/keychain';
 import Networking from '../../../../../src/core/components/networking';
 import Config from '../../../../../src/core/components/config';
+import Crypto from '../../../../../src/core/components/cryptography/index';
 
 const utils = require('../../../../../src/core/utils');
 const assert = require('assert');
@@ -375,13 +376,13 @@ describe('#components/networking', () => {
     let callbackStub;
     let xdrStub;
     let postXDRStub;
-    let encryptStub;
+    let cryptoStub;
 
     beforeEach(() => {
       config = new Config();
-      encryptStub = sinon.stub().returnsArg(0);
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-      networking = new Networking({ config, keychain, encrypt: encryptStub }, undefined, 'origin1.pubnub.com');
+      cryptoStub = new Crypto({ keychain });
+      networking = new Networking({ config, keychain, crypto: cryptoStub }, undefined, 'origin1.pubnub.com');
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -392,15 +393,16 @@ describe('#components/networking', () => {
     });
 
     it('uses encrypt method with cipher key passed', () => {
+      let encryptStub = sinon.stub(cryptoStub, 'encrypt').returns('{\"hi\":\"there\"}');
       keychain.setCipherKey('maCipherKey');
       networking.performPublish('mychannel', { hi: 'there' }, {}, 'GET', callbackStub);
-      assert.deepEqual(encryptStub.args[0], [{ hi: 'there' }, 'maCipherKey']);
+      assert.deepEqual(encryptStub.args[0], ['{\"hi\":\"there\"}']);
 
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params' });
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'publish',
-        'pubKey', 'subKey', 0, 'mychannel', 0, '%5Bobject%20Object%5D']);
+        'pubKey', 'subKey', 0, 'mychannel', 0, '%7B%22hi%22%3A%22there%22%7D']);
     });
 
     it('passes arguments to the xdr module', () => {
@@ -411,7 +413,7 @@ describe('#components/networking', () => {
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params' });
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
       assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'publish',
-        'pubKey', 'subKey', 0, 'mychannel', 0, 'ma-payload']);
+        'pubKey', 'subKey', 0, 'mychannel', 0, '%22ma-payload%22']);
     });
 
     it('errors out if subkey is not defined', () => {
