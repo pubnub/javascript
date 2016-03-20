@@ -430,7 +430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.default = createInstance;
+	exports.default = undefined;
 
 	var _uuid = __webpack_require__(3);
 
@@ -468,7 +468,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _subscriber2 = _interopRequireDefault(_subscriber);
 
-	var _time = __webpack_require__(43);
+	var _time = __webpack_require__(56);
 
 	var _time2 = _interopRequireDefault(_time);
 
@@ -476,31 +476,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(44);
+	var _history = __webpack_require__(57);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(45);
+	var _push = __webpack_require__(58);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(46);
+	var _access = __webpack_require__(59);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _channel_groups = __webpack_require__(47);
+	var _channel_groups = __webpack_require__(60);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _subscribe = __webpack_require__(48);
+	var _subscribe = __webpack_require__(61);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _publish = __webpack_require__(49);
+	var _publish = __webpack_require__(62);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
-	var _flow_interfaces = __webpack_require__(42);
+	var _flow_interfaces = __webpack_require__(55);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -508,17 +508,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var utils = __webpack_require__(18);
 
-	var DEF_WINDOWING = 10; // MILLISECONDS.
-	var DEF_TIMEOUT = 15000; // MILLISECONDS.
-	var DEF_SUB_TIMEOUT = 310; // SECONDS.
-	var DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
-
-	// get / set implementation to store data
-
 	function createInstance(setup) {
 	  var sendBeacon = setup.sendBeacon;
 	  var db = setup.db;
-	  var shutdown = setup.shutdown;
+	  var _shutdown = setup.shutdown;
 
 
 	  var callbacks = {
@@ -548,14 +541,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
 	  config.useSendBeacon = setup.useSendBeacon || true;
 
-	  var stateStorage = new _state2.default();
+	  var state = new _state2.default();
 	  var crypto = new _index2.default({ keychain: keychain });
-
 	  var networking = new _networking2.default({ config: config, keychain: keychain, crypto: crypto, sendBeacon: sendBeacon }, setup.ssl, setup.origin);
-	  // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
-
 	  var publishQueue = new _publish_queue2.default({ networking: networking });
-	  var subscriber = new _subscriber2.default({ networking: networking, state: stateStorage, callbacks: callbacks });
+	  var subscriber = new _subscriber2.default({ networking: networking, state: state, callbacks: callbacks });
 
 	  // initalize the endpoints
 	  var timeEndpoint = new _time2.default({ networking: networking });
@@ -564,13 +554,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var publishEndpoints = new _publish2.default({ publishQueue: publishQueue });
 	  var pushEndpoints = new _push2.default({ networking: networking, publishQueue: publishQueue });
 
-	  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, state: stateStorage });
+	  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, state: state });
 
 	  var accessEndpoints = new _access2.default({ keychain: keychain, config: config, networking: networking });
 
-	  var subscribeEndpoints = new _subscribe2.default({ networking: networking, callbacks: callbacks, config: config, state: stateStorage });
+	  var subscribeEndpoints = new _subscribe2.default({ networking: networking, callbacks: callbacks, config: config, state: state });
 
-	  var presenceHeartbeat = new _presence_heartbeat2.default(config, stateStorage, presenceEndpoints);
+	  var presenceHeartbeat = new _presence_heartbeat2.default({ config: config, state: state, presenceEndpoints: presenceEndpoints });
 	  // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
 
 	  if (config.getPresenceTimeout() === 2) {
@@ -613,18 +603,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      send: pushEndpoints.send.bind(pushEndpoints)
 	    },
 
-	    getCipherKey: function getCipherKey() {
-	      return keychain.getCipherKey();
-	    },
-	    setCipherKey: function setCipherKey(key) {
-	      keychain.setCipherKey(key);
-	    },
-	    rawEncrypt: function rawEncrypt(input, key) {
-	      return encrypt(input, key);
-	    },
-	    rawDecrypt: function rawDecrypt(input, key) {
-	      return decrypt(input, key);
-	    },
 	    getHeartbeat: function getHeartbeat() {
 	      return config.getPresenceTimeout();
 	    },
@@ -634,55 +612,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (config.getPresenceTimeout() === 2) {
 	        config.setHeartbeatInterval(1);
 	      }
-
-	      // emit the event
-	      // eventEmitter.emit('presenceHeartbeatChanged');
 	    },
 	    getHeartbeatInterval: function getHeartbeatInterval() {
 	      return config.getHeartbeatInterval();
 	    },
 	    setHeartbeatInterval: function setHeartbeatInterval(heartbeatInterval) {
 	      config.setHeartbeatInterval(heartbeatInterval);
-	      // eventEmitter.emit('presenceHeartbeatChanged');
-	    },
-	    getVersion: function getVersion() {
-	      return packageJSON.version;
-	    },
-	    addParam: function addParam(key, val) {
-	      networking.addCoreParam(key, val);
 	    },
 	    setAuthKey: function setAuthKey(auth) {
 	      keychain.setAuthKey(auth);
-	      // eventEmitter.emit('keychainChanged');
 	    },
-	    setUUID: function setUUID(uuid) {
-	      keychain.setUUID(uuid);
-	      // eventEmitter.emit('keychainChanged');
-	    },
-	    getUUID: function getUUID() {
-	      return keychain.getUUID();
-	    },
-	    getSubscribedChannels: function getSubscribedChannels() {
-	      return stateStorage.generate_channel_list(true);
-	    },
+
+
+	    setUUID: keychain.setUUID.bind(keychain),
+	    getUUID: keychain.getUUID.bind(keychain),
+
+	    setCipherKey: keychain.setCipherKey.bind(keychain),
+	    getCipherKey: keychain.getCipherKey.bind(keychain),
+
+	    getSubscribedChannels: state.getSubscribedChannels.bind(state),
+
 	    stopTimers: function stopTimers() {
 	      // connectivity.stop();
 	      presenceHeartbeat.stop();
 	    },
-	    shutdown: function (_shutdown) {
-	      function shutdown() {
-	        return _shutdown.apply(this, arguments);
-	      }
-
-	      shutdown.toString = function () {
-	        return _shutdown.toString();
-	      };
-
-	      return shutdown;
-	    }(function () {
+	    getVersion: function getVersion() {
+	      return packageJSON.version;
+	    },
+	    shutdown: function shutdown() {
 	      SELF.stopTimers();
-	      if (shutdown) shutdown();
-	    })
+	      if (_shutdown) _shutdown();
+	    }
 	  };
 
 	  /*
@@ -694,6 +654,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return SELF;
 	}
+	exports.default = createInstance;
 
 /***/ },
 /* 3 */
@@ -1346,8 +1307,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return callback(this._r.validationError('Missing Publish Key'));
 	      }
 
-	      var encryptedMessage = this._crypto.encrypt(msg);
-	      encryptedMessage = JSON.stringify(encryptedMessage);
+	      var stringifiedMessage = JSON.stringify(msg);
+	      var encryptedMessage = this._crypto.encrypt(stringifiedMessage);
 
 	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, _utils2.default.encode(channel), 0, _utils2.default.encode(encryptedMessage)];
 
@@ -1418,6 +1379,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var url = _ref3.url;
 	      var timeout = _ref3.timeout;
 	      var callback = _ref3.callback;
+
+	      console.log('url', url);
 
 	      var superagentConstruct = _superagent2.default.get(url.join('/')).timeout(timeout || this._config.transactionalRequestTimeout).query(data);
 	      return this._abstractedXDR(superagentConstruct, callback);
@@ -3166,8 +3129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
 	      var cipherKey = this._getPaddedKey(this._keychain.getCipherKey(), options);
-	      var hexMessage = JSON.stringify(data);
-	      var encryptedHexArray = _hmacSha2.default.AES.encrypt(hexMessage, cipherKey, { iv: iv, mode: mode }).ciphertext;
+	      var encryptedHexArray = _hmacSha2.default.AES.encrypt(data, cipherKey, { iv: iv, mode: mode }).ciphertext;
 	      var base64Encrypted = encryptedHexArray.toString(_hmacSha2.default.enc.Base64);
 	      return base64Encrypted || data;
 	    }
@@ -3200,6 +3162,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	"use strict";
+
+	/*eslint-disable */
 
 	/*
 	 CryptoJS v3.1.2
@@ -4113,7 +4077,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._presenceState = {};
 
 	    this._eventEmitter = new _eventEmitter2.default();
-	    this.__subscribeTimeToken = '0';
+	    this._subscribeTimeToken = '0';
 	  }
 
 	  // state storage for each channel:
@@ -4202,7 +4166,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'announceSubscriptionChange',
 	    value: function announceSubscriptionChange() {
-	      this.__subscribeTimeToken = 0;
+	      this._subscribeTimeToken = '0';
 	      this._eventEmitter.emit('onSubscriptionChange');
 	    }
 
@@ -5378,7 +5342,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _defaults2 = _interopRequireDefault(_defaults);
 
-	var _flow_interfaces = __webpack_require__(42);
+	var _endsWith2 = __webpack_require__(42);
+
+	var _endsWith3 = _interopRequireDefault(_endsWith2);
+
+	var _flow_interfaces = __webpack_require__(55);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5395,7 +5363,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._networking = networking;
 	    this._state = state;
 	    this._callbacks = callbacks;
-	    this._l = _logger2.default.getLogger('#endpoints/publish');
+	    this._l = _logger2.default.getLogger('#iterator/subscriber');
 
 	    this._state.onSubscriptionChange(this.start.bind(this));
 	  }
@@ -5446,8 +5414,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '__handleSubscribeResponse',
 	    value: function __handleSubscribeResponse(err, response) {
+	      var _this2 = this;
+
 	      if (err) {
-	        console.log('subscribe error', err);
 	        return;
 	      }
 
@@ -5462,6 +5431,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var firstOrigins = _response[2];
 	      var secondOrigins = _response[3];
 
+	      /*
+	        the subscribe endpoint is slightly confusing, it contains upto three elements
+	        1) an array of messages, those always exists.
+	        2) an array of channels OR channel groups, they align in their position to the messages,
+	           only exists if there is more than one channel or at least one channel group
+	        3) an array of channels OF channel groups, they align with messages and exist as long as
+	           one channel group exists.
+	      */
 
 	      firstOrigins = firstOrigins ? firstOrigins.split(',') : [];
 	      secondOrigins = secondOrigins ? secondOrigins.split(',') : [];
@@ -5469,13 +5446,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	      payload.forEach(function (message, index) {
 	        var firstOrigin = firstOrigins[index];
 	        var secondOrigin = secondOrigins[index];
+	        var isPresence = false;
 
 	        // we need to determine if the message originated from a channel or
 	        // channel group
 	        var envelope = { message: message };
 
-	        console.log('sub callback', message, index, firstOrigin, secondOrigin);
-	        console.log('\n\n\n');
+	        // if a channel of a channel group exists, we must be in a channel group mode..
+	        if (secondOrigin) {
+	          envelope.channel = secondOrigin;
+	          envelope.channelGroup = firstOrigin;
+	          // otherwise, we are only in channel mode
+	        } else if (firstOrigin) {
+	            envelope.channel = firstOrigin;
+	            // otherwise, we must be subscribed to just one channel.
+	          } else {
+	              envelope.channel = _this2._state.getSubscribedChannels()[0];
+	            }
+
+	        if (envelope.channel && (0, _endsWith3.default)(envelope.channel, _defaults2.default.PRESENCE_SUFFIX)) {
+	          isPresence = true;
+	          envelope.channel = envelope.channel.replace(_defaults2.default.PRESENCE_SUFFIX, '');
+	        }
+
+	        if (envelope.channelGroup && (0, _endsWith3.default)(envelope.channelGroup, _defaults2.default.PRESENCE_SUFFIX)) {
+	          isPresence = true;
+	          envelope.channelGroup = envelope.channelGroup.replace(_defaults2.default.PRESENCE_SUFFIX, '');
+	        }
+
+	        if (isPresence) {
+	          onPresence(envelope);
+	        } else {
+	          onMessage(envelope);
+	        }
 	      });
 
 	      this._state.setSubscribeTimeToken(timetoken);
@@ -5498,12 +5501,503 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseClamp = __webpack_require__(43),
+	    toInteger = __webpack_require__(44),
+	    toString = __webpack_require__(48);
+
+	/**
+	 * Checks if `string` ends with the given target string.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category String
+	 * @param {string} [string=''] The string to search.
+	 * @param {string} [target] The string to search for.
+	 * @param {number} [position=string.length] The position to search from.
+	 * @returns {boolean} Returns `true` if `string` ends with `target`, else `false`.
+	 * @example
+	 *
+	 * _.endsWith('abc', 'c');
+	 * // => true
+	 *
+	 * _.endsWith('abc', 'b');
+	 * // => false
+	 *
+	 * _.endsWith('abc', 'b', 2);
+	 * // => true
+	 */
+	function endsWith(string, target, position) {
+	  string = toString(string);
+	  target = typeof target == 'string' ? target : (target + '');
+
+	  var length = string.length;
+	  position = position === undefined
+	    ? length
+	    : baseClamp(toInteger(position), 0, length);
+
+	  position -= target.length;
+	  return position >= 0 && string.indexOf(target, position) == position;
+	}
+
+	module.exports = endsWith;
+
+
+/***/ },
+/* 43 */
+/***/ function(module, exports) {
+
+	/**
+	 * The base implementation of `_.clamp` which doesn't coerce arguments to numbers.
+	 *
+	 * @private
+	 * @param {number} number The number to clamp.
+	 * @param {number} [lower] The lower bound.
+	 * @param {number} upper The upper bound.
+	 * @returns {number} Returns the clamped number.
+	 */
+	function baseClamp(number, lower, upper) {
+	  if (number === number) {
+	    if (upper !== undefined) {
+	      number = number <= upper ? number : upper;
+	    }
+	    if (lower !== undefined) {
+	      number = number >= lower ? number : lower;
+	    }
+	  }
+	  return number;
+	}
+
+	module.exports = baseClamp;
+
+
+/***/ },
+/* 44 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var toNumber = __webpack_require__(45);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0,
+	    MAX_INTEGER = 1.7976931348623157e+308;
+
+	/**
+	 * Converts `value` to an integer.
+	 *
+	 * **Note:** This function is loosely based on [`ToInteger`](http://www.ecma-international.org/ecma-262/6.0/#sec-tointeger).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to convert.
+	 * @returns {number} Returns the converted integer.
+	 * @example
+	 *
+	 * _.toInteger(3);
+	 * // => 3
+	 *
+	 * _.toInteger(Number.MIN_VALUE);
+	 * // => 0
+	 *
+	 * _.toInteger(Infinity);
+	 * // => 1.7976931348623157e+308
+	 *
+	 * _.toInteger('3');
+	 * // => 3
+	 */
+	function toInteger(value) {
+	  if (!value) {
+	    return value === 0 ? value : 0;
+	  }
+	  value = toNumber(value);
+	  if (value === INFINITY || value === -INFINITY) {
+	    var sign = (value < 0 ? -1 : 1);
+	    return sign * MAX_INTEGER;
+	  }
+	  var remainder = value % 1;
+	  return value === value ? (remainder ? value - remainder : value) : 0;
+	}
+
+	module.exports = toInteger;
+
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isFunction = __webpack_require__(46),
+	    isObject = __webpack_require__(47);
+
+	/** Used as references for various `Number` constants. */
+	var NAN = 0 / 0;
+
+	/** Used to match leading and trailing whitespace. */
+	var reTrim = /^\s+|\s+$/g;
+
+	/** Used to detect bad signed hexadecimal string values. */
+	var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+	/** Used to detect binary string values. */
+	var reIsBinary = /^0b[01]+$/i;
+
+	/** Used to detect octal string values. */
+	var reIsOctal = /^0o[0-7]+$/i;
+
+	/** Built-in method references without a dependency on `root`. */
+	var freeParseInt = parseInt;
+
+	/**
+	 * Converts `value` to a number.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to process.
+	 * @returns {number} Returns the number.
+	 * @example
+	 *
+	 * _.toNumber(3);
+	 * // => 3
+	 *
+	 * _.toNumber(Number.MIN_VALUE);
+	 * // => 5e-324
+	 *
+	 * _.toNumber(Infinity);
+	 * // => Infinity
+	 *
+	 * _.toNumber('3');
+	 * // => 3
+	 */
+	function toNumber(value) {
+	  if (isObject(value)) {
+	    var other = isFunction(value.valueOf) ? value.valueOf() : value;
+	    value = isObject(other) ? (other + '') : other;
+	  }
+	  if (typeof value != 'string') {
+	    return value === 0 ? value : +value;
+	  }
+	  value = value.replace(reTrim, '');
+	  var isBinary = reIsBinary.test(value);
+	  return (isBinary || reIsOctal.test(value))
+	    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+	    : (reIsBadHex.test(value) ? NAN : +value);
+	}
+
+	module.exports = toNumber;
+
+
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObject = __webpack_require__(47);
+
+	/** `Object#toString` result references. */
+	var funcTag = '[object Function]',
+	    genTag = '[object GeneratorFunction]';
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/**
+	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in Safari 8 which returns 'object' for typed array and weak map constructors,
+	  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+	  var tag = isObject(value) ? objectToString.call(value) : '';
+	  return tag == funcTag || tag == genTag;
+	}
+
+	module.exports = isFunction;
+
+
+/***/ },
+/* 47 */
+/***/ function(module, exports) {
+
+	/**
+	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(_.noop);
+	 * // => true
+	 *
+	 * _.isObject(null);
+	 * // => false
+	 */
+	function isObject(value) {
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+
+	module.exports = isObject;
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Symbol = __webpack_require__(49),
+	    isSymbol = __webpack_require__(53);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0;
+
+	/** Used to convert symbols to primitives and strings. */
+	var symbolProto = Symbol ? Symbol.prototype : undefined,
+	    symbolToString = symbolProto ? symbolProto.toString : undefined;
+
+	/**
+	 * Converts `value` to a string if it's not one. An empty string is returned
+	 * for `null` and `undefined` values. The sign of `-0` is preserved.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to process.
+	 * @returns {string} Returns the string.
+	 * @example
+	 *
+	 * _.toString(null);
+	 * // => ''
+	 *
+	 * _.toString(-0);
+	 * // => '-0'
+	 *
+	 * _.toString([1, 2, 3]);
+	 * // => '1,2,3'
+	 */
+	function toString(value) {
+	  // Exit early for strings to avoid a performance hit in some environments.
+	  if (typeof value == 'string') {
+	    return value;
+	  }
+	  if (value == null) {
+	    return '';
+	  }
+	  if (isSymbol(value)) {
+	    return symbolToString ? symbolToString.call(value) : '';
+	  }
+	  var result = (value + '');
+	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+	}
+
+	module.exports = toString;
+
+
+/***/ },
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var root = __webpack_require__(50);
+
+	/** Built-in value references. */
+	var Symbol = root.Symbol;
+
+	module.exports = Symbol;
+
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(module, global) {var checkGlobal = __webpack_require__(52);
+
+	/** Used to determine if values are of the language type `Object`. */
+	var objectTypes = {
+	  'function': true,
+	  'object': true
+	};
+
+	/** Detect free variable `exports`. */
+	var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
+	  ? exports
+	  : undefined;
+
+	/** Detect free variable `module`. */
+	var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
+	  ? module
+	  : undefined;
+
+	/** Detect free variable `global` from Node.js. */
+	var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
+
+	/** Detect free variable `self`. */
+	var freeSelf = checkGlobal(objectTypes[typeof self] && self);
+
+	/** Detect free variable `window`. */
+	var freeWindow = checkGlobal(objectTypes[typeof window] && window);
+
+	/** Detect `this` as the global object. */
+	var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
+
+	/**
+	 * Used as a reference to the global object.
+	 *
+	 * The `this` value is used if it's the global object to avoid Greasemonkey's
+	 * restricted `window` object, otherwise the `window` object is used.
+	 */
+	var root = freeGlobal ||
+	  ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) ||
+	    freeSelf || thisGlobal || Function('return this')();
+
+	module.exports = root;
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(51)(module), (function() { return this; }())))
+
+/***/ },
+/* 51 */
+/***/ function(module, exports) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
+
+/***/ },
+/* 52 */
+/***/ function(module, exports) {
+
+	/**
+	 * Checks if `value` is a global object.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {null|Object} Returns `value` if it's a global object, else `null`.
+	 */
+	function checkGlobal(value) {
+	  return (value && value.Object === Object) ? value : null;
+	}
+
+	module.exports = checkGlobal;
+
+
+/***/ },
+/* 53 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObjectLike = __webpack_require__(54);
+
+	/** `Object#toString` result references. */
+	var symbolTag = '[object Symbol]';
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/**
+	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/**
+	 * Checks if `value` is classified as a `Symbol` primitive or object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isSymbol(Symbol.iterator);
+	 * // => true
+	 *
+	 * _.isSymbol('abc');
+	 * // => false
+	 */
+	function isSymbol(value) {
+	  return typeof value == 'symbol' ||
+	    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+	}
+
+	module.exports = isSymbol;
+
+
+/***/ },
+/* 54 */
+/***/ function(module, exports) {
+
+	/**
+	 * Checks if `value` is object-like. A value is object-like if it's not `null`
+	 * and has a `typeof` result of "object".
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+	 * @example
+	 *
+	 * _.isObjectLike({});
+	 * // => true
+	 *
+	 * _.isObjectLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObjectLike(_.noop);
+	 * // => false
+	 *
+	 * _.isObjectLike(null);
+	 * // => false
+	 */
+	function isObjectLike(value) {
+	  return !!value && typeof value == 'object';
+	}
+
+	module.exports = isObjectLike;
+
+
+/***/ },
+/* 55 */
 /***/ function(module, exports) {
 
 	'use strict';
 
 /***/ },
-/* 43 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5547,7 +6041,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 44 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5654,7 +6148,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            decryptedMessages.push({ timetoken: timetoken, message: decryptedMessage });
 	          }
 	        } else {
-	          var _decryptedMessage = _this2._crypto.decrypt(payload.message);
+	          var _decryptedMessage = _this2._crypto.decrypt(payload);
 	          try {
 	            decryptedMessages.push(JSON.parse(_decryptedMessage));
 	          } catch (e) {
@@ -5672,7 +6166,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 45 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5817,7 +6311,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 46 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5949,7 +6443,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 47 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6085,7 +6579,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 48 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6116,7 +6610,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _flow_interfaces = __webpack_require__(42);
+	var _flow_interfaces = __webpack_require__(55);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6251,7 +6745,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 49 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

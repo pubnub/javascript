@@ -6,6 +6,8 @@ import Logger from '../components/logger';
 import superagent from 'superagent';
 import consts from '../../../defaults';
 
+import _endsWith from 'lodash/endsWith';
+
 import { callbackStruct } from '../flow_interfaces';
 
 type subscriberConstruct = {
@@ -27,7 +29,7 @@ export default class {
     this._networking = networking;
     this._state = state;
     this._callbacks = callbacks;
-    this._l = Logger.getLogger('#endpoints/publish');
+    this._l = Logger.getLogger('#iterator/subscriber');
 
     this._state.onSubscriptionChange(this.start.bind(this));
   }
@@ -74,34 +76,64 @@ export default class {
 
   __handleSubscribeResponse(err: Object, response: Object) {
     if (err) {
-      console.log('subscribe error', err);
       return;
     }
 
     let { onMessage, onPresence } = this._callbacks;
     let [payload, timetoken, firstOrigins, secondOrigins] = response;
 
-    firstOrigins = firstOrigins ? firstOrigins.split(',') : []
-    secondOrigins = secondOrigins ? secondOrigins.split(',') : []
+    /*
+      the subscribe endpoint is slightly confusing, it contains upto three elements
+      1) an array of messages, those always exists.
+      2) an array of channels OR channel groups, they align in their position to the messages,
+         only exists if there is more than one channel or at least one channel group
+      3) an array of channels OF channel groups, they align with messages and exist as long as
+         one channel group exists.
+    */
+    firstOrigins = firstOrigins ? firstOrigins.split(',') : [];
+    secondOrigins = secondOrigins ? secondOrigins.split(',') : [];
 
     payload.forEach((message, index) => {
       let firstOrigin = firstOrigins[index];
       let secondOrigin = secondOrigins[index];
+      let isPresence = false;
 
       // we need to determine if the message originated from a channel or
       // channel group
-      let envelope: Object = {message};
+      let envelope: Object = { message };
 
+      // if a channel of a channel group exists, we must be in a channel group mode..
+      if (secondOrigin) {
+        envelope.channel = secondOrigin;
+        envelope.channelGroup = firstOrigin;
+      // otherwise, we are only in channel mode
+      } else if (firstOrigin) {
+        envelope.channel = firstOrigin;
+      // otherwise, we must be subscribed to just one channel.
+      } else {
+        envelope.channel = this._state.getSubscribedChannels()[0];
+      }
 
-      console.log('sub callback', message, index, firstOrigin, secondOrigin);
-      console.log('\n\n\n');
-    })
+      if (envelope.channel && _endsWith(envelope.channel, consts.PRESENCE_SUFFIX)) {
+        isPresence = true;
+        envelope.channel = envelope.channel.replace(consts.PRESENCE_SUFFIX, '');
+      }
+
+      if (envelope.channelGroup && _endsWith(envelope.channelGroup, consts.PRESENCE_SUFFIX)) {
+        isPresence = true;
+        envelope.channelGroup = envelope.channelGroup.replace(consts.PRESENCE_SUFFIX, '');
+      }
+
+      if (isPresence) {
+        onPresence(envelope);
+      } else {
+        onMessage(envelope);
+      }
+    });
 
     this._state.setSubscribeTimeToken(timetoken);
     this.start();
   }
-
-  __decideChannelAndG
 
   stop() {
     if (this._runningSuperagent) {

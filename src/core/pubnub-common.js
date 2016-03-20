@@ -24,40 +24,10 @@ import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
 
 let packageJSON = require('../../package.json');
-import { callbackStruct } from './flow_interfaces';
+import { callbackStruct, internalSetupStruct } from './flow_interfaces';
 let utils = require('./utils');
 
-let DEF_WINDOWING = 10; // MILLISECONDS.
-let DEF_TIMEOUT = 15000; // MILLISECONDS.
-let DEF_SUB_TIMEOUT = 310; // SECONDS.
-let DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
-
-type setupObject = {
-  useSendBeacon: ?boolean, // configuration on beacon usage
-  publishKey: ?string, // API key required for publishing
-  subscribeKey: string, // API key required to subscribe
-  cipherKey: string, // decryption keys
-  origin: ?string, // an optional FQDN which will recieve calls from the SDK.
-  ssl: boolean, // is SSL enabled?
-  shutdown: Function, // function to call when pubnub is shutting down.
-
-  sendBeacon: ?Function, // executes a call against the Beacon API
-  useSendBeacon: ?boolean, // enable, disable usage of send beacons
-
-  navigatorOnlineCheck: Function, // a function which abstracts out navigator.onLine
-
-  onStatus: Function, // function to call when a status shows up.
-  onPresence: Function, // function to call when new presence data shows up
-  onMessage: Function, // function to call when a new presence shows up
-
-  subscribeRequestTimeout: ?number, // how long to wait for subscribe requst
-  transactionalRequestTimeout: ?number, // how long to wait for transactional requests
-
-  db: Function // get / set implementation to store data
-
-}
-
-export default function createInstance(setup: setupObject): Object {
+export default function createInstance(setup: internalSetupStruct): Object {
   let { sendBeacon, db, shutdown } = setup;
 
   let callbacks: callbackStruct = {
@@ -100,14 +70,11 @@ export default function createInstance(setup: setupObject): Object {
   // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
   config.useSendBeacon = setup.useSendBeacon || true;
 
-  let stateStorage = new State();
+  let state = new State();
   let crypto = new Crypto({ keychain });
-
-  let networking = new Networking({ config, keychain, crypto, sendBeacon }, setup.ssl, setup.origin)
-    // .setRequestTimeout(setup.timeout || DEF_TIMEOUT)
-
+  let networking = new Networking({ config, keychain, crypto, sendBeacon }, setup.ssl, setup.origin);
   let publishQueue = new PublishQueue({ networking });
-  let subscriber = new Subscriber({ networking, state: stateStorage, callbacks });
+  let subscriber = new Subscriber({ networking, state, callbacks });
 
   // initalize the endpoints
   let timeEndpoint = new TimeEndpoint({ networking });
@@ -116,13 +83,13 @@ export default function createInstance(setup: setupObject): Object {
   let publishEndpoints = new PublishEndpoints({ publishQueue });
   let pushEndpoints = new PushEndpoint({ networking, publishQueue });
 
-  let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, state: stateStorage });
+  let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, state });
 
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking });
 
-  let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config, state: stateStorage });
+  let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config, state });
 
-  let presenceHeartbeat = new PresenceHeartbeat(config, stateStorage, presenceEndpoints);
+  let presenceHeartbeat = new PresenceHeartbeat({ config, state, presenceEndpoints });
   // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
 
   if (config.getPresenceTimeout() === 2) {
@@ -165,22 +132,6 @@ export default function createInstance(setup: setupObject): Object {
       send: pushEndpoints.send.bind(pushEndpoints),
     },
 
-    getCipherKey() {
-      return keychain.getCipherKey();
-    },
-
-    setCipherKey(key: string) {
-      keychain.setCipherKey(key);
-    },
-
-    rawEncrypt(input: string, key: string): string {
-      return encrypt(input, key);
-    },
-
-    rawDecrypt(input: string, key: string): string {
-      return decrypt(input, key);
-    },
-
     getHeartbeat() {
       return config.getPresenceTimeout();
     },
@@ -192,8 +143,7 @@ export default function createInstance(setup: setupObject): Object {
         config.setHeartbeatInterval(1);
       }
 
-      // emit the event
-      // eventEmitter.emit('presenceHeartbeatChanged');
+
     },
 
     getHeartbeatInterval() {
@@ -202,38 +152,27 @@ export default function createInstance(setup: setupObject): Object {
 
     setHeartbeatInterval(heartbeatInterval) {
       config.setHeartbeatInterval(heartbeatInterval);
-      // eventEmitter.emit('presenceHeartbeatChanged');
-    },
-
-    getVersion() {
-      return packageJSON.version;
-    },
-
-    addParam(key: string, val: any) {
-      networking.addCoreParam(key, val);
     },
 
     setAuthKey(auth) {
       keychain.setAuthKey(auth);
-      // eventEmitter.emit('keychainChanged');
     },
 
-    setUUID(uuid) {
-      keychain.setUUID(uuid);
-      // eventEmitter.emit('keychainChanged');
-    },
+    setUUID: keychain.setUUID.bind(keychain),
+    getUUID: keychain.getUUID.bind(keychain),
 
-    getUUID() {
-      return keychain.getUUID();
-    },
+    setCipherKey: keychain.setCipherKey.bind(keychain),
+    getCipherKey: keychain.getCipherKey.bind(keychain),
 
-    getSubscribedChannels() {
-      return stateStorage.generate_channel_list(true);
-    },
+    getSubscribedChannels: state.getSubscribedChannels.bind(state),
 
     stopTimers() {
       // connectivity.stop();
       presenceHeartbeat.stop();
+    },
+
+    getVersion() {
+      return packageJSON.version;
     },
 
     shutdown() {

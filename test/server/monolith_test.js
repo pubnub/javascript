@@ -1,3 +1,5 @@
+ /*eslint-disable */
+
 if (typeof window == 'undefined') {
     var PUBNUB = require('../../lib/node.js/pubnub.js'),
         assert = require('assert'),

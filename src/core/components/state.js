@@ -24,7 +24,7 @@ export default class {
     this._presenceState = {};
 
     this._eventEmitter = new EventEmitter();
-    this.__subscribeTimeToken = '0';
+    this._subscribeTimeToken = '0';
   }
 
   containsChannel(name: string): boolean {
@@ -91,17 +91,17 @@ export default class {
   }
 
   announceSubscriptionChange() {
-    this.__subscribeTimeToken = 0;
+    this._subscribeTimeToken = '0';
     this._eventEmitter.emit('onSubscriptionChange');
   }
 
   // end event emitting.
 
-  getSubscribedChannels() {
+  getSubscribedChannels(): Array<string> {
     return Object.keys(this._channelStorage);
   }
 
-  getSubscribedChannelGroups() {
+  getSubscribedChannelGroups(): Array<string> {
     return Object.keys(this._channelGroupStorage);
   }
 
