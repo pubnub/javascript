@@ -1097,26 +1097,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'performGrant',
 	    value: function performGrant(authKey, data, callback) {
-	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-	      if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-	      if (!this._keychain.getSecretKey()) return this._error('Missing Secret Key');
+	      if (!this._keychain.getSubscribeKey()) {
+	        return callback(this._r.validationError('Missing Subscribe Key'));
+	      }
 
-	      var sign_input = this._keychain.getSubscribeKey() + '\n' + this._keychain.getPublishKey() + '\n' + 'grant' + '\n';
+	      if (!this._keychain.getPublishKey()) {
+	        return callback(this._r.validationError('Missing Publish Key'));
+	      }
+
+	      if (!this._keychain.getSecretKey()) {
+	        return callback(this._r.validationError('Missing Secret Key'));
+	      }
+
+	      var signInput = this._keychain.getSubscribeKey() + '\n' + this._keychain.getPublishKey() + '\n' + 'grant' + '\n';
 
 	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
 
-	      data = this._networking.prepareParams(data);
+	      data.auth = authKey;
 
-	      if (!auth_key) delete data.auth;
+	      data = this.prepareParams(data);
+	      signInput += _utils2.default._get_pam_sign_input_from_params(data);
 
-	      sign_input += _utils2.default._get_pam_sign_input_from_params(data);
-
-	      var signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
+	      var signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
 
 	      signature = signature.replace(/\+/g, '-');
 	      signature = signature.replace(/\//g, '_');
 
 	      data.signature = signature;
+
+	      this._xdr({ data: data, callback: callback, url: url });
+	    }
+	  }, {
+	    key: 'performAudit',
+	    value: function performAudit(authKey, data, callback) {
+	      if (!this._keychain.getSubscribeKey()) {
+	        return callback(this._r.validationError('Missing Subscribe Key'));
+	      }
+
+	      if (!this._keychain.getPublishKey()) {
+	        return callback(this._r.validationError('Missing Publish Key'));
+	      }
+
+	      if (!this._keychain.getSecretKey()) {
+	        return callback(this._r.validationError('Missing Secret Key'));
+	      }
+
+	      var signInput = this._keychain.getSubscribeKey() + '\n' + this._keychain.getPublishKey() + '\n' + 'audit' + '\n';
+
+	      data.auth = authKey;
+	      data = this.prepareParams(data);
+	      signInput += _utils2.default._get_pam_sign_input_from_params(data);
+
+	      var signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
+
+	      signature = signature.replace(/\+/g, '-');
+	      signature = signature.replace(/\//g, '_');
+
+	      data.signature = signature;
+
+	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
 
 	      this._xdr({ data: data, callback: callback, url: url });
 	    }
@@ -1132,35 +1171,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'];
 
 	      this._xdr({ data: data, callback: callback, url: url });
-	    }
-	  }, {
-	    key: 'performAudit',
-	    value: function performAudit(authKey, data, callback) {
-	      var auth_key = args.auth_key;
-	      if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-	      if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-	      if (!this._keychain.getSecretKey()) return this._error('Missing Secret Key');
-
-	      var sign_input = this._keychain.getSubscribeKey() + '\n' + this._keychain.getPublishKey() + '\n' + 'audit' + '\n';
-
-	      if (auth_key) data.auth = auth_key;
-
-	      data = this._networking.prepareParams(data);
-
-	      if (!auth_key) delete data.auth;
-
-	      sign_input += _utils2.default._get_pam_sign_input_from_params(data);
-
-	      var signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
-
-	      signature = signature.replace(/\+/g, '-');
-	      signature = signature.replace(/\//g, '_');
-
-	      data.signature = signature;
-
-	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
-
-	      this._xdr({ data: data, success: success, fail: fail, url: url });
 	    }
 	  }, {
 	    key: 'performLeave',
@@ -1369,8 +1379,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var timeout = _ref2.timeout;
 	      var callback = _ref2.callback;
 
-	      var superagentConstruct = _superagent2.default.post(url.join('/')).timeout(timeout || this._config.transactionalRequestTimeout).query(data);
-	      return this._abstractedXDR(superagentConstruct, callback);
+	      var superagentConstruct = _superagent2.default.post(url.join('/')).query(data);
+	      return this._abstractedXDR(superagentConstruct, timeout, callback);
 	    }
 	  }, {
 	    key: '_xdr',
@@ -1380,23 +1390,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var timeout = _ref3.timeout;
 	      var callback = _ref3.callback;
 
-	      console.log('url', url);
-
-	      var superagentConstruct = _superagent2.default.get(url.join('/')).timeout(timeout || this._config.transactionalRequestTimeout).query(data);
-	      return this._abstractedXDR(superagentConstruct, callback);
+	      var superagentConstruct = _superagent2.default.get(url.join('/')).query(data);
+	      return this._abstractedXDR(superagentConstruct, timeout, callback);
 	    }
 	  }, {
 	    key: '_abstractedXDR',
-	    value: function _abstractedXDR(superagentConstruct, callback) {
-	      return superagentConstruct.type('json').end(function (err, resp) {
+	    value: function _abstractedXDR(superagentConstruct, timeout, callback) {
+	      return superagentConstruct.type('json').timeout(timeout || this._config.transactionalRequestTimeout).end(function (err, resp) {
 	        if (err) return callback(err, null);
 
-	        if ((typeof resp === 'undefined' ? 'undefined' : _typeof(resp)) === 'object' && resp.error) {
-	          callback(resp.error, null);
-	          return;
+	        var parsedResponse = JSON.parse(resp.text);
+
+	        if ((typeof parsedResponse === 'undefined' ? 'undefined' : _typeof(parsedResponse)) === 'object' && parsedResponse.error) {
+	          return callback(parsedResponse.error, null);
 	        }
 
-	        callback(null, JSON.parse(resp.text));
+	        if ((typeof parsedResponse === 'undefined' ? 'undefined' : _typeof(parsedResponse)) === 'object' && parsedResponse.payload) {
+	          return callback(null, parsedResponse.payload);
+	        }
+
+	        callback(null, parsedResponse);
 	      });
 	    }
 	  }]);
@@ -3053,7 +3066,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'HMACSHA256',
 	    value: function HMACSHA256(data) {
-	      var hash = _hmacSha2.default.HmacSHA256(data, this._keychain.getCipherKey());
+	      console.log('HMACSHA256', data, this._keychain.getSecretKey());
+
+	      var hash = _hmacSha2.default.HmacSHA256(data, this._keychain.getSecretKey());
 	      return hash.toString(_hmacSha2.default.enc.Base64);
 	    }
 	  }, {

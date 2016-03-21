@@ -1,22 +1,22 @@
 /* global describe, it, before, after, beforeEach */
 
-var assert = require('assert');
-var PUBNUB = require('../../../lib/node.js/pubnub.js');
-var testUtils = require('../utils');
+let assert = require('assert');
+let PUBNUB = require('../../../lib/node.js/pubnub.js');
+let testUtils = require('../utils');
 
 describe('#publish()', function () {
   this.timeout(180000);
 
-  var messageString = 'Hi from Javascript';
-  var messageJsono = { message: 'Hi from Javascript' };
-  var messageJsonoQ = { message: 'How are you ?' };
-  var messageJsona = ['message', 'Hi from javascript'];
-  var messageNum = 123;
-  var messageNumStr = '123';
-  var messageJsonoStr = '{"message" : "Hi from Javascript"}';
-  var messageJsonaStr = '["message" , "Hi from javascript"]';
-  var fileFixtures = {};
-  var itFixtures = {};
+  let messageString = 'Hi from Javascript';
+  let messageJsono = { message: 'Hi from Javascript' };
+  let messageJsonoQ = { message: 'How are you ?' };
+  let messageJsona = ['message', 'Hi from javascript'];
+  let messageNum = 123;
+  let messageNumStr = '123';
+  let messageJsonoStr = '{"message" : "Hi from Javascript"}';
+  let messageJsonaStr = '["message" , "Hi from javascript"]';
+  let fileFixtures = {};
+  let itFixtures = {};
 
   before(function () {
     fileFixtures.channel = 'test_publish';
@@ -29,16 +29,16 @@ describe('#publish()', function () {
 
   beforeEach(function () {
     itFixtures.pubnub = PUBNUB({
-      publish_key: fileFixtures.publishKey, // 'demo',
-      subscribe_key: fileFixtures.subscribeKey, // 'demo',
+      publishKey: fileFixtures.publishKey, // 'demo',
+      subscribeKey: fileFixtures.subscribeKey, // 'demo',
       uuid: fileFixtures.uuid,
       origin: fileFixtures.origin,
       build_u: true
     });
 
     itFixtures.pubnub_enc = PUBNUB({
-      publish_key: fileFixtures.publishKey, // 'demo',
-      subscribe_key: fileFixtures.subscribeKey, // 'demo',
+      publishKey: fileFixtures.publishKey, // 'demo',
+      subscribeKey: fileFixtures.subscribeKey, // 'demo',
       uuid: fileFixtures.uuid,
       cipher_key: 'enigma',
       origin: fileFixtures.origin,
@@ -48,7 +48,7 @@ describe('#publish()', function () {
 
 
   it('should publish strings without error', function (done) {
-    var ch = fileFixtures.channel + '-' + '1';
+    let ch = fileFixtures.channel + '-' + '1';
     itFixtures.pubnub.subscribe({
       channel: ch,
       state: { name: 'dev' },

@@ -41,6 +41,8 @@ type webSetupType = {
 }
 
 let initFunction = function (setup: webSetupType): Object {
+  console.log('setup', setup);
+
   setup.db = db;
   setup.navigatorOnlineCheck = navigatorOnlineCheck;
   setup.sendBeacon = sendBeacon;

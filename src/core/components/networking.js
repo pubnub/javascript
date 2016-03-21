@@ -65,11 +65,6 @@ export default class {
     this.shiftSubscribeOrigin(false);
   }
 
-  setCoreParams(params: Object): this {
-    this._coreParams = params;
-    return this;
-  }
-
   addCoreParam(key: string, value: any) {
     this._coreParams[key] = value;
   }
@@ -194,31 +189,80 @@ export default class {
   }
 
   performGrant(authKey: string, data: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-    if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-    if (!this._keychain.getSecretKey()) return this._error('Missing Secret Key');
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
 
-    let sign_input = this._keychain.getSubscribeKey() + '\n' +
-      this._keychain.getPublishKey() + '\n' +
-      'grant' + '\n';
+    if (!this._keychain.getPublishKey()) {
+      return callback(this._r.validationError('Missing Publish Key'));
+    }
+
+    if (!this._keychain.getSecretKey()) {
+      return callback(this._r.validationError('Missing Secret Key'));
+    }
+
+    let signInput = this._keychain.getSubscribeKey() +
+      '\n' +
+      this._keychain.getPublishKey() +
+      '\n' +
+      'grant' +
+      '\n';
 
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'grant',
       'sub-key', this._keychain.getSubscribeKey(),
     ];
 
-    data = this._networking.prepareParams(data);
+    data.auth = authKey;
 
-    if (!auth_key) delete data.auth;
+    data = this.prepareParams(data);
+    signInput += utils._get_pam_sign_input_from_params(data);
 
-    sign_input += utils._get_pam_sign_input_from_params(data);
-
-    let signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
+    let signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
 
     signature = signature.replace(/\+/g, '-');
     signature = signature.replace(/\//g, '_');
 
     data.signature = signature;
+
+    this._xdr({ data, callback, url });
+  }
+
+  performAudit(authKey: string, data: Object, callback: Function) {
+    if (!this._keychain.getSubscribeKey()) {
+      return callback(this._r.validationError('Missing Subscribe Key'));
+    }
+
+    if (!this._keychain.getPublishKey()) {
+      return callback(this._r.validationError('Missing Publish Key'));
+    }
+
+    if (!this._keychain.getSecretKey()) {
+      return callback(this._r.validationError('Missing Secret Key'));
+    }
+
+    let signInput = this._keychain.getSubscribeKey() +
+      '\n' +
+      this._keychain.getPublishKey() +
+      '\n' +
+      'audit' +
+      '\n';
+
+    data.auth = authKey;
+    data = this.prepareParams(data);
+    signInput += utils._get_pam_sign_input_from_params(data);
+
+    let signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
+
+    signature = signature.replace(/\+/g, '-');
+    signature = signature.replace(/\//g, '_');
+
+    data.signature = signature;
+
+    let url = [
+      this.getStandardOrigin(), 'v1', 'auth', 'audit',
+      'sub-key', this._keychain.getSubscribeKey(),
+    ];
 
     this._xdr({ data, callback, url });
   }
@@ -238,39 +282,6 @@ export default class {
     ];
 
     this._xdr({ data, callback, url });
-  }
-
-  performAudit(authKey: string, data: Object, callback: Function) {
-    let auth_key = args.auth_key;
-    if (!this._keychain.getSubscribeKey()) return this._error('Missing Subscribe Key');
-    if (!this._keychain.getPublishKey()) return this._error('Missing Publish Key');
-    if (!this._keychain.getSecretKey()) return this._error('Missing Secret Key');
-
-    let sign_input = this._keychain.getSubscribeKey() + '\n' +
-      this._keychain.getPublishKey() + '\n' +
-      'audit' + '\n';
-
-    if (auth_key) data.auth = auth_key;
-
-    data = this._networking.prepareParams(data);
-
-    if (!auth_key) delete data.auth;
-
-    sign_input += utils._get_pam_sign_input_from_params(data);
-
-    let signature = this._hmac_SHA256(sign_input, this._keychain.getSecretKey());
-
-    signature = signature.replace(/\+/g, '-');
-    signature = signature.replace(/\//g, '_');
-
-    data.signature = signature;
-
-    let url = [
-      this.getStandardOrigin(), 'v1', 'auth', 'audit',
-      'sub-key', this._keychain.getSubscribeKey(),
-    ];
-
-    this._xdr({ data, success, fail, url });
   }
 
   performLeave(channel: string, incomingData: Object, callback: Function) {
@@ -293,10 +304,8 @@ export default class {
       data.uuid = this._keychain.getUUID();
     }
 
-    if (this._sendBeacon) {
-      if (this._sendBeacon(utils.buildURL(url, data))) {
-        callback(null, { status: 200, action: 'leave', message: 'OK', service: 'Presence' });
-      }
+    if (this._config.useSendBeacon && this._sendBeacon) {
+      this._sendBeacon(utils.buildURL(url, data));
     } else {
       this._xdr({ data, callback, url });
     }
@@ -483,34 +492,38 @@ export default class {
     return this._subscribeOrigin;
   }
 
-  _postXDR({ data, url, timeout, callback}: superagentPayload) {
+  _postXDR({ data, url, timeout, callback}: superagentPayload): superagent {
     let superagentConstruct = superagent
       .post(url.join('/'))
-      .timeout(timeout || this._config.transactionalRequestTimeout)
       .query(data);
-    return this._abstractedXDR(superagentConstruct, callback);
+    return this._abstractedXDR(superagentConstruct, timeout, callback);
   }
 
-  _xdr({ data, url, timeout, callback}: superagentPayload) {
+  _xdr({ data, url, timeout, callback}: superagentPayload): superagent {
     let superagentConstruct = superagent
       .get(url.join('/'))
-      .timeout(timeout || this._config.transactionalRequestTimeout)
       .query(data);
-    return this._abstractedXDR(superagentConstruct, callback);
+    return this._abstractedXDR(superagentConstruct, timeout, callback);
   }
 
-  _abstractedXDR(superagentConstruct: superagent, callback: Function) {
+  _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {
     return superagentConstruct
       .type('json')
+      .timeout(timeout || this._config.transactionalRequestTimeout)
       .end(function (err, resp) {
         if (err) return callback(err, null);
 
-        if (typeof resp === 'object' && resp.error) {
-          callback(resp.error, null);
-          return;
+        let parsedResponse = JSON.parse(resp.text);
+
+        if (typeof parsedResponse === 'object' && parsedResponse.error) {
+          return callback(parsedResponse.error, null);
         }
 
-        callback(null, JSON.parse(resp.text));
+        if (typeof parsedResponse === 'object' && parsedResponse.payload) {
+          return callback(null, parsedResponse.payload);
+        }
+
+        callback(null, parsedResponse);
       });
   }
 }
