@@ -170,19 +170,58 @@ function validateHeartbeat(heartbeat: number, cur_heartbeat: number, error: Func
   } else return heartbeat;
 }
 
+function v2ChangeKey(o, ok, nk) {
+  if (typeof o[ok] !== 'undefined') {
+    let t = o[ok];
+    o[nk] = t;
+    delete o[ok];
+  }
+  return true;
+}
+
+function v2ExpandKeys(m: Object): Object {
+  if (m.o) {
+    v2ChangeKey(m.o, 't', 'timetoken');
+    v2ChangeKey(m.o, 'r', 'regionCode');
+  }
+
+  if (m.p) {
+    v2ChangeKey(m.p, 't', 'timetoken');
+    v2ChangeKey(m.p, 'r', 'regionCode');
+  }
+
+  v2ChangeKey(m, 'a', 'shard');
+  v2ChangeKey(m, 'b', 'subscriptionMatch');
+  v2ChangeKey(m, 'c', 'channel');
+  v2ChangeKey(m, 'd', 'payload');
+  v2ChangeKey(m, 'ear', 'eatAfterReading');
+  v2ChangeKey(m, 'f', 'flags');
+  v2ChangeKey(m, 'i', 'issuing_client_id');
+  v2ChangeKey(m, 'k', 'subscribeKey');
+  v2ChangeKey(m, 's', 'sequenceNumber');
+  v2ChangeKey(m, 'o', 'originationTimetoken');
+  v2ChangeKey(m, 'p', 'publishTimetoken');
+  v2ChangeKey(m, 'r', 'replicationMap');
+  v2ChangeKey(m, 'u', 'userMetadata');
+  v2ChangeKey(m, 'w', 'waypointList');
+
+  return m;
+}
+
 module.exports = {
-  buildURL: buildURL,
-  encode: encode,
-  each: each,
-  rnow: rnow,
-  isArray: isArray,
-  map: map,
-  pamEncode: pamEncode,
-  generateUUID: generateUUID,
-  timeout: timeout,
-  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
-  _object_to_key_list_sorted: _object_to_key_list_sorted,
-  _object_to_key_list: _object_to_key_list,
-  validateHeartbeat: validateHeartbeat,
-  unique: unique
+  v2ExpandKeys,
+  buildURL,
+  encode,
+  each,
+  rnow,
+  isArray,
+  map,
+  pamEncode,
+  generateUUID,
+  timeout,
+  _get_pam_sign_input_from_params,
+  _object_to_key_list_sorted,
+  _object_to_key_list,
+  validateHeartbeat,
+  unique
 };

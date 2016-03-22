@@ -18,6 +18,10 @@ export default class {
 
   _eventEmitter: EventEmitter;
 
+  filterExpression: string; // V2 subscribe filter expression
+  subscribeRegion: string; // V2 subscribe region selector
+
+
   constructor() {
     this._channelStorage = {};
     this._channelGroupStorage = {};
@@ -25,6 +29,7 @@ export default class {
 
     this._eventEmitter = new EventEmitter();
     this._subscribeTimeToken = '0';
+    this.filterExpression = '';
   }
 
   containsChannel(name: string): boolean {
@@ -55,6 +60,13 @@ export default class {
     this._channelGroupStorage[name] = metadata;
   }
 
+  removeFromPresenceState(name: string) {
+    delete this._presenceState[name];
+  }
+
+  isInPresenceState(name: string) {
+    return name in this._presenceState;
+  }
 
   removeChannelGroup(key: string) {
     delete this._channelGroupStorage[key];
@@ -68,11 +80,11 @@ export default class {
     return this._presenceState;
   }
 
-  setSubscribeTimeToken(newTimeToken: number) {
+  setSubscribeTimeToken(newTimeToken: string) {
     this._subscribeTimeToken = newTimeToken;
   }
 
-  getSubscribeTimeToken() {
+  getSubscribeTimeToken(): string {
     return this._subscribeTimeToken;
   }
 

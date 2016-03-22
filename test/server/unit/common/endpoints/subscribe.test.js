@@ -44,6 +44,39 @@ describe('subscribe endpoints', () => {
     });
   });
 
+  describe('#subscribe', () => {
+    it('errors out if both channel and channel groups are not passed', () => {
+      instance.subscribe({});
+      assert.equal(onStatusStub.args[0][0], 'validationError');
+      assert.equal(validateResponderStub.args[0][0], 'Missing Channel or Channel Group');
+    });
+
+    it('adds channel and channel groups to the subscribed state', () => {
+      instance.subscribe({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] });
+
+      assert.deepEqual(state.getChannel('ch1'), { name: 'ch1', enablePresence: false });
+      assert.deepEqual(state.getChannel('ch2'), { name: 'ch2', enablePresence: false });
+
+      assert.deepEqual(state.getChannelGroup('cg1'), { name: 'cg1', enablePresence: false });
+      assert.deepEqual(state.getChannelGroup('cg2'), { name: 'cg2', enablePresence: false });
+    });
+
+    it('adds channel and channel groups to the subscribed state with presence', () => {
+      instance.subscribe({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'], enablePresence: true });
+
+      assert.deepEqual(state.getChannel('ch1'), { name: 'ch1', enablePresence: true });
+      assert.deepEqual(state.getChannel('ch2'), { name: 'ch2', enablePresence: true });
+
+      assert.deepEqual(state.getChannelGroup('cg1'), { name: 'cg1', enablePresence: true });
+      assert.deepEqual(state.getChannelGroup('cg2'), { name: 'cg2', enablePresence: true });
+    });
+
+    it('supports filter expressions', () => {
+      instance.subscribe({ channels: ['ch1', 'ch2'], filterExpression: 'filterExpression' });
+      assert.equal(state.filterExpression, 'filterExpression');
+    });
+  });
+
   describe('#unsubscribe', () => {
     it('errors out if both channel and channel groups are not passed', () => {
       instance.unsubscribe({});
@@ -178,12 +211,10 @@ describe('subscribe endpoints', () => {
   describe('#_postUnsubscribeCleanup', () => {
     it('removes channels and channel presence from state', () => {
       state.addChannel('ch1', {});
-      state.addChannel('ch1-pnpres', {});
       state.addToPresenceState('ch1', {});
 
 
       state.addChannel('ch2', {});
-      state.addChannel('ch2-pnpres', {});
       state.addToPresenceState('ch2', {});
 
       instance._postUnsubscribeCleanup(['ch1'], []);
@@ -191,29 +222,22 @@ describe('subscribe endpoints', () => {
       assert.equal(state.containsChannel('ch1'), false);
       assert.equal(state.containsChannel('ch2'), true);
 
-      assert.equal(state.containsChannel('ch1-pnpres'), false);
-      assert.equal(state.containsChannel('ch2-pnpres'), true);
-
       assert.equal(state.isInPresenceState('ch1'), false);
       assert.equal(state.isInPresenceState('ch2'), true);
     });
+
     it('removes channel groups and channel group presence from state', () => {
       state.addChannelGroup('cg1', {});
-      state.addChannelGroup('cg1-pnpres', {});
       state.addToPresenceState('cg1', {});
 
 
       state.addChannelGroup('cg2', {});
-      state.addChannelGroup('cg2-pnpres', {});
       state.addToPresenceState('cg2', {});
 
       instance._postUnsubscribeCleanup([], ['cg1']);
 
       assert.equal(state.containsChannelGroup('cg1'), false);
       assert.equal(state.containsChannelGroup('cg2'), true);
-
-      assert.equal(state.containsChannelGroup('cg1-pnpres'), false);
-      assert.equal(state.containsChannelGroup('cg2-pnpres'), true);
 
       assert.equal(state.isInPresenceState('cg1'), false);
       assert.equal(state.isInPresenceState('cg2'), true);

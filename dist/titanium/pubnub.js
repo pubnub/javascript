@@ -955,12 +955,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } /* items that must be passed with each request. */
 
 	  _createClass(_class, [{
-	    key: 'setCoreParams',
-	    value: function setCoreParams(params) {
-	      this._coreParams = params;
-	      return this;
-	    }
-	  }, {
 	    key: 'addCoreParam',
 	    value: function addCoreParam(key, value) {
 	      this._coreParams[key] = value;
@@ -1191,10 +1185,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data.uuid = this._keychain.getUUID();
 	      }
 
-	      if (this._sendBeacon) {
-	        if (this._sendBeacon(_utils2.default.buildURL(url, data))) {
-	          callback(null, { status: 200, action: 'leave', message: 'OK', service: 'Presence' });
-	        }
+	      if (this._config.useSendBeacon && this._sendBeacon) {
+	        this._sendBeacon(_utils2.default.buildURL(url, data));
 	      } else {
 	        this._xdr({ data: data, callback: callback, url: url });
 	      }
@@ -1340,12 +1332,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'performSubscribe',
-	    value: function performSubscribe(channels, timetoken, incomingData, callback) {
+	    value: function performSubscribe(channels, incomingData, callback) {
 	      if (!this._keychain.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      var url = [this.getSubscribeOrigin(), 'subscribe', this._keychain.getSubscribeKey(), _utils2.default.encode(channels), 0, timetoken];
+	      var url = [this.getSubscribeOrigin(), 'v2', 'subscribe', this._keychain.getSubscribeKey(), _utils2.default.encode(channels), 0];
 
 	      var data = this.prepareParams(incomingData);
 
@@ -3066,8 +3058,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'HMACSHA256',
 	    value: function HMACSHA256(data) {
-	      console.log('HMACSHA256', data, this._keychain.getSecretKey());
-
 	      var hash = _hmacSha2.default.HmacSHA256(data, this._keychain.getSecretKey());
 	      return hash.toString(_hmacSha2.default.enc.Base64);
 	    }
@@ -4029,7 +4019,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else return heartbeat;
 	}
 
+	function v2ChangeKey(o, ok, nk) {
+	  if (typeof o[ok] !== 'undefined') {
+	    var t = o[ok];
+	    o[nk] = t;
+	    delete o[ok];
+	  }
+	  return true;
+	}
+
+	function v2ExpandKeys(m) {
+	  if (m.o) {
+	    v2ChangeKey(m.o, 't', 'timetoken');
+	    v2ChangeKey(m.o, 'r', 'regionCode');
+	  }
+
+	  if (m.p) {
+	    v2ChangeKey(m.p, 't', 'timetoken');
+	    v2ChangeKey(m.p, 'r', 'regionCode');
+	  }
+
+	  v2ChangeKey(m, 'a', 'shard');
+	  v2ChangeKey(m, 'b', 'subscriptionMatch');
+	  v2ChangeKey(m, 'c', 'channel');
+	  v2ChangeKey(m, 'd', 'payload');
+	  v2ChangeKey(m, 'ear', 'eatAfterReading');
+	  v2ChangeKey(m, 'f', 'flags');
+	  v2ChangeKey(m, 'i', 'issuing_client_id');
+	  v2ChangeKey(m, 'k', 'subscribeKey');
+	  v2ChangeKey(m, 's', 'sequenceNumber');
+	  v2ChangeKey(m, 'o', 'originationTimetoken');
+	  v2ChangeKey(m, 'p', 'publishTimetoken');
+	  v2ChangeKey(m, 'r', 'replicationMap');
+	  v2ChangeKey(m, 'u', 'userMetadata');
+	  v2ChangeKey(m, 'w', 'waypointList');
+
+	  return m;
+	}
+
 	module.exports = {
+	  v2ExpandKeys: v2ExpandKeys,
 	  buildURL: buildURL,
 	  encode: encode,
 	  each: each,
@@ -4080,6 +4109,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var _class = function () {
+	  // V2 subscribe region selector
 
 	  // this number gets sent on all subscribe calls to indicate the starting Point
 	  // of information polling.
@@ -4093,7 +4123,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._eventEmitter = new _eventEmitter2.default();
 	    this._subscribeTimeToken = '0';
-	  }
+	    this.filterExpression = '';
+	  } // V2 subscribe filter expression
+
 
 	  // state storage for each channel:
 	  // key: channel / channel group
@@ -4134,6 +4166,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'addChannelGroup',
 	    value: function addChannelGroup(name, metadata) {
 	      this._channelGroupStorage[name] = metadata;
+	    }
+	  }, {
+	    key: 'removeFromPresenceState',
+	    value: function removeFromPresenceState(name) {
+	      delete this._presenceState[name];
+	    }
+	  }, {
+	    key: 'isInPresenceState',
+	    value: function isInPresenceState(name) {
+	      return name in this._presenceState;
 	    }
 	  }, {
 	    key: 'removeChannelGroup',
@@ -5333,8 +5375,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _networking = __webpack_require__(5);
@@ -5356,6 +5396,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _defaults = __webpack_require__(19);
 
 	var _defaults2 = _interopRequireDefault(_defaults);
+
+	var _utils = __webpack_require__(18);
+
+	var _utils2 = _interopRequireDefault(_utils);
 
 	var _endsWith2 = __webpack_require__(42);
 
@@ -5421,17 +5465,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	      var timetoken = this._state.getSubscribeTimeToken();
 	      var callback = this.__handleSubscribeResponse.bind(this);
 
-	      this._networking.performSubscribe(stringifiedChannels, timetoken, data, callback);
+	      data.tt = this._state.getSubscribeTimeToken();
+
+	      if (channelGroups.length > 0) {
+	        data['channel-group'] = channelGroups.join(',');
+	      }
+
+	      if (this._state.filterExpression && this._state.filterExpression !== '') {
+	        data['filter-expr'] = this._state.filterExpression;
+	      }
+
+	      if (this._state.subscribeRegion && this._state.subscribeRegion !== '') {
+	        data.tr = this._state.subscribeRegion;
+	      }
+
+	      this._runningSuperagent = this._networking.performSubscribe(stringifiedChannels, data, callback);
 	    }
 	  }, {
 	    key: '__handleSubscribeResponse',
 	    value: function __handleSubscribeResponse(err, response) {
-	      var _this2 = this;
-
 	      if (err) {
+	        this.start();
 	        return;
 	      }
 
@@ -5439,54 +5495,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var onMessage = _callbacks.onMessage;
 	      var onPresence = _callbacks.onPresence;
 
-	      var _response = _slicedToArray(response, 4);
 
-	      var payload = _response[0];
-	      var timetoken = _response[1];
-	      var firstOrigins = _response[2];
-	      var secondOrigins = _response[3];
+	      console.log('response', response);
 
-	      /*
-	        the subscribe endpoint is slightly confusing, it contains upto three elements
-	        1) an array of messages, those always exists.
-	        2) an array of channels OR channel groups, they align in their position to the messages,
-	           only exists if there is more than one channel or at least one channel group
-	        3) an array of channels OF channel groups, they align with messages and exist as long as
-	           one channel group exists.
-	      */
+	      var payload = response.m ? response.m : [];
+	      var timetoken = response.t.t;
 
-	      firstOrigins = firstOrigins ? firstOrigins.split(',') : [];
-	      secondOrigins = secondOrigins ? secondOrigins.split(',') : [];
-
-	      payload.forEach(function (message, index) {
-	        var firstOrigin = firstOrigins[index];
-	        var secondOrigin = secondOrigins[index];
+	      payload.forEach(function (message) {
 	        var isPresence = false;
-
-	        // we need to determine if the message originated from a channel or
-	        // channel group
-	        var envelope = { message: message };
-
-	        // if a channel of a channel group exists, we must be in a channel group mode..
-	        if (secondOrigin) {
-	          envelope.channel = secondOrigin;
-	          envelope.channelGroup = firstOrigin;
-	          // otherwise, we are only in channel mode
-	        } else if (firstOrigin) {
-	            envelope.channel = firstOrigin;
-	            // otherwise, we must be subscribed to just one channel.
-	          } else {
-	              envelope.channel = _this2._state.getSubscribedChannels()[0];
-	            }
+	        var envelope = _utils2.default.v2ExpandKeys(message);
 
 	        if (envelope.channel && (0, _endsWith3.default)(envelope.channel, _defaults2.default.PRESENCE_SUFFIX)) {
 	          isPresence = true;
 	          envelope.channel = envelope.channel.replace(_defaults2.default.PRESENCE_SUFFIX, '');
 	        }
 
-	        if (envelope.channelGroup && (0, _endsWith3.default)(envelope.channelGroup, _defaults2.default.PRESENCE_SUFFIX)) {
+	        if (envelope.subscriptionMatch && (0, _endsWith3.default)(envelope.subscriptionMatch, _defaults2.default.PRESENCE_SUFFIX)) {
 	          isPresence = true;
-	          envelope.channelGroup = envelope.channelGroup.replace(_defaults2.default.PRESENCE_SUFFIX, '');
+	          envelope.subscriptionMatch = envelope.subscriptionMatch.replace(_defaults2.default.PRESENCE_SUFFIX, '');
 	        }
 
 	        if (isPresence) {
@@ -6735,6 +6761,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
 	      var _args$enablePresence = args.enablePresence;
 	      var enablePresence = _args$enablePresence === undefined ? false : _args$enablePresence;
+	      var filterExpression = args.filterExpression;
 	      var onStatus = this._callbacks.onStatus;
 
 
@@ -6749,6 +6776,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channelGroups.forEach(function (channelGroup) {
 	        _this3._state.addChannelGroup(channelGroup, { name: channelGroup, enablePresence: enablePresence });
 	      });
+
+	      // always reset the expressions
+	      this._state.filterExpression = '';
+
+	      if (filterExpression) {
+	        this._state.filterExpression = filterExpression;
+	      }
 
 	      this._state.announceSubscriptionChange();
 	    }

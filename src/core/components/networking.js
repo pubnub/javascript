@@ -458,15 +458,15 @@ export default class {
     }
   }
 
-  performSubscribe(channels: string, timetoken: number, incomingData: Object, callback: Function) {
+  performSubscribe(channels: string, incomingData: Object, callback: Function) {
     if (!this._keychain.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
     let url = [
-      this.getSubscribeOrigin(), 'subscribe',
+      this.getSubscribeOrigin(), 'v2', 'subscribe',
       this._keychain.getSubscribeKey(), utils.encode(channels),
-      0, timetoken
+      0
     ];
 
     let data = this.prepareParams(incomingData);

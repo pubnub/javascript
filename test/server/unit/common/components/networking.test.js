@@ -589,49 +589,49 @@ describe('#components/networking', () => {
 
     it('errors out if subkey is not defined', () => {
       keychain.setSubscribeKey('');
-      networking.performSubscribe('uuid', 'timetoken', {}, callbackStub);
+      networking.performSubscribe('uuid', {}, callbackStub);
       assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
     });
 
     it('uses auth-key from keychain if provided', () => {
       keychain.setAuthKey('myAuthKey');
-      networking.performSubscribe('uuid', 'timetoken', {}, callbackStub);
+      networking.performSubscribe('uuid', {}, callbackStub);
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', uuid: 'keychainUUID' });
     });
 
     it('uses keychain uuid if uuid is not provided', () => {
-      networking.performSubscribe('ch1', 'timetoken', {}, callbackStub);
+      networking.performSubscribe('ch1', {}, callbackStub);
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
-      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'subscribe',
-        'subKey', 'ch1', '0', 'timetoken']);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'subscribe',
+        'subKey', 'ch1', '0']);
     });
 
     it('passes the config timeout', () => {
       config.subscribeRequestTimeout = 1337;
-      networking.performSubscribe('ch1', 'timetoken', {}, callbackStub);
+      networking.performSubscribe('ch1', {}, callbackStub);
       assert.equal(xdrStub.callCount, 1);
       assert.equal(xdrStub.args[0][0].timeout, 1337);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
-      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'subscribe',
-        'subKey', 'ch1', '0', 'timetoken']);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'subscribe',
+        'subKey', 'ch1', '0']);
     });
 
     it('executs #prepareParamsMock to prepare params', () => {
-      networking.performSubscribe('uuid', 'timetoken', { arg: '10' }, callbackStub);
+      networking.performSubscribe('uuid', { arg: '10' }, callbackStub);
       assert.equal(prepareParamsStub.called, true);
       assert.deepEqual(prepareParamsStub.args[0][0], { arg: '10' });
     });
 
     it('passes arguments to the xdr module', () => {
-      let xdrInstance = networking.performSubscribe('ch1', 'timetoken', { arg: '10' }, callbackStub);
+      let xdrInstance = networking.performSubscribe('ch1', { arg: '10' }, callbackStub);
 
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', uuid: 'keychainUUID' });
       assert.deepEqual(xdrStub.args[0][0].callback, callbackStub);
-      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'subscribe',
-        'subKey', 'ch1', '0', 'timetoken']);
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'subscribe',
+        'subKey', 'ch1', '0']);
 
       assert.equal(xdrInstance, 'xdrModule');
     });

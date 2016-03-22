@@ -45,36 +45,4 @@ describe('#components/state', () => {
     assert.equal(stateStorage.containsChannelGroup('cg1'), true);
     assert.equal(stateStorage.containsChannelGroup('cg2'), true);
   });
-
-  describe('#generate_channel_list', () => {
-    it('returns a list of channels which have a valid structure', () => {
-      stateStorage.addChannel('chgen1', { subscribed: true });
-      stateStorage.addChannel('chgen2', {});
-      stateStorage.addChannel('chgen3', { subscribed: true });
-      assert.deepEqual(stateStorage.generate_channel_list(), ['chgen1', 'chgen3']);
-    });
-    it('returns a list of channels which have a valid structure w/ presence', () => {
-      stateStorage.addChannel('chgen1', { subscribed: true });
-      stateStorage.addChannel('chgen2', {});
-      stateStorage.addChannel('chgen3-pnpres', { subscribed: true });
-      stateStorage.addChannel('chgen4-pnpres', {});
-      assert.deepEqual(stateStorage.generate_channel_list(false), ['chgen1', 'chgen3-pnpres']);
-    });
-  });
-
-  describe('#generate_channel_group_list', () => {
-    it('returns a list of channels which have a valid structure', () => {
-      stateStorage.addChannelGroup('cggen1', { subscribed: true });
-      stateStorage.addChannelGroup('cggen2', {});
-      stateStorage.addChannelGroup('cggen3', { subscribed: true });
-      assert.deepEqual(stateStorage.generate_channel_group_list(), ['cggen1', 'cggen3']);
-    });
-    it('returns a list of channels which have a valid structure w/ presence', () => {
-      stateStorage.addChannelGroup('cggen1', { subscribed: true });
-      stateStorage.addChannelGroup('cggen2', {});
-      stateStorage.addChannelGroup('cggen3-pnpres', { subscribed: true });
-      stateStorage.addChannelGroup('cggen4-pnpres', {});
-      assert.deepEqual(stateStorage.generate_channel_group_list(false), ['cggen1', 'cggen3-pnpres']);
-    });
-  });
 });

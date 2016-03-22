@@ -18,7 +18,7 @@ describe('time endpoints', () => {
     const fetchTimeStub = sinon.stub(networking, 'fetchTime');
 
     const timeEndpoint = new TimeEndpoint({ networking });
-    timeEndpoint.fetchTime();
+    timeEndpoint.fetch();
     assert.equal(fetchTimeStub.called, 1);
   });
 
@@ -28,7 +28,7 @@ describe('time endpoints', () => {
     });
 
     const timeEndpoint = new TimeEndpoint({ networking });
-    timeEndpoint.fetchTime((err, response) => {
+    timeEndpoint.fetch((err, response) => {
       assert.equal(err, null);
       assert.deepEqual(response, 14570763868573725);
       done();
@@ -41,7 +41,7 @@ describe('time endpoints', () => {
     });
 
     const timeEndpoint = new TimeEndpoint({ networking });
-    timeEndpoint.fetchTime((err, response) => {
+    timeEndpoint.fetch((err, response) => {
       assert.equal(response, null);
       assert.deepEqual(err, { some: 'horribleError' });
       done();

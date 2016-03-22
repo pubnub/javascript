@@ -23,7 +23,8 @@ type unsubscribeArguments = {
 type subscribeArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-  enablePresence: boolean
+  enablePresence: boolean,
+  filterExpression: ?string,
 }
 
 export default class {
@@ -113,7 +114,7 @@ export default class {
   }
 
   subscribe(args: subscribeArguments) {
-    let { channels = [], channelGroups = [], enablePresence = false } = args;
+    let { channels = [], channelGroups = [], enablePresence = false, filterExpression } = args;
     let { onStatus } = this._callbacks;
 
     if (channels.length === 0 && channelGroups.length === 0) {
@@ -127,6 +128,13 @@ export default class {
     channelGroups.forEach((channelGroup) => {
       this._state.addChannelGroup(channelGroup, { name: channelGroup, enablePresence });
     });
+
+    // always reset the expressions
+    this._state.filterExpression = '';
+
+    if (filterExpression) {
+      this._state.filterExpression = filterExpression;
+    }
 
     this._state.announceSubscriptionChange();
   }

@@ -5,6 +5,7 @@ import State from '../components/state';
 import Logger from '../components/logger';
 import superagent from 'superagent';
 import consts from '../../../defaults';
+import utils from '../utils';
 
 import _endsWith from 'lodash/endsWith';
 
@@ -68,60 +69,49 @@ export default class {
     }
 
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    let timetoken = this._state.getSubscribeTimeToken();
     let callback = this.__handleSubscribeResponse.bind(this);
 
-    this._networking.performSubscribe(stringifiedChannels, timetoken, data, callback);
+    data.tt = this._state.getSubscribeTimeToken();
+
+    if (channelGroups.length > 0) {
+      data['channel-group'] = channelGroups.join(',');
+    }
+
+    if (this._state.filterExpression && this._state.filterExpression !== '') {
+      data['filter-expr'] = this._state.filterExpression;
+    }
+
+    if (this._state.subscribeRegion && this._state.subscribeRegion !== '') {
+      data.tr = this._state.subscribeRegion;
+    }
+
+    this._runningSuperagent = this._networking.performSubscribe(stringifiedChannels, data, callback);
   }
 
   __handleSubscribeResponse(err: Object, response: Object) {
     if (err) {
+      this.start();
       return;
     }
 
     let { onMessage, onPresence } = this._callbacks;
-    let [payload, timetoken, firstOrigins, secondOrigins] = response;
 
-    /*
-      the subscribe endpoint is slightly confusing, it contains upto three elements
-      1) an array of messages, those always exists.
-      2) an array of channels OR channel groups, they align in their position to the messages,
-         only exists if there is more than one channel or at least one channel group
-      3) an array of channels OF channel groups, they align with messages and exist as long as
-         one channel group exists.
-    */
-    firstOrigins = firstOrigins ? firstOrigins.split(',') : [];
-    secondOrigins = secondOrigins ? secondOrigins.split(',') : [];
+    let payload = response.m ? response.m : [];
+    let timetoken = response.t.t;
 
-    payload.forEach((message, index) => {
-      let firstOrigin = firstOrigins[index];
-      let secondOrigin = secondOrigins[index];
+    payload.forEach((message) => {
       let isPresence = false;
+      let envelope = utils.v2ExpandKeys(message);
 
-      // we need to determine if the message originated from a channel or
-      // channel group
-      let envelope: Object = { message };
-
-      // if a channel of a channel group exists, we must be in a channel group mode..
-      if (secondOrigin) {
-        envelope.channel = secondOrigin;
-        envelope.channelGroup = firstOrigin;
-      // otherwise, we are only in channel mode
-      } else if (firstOrigin) {
-        envelope.channel = firstOrigin;
-      // otherwise, we must be subscribed to just one channel.
-      } else {
-        envelope.channel = this._state.getSubscribedChannels()[0];
-      }
 
       if (envelope.channel && _endsWith(envelope.channel, consts.PRESENCE_SUFFIX)) {
         isPresence = true;
         envelope.channel = envelope.channel.replace(consts.PRESENCE_SUFFIX, '');
       }
 
-      if (envelope.channelGroup && _endsWith(envelope.channelGroup, consts.PRESENCE_SUFFIX)) {
+      if (envelope.subscriptionMatch && _endsWith(envelope.subscriptionMatch, consts.PRESENCE_SUFFIX)) {
         isPresence = true;
-        envelope.channelGroup = envelope.channelGroup.replace(consts.PRESENCE_SUFFIX, '');
+        envelope.subscriptionMatch = envelope.subscriptionMatch.replace(consts.PRESENCE_SUFFIX, '');
       }
 
       if (isPresence) {
