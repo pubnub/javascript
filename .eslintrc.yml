@@ -1,4 +1,4 @@
-extends: airbnb/base # TODO: add es6 compiler and move away from legacy.
+extends: airbnb/legacy # TODO: add es6 compiler and move away from legacy.
 plugins:
   - mocha
   - flowtype
