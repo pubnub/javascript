@@ -7,10 +7,10 @@ var isAndroid = Ti.Platform.osname === 'android';
 // INIT PUBNUB
 // ----------------------------------
 var pubnub = require('pubnub')({
-    publish_key   : 'demo',
-    subscribe_key : 'demo',
+    publish_key   : 'demo-36',
+    subscribe_key : 'demo-36',
     ssl           : false,
-    origin        : 'pubsub.pubnub.com'
+    native_tcp_socket: true
 });
 
 // ----------------------------------
