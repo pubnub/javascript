@@ -205,15 +205,14 @@ function PN_API(setup) {
 
   if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
 
-  var crypto_obj = setup['crypto_obj'] ||
-    {
-      encrypt: function (a, key) {
-        return a;
-      },
-      decrypt: function (b, key) {
-        return b;
-      }
-    };
+  var crypto_obj = setup['crypto_obj'] || {
+    encrypt: function (a, key) {
+      return a;
+    },
+    decrypt: function (b, key) {
+      return b;
+    }
+  };
 
   function _get_url_params(data) {
     if (!data) data = {};
