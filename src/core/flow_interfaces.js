@@ -21,6 +21,12 @@ export type callbackStruct = {
   onMessage: Function
 }
 
+export type proxyStruct = {
+  port: number,
+  hostname: string,
+  headers: Object
+}
+
 export type internalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing
@@ -41,6 +47,8 @@ export type internalSetupStruct = {
 
   subscribeRequestTimeout: ?number, // how long to wait for subscribe requst
   transactionalRequestTimeout: ?number, // how long to wait for transactional requests
+
+  proxy: ?proxyStruct, // configuration to support proxy settings.
 
   db: Function // get / set implementation to store data
 

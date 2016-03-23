@@ -28,7 +28,7 @@ import { callbackStruct, internalSetupStruct } from './flow_interfaces';
 let utils = require('./utils');
 
 export default function createInstance(setup: internalSetupStruct): Object {
-  let { sendBeacon, db, shutdown } = setup;
+  let { sendBeacon, db, shutdown, proxy } = setup;
 
   let callbacks: callbackStruct = {
     onMessage: setup.onMessage,
