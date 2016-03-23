@@ -10,6 +10,7 @@ const utils = require('../../../../../src/core/utils');
 const assert = require('assert');
 const sinon = require('sinon');
 
+import superagent from 'superagent';
 
 describe('#components/networking', () => {
   let config;
@@ -46,20 +47,12 @@ describe('#components/networking', () => {
   });
 
   describe('#nextOrigin', () => {
-    let config;
-    let keychain;
-
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
 
-      sinon.stub(Math, 'random', function () {
-        return 0.8;
-      });
-
-      sinon.stub(utils, 'generateUUID', function () {
-        return '5f0651fc-5b92-4a3b-96ca-08eee41508bd';
-      });
+      sinon.stub(Math, 'random', () => 0.8);
+      sinon.stub(utils, 'generateUUID', () => '5f0651fc-5b92-4a3b-96ca-08eee41508bd');
     });
 
     afterEach(() => {
@@ -438,7 +431,7 @@ describe('#components/networking', () => {
       keychain.setAuthKey('myAuthKey');
       networking.performPublish('mychannel', 'my-payload', data, 'POST', callbackStub);
       assert.equal(postXDRStub.callCount, 1);
-      assert.deepEqual(postXDRStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
+      assert.deepEqual(postXDRStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', message: '%22my-payload%22' });
     });
 
     it('executs #prepareParamsMock to prepare params', () => {
@@ -836,8 +829,6 @@ describe('#components/networking', () => {
   });
 
   describe('#performAudit', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -893,8 +884,6 @@ describe('#components/networking', () => {
   });
 
   describe('#performGrant', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -950,8 +939,6 @@ describe('#components/networking', () => {
   });
 
   describe('#provisionDeviceForPush', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -1008,13 +995,117 @@ describe('#components/networking', () => {
     });
   });
 
-  describe('#_xhr', () => {
-    it('triggers error if payload contains an error and is an object', () => {
-      let payload = { error: true, message: 'message', payload: 'payload' };
-      instance._handleHistoryResponse(payload, err, callback, false, 'cipherKey');
+  describe('#_xdr', () => {
+    let networking;
+    let callbackStub;
+    let xdrStub;
 
-      assert.equal(err.called, 1);
-      assert.deepEqual(err.args[0][0], { message: 'message', payload: 'payload' });
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      xdrStub = sinon.stub(networking, '_abstractedXDR');
+      callbackStub = sinon.stub();
     });
-  })
+
+    it('passes the correct params to the abstracted XDR', () => {
+      networking._xdr({ data: { a: 10, b: 20 }, url: ['this', 'is', 'cool'], timeout: 1337, callback: callbackStub });
+      assert.equal(xdrStub.args[0][0].url, 'this/is/cool');
+      assert.deepEqual(xdrStub.args[0][0].qs, { a: 10, b: 20 });
+      assert.deepEqual(xdrStub.args[0][0].method, 'GET');
+      assert.equal(xdrStub.args[0][1], 1337);
+
+      assert.deepEqual(xdrStub.args[0][2], callbackStub);
+    });
+  });
+
+  describe('#_postXDR', () => {
+    let networking;
+    let callbackStub;
+    let xdrStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      xdrStub = sinon.stub(networking, '_abstractedXDR');
+      callbackStub = sinon.stub();
+    });
+
+    it('passes the correct params to the abstracted XDR', () => {
+      networking._postXDR({ data: { a: 10, b: 20 }, url: ['this', 'is', 'cool'], timeout: 1337, callback: callbackStub });
+      assert.equal(xdrStub.args[0][0].url, 'this/is/cool');
+      assert.deepEqual(xdrStub.args[0][0]._data, { a: 10, b: 20 });
+      assert.deepEqual(xdrStub.args[0][0].method, 'POST');
+      assert.equal(xdrStub.args[0][1], 1337);
+      assert.deepEqual(xdrStub.args[0][2], callbackStub);
+    });
+  });
+
+  describe('#_abstractedXDR', () => {
+    let networking;
+    let callbackStub;
+    let stubbedAgent;
+
+    let stubbedTimeout;
+    let stubbedType;
+    let stubbedEnd;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      stubbedAgent = {
+        timeout: () => stubbedAgent,
+        type: () => stubbedAgent,
+        end: () => stubbedAgent
+      };
+
+      stubbedTimeout = sinon.spy(stubbedAgent, 'timeout');
+      stubbedType = sinon.spy(stubbedAgent, 'type');
+      stubbedEnd = sinon.stub(stubbedAgent, 'end');
+    });
+
+    it('sets type to json', () => {
+      networking._abstractedXDR(stubbedAgent, 1337, callbackStub);
+      assert.equal(stubbedType.args[0][0], 'json');
+    });
+
+    it('appends the correct timeout', () => {
+      networking._abstractedXDR(stubbedAgent, 1337, callbackStub);
+      assert.equal(stubbedTimeout.args[0][0], 1337);
+    });
+
+    it('appends the correct timeout from defaults', () => {
+      config.transactionalRequestTimeout = 10;
+      networking._abstractedXDR(stubbedAgent, null, callbackStub);
+      assert.equal(stubbedTimeout.args[0][0], 10);
+    });
+
+    it('returns error to callback if error from superagent was pushed', () => {
+      networking._abstractedXDR(stubbedAgent, null, callbackStub);
+      stubbedEnd.args[0][0]('thisiserror', null);
+      assert.deepEqual(callbackStub.args[0], ['thisiserror', null]);
+    });
+
+    it('returns success to callback if success from superagent was pushed', () => {
+      networking._abstractedXDR(stubbedAgent, null, callbackStub);
+      stubbedEnd.args[0][0](null, { text: '{"hi":"there"}' });
+      assert.deepEqual(callbackStub.args[0], [null, { hi: 'there' }]);
+    });
+
+    it('returns error to callback if error from pubnub was pushed', () => {
+      networking._abstractedXDR(stubbedAgent, null, callbackStub);
+      stubbedEnd.args[0][0](null, { text: '{"error":"niceError"}' });
+      assert.deepEqual(callbackStub.args[0], ['niceError', null]);
+    });
+
+    it('returns payload to callback if payload from pubnub was pushed', () => {
+      networking._abstractedXDR(stubbedAgent, null, callbackStub);
+      stubbedEnd.args[0][0](null, { text: '{"payload":"nicePayload"}' });
+      assert.deepEqual(callbackStub.args[0], [null, 'nicePayload']);
+    });
+  });
 });

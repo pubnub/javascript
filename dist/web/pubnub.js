@@ -1000,7 +1000,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var stringifiedMessage = JSON.stringify(msg);
 	      var encryptedMessage = this._crypto.encrypt(stringifiedMessage);
 
-	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, _utils2.default.encode(channel), 0, _utils2.default.encode(encryptedMessage)];
+	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, _utils2.default.encode(channel), 0];
 
 	      var data = this.prepareParams(incomingData);
 
@@ -1013,8 +1013,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      if (mode === 'POST') {
+	        data.message = _utils2.default.encode(encryptedMessage);
 	        this._postXDR({ data: data, callback: callback, url: url });
 	      } else {
+	        url.push(_utils2.default.encode(encryptedMessage));
 	        this._xdr({ data: data, callback: callback, url: url });
 	      }
 	    }
@@ -1059,7 +1061,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var timeout = _ref2.timeout;
 	      var callback = _ref2.callback;
 
-	      var superagentConstruct = _superagent2.default.post(url.join('/')).query(data);
+	      var superagentConstruct = _superagent2.default.post(url.join('/')).send(data);
 	      return this._abstractedXDR(superagentConstruct, timeout, callback);
 	    }
 	  }, {
@@ -5183,8 +5185,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var onMessage = _callbacks.onMessage;
 	      var onPresence = _callbacks.onPresence;
 
-
-	      console.log('response', response);
 
 	      var payload = response.m ? response.m : [];
 	      var timetoken = response.t.t;

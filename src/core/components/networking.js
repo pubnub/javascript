@@ -12,7 +12,7 @@ type superagentPayload = {
   data: Object,
   url: Array<string | number>,
   callback: Function,
-  timeout: ?number
+  timeout: number | null
 };
 
 type networkingModules = {
@@ -438,7 +438,7 @@ export default class {
       this.getStandardOrigin(), 'publish',
       this._keychain.getPublishKey(), this._keychain.getSubscribeKey(),
       0, utils.encode(channel),
-      0, utils.encode(encryptedMessage),
+      0,
     ];
 
     let data = this.prepareParams(incomingData);
@@ -452,8 +452,10 @@ export default class {
     }
 
     if (mode === 'POST') {
+      data.message = utils.encode(encryptedMessage);
       this._postXDR({ data, callback, url });
     } else {
+      url.push(utils.encode(encryptedMessage));
       this._xdr({ data, callback, url });
     }
   }
@@ -495,7 +497,7 @@ export default class {
   _postXDR({ data, url, timeout, callback}: superagentPayload): superagent {
     let superagentConstruct = superagent
       .post(url.join('/'))
-      .query(data);
+      .send(data);
     return this._abstractedXDR(superagentConstruct, timeout, callback);
   }
 

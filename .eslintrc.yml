@@ -7,7 +7,6 @@ rules:
   mocha/no-exclusive-tests: 2
 
   prefer-template: 0
-  prefer-arrow-callback: 0
   func-names: 0
   no-else-return: 0
   vars-on-top: 0
@@ -18,9 +17,5 @@ rules:
 
   prefer-const: 0
 
-  guard-for-in: 0
-  block-scoped-var: 0
-  no-redeclare: 0
   comma-dangle: 0
-  no-shadow: 0
   no-param-reassign: 0
