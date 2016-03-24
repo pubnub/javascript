@@ -81,7 +81,7 @@ export default class {
     delete this._channelGroupStorage[key];
   }
 
-  addToPresenceState(key: string, value: Object) {
+  addToPresenceState(key: string, value: Object | string | number | boolean) {
     this._presenceState[key] = value;
   }
 

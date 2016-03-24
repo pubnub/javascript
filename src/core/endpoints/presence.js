@@ -28,8 +28,8 @@ type getStateArguments = {
 }
 
 type setStateArguments = {
-  channel: string,
-  channelGroup: string,
+  channels: Array<string>,
+  channelGroups: Array<string>,
   state: Object | string | number | boolean
 }
 
@@ -99,7 +99,7 @@ export default class {
   }
 
   setState(args: setStateArguments, callback: Function) {
-    let { state, channel, channelGroup } = args;
+    let { state, channels = [], channelGroups = [] } = args;
     let data: Object = {};
     let channelsWithPresence: Array<string> = [];
     let channelGroupsWithPresence: Array<string> = [];
@@ -108,7 +108,7 @@ export default class {
       return this._l.error('Missing Callback');
     }
 
-    if (!channel && !channelGroup) {
+    if (channels.length === 0 && channelGroups.length === 0) {
       return callback(this._r.validationError('Channel or Channel Group must be supplied'));
     }
 
@@ -118,25 +118,19 @@ export default class {
 
     data.state = state;
 
-    if (channel) {
-      let channelList = (channel.join ? channel.join(',') : '' + channel).split(',');
-      channelList.forEach((channel) => {
-        if (this._state.getChannel(channel)) {
-          this._state.addToPresenceState(channel, state);
-          channelsWithPresence.push(channel);
-        }
-      });
-    }
+    channels.forEach((channel) => {
+      if (this._state.getChannel(channel)) {
+        this._state.addToPresenceState(channel, state);
+        channelsWithPresence.push(channel);
+      }
+    });
 
-    if (channelGroup) {
-      let channelGroupList = (channelGroup.join ? channelGroup.join(',') : '' + channelGroup).split(',');
-      channelGroupList.forEach((channel) => {
-        if (this._state.getChannelGroup(channel)) {
-          this._state.addToPresenceState(channel, state);
-          channelGroupsWithPresence.push(channel);
-        }
-      });
-    }
+    channelGroups.forEach((channel) => {
+      if (this._state.getChannelGroup(channel)) {
+        this._state.addToPresenceState(channel, state);
+        channelGroupsWithPresence.push(channel);
+      }
+    });
 
     if (channelsWithPresence.length === 0 && channelGroupsWithPresence.length === 0) {
       return callback(this._r.validationError('No subscriptions exists for the states'));
@@ -146,13 +140,9 @@ export default class {
       data['channel-group'] = channelGroupsWithPresence.join(',');
     }
 
-    if (channelsWithPresence.length === 0) {
-      channel = ',';
-    } else {
-      channel = channelsWithPresence.join(',');
-    }
+    let stringifiedChannels = channelsWithPresence.length > 0 ? channelsWithPresence.join(',') : ',';
 
-    this._networking.setState(channel, data, (err: Object, response: Object) => {
+    this._networking.setState(stringifiedChannels, data, (err: Object, response: Object) => {
       if (err) return callback(err, response);
       this._state.announceStateChange();
       return callback(err, response);

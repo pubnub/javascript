@@ -269,27 +269,27 @@ describe('presence endpoints', () => {
     });
 
     it('errors if state is not passed', () => {
-      instance.setState({ channel: 'ch1' }, callbackStub);
+      instance.setState({ channels: ['ch1'] }, callbackStub);
       assert.equal(callbackStub.args[0][0], 'validationError');
       assert.equal(validateResponderStub.args[0][0], 'State must be supplied');
     });
 
     it('errors if channel is not in state', () => {
-      instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channels: ['ch1'], state: { my: 'state' } }, callbackStub);
       assert.equal(callbackStub.args[0][0], 'validationError');
       assert.equal(validateResponderStub.args[0][0], 'No subscriptions exists for the states');
     });
 
     it('supports passing of channel', () => {
       state.addChannel('ch1', {});
-      instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channels: ['ch1'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], 'ch1');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' } });
     });
 
     it('supports passing of channels which do not exist', () => {
       state.addChannel('ch1', {});
-      instance.setState({ channel: 'ch1,ch2', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channels: ['ch1', 'ch2'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], 'ch1');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' } });
     });
@@ -297,21 +297,21 @@ describe('presence endpoints', () => {
     it('supports passing of channels', () => {
       state.addChannel('ch1', {});
       state.addChannel('ch2', {});
-      instance.setState({ channel: 'ch1,ch2', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channels: ['ch1', 'ch2'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], 'ch1,ch2');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' } });
     });
 
     it('supports passing of channel group', () => {
       state.addChannelGroup('cg1', {});
-      instance.setState({ channelGroup: 'cg1', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channelGroups: ['cg1'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], ',');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1' });
     });
 
     it('supports passing of channel groups with some non existing', () => {
       state.addChannelGroup('cg1', {});
-      instance.setState({ channelGroup: 'cg1,cg2', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channelGroups: ['cg1', 'cg2'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], ',');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1' });
     });
@@ -319,7 +319,7 @@ describe('presence endpoints', () => {
     it('supports passing of channel groups', () => {
       state.addChannelGroup('cg1', {});
       state.addChannelGroup('cg2', {});
-      instance.setState({ channelGroup: 'cg1,cg2', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channelGroups: ['cg1', 'cg2'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], ',');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1,cg2' });
     });
@@ -329,7 +329,7 @@ describe('presence endpoints', () => {
       state.addChannelGroup('cg2', {});
       state.addChannel('ch1', {});
       state.addChannel('ch2', {});
-      instance.setState({ channel: 'ch1,ch2', channelGroup: 'cg1,cg2', state: { my: 'state' } }, callbackStub);
+      instance.setState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'], state: { my: 'state' } }, callbackStub);
       assert.equal(xdrMock.args[0][0], 'ch1,ch2');
       assert.deepEqual(xdrMock.args[0][1], { state: { my: 'state' }, 'channel-group': 'cg1,cg2' });
     });
@@ -337,7 +337,7 @@ describe('presence endpoints', () => {
     describe('on success', () => {
       it('calls callback and asks state to announce presence update', () => {
         state.addChannel('ch1', {});
-        instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+        instance.setState({ channels: ['ch1'], state: { my: 'state' } }, callbackStub);
         xdrMock.args[0][2](null, 'success-response');
         assert.equal(callbackStub.called, 1);
         assert.equal(announceStateChangeStub.callCount, 1);
@@ -348,7 +348,7 @@ describe('presence endpoints', () => {
     describe('on error', () => {
       it('uses the error function provided in args', () => {
         state.addChannel('ch1', {});
-        instance.setState({ channel: 'ch1', state: { my: 'state' } }, callbackStub);
+        instance.setState({ channels: ['ch1'], state: { my: 'state' } }, callbackStub);
         xdrMock.args[0][2]('error', null);
         assert.equal(callbackStub.called, 1);
         assert.equal(announceStateChangeStub.callCount, 0);
