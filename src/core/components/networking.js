@@ -75,7 +75,7 @@ export default class {
   prepareParams(data: Object): Object {
     if (!data) data = {};
 
-    utils.each(this._coreParams, function (key, value) {
+    utils.each(this._coreParams, (key, value) => {
       if (!(key in data)) data[key] = value;
     });
 
@@ -280,6 +280,18 @@ export default class {
       'channel', channels,
       'heartbeat',
     ];
+
+    if (this._keychain.getAuthKey()) {
+      data.auth = this._keychain.getAuthKey();
+    }
+
+    if (this._keychain.getUUID()) {
+      data.uuid = this._keychain.getUUID();
+    }
+
+    if (this._config.isRequestIdEnabled()) {
+      data.requestid = utils.generateUUID();
+    }
 
     this._xdr({ data, callback, url });
   }
@@ -512,7 +524,7 @@ export default class {
     return superagentConstruct
       .type('json')
       .timeout(timeout || this._config.transactionalRequestTimeout)
-      .end(function (err, resp) {
+      .end((err, resp) => {
         if (err) return callback(err, null);
 
         let parsedResponse = JSON.parse(resp.text);

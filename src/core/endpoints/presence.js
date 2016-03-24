@@ -5,8 +5,6 @@ import State from '../components/state';
 import Logger from '../components/logger';
 import Responders from '../presenters/responders';
 
-import utils from '../utils';
-
 type presenceConstruct = {
   networking: Networking,
   state: State,
@@ -161,46 +159,22 @@ export default class {
     });
   }
 
-  heartbeat(args: Object) {
-    let callback = args.callback || function () {};
-    let err = args.error || function () {};
+  heartbeat(callback: Function) {
     let data: Object = {
-      uuid: this._keychain.getUUID(),
-      auth: this._keychain.getAuthKey(),
+      state: JSON.stringify(this._state.getPresenceState()),
+      heartbeat: this._state.getPresenceTimeout()
     };
 
-    let st = JSON.stringify(this._state.getPresenceState());
-    if (st.length > 2) {
-      data.state = JSON.stringify(this._state.getPresenceState());
+    let channels = this._state.getSubscribedChannels();
+    let channelGroups = this._state.getSubscribedChannelGroups();
+
+    if (channelGroups.length > 0) {
+      data['channel-group'] = channelGroups.join(',');
     }
 
-    if (this._config.getPresenceTimeout() > 0 && this._config.getPresenceTimeout() < 320) {
-      data.heartbeat = this._config.getPresenceTimeout();
-    }
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 
-    let channels = utils.encode(this._state.generate_channel_list(true).join(','));
-    let channelGroups = this._state.generate_channel_group_list(true).join(',');
-
-    if (!channels) channels = ',';
-    if (channelGroups) data['channel-group'] = channelGroups;
-
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
-    }
-
-    if (this._config.isRequestIdEnabled()) {
-      data.requestid = utils.generateUUID();
-    }
-
-    this._networking.performHeartbeat(channels, {
-      data: this._networking.prepareParams(data),
-      success(response) {
-        Responders.callback(response, callback, err);
-      },
-      fail(response) {
-        Responders.error(response, err);
-      },
-    });
+    this._networking.performHeartbeat(stringifiedChannels, data, callback);
   }
 
 }

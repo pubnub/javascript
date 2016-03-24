@@ -9,7 +9,7 @@ import State from './components/state';
 import PublishQueue from './components/publish_queue';
 import Crypto from './components/cryptography/index';
 
-import PresenceHeartbeat from './components/presence_heartbeat';
+import PresenceHeartbeat from './iterators/presence_heartbeat';
 
 import Subscriber from './iterators/subscriber';
 
@@ -25,10 +25,9 @@ import PublishEndpoints from './endpoints/publish';
 
 let packageJSON = require('../../package.json');
 import { callbackStruct, internalSetupStruct } from './flow_interfaces';
-let utils = require('./utils');
 
 export default function createInstance(setup: internalSetupStruct): Object {
-  let { sendBeacon, db, shutdown, proxy } = setup;
+  let { sendBeacon, db, shutdown } = setup;
 
   let callbacks: callbackStruct = {
     onMessage: setup.onMessage,
@@ -54,14 +53,8 @@ export default function createInstance(setup: internalSetupStruct): Object {
 
   let config = new Config()
     .setRequestIdConfig(setup.use_request_id || false)
-    .setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0))
     .setSupressLeaveEvents(setup.noleave || 0)
-    // .setSubscribeWindow(+setup.windowing || DEF_WINDOWING)
-    // .setSubscribeTimeout((+setup.timeout || DEF_SUB_TIMEOUT) * constants.SECOND)
     .setInstanceIdConfig(setup.instance_id || false);
-
-  config
-    .setHeartbeatInterval(setup.heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
 
   // set timeout to how long a transaction request will wait for the server (default 15 seconds)
   config.transactionalRequestTimeout = setup.transactionalRequestTimeout || 15 * 1000;
@@ -76,7 +69,7 @@ export default function createInstance(setup: internalSetupStruct): Object {
   let publishQueue = new PublishQueue({ networking });
   let subscriber = new Subscriber({ networking, state, callbacks });
 
-  // initalize the endpoints
+  // init the endpoints
   let timeEndpoint = new TimeEndpoint({ networking });
   let historyEndpoint = new HistoryEndpoint({ networking, crypto });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
@@ -89,12 +82,12 @@ export default function createInstance(setup: internalSetupStruct): Object {
 
   let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config, state });
 
-  let presenceHeartbeat = new PresenceHeartbeat({ config, state, presenceEndpoints });
+  let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
   // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
 
-  if (config.getPresenceTimeout() === 2) {
-    config.setHeartbeatInterval(1);
-  }
+  // configure heartbeat timeouts and intervals
+  state.setPresenceTimeout(setup.presenceTimeout);
+  state.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
 
   let SELF = {
 
@@ -132,31 +125,13 @@ export default function createInstance(setup: internalSetupStruct): Object {
       send: pushEndpoints.send.bind(pushEndpoints),
     },
 
-    getHeartbeat() {
-      return config.getPresenceTimeout();
-    },
+    getPresenceTimeout: state.getPresenceTimeout.bind(state),
+    setPresenceTimeout: state.setPresenceTimeout.bind(state),
 
-    setHeartbeat(heartbeat, heartbeat_interval) {
-      config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
-      config.setHeartbeatInterval(heartbeat_interval || (config.getPresenceTimeout() / 2) - 1);
-      if (config.getPresenceTimeout() === 2) {
-        config.setHeartbeatInterval(1);
-      }
+    getPresenceAnnounceInterval: state.getPresenceAnnounceInterval.bind(state),
+    setPresenceAnnounceInterval: state.setPresenceAnnounceInterval.bind(state),
 
-
-    },
-
-    getHeartbeatInterval() {
-      return config.getHeartbeatInterval();
-    },
-
-    setHeartbeatInterval(heartbeatInterval) {
-      config.setHeartbeatInterval(heartbeatInterval);
-    },
-
-    setAuthKey(auth) {
-      keychain.setAuthKey(auth);
-    },
+    setAuthKey: keychain.setAuthKey.bind(keychain),
 
     setUUID: keychain.setUUID.bind(keychain),
     getUUID: keychain.getUUID.bind(keychain),
@@ -187,6 +162,7 @@ export default function createInstance(setup: internalSetupStruct): Object {
   */
   // connectivity.start();
   subscriber.start();
+  presenceHeartbeat.start();
 
   return SELF;
 }

@@ -17,16 +17,6 @@ export default class {
 
 
   /*
-    how long the server will wait before declaring that the client is gone.
-  */
-  _presenceTimeout: number;
-
-  /*
-    how often (in seconds) the client should announce its presence to server
-  */
-  _heartbeatInterval: number;
-
-  /*
     configuration to supress leave events; when a presence leave is performed
     this configuration will disallow the leave event from happening
   */
@@ -63,16 +53,6 @@ export default class {
     return this;
   }
 
-  setHeartbeatInterval(configValue: number): this {
-    this._heartbeatInterval = configValue;
-    return this;
-  }
-
-  setPresenceTimeout(configValue: number): this {
-    this._presenceTimeout = configValue;
-    return this;
-  }
-
   setSupressLeaveEvents(configValue: boolean): this {
     this._suppressLeaveEvents = configValue;
     return this;
@@ -88,14 +68,6 @@ export default class {
 
   isSuppressingLeaveEvents(): boolean {
     return this._suppressLeaveEvents;
-  }
-
-  getHeartbeatInterval(): number {
-    return this._heartbeatInterval;
-  }
-
-  getPresenceTimeout(): number {
-    return this._presenceTimeout;
   }
 
 }

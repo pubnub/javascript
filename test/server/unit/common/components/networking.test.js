@@ -10,8 +10,6 @@ const utils = require('../../../../../src/core/utils');
 const assert = require('assert');
 const sinon = require('sinon');
 
-import superagent from 'superagent';
-
 describe('#components/networking', () => {
   let config;
   let keychain;
@@ -96,9 +94,7 @@ describe('#components/networking', () => {
 
       utils.generateUUID.restore();
 
-      sinon.stub(utils, 'generateUUID', function () {
-        return '5f1z51fc-5b92-4a3b-96ca-08eee41508bd';
-      });
+      sinon.stub(utils, 'generateUUID', () => '5f1z51fc-5b92-4a3b-96ca-08eee41508bd');
 
       newDomain = networking.nextOrigin(true);
       assert.equal(newDomain, 'http://ps5f1z51fc.pubnub.com');
@@ -106,9 +102,6 @@ describe('#components/networking', () => {
   });
 
   describe('#shiftStandardOrigin', () => {
-    let config;
-    let keychain;
-
     beforeEach(() => {
       config = new Config();
       keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
@@ -117,9 +110,7 @@ describe('#components/networking', () => {
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
       let networking = new Networking({ config, keychain }, undefined, undefined);
 
-      sinon.stub(networking, 'nextOrigin', function () {
-        return 'sample-url';
-      });
+      sinon.stub(networking, 'nextOrigin', () => 'sample-url');
 
       let newOrigin = networking.shiftStandardOrigin();
       assert.equal(newOrigin, 'sample-url');
@@ -131,11 +122,10 @@ describe('#components/networking', () => {
 
   describe('#prepareParams', () => {
     let networking;
-    let config;
 
     beforeEach(() => {
       config = new Config();
-      let keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setInstanceId('myId');
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setInstanceId('myId');
       networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
     });
 
@@ -162,9 +152,7 @@ describe('#components/networking', () => {
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
       let networking = new Networking(() => {}, new Keychain());
 
-      sinon.stub(networking, 'nextOrigin', function () {
-        return 'sample-url';
-      });
+      sinon.stub(networking, 'nextOrigin', () => 'sample-url');
 
       let newOrigin = networking.shiftSubscribeOrigin();
       assert.equal(newOrigin, 'sample-url');
@@ -176,8 +164,6 @@ describe('#components/networking', () => {
 
 
   describe('#performChannelGroupOperation', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -258,8 +244,6 @@ describe('#components/networking', () => {
   });
 
   describe('#fetchTime', () => {
-    let config;
-    let keychain;
     let networking;
     let callbackStub;
     let xdrStub;
@@ -306,8 +290,6 @@ describe('#components/networking', () => {
   });
 
   describe('#fetchHistory', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -358,8 +340,6 @@ describe('#components/networking', () => {
   });
 
   describe('#performPublish', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -441,8 +421,6 @@ describe('#components/networking', () => {
   });
 
   describe('#fetchWhereNow', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -499,8 +477,6 @@ describe('#components/networking', () => {
   });
 
   describe('#performLeave', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -560,8 +536,6 @@ describe('#components/networking', () => {
   });
 
   describe('#performSubscribe', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -631,8 +605,6 @@ describe('#components/networking', () => {
   });
 
   describe('#fetchState', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -689,9 +661,54 @@ describe('#components/networking', () => {
     });
   });
 
+  describe('#performHertbeat', () => {
+    let networking;
+    let validationErrorStub;
+    let prepareParamsStub;
+    let callbackStub;
+    let xdrStub;
+
+    beforeEach(() => {
+      config = new Config();
+      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setUUID('keychainUUID');
+      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      callbackStub = sinon.stub();
+
+      xdrStub = sinon.stub(networking, '_xdr');
+      validationErrorStub = sinon.stub();
+      networking._r.validationError = validationErrorStub;
+    });
+
+    it('errors out if subkey is not defined', () => {
+      keychain.setSubscribeKey('');
+      networking.performHeartbeat('ch1', {}, callbackStub);
+      assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
+    });
+
+    it('uses auth-key from keychain if provided', () => {
+      keychain.setAuthKey('myAuthKey');
+      networking.performHeartbeat('ch1', { my: 'state' }, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { my: 'state', auth: 'myAuthKey', uuid: 'keychainUUID' });
+    });
+
+    it('uses keychain uuid', () => {
+      networking.performHeartbeat('ch1', { my: 'state' }, callbackStub);
+      assert.equal(xdrStub.callCount, 1);
+      assert.deepEqual(xdrStub.args[0][0].data, { my: 'state', uuid: 'keychainUUID' });
+      assert.deepEqual(xdrStub.args[0][0].url, ['http://origin1.pubnub.com', 'v2', 'presence',
+        'sub-key', 'subKey', 'channel', 'ch1', 'heartbeat']);
+    });
+
+    it('executs #prepareParamsMock to prepare params', () => {
+      prepareParamsStub = sinon.stub(networking, 'prepareParams').returns({ base: 'params' });
+      networking.performHeartbeat('ch1', { my: 'state' }, callbackStub);
+      assert.equal(prepareParamsStub.called, true);
+      assert.deepEqual(prepareParamsStub.args[0][0], { my: 'state' });
+    });
+  });
+
   describe('#setState', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;
@@ -749,8 +766,6 @@ describe('#components/networking', () => {
   });
 
   describe('#fetchHereNow', () => {
-    let config;
-    let keychain;
     let networking;
     let validationErrorStub;
     let prepareParamsStub;

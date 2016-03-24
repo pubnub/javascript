@@ -221,6 +221,35 @@ describe('presence endpoints', () => {
     });
   });
 
+  describe('#heartbeat', () => {
+    beforeEach(() => {
+      xdrMock = sinon.stub(networking, 'performHeartbeat');
+    });
+
+    it('pushes heartbeat and state information into the data', () => {
+      sinon.stub(state, 'getPresenceState').returns({ some: 'state' });
+      sinon.stub(state, 'getPresenceTimeout').returns(123);
+      instance.heartbeat(callbackStub);
+      assert.deepEqual(xdrMock.args[0], [',', { state: '{"some":"state"}', heartbeat: 123 }, callbackStub]);
+    });
+
+    it('includes channels if they exist', () => {
+      sinon.stub(state, 'getPresenceState').returns({ some: 'state' });
+      sinon.stub(state, 'getPresenceTimeout').returns(123);
+      sinon.stub(state, 'getSubscribedChannels').returns(['a', 'b', 'c']);
+      instance.heartbeat(callbackStub);
+      assert.deepEqual(xdrMock.args[0], ['a,b,c', { state: '{"some":"state"}', heartbeat: 123 }, callbackStub]);
+    });
+
+    it('includes channel groups if they exist', () => {
+      sinon.stub(state, 'getPresenceState').returns({ some: 'state' });
+      sinon.stub(state, 'getPresenceTimeout').returns(123);
+      sinon.stub(state, 'getSubscribedChannelGroups').returns(['a', 'b', 'c']);
+      instance.heartbeat(callbackStub);
+      assert.deepEqual(xdrMock.args[0], [',', { 'channel-group': 'a,b,c', state: '{"some":"state"}', heartbeat: 123 }, callbackStub]);
+    });
+  });
+
   describe('#setState', () => {
     beforeEach(() => {
       xdrMock = sinon.stub(networking, 'setState');

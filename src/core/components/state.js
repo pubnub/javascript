@@ -21,6 +21,15 @@ export default class {
   filterExpression: string; // V2 subscribe filter expression
   subscribeRegion: string; // V2 subscribe region selector
 
+  /*
+    how long the server will wait before declaring that the client is gone.
+  */
+  _presenceTimeout: number;
+
+  /*
+    how often (in seconds) the client should announce its presence to server
+  */
+  _presenceAnnounceInterval: number;
 
   constructor() {
     this._channelStorage = {};
@@ -64,7 +73,7 @@ export default class {
     delete this._presenceState[name];
   }
 
-  isInPresenceState(name: string) {
+  isInPresenceState(name: string): boolean {
     return name in this._presenceState;
   }
 
@@ -98,6 +107,10 @@ export default class {
     this._eventEmitter.on('onSubscriptionChange', callback);
   }
 
+  onPresenceConfigChange(callback: Function) {
+    this._eventEmitter.on('onPresenceConfigChange', callback);
+  }
+
   announceStateChange() {
     this._eventEmitter.emit('onStateChange');
   }
@@ -105,6 +118,10 @@ export default class {
   announceSubscriptionChange() {
     this._subscribeTimeToken = '0';
     this._eventEmitter.emit('onSubscriptionChange');
+  }
+
+  announcePresenceConfigChange() {
+    this._eventEmitter.emit('onPresenceConfigChange');
   }
 
   // end event emitting.
@@ -115,6 +132,53 @@ export default class {
 
   getSubscribedChannelGroups(): Array<string> {
     return Object.keys(this._channelGroupStorage);
+  }
+
+  getPresenceTimeout(): number {
+    return this._presenceTimeout;
+  }
+
+  setPresenceTimeout(newTimeout: number) {
+    this._presenceTimeout = newTimeout;
+    this._presenceAnnounceInterval = (this._presenceTimeout / 2) - 1;
+    this.announcePresenceConfigChange();
+  }
+
+  getPresenceAnnounceInterval(): number {
+    return this._presenceAnnounceInterval;
+  }
+
+  setPresenceAnnounceInterval(newInterval: number) {
+    this._presenceAnnounceInterval = newInterval;
+    this.announcePresenceConfigChange();
+  }
+
+  getChannelsWithPresence(): Array<string> {
+    let channels = [];
+
+    Object.keys(this._channelStorage).forEach((channelName) => {
+      let channel = this._channelStorage[channelName];
+
+      if (channel.enablePresence === true) {
+        channels.push(channelName);
+      }
+    });
+
+    return channels;
+  }
+
+  getChannelGroupsWithPresence(): Array<string> {
+    let channelGroups = [];
+
+    Object.keys(this._channelGroupStorage).forEach((channelGroupName) => {
+      let channelGroup = this._channelGroupStorage[channelGroupName];
+
+      if (channelGroup.enablePresence === true) {
+        channelGroups.push(channelGroupName);
+      }
+    });
+
+    return channelGroups;
   }
 
 }

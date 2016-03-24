@@ -13,6 +13,7 @@ type pubSubConstruct = {
   networking: Networking,
   state: State,
   config: Config,
+  callbacks: callbackStruct
 };
 
 type unsubscribeArguments = {
@@ -95,7 +96,7 @@ export default class {
       if (err) return onStatus(err, null);
 
       this._postUnsubscribeCleanup(existingChannels, existingChannelGroups);
-      this._state.setSubscribeTimeToken(0);
+      this._state.setSubscribeTimeToken('0');
       this._state.announceSubscriptionChange();
       onStatus(null, { action: 'unsubscribe', status: 'finished', response });
     });
