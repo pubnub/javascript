@@ -32,7 +32,9 @@ export default class {
     this._callbacks = callbacks;
     this._l = Logger.getLogger('#iterator/subscriber');
 
+    this._state.onPresenceConfigChange(this.start.bind(this));
     this._state.onSubscriptionChange(this.start.bind(this));
+    this._state.onStateChange(this.start.bind(this));
   }
 
   start() {
@@ -85,6 +87,12 @@ export default class {
       data.tr = this._state.subscribeRegion;
     }
 
+    // include state if we have any state present
+    if (this._state.getChannelsWithPresence().length > 0 || this._state.getChannelGroupsWithPresence().length > 0) {
+      data.state = JSON.stringify(this._state.getPresenceState());
+      data.heartbeat = this._state.getPresenceTimeout();
+    }
+
     this._runningSuperagent = this._networking.performSubscribe(stringifiedChannels, data, callback);
   }
 
@@ -98,6 +106,7 @@ export default class {
 
     let payload = response.m ? response.m : [];
     let timetoken = response.t.t;
+    let region = response.t.r;
 
     payload.forEach((message) => {
       let isPresence = false;
@@ -122,6 +131,7 @@ export default class {
     });
 
     this._state.setSubscribeTimeToken(timetoken);
+    this._state.subscribeRegion = region;
     this.start();
   }
 

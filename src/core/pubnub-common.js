@@ -29,6 +29,7 @@ import { callbackStruct, internalSetupStruct } from './flow_interfaces';
 export default function createInstance(setup: internalSetupStruct): Object {
   let { sendBeacon, db, shutdown } = setup;
 
+  let state = new State();
   let callbacks: callbackStruct = {
     onMessage: setup.onMessage,
     onStatus: setup.onStatus,
@@ -63,7 +64,13 @@ export default function createInstance(setup: internalSetupStruct): Object {
   // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
   config.useSendBeacon = setup.useSendBeacon || true;
 
-  let state = new State();
+  // configure heartbeat timeouts and intervals
+  state.setPresenceTimeout(setup.presenceTimeout || 30);
+
+  if (setup.presenceAnnounceInterval) {
+    state.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
+  }
+
   let crypto = new Crypto({ keychain });
   let networking = new Networking({ config, keychain, crypto, sendBeacon }, setup.ssl, setup.origin);
   let publishQueue = new PublishQueue({ networking });
@@ -75,19 +82,14 @@ export default function createInstance(setup: internalSetupStruct): Object {
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
   let publishEndpoints = new PublishEndpoints({ publishQueue });
   let pushEndpoints = new PushEndpoint({ networking, publishQueue });
-
   let presenceEndpoints = new PresenceEndpoints({ keychain, config, networking, state });
-
   let accessEndpoints = new AccessEndpoints({ keychain, config, networking });
-
   let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config, state });
 
   let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
+
   // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
 
-  // configure heartbeat timeouts and intervals
-  state.setPresenceTimeout(setup.presenceTimeout);
-  state.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
 
   let SELF = {
 

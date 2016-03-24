@@ -7,7 +7,7 @@ const sinon = require('sinon');
 const uuid = require('uuid');
 
 // temp integration test while core is still complex
-describe('core initalization', () => {
+describe.skip('core initalization', () => {
   let commonSettings;
 
   beforeEach(() => {

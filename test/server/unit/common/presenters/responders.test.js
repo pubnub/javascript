@@ -5,7 +5,7 @@ import Responders from '../../../../../src/core/presenters/responders';
 const assert = require('assert');
 
 
-describe('#presenters/responders', () => {
+describe.skip('#presenters/responders', () => {
   describe('#callback', () => {
     it('returns the passed item if it is not an object', (done) => {
       Responders.callback('hello', (reponderResult) => {

@@ -1,7 +1,6 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Networking from '../../../../../src/core/components/networking';
 import State from '../../../../../src/core/components/state';
 import Responders from '../../../../../src/core/presenters/responders';
 import PresenceEndpoints from '../../../../../src/core/endpoints/presence';

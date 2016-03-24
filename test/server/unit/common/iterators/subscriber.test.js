@@ -22,6 +22,10 @@ describe('#iterators/subscriber', () => {
   let onPresenceStub;
   let subscribeStub;
 
+  let onPresenceConfigChangeStub;
+  let onSubscriptionChangeStub;
+  let onStateChangeStub;
+
   beforeEach(() => {
     onStatusStub = sinon.stub();
     onPresenceStub = sinon.stub();
@@ -33,6 +37,11 @@ describe('#iterators/subscriber', () => {
     };
     networking = new Networking({});
     state = new State();
+
+    onStateChangeStub = sinon.stub(state, 'onStateChange');
+    onSubscriptionChangeStub = sinon.stub(state, 'onSubscriptionChange');
+    onPresenceConfigChangeStub = sinon.stub(state, 'onPresenceConfigChange');
+
     subscribeStub = sinon.stub(networking, 'performSubscribe');
     validateResponderStub = sinon.stub().returns('validationError');
 
@@ -48,6 +57,22 @@ describe('#iterators/subscriber', () => {
       callbacks,
       state
     });
+  });
+
+  it('restarts the subscribe loop when channel mix is modified', () => {
+    let stopStub = sinon.stub(instance, 'stop');
+    onSubscriptionChangeStub.args[0][0]();
+    assert.equal(stopStub.called, 1);
+  });
+  it('restarts the subscribe loop when presence state is modified', () => {
+    let stopStub = sinon.stub(instance, 'stop');
+    onStateChangeStub.args[0][0]();
+    assert.equal(stopStub.called, 1);
+  });
+  it('restarts the subscribe loop when heartbeat intervals are modified', () => {
+    let stopStub = sinon.stub(instance, 'stop');
+    onPresenceConfigChangeStub.args[0][0]();
+    assert.equal(stopStub.called, 1);
   });
 
   describe('#start', () => {
@@ -76,10 +101,17 @@ describe('#iterators/subscriber', () => {
       assert.deepEqual(subscribeStub.args[0][1], { tt: 0 });
     });
     it('supports subscription to channels w/ presence', () => {
+      state.setPresenceTimeout(150);
       state.addChannel('ch1', { name: 'ch1', enablePresence: true });
+      state.addToPresenceState('ch1', { pres1: 'yes' });
+      state.addToPresenceState('ch2', { pres1: 'yes' });
       instance.start();
       assert.deepEqual(subscribeStub.args[0][0], 'ch1,ch1-pnpres');
-      assert.deepEqual(subscribeStub.args[0][1], { tt: 0 });
+      assert.deepEqual(subscribeStub.args[0][1], {
+        tt: 0,
+        heartbeat: 150,
+        state: '{\"ch1\":{\"pres1\":\"yes\"},\"ch2\":{\"pres1\":\"yes\"}}'
+      });
     });
     it('supports subscription to channels group', () => {
       state.addChannelGroup('cg1', { name: 'cg1' });
@@ -97,10 +129,18 @@ describe('#iterators/subscriber', () => {
     });
 
     it('supports subscription to channels groups w/ presence', () => {
+      state.setPresenceTimeout(150);
       state.addChannelGroup('cg1', { name: 'cg1', enablePresence: true });
+      state.addToPresenceState('cg1', { pres1: 'yes' });
+      state.addToPresenceState('cg2', { pres1: 'yes' });
       instance.start();
       assert.deepEqual(subscribeStub.args[0][0], ',');
-      assert.deepEqual(subscribeStub.args[0][1], { tt: 0, 'channel-group': 'cg1,cg1-pnpres' });
+      assert.deepEqual(subscribeStub.args[0][1], {
+        tt: 0,
+        'channel-group': 'cg1,cg1-pnpres',
+        heartbeat: 150,
+        state: '{\"cg1\":{\"pres1\":\"yes\"},\"cg2\":{\"pres1\":\"yes\"}}'
+      });
     });
     it('supports subscription to channels and channel groups', () => {
       state.addChannel('ch1', { name: 'ch1' });
@@ -110,11 +150,23 @@ describe('#iterators/subscriber', () => {
       assert.deepEqual(subscribeStub.args[0][1], { tt: 0, 'channel-group': 'cg1' });
     });
     it('supports subscription to channels and channel groups w/ presence', () => {
+      state.setPresenceTimeout(150);
       state.addChannel('ch1', { name: 'ch1', enablePresence: true });
       state.addChannelGroup('cg1', { name: 'cg1', enablePresence: true });
+
+      state.addToPresenceState('ch1', { pres1: 'yes' });
+      state.addToPresenceState('ch2', { pres1: 'yes' });
+      state.addToPresenceState('cg1', { pres1: 'yes' });
+      state.addToPresenceState('cg2', { pres1: 'yes' });
+
       instance.start();
       assert.deepEqual(subscribeStub.args[0][0], 'ch1,ch1-pnpres');
-      assert.deepEqual(subscribeStub.args[0][1], { tt: 0, 'channel-group': 'cg1,cg1-pnpres' });
+      assert.deepEqual(subscribeStub.args[0][1], {
+        tt: 0,
+        'channel-group': 'cg1,cg1-pnpres',
+        state: '{\"ch1\":{\"pres1\":\"yes\"},\"ch2\":{\"pres1\":\"yes\"},\"cg1\":{\"pres1\":\"yes\"},\"cg2\":{\"pres1\":\"yes\"}}',
+        heartbeat: 150
+      });
     });
     it('supports filterExpression', () => {
       state.filterExpression = 'testFilter';
@@ -138,7 +190,8 @@ describe('#iterators/subscriber', () => {
       instance.__handleSubscribeResponse('bigError', {});
       assert.equal(startStub.called, true);
     });
-    it('updates the timetoken inside the state', () => {
+
+    it('updates the timetoken / region inside the state', () => {
       instance.__handleSubscribeResponse(null, {
         t: { t: '14586859725823176', r: 1 },
         m:
@@ -153,7 +206,9 @@ describe('#iterators/subscriber', () => {
       });
 
       assert.equal(state.getSubscribeTimeToken(), '14586859725823176');
+      assert.equal(state.subscribeRegion, 1);
     });
+
     it('strips the -pnpres from the channel name', () => {
       instance.__handleSubscribeResponse(null, {
         t: { t: '14586859725823176', r: 1 },
@@ -178,6 +233,7 @@ describe('#iterators/subscriber', () => {
         publishTimetoken: 'some-payload'
       });
     });
+
     it('calls on the onmessage and passes the recieved message', () => {
       instance.__handleSubscribeResponse(null, {
         t: { t: '14586859725823176', r: 1 },
@@ -202,6 +258,7 @@ describe('#iterators/subscriber', () => {
         publishTimetoken: 'some-payload'
       });
     });
+
     it('restarts the loop', () => {
       let startStub = sinon.stub(instance, 'start');
       instance.__handleSubscribeResponse(null, { t: { t: '14586859725823176', r: 1 } });
