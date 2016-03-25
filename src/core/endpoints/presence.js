@@ -47,7 +47,7 @@ export default class {
   }
 
   hereNow(args: hereNowArguments, callback: Function) {
-    let { channel, channelGroup, uuids = true, state } = args;
+    let { channels = [], channelGroups = [], uuids = true, state } = args;
     let data = {};
 
     if (!uuids) data.disable_uuids = 1;

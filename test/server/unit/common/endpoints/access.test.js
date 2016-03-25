@@ -59,61 +59,73 @@ describe('access endpoints', () => {
     });
 
     it('calls with channel if passed', () => {
-      let args = { channel: 'ch1' };
+      let args = { channels: ['ch1'] };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1', timestamp: 0, r: 0, w: 0 }, callbackStub]);
     });
 
     it('calls with channel as array if passed', () => {
-      let args = { channel: ['ch1', 'ch2'] };
+      let args = { channels: ['ch1', 'ch2'] };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1,ch2', timestamp: 0, r: 0, w: 0 }, callbackStub]);
     });
 
     it('calls with channel if passed', () => {
-      let args = { channel: 'ch1' };
+      let args = { channels: ['ch1'] };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1', timestamp: 0, r: 0, w: 0 }, callbackStub]);
     });
 
-    it('calls with channel groups as string if passed', () => {
-      let args = { channelGroup: 'cg1' };
+    it('calls with channel group if passed', () => {
+      let args = { channelGroups: ['cg1'] };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { 'channel-group': 'cg1', timestamp: 0, r: 0, w: 0 }, callbackStub]);
     });
 
+    it('calls with channel groups if passed', () => {
+      let args = { channelGroups: ['cg1', 'cg2'] };
+      instance.grant(args, callbackStub);
+      assert.deepEqual(xdrMock.args[0], [null, { 'channel-group': 'cg1,cg2', timestamp: 0, r: 0, w: 0 }, callbackStub]);
+    });
+
     it('adds authKey', () => {
-      let args = { channelGroup: 'cg1', authKey: 'authKey' };
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey'] };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], ['authKey', { 'channel-group': 'cg1', timestamp: 0, r: 0, w: 0 }, callbackStub]);
     });
 
+    it('adds authKeys', () => {
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey', 'authKey2'] };
+      instance.grant(args, callbackStub);
+      assert.deepEqual(xdrMock.args[0], ['authKey,authKey2', { 'channel-group': 'cg1', timestamp: 0, r: 0, w: 0 }, callbackStub]);
+    });
+
     it('adds r=1 if read: true is passed', () => {
-      let args = { channelGroup: 'cg1', authKey: 'authKey', read: true };
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey'], read: true };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], ['authKey', { 'channel-group': 'cg1', timestamp: 0, r: 1, w: 0 }, callbackStub]);
     });
 
     it('adds w=1 if write: true is passed', () => {
-      let args = { channelGroup: 'cg1', authKey: 'authKey', write: true };
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey'], write: true };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], ['authKey', { 'channel-group': 'cg1', timestamp: 0, r: 0, w: 1 }, callbackStub]);
     });
 
     it('adds m=1 if manage: true is passed', () => {
-      let args = { channelGroup: 'cg1', authKey: 'authKey', manage: true };
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey'], manage: true };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], ['authKey', { 'channel-group': 'cg1', timestamp: 0, r: 0, w: 0, m: 1 }, callbackStub]);
     });
 
     it('adds m=0 if manage: false is passed', () => {
-      let args = { channelGroup: 'cg1', authKey: 'authKey', manage: false };
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey'], manage: false };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], ['authKey', { 'channel-group': 'cg1', timestamp: 0, r: 0, w: 0, m: 0 }, callbackStub]);
     });
 
     it('calls with both channel and channel group if passed', () => {
-      let args = { channel: 'ch1', channelGroup: 'cg1' };
+      let args = { channels: ['ch1'], channelGroups: ['cg1'] };
       instance.grant(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1', 'channel-group': 'cg1', timestamp: 0, r: 0, w: 0 }, callbackStub]);
     });
@@ -140,25 +152,43 @@ describe('access endpoints', () => {
     });
 
     it('calls with channel if passed', () => {
-      let args = { channel: 'ch1' };
+      let args = { channels: ['ch1'] };
       instance.audit(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1', timestamp: 0 }, callbackStub]);
     });
 
-    it('calls with channel if passed', () => {
-      let args = { channel: 'ch1' };
+    it('calls with multiple channels if passed', () => {
+      let args = { channels: ['ch1', 'ch2'] };
       instance.audit(args, callbackStub);
-      assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1', timestamp: 0 }, callbackStub]);
+      assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1,ch2', timestamp: 0 }, callbackStub]);
+    });
+
+    it('calls with channel group if passed', () => {
+      let args = { channelGroups: ['cg1'] };
+      instance.audit(args, callbackStub);
+      assert.deepEqual(xdrMock.args[0], [null, { 'channel-group': 'cg1', timestamp: 0 }, callbackStub]);
+    });
+
+    it('calls with multiple channels if passed', () => {
+      let args = { channelGroups: ['cg1', 'cg2'] };
+      instance.audit(args, callbackStub);
+      assert.deepEqual(xdrMock.args[0], [null, { 'channel-group': 'cg1,cg2', timestamp: 0 }, callbackStub]);
     });
 
     it('adds authKey', () => {
-      let args = { channelGroup: 'cg1', authKey: 'authKey' };
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey'] };
       instance.audit(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], ['authKey', { 'channel-group': 'cg1', timestamp: 0 }, callbackStub]);
     });
 
+    it('adds authKeys', () => {
+      let args = { channelGroups: ['cg1'], authKeys: ['authKey', 'authKey2'] };
+      instance.audit(args, callbackStub);
+      assert.deepEqual(xdrMock.args[0], ['authKey,authKey2', { 'channel-group': 'cg1', timestamp: 0 }, callbackStub]);
+    });
+
     it('calls with both channel and channel group if passed', () => {
-      let args = { channel: 'ch1', channelGroup: 'cg1' };
+      let args = { channels: ['ch1'], channelGroups: ['cg1'] };
       instance.audit(args, callbackStub);
       assert.deepEqual(xdrMock.args[0], [null, { channel: 'ch1', 'channel-group': 'cg1', timestamp: 0 }, callbackStub]);
     });

@@ -4,26 +4,24 @@ import Networking from '../components/networking';
 import Logger from '../components/logger';
 import Responders from '../presenters/responders';
 
-import utils from '../utils';
-
 type accessConstruct = {
   networking: Networking,
 };
 
 type auditArguments = {
-  channel: string,
-  channelGroup: string,
-  authKey: string,
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  authKeys: Array<string>,
 }
 
 type grantArguments = {
-  channel: string | Array<string>,
-  channelGroup: string,
+  channels: Array<string>,
+  channelGroups: Array<string>,
   ttl: number,
   read: boolean,
   write: boolean,
   manage: boolean,
-  authKey: string | Array<string>
+  authKeys: Array<string>
 }
 
 export default class {
@@ -44,7 +42,7 @@ export default class {
   }
 
   grant(args: grantArguments, callback: Function) {
-    let { channel, channelGroup, ttl, read, write, manage, authKey } = args;
+    let { channels = [], channelGroups = [], ttl, read, write, manage, authKeys = [] } = args;
 
     let r = (read) ? '1' : '0';
     let w = (write) ? '1' : '0';
@@ -62,30 +60,25 @@ export default class {
       data.m = m;
     }
 
-    if (utils.isArray(channel)) {
-      channel = channel.join(',');
-    }
-    if (utils.isArray(authKey)) {
-      authKey = authKey.join(',');
+    if (channels.length > 0) {
+      data.channel = channels.join(',');
     }
 
-    if (channel) {
-      data.channel = channel;
-    }
-
-    if (channelGroup) {
-      data['channel-group'] = channelGroup;
+    if (channelGroups.length > 0) {
+      data['channel-group'] = channelGroups.join(',');
     }
 
     if (ttl || ttl === 0) {
       data.ttl = ttl;
     }
 
-    this._networking.performGrant(authKey, data, callback);
+    let stringifiedAuthKeys = authKeys.length > 0 ? authKeys.join(',') : null;
+
+    this._networking.performGrant(stringifiedAuthKeys, data, callback);
   }
 
   audit(args: auditArguments, callback: Function) {
-    let { channel, channelGroup, authKey } = args;
+    let { channels = [], channelGroups = [], authKeys = [] } = args;
 
     // Make sure we have a Channel
     if (!callback) {
@@ -95,15 +88,17 @@ export default class {
     let timestamp = Math.floor(new Date().getTime() / 1000);
     let data: Object = { timestamp };
 
-    if (channel) {
-      data.channel = channel;
+    if (channels.length > 0) {
+      data.channel = channels.join(',');
     }
 
-    if (channelGroup) {
-      data['channel-group'] = channelGroup;
+    if (channelGroups.length > 0) {
+      data['channel-group'] = channelGroups.join(',');
     }
 
-    this._networking.performAudit(authKey, data, callback);
+    let stringifiedAuthKeys = authKeys.length > 0 ? authKeys.join(',') : null;
+
+    this._networking.performAudit(stringifiedAuthKeys, data, callback);
   }
 
 }
