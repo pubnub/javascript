@@ -1,4 +1,4 @@
-/*! 3.14.4 / modern */
+/*! 3.14.5 / modern */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -407,7 +407,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.14.4",
+		"version": "3.14.5",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -709,15 +709,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (PRESENCE_HB === 2) PRESENCE_HB_INTERVAL = 1;
 
-	  var crypto_obj = setup['crypto_obj'] ||
-	    {
-	      encrypt: function (a, key) {
-	        return a;
-	      },
-	      decrypt: function (b, key) {
-	        return b;
-	      }
-	    };
+	  var crypto_obj = setup['crypto_obj'] || {
+	    encrypt: function (a, key) {
+	      return a;
+	    },
+	    decrypt: function (b, key) {
+	      return b;
+	    }
+	  };
 
 	  function _get_url_params(data) {
 	    if (!data) data = {};
@@ -1416,6 +1415,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var callback = callback || args['callback'] || msg['callback'] || args['success'] || function () {};
 	      var channel = args['channel'] || msg['channel'];
+	      var meta = args['meta'] || args['metadata'];
 	      var auth_key = args['auth_key'] || AUTH_KEY;
 	      var cipher_key = args['cipher_key'];
 	      var err = args['error'] || msg['error'] || function () {};
@@ -1448,6 +1448,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      ];
 
 	      params = { uuid: UUID, auth: auth_key };
+
+	      if (meta && typeof meta === 'object') {
+	        params['meta'] = JSON.stringify(meta);
+	      }
 
 	      if (!store) params['store'] = '0';
 
@@ -2216,7 +2220,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!gw_type) return error('Missing GW Type (gw_type: gcm or apns)');
 	      if (!op) return error('Missing GW Operation (op: add or remove)');
 	      if (!channel) return error('Missing gw destination Channel (channel)');
-	      if (!PUBLISH_KEY) return error('Missing Publish Key');
 	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
 	      // Create URL

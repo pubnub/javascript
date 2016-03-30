@@ -911,6 +911,7 @@ function PN_API(setup) {
 
       var callback = callback || args['callback'] || msg['callback'] || args['success'] || function () {};
       var channel = args['channel'] || msg['channel'];
+      var meta = args['meta'] || args['metadata'];
       var auth_key = args['auth_key'] || AUTH_KEY;
       var cipher_key = args['cipher_key'];
       var err = args['error'] || msg['error'] || function () {};
@@ -943,6 +944,10 @@ function PN_API(setup) {
       ];
 
       params = { uuid: UUID, auth: auth_key };
+
+      if (meta && typeof meta === 'object') {
+        params['meta'] = JSON.stringify(meta);
+      }
 
       if (!store) params['store'] = '0';
 
@@ -1711,7 +1716,6 @@ function PN_API(setup) {
       if (!gw_type) return error('Missing GW Type (gw_type: gcm or apns)');
       if (!op) return error('Missing GW Operation (op: add or remove)');
       if (!channel) return error('Missing gw destination Channel (channel)');
-      if (!PUBLISH_KEY) return error('Missing Publish Key');
       if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
       // Create URL

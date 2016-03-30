@@ -1,3 +1,6 @@
+3-10-16 * 3.14.5
+ - removing publish key from mobile_gw_provision
+ - adding meta v2 to publish
 
 3-10-16 * 3.14.3
  - add support of passing headers via proxy
