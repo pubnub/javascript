@@ -71,19 +71,8 @@ describe('channel groups endpoints', () => {
       assert.deepEqual(xdrMock.args[0][3], callbackStub);
     });
 
-    it('uses the channel param', () => {
-      let args = { channel: 'ch1,ch2' };
-      instance.channelGroup(args, callbackStub);
-      assert.equal(xdrMock.called, 1);
-      let expectedResponse = { add: 'ch1,ch2' };
-      assert.deepEqual(xdrMock.args[0][0], '');
-      assert.deepEqual(xdrMock.args[0][1], 'add');
-      assert.deepEqual(xdrMock.args[0][2], expectedResponse);
-      assert.deepEqual(xdrMock.args[0][3], callbackStub);
-    });
-
     it('uses the channels param', () => {
-      let args = { channels: 'ch1,ch2' };
+      let args = { channels: ['ch1,ch2'] };
       instance.channelGroup(args, callbackStub);
       assert.equal(xdrMock.called, 1);
       let expectedResponse = { add: 'ch1,ch2' };
@@ -94,7 +83,7 @@ describe('channel groups endpoints', () => {
     });
 
     it('uses the channel param w/ array', () => {
-      let args = { channel: ['ch1', 'ch2'] };
+      let args = { channels: ['ch1', 'ch2'] };
       instance.channelGroup(args, callbackStub);
       assert.equal(xdrMock.called, 1);
       let expectedResponse = { add: 'ch1,ch2' };
@@ -116,7 +105,7 @@ describe('channel groups endpoints', () => {
     });
 
     it('uses the channel param w/ array when removing', () => {
-      let args = { channel: ['ch1', 'ch2'], mode: 'remove' };
+      let args = { channels: ['ch1', 'ch2'], mode: 'remove' };
       instance.channelGroup(args, callbackStub);
       assert.equal(xdrMock.called, 1);
       let expectedResponse = { remove: 'ch1,ch2' };
@@ -199,13 +188,13 @@ describe('channel groups endpoints', () => {
     });
   });
 
-  describe('#removeGroup', () => {
+  describe('#deleteGroup', () => {
     it('errors if channel group is not provided ', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeGroup(args, callback);
+      instance.deleteGroup(args, callback);
       assert.equal(channelGroupStub.called, false);
       assert.equal(validateResponderStub.called, true);
       assert.equal(validateResponderStub.args[0][0], 'Missing Channel Group');
@@ -216,10 +205,10 @@ describe('channel groups endpoints', () => {
       const args = { channelGroup: 'my-cg', channel: 'ma-channel', a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeGroup(args, callback);
+      instance.deleteGroup(args, callback);
       assert.equal(channelGroupStub.called, false);
       assert.equal(validateResponderStub.called, true);
-      assert.equal(validateResponderStub.args[0][0], 'Use channel_group_remove_channel if you want to remove a channel from a group.');
+      assert.equal(validateResponderStub.args[0][0], 'Use removeChannel to remove a channel from a group.');
     });
 
     it('forward requests to the #channelGroup', () => {
@@ -228,7 +217,7 @@ describe('channel groups endpoints', () => {
       const expectedArgs = { channelGroup: 'ma-channel-group', a: 10, b: 15, mode: 'remove' };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeGroup(args, callback);
+      instance.deleteGroup(args, callback);
       assert.equal(channelGroupStub.called, 1);
 
       assert.deepEqual(channelGroupStub.args[0][0], expectedArgs);
@@ -236,13 +225,13 @@ describe('channel groups endpoints', () => {
     });
   });
 
-  describe('#addChannel', () => {
+  describe('#addChannels', () => {
     it('errors if channel group is not provided ', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.addChannel(args, callback);
+      instance.addChannels(args, callback);
       assert.equal(channelGroupStub.called, false);
       assert.equal(validateResponderStub.called, true);
       assert.equal(validateResponderStub.args[0][0], 'Missing Channel Group');
@@ -253,7 +242,7 @@ describe('channel groups endpoints', () => {
       const args = { channelGroup: 'my-cg', a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.addChannel(args, callback);
+      instance.addChannels(args, callback);
       assert.equal(channelGroupStub.called, false);
       assert.equal(validateResponderStub.called, true);
       assert.equal(validateResponderStub.args[0][0], 'Missing Channel');
@@ -261,10 +250,10 @@ describe('channel groups endpoints', () => {
 
     it('forward requests to the #channelGroup if channel provided', () => {
       let channelGroupStub = sinon.stub();
-      const args = { channelGroup: 'ma-channel-group', channel: 'channel1', a: 10, b: 15 };
+      const args = { channelGroup: 'ma-channel-group', channels: ['channel1'], a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.addChannel(args, callback);
+      instance.addChannels(args, callback);
       assert.equal(channelGroupStub.called, 1);
 
       assert.deepEqual(channelGroupStub.args[0][0], args);
@@ -273,10 +262,10 @@ describe('channel groups endpoints', () => {
 
     it('forward requests to the #channelGroup if channels provided', () => {
       let channelGroupStub = sinon.stub();
-      const args = { channelGroup: 'ma-channel-group', channels: 'channel1', a: 10, b: 15 };
+      const args = { channelGroup: 'ma-channel-group', channels: ['channel1', 'ch2'], a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.addChannel(args, callback);
+      instance.addChannels(args, callback);
       assert.equal(channelGroupStub.called, 1);
 
       assert.deepEqual(channelGroupStub.args[0][0], args);
@@ -284,13 +273,13 @@ describe('channel groups endpoints', () => {
     });
   });
 
-  describe('#removeChannel', () => {
+  describe('#removeChannels', () => {
     it('errors if channel group is not provided ', () => {
       let channelGroupStub = sinon.stub();
       const args = { a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeChannel(args, callback);
+      instance.removeChannels(args, callback);
       assert.equal(channelGroupStub.called, false);
       assert.equal(validateResponderStub.called, true);
       assert.equal(validateResponderStub.args[0][0], 'Missing Channel Group');
@@ -301,7 +290,7 @@ describe('channel groups endpoints', () => {
       const args = { channelGroup: 'my-cg', a: 10, b: 15 };
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeChannel(args, callback);
+      instance.removeChannels(args, callback);
       assert.equal(channelGroupStub.called, false);
       assert.equal(validateResponderStub.called, true);
       assert.equal(validateResponderStub.args[0][0], 'Missing Channel');
@@ -309,11 +298,11 @@ describe('channel groups endpoints', () => {
 
     it('forward requests to the #channelGroup if channel provided', () => {
       let channelGroupStub = sinon.stub();
-      const args = { channelGroup: 'ma-channel-group', channel: 'channel1', a: 10, b: 15 };
+      const args = { channelGroup: 'ma-channel-group', channels: ['channel1'], a: 10, b: 15 };
       const outputArgs = _.extend(args, { remove: 'true' });
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeChannel(outputArgs, callback);
+      instance.removeChannels(outputArgs, callback);
       assert.equal(channelGroupStub.called, 1);
 
       assert.deepEqual(channelGroupStub.args[0][0], args);
@@ -326,7 +315,7 @@ describe('channel groups endpoints', () => {
       const outputArgs = _.extend(args, { remove: 'true' });
       const callback = sinon.stub();
       instance.channelGroup = channelGroupStub;
-      instance.removeChannel(args, callback);
+      instance.removeChannels(args, callback);
       assert.equal(channelGroupStub.called, 1);
 
       assert.deepEqual(channelGroupStub.args[0][0], outputArgs);

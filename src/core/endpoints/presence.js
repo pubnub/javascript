@@ -11,8 +11,8 @@ type presenceConstruct = {
 };
 
 type hereNowArguments = {
-  channel: string,
-  channelGroup: string,
+  channels: Array<string>,
+  channelGroups: Array<string>,
   uuids: ?boolean,
   state: ?boolean
 }
@@ -23,8 +23,8 @@ type whereNowArguments = {
 
 type getStateArguments = {
   uuid: string,
-  channel: string,
-  channelGroup: string
+  channels: Array<string>,
+  channelGroups: Array<string>
 }
 
 type setStateArguments = {
@@ -58,11 +58,13 @@ export default class {
       return this._l.error('Missing Callback');
     }
 
-    if (channelGroup) {
-      data['channel-group'] = channelGroup;
+    if (channelGroups.length > 0) {
+      data['channel-group'] = channelGroups.join(',');
     }
 
-    this._networking.fetchHereNow(channel, channelGroup, data, callback);
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : null;
+    let stringifiedChannelGroups = channelGroups.length > 0 ? channelGroups.join(',') : null;
+    this._networking.fetchHereNow(stringifiedChannels, stringifiedChannelGroups, data, callback);
   }
 
   whereNow(args: whereNowArguments, callback: Function) {
@@ -76,26 +78,23 @@ export default class {
   }
 
   getState(args: getStateArguments, callback: Function) {
-    let { uuid, channel, channelGroup } = args;
+    let { uuid, channels = [], channelGroups = [] } = args;
     let data: Object = {};
 
     if (!callback) {
       return this._l.error('Missing Callback');
     }
 
-    if (!channel && !channelGroup) {
+    if (channels.length === 0 && channelGroups.length === 0) {
       return callback(this._r.validationError('Channel or Channel Group must be supplied'));
     }
 
-    if (channelGroup) {
-      data['channel-group'] = channelGroup;
+    if (channelGroups.length > 0) {
+      data['channel-group'] = channelGroups.join(',');
     }
 
-    if (!channel) {
-      channel = ',';
-    }
-
-    this._networking.fetchState(uuid, channel, data, callback);
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    this._networking.fetchState(uuid, stringifiedChannels, data, callback);
   }
 
   setState(args: setStateArguments, callback: Function) {

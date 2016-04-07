@@ -4,16 +4,26 @@ import Networking from '../components/networking';
 import Logger from '../components/logger';
 import Responders from '../presenters/responders';
 
-import utils from '../utils';
-
 type channelGroupConstruct = {
   networking: Networking,
 };
 
+type addChannelParams = {
+  channels: Array<string>,
+  channelGroup: string,
+  mode: ?string, // added by the builder
+}
+
+type removeChannelParams = {
+  channels: Array<string>,
+  channelGroup: string,
+  mode: ?string, // added by the builder
+}
+
 type channelGroupParams = {
   channelGroup: string,
-  channels: ?Array<string> | ?string,
-  channel: ?string
+  channels: Array<string>,
+  mode: ?string, // added by the builder
 }
 
 export default class {
@@ -29,15 +39,14 @@ export default class {
 
   // generic function to handle all channel group operations
   channelGroup(args: channelGroupParams, callback: Function) {
-    let providedChannelGroupName = args.channelGroup;
-    let channels = args.channels || args.channel;
-    let effectiveChannelGroupName = '';
+    let { channelGroup, channels = [] } = args;
 
+    let effectiveChannelGroupName = '';
     let data = {};
     let mode = args.mode || 'add';
 
-    if (providedChannelGroupName) {
-      let splitChannelGroupName = providedChannelGroupName.split(':');
+    if (channelGroup) {
+      let splitChannelGroupName = channelGroup.split(':');
 
       if (splitChannelGroupName.length > 1) {
         effectiveChannelGroupName = splitChannelGroupName[1];
@@ -46,11 +55,8 @@ export default class {
       }
     }
 
-    if (channels) {
-      if (utils.isArray(channels)) {
-        channels = channels.join(',');
-      }
-      data[mode] = channels;
+    if (channels.length > 0) {
+      data[mode] = channels.join(',');
     }
 
     this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
@@ -64,8 +70,8 @@ export default class {
     this.channelGroup(args, callback);
   }
 
-  removeGroup(args: Object, callback: Function) {
-    const errorMessage = 'Use channel_group_remove_channel if you want to remove a channel from a group.';
+  deleteGroup(args: Object, callback: Function) {
+    const errorMessage = 'Use removeChannel to remove a channel from a group.';
     if (!args.channelGroup) {
       return callback(this._r.validationError('Missing Channel Group'));
     }
@@ -82,22 +88,28 @@ export default class {
     this.channelGroup(args, callback);
   }
 
-  addChannel(args: Object, callback: Function) {
-    if (!args.channelGroup) {
+  addChannels(args: addChannelParams, callback: Function) {
+    let { channelGroup, channels = [] } = args;
+
+    if (!channelGroup) {
       return callback(this._r.validationError('Missing Channel Group'));
     }
 
-    if (!args.channel && !args.channels) {
+    if (channels.length === 0) {
       return callback(this._r.validationError('Missing Channel'));
     }
+
+    args.mode = 'add';
     this.channelGroup(args, callback);
   }
 
-  removeChannel(args: Object, callback: Function) {
-    if (!args.channelGroup) {
+  removeChannels(args: removeChannelParams, callback: Function) {
+    let { channelGroup, channels = [] } = args;
+
+    if (!channelGroup) {
       return callback(this._r.validationError('Missing Channel Group'));
     }
-    if (!args.channel && !args.channels) {
+    if (channels.length === 0) {
       return callback(this._r.validationError('Missing Channel'));
     }
 
