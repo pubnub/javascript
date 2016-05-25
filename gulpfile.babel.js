@@ -45,52 +45,6 @@ gulp.task('compile_web', ['babel'], function () {
   .pipe(gulp.dest('dist/web'));
 });
 
-gulp.task('compile_titanium', ['babel'], function () {
-  return gulp.src('lib/titanium/platform.js')
-  .pipe(gulpWebpack({
-    module: {
-      loaders: [
-        { test: /\.json/, loader: 'json' },
-      ],
-    },
-    output: {
-      filename: 'pubnub.js',
-      library: 'PUBNUB',
-      libraryTarget: 'umd',
-    },
-    plugins: [
-      new webpack.BannerPlugin(require('./package.json').version + ' / Titanium', {
-        raw: false, entryOnly: true,
-      }),
-    ],
-    externals: [],
-  }))
-  .pipe(gulp.dest('dist/titanium'));
-});
-
-gulp.task('compile_parse', ['babel'], function () {
-  return gulp.src('lib/parse/platform.js')
-  .pipe(gulpWebpack({
-    module: {
-      loaders: [
-        { test: /\.json/, loader: 'json' },
-      ],
-    },
-    output: {
-      filename: 'pubnub.js',
-      library: 'PUBNUB',
-      libraryTarget: 'umd',
-    },
-    plugins: [
-      new webpack.BannerPlugin(require('./package.json').version + ' / Parse', {
-        raw: false, entryOnly: true,
-      }),
-    ],
-    externals: [],
-  }))
-  .pipe(gulp.dest('dist/parse'));
-});
-
 gulp.task('uglify', ['webpack'], function () {
   return gulp.src('dist/web/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
@@ -135,7 +89,7 @@ gulp.task('test_server', function () {
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('webpack', ['compile_titanium', 'compile_web', 'compile_parse']);
+gulp.task('webpack', ['compile_web']);
 gulp.task('compile', ['clean', 'babel', 'webpack', 'uglify']);
 
 gulp.task('validate', ['lint', 'flow']);

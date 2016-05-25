@@ -120,19 +120,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.default = undefined;
 
-	var _uuid = __webpack_require__(2);
-
-	var _uuid2 = _interopRequireDefault(_uuid);
-
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _keychain = __webpack_require__(12);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	var _config = __webpack_require__(16);
+	var _config = __webpack_require__(11);
 
 	var _config2 = _interopRequireDefault(_config);
 
@@ -144,7 +136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _publish_queue2 = _interopRequireDefault(_publish_queue);
 
-	var _index = __webpack_require__(13);
+	var _index = __webpack_require__(10);
 
 	var _index2 = _interopRequireDefault(_index);
 
@@ -156,7 +148,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _subscriber2 = _interopRequireDefault(_subscriber);
 
-	var _time = __webpack_require__(55);
+	var _time = __webpack_require__(54);
 
 	var _time2 = _interopRequireDefault(_time);
 
@@ -164,96 +156,75 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(56);
+	var _history = __webpack_require__(55);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(57);
+	var _push = __webpack_require__(56);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(58);
+	var _access = __webpack_require__(57);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _channel_groups = __webpack_require__(59);
+	var _channel_groups = __webpack_require__(58);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _subscribe = __webpack_require__(60);
+	var _subscribe = __webpack_require__(59);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _publish = __webpack_require__(61);
+	var _publish = __webpack_require__(60);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
-	var _flow_interfaces = __webpack_require__(54);
+	var _flow_interfaces = __webpack_require__(14);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var packageJSON = __webpack_require__(62);
-
-	var utils = __webpack_require__(17);
-
+	var packageJSON = __webpack_require__(61);
 	function createInstance(setup) {
 	  var sendBeacon = setup.sendBeacon;
 	  var db = setup.db;
 	  var _shutdown = setup.shutdown;
 
 
+	  var config = new _config2.default(setup);
+
+	  if (setup.presenceAnnounceInterval) {
+	    config.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
+	  }
+
+	  var state = new _state2.default();
 	  var callbacks = {
 	    onMessage: setup.onMessage,
 	    onStatus: setup.onStatus,
 	    onPresence: setup.onPresence
 	  };
 
-	  var keychain = new _keychain2.default().setInstanceId(_uuid2.default.v4()).setAuthKey(setup.authKey || '').setSecretKey(setup.secretKey || '').setSubscribeKey(setup.subscribeKey).setPublishKey(setup.publishKey).setCipherKey(setup.cipherKey);
-
-	  keychain.setUUID(setup.uuid || !setup.unique_uuid && db.get(keychain.getSubscribeKey() + 'uuid') || _uuid2.default.v4());
-
 	  // write the new key to storage
-	  db.set(keychain.getSubscribeKey() + 'uuid', keychain.getUUID());
+	  db.set(config.getSubscribeKey() + 'uuid', config.getUUID());
 
-	  var config = new _config2.default().setRequestIdConfig(setup.use_request_id || false).setPresenceTimeout(utils.validateHeartbeat(setup.heartbeat || setup.pnexpires || 0)).setSupressLeaveEvents(setup.noleave || 0)
-	  // .setSubscribeWindow(+setup.windowing || DEF_WINDOWING)
-	  // .setSubscribeTimeout((+setup.timeout || DEF_SUB_TIMEOUT) * constants.SECOND)
-	  .setInstanceIdConfig(setup.instance_id || false);
-
-	  config.setHeartbeatInterval(setup.heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
-
-	  // set timeout to how long a transaction request will wait for the server (default 15 seconds)
-	  config.transactionalRequestTimeout = setup.transactionalRequestTimeout || 15 * 1000;
-	  // set timeout to how long a subscribe event loop will run (default 310 seconds)
-	  config.subscribeRequestTimeout = setup.subscribeRequestTimeout || 310 * 1000;
-	  // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
-	  config.useSendBeacon = setup.useSendBeacon || true;
-
-	  var state = new _state2.default();
-	  var crypto = new _index2.default({ keychain: keychain });
-	  var networking = new _networking2.default({ config: config, keychain: keychain, crypto: crypto, sendBeacon: sendBeacon }, setup.ssl, setup.origin);
+	  var crypto = new _index2.default({ config: config });
+	  var networking = new _networking2.default({ config: config, crypto: crypto, sendBeacon: sendBeacon });
 	  var publishQueue = new _publish_queue2.default({ networking: networking });
 	  var subscriber = new _subscriber2.default({ networking: networking, state: state, callbacks: callbacks });
 
-	  // initalize the endpoints
+	  // init the endpoints
 	  var timeEndpoint = new _time2.default({ networking: networking });
 	  var historyEndpoint = new _history2.default({ networking: networking, crypto: crypto });
 	  var channelGroupEndpoints = new _channel_groups2.default({ networking: networking });
 	  var publishEndpoints = new _publish2.default({ publishQueue: publishQueue });
 	  var pushEndpoints = new _push2.default({ networking: networking, publishQueue: publishQueue });
-
-	  var presenceEndpoints = new _presence2.default({ keychain: keychain, config: config, networking: networking, state: state });
-
-	  var accessEndpoints = new _access2.default({ keychain: keychain, config: config, networking: networking });
-
+	  var presenceEndpoints = new _presence2.default({ config: config, networking: networking, state: state });
+	  var accessEndpoints = new _access2.default({ config: config, networking: networking });
 	  var subscribeEndpoints = new _subscribe2.default({ networking: networking, callbacks: callbacks, config: config, state: state });
 
-	  var presenceHeartbeat = new _presence_heartbeat2.default({ config: config, state: state, presenceEndpoints: presenceEndpoints });
-	  // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
+	  var presenceHeartbeat = new _presence_heartbeat2.default({ callbacks: callbacks, state: state, presenceEndpoints: presenceEndpoints });
 
-	  if (config.getPresenceTimeout() === 2) {
-	    config.setHeartbeatInterval(1);
-	  }
+	  // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
 
 	  var SELF = {
 
@@ -291,32 +262,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      send: pushEndpoints.send.bind(pushEndpoints)
 	    },
 
-	    getHeartbeat: function getHeartbeat() {
-	      return config.getPresenceTimeout();
-	    },
-	    setHeartbeat: function setHeartbeat(heartbeat, heartbeat_interval) {
-	      config.setPresenceTimeout(utils.validateHeartbeat(heartbeat, config.getPresenceTimeout(), error));
-	      config.setHeartbeatInterval(heartbeat_interval || config.getPresenceTimeout() / 2 - 1);
-	      if (config.getPresenceTimeout() === 2) {
-	        config.setHeartbeatInterval(1);
-	      }
-	    },
-	    getHeartbeatInterval: function getHeartbeatInterval() {
-	      return config.getHeartbeatInterval();
-	    },
-	    setHeartbeatInterval: function setHeartbeatInterval(heartbeatInterval) {
-	      config.setHeartbeatInterval(heartbeatInterval);
-	    },
-	    setAuthKey: function setAuthKey(auth) {
-	      keychain.setAuthKey(auth);
-	    },
+	    getPresenceTimeout: config.getPresenceTimeout.bind(config),
+	    setPresenceTimeout: config.setPresenceTimeout.bind(config),
 
+	    getPresenceAnnounceInterval: config.getPresenceAnnounceInterval.bind(config),
+	    setPresenceAnnounceInterval: config.setPresenceAnnounceInterval.bind(config),
 
-	    setUUID: keychain.setUUID.bind(keychain),
-	    getUUID: keychain.getUUID.bind(keychain),
+	    setAuthKey: config.setAuthKey.bind(config),
 
-	    setCipherKey: keychain.setCipherKey.bind(keychain),
-	    getCipherKey: keychain.getCipherKey.bind(keychain),
+	    setUUID: config.setUUID.bind(config),
+	    getUUID: config.getUUID.bind(config),
+
+	    setCipherKey: config.setCipherKey.bind(config),
+	    getCipherKey: config.getCipherKey.bind(config),
 
 	    getSubscribedChannels: state.getSubscribedChannels.bind(state),
 
@@ -339,6 +297,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  */
 	  // connectivity.start();
 	  subscriber.start();
+	  presenceHeartbeat.start();
 
 	  return SELF;
 	}
@@ -346,233 +305,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	//     uuid.js
-	//
-	//     Copyright (c) 2010-2012 Robert Kieffer
-	//     MIT License - http://opensource.org/licenses/mit-license.php
-
-	// Unique ID creation requires a high quality random # generator.  We feature
-	// detect to determine the best RNG source, normalizing to a function that
-	// returns 128-bits of randomness, since that's what's usually required
-	var _rng = __webpack_require__(3);
-
-	// Maps for number <-> hex string conversion
-	var _byteToHex = [];
-	var _hexToByte = {};
-	for (var i = 0; i < 256; i++) {
-	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
-	  _hexToByte[_byteToHex[i]] = i;
-	}
-
-	// **`parse()` - Parse a UUID into it's component bytes**
-	function parse(s, buf, offset) {
-	  var i = (buf && offset) || 0, ii = 0;
-
-	  buf = buf || [];
-	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
-	    if (ii < 16) { // Don't overflow!
-	      buf[i + ii++] = _hexToByte[oct];
-	    }
-	  });
-
-	  // Zero out remaining bytes if string was short
-	  while (ii < 16) {
-	    buf[i + ii++] = 0;
-	  }
-
-	  return buf;
-	}
-
-	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
-	function unparse(buf, offset) {
-	  var i = offset || 0, bth = _byteToHex;
-	  return  bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]];
-	}
-
-	// **`v1()` - Generate time-based UUID**
-	//
-	// Inspired by https://github.com/LiosK/UUID.js
-	// and http://docs.python.org/library/uuid.html
-
-	// random #'s we need to init node and clockseq
-	var _seedBytes = _rng();
-
-	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-	var _nodeId = [
-	  _seedBytes[0] | 0x01,
-	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
-	];
-
-	// Per 4.2.2, randomize (14 bit) clockseq
-	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
-
-	// Previous uuid creation time
-	var _lastMSecs = 0, _lastNSecs = 0;
-
-	// See https://github.com/broofa/node-uuid for API details
-	function v1(options, buf, offset) {
-	  var i = buf && offset || 0;
-	  var b = buf || [];
-
-	  options = options || {};
-
-	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
-
-	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
-
-	  // Per 4.2.1.2, use count of uuid's generated during the current clock
-	  // cycle to simulate higher resolution clock
-	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
-
-	  // Time since last uuid creation (in msecs)
-	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
-
-	  // Per 4.2.1.2, Bump clockseq on clock regression
-	  if (dt < 0 && options.clockseq === undefined) {
-	    clockseq = clockseq + 1 & 0x3fff;
-	  }
-
-	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-	  // time interval
-	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-	    nsecs = 0;
-	  }
-
-	  // Per 4.2.1.2 Throw error if too many uuids are requested
-	  if (nsecs >= 10000) {
-	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
-	  }
-
-	  _lastMSecs = msecs;
-	  _lastNSecs = nsecs;
-	  _clockseq = clockseq;
-
-	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-	  msecs += 12219292800000;
-
-	  // `time_low`
-	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-	  b[i++] = tl >>> 24 & 0xff;
-	  b[i++] = tl >>> 16 & 0xff;
-	  b[i++] = tl >>> 8 & 0xff;
-	  b[i++] = tl & 0xff;
-
-	  // `time_mid`
-	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
-	  b[i++] = tmh >>> 8 & 0xff;
-	  b[i++] = tmh & 0xff;
-
-	  // `time_high_and_version`
-	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-	  b[i++] = tmh >>> 16 & 0xff;
-
-	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-	  b[i++] = clockseq >>> 8 | 0x80;
-
-	  // `clock_seq_low`
-	  b[i++] = clockseq & 0xff;
-
-	  // `node`
-	  var node = options.node || _nodeId;
-	  for (var n = 0; n < 6; n++) {
-	    b[i + n] = node[n];
-	  }
-
-	  return buf ? buf : unparse(b);
-	}
-
-	// **`v4()` - Generate random UUID**
-
-	// See https://github.com/broofa/node-uuid for API details
-	function v4(options, buf, offset) {
-	  // Deprecated - 'format' argument, as supported in v1.2
-	  var i = buf && offset || 0;
-
-	  if (typeof(options) == 'string') {
-	    buf = options == 'binary' ? new Array(16) : null;
-	    options = null;
-	  }
-	  options = options || {};
-
-	  var rnds = options.random || (options.rng || _rng)();
-
-	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
-	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-	  // Copy bytes to buffer, if provided
-	  if (buf) {
-	    for (var ii = 0; ii < 16; ii++) {
-	      buf[i + ii] = rnds[ii];
-	    }
-	  }
-
-	  return buf || unparse(rnds);
-	}
-
-	// Export public API
-	var uuid = v4;
-	uuid.v1 = v1;
-	uuid.v4 = v4;
-	uuid.parse = parse;
-	uuid.unparse = unparse;
-
-	module.exports = uuid;
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {
-	var rng;
-
-	if (global.crypto && crypto.getRandomValues) {
-	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
-	  // Moderately fast, high quality
-	  var _rnds8 = new Uint8Array(16);
-	  rng = function whatwgRNG() {
-	    crypto.getRandomValues(_rnds8);
-	    return _rnds8;
-	  };
-	}
-
-	if (!rng) {
-	  // Math.random()-based (RNG)
-	  //
-	  // If all else fails, use Math.random().  It's fast, but is of unspecified
-	  // quality.
-	  var  _rnds = new Array(16);
-	  rng = function() {
-	    for (var i = 0, r; i < 16; i++) {
-	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-	    }
-
-	    return _rnds;
-	  };
-	}
-
-	module.exports = rng;
-
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -585,23 +317,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _superagent = __webpack_require__(5);
+	var _superagent = __webpack_require__(3);
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
-	var _keychain = __webpack_require__(12);
-
-	var _keychain2 = _interopRequireDefault(_keychain);
-
-	var _index = __webpack_require__(13);
+	var _index = __webpack_require__(10);
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _config = __webpack_require__(16);
+	var _config = __webpack_require__(11);
 
 	var _config2 = _interopRequireDefault(_config);
 
@@ -616,16 +344,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _class = function () {
 	  function _class(_ref) {
 	    var config = _ref.config;
-	    var keychain = _ref.keychain;
 	    var crypto = _ref.crypto;
 	    var sendBeacon = _ref.sendBeacon;
-	    var ssl = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-	    var origin = arguments.length <= 2 || arguments[2] === undefined ? 'pubsub.pubnub.com' : arguments[2];
 
 	    _classCallCheck(this, _class);
 
 	    this._config = config;
-	    this._keychain = keychain;
 	    this._crypto = crypto;
 	    this._sendBeacon = sendBeacon;
 
@@ -634,7 +358,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._maxSubDomain = 20;
 	    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
 
-	    this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+	    this._providedFQDN = (config.isSslEnabled() ? 'https://' : 'http://') + config.getOrigin();
 	    this._coreParams = {};
 
 	    // create initial origins
@@ -662,7 +386,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      if (this._config.isInstanceIdEnabled()) {
-	        data.instanceid = this._keychain.getInstanceId();
+	        data.instanceid = this._config.getInstanceId();
 	      }
 
 	      return data;
@@ -718,16 +442,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'fetchHistory',
 	    value: function fetchHistory(channel, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(channel)];
+	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._config.getSubscribeKey(), 'channel', _utils2.default.encode(channel)];
 
 	      var data = this.prepareParams(incomingData);
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
@@ -735,11 +459,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'performChannelGroupOperation',
 	    value: function performChannelGroupOperation(channelGroup, mode, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._keychain.getSubscribeKey(), 'channel-group'];
+	      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._config.getSubscribeKey(), 'channel-group'];
 
 	      if (channelGroup && channelGroup !== '*') {
 	        url.push(channelGroup);
@@ -751,8 +475,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var data = this.prepareParams(incomingData);
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
@@ -760,47 +484,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'provisionDeviceForPush',
 	    value: function provisionDeviceForPush(deviceId, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      if (!this._keychain.getPublishKey()) {
+	      if (!this._config.getPublishKey()) {
 	        return callback(this._r.validationError('Missing Publish Key'));
 	      }
 
-	      var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._keychain.getSubscribeKey(), 'devices', deviceId];
+	      var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._config.getSubscribeKey(), 'devices', deviceId];
 	      var data = this.prepareParams(incomingData);
 
-	      data.uuid = this._keychain.getUUID();
-	      data.auth = this._keychain.getAuthKey();
+	      data.uuid = this._config.getUUID();
+	      data.auth = this._config.getAuthKey();
 
 	      this._xdr({ data: data, url: url, callback: callback });
 	    }
 	  }, {
 	    key: 'performGrant',
 	    value: function performGrant(authKey, data, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      if (!this._keychain.getPublishKey()) {
+	      if (!this._config.getPublishKey()) {
 	        return callback(this._r.validationError('Missing Publish Key'));
 	      }
 
-	      if (!this._keychain.getSecretKey()) {
+	      if (!this._config.getSecretKey()) {
 	        return callback(this._r.validationError('Missing Secret Key'));
 	      }
 
-	      var signInput = this._keychain.getSubscribeKey() + '\n' + this._keychain.getPublishKey() + '\n' + 'grant' + '\n';
+	      var signInput = this._config.getSubscribeKey() + '\n' + this._config.getPublishKey() + '\n' + 'grant' + '\n';
 
-	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._keychain.getSubscribeKey()];
+	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'grant', 'sub-key', this._config.getSubscribeKey()];
 
 	      data.auth = authKey;
 
 	      data = this.prepareParams(data);
 	      signInput += _utils2.default._get_pam_sign_input_from_params(data);
 
-	      var signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
+	      var signature = this._crypto.HMACSHA256(signInput, this._config.getSecretKey());
 
 	      signature = signature.replace(/\+/g, '-');
 	      signature = signature.replace(/\//g, '_');
@@ -812,65 +536,77 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'performAudit',
 	    value: function performAudit(authKey, data, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      if (!this._keychain.getPublishKey()) {
+	      if (!this._config.getPublishKey()) {
 	        return callback(this._r.validationError('Missing Publish Key'));
 	      }
 
-	      if (!this._keychain.getSecretKey()) {
+	      if (!this._config.getSecretKey()) {
 	        return callback(this._r.validationError('Missing Secret Key'));
 	      }
 
-	      var signInput = this._keychain.getSubscribeKey() + '\n' + this._keychain.getPublishKey() + '\n' + 'audit' + '\n';
+	      var signInput = this._config.getSubscribeKey() + '\n' + this._config.getPublishKey() + '\n' + 'audit' + '\n';
 
 	      data.auth = authKey;
 	      data = this.prepareParams(data);
 	      signInput += _utils2.default._get_pam_sign_input_from_params(data);
 
-	      var signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
+	      var signature = this._crypto.HMACSHA256(signInput, this._config.getSecretKey());
 
 	      signature = signature.replace(/\+/g, '-');
 	      signature = signature.replace(/\//g, '_');
 
 	      data.signature = signature;
 
-	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._keychain.getSubscribeKey()];
+	      var url = [this.getStandardOrigin(), 'v1', 'auth', 'audit', 'sub-key', this._config.getSubscribeKey()];
 
 	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'performHeartbeat',
 	    value: function performHeartbeat(channels, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
 	      var data = this.prepareParams(incomingData);
 
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channels, 'heartbeat'];
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'channel', channels, 'heartbeat'];
+
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
+	      }
+
+	      if (this._config.getUUID()) {
+	        data.uuid = this._config.getUUID();
+	      }
+
+	      if (this._config.isRequestIdEnabled()) {
+	        data.requestid = _utils2.default.generateUUID();
+	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'performLeave',
 	    value: function performLeave(channel, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
 	      var data = this.prepareParams(incomingData);
 	      var origin = this.nextOrigin(false);
-	      var url = [origin, 'v2', 'presence', 'sub_key', this._keychain.getSubscribeKey(), 'channel', _utils2.default.encode(channel), 'leave'];
+	      var url = [origin, 'v2', 'presence', 'sub_key', this._config.getSubscribeKey(), 'channel', _utils2.default.encode(channel), 'leave'];
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
-	      if (this._keychain.getUUID()) {
-	        data.uuid = this._keychain.getUUID();
+	      if (this._config.getUUID()) {
+	        data.uuid = this._config.getUUID();
 	      }
 
 	      if (this._config.useSendBeacon && this._sendBeacon) {
@@ -885,12 +621,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var data = this.prepareParams({});
 	      var url = [this.getStandardOrigin(), 'time', 0];
 
-	      if (this._keychain.getUUID()) {
-	        data.uuid = this._keychain.getUUID();
+	      if (this._config.getUUID()) {
+	        data.uuid = this._config.getUUID();
 	      }
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
@@ -898,42 +634,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'fetchWhereNow',
 	    value: function fetchWhereNow(uuid, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
 	      var data = this.prepareParams({});
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      if (!uuid) {
-	        uuid = this._keychain.getUUID();
+	        uuid = this._config.getUUID();
 	      }
 
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'uuid', _utils2.default.encode(uuid)];
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'uuid', _utils2.default.encode(uuid)];
 
 	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'fetchHereNow',
 	    value: function fetchHereNow(channel, channelGroup, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      var data = this.prepareParams(incomingData);
+	      var data = this.Params(incomingData);
 
-	      if (this._keychain.getUUID()) {
-	        data.uuid = this._keychain.getUUID();
+	      if (this._config.getUUID()) {
+	        data.uuid = this._config.getUUID();
 	      }
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey()];
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey()];
 
 	      if (channel) {
 	        url.push('channel');
@@ -950,16 +686,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setState',
 	    value: function setState(channel, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      var data = this.prepareParams(incomingData);
+	      var data = this.s(incomingData);
 
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', this._keychain.getUUID(), 'data'];
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'channel', channel, 'uuid', this._config.getUUID(), 'data'];
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      data.state = JSON.stringify(data.state);
@@ -969,19 +705,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'fetchState',
 	    value: function fetchState(uuid, channel, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
 	      if (!uuid) {
-	        uuid = this._keychain.getUUID();
+	        uuid = this._config.getUUID();
 	      }
 
 	      var data = this.prepareParams(incomingData);
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
+	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
@@ -989,27 +725,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'performPublish',
 	    value: function performPublish(channel, msg, incomingData, mode, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      if (!this._keychain.getPublishKey()) {
+	      if (!this._config.getPublishKey()) {
 	        return callback(this._r.validationError('Missing Publish Key'));
 	      }
 
 	      var stringifiedMessage = JSON.stringify(msg);
 	      var encryptedMessage = this._crypto.encrypt(stringifiedMessage);
 
-	      var url = [this.getStandardOrigin(), 'publish', this._keychain.getPublishKey(), this._keychain.getSubscribeKey(), 0, _utils2.default.encode(channel), 0];
+	      var url = [this.getStandardOrigin(), 'publish', this._config.getPublishKey(), this._config.getSubscribeKey(), 0, _utils2.default.encode(channel), 0];
 
 	      var data = this.prepareParams(incomingData);
 
-	      if (this._keychain.getUUID()) {
-	        data.uuid = this._keychain.getUUID();
+	      if (this._config.getUUID()) {
+	        data.uuid = this._config.getUUID();
 	      }
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
 	      if (mode === 'POST') {
@@ -1023,23 +759,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'performSubscribe',
 	    value: function performSubscribe(channels, incomingData, callback) {
-	      if (!this._keychain.getSubscribeKey()) {
+	      if (!this._config.getSubscribeKey()) {
 	        return callback(this._r.validationError('Missing Subscribe Key'));
 	      }
 
-	      var url = [this.getSubscribeOrigin(), 'v2', 'subscribe', this._keychain.getSubscribeKey(), _utils2.default.encode(channels), 0];
+	      var url = [this.getSubscribeOrigin(), 'v2', 'subscribe', this._config.getSubscribeKey(), _utils2.default.encode(channels), 0];
 
 	      var data = this.prepareParams(incomingData);
 
-	      if (this._keychain.getUUID()) {
-	        data.uuid = this._keychain.getUUID();
+	      if (this._config.getUUID()) {
+	        data.uuid = this._config.getUUID();
 	      }
 
-	      if (this._keychain.getAuthKey()) {
-	        data.auth = this._keychain.getAuthKey();
+	      if (this._config.getAuthKey()) {
+	        data.auth = this._config.getAuthKey();
 	      }
 
-	      var timeout = this._config.subscribeRequestTimeout;
+	      var timeout = this._config.getSubscribeTimeout();
 
 	      return this._xdr({ data: data, callback: callback, url: url, timeout: timeout });
 	    }
@@ -1078,7 +814,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_abstractedXDR',
 	    value: function _abstractedXDR(superagentConstruct, timeout, callback) {
-	      return superagentConstruct.type('json').timeout(timeout || this._config.transactionalRequestTimeout).end(function (err, resp) {
+	      return superagentConstruct.type('json').timeout(timeout || this._config.getTransactionTimeout()).end(function (err, resp) {
 	        if (err) return callback(err, null);
 
 	        var parsedResponse = JSON.parse(resp.text);
@@ -1102,17 +838,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 5 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(6);
-	var reduce = __webpack_require__(7);
-	var requestBase = __webpack_require__(8);
-	var isObject = __webpack_require__(9);
+	var Emitter = __webpack_require__(4);
+	var reduce = __webpack_require__(5);
+	var requestBase = __webpack_require__(6);
+	var isObject = __webpack_require__(7);
 
 	/**
 	 * Root reference for iframes.
@@ -1161,7 +897,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Expose `request`.
 	 */
 
-	var request = module.exports = __webpack_require__(11).bind(null, Request);
+	var request = module.exports = __webpack_require__(9).bind(null, Request);
 
 	/**
 	 * Determine XHR.
@@ -2160,7 +1896,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 4 */
 /***/ function(module, exports) {
 
 	
@@ -2327,7 +2063,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 5 */
 /***/ function(module, exports) {
 
 	
@@ -2356,15 +2092,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 8 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module of mixed-in functions shared between node and client code
 	 */
-	var isObject = __webpack_require__(9);
+	var isObject = __webpack_require__(7);
 
-	var FormData = __webpack_require__(10); // browserify compatible
+	var FormData = __webpack_require__(8); // browserify compatible
 
 	/**
 	 * Clear previous timeout.
@@ -2531,7 +2267,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports) {
 
 	/**
@@ -2550,13 +2286,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports) {
 
 	module.exports = FormData;
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports) {
 
 	// The node and browser modules expose versions of this with the
@@ -2594,113 +2330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class() {
-	    _classCallCheck(this, _class);
-	  }
-
-	  _createClass(_class, [{
-	    key: "setUUID",
-	    value: function setUUID(UUID) {
-	      this._UUID = UUID;
-	      return this;
-	    }
-	  }, {
-	    key: "setCipherKey",
-	    value: function setCipherKey(cipherKey) {
-	      this._cipherKey = cipherKey;
-	      return this;
-	    }
-	  }, {
-	    key: "setSubscribeKey",
-	    value: function setSubscribeKey(subscribeKey) {
-	      this._subscribeKey = subscribeKey;
-	      return this;
-	    }
-	  }, {
-	    key: "setPublishKey",
-	    value: function setPublishKey(publishkey) {
-	      this._publishKey = publishkey;
-	      return this;
-	    }
-	  }, {
-	    key: "setAuthKey",
-	    value: function setAuthKey(authKey) {
-	      this._authKey = authKey;
-	      return this;
-	    }
-	  }, {
-	    key: "setInstanceId",
-	    value: function setInstanceId(instanceId) {
-	      this._instanceId = instanceId;
-	      return this;
-	    }
-	  }, {
-	    key: "setSecretKey",
-	    value: function setSecretKey(secretKey) {
-	      this._secretKey = secretKey;
-	      return this;
-	    }
-
-	    //
-
-	  }, {
-	    key: "getCipherKey",
-	    value: function getCipherKey() {
-	      return this._cipherKey;
-	    }
-	  }, {
-	    key: "getSubscribeKey",
-	    value: function getSubscribeKey() {
-	      return this._subscribeKey;
-	    }
-	  }, {
-	    key: "getPublishKey",
-	    value: function getPublishKey() {
-	      return this._publishKey;
-	    }
-	  }, {
-	    key: "getAuthKey",
-	    value: function getAuthKey() {
-	      return this._authKey;
-	    }
-	  }, {
-	    key: "getInstanceId",
-	    value: function getInstanceId() {
-	      return this._instanceId;
-	    }
-	  }, {
-	    key: "getSecretKey",
-	    value: function getSecretKey() {
-	      return this._secretKey;
-	    }
-	  }, {
-	    key: "getUUID",
-	    value: function getUUID() {
-	      return this._UUID;
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
-/* 13 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2711,11 +2341,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _keychain = __webpack_require__(12);
+	var _config = __webpack_require__(11);
 
-	var _keychain2 = _interopRequireDefault(_keychain);
+	var _config2 = _interopRequireDefault(_config);
 
-	var _hmacSha = __webpack_require__(14);
+	var _hmacSha = __webpack_require__(15);
 
 	var _hmacSha2 = _interopRequireDefault(_hmacSha);
 
@@ -2725,11 +2355,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(_ref) {
-	    var keychain = _ref.keychain;
+	    var config = _ref.config;
 
 	    _classCallCheck(this, _class);
 
-	    this._keychain = keychain;
+	    this._config = config;
 
 	    this._iv = '0123456789012345';
 
@@ -2748,7 +2378,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'HMACSHA256',
 	    value: function HMACSHA256(data) {
-	      var hash = _hmacSha2.default.HmacSHA256(data, this._keychain.getSecretKey());
+	      var hash = _hmacSha2.default.HmacSHA256(data, this._config.getSecretKey());
 	      return hash.toString(_hmacSha2.default.enc.Base64);
 	    }
 	  }, {
@@ -2819,11 +2449,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'encrypt',
 	    value: function encrypt(data, options) {
-	      if (!this._keychain.getCipherKey()) return data;
+	      if (!this._config.getCipherKey()) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
-	      var cipherKey = this._getPaddedKey(this._keychain.getCipherKey(), options);
+	      var cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
 	      var encryptedHexArray = _hmacSha2.default.AES.encrypt(data, cipherKey, { iv: iv, mode: mode }).ciphertext;
 	      var base64Encrypted = encryptedHexArray.toString(_hmacSha2.default.enc.Base64);
 	      return base64Encrypted || data;
@@ -2831,11 +2461,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'decrypt',
 	    value: function decrypt(data, options) {
-	      if (!this._keychain.getCipherKey()) return data;
+	      if (!this._config.getCipherKey()) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
-	      var cipherKey = this._getPaddedKey(this._keychain.getCipherKey(), options);
+	      var cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
 	      try {
 	        var ciphertext = _hmacSha2.default.enc.Base64.parse(data);
 	        var plainJSON = _hmacSha2.default.AES.decrypt({ ciphertext: ciphertext }, cipherKey, { iv: iv, mode: mode }).toString(_hmacSha2.default.enc.Utf8);
@@ -2853,7 +2483,563 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _uuid = __webpack_require__(12);
+
+	var _uuid2 = _interopRequireDefault(_uuid);
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+
+	  /*
+	    how long the server will wait before declaring that the client is gone.
+	  */
+
+
+	  /*
+	    use SSL for http requests?
+	  */
+
+
+	  /*
+	    Unique identifier of this client, will be sent with all request to identify
+	    a unique device for presence and billing
+	  */
+
+
+	  /*
+	    if _useInstanceId is true, this instanceId will be added to all requests
+	  */
+
+
+	  /*
+	    secret key provided by Portal to perform Auth (PAM) API calls. Only
+	    use on server (node) and do not expose it to customers.
+	  */
+
+
+	  /*
+	    subsriber key provided by Portal to perform API calls
+	  */
+
+
+	  /*
+	    how long to wait for the server when making transactional requests
+	  */
+
+
+	  /*
+	    configuration to supress leave events; when a presence leave is performed
+	    this configuration will disallow the leave event from happening
+	  */
+
+
+	  /*
+	    if instanceId config is true, the SDK will pass the unique instance
+	    identifier to the server as instanceId=<UUID>
+	  */
+
+	  function _class(setup) {
+	    _classCallCheck(this, _class);
+
+	    this.setInstanceId(_uuid2.default.v4());
+	    this.setAuthKey(setup.authKey || '');
+	    this.setSecretKey(setup.secretKey || '');
+	    this.setSubscribeKey(setup.subscribeKey);
+	    this.setPublishKey(setup.publishKey);
+	    this.setCipherKey(setup.cipherKey);
+	    this.setRequestIdConfig(setup.useRequestId || false);
+	    this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
+	    this.setInstanceIdConfig(setup.useInstanceId || false);
+	    this.setSslConfig(setup.ssl || false);
+	    this.setOrigin(setup.origin || 'pubsub.pubnub.com');
+	    // set timeout to how long a transaction request will wait for the server (default 15 seconds)
+	    this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
+	    // set timeout to how long a subscribe event loop will run (default 310 seconds)
+	    this.setSubscribeTimeout(setup.subscribeRequestTimeout || 310 * 1000);
+	    // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
+	    this.setSendBeaconConfig(setup.useSendBeacon || true);
+	    // how long the SDK will report the client to be alive before issuing a timeout
+	    this.setPresenceTimeout(setup.presenceTimeout || 300);
+	  }
+
+	  /*
+	    how often (in seconds) the client should announce its presence to server
+	  */
+
+
+	  /*
+	    Custom optional origin.
+	  */
+
+
+	  /*
+	    optionally avoid sending leave events for presence events.
+	  */
+
+
+	  /*
+	    if passed, all payloads will be encrypted using the cipher key and history
+	    fetches will be decrypted using this key.
+	  */
+
+
+	  /*
+	    auth key which will be passed on PAM secured endpoints
+	  */
+
+
+	  /*
+	    publish key provided by Portal to perform publish API calls
+	  */
+
+
+	  /*
+	    use send beacon API when unsubscribing.
+	    https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
+	  */
+
+
+	  /*
+	    how long to wait for the server when running the subscribe loop
+	  */
+
+
+	  /*
+	    if requestId config is true, the SDK will pass a unique request identifier
+	    with each request as request_id=<UUID>
+	  */
+
+
+	  _createClass(_class, [{
+	    key: 'getSubscribeKey',
+	    value: function getSubscribeKey() {
+	      return this._subscribeKey;
+	    }
+	  }, {
+	    key: 'setSubscribeKey',
+	    value: function setSubscribeKey(val) {
+	      this._subscribeKey = val;return this;
+	    }
+	  }, {
+	    key: 'getAuthKey',
+	    value: function getAuthKey() {
+	      return this._authKey;
+	    }
+	  }, {
+	    key: 'setAuthKey',
+	    value: function setAuthKey(val) {
+	      this._authKey = val;return this;
+	    }
+	  }, {
+	    key: 'getPublishKey',
+	    value: function getPublishKey() {
+	      return this._publishKey;
+	    }
+	  }, {
+	    key: 'setPublishKey',
+	    value: function setPublishKey(val) {
+	      this._publishKey = val;return this;
+	    }
+	  }, {
+	    key: 'getSecretKey',
+	    value: function getSecretKey() {
+	      return this._secretKey;
+	    }
+	  }, {
+	    key: 'setSecretKey',
+	    value: function setSecretKey(val) {
+	      this._secretKey = val;return this;
+	    }
+	  }, {
+	    key: 'getCipherKey',
+	    value: function getCipherKey() {
+	      return this._cipherKey;
+	    }
+	  }, {
+	    key: 'setCipherKey',
+	    value: function setCipherKey(val) {
+	      this._cipherKey = val;return this;
+	    }
+	  }, {
+	    key: 'getUUID',
+	    value: function getUUID() {
+	      return this._UUID;
+	    }
+	  }, {
+	    key: 'setUUID',
+	    value: function setUUID(val) {
+	      this._UUID = val;return this;
+	    }
+	  }, {
+	    key: 'getInstanceId',
+	    value: function getInstanceId() {
+	      return this._instanceId;
+	    }
+	  }, {
+	    key: 'setInstanceId',
+	    value: function setInstanceId(val) {
+	      this._instanceId = val;return this;
+	    }
+	  }, {
+	    key: 'isInstanceIdEnabled',
+	    value: function isInstanceIdEnabled() {
+	      return this._useInstanceId;
+	    }
+	  }, {
+	    key: 'setInstanceIdConfig',
+	    value: function setInstanceIdConfig(val) {
+	      this._useInstanceId = val;return this;
+	    }
+	  }, {
+	    key: 'isRequestIdEnabled',
+	    value: function isRequestIdEnabled() {
+	      return this._useRequestId;
+	    }
+	  }, {
+	    key: 'setRequestIdConfig',
+	    value: function setRequestIdConfig(val) {
+	      this._useRequestId = val;return this;
+	    }
+	  }, {
+	    key: 'getSubscribeTimeout',
+	    value: function getSubscribeTimeout() {
+	      return this._subscribeRequestTimeout;
+	    }
+	  }, {
+	    key: 'setSubscribeTimeout',
+	    value: function setSubscribeTimeout(val) {
+	      this._subscribeRequestTimeout = val;return this;
+	    }
+	  }, {
+	    key: 'getTransactionTimeout',
+	    value: function getTransactionTimeout() {
+	      return this._transactionalRequestTimeout;
+	    }
+	  }, {
+	    key: 'setTransactionTimeout',
+	    value: function setTransactionTimeout(val) {
+	      this._transactionalRequestTimeout = val;return this;
+	    }
+	  }, {
+	    key: 'isSuppressingLeaveEvents',
+	    value: function isSuppressingLeaveEvents() {
+	      return this._suppressLeaveEvents;
+	    }
+	  }, {
+	    key: 'setSupressLeaveEvents',
+	    value: function setSupressLeaveEvents(val) {
+	      this._suppressLeaveEvents = val;return this;
+	    }
+	  }, {
+	    key: 'isSslEnabled',
+	    value: function isSslEnabled() {
+	      return this._sslEnabled;
+	    }
+	  }, {
+	    key: 'setSslConfig',
+	    value: function setSslConfig(val) {
+	      this._sslEnabled = val;return this;
+	    }
+	  }, {
+	    key: 'getOrigin',
+	    value: function getOrigin() {
+	      return this._customOrigin;
+	    }
+	  }, {
+	    key: 'setOrigin',
+	    value: function setOrigin(val) {
+	      this._customOrigin = val;return this;
+	    }
+	  }, {
+	    key: 'isSendBeaconEnabled',
+	    value: function isSendBeaconEnabled() {
+	      return this._useSendBeacon;
+	    }
+	  }, {
+	    key: 'setSendBeaconConfig',
+	    value: function setSendBeaconConfig(val) {
+	      this._useSendBeacon = val;return this;
+	    }
+	  }, {
+	    key: 'getPresenceTimeout',
+	    value: function getPresenceTimeout() {
+	      return this._presenceTimeout;
+	    }
+	  }, {
+	    key: 'setPresenceTimeout',
+	    value: function setPresenceTimeout(val) {
+	      this._presenceTimeout = val;
+	      this._presenceAnnounceInterval = this._presenceTimeout / 2 - 1;
+	      return this;
+	    }
+	  }, {
+	    key: 'getPresenceAnnounceInterval',
+	    value: function getPresenceAnnounceInterval() {
+	      return this._presenceAnnounceInterval;
+	    }
+	  }, {
+	    key: 'setPresenceAnnounceInterval',
+	    value: function setPresenceAnnounceInterval(val) {
+	      this._presenceAnnounceInterval = val;return this;
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	//     uuid.js
+	//
+	//     Copyright (c) 2010-2012 Robert Kieffer
+	//     MIT License - http://opensource.org/licenses/mit-license.php
+
+	// Unique ID creation requires a high quality random # generator.  We feature
+	// detect to determine the best RNG source, normalizing to a function that
+	// returns 128-bits of randomness, since that's what's usually required
+	var _rng = __webpack_require__(13);
+
+	// Maps for number <-> hex string conversion
+	var _byteToHex = [];
+	var _hexToByte = {};
+	for (var i = 0; i < 256; i++) {
+	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
+	  _hexToByte[_byteToHex[i]] = i;
+	}
+
+	// **`parse()` - Parse a UUID into it's component bytes**
+	function parse(s, buf, offset) {
+	  var i = (buf && offset) || 0, ii = 0;
+
+	  buf = buf || [];
+	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
+	    if (ii < 16) { // Don't overflow!
+	      buf[i + ii++] = _hexToByte[oct];
+	    }
+	  });
+
+	  // Zero out remaining bytes if string was short
+	  while (ii < 16) {
+	    buf[i + ii++] = 0;
+	  }
+
+	  return buf;
+	}
+
+	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
+	function unparse(buf, offset) {
+	  var i = offset || 0, bth = _byteToHex;
+	  return  bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]];
+	}
+
+	// **`v1()` - Generate time-based UUID**
+	//
+	// Inspired by https://github.com/LiosK/UUID.js
+	// and http://docs.python.org/library/uuid.html
+
+	// random #'s we need to init node and clockseq
+	var _seedBytes = _rng();
+
+	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+	var _nodeId = [
+	  _seedBytes[0] | 0x01,
+	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
+	];
+
+	// Per 4.2.2, randomize (14 bit) clockseq
+	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+
+	// Previous uuid creation time
+	var _lastMSecs = 0, _lastNSecs = 0;
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v1(options, buf, offset) {
+	  var i = buf && offset || 0;
+	  var b = buf || [];
+
+	  options = options || {};
+
+	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
+
+	  // Per 4.2.1.2, use count of uuid's generated during the current clock
+	  // cycle to simulate higher resolution clock
+	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
+
+	  // Time since last uuid creation (in msecs)
+	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+	  // Per 4.2.1.2, Bump clockseq on clock regression
+	  if (dt < 0 && options.clockseq === undefined) {
+	    clockseq = clockseq + 1 & 0x3fff;
+	  }
+
+	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+	  // time interval
+	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+	    nsecs = 0;
+	  }
+
+	  // Per 4.2.1.2 Throw error if too many uuids are requested
+	  if (nsecs >= 10000) {
+	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+	  }
+
+	  _lastMSecs = msecs;
+	  _lastNSecs = nsecs;
+	  _clockseq = clockseq;
+
+	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+	  msecs += 12219292800000;
+
+	  // `time_low`
+	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+	  b[i++] = tl >>> 24 & 0xff;
+	  b[i++] = tl >>> 16 & 0xff;
+	  b[i++] = tl >>> 8 & 0xff;
+	  b[i++] = tl & 0xff;
+
+	  // `time_mid`
+	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+	  b[i++] = tmh >>> 8 & 0xff;
+	  b[i++] = tmh & 0xff;
+
+	  // `time_high_and_version`
+	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+	  b[i++] = tmh >>> 16 & 0xff;
+
+	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+	  b[i++] = clockseq >>> 8 | 0x80;
+
+	  // `clock_seq_low`
+	  b[i++] = clockseq & 0xff;
+
+	  // `node`
+	  var node = options.node || _nodeId;
+	  for (var n = 0; n < 6; n++) {
+	    b[i + n] = node[n];
+	  }
+
+	  return buf ? buf : unparse(b);
+	}
+
+	// **`v4()` - Generate random UUID**
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v4(options, buf, offset) {
+	  // Deprecated - 'format' argument, as supported in v1.2
+	  var i = buf && offset || 0;
+
+	  if (typeof(options) == 'string') {
+	    buf = options == 'binary' ? new Array(16) : null;
+	    options = null;
+	  }
+	  options = options || {};
+
+	  var rnds = options.random || (options.rng || _rng)();
+
+	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+	  // Copy bytes to buffer, if provided
+	  if (buf) {
+	    for (var ii = 0; ii < 16; ii++) {
+	      buf[i + ii] = rnds[ii];
+	    }
+	  }
+
+	  return buf || unparse(rnds);
+	}
+
+	// Export public API
+	var uuid = v4;
+	uuid.v1 = v1;
+	uuid.v4 = v4;
+	uuid.parse = parse;
+	uuid.unparse = unparse;
+
+	module.exports = uuid;
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {
+	var rng;
+
+	if (global.crypto && crypto.getRandomValues) {
+	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+	  // Moderately fast, high quality
+	  var _rnds8 = new Uint8Array(16);
+	  rng = function whatwgRNG() {
+	    crypto.getRandomValues(_rnds8);
+	    return _rnds8;
+	  };
+	}
+
+	if (!rng) {
+	  // Math.random()-based (RNG)
+	  //
+	  // If all else fails, use Math.random().  It's fast, but is of unspecified
+	  // quality.
+	  var  _rnds = new Array(16);
+	  rng = function() {
+	    for (var i = 0, r; i < 16; i++) {
+	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+	    }
+
+	    return _rnds;
+	  };
+	}
+
+	module.exports = rng;
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
 /* 14 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+/***/ },
+/* 15 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -3332,7 +3518,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = CryptoJS;
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3403,134 +3589,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 16 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-
-	  /*
-	    how long to wait for the server when making transactional requests
-	  */
-
-
-	  /*
-	    configuration to supress leave events; when a presence leave is performed
-	    this configuration will disallow the leave event from happening
-	  */
-
-
-	  /*
-	    how long the server will wait before declaring that the client is gone.
-	  */
-
-
-	  /*
-	    if instanceId config is true, the SDK will pass the unique instance
-	    identifier to the server as instanceId=<UUID>
-	  */
-
-	  function _class() {
-	    _classCallCheck(this, _class);
-
-	    this._instanceId = false;
-	    this._requestId = false;
-	  }
-
-	  /*
-	    use send beacon API when unsubscribing.
-	    https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
-	  */
-
-
-	  /*
-	    how long to wait for the server when running the subscribe loop
-	  */
-
-
-	  /*
-	    how often (in seconds) the client should announce its presence to server
-	  */
-
-
-	  /*
-	    if requestId config is true, the SDK will pass a unique request identifier
-	    with each request as request_id=<UUID>
-	  */
-
-
-	  _createClass(_class, [{
-	    key: "setInstanceIdConfig",
-	    value: function setInstanceIdConfig(configValue) {
-	      this._instanceId = configValue;
-	      return this;
-	    }
-	  }, {
-	    key: "setRequestIdConfig",
-	    value: function setRequestIdConfig(configValue) {
-	      this._requestId = configValue;
-	      return this;
-	    }
-	  }, {
-	    key: "setHeartbeatInterval",
-	    value: function setHeartbeatInterval(configValue) {
-	      this._heartbeatInterval = configValue;
-	      return this;
-	    }
-	  }, {
-	    key: "setPresenceTimeout",
-	    value: function setPresenceTimeout(configValue) {
-	      this._presenceTimeout = configValue;
-	      return this;
-	    }
-	  }, {
-	    key: "setSupressLeaveEvents",
-	    value: function setSupressLeaveEvents(configValue) {
-	      this._suppressLeaveEvents = configValue;
-	      return this;
-	    }
-	  }, {
-	    key: "isInstanceIdEnabled",
-	    value: function isInstanceIdEnabled() {
-	      return this._instanceId;
-	    }
-	  }, {
-	    key: "isRequestIdEnabled",
-	    value: function isRequestIdEnabled() {
-	      return this._requestId;
-	    }
-	  }, {
-	    key: "isSuppressingLeaveEvents",
-	    value: function isSuppressingLeaveEvents() {
-	      return this._suppressLeaveEvents;
-	    }
-	  }, {
-	    key: "getHeartbeatInterval",
-	    value: function getHeartbeatInterval() {
-	      return this._heartbeatInterval;
-	    }
-	  }, {
-	    key: "getPresenceTimeout",
-	    value: function getPresenceTimeout() {
-	      return this._presenceTimeout;
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -3538,7 +3596,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-	var _uuid = __webpack_require__(2);
+	var _uuid = __webpack_require__(12);
 
 	var _uuid2 = _interopRequireDefault(_uuid);
 
@@ -3906,6 +3964,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._eventEmitter.on('onSubscriptionChange', callback);
 	    }
 	  }, {
+	    key: 'onPresenceConfigChange',
+	    value: function onPresenceConfigChange(callback) {
+	      this._eventEmitter.on('onPresenceConfigChange', callback);
+	    }
+	  }, {
 	    key: 'announceStateChange',
 	    value: function announceStateChange() {
 	      this._eventEmitter.emit('onStateChange');
@@ -3915,6 +3978,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function announceSubscriptionChange() {
 	      this._subscribeTimeToken = '0';
 	      this._eventEmitter.emit('onSubscriptionChange');
+	    }
+	  }, {
+	    key: 'announcePresenceConfigChange',
+	    value: function announcePresenceConfigChange() {
+	      this._eventEmitter.emit('onPresenceConfigChange');
 	    }
 
 	    // end event emitting.
@@ -3928,6 +3996,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'getSubscribedChannelGroups',
 	    value: function getSubscribedChannelGroups() {
 	      return Object.keys(this._channelGroupStorage);
+	    }
+	  }, {
+	    key: 'getChannelsWithPresence',
+	    value: function getChannelsWithPresence() {
+	      var _this = this;
+
+	      var channels = [];
+
+	      Object.keys(this._channelStorage).forEach(function (channelName) {
+	        var channel = _this._channelStorage[channelName];
+
+	        if (channel.enablePresence === true) {
+	          channels.push(channelName);
+	        }
+	      });
+
+	      return channels;
+	    }
+	  }, {
+	    key: 'getChannelGroupsWithPresence',
+	    value: function getChannelGroupsWithPresence() {
+	      var _this2 = this;
+
+	      var channelGroups = [];
+
+	      Object.keys(this._channelGroupStorage).forEach(function (channelGroupName) {
+	        var channelGroup = _this2._channelGroupStorage[channelGroupName];
+
+	        if (channelGroup.enablePresence === true) {
+	          channelGroups.push(channelGroupName);
+	        }
+	      });
+
+	      return channelGroups;
 	    }
 	  }]);
 
@@ -4343,7 +4445,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -4444,10 +4546,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* flow */
 
-	var _config = __webpack_require__(16);
-
-	var _config2 = _interopRequireDefault(_config);
-
 	var _state = __webpack_require__(19);
 
 	var _state2 = _interopRequireDefault(_state);
@@ -4460,21 +4558,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
+	var _flow_interfaces = __webpack_require__(14);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var constants = __webpack_require__(18);
-	var logger = _logger2.default.getLogger('component/presenceHeartbeat');
 
 	var _class = function () {
-	  function _class(config, state, presence) {
+	  function _class(_ref) {
+	    var state = _ref.state;
+	    var presence = _ref.presence;
+	    var callbacks = _ref.callbacks;
+
 	    _classCallCheck(this, _class);
 
 	    this._state = state;
 	    this._presence = presence;
+	    this._callbacks = callbacks;
 
-	    // this._state.onSubscriptionChange(this.__start.bind(this));
+	    this._state.onPresenceConfigChange(this.start.bind(this));
+	    this._state.onSubscriptionChange(this.start.bind(this));
+	    this._state.onStateChange(this.start.bind(this));
+
+	    this._l = _logger2.default.getLogger('#iterators/presence_heartbeat');
 	  }
 
 	  /**
@@ -4484,10 +4592,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	  _createClass(_class, [{
-	    key: '__start',
-	    value: function __start() {
-	      logger.debug('(re-)starting presence heartbeat');
-	      this.__start();
+	    key: 'start',
+	    value: function start() {
+	      this._l.debug('(re-)starting presence heartbeat');
+	      this.stop();
 	      this.__periodicHeartbeat();
 	    }
 
@@ -4496,39 +4604,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	    */
 
 	  }, {
-	    key: '__stop',
-	    value: function __stop() {
-	      logger.debug('stopping presence heartbeat');
+	    key: 'stop',
+	    value: function stop() {
+	      this._l.debug('stopping presence heartbeat');
 	      clearTimeout(this._intervalId);
 	      this._intervalId = null;
 	    }
 	  }, {
 	    key: '__periodicHeartbeat',
 	    value: function __periodicHeartbeat() {
-	      var timeoutInterval = this._config.getHeartbeatInterval() * constants.SECOND;
+	      var _this = this;
+
+	      var onStatus = this._callbacks.onStatus;
+
+	      var timeoutInterval = this._state.getPresenceAnnounceInterval() * constants.SECOND;
 
 	      // if the heartbeat interval is not within the allowed range, exit early
-	      if (this._config.getHeartbeatInterval() < 1 || this._config.getHeartbeatInterval() > 500) {
-	        logger.debug('interval is greater than 500 or below 1; aborting');
+	      if (this._state.getPresenceAnnounceInterval() < 1 || this._state.getPresenceAnnounceInterval() > 500) {
+	        this._l.debug('interval is greater than 500 or below 1; aborting');
 	        return;
 	      }
 
 	      // if there are no active channel / channel groups, bail out.
-	      if (!this._state.getChannels(true).length && !this._state.getChannelGroups(true).length) {
-	        logger.debug('there are no channels / channel groups to heartbeat; aborting');
+	      if (this._state.getChannelsWithPresence().length === 0 && this._state.getChannelGroupsWithPresence().length === 0) {
+	        this._l.debug('there are no channels / channel groups to heartbeat; aborting');
 	        return;
 	      }
 
-	      this._presence.heartbeat({
-	        callback: function callback() {
-	          this._intervalId = setTimeout(this._presence_heartbeat, timeoutInterval);
-	        },
-	        error: function error(e) {
-	          if (this._error) {
-	            this._error('Presence Heartbeat unable to reach Pubnub servers', e);
-	          }
+	      this._presence.heartbeat(function (err) {
+	        _this._intervalId = setTimeout(_this.__periodicHeartbeat, timeoutInterval);
 
-	          this._intervalId = setTimeout(this._presence_heartbeat, timeoutInterval);
+	        if (err) {
+	          onStatus({
+	            type: 'heartbeatFailure',
+	            message: 'Presence Heartbeat unable to reach Pubnub servers',
+	            rawError: err
+	          });
 	        }
 	      });
 	    }
@@ -4551,7 +4662,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -4563,13 +4674,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
-
-	var _utils = __webpack_require__(17);
-
-	var _utils2 = _interopRequireDefault(_utils);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4591,8 +4698,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'hereNow',
 	    value: function hereNow(args, callback) {
-	      var channel = args.channel;
-	      var channelGroup = args.channelGroup;
+	      var _args$channels = args.channels;
+	      var channels = _args$channels === undefined ? [] : _args$channels;
+	      var _args$channelGroups = args.channelGroups;
+	      var channelGroups = _args$channelGroups === undefined ? [] : _args$channelGroups;
 	      var _args$uuids = args.uuids;
 	      var uuids = _args$uuids === undefined ? true : _args$uuids;
 	      var state = args.state;
@@ -4607,11 +4716,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._l.error('Missing Callback');
 	      }
 
-	      if (channelGroup) {
-	        data['channel-group'] = channelGroup;
+	      if (channelGroups.length > 0) {
+	        data['channel-group'] = channelGroups.join(',');
 	      }
 
-	      this._networking.fetchHereNow(channel, channelGroup, data, callback);
+	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : null;
+	      var stringifiedChannelGroups = channelGroups.length > 0 ? channelGroups.join(',') : null;
+	      this._networking.fetchHereNow(stringifiedChannels, stringifiedChannelGroups, data, callback);
 	    }
 	  }, {
 	    key: 'whereNow',
@@ -4629,8 +4740,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'getState',
 	    value: function getState(args, callback) {
 	      var uuid = args.uuid;
-	      var channel = args.channel;
-	      var channelGroup = args.channelGroup;
+	      var _args$channels2 = args.channels;
+	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
+	      var _args$channelGroups2 = args.channelGroups;
+	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
 
 	      var data = {};
 
@@ -4638,19 +4751,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._l.error('Missing Callback');
 	      }
 
-	      if (!channel && !channelGroup) {
+	      if (channels.length === 0 && channelGroups.length === 0) {
 	        return callback(this._r.validationError('Channel or Channel Group must be supplied'));
 	      }
 
-	      if (channelGroup) {
-	        data['channel-group'] = channelGroup;
+	      if (channelGroups.length > 0) {
+	        data['channel-group'] = channelGroups.join(',');
 	      }
 
-	      if (!channel) {
-	        channel = ',';
-	      }
-
-	      this._networking.fetchState(uuid, channel, data, callback);
+	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+	      this._networking.fetchState(uuid, stringifiedChannels, data, callback);
 	    }
 	  }, {
 	    key: 'setState',
@@ -4658,8 +4768,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var _this = this;
 
 	      var state = args.state;
-	      var channel = args.channel;
-	      var channelGroup = args.channelGroup;
+	      var _args$channels3 = args.channels;
+	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
+	      var _args$channelGroups3 = args.channelGroups;
+	      var channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
 
 	      var data = {};
 	      var channelsWithPresence = [];
@@ -4669,7 +4781,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._l.error('Missing Callback');
 	      }
 
-	      if (!channel && !channelGroup) {
+	      if (channels.length === 0 && channelGroups.length === 0) {
 	        return callback(this._r.validationError('Channel or Channel Group must be supplied'));
 	      }
 
@@ -4679,25 +4791,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      data.state = state;
 
-	      if (channel) {
-	        var channelList = (channel.join ? channel.join(',') : '' + channel).split(',');
-	        channelList.forEach(function (channel) {
-	          if (_this._state.getChannel(channel)) {
-	            _this._state.addToPresenceState(channel, state);
-	            channelsWithPresence.push(channel);
-	          }
-	        });
-	      }
+	      channels.forEach(function (channel) {
+	        if (_this._state.getChannel(channel)) {
+	          _this._state.addToPresenceState(channel, state);
+	          channelsWithPresence.push(channel);
+	        }
+	      });
 
-	      if (channelGroup) {
-	        var channelGroupList = (channelGroup.join ? channelGroup.join(',') : '' + channelGroup).split(',');
-	        channelGroupList.forEach(function (channel) {
-	          if (_this._state.getChannelGroup(channel)) {
-	            _this._state.addToPresenceState(channel, state);
-	            channelGroupsWithPresence.push(channel);
-	          }
-	        });
-	      }
+	      channelGroups.forEach(function (channel) {
+	        if (_this._state.getChannelGroup(channel)) {
+	          _this._state.addToPresenceState(channel, state);
+	          channelGroupsWithPresence.push(channel);
+	        }
+	      });
 
 	      if (channelsWithPresence.length === 0 && channelGroupsWithPresence.length === 0) {
 	        return callback(this._r.validationError('No subscriptions exists for the states'));
@@ -4707,13 +4813,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data['channel-group'] = channelGroupsWithPresence.join(',');
 	      }
 
-	      if (channelsWithPresence.length === 0) {
-	        channel = ',';
-	      } else {
-	        channel = channelsWithPresence.join(',');
-	      }
+	      var stringifiedChannels = channelsWithPresence.length > 0 ? channelsWithPresence.join(',') : ',';
 
-	      this._networking.setState(channel, data, function (err, response) {
+	      this._networking.setState(stringifiedChannels, data, function (err, response) {
 	        if (err) return callback(err, response);
 	        _this._state.announceStateChange();
 	        return callback(err, response);
@@ -4721,46 +4823,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'heartbeat',
-	    value: function heartbeat(args) {
-	      var callback = args.callback || function () {};
-	      var err = args.error || function () {};
+	    value: function heartbeat(callback) {
 	      var data = {
-	        uuid: this._keychain.getUUID(),
-	        auth: this._keychain.getAuthKey()
+	        state: JSON.stringify(this._state.getPresenceState()),
+	        heartbeat: this._state.getPresenceTimeout()
 	      };
 
-	      var st = JSON.stringify(this._state.getPresenceState());
-	      if (st.length > 2) {
-	        data.state = JSON.stringify(this._state.getPresenceState());
+	      var channels = this._state.getSubscribedChannels();
+	      var channelGroups = this._state.getSubscribedChannelGroups();
+
+	      if (channelGroups.length > 0) {
+	        data['channel-group'] = channelGroups.join(',');
 	      }
 
-	      if (this._config.getPresenceTimeout() > 0 && this._config.getPresenceTimeout() < 320) {
-	        data.heartbeat = this._config.getPresenceTimeout();
-	      }
+	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 
-	      var channels = _utils2.default.encode(this._state.generate_channel_list(true).join(','));
-	      var channelGroups = this._state.generate_channel_group_list(true).join(',');
-
-	      if (!channels) channels = ',';
-	      if (channelGroups) data['channel-group'] = channelGroups;
-
-	      if (this._config.isInstanceIdEnabled()) {
-	        data.instanceid = this._keychain.getInstanceId();
-	      }
-
-	      if (this._config.isRequestIdEnabled()) {
-	        data.requestid = _utils2.default.generateUUID();
-	      }
-
-	      this._networking.performHeartbeat(channels, {
-	        data: this._networking.prepareParams(data),
-	        success: function success(response) {
-	          _responders2.default.callback(response, callback, err);
-	        },
-	        fail: function fail(response) {
-	          _responders2.default.error(response, err);
-	        }
-	      });
+	      this._networking.performHeartbeat(stringifiedChannels, data, callback);
 	    }
 	  }]);
 
@@ -5067,7 +5145,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -5079,7 +5157,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _superagent = __webpack_require__(5);
+	var _superagent = __webpack_require__(3);
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
@@ -5095,7 +5173,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _endsWith3 = _interopRequireDefault(_endsWith2);
 
-	var _flow_interfaces = __webpack_require__(54);
+	var _flow_interfaces = __webpack_require__(14);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5114,7 +5192,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._callbacks = callbacks;
 	    this._l = _logger2.default.getLogger('#iterator/subscriber');
 
+	    this._state.onPresenceConfigChange(this.start.bind(this));
 	    this._state.onSubscriptionChange(this.start.bind(this));
+	    this._state.onStateChange(this.start.bind(this));
 	  }
 
 	  _createClass(_class, [{
@@ -5171,6 +5251,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data.tr = this._state.subscribeRegion;
 	      }
 
+	      // include state if we have any state present
+	      if (this._state.getChannelsWithPresence().length > 0 || this._state.getChannelGroupsWithPresence().length > 0) {
+	        data.state = JSON.stringify(this._state.getPresenceState());
+	        data.heartbeat = this._state.getPresenceTimeout();
+	      }
+
 	      this._runningSuperagent = this._networking.performSubscribe(stringifiedChannels, data, callback);
 	    }
 	  }, {
@@ -5188,6 +5274,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var payload = response.m ? response.m : [];
 	      var timetoken = response.t.t;
+	      var region = response.t.r;
 
 	      payload.forEach(function (message) {
 	        var isPresence = false;
@@ -5211,6 +5298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      this._state.setSubscribeTimeToken(timetoken);
+	      this._state.subscribeRegion = region;
 	      this.start();
 	    }
 	  }, {
@@ -5721,12 +5809,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 54 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-/***/ },
-/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5737,7 +5819,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -5770,7 +5852,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 56 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5781,15 +5863,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _index = __webpack_require__(13);
+	var _index = __webpack_require__(10);
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
@@ -5895,7 +5977,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 57 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5906,7 +5988,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -5914,7 +5996,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _publish_queue2 = _interopRequireDefault(_publish_queue);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
@@ -6040,7 +6122,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 58 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6051,7 +6133,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -6059,13 +6141,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
-
-	var _utils = __webpack_require__(17);
-
-	var _utils2 = _interopRequireDefault(_utils);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6092,13 +6170,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'grant',
 	    value: function grant(args, callback) {
-	      var channel = args.channel;
-	      var channelGroup = args.channelGroup;
+	      var _args$channels = args.channels;
+	      var channels = _args$channels === undefined ? [] : _args$channels;
+	      var _args$channelGroups = args.channelGroups;
+	      var channelGroups = _args$channelGroups === undefined ? [] : _args$channelGroups;
 	      var ttl = args.ttl;
 	      var read = args.read;
 	      var write = args.write;
 	      var manage = args.manage;
-	      var authKey = args.authKey;
+	      var _args$authKeys = args.authKeys;
+	      var authKeys = _args$authKeys === undefined ? [] : _args$authKeys;
 
 
 	      var r = read ? '1' : '0';
@@ -6117,33 +6198,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data.m = m;
 	      }
 
-	      if (_utils2.default.isArray(channel)) {
-	        channel = channel.join(',');
-	      }
-	      if (_utils2.default.isArray(authKey)) {
-	        authKey = authKey.join(',');
+	      if (channels.length > 0) {
+	        data.channel = channels.join(',');
 	      }
 
-	      if (channel) {
-	        data.channel = channel;
-	      }
-
-	      if (channelGroup) {
-	        data['channel-group'] = channelGroup;
+	      if (channelGroups.length > 0) {
+	        data['channel-group'] = channelGroups.join(',');
 	      }
 
 	      if (ttl || ttl === 0) {
 	        data.ttl = ttl;
 	      }
 
-	      this._networking.performGrant(authKey, data, callback);
+	      var stringifiedAuthKeys = authKeys.length > 0 ? authKeys.join(',') : null;
+
+	      this._networking.performGrant(stringifiedAuthKeys, data, callback);
 	    }
 	  }, {
 	    key: 'audit',
 	    value: function audit(args, callback) {
-	      var channel = args.channel;
-	      var channelGroup = args.channelGroup;
-	      var authKey = args.authKey;
+	      var _args$channels2 = args.channels;
+	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
+	      var _args$channelGroups2 = args.channelGroups;
+	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
+	      var _args$authKeys2 = args.authKeys;
+	      var authKeys = _args$authKeys2 === undefined ? [] : _args$authKeys2;
 
 	      // Make sure we have a Channel
 
@@ -6154,15 +6233,164 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var timestamp = Math.floor(new Date().getTime() / 1000);
 	      var data = { timestamp: timestamp };
 
-	      if (channel) {
-	        data.channel = channel;
+	      if (channels.length > 0) {
+	        data.channel = channels.join(',');
 	      }
+
+	      if (channelGroups.length > 0) {
+	        data['channel-group'] = channelGroups.join(',');
+	      }
+
+	      var stringifiedAuthKeys = authKeys.length > 0 ? authKeys.join(',') : null;
+
+	      this._networking.performAudit(stringifiedAuthKeys, data, callback);
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+
+/***/ },
+/* 58 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(2);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _logger = __webpack_require__(38);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	var _responders = __webpack_require__(16);
+
+	var _responders2 = _interopRequireDefault(_responders);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	// added by the builder
+	// added by the builder
+	// added by the builder
+
+	var _class = function () {
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+
+	    _classCallCheck(this, _class);
+
+	    this._networking = networking;
+	    this._r = new _responders2.default('#endpoints/history');
+	    this._l = _logger2.default.getLogger('#endpoints/history');
+	  }
+
+	  // generic function to handle all channel group operations
+
+
+	  _createClass(_class, [{
+	    key: 'channelGroup',
+	    value: function channelGroup(args, callback) {
+	      var channelGroup = args.channelGroup;
+	      var _args$channels = args.channels;
+	      var channels = _args$channels === undefined ? [] : _args$channels;
+
+
+	      var effectiveChannelGroupName = '';
+	      var data = {};
+	      var mode = args.mode || 'add';
 
 	      if (channelGroup) {
-	        data['channel-group'] = channelGroup;
+	        var splitChannelGroupName = channelGroup.split(':');
+
+	        if (splitChannelGroupName.length > 1) {
+	          effectiveChannelGroupName = splitChannelGroupName[1];
+	        } else {
+	          effectiveChannelGroupName = splitChannelGroupName[0];
+	        }
 	      }
 
-	      this._networking.performAudit(authKey, data, callback);
+	      if (channels.length > 0) {
+	        data[mode] = channels.join(',');
+	      }
+
+	      this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
+	    }
+	  }, {
+	    key: 'listChannels',
+	    value: function listChannels(args, callback) {
+	      if (!args.channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+
+	      this.channelGroup(args, callback);
+	    }
+	  }, {
+	    key: 'deleteGroup',
+	    value: function deleteGroup(args, callback) {
+	      var errorMessage = 'Use removeChannel to remove a channel from a group.';
+	      if (!args.channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+
+	      if (args.channel) {
+	        return callback(this._r.validationError(errorMessage));
+	      }
+
+	      args.mode = 'remove';
+	      this.channelGroup(args, callback);
+	    }
+	  }, {
+	    key: 'listGroups',
+	    value: function listGroups(args, callback) {
+	      this.channelGroup(args, callback);
+	    }
+	  }, {
+	    key: 'addChannels',
+	    value: function addChannels(args, callback) {
+	      var channelGroup = args.channelGroup;
+	      var _args$channels2 = args.channels;
+	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
+
+
+	      if (!channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+
+	      if (channels.length === 0) {
+	        return callback(this._r.validationError('Missing Channel'));
+	      }
+
+	      args.mode = 'add';
+	      this.channelGroup(args, callback);
+	    }
+	  }, {
+	    key: 'removeChannels',
+	    value: function removeChannels(args, callback) {
+	      var channelGroup = args.channelGroup;
+	      var _args$channels3 = args.channels;
+	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
+
+
+	      if (!channelGroup) {
+	        return callback(this._r.validationError('Missing Channel Group'));
+	      }
+	      if (channels.length === 0) {
+	        return callback(this._r.validationError('Missing Channel'));
+	      }
+
+	      args.mode = 'remove';
+	      this.channelGroup(args, callback);
 	    }
 	  }]);
 
@@ -6183,147 +6411,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(4);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _logger = __webpack_require__(38);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _responders = __webpack_require__(15);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	var _utils = __webpack_require__(17);
-
-	var _utils2 = _interopRequireDefault(_utils);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-
-	    _classCallCheck(this, _class);
-
-	    this._networking = networking;
-	    this._r = new _responders2.default('#endpoints/history');
-	    this._l = _logger2.default.getLogger('#endpoints/history');
-	  }
-
-	  // generic function to handle all channel group operations
-
-
-	  _createClass(_class, [{
-	    key: 'channelGroup',
-	    value: function channelGroup(args, callback) {
-	      var providedChannelGroupName = args.channelGroup;
-	      var channels = args.channels || args.channel;
-	      var effectiveChannelGroupName = '';
-
-	      var data = {};
-	      var mode = args.mode || 'add';
-
-	      if (providedChannelGroupName) {
-	        var splitChannelGroupName = providedChannelGroupName.split(':');
-
-	        if (splitChannelGroupName.length > 1) {
-	          effectiveChannelGroupName = splitChannelGroupName[1];
-	        } else {
-	          effectiveChannelGroupName = splitChannelGroupName[0];
-	        }
-	      }
-
-	      if (channels) {
-	        if (_utils2.default.isArray(channels)) {
-	          channels = channels.join(',');
-	        }
-	        data[mode] = channels;
-	      }
-
-	      this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
-	    }
-	  }, {
-	    key: 'listChannels',
-	    value: function listChannels(args, callback) {
-	      if (!args.channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
-	      }
-
-	      this.channelGroup(args, callback);
-	    }
-	  }, {
-	    key: 'removeGroup',
-	    value: function removeGroup(args, callback) {
-	      var errorMessage = 'Use channel_group_remove_channel if you want to remove a channel from a group.';
-	      if (!args.channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
-	      }
-
-	      if (args.channel) {
-	        return callback(this._r.validationError(errorMessage));
-	      }
-
-	      args.mode = 'remove';
-	      this.channelGroup(args, callback);
-	    }
-	  }, {
-	    key: 'listGroups',
-	    value: function listGroups(args, callback) {
-	      this.channelGroup(args, callback);
-	    }
-	  }, {
-	    key: 'addChannel',
-	    value: function addChannel(args, callback) {
-	      if (!args.channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
-	      }
-
-	      if (!args.channel && !args.channels) {
-	        return callback(this._r.validationError('Missing Channel'));
-	      }
-	      this.channelGroup(args, callback);
-	    }
-	  }, {
-	    key: 'removeChannel',
-	    value: function removeChannel(args, callback) {
-	      if (!args.channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
-	      }
-	      if (!args.channel && !args.channels) {
-	        return callback(this._r.validationError('Missing Channel'));
-	      }
-
-	      args.mode = 'remove';
-	      this.channelGroup(args, callback);
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-
-/***/ },
-/* 60 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(4);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(16);
+	var _config = __webpack_require__(11);
 
 	var _config2 = _interopRequireDefault(_config);
 
@@ -6331,7 +6423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _state2 = _interopRequireDefault(_state);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
@@ -6339,7 +6431,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _flow_interfaces = __webpack_require__(54);
+	var _flow_interfaces = __webpack_require__(14);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6418,7 +6510,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (err) return onStatus(err, null);
 
 	        _this._postUnsubscribeCleanup(existingChannels, existingChannelGroups);
-	        _this._state.setSubscribeTimeToken(0);
+	        _this._state.setSubscribeTimeToken('0');
 	        _this._state.announceSubscriptionChange();
 	        onStatus(null, { action: 'unsubscribe', status: 'finished', response: response });
 	      });
@@ -6482,7 +6574,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 61 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6499,7 +6591,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _publish_queue2 = _interopRequireDefault(_publish_queue);
 
-	var _responders = __webpack_require__(15);
+	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
 
@@ -6572,7 +6664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 62 */
+/* 61 */
 /***/ function(module, exports) {
 
 	module.exports = {

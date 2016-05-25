@@ -1,4 +1,4 @@
-/* @flow */
+ /* @flow */
 
 import EventEmitter from 'event-emitter';
 
@@ -20,16 +20,6 @@ export default class {
 
   filterExpression: string; // V2 subscribe filter expression
   subscribeRegion: string; // V2 subscribe region selector
-
-  /*
-    how long the server will wait before declaring that the client is gone.
-  */
-  _presenceTimeout: number;
-
-  /*
-    how often (in seconds) the client should announce its presence to server
-  */
-  _presenceAnnounceInterval: number;
 
   constructor() {
     this._channelStorage = {};
@@ -132,25 +122,6 @@ export default class {
 
   getSubscribedChannelGroups(): Array<string> {
     return Object.keys(this._channelGroupStorage);
-  }
-
-  getPresenceTimeout(): number {
-    return this._presenceTimeout;
-  }
-
-  setPresenceTimeout(newTimeout: number) {
-    this._presenceTimeout = newTimeout;
-    this._presenceAnnounceInterval = (this._presenceTimeout / 2) - 1;
-    this.announcePresenceConfigChange();
-  }
-
-  getPresenceAnnounceInterval(): number {
-    return this._presenceAnnounceInterval;
-  }
-
-  setPresenceAnnounceInterval(newInterval: number) {
-    this._presenceAnnounceInterval = newInterval;
-    this.announcePresenceConfigChange();
   }
 
   getChannelsWithPresence(): Array<string> {

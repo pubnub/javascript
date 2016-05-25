@@ -1,7 +1,6 @@
 /* global describe, beforeEach, it, before, afterEach */
 /* eslint no-console: 0 */
 
-import Keychain from '../../../../../src/core/components/keychain';
 import Networking from '../../../../../src/core/components/networking';
 import Config from '../../../../../src/core/components/config';
 import Crypto from '../../../../../src/core/components/cryptography/index';
@@ -12,43 +11,48 @@ const sinon = require('sinon');
 
 describe('#components/networking', () => {
   let config;
-  let keychain;
 
   beforeEach(() => {
-    config = new Config();
-    keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
+    config = new Config({}).setSubscribeKey('subKey').setPublishKey('pubKey');
   });
 
   it('creates a class with default origin', () => {
-    let networking = new Networking({ config, keychain }, undefined, undefined);
+    let networking = new Networking({ config });
     assert.equal(networking._providedFQDN, 'http://pubsub.pubnub.com');
   });
 
   it('creates a class with enabled SSL FQDN', () => {
-    let networking = new Networking({ config, keychain }, true);
+    config.setSslConfig(true);
+
+    let networking = new Networking({ config });
     assert.equal(networking._providedFQDN, 'https://pubsub.pubnub.com');
   });
 
   it('creates a class with disabled SSL FQDN', () => {
-    let networking = new Networking({ config, keychain }, false);
+    config.setSslConfig(false);
+
+    let networking = new Networking({ config });
     assert.equal(networking._providedFQDN, 'http://pubsub.pubnub.com');
   });
 
   it('creates a class with enabled SSL and custom domain', () => {
-    let networking = new Networking({ config, keychain }, true, 'custom.domain.com');
+    config.setSslConfig(true);
+    config.setOrigin('custom.domain.com');
+
+    let networking = new Networking({ config });
     assert.equal(networking._providedFQDN, 'https://custom.domain.com');
   });
 
   it('creates a class with disabled SSL FQDN and custom domain', () => {
-    let networking = new Networking({ config, keychain }, false, 'custom.domain.com');
+    config.setSslConfig(false);
+    config.setOrigin('custom.domain.com');
+
+    let networking = new Networking({ config });
     assert.equal(networking._providedFQDN, 'http://custom.domain.com');
   });
 
   describe('#nextOrigin', () => {
     beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-
       sinon.stub(Math, 'random', () => 0.8);
       sinon.stub(utils, 'generateUUID', () => '5f0651fc-5b92-4a3b-96ca-08eee41508bd');
     });
@@ -59,20 +63,23 @@ describe('#components/networking', () => {
     });
 
     it('it does not operate on non pubsub domains', () => {
-      let networking = new Networking({ config, keychain }, null, 'custom.url.com');
+      config.setSslConfig(false);
+      config.setOrigin('custom.url.com');
+
+      let networking = new Networking({ config });
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://custom.url.com');
     });
 
     it('applies the next subdomain if default url is used', () => {
-      let networking = new Networking({ config, keychain }, null, 'pubsub.pubnub.com');
+      let networking = new Networking({ config });
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
     });
 
     // assuming MAX=20 inside the configurations, this test is not isolated.
     it('applies the next subdomain if default url is used and resets over', () => {
-      let networking = new Networking({ config, keychain }, null, 'pubsub.pubnub.com');
+      let networking = new Networking({ config });
       let newDomain = networking.nextOrigin(false);
       assert.equal(newDomain, 'http://ps19.pubnub.com');
       newDomain = networking.nextOrigin(false);
@@ -88,7 +95,7 @@ describe('#components/networking', () => {
     });
 
     it('supports failover', () => {
-      let networking = new Networking({ config, keychain }, undefined, 'pubsub.pubnub.com');
+      let networking = new Networking({ config });
       let newDomain = networking.nextOrigin(true);
       assert.equal(newDomain, 'http://ps5f0651fc.pubnub.com');
 
@@ -102,13 +109,8 @@ describe('#components/networking', () => {
   });
 
   describe('#shiftStandardOrigin', () => {
-    beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-    });
-
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
-      let networking = new Networking({ config, keychain }, undefined, undefined);
+      let networking = new Networking({ config });
 
       sinon.stub(networking, 'nextOrigin', () => 'sample-url');
 
@@ -124,9 +126,8 @@ describe('#components/networking', () => {
     let networking;
 
     beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey').setInstanceId('myId');
-      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      config.setInstanceId('myId').setOrigin('origin1.pubnub.com');
+      networking = new Networking({ config });
     });
 
     it('works when the default core params are note passed', () => {
@@ -150,7 +151,7 @@ describe('#components/networking', () => {
 
   describe('#shiftSubscribeOrigin', () => {
     it('calls the #nextOrigin, updates the local variable and returns it', () => {
-      let networking = new Networking(() => {}, new Keychain());
+      let networking = new Networking({ config });
 
       sinon.stub(networking, 'nextOrigin', () => 'sample-url');
 
@@ -171,9 +172,8 @@ describe('#components/networking', () => {
     let xdrStub;
 
     beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      config.setOrigin('origin1.pubnub.com');
+      networking = new Networking({ config });
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -183,7 +183,7 @@ describe('#components/networking', () => {
     });
 
     it('errors out if subkey is not defined', () => {
-      keychain.setSubscribeKey('');
+      config.setSubscribeKey('');
       networking.performChannelGroupOperation('cg1', 'add', {}, callbackStub);
       assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
     });
@@ -191,7 +191,7 @@ describe('#components/networking', () => {
 
     it('uses auth-key from keychain if provided', () => {
       let data = { my: 'object' };
-      keychain.setAuthKey('myAuthKey');
+      config.setAuthKey('myAuthKey');
       networking.performChannelGroupOperation('cg1', 'add', data, callbackStub);
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
@@ -250,9 +250,8 @@ describe('#components/networking', () => {
     let expectedURL = ['http://origin1.pubnub.com', 'time', 0];
 
     beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain();
-      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      config.setOrigin('origin1.pubnub.com');
+      networking = new Networking({ config });
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -260,7 +259,7 @@ describe('#components/networking', () => {
     });
 
     it('passes arguments to the xdr module', () => {
-      keychain.setUUID('myUniqueId').setAuthKey('authKey');
+      config.setUUID('myUniqueId').setAuthKey('authKey');
       let expectedData = { base: 'params', uuid: 'myUniqueId', auth: 'authKey' };
 
       networking.fetchTime(callbackStub);
@@ -270,7 +269,7 @@ describe('#components/networking', () => {
     });
 
     it('passes arguments to the xdr module without auth keys', () => {
-      keychain.setUUID('myUniqueId');
+      config.setUUID('myUniqueId');
       let expectedData = { base: 'params', uuid: 'myUniqueId' };
 
       networking.fetchTime(callbackStub);
@@ -297,9 +296,8 @@ describe('#components/networking', () => {
     let xdrStub;
 
     beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain().setSubscribeKey('subKey');
-      networking = new Networking({ config, keychain }, undefined, 'origin1.pubnub.com');
+      config.setOrigin('origin1.pubnub.com');
+      networking = new Networking({ config });
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -320,14 +318,14 @@ describe('#components/networking', () => {
     });
 
     it('errors out if subkey is not defined', () => {
-      keychain.setSubscribeKey('');
+      config.setSubscribeKey('');
       networking.fetchHistory('mychannel', { channel: 'ch1' }, callbackStub);
       assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
     });
 
     it('uses auth-key from keychain if provided', () => {
       let data = { my: 'object' };
-      keychain.setAuthKey('myAuthKey');
+      config.setAuthKey('myAuthKey');
       networking.fetchHistory('mychannel', data, callbackStub);
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
@@ -349,10 +347,9 @@ describe('#components/networking', () => {
     let cryptoStub;
 
     beforeEach(() => {
-      config = new Config();
-      keychain = new Keychain().setSubscribeKey('subKey').setPublishKey('pubKey');
-      cryptoStub = new Crypto({ keychain });
-      networking = new Networking({ config, keychain, crypto: cryptoStub }, undefined, 'origin1.pubnub.com');
+      config.setOrigin('origin1.pubnub.com');
+      cryptoStub = new Crypto({ config });
+      networking = new Networking({ config, crypto: cryptoStub });
       callbackStub = sinon.stub();
 
       xdrStub = sinon.stub(networking, '_xdr');
@@ -364,7 +361,7 @@ describe('#components/networking', () => {
 
     it('uses encrypt method with cipher key passed', () => {
       let encryptStub = sinon.stub(cryptoStub, 'encrypt').returns('{\"hi\":\"there\"}');
-      keychain.setCipherKey('maCipherKey');
+      config.setCipherKey('maCipherKey');
       networking.performPublish('mychannel', { hi: 'there' }, {}, 'GET', callbackStub);
       assert.deepEqual(encryptStub.args[0], ['{\"hi\":\"there\"}']);
 
@@ -387,20 +384,20 @@ describe('#components/networking', () => {
     });
 
     it('errors out if subkey is not defined', () => {
-      keychain.setSubscribeKey('');
+      config.setSubscribeKey('');
       networking.performPublish('mychannel', 'my-payload', {}, 'GET', callbackStub);
       assert.equal(validationErrorStub.args[0][0], 'Missing Subscribe Key');
     });
 
     it('errors out if pubkey is not defined', () => {
-      keychain.setPublishKey('');
+      config.setPublishKey('');
       networking.performPublish('mychannel', 'my-payload', {}, 'GET', callbackStub);
       assert.equal(validationErrorStub.args[0][0], 'Missing Publish Key');
     });
 
-    it('uses auth-key from keychain if provided', () => {
+    it('uses auth-key from config if provided', () => {
       let data = { my: 'object' };
-      keychain.setAuthKey('myAuthKey');
+      config.setAuthKey('myAuthKey');
       networking.performPublish('mychannel', 'my-payload', data, 'GET', callbackStub);
       assert.equal(xdrStub.callCount, 1);
       assert.deepEqual(xdrStub.args[0][0].data, { base: 'params', auth: 'myAuthKey' });
@@ -408,7 +405,7 @@ describe('#components/networking', () => {
 
     it('executes call against the POST interfaces', () => {
       let data = { my: 'object' };
-      keychain.setAuthKey('myAuthKey');
+      config.setAuthKey('myAuthKey');
       networking.performPublish('mychannel', 'my-payload', data, 'POST', callbackStub);
       assert.equal(postXDRStub.callCount, 1);
       assert.deepEqual(postXDRStub.args[0][0].data, { base: 'params', auth: 'myAuthKey', message: '%22my-payload%22' });

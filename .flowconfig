@@ -9,3 +9,5 @@
 ./core/src/flow_interfaces.js
 
 [options]
+
+unsafe.enable_getters_and_setters=true

@@ -2,7 +2,6 @@
 
 import superagent from 'superagent';
 
-import Keychain from './keychain.js';
 import Crypto from './cryptography/index';
 import Responders from '../presenters/responders';
 import Config from './config.js';
@@ -12,12 +11,11 @@ type superagentPayload = {
   data: Object,
   url: Array<string | number>,
   callback: Function,
-  timeout: number | null
+  timeout: ?number
 };
 
 type networkingModules = {
   crypto: Crypto,
-  keychain: Keychain,
   config: Config,
   sendBeacon: Function
 }
@@ -27,7 +25,6 @@ type publishPayload = Object | string | number | boolean;
 export default class {
   _sendBeacon: Function;
 
-  _keychain: Keychain;
   _config: Config;
   _crypto: Crypto;
 
@@ -45,10 +42,8 @@ export default class {
 
   _r: Responders;
 
-  constructor({ config, keychain, crypto, sendBeacon }: networkingModules,
-      ssl: boolean = false, origin: ?string = 'pubsub.pubnub.com') {
+  constructor({ config, crypto, sendBeacon }: networkingModules) {
     this._config = config;
-    this._keychain = keychain;
     this._crypto = crypto;
     this._sendBeacon = sendBeacon;
 
@@ -57,7 +52,7 @@ export default class {
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
 
-    this._providedFQDN = (ssl ? 'https://' : 'http://') + origin;
+    this._providedFQDN = (config.isSslEnabled() ? 'https://' : 'http://') + config.getOrigin();
     this._coreParams = {};
 
     // create initial origins
@@ -80,7 +75,7 @@ export default class {
     });
 
     if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._keychain.getInstanceId();
+      data.instanceid = this._config.getInstanceId();
     }
 
     return data;
@@ -122,32 +117,32 @@ export default class {
 
   // method based URL's
   fetchHistory(channel: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
     let url = [
       this.getStandardOrigin(), 'v2', 'history', 'sub-key',
-      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel),
+      this._config.getSubscribeKey(), 'channel', utils.encode(channel),
     ];
 
     let data = this.prepareParams(incomingData);
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     this._xdr({ data, callback, url });
   }
 
   performChannelGroupOperation(channelGroup: string, mode: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
     let url = [
       this.getStandardOrigin(), 'v1', 'channel-registration',
-      'sub-key', this._keychain.getSubscribeKey(), 'channel-group',
+      'sub-key', this._config.getSubscribeKey(), 'channel-group',
     ];
 
     if (channelGroup && channelGroup !== '*') {
@@ -160,57 +155,57 @@ export default class {
 
     let data = this.prepareParams(incomingData);
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     this._xdr({ data, callback, url });
   }
 
   provisionDeviceForPush(deviceId: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    if (!this._keychain.getPublishKey()) {
+    if (!this._config.getPublishKey()) {
       return callback(this._r.validationError('Missing Publish Key'));
     }
 
     let url = [
       this.getStandardOrigin(), 'v1', 'push', 'sub-key',
-      this._keychain.getSubscribeKey(), 'devices', deviceId,
+      this._config.getSubscribeKey(), 'devices', deviceId,
     ];
     let data = this.prepareParams(incomingData);
 
-    data.uuid = this._keychain.getUUID();
-    data.auth = this._keychain.getAuthKey();
+    data.uuid = this._config.getUUID();
+    data.auth = this._config.getAuthKey();
 
     this._xdr({ data, url, callback });
   }
 
   performGrant(authKey: string, data: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    if (!this._keychain.getPublishKey()) {
+    if (!this._config.getPublishKey()) {
       return callback(this._r.validationError('Missing Publish Key'));
     }
 
-    if (!this._keychain.getSecretKey()) {
+    if (!this._config.getSecretKey()) {
       return callback(this._r.validationError('Missing Secret Key'));
     }
 
-    let signInput = this._keychain.getSubscribeKey() +
+    let signInput = this._config.getSubscribeKey() +
       '\n' +
-      this._keychain.getPublishKey() +
+      this._config.getPublishKey() +
       '\n' +
       'grant' +
       '\n';
 
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'grant',
-      'sub-key', this._keychain.getSubscribeKey(),
+      'sub-key', this._config.getSubscribeKey(),
     ];
 
     data.auth = authKey;
@@ -218,7 +213,7 @@ export default class {
     data = this.prepareParams(data);
     signInput += utils._get_pam_sign_input_from_params(data);
 
-    let signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
+    let signature = this._crypto.HMACSHA256(signInput, this._config.getSecretKey());
 
     signature = signature.replace(/\+/g, '-');
     signature = signature.replace(/\//g, '_');
@@ -229,21 +224,21 @@ export default class {
   }
 
   performAudit(authKey: string, data: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    if (!this._keychain.getPublishKey()) {
+    if (!this._config.getPublishKey()) {
       return callback(this._r.validationError('Missing Publish Key'));
     }
 
-    if (!this._keychain.getSecretKey()) {
+    if (!this._config.getSecretKey()) {
       return callback(this._r.validationError('Missing Secret Key'));
     }
 
-    let signInput = this._keychain.getSubscribeKey() +
+    let signInput = this._config.getSubscribeKey() +
       '\n' +
-      this._keychain.getPublishKey() +
+      this._config.getPublishKey() +
       '\n' +
       'audit' +
       '\n';
@@ -252,7 +247,7 @@ export default class {
     data = this.prepareParams(data);
     signInput += utils._get_pam_sign_input_from_params(data);
 
-    let signature = this._crypto.HMACSHA256(signInput, this._keychain.getSecretKey());
+    let signature = this._crypto.HMACSHA256(signInput, this._config.getSecretKey());
 
     signature = signature.replace(/\+/g, '-');
     signature = signature.replace(/\//g, '_');
@@ -261,14 +256,14 @@ export default class {
 
     let url = [
       this.getStandardOrigin(), 'v1', 'auth', 'audit',
-      'sub-key', this._keychain.getSubscribeKey(),
+      'sub-key', this._config.getSubscribeKey(),
     ];
 
     this._xdr({ data, callback, url });
   }
 
   performHeartbeat(channels: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
@@ -276,17 +271,17 @@ export default class {
 
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._keychain.getSubscribeKey(),
+      'sub-key', this._config.getSubscribeKey(),
       'channel', channels,
       'heartbeat',
     ];
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
-    if (this._keychain.getUUID()) {
-      data.uuid = this._keychain.getUUID();
+    if (this._config.getUUID()) {
+      data.uuid = this._config.getUUID();
     }
 
     if (this._config.isRequestIdEnabled()) {
@@ -297,7 +292,7 @@ export default class {
   }
 
   performLeave(channel: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
@@ -305,15 +300,15 @@ export default class {
     let origin = this.nextOrigin(false);
     let url = [
       origin, 'v2', 'presence', 'sub_key',
-      this._keychain.getSubscribeKey(), 'channel', utils.encode(channel), 'leave',
+      this._config.getSubscribeKey(), 'channel', utils.encode(channel), 'leave',
     ];
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
-    if (this._keychain.getUUID()) {
-      data.uuid = this._keychain.getUUID();
+    if (this._config.getUUID()) {
+      data.uuid = this._config.getUUID();
     }
 
     if (this._config.useSendBeacon && this._sendBeacon) {
@@ -327,35 +322,35 @@ export default class {
     let data = this.prepareParams({});
     let url = [this.getStandardOrigin(), 'time', 0];
 
-    if (this._keychain.getUUID()) {
-      data.uuid = this._keychain.getUUID();
+    if (this._config.getUUID()) {
+      data.uuid = this._config.getUUID();
     }
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     this._xdr({ data, callback, url });
   }
 
   fetchWhereNow(uuid: string | null, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
     let data: Object = this.prepareParams({});
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     if (!uuid) {
-      uuid = this._keychain.getUUID();
+      uuid = this._config.getUUID();
     }
 
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._keychain.getSubscribeKey(),
+      'sub-key', this._config.getSubscribeKey(),
       'uuid', utils.encode(uuid),
     ];
 
@@ -363,23 +358,23 @@ export default class {
   }
 
   fetchHereNow(channel: string, channelGroup: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    let data = this.prepareParams(incomingData);
+    let data = this.Params(incomingData);
 
-    if (this._keychain.getUUID()) {
-      data.uuid = this._keychain.getUUID();
+    if (this._config.getUUID()) {
+      data.uuid = this._config.getUUID();
     }
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     let url = [
       this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._keychain.getSubscribeKey(),
+      'sub-key', this._config.getSubscribeKey(),
     ];
 
     if (channel) {
@@ -396,17 +391,17 @@ export default class {
   }
 
   setState(channel: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    let data: Object = this.prepareParams(incomingData);
+    let data: Object = this.s(incomingData);
 
     let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
-      this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', this._keychain.getUUID(), 'data'];
+      this._config.getSubscribeKey(), 'channel', channel, 'uuid', this._config.getUUID(), 'data'];
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     data.state = JSON.stringify(data.state);
@@ -415,31 +410,31 @@ export default class {
   }
 
   fetchState(uuid: string, channel: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
     if (!uuid) {
-      uuid = this._keychain.getUUID();
+      uuid = this._config.getUUID();
     }
 
     let data: Object = this.prepareParams(incomingData);
     let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
-      this._keychain.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
+      this._config.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     this._xdr({ data, callback, url });
   }
 
   performPublish(channel: string, msg: publishPayload, incomingData: Object, mode: string, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    if (!this._keychain.getPublishKey()) {
+    if (!this._config.getPublishKey()) {
       return callback(this._r.validationError('Missing Publish Key'));
     }
 
@@ -448,19 +443,19 @@ export default class {
 
     let url = [
       this.getStandardOrigin(), 'publish',
-      this._keychain.getPublishKey(), this._keychain.getSubscribeKey(),
+      this._config.getPublishKey(), this._config.getSubscribeKey(),
       0, utils.encode(channel),
       0,
     ];
 
     let data = this.prepareParams(incomingData);
 
-    if (this._keychain.getUUID()) {
-      data.uuid = this._keychain.getUUID();
+    if (this._config.getUUID()) {
+      data.uuid = this._config.getUUID();
     }
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
     if (mode === 'POST') {
@@ -472,28 +467,28 @@ export default class {
     }
   }
 
-  performSubscribe(channels: string, incomingData: Object, callback: Function) {
-    if (!this._keychain.getSubscribeKey()) {
+  performSubscribe(channels: string, incomingData: Object, callback: Function): superagent {
+    if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
     let url = [
       this.getSubscribeOrigin(), 'v2', 'subscribe',
-      this._keychain.getSubscribeKey(), utils.encode(channels),
+      this._config.getSubscribeKey(), utils.encode(channels),
       0
     ];
 
     let data = this.prepareParams(incomingData);
 
-    if (this._keychain.getUUID()) {
-      data.uuid = this._keychain.getUUID();
+    if (this._config.getUUID()) {
+      data.uuid = this._config.getUUID();
     }
 
-    if (this._keychain.getAuthKey()) {
-      data.auth = this._keychain.getAuthKey();
+    if (this._config.getAuthKey()) {
+      data.auth = this._config.getAuthKey();
     }
 
-    const timeout = this._config.subscribeRequestTimeout;
+    const timeout = this._config.getSubscribeTimeout();
 
     return this._xdr({ data, callback, url, timeout });
   }
@@ -523,7 +518,7 @@ export default class {
   _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {
     return superagentConstruct
       .type('json')
-      .timeout(timeout || this._config.transactionalRequestTimeout)
+      .timeout(timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
         if (err) return callback(err, null);
 

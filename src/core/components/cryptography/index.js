@@ -1,23 +1,23 @@
 /* @flow */
 
-import Keychain from '../keychain';
+import Config from '../config';
 import CryptoJS from './hmac-sha256.js';
 
 type CryptoConstruct = {
-  keychain: Keychain,
+  config: Config,
 }
 
 export default class {
 
-  _keychain: Keychain;
+  _config: Config;
   _iv: string;
   _allowedKeyEncodings: Array<string>;
   _allowedKeyLengths: Array<number>;
   _allowedModes: Array<string>;
   _defaultOptions: Object;
 
-  constructor({ keychain }: CryptoConstruct) {
-    this._keychain = keychain;
+  constructor({ config }: CryptoConstruct) {
+    this._config = config;
 
     this._iv = '0123456789012345';
 
@@ -34,7 +34,7 @@ export default class {
   }
 
   HMACSHA256(data: string): string {
-    let hash = CryptoJS.HmacSHA256(data, this._keychain.getSecretKey());
+    let hash = CryptoJS.HmacSHA256(data, this._config.getSecretKey());
     return hash.toString(CryptoJS.enc.Base64);
   }
 
@@ -98,22 +98,22 @@ export default class {
   }
 
   encrypt(data: string, options: ?Object): Object | string | null {
-    if (!this._keychain.getCipherKey()) return data;
+    if (!this._config.getCipherKey()) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);
     let mode = this._getMode(options);
-    let cipherKey = this._getPaddedKey(this._keychain.getCipherKey(), options);
+    let cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
     let encryptedHexArray = CryptoJS.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
     let base64Encrypted = encryptedHexArray.toString(CryptoJS.enc.Base64);
     return base64Encrypted || data;
   }
 
   decrypt(data: Object, options: Object): Object | string | null {
-    if (!this._keychain.getCipherKey()) return data;
+    if (!this._config.getCipherKey()) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);
     let mode = this._getMode(options);
-    let cipherKey = this._getPaddedKey(this._keychain.getCipherKey(), options);
+    let cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
     try {
       let ciphertext = CryptoJS.enc.Base64.parse(data);
       let plainJSON = CryptoJS.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS.enc.Utf8);
