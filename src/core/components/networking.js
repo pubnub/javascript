@@ -362,7 +362,7 @@ export default class {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    let data = this.Params(incomingData);
+    let data = this.prepareParams(incomingData);
 
     if (this._config.getUUID()) {
       data.uuid = this._config.getUUID();
@@ -395,7 +395,7 @@ export default class {
       return callback(this._r.validationError('Missing Subscribe Key'));
     }
 
-    let data: Object = this.s(incomingData);
+    let data: Object = this.prepareParams(incomingData);
 
     let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
       this._config.getSubscribeKey(), 'channel', channel, 'uuid', this._config.getUUID(), 'data'];
