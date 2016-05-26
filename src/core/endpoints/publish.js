@@ -1,11 +1,11 @@
 /* @flow */
 
-import PublishQueue from '../components/publish_queue';
+import Networking from '../components/networking';
 import Responders from '../presenters/responders';
 import Logger from '../components/logger';
 
 type publishConstruct = {
-  publishQueue: PublishQueue
+  networking: Networking
 };
 
 type publishArguments = {
@@ -17,12 +17,12 @@ type publishArguments = {
 }
 
 export default class {
-  _publishQueue: PublishQueue;
+  _networking: Networking;
   _r: Responders;
   _l: Logger;
 
-  constructor({ publishQueue }: publishConstruct) {
-    this._publishQueue = publishQueue;
+  constructor({ networking }: publishConstruct) {
+    this._networking = networking;
     this._r = new Responders('#endpoints/publish');
     this._l = Logger.getLogger('#endpoints/publish');
   }
@@ -39,7 +39,6 @@ export default class {
     }
 
     let params: Object = {};
-    let publishItem = this._publishQueue.newQueueable();
 
     if (!storeInHistory) {
       params.store = '0';
