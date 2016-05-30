@@ -42,40 +42,45 @@ export default class {
   /*
     subsriber key provided by Portal to perform API calls
   */
-  _subscribeKey: string;
+  subscribeKey: string;
 
   /*
     publish key provided by Portal to perform publish API calls
   */
-  _publishKey: string;
+  publishKey: string;
 
   /*
     secret key provided by Portal to perform Auth (PAM) API calls. Only
     use on server (node) and do not expose it to customers.
   */
-  _secretKey: string;
+  secretKey: string;
 
   /*
     auth key which will be passed on PAM secured endpoints
   */
-  _authKey: string;
+  authKey: string;
 
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
   */
-  _instanceId: string;
+  instanceId: string;
 
   /*
     if passed, all payloads will be encrypted using the cipher key and history
     fetches will be decrypted using this key.
   */
-  _cipherKey: string;
+  cipherKey: string;
 
   /*
     Unique identifier of this client, will be sent with all request to identify
     a unique device for presence and billing
   */
-  _UUID: string;
+  UUID: string;
+
+  /*
+    base params to be inclded with each call
+  */
+  baseParams: Object;
 
   /*
     optionally avoid sending leave events for presence events.
@@ -103,12 +108,14 @@ export default class {
   _presenceAnnounceInterval: number;
 
   constructor(setup: internalSetupStruct) {
-    this.setInstanceId(uuidGenerator.v4());
-    this.setAuthKey(setup.authKey || '');
-    this.setSecretKey(setup.secretKey || '');
-    this.setSubscribeKey(setup.subscribeKey);
-    this.setPublishKey(setup.publishKey);
-    this.setCipherKey(setup.cipherKey);
+    this.instanceId = uuidGenerator.v4();
+    this.authKey = setup.authKey || '';
+    this.secretKey = setup.secretKey || '';
+    this.subscribeKey = setup.subscribeKey;
+    this.publishKey = setup.publishKey;
+    this.cipherKey = setup.cipherKey;
+    this.baseParams = setup.params || {};
+
     this.setRequestIdConfig(setup.useRequestId || false);
     this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
     this.setInstanceIdConfig(setup.useInstanceId || false);
@@ -122,28 +129,11 @@ export default class {
     this.setSendBeaconConfig(setup.useSendBeacon || true);
     // how long the SDK will report the client to be alive before issuing a timeout
     this.setPresenceTimeout(setup.presenceTimeout || 300);
+
+    if (setup.presenceAnnounceInterval) {
+      this.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
+    }
   }
-
-  getSubscribeKey(): string { return this._subscribeKey; }
-  setSubscribeKey(val: string): this { this._subscribeKey = val; return this; }
-
-  getAuthKey(): string { return this._authKey; }
-  setAuthKey(val: string): this { this._authKey = val; return this; }
-
-  getPublishKey(): string { return this._publishKey; }
-  setPublishKey(val: string): this { this._publishKey = val; return this; }
-
-  getSecretKey(): string { return this._secretKey; }
-  setSecretKey(val: string): this { this._secretKey = val; return this; }
-
-  getCipherKey(): string { return this._cipherKey; }
-  setCipherKey(val: string): this { this._cipherKey = val; return this; }
-
-  getUUID(): string { return this._UUID; }
-  setUUID(val: string): this { this._UUID = val; return this; }
-
-  getInstanceId(): string { return this._instanceId; }
-  setInstanceId(val: string): this { this._instanceId = val; return this; }
 
   isInstanceIdEnabled(): boolean { return this._useInstanceId; }
   setInstanceIdConfig(val: boolean): this { this._useInstanceId = val; return this; }

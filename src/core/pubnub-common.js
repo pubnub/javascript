@@ -3,10 +3,13 @@
 import Networking from './components/networking';
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
+import packageJSON from '../../package.json';
 
+/*
 import PresenceHeartbeat from './iterators/presence_heartbeat';
-
+import SubscribeEndpoints from './endpoints/subscribe';
 import Subscriber from './iterators/subscriber';
+*/
 
 import TimeEndpoint from './endpoints/time';
 import PresenceEndpoints from './endpoints/presence';
@@ -15,23 +18,44 @@ import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
 
-import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
 
-let packageJSON = require('../../package.json');
-import { callbackStruct, internalSetupStruct } from './flow_interfaces';
 
-export default function createInstance(setup: internalSetupStruct): Object {
-  let { sendBeacon, db, shutdown } = setup;
+import { internalSetupStruct } from './flow_interfaces';
 
-  let config = new Config(setup);
+export default class {
 
-  if (setup.presenceAnnounceInterval) {
-    config.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
+  config: Config;
+  crypto: Crypto;
+  networking: Networking;
+
+  // tell flow about the mounted endpoint
+  time: Function;
+  publish: Function;
+
+  constructor(setup: internalSetupStruct) {
+    let { sendBeacon, db } = setup;
+
+    this.config = new Config(setup);
+    this.crypto = new Crypto({ config: this.config });
+    this.networking = new Networking({ config: this.config, crypto: this.crypto, sendBeacon });
+
+    // write the new key to storage
+    db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
+
+    // mount up the endpoints
+    const timeEndpoint = new TimeEndpoint({ networking: this.networking, config: this.config });
+    this.time = timeEndpoint.fetch.bind(timeEndpoint);
+
+    const publishEndpoints = new PublishEndpoints({ networking: this.networking });
+    this.publish = publishEndpoints.publish.bind(publishEndpoints);
   }
 
-  let crypto = new Crypto({ config });
-  let networking = new Networking({ config, crypto, sendBeacon });
+  getVersion(): String { return packageJSON.version; }
+
+}
+  /*
+  let
 
   let callbacks: callbackStruct = {
     onMessage: setup.onMessage,
@@ -39,20 +63,14 @@ export default function createInstance(setup: internalSetupStruct): Object {
     onPresence: setup.onPresence
   };
 
-  // write the new key to storage
-  db.set(config.getSubscribeKey() + 'uuid', config.getUUID());
-
-
   // let state = new State();
   // let subscriber = new Subscriber({ networking, state, callbacks });
   // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
   // let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
 
   // init the endpoints
-  let timeEndpoint = new TimeEndpoint({ networking });
   let historyEndpoint = new HistoryEndpoint({ networking, crypto });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
-  let publishEndpoints = new PublishEndpoints({ networking });
   let pushEndpoints = new PushEndpoint({ networking });
   let presenceEndpoints = new PresenceEndpoints({ config, networking });
   let accessEndpoints = new AccessEndpoints({ config, networking });
@@ -75,9 +93,7 @@ export default function createInstance(setup: internalSetupStruct): Object {
     },
 
     history: historyEndpoint.fetch.bind(historyEndpoint),
-    time: timeEndpoint.fetch.bind(timeEndpoint),
 
-    publish: publishEndpoints.publish.bind(publishEndpoints),
     // subscribe: subscribeEndpoints.subscribe.bind(subscribeEndpoints),
     // unsubscribe: subscribeEndpoints.unsubscribe.bind(subscribeEndpoints),
 
@@ -114,23 +130,10 @@ export default function createInstance(setup: internalSetupStruct): Object {
       // presenceHeartbeat.stop();
     },
 
-    getVersion() {
-      return packageJSON.version;
-    },
-
     shutdown() {
       SELF.stopTimers();
       if (shutdown) shutdown();
     }
   };
-
-  /*
-    create the connectivity element last, this will signal to other elements
-    that the SDK is connected to internet.
-  */
-  // connectivity.start();
-  // subscriber.start();
-  // presenceHeartbeat.start();
-
-  return SELF;
 }
+*/

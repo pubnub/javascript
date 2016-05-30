@@ -1,11 +1,14 @@
 /* @flow */
 
 import superagent from 'superagent';
+// import axios from 'axios';
 
 import Crypto from './cryptography/index';
 import Responders from '../presenters/responders';
 import Config from './config.js';
 import utils from '../utils';
+
+import { endpointDefinition } from '../flow_interfaces';
 
 type superagentPayload = {
   data: Object,
@@ -58,27 +61,6 @@ export default class {
     // create initial origins
     this.shiftStandardOrigin(false);
     this.shiftSubscribeOrigin(false);
-  }
-
-  addCoreParam(key: string, value: any) {
-    this._coreParams[key] = value;
-  }
-
-  /*
-    Fuses the provided endpoint specific params (from data) with instance params
-  */
-  prepareParams(data: Object): Object {
-    if (!data) data = {};
-
-    utils.each(this._coreParams, (key, value) => {
-      if (!(key in data)) data[key] = value;
-    });
-
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._config.getInstanceId();
-    }
-
-    return data;
   }
 
   nextOrigin(failover: boolean): string {
@@ -198,7 +180,7 @@ export default class {
 
     let signInput = this._config.getSubscribeKey() +
       '\n' +
-      this._config.getPublishKey() +
+      this._config._publishKeyD +
       '\n' +
       'grant' +
       '\n';
@@ -316,21 +298,6 @@ export default class {
     } else {
       this._xdr({ data, callback, url });
     }
-  }
-
-  fetchTime(callback: Function) {
-    let data = this.prepareParams({});
-    let url = [this.getStandardOrigin(), 'time', 0];
-
-    if (this._config.getUUID()) {
-      data.uuid = this._config.getUUID();
-    }
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    this._xdr({ data, callback, url });
   }
 
   fetchWhereNow(uuid: string | null, callback: Function) {
@@ -508,11 +475,15 @@ export default class {
     return this._abstractedXDR(superagentConstruct, timeout, callback);
   }
 
-  _xdr({ data, url, timeout, callback}: superagentPayload): superagent {
+  XDR(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
+    console.log("----");
+    console.log("params", params);
+    console.log("endpoint", endpoint);
+
     let superagentConstruct = superagent
-      .get(url.join('/'))
-      .query(data);
-    return this._abstractedXDR(superagentConstruct, timeout, callback);
+      .get(this.getStandardOrigin() + endpoint.url)
+      .query(params);
+    return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
   }
 
   _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {

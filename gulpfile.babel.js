@@ -4,7 +4,7 @@ const gulp = require('gulp');
 const babel = require('gulp-babel');
 const clean = require('gulp-clean');
 const gulpWebpack = require('gulp-webpack');
-const webpack = require('webpack');
+const webpackConfig = require('./webpack.config');
 const eslint = require('gulp-eslint');
 const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
@@ -24,25 +24,8 @@ gulp.task('babel', ['clean'], function () {
 
 gulp.task('compile_web', ['babel'], function () {
   return gulp.src('lib/web/platform.js')
-  .pipe(gulpWebpack({
-    module: {
-      loaders: [
-        { test: /\.json/, loader: 'json' },
-      ],
-    },
-    output: {
-      filename: 'pubnub.js',
-      library: 'PUBNUB',
-      libraryTarget: 'umd',
-    },
-    plugins: [
-      new webpack.BannerPlugin(require('./package.json').version + ' / Consumer ', {
-        raw: false, entryOnly: true,
-      }),
-    ],
-    externals: [],
-  }))
-  .pipe(gulp.dest('dist/web'));
+    .pipe(gulpWebpack(webpackConfig))
+    .pipe(gulp.dest('dist/web'));
 });
 
 gulp.task('uglify', ['webpack'], function () {

@@ -53,3 +53,18 @@ export type internalSetupStruct = {
   db: Function // get / set implementation to store data
 
 }
+
+type endpointKeyDefinition = {
+  required: boolean
+}
+
+type supportedParams = {
+  subscribeKey: endpointKeyDefinition,
+  uuid: endpointKeyDefinition,
+}
+
+export type endpointDefinition = {
+  params: supportedParams,
+  timeout: number,
+  url: string
+}

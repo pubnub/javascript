@@ -1,8 +1,10 @@
 {
     "presets": ["es2015"],
+    "comments": false,
     "plugins": [
         "transform-class-properties",
-        "transform-flow-strip-types"
+        "transform-flow-strip-types",
+        "add-module-exports"
     ],
     "sourceMaps": true
 }
