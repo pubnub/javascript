@@ -8,7 +8,7 @@ import Responders from '../presenters/responders';
 import Config from './config.js';
 import utils from '../utils';
 
-import { endpointDefinition } from '../flow_interfaces';
+import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type superagentPayload = {
   data: Object,
@@ -476,10 +476,6 @@ export default class {
   }
 
   XDR(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
-    console.log("----");
-    console.log("params", params);
-    console.log("endpoint", endpoint);
-
     let superagentConstruct = superagent
       .get(this.getStandardOrigin() + endpoint.url)
       .query(params);
@@ -491,19 +487,17 @@ export default class {
       .type('json')
       .timeout(timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
-        if (err) return callback(err, null);
+        let status: statusStruct = {};
+        status.error = err;
+
+        // console.log(err);
+
+        if (err) {
+          return callback(status, null);
+        }
 
         let parsedResponse = JSON.parse(resp.text);
-
-        if (typeof parsedResponse === 'object' && parsedResponse.error) {
-          return callback(parsedResponse.error, null);
-        }
-
-        if (typeof parsedResponse === 'object' && parsedResponse.payload) {
-          return callback(null, parsedResponse.payload);
-        }
-
-        callback(null, parsedResponse);
+        return callback(status, parsedResponse);
       });
   }
 }

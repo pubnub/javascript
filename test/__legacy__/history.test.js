@@ -12,7 +12,7 @@ import loglevel from 'loglevel';
 
 loglevel.disableAll();
 
-describe('history endpoints', () => {
+describe.skip('history endpoints', () => {
   let networking;
   let instance;
   let cryptoStub;

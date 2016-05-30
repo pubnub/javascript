@@ -13,7 +13,7 @@ import loglevel from 'loglevel';
 
 loglevel.disableAll();
 
-describe('presence endpoints', () => {
+describe.skip('presence endpoints', () => {
   let networking;
   let state;
   let instance;

@@ -13,7 +13,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 const proxyquire = require('proxyquire').noCallThru();
 
-describe('channel groups endpoints', () => {
+describe.skip('channel groups endpoints', () => {
   let instance;
   let networking;
   let callbackStub;

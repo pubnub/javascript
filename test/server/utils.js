@@ -1,23 +1,11 @@
-var _ = require('lodash');
+import nock from 'nock';
 
-function getRandom(max) {
-  return Math.floor((Math.random() * (max || 1000000000) + 1));
-}
-
-function getTestUUID() {
-  if (_.includes(['playback', 'cache'], process.env.VCR_MODE)) {
-    return 'dd6af454-fa7a-47be-a800-1b9b050f5d94';
-  } else {
-    return require('node-uuid').v4();
+module.exports = {
+  createNock() {
+    return nock('http://ps.pubnub.com:80', {
+      filteringScope: (scope) => {
+        return true;
+      }
+    });
   }
 }
-
-function getChannelPostFix() {
-  if (_.includes(['playback', 'cache'], process.env.VCR_MODE)) {
-    return 10;
-  } else {
-    return getRandom();
-  }
-}
-
-module.exports = { getTestUUID: getTestUUID, getChannelPostFix: getChannelPostFix, getRandom: getRandom };

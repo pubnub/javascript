@@ -32,9 +32,11 @@
     "messaging"
   ],
   "dependencies": {
+    "axios": "^0.11.1",
     "event-emitter": "^0.3.4",
     "lodash": "^4.1.0",
     "loglevel": "^1.4.0",
+    "request": "^2.72.0",
     "superagent": "^2.0.0",
     "uuid": "^2.0.1"
   },
@@ -76,6 +78,7 @@
     "karma-phantomjs-launcher": "1.0.0",
     "karma-spec-reporter": "0.0.26",
     "mocha": "2.5.3",
+    "nock": "^8.0.0",
     "node-uuid": "1.4.7",
     "phantomjs-prebuilt": "2.1.7",
     "proxyquire": "1.7.9",

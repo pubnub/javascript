@@ -3,18 +3,22 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndoint from './base.js';
-import { endpointDefinition } from '../flow_interfaces';
+import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type timeConstruct = {
   networking: Networking,
   config: Config
 };
 
+type timeResponse = {
+  timetoken: number
+};
+
 export default class extends BaseEndoint {
 
   constructor({ networking, config }: timeConstruct) {
     super({ config });
-    this._networking = networking;
+    this.networking = networking;
   }
 
   fetch(callback: Function) {
@@ -32,9 +36,13 @@ export default class extends BaseEndoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this._networking.XDR(params, endpointConfig, (err, response) => {
-      if (err) return callback(err);
-      callback(null, response[0]);
+    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      let response: timeResponse = {};
+      response.timetoken = payload[0];
+
+      callback(status, response);
     });
   }
 }

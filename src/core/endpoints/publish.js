@@ -28,15 +28,10 @@ export default class {
   }
 
   publish(args: publishArguments, callback: Function) {
-    const { message, channel, meta, sendByPost = false, storeInHistory = true } = args;
+    const { message, channel, meta, sendByPost = false, storeInHistory } = args;
 
-    if (!message) {
-      return callback(this._r.validationError('Missing Message'));
-    }
-
-    if (!channel) {
-      return callback(this._r.validationError('Missing Channel'));
-    }
+    if (!message) return callback(this._r.validationError('Missing Message'));
+    if (!channel) return callback(this._r.validationError('Missing Channel'));
 
     let params: Object = {};
 

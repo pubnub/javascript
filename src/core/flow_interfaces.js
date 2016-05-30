@@ -27,6 +27,10 @@ export type proxyStruct = {
   headers: Object
 }
 
+export type statusStruct = {
+  error: boolean
+}
+
 export type internalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing

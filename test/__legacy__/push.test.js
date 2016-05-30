@@ -9,7 +9,7 @@ import assert from 'assert';
 import sinon from 'sinon';
 const proxyquire = require('proxyquire').noCallThru();
 
-describe('push endpoints', () => {
+describe.skip('push endpoints', () => {
   let networking;
   let publishQueue;
 

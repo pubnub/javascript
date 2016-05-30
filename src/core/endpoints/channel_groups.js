@@ -1,119 +1,187 @@
 /* @flow */
 
+import BaseEndoint from './base.js';
 import Networking from '../components/networking';
+import Config from '../components/config';
 import Logger from '../components/logger';
-import Responders from '../presenters/responders';
+
+import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type channelGroupConstruct = {
   networking: Networking,
+  config: Config
 };
+
+type listChannelsParams = {
+  channelGroup: string,
+}
+
+type deleteGroupParams = {
+  channelGroup: string,
+}
 
 type addChannelParams = {
   channels: Array<string>,
   channelGroup: string,
-  mode: ?string, // added by the builder
 }
 
 type removeChannelParams = {
   channels: Array<string>,
   channelGroup: string,
-  mode: ?string, // added by the builder
 }
 
-type channelGroupParams = {
-  channelGroup: string,
-  channels: Array<string>,
-  mode: ?string, // added by the builder
+
+type listAllGroupsResponse = {
+  groups: Array<string>
 }
 
-export default class {
-  _networking: Networking;
-  _r: Responders;
-  _l: Logger;
+type listChannelsResponse = {
+  channels: Array<string>
+}
 
-  constructor({ networking }: channelGroupConstruct) {
-    this._networking = networking;
-    this._r = new Responders('#endpoints/history');
-    this._l = Logger.getLogger('#endpoints/history');
+export default class extends BaseEndoint {
+  networking: Networking;
+  config: Config;
+  logger: Logger;
+
+  constructor({ networking, config }: channelGroupConstruct) {
+    super({ config });
+    this.networking = networking;
+    this.config = config;
+    this.logger = Logger.getLogger('#endpoints/channel_groups');
   }
 
-  // generic function to handle all channel group operations
-  channelGroup(args: channelGroupParams, callback: Function) {
-    let { channelGroup, channels = [] } = args;
+  listChannels(args: listChannelsParams, callback: Function) {
+    let { channelGroup } = args;
 
-    let effectiveChannelGroupName = '';
-    let data = {};
-    let mode = args.mode || 'add';
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false },
+        subscribeKey: { required: true }
+      },
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+    };
 
-    if (channelGroup) {
-      let splitChannelGroupName = channelGroup.split(':');
+    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
 
-      if (splitChannelGroupName.length > 1) {
-        effectiveChannelGroupName = splitChannelGroupName[1];
-      } else {
-        effectiveChannelGroupName = splitChannelGroupName[0];
-      }
-    }
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
 
-    if (channels.length > 0) {
-      data[mode] = channels.join(',');
-    }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
 
-    this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
+    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+      let response: listChannelsResponse = {};
+      response.channels = payload.payload.channels;
+
+      callback(status, response);
+    });
   }
 
-  listChannels(args: Object, callback: Function) {
-    if (!args.channelGroup) {
-      return callback(this._r.validationError('Missing Channel Group'));
-    }
+  deleteGroup(args: deleteGroupParams, callback: Function) {
+    let { channelGroup } = args;
 
-    this.channelGroup(args, callback);
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false },
+        subscribeKey: { required: true }
+      },
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove'
+    };
+
+    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    this.networking.XDR(params, endpointConfig, (status: statusStruct) => {
+      callback(status);
+    });
   }
 
-  deleteGroup(args: Object, callback: Function) {
-    const errorMessage = 'Use removeChannel to remove a channel from a group.';
-    if (!args.channelGroup) {
-      return callback(this._r.validationError('Missing Channel Group'));
-    }
+  listGroups(callback: Function) {
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false },
+        subscribeKey: { required: true }
+      },
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group'
+    };
 
-    if (args.channel) {
-      return callback(this._r.validationError(errorMessage));
-    }
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
 
-    args.mode = 'remove';
-    this.channelGroup(args, callback);
-  }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
 
-  listGroups(args: Object, callback: Function) {
-    this.channelGroup(args, callback);
+    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      let response: listAllGroupsResponse = {};
+      response.groups = payload.payload.groups;
+
+      callback(status, response);
+    });
   }
 
   addChannels(args: addChannelParams, callback: Function) {
     let { channelGroup, channels = [] } = args;
 
-    if (!channelGroup) {
-      return callback(this._r.validationError('Missing Channel Group'));
-    }
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false },
+        subscribeKey: { required: true }
+      },
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+    };
 
-    if (channels.length === 0) {
-      return callback(this._r.validationError('Missing Channel'));
-    }
+    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+    if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
 
-    args.mode = 'add';
-    this.channelGroup(args, callback);
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+    params.add = channels.join(',');
+
+    this.networking.XDR(params, endpointConfig, (status: statusStruct) => {
+      callback(status);
+    });
   }
 
   removeChannels(args: removeChannelParams, callback: Function) {
     let { channelGroup, channels = [] } = args;
 
-    if (!channelGroup) {
-      return callback(this._r.validationError('Missing Channel Group'));
-    }
-    if (channels.length === 0) {
-      return callback(this._r.validationError('Missing Channel'));
-    }
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false },
+        subscribeKey: { required: true }
+      },
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+    };
 
-    args.mode = 'remove';
-    this.channelGroup(args, callback);
+    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+    if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+    params.remove = channels.join(',');
+
+    this.networking.XDR(params, endpointConfig, (status: statusStruct) => {
+      callback(status);
+    });
   }
 }

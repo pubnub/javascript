@@ -12,7 +12,7 @@ import loglevel from 'loglevel';
 
 loglevel.disableAll();
 
-describe('subscribe endpoints', () => {
+describe.skip('subscribe endpoints', () => {
   let networking;
   let leaveStub;
   let state;

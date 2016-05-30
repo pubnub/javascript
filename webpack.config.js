@@ -7,6 +7,12 @@ var config = {
       { test: /\.json/, loader: 'json' },
     ],
   },
+  node: {
+    console: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty'
+  },
   output: {
     filename: 'pubnub.js',
     library: 'PUBNUB',

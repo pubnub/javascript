@@ -47,8 +47,18 @@ export default class {
     const timeEndpoint = new TimeEndpoint({ networking: this.networking, config: this.config });
     this.time = timeEndpoint.fetch.bind(timeEndpoint);
 
-    const publishEndpoints = new PublishEndpoints({ networking: this.networking });
-    this.publish = publishEndpoints.publish.bind(publishEndpoints);
+    const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this.networking, config: this.config });
+    this.channelGroups = {
+      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
+      listAll: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
+      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
+      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
+      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints),
+    };
+
+
+    // const publishEndpoints = new PublishEndpoints({ networking: this.networking });
+    // this.publish = publishEndpoints.publish.bind(publishEndpoints);
   }
 
   getVersion(): String { return packageJSON.version; }
@@ -82,14 +92,6 @@ export default class {
       grant: accessEndpoints.grant.bind(accessEndpoints),
       audit: accessEndpoints.audit.bind(accessEndpoints),
       revoke: accessEndpoints.revoke.bind(accessEndpoints),
-    },
-
-    channelGroups: {
-      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
-      deleteGroup: channelGroupEndpoints.removeGroup.bind(channelGroupEndpoints),
-      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
-      addChannel: channelGroupEndpoints.addChannel.bind(channelGroupEndpoints),
-      removeChannel: channelGroupEndpoints.addChannel.bind(channelGroupEndpoints)
     },
 
     history: historyEndpoint.fetch.bind(historyEndpoint),
