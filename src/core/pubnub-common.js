@@ -56,6 +56,13 @@ export default class {
       deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints),
     };
 
+    const pushEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
+    this.pushNotifications = {
+      listChannelsForDevice: pushEndpoints.listChannelsForDevice.bind(pushEndpoints),
+      addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
+      removeDeviceFromChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
+      removeDevice: pushEndpoints.removeDeviceFromPushChannel.bind(pushEndpoints),
+    };
 
     // const publishEndpoints = new PublishEndpoints({ networking: this.networking });
     // this.publish = publishEndpoints.publish.bind(publishEndpoints);
@@ -81,7 +88,6 @@ export default class {
   // init the endpoints
   let historyEndpoint = new HistoryEndpoint({ networking, crypto });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
-  let pushEndpoints = new PushEndpoint({ networking });
   let presenceEndpoints = new PresenceEndpoints({ config, networking });
   let accessEndpoints = new AccessEndpoints({ config, networking });
   // let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config });
@@ -104,11 +110,6 @@ export default class {
       whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
       getState: presenceEndpoints.getState.bind(presenceEndpoints),
       setState: presenceEndpoints.setState.bind(presenceEndpoints),
-    },
-
-    push: {
-      addDeviceToPushChannel: pushEndpoints.addDeviceToPushChannel.bind(pushEndpoints),
-      removeDeviceFromPushChannel: pushEndpoints.removeDeviceFromPushChannel.bind(pushEndpoints)
     },
 
     getPresenceTimeout: config.getPresenceTimeout.bind(config),
