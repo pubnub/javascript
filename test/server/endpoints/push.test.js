@@ -22,7 +22,7 @@ describe('push endpoints', () => {
     pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey' });
   });
 
-  describe.only('adding channels to device', () => {
+  describe('adding channels to device', () => {
     it('supports addition of multiple channels for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
         .query({ add: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns' })
@@ -100,4 +100,81 @@ describe('push endpoints', () => {
       });
     });
   });
+
+  describe('supports deletion of channels', () => {
+    it('supports removal of multiple channels for apple', (done) => {
+      const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
+        .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns' })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.pushNotifications.removeDeviceFromChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
+        assert.equal(status.error, null);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('supports removal of multiple channels for microsoft', (done) => {
+      const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
+        .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns' })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.pushNotifications.removeDeviceFromChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
+        assert.equal(status.error, null);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('supports removal of multiple channels for google', (done) => {
+      const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
+        .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm' })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.pushNotifications.removeDeviceFromChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
+        assert.equal(status.error, null);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+  });
+
+  describe('supports removal of device', () => {
+    it('supports removal of device for apple', (done) => {
+      const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns' })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.pushNotifications.removeDevice({ device: 'niceDevice', pushGateway: 'apns' }, (status) => {
+        assert.equal(status.error, null);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('supports removal of device for microsoft', (done) => {
+      const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns' })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.pushNotifications.removeDevice({ device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
+        assert.equal(status.error, null);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('supports removal of device for google', (done) => {
+      const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm' })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.pushNotifications.removeDevice({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
+        assert.equal(status.error, null);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+  });
+
 });

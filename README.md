@@ -4,6 +4,13 @@
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
 
+---
+
+## Documentation Preview
+https://hackmd.io/IYJgxgZgbAJhCMBaMAOARgTkQFnCRKw2wOAzAKbnDlQbwrZhA===
+
+----
+
 PubNub for JavaScript Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
 
 ## Communication

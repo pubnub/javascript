@@ -15,13 +15,13 @@ type provisionDeviceArgs = {
   operation: 'add' | 'remove',
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
-  channel: string
+  channels: Array<string>
 };
 
 type modifyDeviceArgs = {
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
-  channel: string
+  channels: Array<string>
 };
 
 type listChannelsArgs = {
@@ -86,23 +86,48 @@ export default class extends BaseEndoint {
   }
 
   removeDevice(args: removeDeviceAargs, callback: Function) {
-    // TODO
+    let { pushGateway, device } = args;
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false }
+      },
+      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove'
+    };
+
+    if (!device) {
+      return callback(this._r.validationError('Missing Device ID (device)'));
+    }
+
+    if (!pushGateway) {
+      return callback(this._r.validationError('Missing GW Type (pushGateway: gcm or apns)'));
+    }
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+    params.type = pushGateway;
+
+    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+      callback(status);
+    });
   }
 
   addDeviceToPushChannels(args: modifyDeviceArgs, callback: Function) {
-    let { pushGateway, device, channel } = args;
-    const payload = { operation: 'add', pushGateway, device, channel };
+    let { pushGateway, device, channels } = args;
+    const payload = { operation: 'add', pushGateway, device, channels };
     this.__provisionDevice(payload, callback);
   }
 
   removeDeviceFromPushChannels(args: modifyDeviceArgs, callback: Function) {
-    let { pushGateway, device, channel } = args;
-    const payload = { operation: 'remove', pushGateway, device, channel };
+    let { pushGateway, device, channels } = args;
+    const payload = { operation: 'remove', pushGateway, device, channels };
     this.__provisionDevice(payload, callback);
   }
 
   __provisionDevice(args: provisionDeviceArgs, callback: Function) {
-    let { operation, pushGateway, device, channel } = args;
+    let { operation, pushGateway, device, channels } = args;
     const endpointConfig: endpointDefinition = {
       params: {
         authKey: { required: false },
@@ -123,7 +148,7 @@ export default class extends BaseEndoint {
       return callback(this._r.validationError('Missing GW Operation (operation: add or remove)'));
     }
 
-    if (!channel) {
+    if (!channels) {
       return callback(this._r.validationError('Missing gw destination Channel (channel)'));
     }
 
@@ -133,13 +158,12 @@ export default class extends BaseEndoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    if (operation === 'add') params.add = channel;
-    if (operation === 'remove') params.remove = channel;
+    if (operation === 'add') params.add = channels.join(',');
+    if (operation === 'remove') params.remove = channels.join(',');
 
-    console.log(params);
 
     this.networking.GET(params, endpointConfig, (status: statusStruct) => {
-      return callback(status);
+      callback(status);
     });
   }
 
