@@ -98,22 +98,22 @@ export default class {
   }
 
   encrypt(data: string, options: ?Object): Object | string | null {
-    if (!this._config.getCipherKey()) return data;
+    if (!this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);
     let mode = this._getMode(options);
-    let cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
+    let cipherKey = this._getPaddedKey(this._config.cipherKey, options);
     let encryptedHexArray = CryptoJS.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
     let base64Encrypted = encryptedHexArray.toString(CryptoJS.enc.Base64);
     return base64Encrypted || data;
   }
 
   decrypt(data: Object, options: Object): Object | string | null {
-    if (!this._config.getCipherKey()) return data;
+    if (!this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);
     let mode = this._getMode(options);
-    let cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
+    let cipherKey = this._getPaddedKey(this._config.cipherKey, options);
     try {
       let ciphertext = CryptoJS.enc.Base64.parse(data);
       let plainJSON = CryptoJS.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS.enc.Utf8);

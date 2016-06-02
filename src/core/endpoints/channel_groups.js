@@ -71,7 +71,7 @@ export default class extends BaseEndoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
       let response: listChannelsResponse = {};
       response.channels = payload.payload.channels;
@@ -100,7 +100,7 @@ export default class extends BaseEndoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
       callback(status);
     });
   }
@@ -121,7 +121,7 @@ export default class extends BaseEndoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: listAllGroupsResponse = {};
@@ -153,7 +153,7 @@ export default class extends BaseEndoint {
     const params = this.createBaseParams(endpointConfig);
     params.add = channels.join(',');
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
       callback(status);
     });
   }
@@ -180,7 +180,7 @@ export default class extends BaseEndoint {
     const params = this.createBaseParams(endpointConfig);
     params.remove = channels.join(',');
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
       callback(status);
     });
   }

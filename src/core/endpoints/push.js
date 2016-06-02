@@ -13,7 +13,7 @@ type pushConstruct = {
 
 type provisionDeviceArgs = {
   operation: 'add' | 'remove',
-  pushGateway: 'gcm' | 'apns',
+  pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
   channel: string
 };
@@ -74,17 +74,18 @@ export default class extends BaseEndoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Array<string>) => {
       if (status.error) return callback(status);
 
-      let response: listChannelsResponse = {};
-      response.channels = payload;
+      let response: listChannelsResponse = {
+        channels: payload
+      };
 
       callback(status, response);
     });
   }
 
-  removeDeviceFromPushChannel(args: removeDeviceAargs, callback: Function) {
+  removeDevice(args: removeDeviceAargs, callback: Function) {
     // TODO
   }
 
@@ -102,6 +103,13 @@ export default class extends BaseEndoint {
 
   __provisionDevice(args: provisionDeviceArgs, callback: Function) {
     let { operation, pushGateway, device, channel } = args;
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false }
+      },
+      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
+    };
 
     if (!device) {
       return callback(this._r.validationError('Missing Device ID (device)'));
@@ -119,17 +127,20 @@ export default class extends BaseEndoint {
       return callback(this._r.validationError('Missing gw destination Channel (channel)'));
     }
 
-    let data: Object = {
-      type: pushGateway
-    };
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+    params.type = pushGateway;
 
-    if (operation === 'add') {
-      data.add = channel;
-    } else if (operation === 'remove') {
-      data.remove = channel;
-    }
+    if (operation === 'add') params.add = channel;
+    if (operation === 'remove') params.remove = channel;
 
-    this._networking.provisionDeviceForPush(device, data, callback);
+    console.log(params);
+
+    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+      return callback(status);
+    });
   }
 
 }

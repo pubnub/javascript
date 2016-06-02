@@ -10,13 +10,6 @@ import utils from '../utils';
 
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
-type superagentPayload = {
-  data: Object,
-  url: Array<string | number>,
-  callback: Function,
-  timeout: ?number
-};
-
 type networkingModules = {
   crypto: Crypto,
   config: Config,
@@ -115,54 +108,6 @@ export default class {
     }
 
     this._xdr({ data, callback, url });
-  }
-
-  performChannelGroupOperation(channelGroup: string, mode: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let url = [
-      this.getStandardOrigin(), 'v1', 'channel-registration',
-      'sub-key', this._config.getSubscribeKey(), 'channel-group',
-    ];
-
-    if (channelGroup && channelGroup !== '*') {
-      url.push(channelGroup);
-    }
-
-    if (mode === 'remove') {
-      url.push('remove');
-    }
-
-    let data = this.prepareParams(incomingData);
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    this._xdr({ data, callback, url });
-  }
-
-  provisionDeviceForPush(deviceId: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    if (!this._config.getPublishKey()) {
-      return callback(this._r.validationError('Missing Publish Key'));
-    }
-
-    let url = [
-      this.getStandardOrigin(), 'v1', 'push', 'sub-key',
-      this._config.getSubscribeKey(), 'devices', deviceId,
-    ];
-    let data = this.prepareParams(incomingData);
-
-    data.uuid = this._config.getUUID();
-    data.auth = this._config.getAuthKey();
-
-    this._xdr({ data, url, callback });
   }
 
   performGrant(authKey: string, data: Object, callback: Function) {
@@ -396,43 +341,6 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  performPublish(channel: string, msg: publishPayload, incomingData: Object, mode: string, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    if (!this._config.getPublishKey()) {
-      return callback(this._r.validationError('Missing Publish Key'));
-    }
-
-    let stringifiedMessage = JSON.stringify(msg);
-    let encryptedMessage = this._crypto.encrypt(stringifiedMessage);
-
-    let url = [
-      this.getStandardOrigin(), 'publish',
-      this._config.getPublishKey(), this._config.getSubscribeKey(),
-      0, utils.encode(channel),
-      0,
-    ];
-
-    let data = this.prepareParams(incomingData);
-
-    if (this._config.getUUID()) {
-      data.uuid = this._config.getUUID();
-    }
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    if (mode === 'POST') {
-      data.message = utils.encode(encryptedMessage);
-      this._postXDR({ data, callback, url });
-    } else {
-      url.push(utils.encode(encryptedMessage));
-      this._xdr({ data, callback, url });
-    }
-  }
 
   performSubscribe(channels: string, incomingData: Object, callback: Function): superagent {
     if (!this._config.getSubscribeKey()) {
@@ -468,14 +376,15 @@ export default class {
     return this._subscribeOrigin;
   }
 
-  _postXDR({ data, url, timeout, callback}: superagentPayload): superagent {
+  POST(params : Object, body: string, endpoint: endpointDefinition, callback: Function): superagent {
     let superagentConstruct = superagent
-      .post(url.join('/'))
-      .send(data);
-    return this._abstractedXDR(superagentConstruct, timeout, callback);
+      .post(this.getStandardOrigin() + endpoint.url)
+      .query(params)
+      .send(body);
+    return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
   }
 
-  XDR(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
+  GET(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
     let superagentConstruct = superagent
       .get(this.getStandardOrigin() + endpoint.url)
       .query(params);

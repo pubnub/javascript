@@ -32,6 +32,8 @@ export default class {
   // tell flow about the mounted endpoint
   time: Function;
   publish: Function;
+  channelGroups: Object;
+  pushNotifications: Object;
 
   constructor(setup: internalSetupStruct) {
     let { sendBeacon, db } = setup;
@@ -61,12 +63,18 @@ export default class {
       listChannelsForDevice: pushEndpoints.listChannelsForDevice.bind(pushEndpoints),
       addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
       removeDeviceFromChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
-      removeDevice: pushEndpoints.removeDeviceFromPushChannel.bind(pushEndpoints),
+      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
     };
 
-    // const publishEndpoints = new PublishEndpoints({ networking: this.networking });
-    // this.publish = publishEndpoints.publish.bind(publishEndpoints);
+    const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });
+    this.publish = publishEndpoints.publish.bind(publishEndpoints);
+
+    const historyEndpoint = new HistoryEndpoint({ networking: this.networking, config: this.config, crypto: this.crypto });
+    this.history = historyEndpoint.fetch.bind(historyEndpoint);
+
+    this.setCipherKey = this.config.setCipherKey.bind(this.config);
   }
+
 
   getVersion(): String { return packageJSON.version; }
 
@@ -86,7 +94,6 @@ export default class {
   // let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
 
   // init the endpoints
-  let historyEndpoint = new HistoryEndpoint({ networking, crypto });
   let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
   let presenceEndpoints = new PresenceEndpoints({ config, networking });
   let accessEndpoints = new AccessEndpoints({ config, networking });
@@ -122,9 +129,6 @@ export default class {
 
     setUUID: config.setUUID.bind(config),
     getUUID: config.getUUID.bind(config),
-
-    setCipherKey: config.setCipherKey.bind(config),
-    getCipherKey: config.getCipherKey.bind(config),
 
     // getSubscribedChannels: state.getSubscribedChannels.bind(state),
 

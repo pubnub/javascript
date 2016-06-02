@@ -135,6 +135,9 @@ export default class {
     }
   }
 
+  // exposed setters
+  setCipherKey(val: string): this { this.cipherKey = val; return this; }
+
   isInstanceIdEnabled(): boolean { return this._useInstanceId; }
   setInstanceIdConfig(val: boolean): this { this._useInstanceId = val; return this; }
 

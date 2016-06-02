@@ -1,11 +1,21 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import Responders from '../presenters/responders';
+import Config from '../components/config';
+import Crypto from '../components/cryptography/index';
 import Logger from '../components/logger';
+import BaseEndoint from './base.js';
+
+import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type publishConstruct = {
-  networking: Networking
+  networking: Networking,
+  config: Config,
+  crypto: Crypto
+};
+
+type publishResponse = {
+  timetoken: number
 };
 
 type publishArguments = {
@@ -16,41 +26,74 @@ type publishArguments = {
   meta: Object // psv2 supports filtering by metadata
 }
 
-export default class {
-  _networking: Networking;
-  _r: Responders;
+export default class extends BaseEndoint {
+  networking: Networking;
+  config: Config;
+  crypto: Crypto;
   _l: Logger;
 
-  constructor({ networking }: publishConstruct) {
-    this._networking = networking;
-    this._r = new Responders('#endpoints/publish');
+  constructor({ networking, config, crypto }: publishConstruct) {
+    super({ config });
+    this.networking = networking;
+    this.config = config;
+    this.crypto = crypto;
     this._l = Logger.getLogger('#endpoints/publish');
   }
 
   publish(args: publishArguments, callback: Function) {
     const { message, channel, meta, sendByPost = false, storeInHistory } = args;
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        subscribeKey: { required: true },
+        publishKey: { required: true },
+        uuid: { required: false }
+      },
+      url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0'
+    };
 
     if (!message) return callback(this._r.validationError('Missing Message'));
     if (!channel) return callback(this._r.validationError('Missing Channel'));
 
-    let params: Object = {};
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
 
-    if (!storeInHistory) {
-      params.store = '0';
+    if (storeInHistory != null) {
+      if (storeInHistory) {
+        params.store = '1';
+      } else {
+        params.store = '0';
+      }
     }
 
     if (meta && typeof meta === 'object') {
       params.meta = JSON.stringify(meta);
     }
 
-    publishItem.payload = message;
-    publishItem.channel = channel;
-    publishItem.params = params;
-    publishItem.httpMethod = (sendByPost) ? 'POST' : 'GET';
-    publishItem.callback = callback;
+    let onCallback = (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
 
-    // Queue Message Send
-    this._publishQueue.queueItem(publishItem);
+      let response: publishResponse = {
+        timetoken: payload[2]
+      };
+
+      callback(status, response);
+    };
+
+    let stringifiedPayload = JSON.stringify(message);
+
+    if (this.config.cipherKey) {
+      stringifiedPayload = this.crypto.encrypt(stringifiedPayload);
+      stringifiedPayload = JSON.stringify(stringifiedPayload);
+    }
+
+    if (sendByPost) {
+      this.networking.POST(params, stringifiedPayload, endpointConfig, onCallback);
+    } else {
+      endpointConfig.url += '/' + encodeURIComponent(stringifiedPayload);
+      this.networking.GET(params, endpointConfig, onCallback);
+    }
   }
-
 }

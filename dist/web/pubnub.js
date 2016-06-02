@@ -190,8 +190,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var timeEndpoint = new _time2.default({ networking: this.networking, config: this.config });
 	    this.time = timeEndpoint.fetch.bind(timeEndpoint);
 
-	    var publishEndpoints = new _publish2.default({ networking: this.networking });
+	    var channelGroupEndpoints = new _channel_groups2.default({ networking: this.networking, config: this.config });
+	    this.channelGroups = {
+	      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
+	      listAll: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
+	      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
+	      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
+	      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints)
+	    };
+
+	    var pushEndpoints = new _push2.default({ networking: this.networking, config: this.config });
+	    this.pushNotifications = {
+	      listChannelsForDevice: pushEndpoints.listChannelsForDevice.bind(pushEndpoints),
+	      addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
+	      removeDeviceFromChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
+	      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints)
+	    };
+
+	    var publishEndpoints = new _publish2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
 	    this.publish = publishEndpoints.publish.bind(publishEndpoints);
+
+	    var historyEndpoint = new _history2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
+	    this.history = historyEndpoint.fetch.bind(historyEndpoint);
+
+	    this.setCipherKey = this.config.setCipherKey.bind(this.config);
 	  }
 
 	  _createClass(_class, [{
@@ -211,13 +233,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -328,50 +348,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
-	    }
-	  }, {
-	    key: 'performChannelGroupOperation',
-	    value: function performChannelGroupOperation(channelGroup, mode, incomingData, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      var url = [this.getStandardOrigin(), 'v1', 'channel-registration', 'sub-key', this._config.getSubscribeKey(), 'channel-group'];
-
-	      if (channelGroup && channelGroup !== '*') {
-	        url.push(channelGroup);
-	      }
-
-	      if (mode === 'remove') {
-	        url.push('remove');
-	      }
-
-	      var data = this.prepareParams(incomingData);
-
-	      if (this._config.getAuthKey()) {
-	        data.auth = this._config.getAuthKey();
-	      }
-
-	      this._xdr({ data: data, callback: callback, url: url });
-	    }
-	  }, {
-	    key: 'provisionDeviceForPush',
-	    value: function provisionDeviceForPush(deviceId, incomingData, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      if (!this._config.getPublishKey()) {
-	        return callback(this._r.validationError('Missing Publish Key'));
-	      }
-
-	      var url = [this.getStandardOrigin(), 'v1', 'push', 'sub-key', this._config.getSubscribeKey(), 'devices', deviceId];
-	      var data = this.prepareParams(incomingData);
-
-	      data.uuid = this._config.getUUID();
-	      data.auth = this._config.getAuthKey();
-
-	      this._xdr({ data: data, url: url, callback: callback });
 	    }
 	  }, {
 	    key: 'performGrant',
@@ -580,40 +556,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
-	    key: 'performPublish',
-	    value: function performPublish(channel, msg, incomingData, mode, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      if (!this._config.getPublishKey()) {
-	        return callback(this._r.validationError('Missing Publish Key'));
-	      }
-
-	      var stringifiedMessage = JSON.stringify(msg);
-	      var encryptedMessage = this._crypto.encrypt(stringifiedMessage);
-
-	      var url = [this.getStandardOrigin(), 'publish', this._config.getPublishKey(), this._config.getSubscribeKey(), 0, _utils2.default.encode(channel), 0];
-
-	      var data = this.prepareParams(incomingData);
-
-	      if (this._config.getUUID()) {
-	        data.uuid = this._config.getUUID();
-	      }
-
-	      if (this._config.getAuthKey()) {
-	        data.auth = this._config.getAuthKey();
-	      }
-
-	      if (mode === 'POST') {
-	        data.message = _utils2.default.encode(encryptedMessage);
-	        this._postXDR({ data: data, callback: callback, url: url });
-	      } else {
-	        url.push(_utils2.default.encode(encryptedMessage));
-	        this._xdr({ data: data, callback: callback, url: url });
-	      }
-	    }
-	  }, {
 	    key: 'performSubscribe',
 	    value: function performSubscribe(channels, incomingData, callback) {
 	      if (!this._config.getSubscribeKey()) {
@@ -647,23 +589,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this._subscribeOrigin;
 	    }
 	  }, {
-	    key: '_postXDR',
-	    value: function _postXDR(_ref2) {
-	      var data = _ref2.data;
-	      var url = _ref2.url;
-	      var timeout = _ref2.timeout;
-	      var callback = _ref2.callback;
-
-	      var superagentConstruct = _superagent2.default.post(url.join('/')).send(data);
-	      return this._abstractedXDR(superagentConstruct, timeout, callback);
+	    key: 'POST',
+	    value: function POST(params, body, endpoint, callback) {
+	      var superagentConstruct = _superagent2.default.post(this.getStandardOrigin() + endpoint.url).query(params).send(body);
+	      return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
 	    }
 	  }, {
-	    key: 'XDR',
-	    value: function XDR(params, endpoint, callback) {
-	      console.log("----");
-	      console.log("params", params);
-	      console.log("endpoint", endpoint);
-
+	    key: 'GET',
+	    value: function GET(params, endpoint, callback) {
 	      var superagentConstruct = _superagent2.default.get(this.getStandardOrigin() + endpoint.url).query(params);
 	      return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
 	    }
@@ -674,21 +607,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var status = {};
 	        status.error = err;
 
-	        console.log(err);
-
 	        if (err) {
 	          return callback(status, null);
 	        }
 
 	        var parsedResponse = JSON.parse(resp.text);
-
-	        if ((typeof parsedResponse === 'undefined' ? 'undefined' : _typeof(parsedResponse)) === 'object' && parsedResponse.error) {
-	          return callback(parsedResponse.error, null);
-	        }
-
-	        if ((typeof parsedResponse === 'undefined' ? 'undefined' : _typeof(parsedResponse)) === 'object' && parsedResponse.payload) {
-	          return callback(null, parsedResponse.payload);
-	        }
+	        return callback(status, parsedResponse);
 	      });
 	    }
 	  }]);
@@ -698,7 +622,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 4 */
@@ -2409,11 +2332,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'encrypt',
 	    value: function encrypt(data, options) {
-	      if (!this._config.getCipherKey()) return data;
+	      if (!this._config.cipherKey) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
-	      var cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
+	      var cipherKey = this._getPaddedKey(this._config.cipherKey, options);
 	      var encryptedHexArray = _hmacSha2.default.AES.encrypt(data, cipherKey, { iv: iv, mode: mode }).ciphertext;
 	      var base64Encrypted = encryptedHexArray.toString(_hmacSha2.default.enc.Base64);
 	      return base64Encrypted || data;
@@ -2421,11 +2344,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'decrypt',
 	    value: function decrypt(data, options) {
-	      if (!this._config.getCipherKey()) return data;
+	      if (!this._config.cipherKey) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
-	      var cipherKey = this._getPaddedKey(this._config.getCipherKey(), options);
+	      var cipherKey = this._getPaddedKey(this._config.cipherKey, options);
 	      try {
 	        var ciphertext = _hmacSha2.default.enc.Base64.parse(data);
 	        var plainJSON = _hmacSha2.default.AES.decrypt({ ciphertext: ciphertext }, cipherKey, { iv: iv, mode: mode }).toString(_hmacSha2.default.enc.Utf8);
@@ -2497,6 +2420,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
+	    key: 'setCipherKey',
+	    value: function setCipherKey(val) {
+	      this.cipherKey = val;return this;
+	    }
+	  }, {
 	    key: 'isInstanceIdEnabled',
 	    value: function isInstanceIdEnabled() {
 	      return this._useInstanceId;
@@ -3739,7 +3667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
 
-	    _this._networking = networking;
+	    _this.networking = networking;
 	    return _this;
 	  }
 
@@ -3760,7 +3688,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var params = this.createBaseParams(endpointConfig);
 
-	      this._networking.XDR(params, endpointConfig, function (status, payload) {
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 
 	        var response = {};
@@ -4922,7 +4850,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -4934,76 +4862,86 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
+	var _config = __webpack_require__(11);
+
+	var _config2 = _interopRequireDefault(_config);
+
 	var _index = __webpack_require__(10);
 
 	var _index2 = _interopRequireDefault(_index);
-
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
 
 	var _logger = __webpack_require__(39);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
+	var _base = __webpack_require__(21);
+
+	var _base2 = _interopRequireDefault(_base);
+
+	var _flow_interfaces = __webpack_require__(14);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _class = function () {
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _class = function (_BaseEndoint) {
+	  _inherits(_class, _BaseEndoint);
+
 	  function _class(_ref) {
 	    var networking = _ref.networking;
 	    var crypto = _ref.crypto;
+	    var config = _ref.config;
 
 	    _classCallCheck(this, _class);
 
-	    this._networking = networking;
-	    this._crypto = crypto;
-	    this._r = new _responders2.default('#endpoints/history');
-	    this._l = _logger2.default.getLogger('#endpoints/history');
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
+
+	    _this.networking = networking;
+	    _this.crypto = crypto;
+	    _this.config = config;
+	    _this._l = _logger2.default.getLogger('#endpoints/history');
+	    return _this;
 	  }
 
 	  _createClass(_class, [{
 	    key: 'fetch',
 	    value: function fetch(args, callback) {
-	      var _this = this;
-
 	      var channel = args.channel;
-	      var channelGroup = args.channelGroup;
 	      var start = args.start;
 	      var end = args.end;
 	      var includeToken = args.includeToken;
+	      var reverse = args.reverse;
+	      var _args$count = args.count;
+	      var count = _args$count === undefined ? 100 : _args$count;
 
 
-	      var count = args.count || args.limit || 100;
-	      var reverse = args.reverse || 'false';
-	      var stringMessageToken = args.stringMessageToken || false;
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false },
+	          subscribeKey: { required: true }
+	        },
+	        url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel)
+	      };
 
-	      if (!channel && !channelGroup) {
-	        return callback(this._r.validationError('Missing channel and/or channel group'));
-	      }
-
-	      if (!callback) {
-	        return this._l.error('Missing Callback');
-	      }
+	      if (!channel) return callback(this._r.validationError('Missing channel'));
+	      if (!callback) return this._l.error('Missing Callback');
 
 	      var params = { count: count, reverse: reverse, stringtoken: 'true' };
 
-	      if (channelGroup) {
-	        params['channel-group'] = channelGroup;
-	        if (!channel) {
-	          channel = ',';
-	        }
-	      }
-
 	      if (start) params.start = start;
 	      if (end) params.end = end;
-	      if (includeToken) params.include_token = 'true';
-	      if (stringMessageToken) params.string_message_token = 'true';
+	      if (includeToken != null) params.include_token = includeToken.toString();
+	      if (reverse != null) params.reverse = reverse.toString();
 
-	      this._networking.fetchHistory(channel, params, function (err, resp) {
-	        if (err) return callback(err, null);
-	        callback(null, _this._parseResponse(resp, includeToken));
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+
+	        console.log(status, payload);
 	      });
 	    }
 	  }, {
@@ -5037,10 +4975,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }]);
 
 	  return _class;
-	}();
+	}(_base2.default);
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 42 */
@@ -5058,27 +4997,89 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
+	var _config = __webpack_require__(11);
+
+	var _config2 = _interopRequireDefault(_config);
+
 	var _responders = __webpack_require__(16);
 
 	var _responders2 = _interopRequireDefault(_responders);
+
+	var _base = __webpack_require__(21);
+
+	var _base2 = _interopRequireDefault(_base);
+
+	var _flow_interfaces = __webpack_require__(14);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _class = function () {
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _class = function (_BaseEndoint) {
+	  _inherits(_class, _BaseEndoint);
+
 	  function _class(_ref) {
 	    var networking = _ref.networking;
+	    var config = _ref.config;
 
 	    _classCallCheck(this, _class);
 
-	    this._networking = networking;
-	    this._r = new _responders2.default('endpoints/push');
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
+
+	    _this.networking = networking;
+	    _this.config = config;
+	    _this._r = new _responders2.default('endpoints/push');
+	    return _this;
 	  }
 
 	  _createClass(_class, [{
-	    key: 'addDeviceToPushChannel',
-	    value: function addDeviceToPushChannel(args, callback) {
+	    key: 'listChannelsForDevice',
+	    value: function listChannelsForDevice(args, callback) {
+	      var pushGateway = args.pushGateway;
+	      var device = args.device;
+
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false }
+	        },
+	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
+	      };
+
+	      if (!device) {
+	        return callback(this._r.validationError('Missing Device ID (device)'));
+	      }
+
+	      if (!pushGateway) {
+	        return callback(this._r.validationError('Missing GW Type (pushGateway: gcm,apns, mpns)'));
+	      }
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+	      params.type = pushGateway;
+
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+
+	        var response = {};
+	        response.channels = payload;
+
+	        callback(status, response);
+	      });
+	    }
+	  }, {
+	    key: 'removeDevice',
+	    value: function removeDevice(args, callback) {}
+	  }, {
+	    key: 'addDeviceToPushChannels',
+	    value: function addDeviceToPushChannels(args, callback) {
 	      var pushGateway = args.pushGateway;
 	      var device = args.device;
 	      var channel = args.channel;
@@ -5087,8 +5088,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.__provisionDevice(payload, callback);
 	    }
 	  }, {
-	    key: 'removeDeviceFromPushChannel',
-	    value: function removeDeviceFromPushChannel(args, callback) {
+	    key: 'removeDeviceFromPushChannels',
+	    value: function removeDeviceFromPushChannels(args, callback) {
 	      var pushGateway = args.pushGateway;
 	      var device = args.device;
 	      var channel = args.channel;
@@ -5136,7 +5137,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }]);
 
 	  return _class;
-	}();
+	}(_base2.default);
 
 	exports.default = _class;
 	module.exports = exports['default'];
@@ -5283,131 +5284,200 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+	var _base = __webpack_require__(21);
+
+	var _base2 = _interopRequireDefault(_base);
+
 	var _networking = __webpack_require__(3);
 
 	var _networking2 = _interopRequireDefault(_networking);
+
+	var _config = __webpack_require__(11);
+
+	var _config2 = _interopRequireDefault(_config);
 
 	var _logger = __webpack_require__(39);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
+	var _flow_interfaces = __webpack_require__(14);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _class = function () {
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _class = function (_BaseEndoint) {
+	  _inherits(_class, _BaseEndoint);
+
 	  function _class(_ref) {
 	    var networking = _ref.networking;
+	    var config = _ref.config;
 
 	    _classCallCheck(this, _class);
 
-	    this._networking = networking;
-	    this._r = new _responders2.default('#endpoints/history');
-	    this._l = _logger2.default.getLogger('#endpoints/history');
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
+
+	    _this.networking = networking;
+	    _this.config = config;
+	    _this.logger = _logger2.default.getLogger('#endpoints/channel_groups');
+	    return _this;
 	  }
 
 	  _createClass(_class, [{
-	    key: 'channelGroup',
-	    value: function channelGroup(args, callback) {
-	      var channelGroup = args.channelGroup;
-	      var _args$channels = args.channels;
-	      var channels = _args$channels === undefined ? [] : _args$channels;
-
-
-	      var effectiveChannelGroupName = '';
-	      var data = {};
-	      var mode = args.mode || 'add';
-
-	      if (channelGroup) {
-	        var splitChannelGroupName = channelGroup.split(':');
-
-	        if (splitChannelGroupName.length > 1) {
-	          effectiveChannelGroupName = splitChannelGroupName[1];
-	        } else {
-	          effectiveChannelGroupName = splitChannelGroupName[0];
-	        }
-	      }
-
-	      if (channels.length > 0) {
-	        data[mode] = channels.join(',');
-	      }
-
-	      this._networking.performChannelGroupOperation(effectiveChannelGroupName, mode, data, callback);
-	    }
-	  }, {
 	    key: 'listChannels',
 	    value: function listChannels(args, callback) {
-	      if (!args.channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
+	      var channelGroup = args.channelGroup;
+
+
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false },
+	          subscribeKey: { required: true }
+	        },
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+	      };
+
+	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
 
-	      this.channelGroup(args, callback);
+	      var params = this.createBaseParams(endpointConfig);
+
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+	        var response = {};
+	        response.channels = payload.payload.channels;
+
+	        callback(status, response);
+	      });
 	    }
 	  }, {
 	    key: 'deleteGroup',
 	    value: function deleteGroup(args, callback) {
-	      var errorMessage = 'Use removeChannel to remove a channel from a group.';
-	      if (!args.channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
+	      var channelGroup = args.channelGroup;
+
+
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false },
+	          subscribeKey: { required: true }
+	        },
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove'
+	      };
+
+	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
 
-	      if (args.channel) {
-	        return callback(this._r.validationError(errorMessage));
-	      }
+	      var params = this.createBaseParams(endpointConfig);
 
-	      args.mode = 'remove';
-	      this.channelGroup(args, callback);
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        callback(status);
+	      });
 	    }
 	  }, {
 	    key: 'listGroups',
-	    value: function listGroups(args, callback) {
-	      this.channelGroup(args, callback);
+	    value: function listGroups(callback) {
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false },
+	          subscribeKey: { required: true }
+	        },
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group'
+	      };
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+
+	        var response = {};
+	        response.groups = payload.payload.groups;
+
+	        callback(status, response);
+	      });
 	    }
 	  }, {
 	    key: 'addChannels',
 	    value: function addChannels(args, callback) {
 	      var channelGroup = args.channelGroup;
-	      var _args$channels2 = args.channels;
-	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
+	      var _args$channels = args.channels;
+	      var channels = _args$channels === undefined ? [] : _args$channels;
 
 
-	      if (!channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false },
+	          subscribeKey: { required: true }
+	        },
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+	      };
+
+	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+	      if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
 
-	      if (channels.length === 0) {
-	        return callback(this._r.validationError('Missing Channel'));
-	      }
+	      var params = this.createBaseParams(endpointConfig);
+	      params.add = channels.join(',');
 
-	      args.mode = 'add';
-	      this.channelGroup(args, callback);
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        callback(status);
+	      });
 	    }
 	  }, {
 	    key: 'removeChannels',
 	    value: function removeChannels(args, callback) {
 	      var channelGroup = args.channelGroup;
-	      var _args$channels3 = args.channels;
-	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
+	      var _args$channels2 = args.channels;
+	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
 
 
-	      if (!channelGroup) {
-	        return callback(this._r.validationError('Missing Channel Group'));
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false },
+	          subscribeKey: { required: true }
+	        },
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+	      };
+
+	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+	      if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
-	      if (channels.length === 0) {
-	        return callback(this._r.validationError('Missing Channel'));
-	      }
 
-	      args.mode = 'remove';
-	      this.channelGroup(args, callback);
+	      var params = this.createBaseParams(endpointConfig);
+	      params.remove = channels.join(',');
+
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        callback(status);
+	      });
 	    }
 	  }]);
 
 	  return _class;
-	}();
+	}(_base2.default);
 
 	exports.default = _class;
 	module.exports = exports['default'];
@@ -5430,27 +5500,49 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _responders = __webpack_require__(16);
+	var _config = __webpack_require__(11);
 
-	var _responders2 = _interopRequireDefault(_responders);
+	var _config2 = _interopRequireDefault(_config);
+
+	var _index = __webpack_require__(10);
+
+	var _index2 = _interopRequireDefault(_index);
 
 	var _logger = __webpack_require__(39);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
+	var _base = __webpack_require__(21);
+
+	var _base2 = _interopRequireDefault(_base);
+
+	var _flow_interfaces = __webpack_require__(14);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _class = function () {
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _class = function (_BaseEndoint) {
+	  _inherits(_class, _BaseEndoint);
+
 	  function _class(_ref) {
 	    var networking = _ref.networking;
+	    var config = _ref.config;
+	    var crypto = _ref.crypto;
 
 	    _classCallCheck(this, _class);
 
-	    this._networking = networking;
-	    this._r = new _responders2.default('#endpoints/publish');
-	    this._l = _logger2.default.getLogger('#endpoints/publish');
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
+
+	    _this.networking = networking;
+	    _this.config = config;
+	    _this.crypto = crypto;
+	    _this._l = _logger2.default.getLogger('#endpoints/publish');
+	    return _this;
 	  }
 
 	  _createClass(_class, [{
@@ -5463,32 +5555,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var sendByPost = _args$sendByPost === undefined ? false : _args$sendByPost;
 	      var storeInHistory = args.storeInHistory;
 
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          subscribeKey: { required: true },
+	          publishKey: { required: true },
+	          uuid: { required: false }
+	        },
+	        url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0'
+	      };
 
 	      if (!message) return callback(this._r.validationError('Missing Message'));
 	      if (!channel) return callback(this._r.validationError('Missing Channel'));
 
-	      var params = {};
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
 
-	      if (!storeInHistory) {
-	        params.store = '0';
+	      var params = this.createBaseParams(endpointConfig);
+
+	      if (storeInHistory != null) {
+	        if (storeInHistory) {
+	          params.store = '1';
+	        } else {
+	          params.store = '0';
+	        }
 	      }
 
 	      if (meta && (typeof meta === 'undefined' ? 'undefined' : _typeof(meta)) === 'object') {
 	        params.meta = JSON.stringify(meta);
 	      }
 
-	      publishItem.payload = message;
-	      publishItem.channel = channel;
-	      publishItem.params = params;
-	      publishItem.httpMethod = sendByPost ? 'POST' : 'GET';
-	      publishItem.callback = callback;
+	      var onCallback = function onCallback(status, payload) {
+	        if (status.error) return callback(status);
 
-	      this._publishQueue.queueItem(publishItem);
+	        var response = {
+	          timetoken: payload[2]
+	        };
+
+	        callback(status, response);
+	      };
+
+	      var stringifiedPayload = JSON.stringify(message);
+
+	      if (this.config.cipherKey) {
+	        stringifiedPayload = this.crypto.encrypt(stringifiedPayload);
+	        stringifiedPayload = JSON.stringify(stringifiedPayload);
+	      }
+
+	      if (sendByPost) {
+	        this.networking.POST(params, stringifiedPayload, endpointConfig, onCallback);
+	      } else {
+	        endpointConfig.url += '/' + encodeURIComponent(stringifiedPayload);
+	        this.networking.GET(params, endpointConfig, onCallback);
+	      }
 	    }
 	  }]);
 
 	  return _class;
-	}();
+	}(_base2.default);
 
 	exports.default = _class;
 	module.exports = exports['default'];

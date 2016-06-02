@@ -36,7 +36,7 @@ export default class extends BaseEndoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.XDR(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: timeResponse = {};

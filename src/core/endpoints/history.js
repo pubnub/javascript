@@ -1,13 +1,16 @@
 /* @flow */
 
 import Networking from '../components/networking';
+import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
-import Responders from '../presenters/responders';
 import Logger from '../components/logger';
+import BaseEndoint from './base.js';
+import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type historyConstruct = {
   networking: Networking,
-  crypto: Crypto
+  crypto: Crypto,
+  config: Config
 };
 
 type fetchHistoryArguments = {
@@ -16,56 +19,51 @@ type fetchHistoryArguments = {
   start: number, // start timetoken for history fetching
   end: number, // end timetoken for history feting
   includeToken: boolean, // include time token for each history call
-  stringMessageToken: boolean // TODO:
 }
 
-export default class {
-  _networking: Networking;
-  _crypto: Crypto;
-  _r: Responders;
+export default class extends BaseEndoint {
+  networking: Networking;
+  crypto: Crypto;
+  config: Config;
   _l: Logger;
 
-  constructor({ networking, crypto }: historyConstruct) {
-    this._networking = networking;
-    this._crypto = crypto;
-    this._r = new Responders('#endpoints/history');
+  constructor({ networking, crypto, config }: historyConstruct) {
+    super({ config });
+    this.networking = networking;
+    this.crypto = crypto;
+    this.config = config;
     this._l = Logger.getLogger('#endpoints/history');
   }
 
   fetch(args: fetchHistoryArguments, callback: Function) {
-    let { channel } = args;
-    const { channelGroup, start, end, includeToken } = args;
+    const { channel, start, end, includeToken, reverse, count = 100 } = args;
 
-    const count = args.count || args.limit || 100;
-    const reverse = args.reverse || 'false';
-    const stringMessageToken = args.stringMessageToken || false;
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: { required: false },
+        subscribeKey: { required: true }
+      },
+      url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel)
+    };
 
-    if (!channel && !channelGroup) {
-      return callback(this._r.validationError('Missing channel and/or channel group'));
-    }
-
-    if (!callback) {
-      return this._l.error('Missing Callback');
-    }
+    if (!channel) return callback(this._r.validationError('Missing channel'));
+    if (!callback) return this._l.error('Missing Callback');
 
     const params: Object = { count, reverse, stringtoken: 'true' };
 
-    if (channelGroup) {
-      params['channel-group'] = channelGroup;
-      if (!channel) {
-        channel = ',';
-      }
-    }
-
     if (start) params.start = start;
     if (end) params.end = end;
-    if (includeToken) params.include_token = 'true';
-    if (stringMessageToken) params.string_message_token = 'true';
+    if (includeToken != null) params.include_token = includeToken.toString();
+    if (reverse != null) params.reverse = reverse.toString();
 
     // Send Message
-    this._networking.fetchHistory(channel, params, (err, resp) => {
-      if (err) return callback(err, null);
-      callback(null, this._parseResponse(resp, includeToken));
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      console.log(status, payload);
+
+      // callback(null, this._parseResponse(resp, includeToken));
     });
   }
 
