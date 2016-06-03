@@ -4628,10 +4628,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	*/
 	(function (root, definition) {
 	    "use strict";
-	    if (typeof module === 'object' && module.exports && "function" === 'function') {
-	        module.exports = definition();
-	    } else if (true) {
+	    if (true) {
 	        !(__WEBPACK_AMD_DEFINE_FACTORY__ = (definition), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    } else if (typeof module === 'object' && module.exports) {
+	        module.exports = definition();
 	    } else {
 	        root.log = definition();
 	    }
@@ -4850,7 +4850,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -4910,10 +4910,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'fetch',
 	    value: function fetch(args, callback) {
+	      var _this2 = this;
+
 	      var channel = args.channel;
 	      var start = args.start;
 	      var end = args.end;
-	      var includeToken = args.includeToken;
+	      var includeTimetoken = args.includeTimetoken;
 	      var reverse = args.reverse;
 	      var _args$count = args.count;
 	      var count = _args$count === undefined ? 100 : _args$count;
@@ -4935,42 +4937,54 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (start) params.start = start;
 	      if (end) params.end = end;
-	      if (includeToken != null) params.include_token = includeToken.toString();
+	      if (includeTimetoken != null) params.include_token = includeTimetoken.toString();
 	      if (reverse != null) params.reverse = reverse.toString();
 
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 
-	        console.log(status, payload);
+	        callback(status, _this2._parseResponse(payload, includeTimetoken));
 	      });
 	    }
 	  }, {
 	    key: '_parseResponse',
-	    value: function _parseResponse(response, includeToken) {
-	      var _this2 = this;
+	    value: function _parseResponse(payload, includeTimetoken) {
+	      var _this3 = this;
 
-	      var messages = response[0];
-	      var decryptedMessages = [];
-	      messages.forEach(function (payload) {
-	        if (includeToken) {
-	          var decryptedMessage = _this2._crypto.decrypt(payload.message);
-	          var timetoken = payload.timetoken;
+	      var response = {
+	        messages: [],
+	        startTimeToken: parseInt(payload[1], 10),
+	        endTimeToken: parseInt(payload[2], 10)
+	      };
 
-	          try {
-	            decryptedMessages.push({ timetoken: timetoken, message: JSON.parse(decryptedMessage) });
-	          } catch (e) {
-	            decryptedMessages.push({ timetoken: timetoken, message: decryptedMessage });
-	          }
+	      payload[0].forEach(function (serverHistoryItem) {
+	        var item = {
+	          timetoken: null,
+	          entry: null
+	        };
+
+	        if (includeTimetoken) {
+	          item.timetoken = serverHistoryItem.timetoken;
+	          item.entry = _this3.__processMessage(serverHistoryItem.message);
 	        } else {
-	          var _decryptedMessage = _this2._crypto.decrypt(payload);
-	          try {
-	            decryptedMessages.push(JSON.parse(_decryptedMessage));
-	          } catch (e) {
-	            decryptedMessages.push(_decryptedMessage);
-	          }
+	          item.entry = _this3.__processMessage(serverHistoryItem);
 	        }
+
+	        response.messages.push(item);
 	      });
-	      return [decryptedMessages, response[1], response[2]];
+
+	      return response;
+	    }
+	  }, {
+	    key: '__processMessage',
+	    value: function __processMessage(message) {
+	      if (!this.config.cipherKey) return message;
+
+	      try {
+	        return this.crypto.decrypt(message);
+	      } catch (e) {
+	        return message;
+	      }
 	    }
 	  }]);
 
@@ -4979,7 +4993,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 42 */
@@ -5068,23 +5081,54 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 
-	        var response = {};
-	        response.channels = payload;
+	        var response = {
+	          channels: payload
+	        };
 
 	        callback(status, response);
 	      });
 	    }
 	  }, {
 	    key: 'removeDevice',
-	    value: function removeDevice(args, callback) {}
+	    value: function removeDevice(args, callback) {
+	      var pushGateway = args.pushGateway;
+	      var device = args.device;
+
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false }
+	        },
+	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove'
+	      };
+
+	      if (!device) {
+	        return callback(this._r.validationError('Missing Device ID (device)'));
+	      }
+
+	      if (!pushGateway) {
+	        return callback(this._r.validationError('Missing GW Type (pushGateway: gcm or apns)'));
+	      }
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+	      params.type = pushGateway;
+
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        callback(status);
+	      });
+	    }
 	  }, {
 	    key: 'addDeviceToPushChannels',
 	    value: function addDeviceToPushChannels(args, callback) {
 	      var pushGateway = args.pushGateway;
 	      var device = args.device;
-	      var channel = args.channel;
+	      var channels = args.channels;
 
-	      var payload = { operation: 'add', pushGateway: pushGateway, device: device, channel: channel };
+	      var payload = { operation: 'add', pushGateway: pushGateway, device: device, channels: channels };
 	      this.__provisionDevice(payload, callback);
 	    }
 	  }, {
@@ -5092,9 +5136,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function removeDeviceFromPushChannels(args, callback) {
 	      var pushGateway = args.pushGateway;
 	      var device = args.device;
-	      var channel = args.channel;
+	      var channels = args.channels;
 
-	      var payload = { operation: 'remove', pushGateway: pushGateway, device: device, channel: channel };
+	      var payload = { operation: 'remove', pushGateway: pushGateway, device: device, channels: channels };
 	      this.__provisionDevice(payload, callback);
 	    }
 	  }, {
@@ -5103,8 +5147,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var operation = args.operation;
 	      var pushGateway = args.pushGateway;
 	      var device = args.device;
-	      var channel = args.channel;
+	      var channels = args.channels;
 
+	      var endpointConfig = {
+	        params: {
+	          authKey: { required: false },
+	          uuid: { required: false }
+	        },
+	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
+	      };
 
 	      if (!device) {
 	        return callback(this._r.validationError('Missing Device ID (device)'));
@@ -5118,21 +5169,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return callback(this._r.validationError('Missing GW Operation (operation: add or remove)'));
 	      }
 
-	      if (!channel) {
+	      if (!channels) {
 	        return callback(this._r.validationError('Missing gw destination Channel (channel)'));
 	      }
 
-	      var data = {
-	        type: pushGateway
-	      };
-
-	      if (operation === 'add') {
-	        data.add = channel;
-	      } else if (operation === 'remove') {
-	        data.remove = channel;
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
 
-	      this._networking.provisionDeviceForPush(device, data, callback);
+	      var params = this.createBaseParams(endpointConfig);
+	      params.type = pushGateway;
+
+	      if (operation === 'add') params.add = channels.join(',');
+	      if (operation === 'remove') params.remove = channels.join(',');
+
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        callback(status);
+	      });
 	    }
 	  }]);
 

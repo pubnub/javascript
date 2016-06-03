@@ -21,6 +21,17 @@ type fetchHistoryArguments = {
   includeToken: boolean, // include time token for each history call
 }
 
+type historyItem = {
+  timetoken: number,
+  entry: any,
+}
+
+type historyResponse = {
+  messages: Array<historyItem>,
+  startTimeToken: number,
+  endTimeToken: number,
+}
+
 export default class extends BaseEndoint {
   networking: Networking;
   crypto: Crypto;
@@ -36,7 +47,7 @@ export default class extends BaseEndoint {
   }
 
   fetch(args: fetchHistoryArguments, callback: Function) {
-    const { channel, start, end, includeToken, reverse, count = 100 } = args;
+    const { channel, start, end, includeTimetoken, reverse, count = 100 } = args;
 
     const endpointConfig: endpointDefinition = {
       params: {
@@ -50,44 +61,59 @@ export default class extends BaseEndoint {
     if (!channel) return callback(this._r.validationError('Missing channel'));
     if (!callback) return this._l.error('Missing Callback');
 
-    const params: Object = { count, reverse, stringtoken: 'true' };
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+    params.count = count;
 
     if (start) params.start = start;
     if (end) params.end = end;
-    if (includeToken != null) params.include_token = includeToken.toString();
+    if (includeTimetoken != null) params.include_token = includeTimetoken.toString();
     if (reverse != null) params.reverse = reverse.toString();
 
     // Send Message
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      console.log(status, payload);
-
-      // callback(null, this._parseResponse(resp, includeToken));
+      callback(status, this._parseResponse(payload, includeTimetoken));
     });
   }
 
-  _parseResponse(response: Object, includeToken: boolean): Array<any> {
-    const messages = response[0];
-    const decryptedMessages = [];
-    messages.forEach((payload) => {
-      if (includeToken) {
-        const decryptedMessage = this._crypto.decrypt(payload.message);
-        const { timetoken } = payload;
-        try {
-          decryptedMessages.push({ timetoken, message: JSON.parse(decryptedMessage) });
-        } catch (e) {
-          decryptedMessages.push(({ timetoken, message: decryptedMessage }));
-        }
+  _parseResponse(payload: Object, includeTimetoken: boolean): historyResponse {
+    const response: historyResponse = {
+      messages: [],
+      startTimeToken: parseInt(payload[1], 10),
+      endTimeToken: parseInt(payload[2], 10),
+    };
+
+    payload[0].forEach((serverHistoryItem) => {
+      const item: historyItem = {
+        timetoken: null,
+        entry: null
+      };
+
+      if (includeTimetoken) {
+        item.timetoken = serverHistoryItem.timetoken;
+        item.entry = this.__processMessage(serverHistoryItem.message);
       } else {
-        const decryptedMessage = this._crypto.decrypt(payload);
-        try {
-          decryptedMessages.push(JSON.parse(decryptedMessage));
-        } catch (e) {
-          decryptedMessages.push(decryptedMessage);
-        }
+        item.entry = this.__processMessage(serverHistoryItem);
       }
+
+      response.messages.push(item);
     });
-    return [decryptedMessages, response[1], response[2]];
+
+    return response;
   }
+
+  __processMessage(message) {
+    if (!this.config.cipherKey) return message;
+
+    try {
+      return this.crypto.decrypt(message);
+    } catch (e) {
+      return message;
+    }
+  }
+
 }
