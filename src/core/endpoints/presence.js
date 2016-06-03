@@ -46,6 +46,7 @@ export default class {
     this._l = Logger.getLogger('#endpoints/presence');
   }
 
+  /*
   hereNow(args: hereNowArguments, callback: Function) {
     let { channels = [], channelGroups = [], uuids = true, state } = args;
     let data = {};
@@ -77,6 +78,7 @@ export default class {
     this._networking.fetchWhereNow(uuid, callback);
   }
 
+
   getState(args: getStateArguments, callback: Function) {
     let { uuid, channels = [], channelGroups = [] } = args;
     let data: Object = {};
@@ -96,6 +98,7 @@ export default class {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     this._networking.fetchState(uuid, stringifiedChannels, data, callback);
   }
+  */
 
   setState(args: setStateArguments, callback: Function) {
     let { state, channels = [], channelGroups = [] } = args;
@@ -148,6 +151,7 @@ export default class {
     });
   }
 
+  /*
   heartbeat(callback: Function) {
     let data: Object = {
       state: JSON.stringify(this._state.getPresenceState()),
@@ -165,5 +169,6 @@ export default class {
 
     this._networking.performHeartbeat(stringifiedChannels, data, callback);
   }
+  */
 
 }

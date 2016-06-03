@@ -66,6 +66,11 @@ export default class {
       removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
     };
 
+    const presenceEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
+    this.presence = {
+      setState: PresenceEndpoints.
+    }
+
     const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
 
@@ -94,8 +99,6 @@ export default class {
   // let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
 
   // init the endpoints
-  let channelGroupEndpoints = new ChannelGroupEndpoints({ networking });
-  let presenceEndpoints = new PresenceEndpoints({ config, networking });
   let accessEndpoints = new AccessEndpoints({ config, networking });
   // let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config });
 
