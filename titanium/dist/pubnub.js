@@ -326,6 +326,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	CREATE_PUBNUB['init'] = CREATE_PUBNUB;
 	CREATE_PUBNUB['crypto_obj'] = crypto_obj();
+	CREATE_PUBNUB['PNmessage'] = pubNubCore.PNmessage;
 
 	module.exports = CREATE_PUBNUB;
 
