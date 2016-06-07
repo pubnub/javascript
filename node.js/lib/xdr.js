@@ -5,8 +5,7 @@ var _ = require('lodash');
 
 var keepAliveConfig = {
   keepAlive: true,
-  keepAliveMsecs: 300000,
-  maxSockets: 5
+  keepAliveMsecs: 300000
 };
 
 function keepAliveIsEmbedded() {
