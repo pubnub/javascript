@@ -1,24 +1,32 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import State from '../components/state';
+import Config from '../components/config';
 import Logger from '../components/logger';
 import Responders from '../presenters/responders';
+import BaseEndoint from './base.js';
+import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type presenceConstruct = {
   networking: Networking,
-  state: State,
+  config: Config
 };
 
+/*
 type hereNowArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   uuids: ?boolean,
   state: ?boolean
 }
+*/
 
 type whereNowArguments = {
   uuid: string,
+}
+
+type whereNowResponse = {
+  channels: Array<string>,
 }
 
 type getStateArguments = {
@@ -27,23 +35,56 @@ type getStateArguments = {
   channelGroups: Array<string>
 }
 
+/*
 type setStateArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   state: Object | string | number | boolean
 }
+*/
 
-export default class {
-  _networking: Networking;
-  _state: State;
+export default class extends BaseEndoint {
+  networking: Networking;
+  config: Config;
   _r: Responders;
   _l: Logger;
 
-  constructor({ networking, state }: presenceConstruct) {
-    this._networking = networking;
-    this._state = state;
+  constructor({ networking, config }: presenceConstruct) {
+    super({ networking });
+    this.networking = networking;
+    this.config = config;
     this._r = new Responders('#endpoints/presence');
     this._l = Logger.getLogger('#endpoints/presence');
+  }
+
+  whereNow(args: whereNowArguments, callback: Function) {
+    let { uuid = this.config.UUID } = args;
+    const endpointConfig: endpointDefinition = {
+      params: {
+        uuid: { required: false }
+      },
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid
+    };
+
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      let response: whereNowResponse = {
+        channels: payload.payload.channels
+      };
+
+      callback(status, response);
+    });
   }
 
   /*
@@ -68,17 +109,6 @@ export default class {
     this._networking.fetchHereNow(stringifiedChannels, stringifiedChannelGroups, data, callback);
   }
 
-  whereNow(args: whereNowArguments, callback: Function) {
-    let { uuid } = args;
-
-    if (!callback) {
-      return this._l.error('Missing Callback');
-    }
-
-    this._networking.fetchWhereNow(uuid, callback);
-  }
-
-
   getState(args: getStateArguments, callback: Function) {
     let { uuid, channels = [], channelGroups = [] } = args;
     let data: Object = {};
@@ -100,6 +130,7 @@ export default class {
   }
   */
 
+  /*
   setState(args: setStateArguments, callback: Function) {
     let { state, channels = [], channelGroups = [] } = args;
     let data: Object = {};
@@ -150,6 +181,7 @@ export default class {
       return callback(err, response);
     });
   }
+  */
 
   /*
   heartbeat(callback: Function) {

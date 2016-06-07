@@ -24,7 +24,6 @@ export default class extends BaseEndoint {
   fetch(callback: Function) {
     const endpointConfig: endpointDefinition = {
       params: {
-        authKey: { required: false },
         uuid: { required: false }
       },
       url: '/time/0'

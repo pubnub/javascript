@@ -34,6 +34,11 @@ export default class {
   publish: Function;
   channelGroups: Object;
   pushNotifications: Object;
+  presence: Object;
+  history: Object;
+
+  //
+  setCipherKey: Function;
 
   constructor(setup: internalSetupStruct) {
     let { sendBeacon, db } = setup;
@@ -68,8 +73,9 @@ export default class {
 
     const presenceEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
     this.presence = {
-      setState: PresenceEndpoints.
-    }
+      whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
+      getState: presenceEndpoints.getState.bind(presenceEndpoints)
+    };
 
     const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
