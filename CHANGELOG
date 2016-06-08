@@ -1,5 +1,8 @@
 
-3-10-16 * 3.14.7
+6-10-16 * 3.15.0
+ - do not reset the time-token when unsubscribing.
+
+6-7-16 * 3.14.7
  - removing max_socket limit from publishing.
 
 3-10-16 * 3.14.5

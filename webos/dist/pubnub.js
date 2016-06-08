@@ -1,4 +1,4 @@
-/*! 3.14.7 / webos */
+/*! 3.15.0 / webos */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -407,7 +407,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.14.7",
+		"version": "3.15.0",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -1487,9 +1487,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var callback = callback || args['callback'] || function () {};
 	      var err = args['error'] || function () {};
 
-	      TIMETOKEN = 0;
-	      SUB_RESTORE = 1;   // REVISIT !!!!
-
 	      if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
 	      if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
@@ -1514,9 +1511,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 
 	        utils.each(existingChannels.concat(presenceChannels), function (channel) {
-	          if (channel in CHANNELS) CHANNELS[channel] = 0;
+	          if (channel in CHANNELS) delete CHANNELS[channel];
 	          if (channel in STATE) delete STATE[channel];
 	        });
+
+	        if (CHANNELS.length === 0 && CHANNEL_GROUPS.length === 0) {
+	          TIMETOKEN = 0;
+	        }
 
 	        var CB_CALLED = true;
 	        if (READY) {
@@ -1546,9 +1547,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 
 	        utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-	          if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
+	          if (channelGroup in CHANNEL_GROUPS) delete CHANNEL_GROUPS[channelGroup];
 	          if (channelGroup in STATE) delete STATE[channelGroup];
 	        });
+
+	        if (CHANNELS.length === 0 && CHANNEL_GROUPS.length === 0) {
+	          TIMETOKEN = 0;
+	        }
 
 	        var CB_CALLED = true;
 	        if (READY) {

@@ -983,9 +983,6 @@ function PN_API(setup) {
       var callback = callback || args['callback'] || function () {};
       var err = args['error'] || function () {};
 
-      TIMETOKEN = 0;
-      SUB_RESTORE = 1;   // REVISIT !!!!
-
       if (!channelArg && !channelGroupArg) return error('Missing Channel or Channel Group');
       if (!SUBSCRIBE_KEY) return error('Missing Subscribe Key');
 
@@ -1010,9 +1007,13 @@ function PN_API(setup) {
         });
 
         utils.each(existingChannels.concat(presenceChannels), function (channel) {
-          if (channel in CHANNELS) CHANNELS[channel] = 0;
+          if (channel in CHANNELS) delete CHANNELS[channel];
           if (channel in STATE) delete STATE[channel];
         });
+
+        if (CHANNELS.length === 0 && CHANNEL_GROUPS.length === 0) {
+          TIMETOKEN = 0;
+        }
 
         var CB_CALLED = true;
         if (READY) {
@@ -1042,9 +1043,13 @@ function PN_API(setup) {
         });
 
         utils.each(existingChannelGroups.concat(presenceChannelGroups), function (channelGroup) {
-          if (channelGroup in CHANNEL_GROUPS) CHANNEL_GROUPS[channelGroup] = 0;
+          if (channelGroup in CHANNEL_GROUPS) delete CHANNEL_GROUPS[channelGroup];
           if (channelGroup in STATE) delete STATE[channelGroup];
         });
+
+        if (CHANNELS.length === 0 && CHANNEL_GROUPS.length === 0) {
+          TIMETOKEN = 0;
+        }
 
         var CB_CALLED = true;
         if (READY) {
