@@ -1,0 +1,4 @@
+name: javascript
+features:
+  publish:
+   - STORE-FLAG
