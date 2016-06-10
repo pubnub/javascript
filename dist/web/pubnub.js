@@ -135,35 +135,39 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _package = __webpack_require__(19);
+	var _subscription_manager = __webpack_require__(19);
+
+	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
+
+	var _package = __webpack_require__(20);
 
 	var _package2 = _interopRequireDefault(_package);
 
-	var _time = __webpack_require__(20);
+	var _time = __webpack_require__(21);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(22);
+	var _presence = __webpack_require__(23);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(41);
+	var _history = __webpack_require__(26);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(42);
+	var _push = __webpack_require__(27);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(43);
+	var _access = __webpack_require__(28);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _channel_groups = __webpack_require__(44);
+	var _channel_groups = __webpack_require__(29);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _publish = __webpack_require__(45);
+	var _publish = __webpack_require__(30);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
@@ -184,6 +188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.config = new _config2.default(setup);
 	    this.crypto = new _index2.default({ config: this.config });
 	    this.networking = new _networking2.default({ config: this.config, crypto: this.crypto, sendBeacon: sendBeacon });
+	    this.subscriptionManager = new _subscription_manager2.default();
 
 	    db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
 
@@ -205,6 +210,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
 	      removeDeviceFromChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
 	      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints)
+	    };
+
+	    var presenceEndpoints = new _presence2.default({ networking: this.networking, config: this.config, subscriptionManager: this.subscriptionManager });
+	    this.presence = {
+	      whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
+	      getState: presenceEndpoints.getState.bind(presenceEndpoints),
+	      setState: presenceEndpoints.setState.bind(presenceEndpoints)
 	    };
 
 	    var publishEndpoints = new _publish2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
@@ -333,23 +345,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this._subscribeOrigin;
 	    }
 	  }, {
-	    key: 'fetchHistory',
-	    value: function fetchHistory(channel, incomingData, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      var url = [this.getStandardOrigin(), 'v2', 'history', 'sub-key', this._config.getSubscribeKey(), 'channel', _utils2.default.encode(channel)];
-
-	      var data = this.prepareParams(incomingData);
-
-	      if (this._config.getAuthKey()) {
-	        data.auth = this._config.getAuthKey();
-	      }
-
-	      this._xdr({ data: data, callback: callback, url: url });
-	    }
-	  }, {
 	    key: 'performGrant',
 	    value: function performGrant(authKey, data, callback) {
 	      if (!this._config.getSubscribeKey()) {
@@ -465,27 +460,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  }, {
-	    key: 'fetchWhereNow',
-	    value: function fetchWhereNow(uuid, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      var data = this.prepareParams({});
-
-	      if (this._config.getAuthKey()) {
-	        data.auth = this._config.getAuthKey();
-	      }
-
-	      if (!uuid) {
-	        uuid = this._config.getUUID();
-	      }
-
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'uuid', _utils2.default.encode(uuid)];
-
-	      this._xdr({ data: data, callback: callback, url: url });
-	    }
-	  }, {
 	    key: 'fetchHereNow',
 	    value: function fetchHereNow(channel, channelGroup, incomingData, callback) {
 	      if (!this._config.getSubscribeKey()) {
@@ -532,26 +506,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      data.state = JSON.stringify(data.state);
-
-	      this._xdr({ data: data, callback: callback, url: url });
-	    }
-	  }, {
-	    key: 'fetchState',
-	    value: function fetchState(uuid, channel, incomingData, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      if (!uuid) {
-	        uuid = this._config.getUUID();
-	      }
-
-	      var data = this.prepareParams(incomingData);
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
-
-	      if (this._config.getAuthKey()) {
-	        data.auth = this._config.getAuthKey();
-	      }
 
 	      this._xdr({ data: data, callback: callback, url: url });
 	    }
@@ -2399,6 +2353,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.publishKey = setup.publishKey;
 	    this.cipherKey = setup.cipherKey;
 	    this.baseParams = setup.params || {};
+	    this.UUID = setup.uuid || _uuid2.default.v4();
 
 	    this.setRequestIdConfig(setup.useRequestId || false);
 	    this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
@@ -3522,6 +3477,36 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 19 */
 /***/ function(module, exports) {
 
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class() {
+	    _classCallCheck(this, _class);
+	  }
+
+	  _createClass(_class, [{
+	    key: "adaptStateChange",
+	    value: function adaptStateChange() {}
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+	module.exports = exports["default"];
+
+/***/ },
+/* 20 */
+/***/ function(module, exports) {
+
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
@@ -3623,7 +3608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3642,7 +3627,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(21);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -3676,7 +3661,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function fetch(callback) {
 	      var endpointConfig = {
 	        params: {
-	          authKey: { required: false },
 	          uuid: { required: false }
 	        },
 	        url: '/time/0'
@@ -3706,7 +3690,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3781,7 +3765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3796,11 +3780,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _state = __webpack_require__(23);
+	var _subscription_manager = __webpack_require__(19);
 
-	var _state2 = _interopRequireDefault(_state);
+	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _logger = __webpack_require__(39);
+	var _config = __webpack_require__(11);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _logger = __webpack_require__(24);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
@@ -3808,73 +3796,92 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _responders2 = _interopRequireDefault(_responders);
 
+	var _base = __webpack_require__(22);
+
+	var _base2 = _interopRequireDefault(_base);
+
+	var _flow_interfaces = __webpack_require__(14);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _class = function () {
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _class = function (_BaseEndoint) {
+	  _inherits(_class, _BaseEndoint);
+
 	  function _class(_ref) {
 	    var networking = _ref.networking;
-	    var state = _ref.state;
+	    var config = _ref.config;
+	    var subscriptionManager = _ref.subscriptionManager;
 
 	    _classCallCheck(this, _class);
 
-	    this._networking = networking;
-	    this._state = state;
-	    this._r = new _responders2.default('#endpoints/presence');
-	    this._l = _logger2.default.getLogger('#endpoints/presence');
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
+
+	    _this.networking = networking;
+	    _this.config = config;
+	    _this.subscriptionManager = subscriptionManager;
+	    _this._r = new _responders2.default('#endpoints/presence');
+	    _this._l = _logger2.default.getLogger('#endpoints/presence');
+	    return _this;
 	  }
 
 	  _createClass(_class, [{
-	    key: 'hereNow',
-	    value: function hereNow(args, callback) {
-	      var _args$channels = args.channels;
-	      var channels = _args$channels === undefined ? [] : _args$channels;
-	      var _args$channelGroups = args.channelGroups;
-	      var channelGroups = _args$channelGroups === undefined ? [] : _args$channelGroups;
-	      var _args$uuids = args.uuids;
-	      var uuids = _args$uuids === undefined ? true : _args$uuids;
-	      var state = args.state;
-
-	      var data = {};
-
-	      if (!uuids) data.disable_uuids = 1;
-	      if (state) data.state = 1;
-
-	      if (!callback) {
-	        return this._l.error('Missing Callback');
-	      }
-
-	      if (channelGroups.length > 0) {
-	        data['channel-group'] = channelGroups.join(',');
-	      }
-
-	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : null;
-	      var stringifiedChannelGroups = channelGroups.length > 0 ? channelGroups.join(',') : null;
-	      this._networking.fetchHereNow(stringifiedChannels, stringifiedChannelGroups, data, callback);
-	    }
-	  }, {
 	    key: 'whereNow',
 	    value: function whereNow(args, callback) {
-	      var uuid = args.uuid;
+	      var _args$uuid = args.uuid;
+	      var uuid = _args$uuid === undefined ? this.config.UUID : _args$uuid;
 
+	      var endpointConfig = {
+	        params: {
+	          uuid: { required: false },
+	          authKey: { required: false }
+	        },
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid
+	      };
 
 	      if (!callback) {
 	        return this._l.error('Missing Callback');
 	      }
 
-	      this._networking.fetchWhereNow(uuid, callback);
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+
+	        var response = {
+	          channels: payload.payload.channels
+	        };
+
+	        callback(status, response);
+	      });
 	    }
 	  }, {
 	    key: 'getState',
 	    value: function getState(args, callback) {
-	      var uuid = args.uuid;
-	      var _args$channels2 = args.channels;
-	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
-	      var _args$channelGroups2 = args.channelGroups;
-	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
+	      var _args$uuid2 = args.uuid;
+	      var uuid = _args$uuid2 === undefined ? this.config.UUID : _args$uuid2;
+	      var _args$channels = args.channels;
+	      var channels = _args$channels === undefined ? [] : _args$channels;
+	      var _args$channelGroups = args.channelGroups;
+	      var channelGroups = _args$channelGroups === undefined ? [] : _args$channelGroups;
 
-	      var data = {};
+	      var stringifiedChannels = channels.join(',');
+	      var endpointConfig = {
+	        params: {
+	          uuid: { required: false },
+	          authKey: { required: false }
+	        },
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid
+	      };
 
 	      if (!callback) {
 	        return this._l.error('Missing Callback');
@@ -3884,27 +3891,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return callback(this._r.validationError('Channel or Channel Group must be supplied'));
 	      }
 
-	      if (channelGroups.length > 0) {
-	        data['channel-group'] = channelGroups.join(',');
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
 
-	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	      this._networking.fetchState(uuid, stringifiedChannels, data, callback);
+	      var params = this.createBaseParams(endpointConfig);
+
+	      if (channelGroups.length > 0) {
+	        params['channel-group'] = channelGroups.join(',');
+	      }
+
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+
+	        var channelsResponse = {};
+
+	        if (channels.length === 1 && channelGroups.length === 0) {
+	          channelsResponse[channels[0]] = payload.payload;
+	        } else {
+	          channelsResponse = payload.payload;
+	        }
+
+	        var response = {
+	          channels: channelsResponse
+	        };
+
+	        callback(status, response);
+	      });
 	    }
 	  }, {
 	    key: 'setState',
 	    value: function setState(args, callback) {
-	      var _this = this;
-
 	      var state = args.state;
-	      var _args$channels3 = args.channels;
-	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
-	      var _args$channelGroups3 = args.channelGroups;
-	      var channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
+	      var _args$channels2 = args.channels;
+	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
+	      var _args$channelGroups2 = args.channelGroups;
+	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
 
-	      var data = {};
-	      var channelsWithPresence = [];
-	      var channelGroupsWithPresence = [];
+	      var stringifiedChannels = channels.join(',');
+	      var endpointConfig = {
+	        params: {
+	          uuid: { required: false },
+	          authKey: { required: false }
+	        },
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + this.config.UUID + '/data'
+	      };
 
 	      if (!callback) {
 	        return this._l.error('Missing Callback');
@@ -3918,247 +3949,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return callback(this._r.validationError('State must be supplied'));
 	      }
 
-	      data.state = state;
+	      this.subscriptionManager.adaptStateChange({ channels: channels, state: state, channelGroups: channelGroups });
 
-	      channels.forEach(function (channel) {
-	        if (_this._state.getChannel(channel)) {
-	          _this._state.addToPresenceState(channel, state);
-	          channelsWithPresence.push(channel);
-	        }
-	      });
-
-	      channelGroups.forEach(function (channel) {
-	        if (_this._state.getChannelGroup(channel)) {
-	          _this._state.addToPresenceState(channel, state);
-	          channelGroupsWithPresence.push(channel);
-	        }
-	      });
-
-	      if (channelsWithPresence.length === 0 && channelGroupsWithPresence.length === 0) {
-	        return callback(this._r.validationError('No subscriptions exists for the states'));
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
 	      }
 
-	      if (channelGroupsWithPresence.length > 0) {
-	        data['channel-group'] = channelGroupsWithPresence.join(',');
-	      }
+	      var params = this.createBaseParams(endpointConfig);
 
-	      var stringifiedChannels = channelsWithPresence.length > 0 ? channelsWithPresence.join(',') : ',';
-
-	      this._networking.setState(stringifiedChannels, data, function (err, response) {
-	        if (err) return callback(err, response);
-	        _this._state.announceStateChange();
-	        return callback(err, response);
-	      });
-	    }
-	  }, {
-	    key: 'heartbeat',
-	    value: function heartbeat(callback) {
-	      var data = {
-	        state: JSON.stringify(this._state.getPresenceState()),
-	        heartbeat: this._state.getPresenceTimeout()
-	      };
-
-	      var channels = this._state.getSubscribedChannels();
-	      var channelGroups = this._state.getSubscribedChannelGroups();
+	      params.state = encodeURIComponent(JSON.stringify(state));
 
 	      if (channelGroups.length > 0) {
-	        data['channel-group'] = channelGroups.join(',');
+	        params['channel-group'] = channelGroups.join(',');
 	      }
 
-	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
 
-	      this._networking.performHeartbeat(stringifiedChannels, data, callback);
+	        var response = {
+	          state: payload.payload
+	        };
+
+	        callback(status, response);
+	      });
 	    }
 	  }]);
 
 	  return _class;
-	}();
-
-	exports.default = _class;
-	module.exports = exports['default'];
-
-/***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _eventEmitter = __webpack_require__(24);
-
-	var _eventEmitter2 = _interopRequireDefault(_eventEmitter);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class() {
-	    _classCallCheck(this, _class);
-
-	    this._channelStorage = {};
-	    this._channelGroupStorage = {};
-	    this._presenceState = {};
-
-	    this._eventEmitter = new _eventEmitter2.default();
-	    this._subscribeTimeToken = '0';
-	    this.filterExpression = '';
-	  }
-
-	  _createClass(_class, [{
-	    key: 'containsChannel',
-	    value: function containsChannel(name) {
-	      return name in this._channelStorage;
-	    }
-	  }, {
-	    key: 'containsChannelGroup',
-	    value: function containsChannelGroup(name) {
-	      return name in this._channelGroupStorage;
-	    }
-	  }, {
-	    key: 'getChannel',
-	    value: function getChannel(name) {
-	      return this._channelStorage[name];
-	    }
-	  }, {
-	    key: 'getChannelGroup',
-	    value: function getChannelGroup(name) {
-	      return this._channelGroupStorage[name];
-	    }
-	  }, {
-	    key: 'addChannel',
-	    value: function addChannel(name, metadata) {
-	      this._channelStorage[name] = metadata;
-	    }
-	  }, {
-	    key: 'removeChannel',
-	    value: function removeChannel(key) {
-	      delete this._channelStorage[key];
-	    }
-	  }, {
-	    key: 'addChannelGroup',
-	    value: function addChannelGroup(name, metadata) {
-	      this._channelGroupStorage[name] = metadata;
-	    }
-	  }, {
-	    key: 'removeFromPresenceState',
-	    value: function removeFromPresenceState(name) {
-	      delete this._presenceState[name];
-	    }
-	  }, {
-	    key: 'isInPresenceState',
-	    value: function isInPresenceState(name) {
-	      return name in this._presenceState;
-	    }
-	  }, {
-	    key: 'removeChannelGroup',
-	    value: function removeChannelGroup(key) {
-	      delete this._channelGroupStorage[key];
-	    }
-	  }, {
-	    key: 'addToPresenceState',
-	    value: function addToPresenceState(key, value) {
-	      this._presenceState[key] = value;
-	    }
-	  }, {
-	    key: 'getPresenceState',
-	    value: function getPresenceState() {
-	      return this._presenceState;
-	    }
-	  }, {
-	    key: 'setSubscribeTimeToken',
-	    value: function setSubscribeTimeToken(newTimeToken) {
-	      this._subscribeTimeToken = newTimeToken;
-	    }
-	  }, {
-	    key: 'getSubscribeTimeToken',
-	    value: function getSubscribeTimeToken() {
-	      return this._subscribeTimeToken;
-	    }
-	  }, {
-	    key: 'onStateChange',
-	    value: function onStateChange(callback) {
-	      this._eventEmitter.on('onStateChange', callback);
-	    }
-	  }, {
-	    key: 'onSubscriptionChange',
-	    value: function onSubscriptionChange(callback) {
-	      this._eventEmitter.on('onSubscriptionChange', callback);
-	    }
-	  }, {
-	    key: 'onPresenceConfigChange',
-	    value: function onPresenceConfigChange(callback) {
-	      this._eventEmitter.on('onPresenceConfigChange', callback);
-	    }
-	  }, {
-	    key: 'announceStateChange',
-	    value: function announceStateChange() {
-	      this._eventEmitter.emit('onStateChange');
-	    }
-	  }, {
-	    key: 'announceSubscriptionChange',
-	    value: function announceSubscriptionChange() {
-	      this._subscribeTimeToken = '0';
-	      this._eventEmitter.emit('onSubscriptionChange');
-	    }
-	  }, {
-	    key: 'announcePresenceConfigChange',
-	    value: function announcePresenceConfigChange() {
-	      this._eventEmitter.emit('onPresenceConfigChange');
-	    }
-	  }, {
-	    key: 'getSubscribedChannels',
-	    value: function getSubscribedChannels() {
-	      return Object.keys(this._channelStorage);
-	    }
-	  }, {
-	    key: 'getSubscribedChannelGroups',
-	    value: function getSubscribedChannelGroups() {
-	      return Object.keys(this._channelGroupStorage);
-	    }
-	  }, {
-	    key: 'getChannelsWithPresence',
-	    value: function getChannelsWithPresence() {
-	      var _this = this;
-
-	      var channels = [];
-
-	      Object.keys(this._channelStorage).forEach(function (channelName) {
-	        var channel = _this._channelStorage[channelName];
-
-	        if (channel.enablePresence === true) {
-	          channels.push(channelName);
-	        }
-	      });
-
-	      return channels;
-	    }
-	  }, {
-	    key: 'getChannelGroupsWithPresence',
-	    value: function getChannelGroupsWithPresence() {
-	      var _this2 = this;
-
-	      var channelGroups = [];
-
-	      Object.keys(this._channelGroupStorage).forEach(function (channelGroupName) {
-	        var channelGroup = _this2._channelGroupStorage[channelGroupName];
-
-	        if (channelGroup.enablePresence === true) {
-	          channelGroups.push(channelGroupName);
-	        }
-	      });
-
-	      return channelGroups;
-	    }
-	  }]);
-
-	  return _class;
-	}();
+	}(_base2.default);
 
 	exports.default = _class;
 	module.exports = exports['default'];
@@ -4169,408 +3987,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var d        = __webpack_require__(25)
-	  , callable = __webpack_require__(38)
-
-	  , apply = Function.prototype.apply, call = Function.prototype.call
-	  , create = Object.create, defineProperty = Object.defineProperty
-	  , defineProperties = Object.defineProperties
-	  , hasOwnProperty = Object.prototype.hasOwnProperty
-	  , descriptor = { configurable: true, enumerable: false, writable: true }
-
-	  , on, once, off, emit, methods, descriptors, base;
-
-	on = function (type, listener) {
-		var data;
-
-		callable(listener);
-
-		if (!hasOwnProperty.call(this, '__ee__')) {
-			data = descriptor.value = create(null);
-			defineProperty(this, '__ee__', descriptor);
-			descriptor.value = null;
-		} else {
-			data = this.__ee__;
-		}
-		if (!data[type]) data[type] = listener;
-		else if (typeof data[type] === 'object') data[type].push(listener);
-		else data[type] = [data[type], listener];
-
-		return this;
-	};
-
-	once = function (type, listener) {
-		var once, self;
-
-		callable(listener);
-		self = this;
-		on.call(this, type, once = function () {
-			off.call(self, type, once);
-			apply.call(listener, this, arguments);
-		});
-
-		once.__eeOnceListener__ = listener;
-		return this;
-	};
-
-	off = function (type, listener) {
-		var data, listeners, candidate, i;
-
-		callable(listener);
-
-		if (!hasOwnProperty.call(this, '__ee__')) return this;
-		data = this.__ee__;
-		if (!data[type]) return this;
-		listeners = data[type];
-
-		if (typeof listeners === 'object') {
-			for (i = 0; (candidate = listeners[i]); ++i) {
-				if ((candidate === listener) ||
-						(candidate.__eeOnceListener__ === listener)) {
-					if (listeners.length === 2) data[type] = listeners[i ? 0 : 1];
-					else listeners.splice(i, 1);
-				}
-			}
-		} else {
-			if ((listeners === listener) ||
-					(listeners.__eeOnceListener__ === listener)) {
-				delete data[type];
-			}
-		}
-
-		return this;
-	};
-
-	emit = function (type) {
-		var i, l, listener, listeners, args;
-
-		if (!hasOwnProperty.call(this, '__ee__')) return;
-		listeners = this.__ee__[type];
-		if (!listeners) return;
-
-		if (typeof listeners === 'object') {
-			l = arguments.length;
-			args = new Array(l - 1);
-			for (i = 1; i < l; ++i) args[i - 1] = arguments[i];
-
-			listeners = listeners.slice();
-			for (i = 0; (listener = listeners[i]); ++i) {
-				apply.call(listener, this, args);
-			}
-		} else {
-			switch (arguments.length) {
-			case 1:
-				call.call(listeners, this);
-				break;
-			case 2:
-				call.call(listeners, this, arguments[1]);
-				break;
-			case 3:
-				call.call(listeners, this, arguments[1], arguments[2]);
-				break;
-			default:
-				l = arguments.length;
-				args = new Array(l - 1);
-				for (i = 1; i < l; ++i) {
-					args[i - 1] = arguments[i];
-				}
-				apply.call(listeners, this, args);
-			}
-		}
-	};
-
-	methods = {
-		on: on,
-		once: once,
-		off: off,
-		emit: emit
-	};
-
-	descriptors = {
-		on: d(on),
-		once: d(once),
-		off: d(off),
-		emit: d(emit)
-	};
-
-	base = defineProperties({}, descriptors);
-
-	module.exports = exports = function (o) {
-		return (o == null) ? create(base) : defineProperties(Object(o), descriptors);
-	};
-	exports.methods = methods;
-
-
-/***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assign        = __webpack_require__(26)
-	  , normalizeOpts = __webpack_require__(33)
-	  , isCallable    = __webpack_require__(34)
-	  , contains      = __webpack_require__(35)
-
-	  , d;
-
-	d = module.exports = function (dscr, value/*, options*/) {
-		var c, e, w, options, desc;
-		if ((arguments.length < 2) || (typeof dscr !== 'string')) {
-			options = value;
-			value = dscr;
-			dscr = null;
-		} else {
-			options = arguments[2];
-		}
-		if (dscr == null) {
-			c = w = true;
-			e = false;
-		} else {
-			c = contains.call(dscr, 'c');
-			e = contains.call(dscr, 'e');
-			w = contains.call(dscr, 'w');
-		}
-
-		desc = { value: value, configurable: c, enumerable: e, writable: w };
-		return !options ? desc : assign(normalizeOpts(options), desc);
-	};
-
-	d.gs = function (dscr, get, set/*, options*/) {
-		var c, e, options, desc;
-		if (typeof dscr !== 'string') {
-			options = set;
-			set = get;
-			get = dscr;
-			dscr = null;
-		} else {
-			options = arguments[3];
-		}
-		if (get == null) {
-			get = undefined;
-		} else if (!isCallable(get)) {
-			options = get;
-			get = set = undefined;
-		} else if (set == null) {
-			set = undefined;
-		} else if (!isCallable(set)) {
-			options = set;
-			set = undefined;
-		}
-		if (dscr == null) {
-			c = true;
-			e = false;
-		} else {
-			c = contains.call(dscr, 'c');
-			e = contains.call(dscr, 'e');
-		}
-
-		desc = { get: get, set: set, configurable: c, enumerable: e };
-		return !options ? desc : assign(normalizeOpts(options), desc);
-	};
-
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	module.exports = __webpack_require__(27)()
-		? Object.assign
-		: __webpack_require__(28);
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = function () {
-		var assign = Object.assign, obj;
-		if (typeof assign !== 'function') return false;
-		obj = { foo: 'raz' };
-		assign(obj, { bar: 'dwa' }, { trzy: 'trzy' });
-		return (obj.foo + obj.bar + obj.trzy) === 'razdwatrzy';
-	};
-
-
-/***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var keys  = __webpack_require__(29)
-	  , value = __webpack_require__(32)
-
-	  , max = Math.max;
-
-	module.exports = function (dest, src/*, …srcn*/) {
-		var error, i, l = max(arguments.length, 2), assign;
-		dest = Object(value(dest));
-		assign = function (key) {
-			try { dest[key] = src[key]; } catch (e) {
-				if (!error) error = e;
-			}
-		};
-		for (i = 1; i < l; ++i) {
-			src = arguments[i];
-			keys(src).forEach(assign);
-		}
-		if (error !== undefined) throw error;
-		return dest;
-	};
-
-
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	module.exports = __webpack_require__(30)()
-		? Object.keys
-		: __webpack_require__(31);
-
-
-/***/ },
-/* 30 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = function () {
-		try {
-			Object.keys('primitive');
-			return true;
-		} catch (e) { return false; }
-	};
-
-
-/***/ },
-/* 31 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	var keys = Object.keys;
-
-	module.exports = function (object) {
-		return keys(object == null ? object : Object(object));
-	};
-
-
-/***/ },
-/* 32 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = function (value) {
-		if (value == null) throw new TypeError("Cannot use null or undefined");
-		return value;
-	};
-
-
-/***/ },
-/* 33 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	var forEach = Array.prototype.forEach, create = Object.create;
-
-	var process = function (src, obj) {
-		var key;
-		for (key in src) obj[key] = src[key];
-	};
-
-	module.exports = function (options/*, …options*/) {
-		var result = create(null);
-		forEach.call(arguments, function (options) {
-			if (options == null) return;
-			process(Object(options), result);
-		});
-		return result;
-	};
-
-
-/***/ },
-/* 34 */
-/***/ function(module, exports) {
-
-	// Deprecated
-
-	'use strict';
-
-	module.exports = function (obj) { return typeof obj === 'function'; };
-
-
-/***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	module.exports = __webpack_require__(36)()
-		? String.prototype.contains
-		: __webpack_require__(37);
-
-
-/***/ },
-/* 36 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	var str = 'razdwatrzy';
-
-	module.exports = function () {
-		if (typeof str.contains !== 'function') return false;
-		return ((str.contains('dwa') === true) && (str.contains('foo') === false));
-	};
-
-
-/***/ },
-/* 37 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	var indexOf = String.prototype.indexOf;
-
-	module.exports = function (searchString/*, position*/) {
-		return indexOf.call(this, searchString, arguments[1]) > -1;
-	};
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = function (fn) {
-		if (typeof fn !== 'function') throw new TypeError(fn + " is not a function");
-		return fn;
-	};
-
-
-/***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _loglevel = __webpack_require__(40);
+	var _loglevel = __webpack_require__(25);
 
 	var _loglevel2 = _interopRequireDefault(_loglevel);
 
@@ -4617,7 +4040,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 40 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(console) {/*
@@ -4847,7 +4270,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
-/* 41 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4870,11 +4293,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _logger = __webpack_require__(39);
+	var _logger = __webpack_require__(24);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _base = __webpack_require__(21);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4933,7 +4356,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!channel) return callback(this._r.validationError('Missing channel'));
 	      if (!callback) return this._l.error('Missing Callback');
 
-	      var params = { count: count, reverse: reverse, stringtoken: 'true' };
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+	      params.count = count;
 
 	      if (start) params.start = start;
 	      if (end) params.end = end;
@@ -4995,7 +4423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 42 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5018,7 +4446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _base = __webpack_require__(21);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -5196,7 +4624,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 43 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5211,7 +4639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _logger = __webpack_require__(39);
+	var _logger = __webpack_require__(24);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
@@ -5326,7 +4754,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 44 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5337,7 +4765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _base = __webpack_require__(21);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -5349,7 +4777,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _logger = __webpack_require__(39);
+	var _logger = __webpack_require__(24);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
@@ -5536,7 +4964,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 45 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5561,11 +4989,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _logger = __webpack_require__(39);
+	var _logger = __webpack_require__(24);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _base = __webpack_require__(21);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 

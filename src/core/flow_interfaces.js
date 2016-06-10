@@ -72,3 +72,9 @@ export type endpointDefinition = {
   timeout: number,
   url: string
 }
+
+export type stateChangeAnnouncement = {
+  state: Object,
+  channels: Array<string>,
+  channelGroups: Array<string>
+}

@@ -3,6 +3,8 @@
 import Networking from './components/networking';
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
+import SubscriptionManager from './components/subscription_manager';
+
 import packageJSON from '../../package.json';
 
 /*
@@ -28,6 +30,7 @@ export default class {
   config: Config;
   crypto: Crypto;
   networking: Networking;
+  subscriptionManager: SubscriptionManager;
 
   // tell flow about the mounted endpoint
   time: Function;
@@ -46,6 +49,7 @@ export default class {
     this.config = new Config(setup);
     this.crypto = new Crypto({ config: this.config });
     this.networking = new Networking({ config: this.config, crypto: this.crypto, sendBeacon });
+    this.subscriptionManager = new SubscriptionManager();
 
     // write the new key to storage
     db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
@@ -71,10 +75,11 @@ export default class {
       removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
     };
 
-    const presenceEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
+    const presenceEndpoints = new PresenceEndpoints({ networking: this.networking, config: this.config, subscriptionManager: this.subscriptionManager });
     this.presence = {
       whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
-      getState: presenceEndpoints.getState.bind(presenceEndpoints)
+      getState: presenceEndpoints.getState.bind(presenceEndpoints),
+      setState: presenceEndpoints.setState.bind(presenceEndpoints)
     };
 
     const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });

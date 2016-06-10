@@ -16,8 +16,6 @@ type networkingModules = {
   sendBeacon: Function
 }
 
-type publishPayload = Object | string | number | boolean;
-
 export default class {
   _sendBeacon: Function;
 
@@ -88,26 +86,6 @@ export default class {
     this._subscribeOrigin = this.nextOrigin(failover);
 
     return this._subscribeOrigin;
-  }
-
-  // method based URL's
-  fetchHistory(channel: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let url = [
-      this.getStandardOrigin(), 'v2', 'history', 'sub-key',
-      this._config.getSubscribeKey(), 'channel', utils.encode(channel),
-    ];
-
-    let data = this.prepareParams(incomingData);
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    this._xdr({ data, callback, url });
   }
 
   performGrant(authKey: string, data: Object, callback: Function) {
@@ -245,30 +223,6 @@ export default class {
     }
   }
 
-  fetchWhereNow(uuid: string | null, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let data: Object = this.prepareParams({});
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    if (!uuid) {
-      uuid = this._config.getUUID();
-    }
-
-    let url = [
-      this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._config.getSubscribeKey(),
-      'uuid', utils.encode(uuid),
-    ];
-
-    this._xdr({ data, callback, url });
-  }
-
   fetchHereNow(channel: string, channelGroup: string, incomingData: Object, callback: Function) {
     if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
@@ -320,27 +274,6 @@ export default class {
 
     this._xdr({ data, callback, url });
   }
-
-  fetchState(uuid: string, channel: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    if (!uuid) {
-      uuid = this._config.getUUID();
-    }
-
-    let data: Object = this.prepareParams(incomingData);
-    let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
-      this._config.getSubscribeKey(), 'channel', channel, 'uuid', uuid];
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    this._xdr({ data, callback, url });
-  }
-
 
   performSubscribe(channels: string, incomingData: Object, callback: Function): superagent {
     if (!this._config.getSubscribeKey()) {

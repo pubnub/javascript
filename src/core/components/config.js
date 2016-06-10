@@ -115,6 +115,7 @@ export default class {
     this.publishKey = setup.publishKey;
     this.cipherKey = setup.cipherKey;
     this.baseParams = setup.params || {};
+    this.UUID = setup.uuid || uuidGenerator.v4();
 
     this.setRequestIdConfig(setup.useRequestId || false);
     this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);

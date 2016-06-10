@@ -1,4 +1,4 @@
-/* eslint no-console: 0 */
+/* eslint no-console: 0, arrow-body-style: 0 */
 
 const gulp = require('gulp');
 const babel = require('gulp-babel');
@@ -67,8 +67,8 @@ gulp.task('test_release', function () {
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('test_server', function () {
-  return gulp.src('test/server/**/*.test.js', { read: false })
+gulp.task('test_server', () => {
+  return gulp.src('test/server/endpoints/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }));
 });
 

@@ -1,6 +1,7 @@
 /* @flow */
 
 import Networking from '../components/networking';
+import SubscriptionManager from '../components/subscription_manager';
 import Config from '../components/config';
 import Logger from '../components/logger';
 import Responders from '../presenters/responders';
@@ -9,7 +10,8 @@ import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type presenceConstruct = {
   networking: Networking,
-  config: Config
+  config: Config,
+  subscriptionManager: SubscriptionManager
 };
 
 /*
@@ -29,19 +31,29 @@ type whereNowResponse = {
   channels: Array<string>,
 }
 
+//
+
 type getStateArguments = {
   uuid: string,
   channels: Array<string>,
   channelGroups: Array<string>
 }
 
-/*
+type getStateResponse = {
+  channels: Object
+}
+
+//
+
 type setStateArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-  state: Object | string | number | boolean
+  state: Object
 }
-*/
+
+type setStateResponse = {
+  state: Object
+}
 
 export default class extends BaseEndoint {
   networking: Networking;
@@ -49,10 +61,11 @@ export default class extends BaseEndoint {
   _r: Responders;
   _l: Logger;
 
-  constructor({ networking, config }: presenceConstruct) {
-    super({ networking });
+  constructor({ networking, config, subscriptionManager }: presenceConstruct) {
+    super({ config });
     this.networking = networking;
     this.config = config;
+    this.subscriptionManager = subscriptionManager;
     this._r = new Responders('#endpoints/presence');
     this._l = Logger.getLogger('#endpoints/presence');
   }
@@ -61,7 +74,8 @@ export default class extends BaseEndoint {
     let { uuid = this.config.UUID } = args;
     const endpointConfig: endpointDefinition = {
       params: {
-        uuid: { required: false }
+        uuid: { required: false },
+        authKey: { required: false }
       },
       url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid
     };
@@ -81,6 +95,105 @@ export default class extends BaseEndoint {
 
       let response: whereNowResponse = {
         channels: payload.payload.channels
+      };
+
+      callback(status, response);
+    });
+  }
+
+  getState(args: getStateArguments, callback: Function) {
+    let { uuid = this.config.UUID, channels = [], channelGroups = [] } = args;
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    const endpointConfig: endpointDefinition = {
+      params: {
+        uuid: { required: false },
+        authKey: { required: false }
+      },
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid
+    };
+
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
+
+    if (channels.length === 0 && channelGroups.length === 0) {
+      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+    }
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    if (channelGroups.length > 0) {
+      params['channel-group'] = channelGroups.join(',');
+    }
+
+    // let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      let channelsResponse = {};
+
+      if (channels.length === 1 && channelGroups.length === 0) {
+        channelsResponse[channels[0]] = payload.payload;
+      } else {
+        channelsResponse = payload.payload;
+      }
+
+      let response: getStateResponse = {
+        channels: channelsResponse
+      };
+
+      callback(status, response);
+    });
+  }
+
+  setState(args: setStateArguments, callback: Function) {
+    let { state, channels = [], channelGroups = [] } = args;
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    const endpointConfig: endpointDefinition = {
+      params: {
+        uuid: { required: false },
+        authKey: { required: false }
+      },
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + this.config.UUID + '/data'
+    };
+
+    if (!callback) {
+      return this._l.error('Missing Callback');
+    }
+
+    if (channels.length === 0 && channelGroups.length === 0) {
+      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+    }
+
+    if (!state) {
+      return callback(this._r.validationError('State must be supplied'));
+    }
+
+    // announce the new state to the subscription manager.
+    this.subscriptionManager.adaptStateChange({ channels, state, channelGroups });
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    params.state = encodeURIComponent(JSON.stringify(state));
+
+    if (channelGroups.length > 0) {
+      params['channel-group'] = channelGroups.join(',');
+    }
+
+    // let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      let response: setStateResponse = {
+        state: payload.payload
       };
 
       callback(status, response);
@@ -109,78 +222,10 @@ export default class extends BaseEndoint {
     this._networking.fetchHereNow(stringifiedChannels, stringifiedChannelGroups, data, callback);
   }
 
-  getState(args: getStateArguments, callback: Function) {
-    let { uuid, channels = [], channelGroups = [] } = args;
-    let data: Object = {};
-
-    if (!callback) {
-      return this._l.error('Missing Callback');
-    }
-
-    if (channels.length === 0 && channelGroups.length === 0) {
-      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
-    }
-
-    if (channelGroups.length > 0) {
-      data['channel-group'] = channelGroups.join(',');
-    }
-
-    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    this._networking.fetchState(uuid, stringifiedChannels, data, callback);
-  }
   */
 
   /*
-  setState(args: setStateArguments, callback: Function) {
-    let { state, channels = [], channelGroups = [] } = args;
-    let data: Object = {};
-    let channelsWithPresence: Array<string> = [];
-    let channelGroupsWithPresence: Array<string> = [];
 
-    if (!callback) {
-      return this._l.error('Missing Callback');
-    }
-
-    if (channels.length === 0 && channelGroups.length === 0) {
-      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
-    }
-
-    if (!state) {
-      return callback(this._r.validationError('State must be supplied'));
-    }
-
-    data.state = state;
-
-    channels.forEach((channel) => {
-      if (this._state.getChannel(channel)) {
-        this._state.addToPresenceState(channel, state);
-        channelsWithPresence.push(channel);
-      }
-    });
-
-    channelGroups.forEach((channel) => {
-      if (this._state.getChannelGroup(channel)) {
-        this._state.addToPresenceState(channel, state);
-        channelGroupsWithPresence.push(channel);
-      }
-    });
-
-    if (channelsWithPresence.length === 0 && channelGroupsWithPresence.length === 0) {
-      return callback(this._r.validationError('No subscriptions exists for the states'));
-    }
-
-    if (channelGroupsWithPresence.length > 0) {
-      data['channel-group'] = channelGroupsWithPresence.join(',');
-    }
-
-    let stringifiedChannels = channelsWithPresence.length > 0 ? channelsWithPresence.join(',') : ',';
-
-    this._networking.setState(stringifiedChannels, data, (err: Object, response: Object) => {
-      if (err) return callback(err, response);
-      this._state.announceStateChange();
-      return callback(err, response);
-    });
-  }
   */
 
   /*
