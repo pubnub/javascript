@@ -39,6 +39,7 @@ export default class {
   pushNotifications: Object;
   presence: Object;
   history: Object;
+  accessManager: Object;
 
   //
   setCipherKey: Function;
@@ -88,6 +89,12 @@ export default class {
     const historyEndpoint = new HistoryEndpoint({ networking: this.networking, config: this.config, crypto: this.crypto });
     this.history = historyEndpoint.fetch.bind(historyEndpoint);
 
+    const accessEndpoints = new AccessEndpoints({ config: this.config, networking: this.networking, crypto: this.crypto });
+    this.accessManager = {
+      grant: accessEndpoints.grant.bind(accessEndpoints),
+      audit: accessEndpoints.audit.bind(accessEndpoints)
+    };
+
     this.setCipherKey = this.config.setCipherKey.bind(this.config);
   }
 
@@ -110,27 +117,15 @@ export default class {
   // let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
 
   // init the endpoints
-  let accessEndpoints = new AccessEndpoints({ config, networking });
   // let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config });
 
   let SELF = {
-
-    accessManager: {
-      grant: accessEndpoints.grant.bind(accessEndpoints),
-      audit: accessEndpoints.audit.bind(accessEndpoints),
-      revoke: accessEndpoints.revoke.bind(accessEndpoints),
-    },
-
-    history: historyEndpoint.fetch.bind(historyEndpoint),
 
     // subscribe: subscribeEndpoints.subscribe.bind(subscribeEndpoints),
     // unsubscribe: subscribeEndpoints.unsubscribe.bind(subscribeEndpoints),
 
     presence: {
       hereNow: presenceEndpoints.hereNow.bind(presenceEndpoints),
-      whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
-      getState: presenceEndpoints.getState.bind(presenceEndpoints),
-      setState: presenceEndpoints.setState.bind(presenceEndpoints),
     },
 
     getPresenceTimeout: config.getPresenceTimeout.bind(config),

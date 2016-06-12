@@ -1,6 +1,7 @@
 /* @flow */
 
 import superagent from 'superagent';
+import superagentLogger from 'superagent-logger';
 // import axios from 'axios';
 
 import Crypto from './cryptography/index';
@@ -88,84 +89,6 @@ export default class {
     return this._subscribeOrigin;
   }
 
-  performGrant(authKey: string, data: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    if (!this._config.getPublishKey()) {
-      return callback(this._r.validationError('Missing Publish Key'));
-    }
-
-    if (!this._config.getSecretKey()) {
-      return callback(this._r.validationError('Missing Secret Key'));
-    }
-
-    let signInput = this._config.getSubscribeKey() +
-      '\n' +
-      this._config._publishKeyD +
-      '\n' +
-      'grant' +
-      '\n';
-
-    let url = [
-      this.getStandardOrigin(), 'v1', 'auth', 'grant',
-      'sub-key', this._config.getSubscribeKey(),
-    ];
-
-    data.auth = authKey;
-
-    data = this.prepareParams(data);
-    signInput += utils._get_pam_sign_input_from_params(data);
-
-    let signature = this._crypto.HMACSHA256(signInput, this._config.getSecretKey());
-
-    signature = signature.replace(/\+/g, '-');
-    signature = signature.replace(/\//g, '_');
-
-    data.signature = signature;
-
-    this._xdr({ data, callback, url });
-  }
-
-  performAudit(authKey: string, data: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    if (!this._config.getPublishKey()) {
-      return callback(this._r.validationError('Missing Publish Key'));
-    }
-
-    if (!this._config.getSecretKey()) {
-      return callback(this._r.validationError('Missing Secret Key'));
-    }
-
-    let signInput = this._config.getSubscribeKey() +
-      '\n' +
-      this._config.getPublishKey() +
-      '\n' +
-      'audit' +
-      '\n';
-
-    data.auth = authKey;
-    data = this.prepareParams(data);
-    signInput += utils._get_pam_sign_input_from_params(data);
-
-    let signature = this._crypto.HMACSHA256(signInput, this._config.getSecretKey());
-
-    signature = signature.replace(/\+/g, '-');
-    signature = signature.replace(/\//g, '_');
-
-    data.signature = signature;
-
-    let url = [
-      this.getStandardOrigin(), 'v1', 'auth', 'audit',
-      'sub-key', this._config.getSubscribeKey(),
-    ];
-
-    this._xdr({ data, callback, url });
-  }
 
   performHeartbeat(channels: string, incomingData: Object, callback: Function) {
     if (!this._config.getSubscribeKey()) {
@@ -256,25 +179,6 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  setState(channel: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let data: Object = this.prepareParams(incomingData);
-
-    let url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key',
-      this._config.getSubscribeKey(), 'channel', channel, 'uuid', this._config.getUUID(), 'data'];
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    data.state = JSON.stringify(data.state);
-
-    this._xdr({ data, callback, url });
-  }
-
   performSubscribe(channels: string, incomingData: Object, callback: Function): superagent {
     if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
@@ -327,6 +231,7 @@ export default class {
   _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {
     return superagentConstruct
       .type('json')
+      .use(superagentLogger({ outgoing: true, timestamp: true }))
       .timeout(timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
         let status: statusStruct = {};
