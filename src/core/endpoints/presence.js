@@ -130,7 +130,6 @@ export default class extends BaseEndoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    // let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 

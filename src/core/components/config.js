@@ -83,6 +83,11 @@ export default class {
   baseParams: Object;
 
   /*
+    filter expression to pass along when subscribing.
+  */
+  filterExpression: string;
+
+  /*
     optionally avoid sending leave events for presence events.
   */
   _supressLeaveEvents: boolean;

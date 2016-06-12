@@ -179,32 +179,6 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  performSubscribe(channels: string, incomingData: Object, callback: Function): superagent {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let url = [
-      this.getSubscribeOrigin(), 'v2', 'subscribe',
-      this._config.getSubscribeKey(), utils.encode(channels),
-      0
-    ];
-
-    let data = this.prepareParams(incomingData);
-
-    if (this._config.getUUID()) {
-      data.uuid = this._config.getUUID();
-    }
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    const timeout = this._config.getSubscribeTimeout();
-
-    return this._xdr({ data, callback, url, timeout });
-  }
-
   getStandardOrigin(): string {
     return this._standardOrigin;
   }
@@ -222,6 +196,8 @@ export default class {
   }
 
   GET(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
+    console.log('params', params);
+
     let superagentConstruct = superagent
       .get(this.getStandardOrigin() + endpoint.url)
       .query(params);

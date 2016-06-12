@@ -2,53 +2,114 @@
 
 import Networking from '../components/networking';
 import Config from '../components/config';
-import State from '../components/state';
 
 import Responders from '../presenters/responders';
 import Logger from '../components/logger';
+import BaseEndoint from './base.js';
 
-import { callbackStruct } from '../flow_interfaces';
+import { endpointDefinition, statusStruct, PublishMetaData,
+  SubscribeMetadata, SubscribeMessage, SubscribeEnvelope } from '../flow_interfaces';
 
 type pubSubConstruct = {
   networking: Networking,
-  state: State,
   config: Config,
-  callbacks: callbackStruct
 };
-
-type unsubscribeArguments = {
-  channels: Array<string>,
-  channelGroups: Array<string>,
-}
 
 type subscribeArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-  enablePresence: boolean,
+  timetoken: number,
   filterExpression: ?string,
 }
 
-export default class {
+
+export default class extends BaseEndoint {
   _networking: Networking;
   _config: Config;
-  _state: State;
-  _callbacks: callbackStruct;
 
   _r: Responders;
   _l: Logger;
 
-  _subscribeIntervalId: number | null;
-
-  constructor({ networking, config, state, callbacks }: pubSubConstruct) {
+  constructor({ networking, config }: pubSubConstruct) {
+    super({ networking });
     this._networking = networking;
     this._config = config;
-    this._state = state;
-    this._callbacks = callbacks;
-
     this._r = new Responders('#endpoints/subscribe');
     this._l = Logger.getLogger('#endpoints/subscribe');
   }
 
+  subscribe(args: subscribeArguments, callback: Function) {
+    let { channels = [], channelGroups = [], timetoken, filterExpression, region } = args;
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    const endpointConfig: endpointDefinition = {
+      params: {
+        authKey: { required: false },
+        uuid: {},
+        subscribeKey: { required: true }
+      },
+      url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0'
+    };
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    if (channelGroups.length > 0) {
+      params['channel-group'] = channelGroups.join(',');
+    }
+
+    if (filterExpression && filterExpression.length > 0) {
+      params['filter-expr'] = encodeURIComponent(filterExpression);
+    }
+
+    if (timetoken) {
+      params.tt = timetoken;
+    }
+
+    if (region) {
+      params.tr = region;
+    }
+
+    return this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+      if (status.error) return callback(status);
+
+      const messages: Array<SubscribeMessage> = [];
+
+      console.log('raw payload', payload);
+
+      payload.m.forEach((rawMessage) => {
+        let publishMetaData: PublishMetaData = {
+          publishTimetoken: rawMessage.p.o,
+          region: rawMessage.p.r
+        };
+        let parsedMessage: SubscribeMessage = {
+          shard: parseInt(rawMessage.a, 10),
+          subscriptionMatch: rawMessage.b,
+          channel: rawMessage.c,
+          payload: rawMessage.d,
+          flags: rawMessage.f,
+          issuingClientId: rawMessage.i,
+          subscribeKey: rawMessage.k,
+          originationTimetoken: rawMessage.o,
+          publishMetaData
+        };
+        messages.push(parsedMessage);
+      });
+
+      const metadata: SubscribeMetadata = {
+        timetoken: parseInt(payload.t.t, 10),
+        region: payload.t.r
+      };
+      const response: SubscribeEnvelope = { messages, metadata };
+
+      console.log('parsed payload', response);
+
+      callback(status, response);
+    });
+  }
+
+  /*
   unsubscribe(args: unsubscribeArguments) {
     let { onStatus } = this._callbacks;
     let { channels = [], channelGroups = [] } = args;
@@ -101,42 +162,5 @@ export default class {
       onStatus(null, { action: 'unsubscribe', status: 'finished', response });
     });
   }
-
-  _postUnsubscribeCleanup(channels: Array<string>, channelGroups: Array<string>) {
-    channels.forEach((channel) => {
-      this._state.removeChannel(channel);
-      this._state.removeFromPresenceState(channel);
-    });
-
-    channelGroups.forEach((channelGroup) => {
-      this._state.removeChannelGroup(channelGroup);
-      this._state.removeFromPresenceState(channelGroup);
-    });
-  }
-
-  subscribe(args: subscribeArguments) {
-    let { channels = [], channelGroups = [], enablePresence = false, filterExpression } = args;
-    let { onStatus } = this._callbacks;
-
-    if (channels.length === 0 && channelGroups.length === 0) {
-      return onStatus(this._r.validationError('Missing Channel or Channel Group'));
-    }
-
-    channels.forEach((channel) => {
-      this._state.addChannel(channel, { name: channel, enablePresence });
-    });
-
-    channelGroups.forEach((channelGroup) => {
-      this._state.addChannelGroup(channelGroup, { name: channelGroup, enablePresence });
-    });
-
-    // always reset the expressions
-    this._state.filterExpression = '';
-
-    if (filterExpression) {
-      this._state.filterExpression = filterExpression;
-    }
-
-    this._state.announceSubscriptionChange();
-  }
+  */
 }

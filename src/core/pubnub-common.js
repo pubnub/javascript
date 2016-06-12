@@ -9,7 +9,6 @@ import packageJSON from '../../package.json';
 
 /*
 import PresenceHeartbeat from './iterators/presence_heartbeat';
-import SubscribeEndpoints from './endpoints/subscribe';
 import Subscriber from './iterators/subscriber';
 */
 
@@ -19,9 +18,8 @@ import HistoryEndpoint from './endpoints/history';
 import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import ChannelGroupEndpoints from './endpoints/channel_groups';
-
+import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
-
 
 import { internalSetupStruct } from './flow_interfaces';
 
@@ -50,7 +48,10 @@ export default class {
     this.config = new Config(setup);
     this.crypto = new Crypto({ config: this.config });
     this.networking = new Networking({ config: this.config, crypto: this.crypto, sendBeacon });
-    this.subscriptionManager = new SubscriptionManager();
+
+    const subscribeEndpoints = new SubscribeEndpoints({ networking: this.networking, config: this.config });
+
+    this.subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this.config });
 
     // write the new key to storage
     db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
@@ -94,6 +95,9 @@ export default class {
       grant: accessEndpoints.grant.bind(accessEndpoints),
       audit: accessEndpoints.audit.bind(accessEndpoints)
     };
+
+    this.subscribe = this.subscriptionManager.adaptSubscribeChange.bind(this.subscriptionManager);
+    this.unsubscribe = this.subscriptionManager.adaptUnsubscribeChange.bind(this.subscriptionManager);
 
     this.setCipherKey = this.config.setCipherKey.bind(this.config);
   }

@@ -78,3 +78,36 @@ export type stateChangeAnnouncement = {
   channels: Array<string>,
   channelGroups: Array<string>
 }
+
+// ****************** SUBSCRIPTIONS *******************************************
+
+type SubscribeMetadata = {
+  timetoken: number,
+  region: number
+}
+
+type PublishMetaData = {
+  publishTimetoken: number,
+  region: number
+}
+
+type SubscribeMessage = {
+  shard: string,
+  subscriptionMatch: string,
+  channel: string,
+  payload: string,
+  flags: string,
+  issuingClientId: string,
+  subscribeKey: string,
+  originationTimetoken: string,
+  publishMetaData: PublishMetaData
+
+}
+
+// subscribe responses
+type SubscribeEnvelope = {
+  messages: Array<SubscribeMessage>,
+  metadata: SubscribeMetadata;
+}
+
+// ******************************************************************************
