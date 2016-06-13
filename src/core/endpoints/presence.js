@@ -14,14 +14,12 @@ type presenceConstruct = {
   subscriptionManager: SubscriptionManager
 };
 
-/*
 type hereNowArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-  uuids: ?boolean,
-  state: ?boolean
+  includeUUIDs: boolean,
+  includeState: boolean
 }
-*/
 
 type whereNowArguments = {
   uuid: string,
@@ -226,13 +224,29 @@ export default class extends BaseEndoint {
     );
   }
 
-  /*
   hereNow(args: hereNowArguments, callback: Function) {
-    let { channels = [], channelGroups = [], uuids = true, state } = args;
-    let data = {};
+    let { channels = [], channelGroups = [], includeUUIDs = true, includeState = false } = args;
+    const endpointConfig: endpointDefinition = {
+      params: {
+        uuid: { required: false },
+        authKey: { required: false }
+      },
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey
+    };
 
-    if (!uuids) data.disable_uuids = 1;
-    if (state) data.state = 1;
+    if (channels.length > 0 || channelGroups.length > 0) {
+      let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+      endpointConfig.url += '/channel/' + encodeURIComponent(stringifiedChannels);
+    }
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    if (!includeUUIDs) params.disable_uuids = 1;
+    if (includeState) params.state = 1;
 
     // Make sure we have a Channel
     if (!callback) {
@@ -240,19 +254,79 @@ export default class extends BaseEndoint {
     }
 
     if (channelGroups.length > 0) {
-      data['channel-group'] = channelGroups.join(',');
+      params['channel-group'] = channelGroups.join(',');
     }
 
-    let stringifiedChannels = channels.length > 0 ? channels.join(',') : null;
-    let stringifiedChannelGroups = channelGroups.length > 0 ? channelGroups.join(',') : null;
-    this._networking.fetchHereNow(stringifiedChannels, stringifiedChannelGroups, data, callback);
+    this.networking.GET(params, endpointConfig, (status: statusStruct, payload) => {
+      if (status.error) return callback(status);
+
+      let prepareSingularChannel = () => {
+        let response = {};
+        let occupantsList = [];
+        response.totalChannels = 1;
+        response.totalOccupancy = payload.occupancy;
+        response.channels = {};
+        response.channels[channels[0]] = {
+          occupants: occupantsList,
+          name: channels[0],
+          occupancy: payload.occupancy
+        };
+
+        if (includeUUIDs) {
+          payload.uuids.forEach((uuidEntry) => {
+            if (includeState) {
+              occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
+            } else {
+              occupantsList.push({ state: null, uuid: uuidEntry });
+            }
+          });
+        }
+
+        return response;
+      };
+
+      let prepareMultipleChannel = () => {
+        let response = {};
+        response.totalChannels = payload.payload.total_channels;
+        response.totalOccupancy = payload.payload.total_occupancy;
+        response.channels = {};
+
+        Object.keys(payload.payload.channels).forEach((channelName) => {
+          let channelEntry = payload.payload.channels[channelName];
+          let occupantsList = [];
+          response.channels[channelName] = {
+            occupants: occupantsList,
+            name: channelName,
+            occupancy: channelEntry.occupancy
+          };
+
+          if (includeUUIDs) {
+            channelEntry.uuids.forEach((uuidEntry) => {
+              if (includeState) {
+                occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
+              } else {
+                occupantsList.push({ state: null, uuid: uuidEntry });
+              }
+            });
+          }
+
+          return response;
+        });
+
+        return response;
+      };
+
+      let response;
+      if (channels.length > 1 || channelGroups.length > 0) {
+        response = prepareMultipleChannel();
+      } else {
+        response = prepareSingularChannel();
+      }
+
+      callback(status, response);
+    });
   }
 
-  */
-
-  /*
-
-  */
 
   /*
   heartbeat(callback: Function) {

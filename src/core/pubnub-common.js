@@ -81,6 +81,7 @@ export default class {
 
 
     this.presence = {
+      hereNow: presenceEndpoints.hereNow.bind(presenceEndpoints),
       whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
       getState: presenceEndpoints.getState.bind(presenceEndpoints),
       setState: subscriptionManager.adaptStateChange.bind(subscriptionManager)
@@ -134,7 +135,6 @@ export default class {
     // unsubscribe: subscribeEndpoints.unsubscribe.bind(subscribeEndpoints),
 
     presence: {
-      hereNow: presenceEndpoints.hereNow.bind(presenceEndpoints),
     },
 
     getPresenceTimeout: config.getPresenceTimeout.bind(config),

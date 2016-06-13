@@ -69,6 +69,15 @@ export default class {
 
   adaptStateChange(args: stateArgs, callback: Function) {
     const { state, channels = [], channelGroups = [] } = args;
+
+    channels.forEach((channel) => {
+      if (channel in this._channels) this._channels[channel].state = state;
+    });
+
+    channelGroups.forEach((channelGroup) => {
+      if (channelGroup in this._channelGroups) this._channelGroups[channelGroup].state = state;
+    });
+
     this._presenceEndpoints.setState({ state, channels, channelGroups }, callback);
   }
 
@@ -78,13 +87,13 @@ export default class {
     if (timetoken) this._timetoken = timetoken;
 
     channels.forEach((channel) => {
-      this._channels[channel] = true;
-      if (withPresence) this._presenceChannels[channel] = true;
+      this._channels[channel] = { state: {} };
+      if (withPresence) this._presenceChannels[channel] = {};
     });
 
     channelGroups.forEach((channelGroup) => {
-      this._channelGroups[channelGroup] = true;
-      if (withPresence) this._presenceChannelGroups[channelGroup] = true;
+      this._channelGroups[channelGroup] = { state: {} };
+      if (withPresence) this._presenceChannelGroups[channelGroup] = {};
     });
 
     this.reconnect();
