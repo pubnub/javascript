@@ -55,6 +55,11 @@ type setStateResponse = {
   state: Object
 }
 
+type leaveArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+}
+
 export default class extends BaseEndoint {
   networking: Networking;
   config: Config;
@@ -172,9 +177,6 @@ export default class extends BaseEndoint {
       return callback(this._r.validationError('State must be supplied'));
     }
 
-    // announce the new state to the subscription manager.
-    this.subscriptionManager.adaptStateChange({ channels, state, channelGroups });
-
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }
 
@@ -187,7 +189,6 @@ export default class extends BaseEndoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    // let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
@@ -197,6 +198,32 @@ export default class extends BaseEndoint {
 
       callback(status, response);
     });
+  }
+
+  leave(args: leaveArguments, callback: Function) {
+    let { channels = [], channelGroups = [] } = args;
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    const endpointConfig: endpointDefinition = {
+      params: {
+        uuid: { required: false },
+        authKey: { required: false }
+      },
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave'
+    };
+
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
+
+    if (channelGroups.length > 0) {
+      params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+    }
+
+    this.networking.GET(params, endpointConfig, (status: statusStruct) =>
+      callback(status)
+    );
   }
 
   /*

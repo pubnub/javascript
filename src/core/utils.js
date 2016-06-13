@@ -52,51 +52,6 @@ function encode(path: string): string {
   return encodeURIComponent(path);
 }
 
-/**
- * Build Url
- * =======
- *
- */
-function buildURL(urlComponents: Array<string>, urlParams: Object): string {
-  var url = urlComponents.join(defaultConfiguration.URLBIT);
-  var params = [];
-
-  if (!urlParams) return url;
-
-  each(urlParams, function (key, value) {
-    var valueStr = (typeof value === 'object') ? JSON.stringify(value) : value;
-    (typeof value !== 'undefined' &&
-      value !== null && encode(valueStr).length > 0
-    ) && params.push(key + '=' + encode(valueStr));
-  });
-
-  url += '?' + params.join(defaultConfiguration.PARAMSBIT);
-  return url;
-}
-
-/**
- * timeout
- * =======
- * timeout( function(){}, 100 );
- */
-function timeout(fun, wait) {
-  if (typeof(setTimeout) === 'undefined') {
-    return;
-  }
-
-  return setTimeout(fun, wait);
-}
-
-/**
- * uuid
- * ====
- * var my_uuid = generateUUID();
- */
-function generateUUID(callback: Function): string {
-  var u = uuidGenerator.v4();
-  if (callback) callback(u);
-  return u;
-}
 
 /**
  * MAP
@@ -210,18 +165,17 @@ function v2ExpandKeys(m: Object): Object {
 
 module.exports = {
   v2ExpandKeys,
-  buildURL,
   encode,
   each,
   rnow,
   isArray,
   map,
   pamEncode,
-  generateUUID,
-  timeout,
   _get_pam_sign_input_from_params,
   _object_to_key_list_sorted,
   _object_to_key_list,
   validateHeartbeat,
-  unique
+  endsWith(searchString, suffix) {
+    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+  }
 };

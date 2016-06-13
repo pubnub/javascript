@@ -139,15 +139,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _package = __webpack_require__(39);
+	var _package = __webpack_require__(40);
 
 	var _package2 = _interopRequireDefault(_package);
 
-	var _time = __webpack_require__(40);
+	var _time = __webpack_require__(41);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(41);
+	var _presence = __webpack_require__(39);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
@@ -194,15 +194,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.networking = new _networking2.default({ config: this.config, crypto: this.crypto, sendBeacon: sendBeacon });
 
 	    var subscribeEndpoints = new _subscribe2.default({ networking: this.networking, config: this.config });
+	    var presenceEndpoints = new _presence2.default({ networking: this.networking, config: this.config });
+	    var timeEndpoint = new _time2.default({ networking: this.networking, config: this.config });
+	    var pushEndpoints = new _push2.default({ networking: this.networking, config: this.config });
+	    var channelGroupEndpoints = new _channel_groups2.default({ networking: this.networking, config: this.config });
+	    var publishEndpoints = new _publish2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
+	    var historyEndpoint = new _history2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
+	    var accessEndpoints = new _access2.default({ config: this.config, networking: this.networking, crypto: this.crypto });
 
-	    this.subscriptionManager = new _subscription_manager2.default({ subscribeEndpoints: subscribeEndpoints, config: this.config });
+	    var subscriptionManager = new _subscription_manager2.default({ subscribeEndpoints: subscribeEndpoints, config: this.config, presenceEndpoints: presenceEndpoints });
 
 	    db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
 
-	    var timeEndpoint = new _time2.default({ networking: this.networking, config: this.config });
-	    this.time = timeEndpoint.fetch.bind(timeEndpoint);
-
-	    var channelGroupEndpoints = new _channel_groups2.default({ networking: this.networking, config: this.config });
 	    this.channelGroups = {
 	      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
 	      listAll: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
@@ -211,7 +214,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints)
 	    };
 
-	    var pushEndpoints = new _push2.default({ networking: this.networking, config: this.config });
 	    this.pushNotifications = {
 	      listChannelsForDevice: pushEndpoints.listChannelsForDevice.bind(pushEndpoints),
 	      addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
@@ -219,27 +221,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints)
 	    };
 
-	    var presenceEndpoints = new _presence2.default({ networking: this.networking, config: this.config, subscriptionManager: this.subscriptionManager });
 	    this.presence = {
 	      whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
 	      getState: presenceEndpoints.getState.bind(presenceEndpoints),
-	      setState: presenceEndpoints.setState.bind(presenceEndpoints)
+	      setState: subscriptionManager.adaptStateChange.bind(subscriptionManager)
 	    };
 
-	    var publishEndpoints = new _publish2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
-	    this.publish = publishEndpoints.publish.bind(publishEndpoints);
-
-	    var historyEndpoint = new _history2.default({ networking: this.networking, config: this.config, crypto: this.crypto });
-	    this.history = historyEndpoint.fetch.bind(historyEndpoint);
-
-	    var accessEndpoints = new _access2.default({ config: this.config, networking: this.networking, crypto: this.crypto });
 	    this.accessManager = {
 	      grant: accessEndpoints.grant.bind(accessEndpoints),
 	      audit: accessEndpoints.audit.bind(accessEndpoints)
 	    };
 
-	    this.subscribe = this.subscriptionManager.adaptSubscribeChange.bind(this.subscriptionManager);
-	    this.unsubscribe = this.subscriptionManager.adaptUnsubscribeChange.bind(this.subscriptionManager);
+	    this.publish = publishEndpoints.publish.bind(publishEndpoints);
+	    this.history = historyEndpoint.fetch.bind(historyEndpoint);
+	    this.time = timeEndpoint.fetch.bind(timeEndpoint);
+
+	    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
+
+	    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
+	    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
+
 
 	    this.setCipherKey = this.config.setCipherKey.bind(this.config);
 	  }
@@ -481,6 +484,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        var parsedResponse = JSON.parse(resp.text);
+
+	        console.log(parsedResponse);
+
 	        return callback(status, parsedResponse);
 	      });
 	    }
@@ -4015,7 +4021,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -4060,8 +4066,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'HMACSHA256',
 	    value: function HMACSHA256(data) {
-	      console.log(data, this._config.secretKey);
-
 	      var hash = _hmacSha2.default.HmacSHA256(data, this._config.secretKey);
 	      return hash.toString(_hmacSha2.default.enc.Base64);
 	    }
@@ -4164,7 +4168,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 26 */
@@ -5110,8 +5113,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 	var _uuid = __webpack_require__(27);
 
 	var _uuid2 = _interopRequireDefault(_uuid);
@@ -5151,35 +5152,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function encode(path) {
 	  return encodeURIComponent(path);
-	}
-
-	function buildURL(urlComponents, urlParams) {
-	  var url = urlComponents.join(defaultConfiguration.URLBIT);
-	  var params = [];
-
-	  if (!urlParams) return url;
-
-	  each(urlParams, function (key, value) {
-	    var valueStr = (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' ? JSON.stringify(value) : value;
-	    typeof value !== 'undefined' && value !== null && encode(valueStr).length > 0 && params.push(key + '=' + encode(valueStr));
-	  });
-
-	  url += '?' + params.join(defaultConfiguration.PARAMSBIT);
-	  return url;
-	}
-
-	function timeout(fun, wait) {
-	  if (typeof setTimeout === 'undefined') {
-	    return;
-	  }
-
-	  return setTimeout(fun, wait);
-	}
-
-	function generateUUID(callback) {
-	  var u = _uuid2.default.v4();
-	  if (callback) callback(u);
-	  return u;
 	}
 
 	function map(list, fun) {
@@ -5290,20 +5262,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 	  v2ExpandKeys: v2ExpandKeys,
-	  buildURL: buildURL,
 	  encode: encode,
 	  each: each,
 	  rnow: rnow,
 	  isArray: isArray,
 	  map: map,
 	  pamEncode: pamEncode,
-	  generateUUID: generateUUID,
-	  timeout: timeout,
 	  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
 	  _object_to_key_list_sorted: _object_to_key_list_sorted,
 	  _object_to_key_list: _object_to_key_list,
 	  validateHeartbeat: validateHeartbeat,
-	  unique: unique
+	  endsWith: function endsWith(searchString, suffix) {
+	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+	  }
 	};
 
 /***/ },
@@ -5335,9 +5306,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
+	var _presence = __webpack_require__(39);
+
+	var _presence2 = _interopRequireDefault(_presence);
+
+	var _cryptography = __webpack_require__(25);
+
+	var _cryptography2 = _interopRequireDefault(_cryptography);
+
 	var _config = __webpack_require__(26);
 
 	var _config2 = _interopRequireDefault(_config);
+
+	var _utils = __webpack_require__(32);
+
+	var _utils2 = _interopRequireDefault(_utils);
 
 	var _flow_interfaces = __webpack_require__(29);
 
@@ -5348,7 +5331,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _class = function () {
 	  function _class(_ref) {
 	    var subscribeEndpoints = _ref.subscribeEndpoints;
+	    var presenceEndpoints = _ref.presenceEndpoints;
 	    var config = _ref.config;
+	    var crypto = _ref.crypto;
 
 	    _classCallCheck(this, _class);
 
@@ -5360,8 +5345,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._config = config;
 	    this._subscribeEndpoints = subscribeEndpoints;
+	    this._presenceEndpoints = presenceEndpoints;
+	    this._crypto = crypto;
 
 	    this._timetoken = 0;
+
+	    this._listeners = [];
 	  }
 
 	  _createClass(_class, [{
@@ -5397,7 +5386,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'adaptUnsubscribeChange',
-	    value: function adaptUnsubscribeChange(args) {}
+	    value: function adaptUnsubscribeChange(args) {
+	      var _this2 = this;
+
+	      var _args$channels2 = args.channels;
+	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
+	      var _args$channelGroups2 = args.channelGroups;
+	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
+
+
+	      channels.forEach(function (channel) {
+	        if (channel in _this2._channels) delete _this2._channels[channel];
+	        if (channel in _this2._presenceChannels) delete _this2._presenceChannels[channel];
+	      });
+
+	      channelGroups.forEach(function (channelGroup) {
+	        if (channelGroup in _this2._channelGroups) delete _this2._channelGroups[channelGroup];
+	        if (channelGroup in _this2._presenceChannelGroups) delete _this2._channelGroups[channelGroup];
+	      });
+
+	      this._presenceEndpoints.leave({ channels: channels, channelGroups: channelGroups }, function (status, payload) {
+	        console.log('unsubscribe result', status, payload);
+	      });
+
+	      this.reconnect();
+	    }
+	  }, {
+	    key: 'addListener',
+	    value: function addListener(newListeners) {
+	      this._listeners.push(newListeners);
+	    }
+	  }, {
+	    key: 'removeListener',
+	    value: function removeListener(deprecatedListeners) {
+	      var listenerPosition = this._listeners.indexOf(deprecatedListeners);
+	      if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
+	    }
 	  }, {
 	    key: 'reconnect',
 	    value: function reconnect() {
@@ -5406,7 +5430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_startSubscribeLoop',
 	    value: function _startSubscribeLoop() {
-	      var _this2 = this;
+	      var _this3 = this;
 
 	      this._stopSubscribeLoop();
 	      var channels = [];
@@ -5433,19 +5457,74 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }, function (status, payload) {
 	        if (status.error) {
 	          console.log("subscribe tanked");
-	          _this2._startSubscribeLoop();
+	          _this3._startSubscribeLoop();
 	          return;
 	        }
 
-	        console.log(payload);
-	        _this2._region = payload.metadata.region;
-	        _this2._timetoken = payload.metadata.timetoken;
-	        _this2._startSubscribeLoop();
+	        payload.messages.forEach(function (message) {
+	          var channel = message.channel;
+	          var subscriptionMatch = message.subscriptionMatch;
+	          var publishMetaData = message.publishMetaData;
+
+	          if (channel === subscriptionMatch) {
+	            subscriptionMatch = null;
+	          }
+
+	          if (_utils2.default.endsWith(message.channel, '-pnpres')) {
+	            var announce = {};
+	            announce.actualChannel = subscriptionMatch != null ? channel : null;
+	            announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+
+	            announce.timetoken = publishMetaData.publishTimetoken;
+	            announce.occupancy = message.payload.occupancy;
+	            announce.uuid = message.payload.uuid;
+	            announce.timestamp = message.payload.timestamp;
+	            _this3._announcePresence(announce);
+	          } else {
+	            var _announce = {};
+	            _announce.actualChannel = subscriptionMatch != null ? channel : null;
+	            _announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+	            _announce.timetoken = publishMetaData.publishTimetoken;
+
+	            if (_this3._config.cipherKey) {
+	              _announce.message = _this3._crypto.decrypt(message.payload);
+	            } else {
+	                _announce.message = message.payload;
+	              }
+
+	            _this3._announceMessage(_announce);
+	          }
+	        });
+
+	        _this3._region = payload.metadata.region;
+	        _this3._timetoken = payload.metadata.timetoken;
+	        _this3._startSubscribeLoop();
 	      });
 	    }
 	  }, {
 	    key: '_stopSubscribeLoop',
 	    value: function _stopSubscribeLoop() {}
+	  }, {
+	    key: '_announcePresence',
+	    value: function _announcePresence(announce) {
+	      this._listeners.forEach(function (listener) {
+	        if (listener.presence) listener.presence(announce);
+	      });
+	    }
+	  }, {
+	    key: '_announceStatus',
+	    value: function _announceStatus(announce) {
+	      this._listeners.forEach(function (listener) {
+	        if (listener.status) listener.status(announce);
+	      });
+	    }
+	  }, {
+	    key: '_announceMessage',
+	    value: function _announceMessage(announce) {
+	      this._listeners.forEach(function (listener) {
+	        if (listener.message) listener.message(announce);
+	      });
+	    }
 	  }]);
 
 	  return _class;
@@ -5459,7 +5538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -5563,11 +5642,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var messages = [];
 
-	        console.log('raw payload', payload);
-
 	        payload.m.forEach(function (rawMessage) {
 	          var publishMetaData = {
-	            publishTimetoken: rawMessage.p.o,
+	            publishTimetoken: rawMessage.p.t,
 	            region: rawMessage.p.r
 	          };
 	          var parsedMessage = {
@@ -5585,12 +5662,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 
 	        var metadata = {
-	          timetoken: parseInt(payload.t.t, 10),
+	          timetoken: payload.t.t,
 	          region: payload.t.r
 	        };
 	        var response = { messages: messages, metadata: metadata };
-
-	        console.log('parsed payload', response);
 
 	        callback(status, response);
 	      });
@@ -5602,7 +5677,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 36 */
@@ -5969,193 +6043,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 39 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"name": "pubnub",
-		"preferGlobal": false,
-		"version": "4.0.0-beta1",
-		"author": "PubNub <support@pubnub.com>",
-		"description": "Publish & Subscribe Real-time Messaging with PubNub",
-		"contributors": [
-			{
-				"name": "Stephen Blum",
-				"email": "stephen@pubnub.com"
-			}
-		],
-		"bin": {},
-		"scripts": {
-			"test": "grunt test --force"
-		},
-		"main": "./node.js/pubnub.js",
-		"browser": "./modern/dist/pubnub.js",
-		"repository": {
-			"type": "git",
-			"url": "git://github.com/pubnub/javascript.git"
-		},
-		"keywords": [
-			"cloud",
-			"publish",
-			"subscribe",
-			"websockets",
-			"comet",
-			"bosh",
-			"xmpp",
-			"real-time",
-			"messaging"
-		],
-		"dependencies": {
-			"axios": "^0.11.1",
-			"event-emitter": "^0.3.4",
-			"lodash": "^4.1.0",
-			"loglevel": "^1.4.0",
-			"request": "^2.72.0",
-			"superagent": "^2.0.0",
-			"superagent-logger": "^1.1.0",
-			"uuid": "^2.0.1"
-		},
-		"noAnalyze": false,
-		"devDependencies": {
-			"babel-core": "^6.6.5",
-			"babel-eslint": "6.0.4",
-			"babel-plugin-add-module-exports": "^0.2.1",
-			"babel-plugin-transform-class-properties": "^6.6.0",
-			"babel-plugin-transform-flow-strip-types": "^6.6.5",
-			"babel-preset-es2015": "^6.6.0",
-			"babel-register": "^6.6.5",
-			"chai": "^3.5.0",
-			"chai-as-promised": "^5.2.0",
-			"eslint": "2.11.0",
-			"eslint-config-airbnb": "9.0.1",
-			"eslint-plugin-flowtype": "2.2.7",
-			"eslint-plugin-import": "^1.8.1",
-			"eslint-plugin-mocha": "2.2.0",
-			"eslint-plugin-react": "5.1.1",
-			"flow-bin": "^0.26.0",
-			"gulp": "^3.9.1",
-			"gulp-babel": "^6.1.2",
-			"gulp-clean": "^0.3.2",
-			"gulp-eslint": "^2.0.0",
-			"gulp-exec": "^2.1.2",
-			"gulp-flowtype": "^0.4.9",
-			"gulp-mocha": "^2.2.0",
-			"gulp-rename": "^1.2.2",
-			"gulp-uglify": "^1.5.3",
-			"gulp-webpack": "^1.5.0",
-			"imports-loader": "0.6.5",
-			"json-loader": "0.5.4",
-			"karma": "0.13.22",
-			"karma-babel-preprocessor": "^6.0.1",
-			"karma-chai": "0.1.0",
-			"karma-chrome-launcher": "^1.0.1",
-			"karma-mocha": "^1.0.1",
-			"karma-phantomjs-launcher": "1.0.0",
-			"karma-spec-reporter": "0.0.26",
-			"mocha": "2.5.3",
-			"nock": "^8.0.0",
-			"node-uuid": "1.4.7",
-			"phantomjs-prebuilt": "2.1.7",
-			"proxyquire": "1.7.9",
-			"run-sequence": "^1.1.5",
-			"sinon": "^1.17.3",
-			"stats-webpack-plugin": "^0.3.1",
-			"uglify-js": "^2.6.2",
-			"underscore": "1.8.3",
-			"webpack": "^1.12.14",
-			"webpack-dev-server": "1.14.1",
-			"webpack-stats-plugin": "^0.1.1"
-		},
-		"bundleDependencies": [],
-		"license": "MIT",
-		"engine": {
-			"node": ">=0.8"
-		}
-	};
-
-/***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(3);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(26);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _base = __webpack_require__(38);
-
-	var _base2 = _interopRequireDefault(_base);
-
-	var _flow_interfaces = __webpack_require__(29);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
-
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var config = _ref.config;
-
-	    _classCallCheck(this, _class);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
-
-	    _this.networking = networking;
-	    return _this;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'fetch',
-	    value: function fetch(callback) {
-	      var endpointConfig = {
-	        params: {
-	          uuid: { required: false }
-	        },
-	        url: '/time/0'
-	      };
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
-	        if (status.error) return callback(status);
-
-	        var response = {};
-	        response.timetoken = payload[0];
-
-	        callback(status, response);
-	      });
-	    }
-	  }]);
-
-	  return _class;
-	}(_base2.default);
-
-	exports.default = _class;
-	module.exports = exports['default'];
-
-/***/ },
-/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6359,6 +6246,225 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var response = {
 	          state: payload.payload
 	        };
+
+	        callback(status, response);
+	      });
+	    }
+	  }, {
+	    key: 'leave',
+	    value: function leave(args, callback) {
+	      var _args$channels3 = args.channels;
+	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
+	      var _args$channelGroups3 = args.channelGroups;
+	      var channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
+
+	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+	      var endpointConfig = {
+	        params: {
+	          uuid: { required: false },
+	          authKey: { required: false }
+	        },
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/leave'
+	      };
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+
+	      if (channelGroups.length > 0) {
+	        params['channel-group'] = channelGroups.join(',');
+	      }
+
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        return callback(status);
+	      });
+	    }
+	  }]);
+
+	  return _class;
+	}(_base2.default);
+
+	exports.default = _class;
+	module.exports = exports['default'];
+
+/***/ },
+/* 40 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"name": "pubnub",
+		"preferGlobal": false,
+		"version": "4.0.0-beta1",
+		"author": "PubNub <support@pubnub.com>",
+		"description": "Publish & Subscribe Real-time Messaging with PubNub",
+		"contributors": [
+			{
+				"name": "Stephen Blum",
+				"email": "stephen@pubnub.com"
+			}
+		],
+		"bin": {},
+		"scripts": {
+			"test": "grunt test --force"
+		},
+		"main": "./node.js/pubnub.js",
+		"browser": "./modern/dist/pubnub.js",
+		"repository": {
+			"type": "git",
+			"url": "git://github.com/pubnub/javascript.git"
+		},
+		"keywords": [
+			"cloud",
+			"publish",
+			"subscribe",
+			"websockets",
+			"comet",
+			"bosh",
+			"xmpp",
+			"real-time",
+			"messaging"
+		],
+		"dependencies": {
+			"axios": "^0.11.1",
+			"big-integer": "^1.6.15",
+			"event-emitter": "^0.3.4",
+			"lodash": "^4.1.0",
+			"loglevel": "^1.4.0",
+			"request": "^2.72.0",
+			"superagent": "^2.0.0",
+			"superagent-logger": "^1.1.0",
+			"uuid": "^2.0.1"
+		},
+		"noAnalyze": false,
+		"devDependencies": {
+			"babel-core": "^6.6.5",
+			"babel-eslint": "6.0.4",
+			"babel-plugin-add-module-exports": "^0.2.1",
+			"babel-plugin-transform-class-properties": "^6.6.0",
+			"babel-plugin-transform-flow-strip-types": "^6.6.5",
+			"babel-preset-es2015": "^6.6.0",
+			"babel-register": "^6.6.5",
+			"chai": "^3.5.0",
+			"chai-as-promised": "^5.2.0",
+			"eslint": "2.11.0",
+			"eslint-config-airbnb": "9.0.1",
+			"eslint-plugin-flowtype": "2.2.7",
+			"eslint-plugin-import": "^1.8.1",
+			"eslint-plugin-mocha": "2.2.0",
+			"eslint-plugin-react": "5.1.1",
+			"flow-bin": "^0.26.0",
+			"gulp": "^3.9.1",
+			"gulp-babel": "^6.1.2",
+			"gulp-clean": "^0.3.2",
+			"gulp-eslint": "^2.0.0",
+			"gulp-exec": "^2.1.2",
+			"gulp-flowtype": "^0.4.9",
+			"gulp-mocha": "^2.2.0",
+			"gulp-rename": "^1.2.2",
+			"gulp-uglify": "^1.5.3",
+			"gulp-webpack": "^1.5.0",
+			"imports-loader": "0.6.5",
+			"json-loader": "0.5.4",
+			"karma": "0.13.22",
+			"karma-babel-preprocessor": "^6.0.1",
+			"karma-chai": "0.1.0",
+			"karma-chrome-launcher": "^1.0.1",
+			"karma-mocha": "^1.0.1",
+			"karma-phantomjs-launcher": "1.0.0",
+			"karma-spec-reporter": "0.0.26",
+			"mocha": "2.5.3",
+			"nock": "^8.0.0",
+			"node-uuid": "1.4.7",
+			"phantomjs-prebuilt": "2.1.7",
+			"proxyquire": "1.7.9",
+			"run-sequence": "^1.1.5",
+			"sinon": "^1.17.3",
+			"stats-webpack-plugin": "^0.3.1",
+			"uglify-js": "^2.6.2",
+			"underscore": "1.8.3",
+			"webpack": "^1.12.14",
+			"webpack-dev-server": "1.14.1",
+			"webpack-stats-plugin": "^0.1.1"
+		},
+		"bundleDependencies": [],
+		"license": "MIT",
+		"engine": {
+			"node": ">=0.8"
+		}
+	};
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _networking = __webpack_require__(3);
+
+	var _networking2 = _interopRequireDefault(_networking);
+
+	var _config = __webpack_require__(26);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _base = __webpack_require__(38);
+
+	var _base2 = _interopRequireDefault(_base);
+
+	var _flow_interfaces = __webpack_require__(29);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _class = function (_BaseEndoint) {
+	  _inherits(_class, _BaseEndoint);
+
+	  function _class(_ref) {
+	    var networking = _ref.networking;
+	    var config = _ref.config;
+
+	    _classCallCheck(this, _class);
+
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
+
+	    _this.networking = networking;
+	    return _this;
+	  }
+
+	  _createClass(_class, [{
+	    key: 'fetch',
+	    value: function fetch(callback) {
+	      var endpointConfig = {
+	        params: {
+	          uuid: { required: false }
+	        },
+	        url: '/time/0'
+	      };
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+
+	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	        if (status.error) return callback(status);
+
+	        var response = {};
+	        response.timetoken = payload[0];
 
 	        callback(status, response);
 	      });

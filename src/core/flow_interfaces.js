@@ -16,9 +16,9 @@ declare module 'lodash/pick' {
 }
 
 export type callbackStruct = {
-  onStatus: Function,
-  onPresence: Function,
-  onMessage: Function
+  status: Function,
+  presence: Function,
+  message: Function
 }
 
 export type proxyStruct = {
@@ -79,7 +79,7 @@ export type stateChangeAnnouncement = {
   channelGroups: Array<string>
 }
 
-// ****************** SUBSCRIPTIONS *******************************************
+// ****************** SUBSCRIPTIONS ********************************************
 
 type SubscribeMetadata = {
   timetoken: number,
@@ -95,7 +95,7 @@ type SubscribeMessage = {
   shard: string,
   subscriptionMatch: string,
   channel: string,
-  payload: string,
+  payload: Object,
   flags: string,
   issuingClientId: string,
   subscribeKey: string,
@@ -110,4 +110,31 @@ type SubscribeEnvelope = {
   metadata: SubscribeMetadata;
 }
 
-// ******************************************************************************
+// *****************************************************************************
+
+
+// ****************** Announcements ********************************************
+
+type PresenceAnnouncement = {
+  event: string,
+
+  uuid: string,
+  timestamp: number,
+  occupancy: number,
+  state: Object,
+
+  subscribedChannel: string,
+  actualChannel: string,
+  timetoken: number,
+  userMetadata: Object
+}
+
+type MessageAnnouncement = {
+
+  message: Object,
+
+  subscribedChannel: string,
+  actualChannel: string,
+  timetoken: number,
+  userMetadata: Object
+}

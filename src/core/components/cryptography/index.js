@@ -34,8 +34,6 @@ export default class {
   }
 
   HMACSHA256(data: string): string {
-    console.log(data, this._config.secretKey);
-
     let hash = CryptoJS.HmacSHA256(data, this._config.secretKey);
     return hash.toString(CryptoJS.enc.Base64);
   }

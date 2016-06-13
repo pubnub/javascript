@@ -76,11 +76,9 @@ export default class extends BaseEndoint {
 
       const messages: Array<SubscribeMessage> = [];
 
-      console.log('raw payload', payload);
-
       payload.m.forEach((rawMessage) => {
         let publishMetaData: PublishMetaData = {
-          publishTimetoken: rawMessage.p.o,
+          publishTimetoken: rawMessage.p.t,
           region: rawMessage.p.r
         };
         let parsedMessage: SubscribeMessage = {
@@ -98,12 +96,10 @@ export default class extends BaseEndoint {
       });
 
       const metadata: SubscribeMetadata = {
-        timetoken: parseInt(payload.t.t, 10),
+        timetoken: payload.t.t,
         region: payload.t.r
       };
       const response: SubscribeEnvelope = { messages, metadata };
-
-      console.log('parsed payload', response);
 
       callback(status, response);
     });

@@ -28,7 +28,6 @@ export default class {
   config: Config;
   crypto: Crypto;
   networking: Networking;
-  subscriptionManager: SubscriptionManager;
 
   // tell flow about the mounted endpoint
   time: Function;
@@ -50,17 +49,21 @@ export default class {
     this.networking = new Networking({ config: this.config, crypto: this.crypto, sendBeacon });
 
     const subscribeEndpoints = new SubscribeEndpoints({ networking: this.networking, config: this.config });
+    const presenceEndpoints = new PresenceEndpoints({ networking: this.networking, config: this.config });
+    const timeEndpoint = new TimeEndpoint({ networking: this.networking, config: this.config });
+    const pushEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
+    const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this.networking, config: this.config });
+    const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });
+    const historyEndpoint = new HistoryEndpoint({ networking: this.networking, config: this.config, crypto: this.crypto });
+    const accessEndpoints = new AccessEndpoints({ config: this.config, networking: this.networking, crypto: this.crypto });
 
-    this.subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this.config });
+    const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this.config, presenceEndpoints });
 
     // write the new key to storage
     db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
 
     // mount up the endpoints
-    const timeEndpoint = new TimeEndpoint({ networking: this.networking, config: this.config });
-    this.time = timeEndpoint.fetch.bind(timeEndpoint);
 
-    const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this.networking, config: this.config });
     this.channelGroups = {
       listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
       listAll: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
@@ -69,7 +72,6 @@ export default class {
       deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints),
     };
 
-    const pushEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
     this.pushNotifications = {
       listChannelsForDevice: pushEndpoints.listChannelsForDevice.bind(pushEndpoints),
       addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
@@ -77,27 +79,30 @@ export default class {
       removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
     };
 
-    const presenceEndpoints = new PresenceEndpoints({ networking: this.networking, config: this.config, subscriptionManager: this.subscriptionManager });
+
     this.presence = {
       whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
       getState: presenceEndpoints.getState.bind(presenceEndpoints),
-      setState: presenceEndpoints.setState.bind(presenceEndpoints)
+      setState: subscriptionManager.adaptStateChange.bind(subscriptionManager)
     };
 
-    const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });
-    this.publish = publishEndpoints.publish.bind(publishEndpoints);
-
-    const historyEndpoint = new HistoryEndpoint({ networking: this.networking, config: this.config, crypto: this.crypto });
-    this.history = historyEndpoint.fetch.bind(historyEndpoint);
-
-    const accessEndpoints = new AccessEndpoints({ config: this.config, networking: this.networking, crypto: this.crypto });
     this.accessManager = {
       grant: accessEndpoints.grant.bind(accessEndpoints),
       audit: accessEndpoints.audit.bind(accessEndpoints)
     };
 
-    this.subscribe = this.subscriptionManager.adaptSubscribeChange.bind(this.subscriptionManager);
-    this.unsubscribe = this.subscriptionManager.adaptUnsubscribeChange.bind(this.subscriptionManager);
+    this.publish = publishEndpoints.publish.bind(publishEndpoints);
+    this.history = historyEndpoint.fetch.bind(historyEndpoint);
+    this.time = timeEndpoint.fetch.bind(timeEndpoint);
+
+    // subscription related methods
+    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
+
+    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
+    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
+    //
 
     this.setCipherKey = this.config.setCipherKey.bind(this.config);
   }

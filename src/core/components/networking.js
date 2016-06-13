@@ -119,33 +119,6 @@ export default class {
     this._xdr({ data, callback, url });
   }
 
-  performLeave(channel: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let data = this.prepareParams(incomingData);
-    let origin = this.nextOrigin(false);
-    let url = [
-      origin, 'v2', 'presence', 'sub_key',
-      this._config.getSubscribeKey(), 'channel', utils.encode(channel), 'leave',
-    ];
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    if (this._config.getUUID()) {
-      data.uuid = this._config.getUUID();
-    }
-
-    if (this._config.useSendBeacon && this._sendBeacon) {
-      this._sendBeacon(utils.buildURL(url, data));
-    } else {
-      this._xdr({ data, callback, url });
-    }
-  }
-
   fetchHereNow(channel: string, channelGroup: string, incomingData: Object, callback: Function) {
     if (!this._config.getSubscribeKey()) {
       return callback(this._r.validationError('Missing Subscribe Key'));
@@ -196,8 +169,6 @@ export default class {
   }
 
   GET(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
-    console.log('params', params);
-
     let superagentConstruct = superagent
       .get(this.getStandardOrigin() + endpoint.url)
       .query(params);

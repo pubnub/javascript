@@ -33,6 +33,7 @@
   ],
   "dependencies": {
     "axios": "^0.11.1",
+    "big-integer": "^1.6.15",
     "event-emitter": "^0.3.4",
     "lodash": "^4.1.0",
     "loglevel": "^1.4.0",

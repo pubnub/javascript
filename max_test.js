@@ -15,13 +15,31 @@ const pubnub = new PubNub({
   sendByPost: true
 });
 
+pubnub.addListener({
+  presence: (presence) => {
+    // console.log("\n\n\n");
+    // console.log('incoming presence', presence);
+    // console.log("\n\n\n");
+  },
+  status: (status) => {
+    console.log("\n\n\n");
+    console.log('incoming status', status);
+    console.log("\n\n\n");
+  },
+  message: (message) => {
+    console.log("\n\n\n");
+    console.log('on listener, got message', message);
+    console.log("\n\n\n");
+  }
+});
+
 ploadz = {
   message: { such: 'object' },
   channel: 'max-max-max',
   sendByPost: true
 }
 
-pubnub.subscribe({ channels: ['max-ch1', 'max-ch2'], channelGroups: [],  withPresence: true });
+pubnub.unsubscribe({ channels: ['max-ch1', 'max-ch2'], channelGroups: [],  withPresence: true });
 
 //pubnub.accessManager.audit({ authKeys: ['a'], channel: 'max-ch1' }, (status, response) => {
 //  console.log(status, response);
