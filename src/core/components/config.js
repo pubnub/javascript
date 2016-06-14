@@ -125,6 +125,8 @@ export default class {
     this.origin = setup.origin || 'pubsub.pubnub.com';
     this.secure = setup.ssl || false;
 
+    this.logVerbosity = setup.logVerbosity || false;
+
     this.setRequestIdConfig(setup.useRequestId || false);
     this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
     this.setInstanceIdConfig(setup.useInstanceId || false);

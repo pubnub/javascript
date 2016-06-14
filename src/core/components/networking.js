@@ -1,8 +1,6 @@
 /* @flow */
 
 import superagent from 'superagent';
-import superagentLogger from 'superagent-logger';
-// import axios from 'axios';
 
 import Crypto from './cryptography/index';
 import Responders from '../presenters/responders';
@@ -52,7 +50,6 @@ export default class {
 
     // create initial origins
     this.shiftStandardOrigin(false);
-    this.shiftSubscribeOrigin(false);
   }
 
   nextOrigin(failover: boolean): string {
@@ -83,52 +80,8 @@ export default class {
     return this._standardOrigin;
   }
 
-  shiftSubscribeOrigin(failover: boolean = false): string {
-    this._subscribeOrigin = this.nextOrigin(failover);
-
-    return this._subscribeOrigin;
-  }
-
-
-  fetchHereNow(channel: string, channelGroup: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let data = this.prepareParams(incomingData);
-
-    if (this._config.getUUID()) {
-      data.uuid = this._config.getUUID();
-    }
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    let url = [
-      this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._config.getSubscribeKey(),
-    ];
-
-    if (channel) {
-      url.push('channel');
-      url.push(utils.encode(channel));
-    }
-
-    if (channelGroup && !channel) {
-      url.push('channel');
-      url.push(',');
-    }
-
-    this._xdr({ data, callback, url });
-  }
-
   getStandardOrigin(): string {
     return this._standardOrigin;
-  }
-
-  getSubscribeOrigin(): string {
-    return this._subscribeOrigin;
   }
 
   POST(params : Object, body: string, endpoint: endpointDefinition, callback: Function): superagent {
@@ -147,9 +100,14 @@ export default class {
   }
 
   _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {
+
+    // attach a logger
+    if (this._config.logVerbosity) {
+      superagentConstruct = superagentConstruct.use(this._logger());
+    }
+
     return superagentConstruct
       .type('json')
-      .use(superagentLogger({ outgoing: true, timestamp: true }))
       .timeout(timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
         let status: statusStruct = {};
@@ -164,5 +122,32 @@ export default class {
         let parsedResponse = JSON.parse(resp.text);
         return callback(status, parsedResponse);
       });
+  }
+
+  _logger(options) {
+    if (!options) options = {};
+    if (options instanceof superagent.Request) {
+      return this._attachSuperagentLogger({}, options);
+    } else {
+      return this._attachSuperagentLogger.bind(null, options);
+    }
+  }
+
+  _attachSuperagentLogger(options, req) {
+    let start = new Date().getTime();
+    let timestamp = new Date().toISOString();
+    console.log('<<<<<');                                               // eslint-disable-line no-console
+    console.log('[' + timestamp + ']', '\n', req.url, '\n', req.qs);    // eslint-disable-line no-console
+    console.log('-----');                                               // eslint-disable-line no-console
+
+    req.on('response', (res) => {
+      let now = new Date().getTime();
+      let elapsed = now - start;
+      let timestampDone = new Date().toISOString();
+
+      console.log('>>>>>>');                                                                                  // eslint-disable-line no-console
+      console.log('[' + timestampDone + ' / ' + elapsed + ']', '\n', req.url, '\n', req.qs, '\n', res.text);  // eslint-disable-line no-console
+      console.log('-----');                                                                                   // eslint-disable-line no-console
+    });
   }
 }

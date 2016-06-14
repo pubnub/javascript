@@ -32,14 +32,10 @@
     "messaging"
   ],
   "dependencies": {
-    "axios": "^0.11.1",
-    "big-integer": "^1.6.15",
     "event-emitter": "^0.3.4",
     "lodash": "^4.1.0",
     "loglevel": "^1.4.0",
-    "request": "^2.72.0",
     "superagent": "^2.0.0",
-    "superagent-logger": "^1.1.0",
     "uuid": "^2.0.1"
   },
   "noAnalyze": false,
@@ -81,14 +77,11 @@
     "karma-spec-reporter": "0.0.26",
     "mocha": "2.5.3",
     "nock": "^8.0.0",
-    "node-uuid": "1.4.7",
     "phantomjs-prebuilt": "2.1.7",
-    "proxyquire": "1.7.9",
     "run-sequence": "^1.1.5",
     "sinon": "^1.17.3",
     "stats-webpack-plugin": "^0.3.1",
     "uglify-js": "^2.6.2",
-    "underscore": "1.8.3",
     "webpack": "^1.12.14",
     "webpack-dev-server": "1.14.1",
     "webpack-stats-plugin": "^0.1.1"
