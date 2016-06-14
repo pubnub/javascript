@@ -12,7 +12,8 @@ const pubnub = new PubNub({
 const pubnub = new PubNub({
   subscribeKey: 'demo',
   publishKey: 'demo',
-  sendByPost: true
+  sendByPost: true,
+  presenceTimeout: 10
 });
 
 pubnub.addListener({
@@ -40,11 +41,11 @@ ploadz = {
 }
 
 
-pubnub.presence.hereNow({ channels: ['Shield_Proxy_Get_Analytics1', 'Shield_Proxy_Check_Online2'] }, (status, payload) => {
-  console.log(status, payload);
-})
+//pubnub.presence.hereNow({ channels: ['Shield_Proxy_Get_Analytics1', 'Shield_Proxy_Check_Online2'] }, (status, payload) => {
+//  console.log(status, payload);
+//})
 
-//pubnub.unsubscribe({ channels: ['max-ch1', 'max-ch2'], channelGroups: [],  withPresence: true });
+pubnub.subscribe({ channels: ['max-ch1', 'max-ch2'], channelGroups: [],  withPresence: true });
 
 //pubnub.accessManager.audit({ authKeys: ['a'], channel: 'max-ch1' }, (status, response) => {
 //  console.log(status, response);

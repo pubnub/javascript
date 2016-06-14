@@ -320,7 +320,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._maxSubDomain = 20;
 	    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
 
-	    this._providedFQDN = (config.isSslEnabled() ? 'https://' : 'http://') + config.getOrigin();
+	    this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
 	    this._coreParams = {};
 
 	    this.shiftStandardOrigin(false);
@@ -367,31 +367,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._subscribeOrigin = this.nextOrigin(failover);
 
 	      return this._subscribeOrigin;
-	    }
-	  }, {
-	    key: 'performHeartbeat',
-	    value: function performHeartbeat(channels, incomingData, callback) {
-	      if (!this._config.getSubscribeKey()) {
-	        return callback(this._r.validationError('Missing Subscribe Key'));
-	      }
-
-	      var data = this.prepareParams(incomingData);
-
-	      var url = [this.getStandardOrigin(), 'v2', 'presence', 'sub-key', this._config.getSubscribeKey(), 'channel', channels, 'heartbeat'];
-
-	      if (this._config.getAuthKey()) {
-	        data.auth = this._config.getAuthKey();
-	      }
-
-	      if (this._config.getUUID()) {
-	        data.uuid = this._config.getUUID();
-	      }
-
-	      if (this._config.isRequestIdEnabled()) {
-	        data.requestid = _utils2.default.generateUUID();
-	      }
-
-	      this._xdr({ data: data, callback: callback, url: url });
 	    }
 	  }, {
 	    key: 'fetchHereNow',
@@ -4174,11 +4149,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.baseParams = setup.params || {};
 	    this.UUID = setup.uuid || _uuid2.default.v4();
 
+	    this.origin = setup.origin || 'pubsub.pubnub.com';
+	    this.secure = setup.ssl || false;
+
 	    this.setRequestIdConfig(setup.useRequestId || false);
 	    this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
 	    this.setInstanceIdConfig(setup.useInstanceId || false);
-	    this.setSslConfig(setup.ssl || false);
-	    this.setOrigin(setup.origin || 'pubsub.pubnub.com');
 
 	    this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
 
@@ -4197,6 +4173,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setCipherKey',
 	    value: function setCipherKey(val) {
 	      this.cipherKey = val;return this;
+	    }
+	  }, {
+	    key: 'getPresenceTimeout',
+	    value: function getPresenceTimeout() {
+	      return this._presenceTimeout;
+	    }
+	  }, {
+	    key: 'setPresenceTimeout',
+	    value: function setPresenceTimeout(val) {
+	      this._presenceTimeout = val;
+	      this._presenceAnnounceInterval = this._presenceTimeout / 2 - 1;
+	      return this;
+	    }
+	  }, {
+	    key: 'getPresenceAnnounceInterval',
+	    value: function getPresenceAnnounceInterval() {
+	      return this._presenceAnnounceInterval;
+	    }
+	  }, {
+	    key: 'setPresenceAnnounceInterval',
+	    value: function setPresenceAnnounceInterval(val) {
+	      this._presenceAnnounceInterval = val;return this;
 	    }
 	  }, {
 	    key: 'isInstanceIdEnabled',
@@ -4249,26 +4247,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._suppressLeaveEvents = val;return this;
 	    }
 	  }, {
-	    key: 'isSslEnabled',
-	    value: function isSslEnabled() {
-	      return this._sslEnabled;
-	    }
-	  }, {
-	    key: 'setSslConfig',
-	    value: function setSslConfig(val) {
-	      this._sslEnabled = val;return this;
-	    }
-	  }, {
-	    key: 'getOrigin',
-	    value: function getOrigin() {
-	      return this._customOrigin;
-	    }
-	  }, {
-	    key: 'setOrigin',
-	    value: function setOrigin(val) {
-	      this._customOrigin = val;return this;
-	    }
-	  }, {
 	    key: 'isSendBeaconEnabled',
 	    value: function isSendBeaconEnabled() {
 	      return this._useSendBeacon;
@@ -4277,28 +4255,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setSendBeaconConfig',
 	    value: function setSendBeaconConfig(val) {
 	      this._useSendBeacon = val;return this;
-	    }
-	  }, {
-	    key: 'getPresenceTimeout',
-	    value: function getPresenceTimeout() {
-	      return this._presenceTimeout;
-	    }
-	  }, {
-	    key: 'setPresenceTimeout',
-	    value: function setPresenceTimeout(val) {
-	      this._presenceTimeout = val;
-	      this._presenceAnnounceInterval = this._presenceTimeout / 2 - 1;
-	      return this;
-	    }
-	  }, {
-	    key: 'getPresenceAnnounceInterval',
-	    value: function getPresenceAnnounceInterval() {
-	      return this._presenceAnnounceInterval;
-	    }
-	  }, {
-	    key: 'setPresenceAnnounceInterval',
-	    value: function setPresenceAnnounceInterval(val) {
-	      this._presenceAnnounceInterval = val;return this;
 	    }
 	  }]);
 
@@ -5415,11 +5371,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'reconnect',
 	    value: function reconnect() {
 	      this._startSubscribeLoop();
+	      this._registerHeartbeatTimer();
+	    }
+	  }, {
+	    key: 'disconnect',
+	    value: function disconnect() {
+	      this._stopSubscribeLoop();
+	    }
+	  }, {
+	    key: '_registerHeartbeatTimer',
+	    value: function _registerHeartbeatTimer() {
+	      this._stopHeartbeatTimer();
+	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getPresenceAnnounceInterval() * 1000);
+	    }
+	  }, {
+	    key: '_stopHeartbeatTimer',
+	    value: function _stopHeartbeatTimer() {
+	      if (this._heartbeatTimer) {
+	        clearInterval(this._heartbeatTimer);
+	        this._heartbeatTimer = null;
+	      }
+	    }
+	  }, {
+	    key: '_performHeartbeatLoop',
+	    value: function _performHeartbeatLoop() {
+	      var _this4 = this;
+
+	      var presenceChannels = Object.keys(this._channels);
+	      var presenceChannelGroups = Object.keys(this._channelGroups);
+	      var presenceState = {};
+
+	      presenceChannels.forEach(function (channel) {
+	        var channelState = _this4._channels[channel].state;
+	        if (channelState) presenceState[channel] = channelState;
+	      });
+
+	      presenceChannelGroups.forEach(function (channelGroup) {
+	        var channelGroupState = _this4.channelGroup[channelGroup].state;
+	        if (channelGroupState) presenceState[channelGroup] = channelGroupState;
+	      });
+
+	      this._presenceEndpoints.heartbeat({
+	        channels: presenceChannels,
+	        channelGroups: presenceChannelGroups,
+	        state: presenceState }, function (status) {
+	        console.log(status);
+	      });
 	    }
 	  }, {
 	    key: '_startSubscribeLoop',
 	    value: function _startSubscribeLoop() {
-	      var _this4 = this;
+	      var _this5 = this;
 
 	      this._stopSubscribeLoop();
 	      var channels = [];
@@ -5449,8 +5451,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        region: this._region
 	      }, function (status, payload) {
 	        if (status.error) {
-	          console.log("subscribe tanked");
-	          _this4._startSubscribeLoop();
+	          _this5._startSubscribeLoop();
 	          return;
 	        }
 
@@ -5472,26 +5473,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	            announce.occupancy = message.payload.occupancy;
 	            announce.uuid = message.payload.uuid;
 	            announce.timestamp = message.payload.timestamp;
-	            _this4._announcePresence(announce);
+	            _this5._announcePresence(announce);
 	          } else {
 	            var _announce = {};
 	            _announce.actualChannel = subscriptionMatch != null ? channel : null;
 	            _announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
 	            _announce.timetoken = publishMetaData.publishTimetoken;
 
-	            if (_this4._config.cipherKey) {
-	              _announce.message = _this4._crypto.decrypt(message.payload);
+	            if (_this5._config.cipherKey) {
+	              _announce.message = _this5._crypto.decrypt(message.payload);
 	            } else {
 	                _announce.message = message.payload;
 	              }
 
-	            _this4._announceMessage(_announce);
+	            _this5._announceMessage(_announce);
 	          }
 	        });
 
-	        _this4._region = payload.metadata.region;
-	        _this4._timetoken = payload.metadata.timetoken;
-	        _this4._startSubscribeLoop();
+	        _this5._region = payload.metadata.region;
+	        _this5._timetoken = payload.metadata.timetoken;
+	        _this5._startSubscribeLoop();
 	      });
 	    }
 	  }, {
@@ -6381,6 +6382,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        callback(status, response);
+	      });
+	    }
+	  }, {
+	    key: 'heartbeat',
+	    value: function heartbeat(args, callback) {
+	      var _args$channels5 = args.channels;
+	      var channels = _args$channels5 === undefined ? [] : _args$channels5;
+	      var _args$channelGroups5 = args.channelGroups;
+	      var channelGroups = _args$channelGroups5 === undefined ? [] : _args$channelGroups5;
+	      var _args$state = args.state;
+	      var state = _args$state === undefined ? {} : _args$state;
+
+	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+	      var endpointConfig = {
+	        params: {
+	          uuid: { required: false },
+	          authKey: { required: false }
+	        },
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat'
+	      };
+
+	      if (!this.validateEndpointConfig(endpointConfig)) {
+	        return;
+	      }
+
+	      var params = this.createBaseParams(endpointConfig);
+
+	      if (channelGroups.length > 0) {
+	        params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	      }
+
+	      params.state = encodeURIComponent(JSON.stringify(state));
+	      params.heartbeat = this.config.getPresenceTimeout();
+
+	      this.networking.GET(params, endpointConfig, function (status) {
+	        return callback(status);
 	      });
 	    }
 	  }]);

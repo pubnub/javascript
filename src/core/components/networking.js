@@ -47,7 +47,7 @@ export default class {
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
 
-    this._providedFQDN = (config.isSslEnabled() ? 'https://' : 'http://') + config.getOrigin();
+    this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
     this._coreParams = {};
 
     // create initial origins
@@ -89,35 +89,6 @@ export default class {
     return this._subscribeOrigin;
   }
 
-
-  performHeartbeat(channels: string, incomingData: Object, callback: Function) {
-    if (!this._config.getSubscribeKey()) {
-      return callback(this._r.validationError('Missing Subscribe Key'));
-    }
-
-    let data = this.prepareParams(incomingData);
-
-    let url = [
-      this.getStandardOrigin(), 'v2', 'presence',
-      'sub-key', this._config.getSubscribeKey(),
-      'channel', channels,
-      'heartbeat',
-    ];
-
-    if (this._config.getAuthKey()) {
-      data.auth = this._config.getAuthKey();
-    }
-
-    if (this._config.getUUID()) {
-      data.uuid = this._config.getUUID();
-    }
-
-    if (this._config.isRequestIdEnabled()) {
-      data.requestid = utils.generateUUID();
-    }
-
-    this._xdr({ data, callback, url });
-  }
 
   fetchHereNow(channel: string, channelGroup: string, incomingData: Object, callback: Function) {
     if (!this._config.getSubscribeKey()) {

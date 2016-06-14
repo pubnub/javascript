@@ -58,6 +58,12 @@ type leaveArguments = {
   channelGroups: Array<string>,
 }
 
+type heartbeatArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  state: Object
+}
+
 export default class extends BaseEndoint {
   networking: Networking;
   config: Config;
@@ -327,25 +333,33 @@ export default class extends BaseEndoint {
     });
   }
 
-
-  /*
-  heartbeat(callback: Function) {
-    let data: Object = {
-      state: JSON.stringify(this._state.getPresenceState()),
-      heartbeat: this._state.getPresenceTimeout()
+  heartbeat(args: heartbeatArguments, callback: Function) {
+    let { channels = [], channelGroups = [], state = {} } = args;
+    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    const endpointConfig: endpointDefinition = {
+      params: {
+        uuid: { required: false },
+        authKey: { required: false }
+      },
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat'
     };
 
-    let channels = this._state.getSubscribedChannels();
-    let channelGroups = this._state.getSubscribedChannelGroups();
+    // validate this request and return false if stuff is missing
+    if (!this.validateEndpointConfig(endpointConfig)) { return; }
+
+    // create base params
+    const params = this.createBaseParams(endpointConfig);
 
     if (channelGroups.length > 0) {
-      data['channel-group'] = channelGroups.join(',');
+      params['channel-group'] = encodeURIComponent(channelGroups.join(','));
     }
 
-    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    params.state = encodeURIComponent(JSON.stringify(state));
+    params.heartbeat = this.config.getPresenceTimeout();
 
-    this._networking.performHeartbeat(stringifiedChannels, data, callback);
+    this.networking.GET(params, endpointConfig, (status: statusStruct) =>
+      callback(status)
+    );
   }
-  */
 
 }

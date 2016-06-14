@@ -122,11 +122,13 @@ export default class {
     this.baseParams = setup.params || {};
     this.UUID = setup.uuid || uuidGenerator.v4();
 
+    this.origin = setup.origin || 'pubsub.pubnub.com';
+    this.secure = setup.ssl || false;
+
     this.setRequestIdConfig(setup.useRequestId || false);
     this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
     this.setInstanceIdConfig(setup.useInstanceId || false);
-    this.setSslConfig(setup.ssl || false);
-    this.setOrigin(setup.origin || 'pubsub.pubnub.com');
+
     // set timeout to how long a transaction request will wait for the server (default 15 seconds)
     this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
     // set timeout to how long a subscribe event loop will run (default 310 seconds)
@@ -144,6 +146,17 @@ export default class {
   // exposed setters
   setCipherKey(val: string): this { this.cipherKey = val; return this; }
 
+  getPresenceTimeout(): number { return this._presenceTimeout; }
+  setPresenceTimeout(val: number): this {
+    this._presenceTimeout = val;
+    this._presenceAnnounceInterval = (this._presenceTimeout / 2) - 1;
+    return this;
+  }
+
+  getPresenceAnnounceInterval(): number { return this._presenceAnnounceInterval; }
+  setPresenceAnnounceInterval(val: number): this { this._presenceAnnounceInterval = val; return this; }
+
+  // deprecated setters.
   isInstanceIdEnabled(): boolean { return this._useInstanceId; }
   setInstanceIdConfig(val: boolean): this { this._useInstanceId = val; return this; }
 
@@ -159,23 +172,7 @@ export default class {
   isSuppressingLeaveEvents(): boolean { return this._suppressLeaveEvents; }
   setSupressLeaveEvents(val: boolean): this { this._suppressLeaveEvents = val; return this; }
 
-  isSslEnabled(): boolean { return this._sslEnabled; }
-  setSslConfig(val: boolean): this { this._sslEnabled = val; return this; }
-
-  getOrigin(): string { return this._customOrigin; }
-  setOrigin(val: string): this { this._customOrigin = val; return this; }
-
   isSendBeaconEnabled(): boolean { return this._useSendBeacon; }
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
-
-  getPresenceTimeout(): number { return this._presenceTimeout; }
-  setPresenceTimeout(val: number): this {
-    this._presenceTimeout = val;
-    this._presenceAnnounceInterval = (this._presenceTimeout / 2) - 1;
-    return this;
-  }
-
-  getPresenceAnnounceInterval(): number { return this._presenceAnnounceInterval; }
-  setPresenceAnnounceInterval(val: number): this { this._presenceAnnounceInterval = val; return this; }
 
 }

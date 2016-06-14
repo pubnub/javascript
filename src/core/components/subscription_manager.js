@@ -4,8 +4,7 @@ import PresenceEndpoints from '../endpoints/presence';
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
 import utils from '../utils';
-import { SubscribeMetadata, MessageAnnouncement,
-  SubscribeEnvelope, statusStruct, callbackStruct, PresenceAnnouncement } from '../flow_interfaces';
+import { MessageAnnouncement, SubscribeEnvelope, statusStruct, callbackStruct, PresenceAnnouncement } from '../flow_interfaces';
 
 type subscribeArgs = {
   channels: Array<string>,
@@ -49,6 +48,8 @@ export default class {
   _presenceEndpoints: PresenceEndpoints;
 
   _listeners: Array<callbackStruct>;
+
+  _heartbeatTimer: number;
 
   constructor({ subscribeEndpoints, presenceEndpoints, config, crypto }: subscriptionManagerConsturct) {
     this._channels = {};
@@ -130,6 +131,46 @@ export default class {
 
   reconnect() {
     this._startSubscribeLoop();
+    this._registerHeartbeatTimer();
+  }
+
+  disconnect() {
+    this._stopSubscribeLoop();
+  }
+
+  _registerHeartbeatTimer() {
+    this._stopHeartbeatTimer();
+    this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getPresenceAnnounceInterval() * 1000);
+  }
+
+  _stopHeartbeatTimer() {
+    if (this._heartbeatTimer) {
+      clearInterval(this._heartbeatTimer);
+      this._heartbeatTimer = null;
+    }
+  }
+
+  _performHeartbeatLoop() {
+    let presenceChannels = Object.keys(this._channels);
+    let presenceChannelGroups = Object.keys(this._channelGroups);
+    let presenceState = {};
+
+    presenceChannels.forEach((channel) => {
+      let channelState = this._channels[channel].state;
+      if (channelState) presenceState[channel] = channelState;
+    });
+
+    presenceChannelGroups.forEach((channelGroup) => {
+      let channelGroupState = this.channelGroup[channelGroup].state;
+      if (channelGroupState) presenceState[channelGroup] = channelGroupState;
+    });
+
+    this._presenceEndpoints.heartbeat({
+      channels: presenceChannels,
+      channelGroups: presenceChannelGroups,
+      state: presenceState }, (status) => {
+          console.log(status);
+    });
   }
 
   _startSubscribeLoop() {
@@ -153,8 +194,6 @@ export default class {
       region: this._region
     }, (status: statusStruct, payload: SubscribeEnvelope) => {
       if (status.error) {
-        // TODO handle failure
-        console.log("subscribe tanked");
         this._startSubscribeLoop();
         return;
       }
