@@ -13,7 +13,7 @@ const pubnub = new PubNub({
   subscribeKey: 'demo',
   publishKey: 'demo',
   sendByPost: true,
-  presenceTimeout: 10
+  logVerbosity: true
 });
 
 pubnub.addListener({

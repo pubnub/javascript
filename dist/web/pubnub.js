@@ -3664,6 +3664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          uuid: {},
 	          subscribeKey: { required: true }
 	        },
+	        timeout: this._config.getSubscribeTimeout(),
 	        url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0'
 	      };
 

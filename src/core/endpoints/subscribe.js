@@ -47,6 +47,7 @@ export default class extends BaseEndoint {
         uuid: {},
         subscribeKey: { required: true }
       },
+      timeout: this._config.getSubscribeTimeout(),
       url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0'
     };
 
@@ -104,59 +105,4 @@ export default class extends BaseEndoint {
       callback(status, response);
     });
   }
-
-  /*
-  unsubscribe(args: unsubscribeArguments) {
-    let { onStatus } = this._callbacks;
-    let { channels = [], channelGroups = [] } = args;
-    let existingChannels = []; // matching channels to unsubscribe
-    let existingChannelGroups = []; // matching channel groups to unsubscribe
-    let data = {};
-
-    // Make sure we have a Channel
-    if (!onStatus) {
-      return this._l.error('Missing onStatus Callback');
-    }
-
-    if (channels.length === 0 && channelGroups.length === 0) {
-      return onStatus(this._r.validationError('Missing Channel or Channel Group'));
-    }
-
-    if (channels) {
-      channels.forEach((channel) => {
-        if (this._state.containsChannel(channel)) {
-          existingChannels.push(channel);
-        }
-      });
-    }
-
-    if (channelGroups) {
-      channelGroups.forEach((channelGroup) => {
-        if (this._state.containsChannelGroup(channelGroup)) {
-          existingChannelGroups.push(channelGroup);
-        }
-      });
-    }
-
-    // if NO channels && channel groups to unsubscribe, trigger a callback
-    if (existingChannels.length === 0 && existingChannelGroups.length === 0) {
-      return onStatus(this._r.validationError('already unsubscribed from all channel / channel groups'));
-    }
-
-    let stringifiedChannelParam = existingChannels.length > 0 ? existingChannels.join(',') : ',';
-
-    if (existingChannelGroups.length > 0) {
-      data['channel-group'] = existingChannelGroups.join(',');
-    }
-
-    this._networking.performLeave(stringifiedChannelParam, data, (err, response) => {
-      if (err) return onStatus(err, null);
-
-      this._postUnsubscribeCleanup(existingChannels, existingChannelGroups);
-      this._state.setSubscribeTimeToken('0');
-      this._state.announceSubscriptionChange();
-      onStatus(null, { action: 'unsubscribe', status: 'finished', response });
-    });
-  }
-  */
 }
