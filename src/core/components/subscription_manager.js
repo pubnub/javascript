@@ -136,6 +136,7 @@ export default class {
 
   disconnect() {
     this._stopSubscribeLoop();
+    this._stopHeartbeatTimer();
   }
 
   _registerHeartbeatTimer() {

@@ -4,7 +4,7 @@
 import assert from 'assert';
 import nock from 'nock';
 import utils from '../utils';
-import PubNub from '../../../src/node.js/index.js';
+import PubNub from '../../src/node.js/index.js';
 
 describe('setting state operation', () => {
   let pubnub;
@@ -29,7 +29,7 @@ describe('setting state operation', () => {
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
-      pubnub.presence.setState({ channels: ['ch1'], state: { hello: 'there' } }, (status, response) => {
+      pubnub.setState({ channels: ['ch1'], state: { hello: 'there' } }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.state, { age: 20, status: 'online' });
         assert.equal(scope.isDone(), true);
@@ -43,7 +43,7 @@ describe('setting state operation', () => {
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
-      pubnub.presence.setState({ channels: ['ch1', 'ch2'], state: { hello: 'there' } }, (status, response) => {
+      pubnub.setState({ channels: ['ch1', 'ch2'], state: { hello: 'there' } }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.state, { age: 20, status: 'online' });
         assert.equal(scope.isDone(), true);
@@ -57,7 +57,7 @@ describe('setting state operation', () => {
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
-      pubnub.presence.setState({ channelGroups: ['cg1'], state: { hello: 'there' } }, (status, response) => {
+      pubnub.setState({ channelGroups: ['cg1'], state: { hello: 'there' } }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.state, { age: 20, status: 'online' });
         assert.equal(scope.isDone(), true);
@@ -71,7 +71,7 @@ describe('setting state operation', () => {
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
-      pubnub.presence.setState({ channelGroups: ['cg1', 'cg2'], state: { hello: 'there' } }, (status, response) => {
+      pubnub.setState({ channelGroups: ['cg1', 'cg2'], state: { hello: 'there' } }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.state, { age: 20, status: 'online' });
         assert.equal(scope.isDone(), true);

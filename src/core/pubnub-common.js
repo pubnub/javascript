@@ -44,53 +44,44 @@ export default class {
   constructor(setup: internalSetupStruct) {
     let { sendBeacon, db } = setup;
 
-    this.config = new Config(setup);
-    this.crypto = new Crypto({ config: this.config });
-    this.networking = new Networking({ config: this.config, crypto: this.crypto, sendBeacon });
+    this._config = new Config(setup);
+    this._crypto = new Crypto({ config: this._config });
+    this._networking = new Networking({ config: this._config, crypto: this._crypto, sendBeacon });
 
-    const subscribeEndpoints = new SubscribeEndpoints({ networking: this.networking, config: this.config });
-    const presenceEndpoints = new PresenceEndpoints({ networking: this.networking, config: this.config });
-    const timeEndpoint = new TimeEndpoint({ networking: this.networking, config: this.config });
-    const pushEndpoints = new PushEndpoint({ networking: this.networking, config: this.config });
-    const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this.networking, config: this.config });
-    const publishEndpoints = new PublishEndpoints({ networking: this.networking, config: this.config, crypto: this.crypto });
-    const historyEndpoint = new HistoryEndpoint({ networking: this.networking, config: this.config, crypto: this.crypto });
-    const accessEndpoints = new AccessEndpoints({ config: this.config, networking: this.networking, crypto: this.crypto });
+    const subscribeEndpoints = new SubscribeEndpoints({ networking: this._networking, config: this._config });
+    const presenceEndpoints = new PresenceEndpoints({ networking: this._networking, config: this._config });
+    const timeEndpoint = new TimeEndpoint({ networking: this._networking, config: this._config });
+    const pushEndpoints = new PushEndpoint({ networking: this._networking, config: this._config });
+    const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this._networking, config: this._config });
+    const publishEndpoints = new PublishEndpoints({ networking: this._networking, config: this._config, crypto: this._crypto });
+    const historyEndpoint = new HistoryEndpoint({ networking: this._networking, config: this._config, crypto: this._crypto });
+    const accessEndpoints = new AccessEndpoints({ config: this._config, networking: this._networking, crypto: this._crypto });
 
-    const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this.config, presenceEndpoints });
+    const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this._config, presenceEndpoints });
 
     // write the new key to storage
-    db.set(this.config.subscribeKey + 'uuid', this.config.UUID);
+    db.set(this._config.subscribeKey + 'uuid', this._config.UUID);
 
     // mount up the endpoints
-
-    this.channelGroups = {
-      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
-      listAll: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
-      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
-      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
-      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints),
-    };
-
-    this.pushNotifications = {
-      listChannelsForDevice: pushEndpoints.listChannelsForDevice.bind(pushEndpoints),
-      addDeviceToChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
-      removeDeviceFromChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
-      removeDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
-    };
-
-
-    this.presence = {
-      hereNow: presenceEndpoints.hereNow.bind(presenceEndpoints),
-      whereNow: presenceEndpoints.whereNow.bind(presenceEndpoints),
-      getState: presenceEndpoints.getState.bind(presenceEndpoints),
-      setState: subscriptionManager.adaptStateChange.bind(subscriptionManager)
-    };
-
-    this.accessManager = {
-      grant: accessEndpoints.grant.bind(accessEndpoints),
-      audit: accessEndpoints.audit.bind(accessEndpoints)
-    };
+    /** channel groups **/
+    this.listAllChannelGroups = channelGroupEndpoints.listGroups.bind(channelGroupEndpoints);
+    this.listChannelsForChannelGroup = channelGroupEndpoints.listChannels.bind(channelGroupEndpoints);
+    this.addChannelsToChannelGroup = channelGroupEndpoints.addChannels.bind(channelGroupEndpoints);
+    this.removeChannelsFromChannelGroup = channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints);
+    this.deleteChannelGroup = channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints);
+    /** push **/
+    this.addPushNotificationsOnChannels = pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints);
+    this.removePushNotificationsFromChannels = pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints);
+    this.removeAllPushNotificationsFromDeviceWithPushToken = pushEndpoints.removeDevice.bind(pushEndpoints);
+    this.auditPushChannelProvisions = pushEndpoints.listChannelsForDevice.bind(pushEndpoints);
+    /** presence **/
+    this.hereNow = presenceEndpoints.hereNow.bind(presenceEndpoints);
+    this.whereNow = presenceEndpoints.whereNow.bind(presenceEndpoints);
+    this.getState = presenceEndpoints.getState.bind(presenceEndpoints);
+    this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+    /** PAM **/
+    this.grant = accessEndpoints.grant.bind(accessEndpoints);
+    this.audit = accessEndpoints.audit.bind(accessEndpoints);
 
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
     this.history = historyEndpoint.fetch.bind(historyEndpoint);
@@ -101,11 +92,13 @@ export default class {
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
+    this.stop = subscriptionManager.disconnect.bind(this.subscriptionManager);
+    this.reconnect = subscriptionManager.reconnect.bind(this.SubscriptionManager);
+
     this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
     this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
-    //
-
-    this.setCipherKey = this.config.setCipherKey.bind(this.config);
+    /** config **/
+    this.setCipherKey = this._config.setCipherKey.bind(this._config);
   }
 
 
