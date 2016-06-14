@@ -155,6 +155,10 @@ export default class {
     let presenceChannelGroups = Object.keys(this._channelGroups);
     let presenceState = {};
 
+    if (presenceChannels.length === 0 && presenceChannelGroups.length === 0) {
+      return;
+    }
+
     presenceChannels.forEach((channel) => {
       let channelState = this._channels[channel].state;
       if (channelState) presenceState[channel] = channelState;
