@@ -125,6 +125,11 @@ export default class {
     this.origin = setup.origin || 'pubsub.pubnub.com';
     this.secure = setup.ssl || false;
 
+    // if location config exist and we are in https, force secure to true.
+    if (typeof location !== 'undefined' && location.protocol === 'https:') {
+      this.secure = true;
+    }
+
     this.logVerbosity = setup.logVerbosity || false;
 
     this.setRequestIdConfig(setup.useRequestId || false);
