@@ -25,9 +25,9 @@ import { internalSetupStruct } from './flow_interfaces';
 
 export default class {
 
-  config: Config;
-  crypto: Crypto;
-  networking: Networking;
+  _config: Config;
+  _crypto: Crypto;
+  _networking: Networking;
 
   // tell flow about the mounted endpoint
   time: Function;
@@ -59,8 +59,6 @@ export default class {
 
     const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this._config, presenceEndpoints });
 
-    // write the new key to storage
-    db.set(this._config.subscribeKey + 'uuid', this._config.UUID);
 
     // mount up the endpoints
     /** channel groups **/

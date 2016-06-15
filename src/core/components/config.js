@@ -95,12 +95,18 @@ export default class {
   /*
     use SSL for http requests?
   */
-  _sslEnabled: boolean;
+  secure: boolean;
 
   /*
     Custom optional origin.
   */
-  _customOrigin: string;
+  origin: string;
+
+  /*
+    log verbosity: true to output lots of info
+  */
+
+  logVerbosity: boolean;
 
   /*
     how long the server will wait before declaring that the client is gone.
