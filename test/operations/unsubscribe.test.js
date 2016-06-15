@@ -4,7 +4,7 @@
 import assert from 'assert';
 import nock from 'nock';
 import utils from '../utils';
-import PubNub from '../../src/node.js/index.js';
+import PubNub from '../../src/node/index.js';
 
 describe('unsubscribe', () => {
   let pubnub;
@@ -20,6 +20,10 @@ describe('unsubscribe', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
+  });
+
+  afterEach(() => {
+    pubnub.stop();
   });
 
   describe('#unsubscribe', () => {

@@ -12,6 +12,8 @@ const exec = require('child_process').exec;
 const Karma = require('karma').Server;
 const mocha = require('gulp-mocha');
 const runSequence = require('run-sequence');
+const gulpIstanbul = require('gulp-istanbul');
+const isparta = require('isparta');
 
 gulp.task('clean', () => {
   return gulp.src(['lib/', 'dist'], { read: false })
@@ -62,14 +64,23 @@ gulp.task('karma_client_min', (done) => {
   }, done).start();
 });
 
+gulp.task('pre-test', () => {
+  return gulp.src(['src/**/*.js'])
+    // Covering files
+    .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter }))
+    // Force `require` to return covered files
+    .pipe(gulpIstanbul.hookRequire());
+});
+
 gulp.task('test_release', () => {
   return gulp.src('test/release/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('test_server', () => {
+gulp.task('test_server', ['pre-test'], () => {
   return gulp.src('test/**/*.test.js', { read: false })
-    .pipe(mocha({ reporter: 'spec' }));
+    .pipe(mocha({ reporter: 'spec' }))
+    .pipe(gulpIstanbul.writeReports({ reporters: ['lcov', 'json', 'text', 'text-summary', 'html'] }));
 });
 
 gulp.task('webpack', ['compile_web']);
@@ -77,8 +88,8 @@ gulp.task('compile', ['clean', 'babel', 'webpack', 'uglify']);
 
 gulp.task('validate', ['lint', 'flow']);
 gulp.task('test_client', (done) => {
-  return runSequence('karma_client_full', 'karma_client_min', done);
+  runSequence('karma_client_full', 'karma_client_min', done);
 });
 gulp.task('test', (done) => {
-  return runSequence('test_server', 'test_release', done);
+  runSequence('test_server', 'test_release', done);
 });

@@ -135,43 +135,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _subscription_manager = __webpack_require__(19);
+	var _subscription_manager = __webpack_require__(18);
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _package = __webpack_require__(25);
+	var _package = __webpack_require__(24);
 
 	var _package2 = _interopRequireDefault(_package);
 
-	var _time = __webpack_require__(26);
+	var _time = __webpack_require__(25);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(24);
+	var _presence = __webpack_require__(23);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(27);
+	var _history = __webpack_require__(26);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(28);
+	var _push = __webpack_require__(27);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(29);
+	var _access = __webpack_require__(28);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _channel_groups = __webpack_require__(30);
+	var _channel_groups = __webpack_require__(29);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _subscribe = __webpack_require__(20);
+	var _subscribe = __webpack_require__(19);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _publish = __webpack_require__(31);
+	var _publish = __webpack_require__(30);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
@@ -189,7 +189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var db = setup.db;
 
 
-	    this._config = new _config2.default(setup);
+	    this._config = new _config2.default({ setup: setup, db: db });
 	    this._crypto = new _index2.default({ config: this._config });
 	    this._networking = new _networking2.default({ config: this._config, crypto: this._crypto, sendBeacon: sendBeacon });
 
@@ -203,8 +203,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var accessEndpoints = new _access2.default({ config: this._config, networking: this._networking, crypto: this._crypto });
 
 	    var subscriptionManager = new _subscription_manager2.default({ subscribeEndpoints: subscribeEndpoints, config: this._config, presenceEndpoints: presenceEndpoints });
-
-	    db.set(this._config.subscribeKey + 'uuid', this._config.UUID);
 
 	    this.listAllChannelGroups = channelGroupEndpoints.listGroups.bind(channelGroupEndpoints);
 	    this.listChannelsForChannelGroup = channelGroupEndpoints.listChannels.bind(channelGroupEndpoints);
@@ -233,13 +231,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
-	    this.stop = subscriptionManager.disconnect.bind(this.subscriptionManager);
-	    this.reconnect = subscriptionManager.reconnect.bind(this.SubscriptionManager);
+	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
+	    this.reconnect = subscriptionManager.reconnect.bind(_subscription_manager2.default);
 
 	    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
 	    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
 
 	    this.setCipherKey = this._config.setCipherKey.bind(this._config);
+	    this.getUUID = this._config.getUUID.bind(this._config);
+	    this.setUUID = this._config.setUUID.bind(this._config);
 	  }
 
 	  _createClass(_class, [{
@@ -2188,8 +2188,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var _class = function () {
-	  function _class(setup) {
+	  function _class(_ref) {
+	    var setup = _ref.setup;
+	    var db = _ref.db;
+
 	    _classCallCheck(this, _class);
+
+	    this._db = db;
 
 	    this.instanceId = _uuid2.default.v4();
 	    this.authKey = setup.authKey || '';
@@ -2198,7 +2203,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.publishKey = setup.publishKey;
 	    this.cipherKey = setup.cipherKey;
 	    this.baseParams = setup.params || {};
-	    this.UUID = setup.uuid || _uuid2.default.v4();
 
 	    this.origin = setup.origin || 'pubsub.pubnub.com';
 	    this.secure = setup.ssl || false;
@@ -2208,9 +2212,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    this.logVerbosity = setup.logVerbosity || false;
+	    this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
 	    this.setRequestIdConfig(setup.useRequestId || false);
-	    this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
 	    this.setInstanceIdConfig(setup.useInstanceId || false);
 
 	    this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
@@ -2224,12 +2228,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (setup.presenceAnnounceInterval) {
 	      this.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
 	    }
+
+	    this.setUUID(this._decideUUID(setup.uuid));
 	  }
 
 	  _createClass(_class, [{
 	    key: 'setCipherKey',
 	    value: function setCipherKey(val) {
 	      this.cipherKey = val;return this;
+	    }
+	  }, {
+	    key: 'getUUID',
+	    value: function getUUID() {
+	      return this.UUID;
+	    }
+	  }, {
+	    key: 'setUUID',
+	    value: function setUUID(val) {
+	      if (this._db && this._db.set) this._db.set(this.subscribeKey + 'uuid', val);
+	      this.UUID = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'getPresenceTimeout',
@@ -2294,16 +2312,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._transactionalRequestTimeout = val;return this;
 	    }
 	  }, {
-	    key: 'isSuppressingLeaveEvents',
-	    value: function isSuppressingLeaveEvents() {
-	      return this._suppressLeaveEvents;
-	    }
-	  }, {
-	    key: 'setSupressLeaveEvents',
-	    value: function setSupressLeaveEvents(val) {
-	      this._suppressLeaveEvents = val;return this;
-	    }
-	  }, {
 	    key: 'isSendBeaconEnabled',
 	    value: function isSendBeaconEnabled() {
 	      return this._useSendBeacon;
@@ -2312,6 +2320,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setSendBeaconConfig',
 	    value: function setSendBeaconConfig(val) {
 	      this._useSendBeacon = val;return this;
+	    }
+	  }, {
+	    key: '_decideUUID',
+	    value: function _decideUUID(providedUUID) {
+	      if (providedUUID) {
+	        return providedUUID;
+	      }
+
+	      if (this._db && this._db.get && this._db.get(this.subscribeKey + 'uuid')) {
+	        return this._db.get(this.subscribeKey + 'uuid');
+	      }
+
+	      return _uuid2.default.v4();
 	    }
 	  }]);
 
@@ -3092,26 +3113,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 17 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
-
-	var _uuid = __webpack_require__(12);
-
-	var _uuid2 = _interopRequireDefault(_uuid);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var defaultConfiguration = __webpack_require__(18);
-	var NOW = 1;
-
-	function rnow() {
-	  return +new Date();
-	}
-
-	function unique() {
-	  return 'x' + ++NOW + '' + +new Date();
-	}
 
 	function isArray(arg) {
 	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === 'number');
@@ -3170,91 +3174,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }).join('&');
 	}
 
-	function validateHeartbeat(heartbeat, cur_heartbeat, error) {
-	  var err = false;
-
-	  if (typeof heartbeat === 'undefined') {
-	    return cur_heartbeat;
-	  }
-
-	  if (typeof heartbeat === 'number') {
-	    if (heartbeat > defaultConfiguration._minimumHeartbeatInterval || heartbeat === 0) {
-	      err = false;
-	    } else {
-	      err = true;
-	    }
-	  } else if (typeof heartbeat === 'boolean') {
-	    if (!heartbeat) {
-	      return 0;
-	    } else {
-	      return defaultConfiguration._defaultHeartbeatInterval;
-	    }
-	  } else {
-	    err = true;
-	  }
-
-	  if (err) {
-	    if (error) {
-	      var errorMessage = 'Presence Heartbeat value invalid. Valid range ( x >';
-	      errorMessage += defaultConfiguration._minimumHeartbeatInterval + ' or x = 0). Current Value : ';
-	      errorMessage += cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
-
-	      error(errorMessage);
-	    }
-	    return cur_heartbeat || defaultConfiguration._minimumHeartbeatInterval;
-	  } else return heartbeat;
-	}
-
-	function v2ChangeKey(o, ok, nk) {
-	  if (typeof o[ok] !== 'undefined') {
-	    var t = o[ok];
-	    o[nk] = t;
-	    delete o[ok];
-	  }
-	  return true;
-	}
-
-	function v2ExpandKeys(m) {
-	  if (m.o) {
-	    v2ChangeKey(m.o, 't', 'timetoken');
-	    v2ChangeKey(m.o, 'r', 'regionCode');
-	  }
-
-	  if (m.p) {
-	    v2ChangeKey(m.p, 't', 'timetoken');
-	    v2ChangeKey(m.p, 'r', 'regionCode');
-	  }
-
-	  v2ChangeKey(m, 'a', 'shard');
-	  v2ChangeKey(m, 'b', 'subscriptionMatch');
-	  v2ChangeKey(m, 'c', 'channel');
-	  v2ChangeKey(m, 'd', 'payload');
-	  v2ChangeKey(m, 'ear', 'eatAfterReading');
-	  v2ChangeKey(m, 'f', 'flags');
-	  v2ChangeKey(m, 'i', 'issuing_client_id');
-	  v2ChangeKey(m, 'k', 'subscribeKey');
-	  v2ChangeKey(m, 's', 'sequenceNumber');
-	  v2ChangeKey(m, 'o', 'originationTimetoken');
-	  v2ChangeKey(m, 'p', 'publishTimetoken');
-	  v2ChangeKey(m, 'r', 'replicationMap');
-	  v2ChangeKey(m, 'u', 'userMetadata');
-	  v2ChangeKey(m, 'w', 'waypointList');
-
-	  return m;
-	}
-
 	module.exports = {
-	  v2ExpandKeys: v2ExpandKeys,
 	  encode: encode,
 	  each: each,
-	  rnow: rnow,
 	  isArray: isArray,
 	  map: map,
 	  pamEncode: pamEncode,
 	  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
 	  _object_to_key_list_sorted: _object_to_key_list_sorted,
 	  _object_to_key_list: _object_to_key_list,
-	  validateHeartbeat: validateHeartbeat,
 	  endsWith: function endsWith(searchString, suffix) {
 	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
 	  }
@@ -3262,19 +3190,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 18 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"PARAMSBIT": "&",
-		"URLBIT": "/",
-		"defaultHeartbeatInterval": 30,
-		"minimumHeartbeatInterval": 5,
-		"PRESENCE_SUFFIX": "-pnpres",
-		"SECOND": 1000
-	};
-
-/***/ },
-/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
@@ -3285,11 +3200,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _subscribe = __webpack_require__(20);
+	var _subscribe = __webpack_require__(19);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _presence = __webpack_require__(24);
+	var _presence = __webpack_require__(23);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
@@ -3407,9 +3322,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (channelGroup in _this3._presenceChannelGroups) delete _this3._channelGroups[channelGroup];
 	      });
 
-	      this._presenceEndpoints.leave({ channels: channels, channelGroups: channelGroups }, function (status) {
-	        _this3._announceStatus(status);
-	      });
+	      if (this._config.suppressLeaveEvents === false) {
+	        this._presenceEndpoints.leave({ channels: channels, channelGroups: channelGroups }, function (status) {
+	          _this3._announceStatus(status);
+	        });
+	      }
 
 	      this.reconnect();
 	    }
@@ -3545,8 +3462,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (_this5._config.cipherKey) {
 	              _announce.message = _this5._crypto.decrypt(message.payload);
 	            } else {
-	                _announce.message = message.payload;
-	              }
+	              _announce.message = message.payload;
+	            }
 
 	            _this5._announceMessage(_announce);
 	          }
@@ -3591,7 +3508,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3614,11 +3531,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _logger = __webpack_require__(21);
+	var _logger = __webpack_require__(20);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -3679,7 +3596,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var params = this.createBaseParams(endpointConfig);
 
 	      if (channelGroups.length > 0) {
-	        params['channel-group'] = channelGroups.join(',');
+	        params['channel-group'] = encodeURIComponent(channelGroups.join(','));
 	      }
 
 	      if (filterExpression && filterExpression.length > 0) {
@@ -3736,7 +3653,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3747,7 +3664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _loglevel = __webpack_require__(22);
+	var _loglevel = __webpack_require__(21);
 
 	var _loglevel2 = _interopRequireDefault(_loglevel);
 
@@ -3794,7 +3711,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(console) {/*
@@ -4024,7 +3941,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4099,7 +4016,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4114,15 +4031,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _subscription_manager = __webpack_require__(19);
-
-	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
-
 	var _config = __webpack_require__(11);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _logger = __webpack_require__(21);
+	var _logger = __webpack_require__(20);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
@@ -4130,7 +4043,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4150,7 +4063,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _class(_ref) {
 	    var networking = _ref.networking;
 	    var config = _ref.config;
-	    var subscriptionManager = _ref.subscriptionManager;
 
 	    _classCallCheck(this, _class);
 
@@ -4158,7 +4070,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _this.networking = networking;
 	    _this.config = config;
-	    _this.subscriptionManager = subscriptionManager;
 	    _this._r = new _responders2.default('#endpoints/presence');
 	    _this._l = _logger2.default.getLogger('#endpoints/presence');
 	    return _this;
@@ -4492,7 +4403,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -4509,7 +4420,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		],
 		"bin": {},
 		"scripts": {
-			"test": "grunt test --force"
+			"codecov": "cat coverage/*/lcov.info | codecov"
 		},
 		"main": "./node.js/pubnub.js",
 		"browser": "./modern/dist/pubnub.js",
@@ -4559,11 +4470,13 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-eslint": "^2.0.0",
 			"gulp-exec": "^2.1.2",
 			"gulp-flowtype": "^0.4.9",
+			"gulp-istanbul": "^1.0.0",
 			"gulp-mocha": "^2.2.0",
 			"gulp-rename": "^1.2.2",
 			"gulp-uglify": "^1.5.3",
 			"gulp-webpack": "^1.5.0",
 			"imports-loader": "0.6.5",
+			"isparta": "^4.0.0",
 			"json-loader": "0.5.4",
 			"karma": "0.13.22",
 			"karma-babel-preprocessor": "^6.0.1",
@@ -4591,7 +4504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4610,7 +4523,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4658,8 +4571,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 
-	        var response = {};
-	        response.timetoken = payload[0];
+	        var response = {
+	          timetoken: payload[0]
+	        };
 
 	        callback(status, response);
 	      });
@@ -4673,7 +4587,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 27 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4696,11 +4610,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _logger = __webpack_require__(21);
+	var _logger = __webpack_require__(20);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4826,7 +4740,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 28 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4849,7 +4763,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -5011,8 +4925,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var params = this.createBaseParams(endpointConfig);
 	      params.type = pushGateway;
 
-	      if (operation === 'add') params.add = channels.join(',');
-	      if (operation === 'remove') params.remove = channels.join(',');
+	      if (operation === 'add') params.add = encodeURIComponent(channels.join(','));
+	      if (operation === 'remove') params.remove = encodeURIComponent(channels.join(','));
 
 	      this.networking.GET(params, endpointConfig, function (status) {
 	        callback(status);
@@ -5027,10 +4941,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 29 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -5050,7 +4964,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _cryptography2 = _interopRequireDefault(_cryptography);
 
-	var _logger = __webpack_require__(21);
+	var _logger = __webpack_require__(20);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
@@ -5058,7 +4972,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _responders2 = _interopRequireDefault(_responders);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -5239,7 +5153,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
-	        console.log(status, payload);
+
+	        var response = {};
+
+	        callback(status, response);
 	      });
 	    }
 	  }]);
@@ -5249,10 +5166,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
-/* 30 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5263,7 +5179,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -5275,7 +5191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _logger = __webpack_require__(21);
+	var _logger = __webpack_require__(20);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
@@ -5331,8 +5247,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
-	        var response = {};
-	        response.channels = payload.payload.channels;
+	        var response = {
+	          channels: payload.payload.channels
+	        };
 
 	        callback(status, response);
 	      });
@@ -5385,8 +5302,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 
-	        var response = {};
-	        response.groups = payload.payload.groups;
+	        var response = {
+	          groups: payload.payload.groups
+	        };
 
 	        callback(status, response);
 	      });
@@ -5462,7 +5380,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 31 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5487,11 +5405,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _logger = __webpack_require__(21);
+	var _logger = __webpack_require__(20);
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _base = __webpack_require__(23);
+	var _base = __webpack_require__(22);
 
 	var _base2 = _interopRequireDefault(_base);
 

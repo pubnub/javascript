@@ -98,8 +98,8 @@ export default class {
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
-    this.stop = subscriptionManager.disconnect.bind(this.subscriptionManager);
-    this.reconnect = subscriptionManager.reconnect.bind(this.SubscriptionManager);
+    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
+    this.reconnect = subscriptionManager.reconnect.bind(SubscriptionManager);
 
     this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
     this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);

@@ -205,7 +205,6 @@ export default class {
         return;
       }
 
-
       payload.messages.forEach((message) => {
         let channel = message.channel;
         let subscriptionMatch = message.subscriptionMatch;
@@ -233,7 +232,6 @@ export default class {
 
           if (this._config.cipherKey) {
             announce.message = this._crypto.decrypt(message.payload);
-            // TODO decipher the message
           } else {
             announce.message = message.payload;
           }
