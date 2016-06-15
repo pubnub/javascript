@@ -4,7 +4,7 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import uuidGenerator from 'uuid';
-import PubNub from '../../src/core/pubnub-common.js';
+import PubNub from '../../lib/core/pubnub-common.js';
 
 describe('components/config', () => {
   describe('UUID storage', () => {

@@ -145,3 +145,5 @@ type MessageAnnouncement = {
   timetoken: number,
   userMetadata: Object
 }
+
+module.exports = {};

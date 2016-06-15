@@ -14,14 +14,20 @@ const mocha = require('gulp-mocha');
 const runSequence = require('run-sequence');
 const gulpIstanbul = require('gulp-istanbul');
 const isparta = require('isparta');
+const sourcemaps = require('gulp-sourcemaps');
+const remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul');
 
 gulp.task('clean', () => {
-  return gulp.src(['lib/', 'dist'], { read: false })
+  return gulp.src(['lib', 'dist', 'coverage'], { read: false })
     .pipe(clean());
 });
 
 gulp.task('babel', ['clean'], () => {
-  return gulp.src('src/**/*.js').pipe(babel()).pipe(gulp.dest('lib'));
+  return gulp.src('src/**/*.js')
+    .pipe(sourcemaps.init())
+    .pipe(babel())
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('lib'));
 });
 
 gulp.task('compile_web', ['babel'], () => {
@@ -65,10 +71,8 @@ gulp.task('karma_client_min', (done) => {
 });
 
 gulp.task('pre-test', () => {
-  return gulp.src(['src/**/*.js'])
-    // Covering files
+  return gulp.src(['lib/**/*.js'])
     .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter }))
-    // Force `require` to return covered files
     .pipe(gulpIstanbul.hookRequire());
 });
 
@@ -77,10 +81,21 @@ gulp.task('test_release', () => {
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('test_server', ['pre-test'], () => {
+gulp.task('test_server', () => {
   return gulp.src('test/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }))
-    .pipe(gulpIstanbul.writeReports({ reporters: ['lcov', 'json', 'text', 'text-summary', 'html'] }));
+    .pipe(gulpIstanbul.writeReports({ reporters: ['json'] }));
+});
+
+gulp.task('remap_istanbul', () => {
+  return gulp.src('./coverage/coverage-final.json')
+      .pipe(remapIstanbul({
+        reports: {
+          json: './coverage/coverage-final.json',
+          html: './coverage/html-report',
+          text: null,
+        }
+      }));
 });
 
 gulp.task('webpack', ['compile_web']);
@@ -90,6 +105,7 @@ gulp.task('validate', ['lint', 'flow']);
 gulp.task('test_client', (done) => {
   runSequence('karma_client_full', 'karma_client_min', done);
 });
+
 gulp.task('test', (done) => {
-  runSequence('test_server', 'test_release', done);
+  runSequence('pre-test', 'test_server', 'test_release', 'remap_istanbul', done);
 });

@@ -103,6 +103,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = initFunction;
+	//# sourceMappingURL=platform.js.map
+
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
@@ -254,6 +256,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=pubnub-common.js.map
+
 
 /***/ },
 /* 3 */
@@ -420,6 +424,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=networking.js.map
+
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
@@ -2164,6 +2170,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=index.js.map
+
 
 /***/ },
 /* 11 */
@@ -2341,6 +2349,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=config.js.map
+
 
 /***/ },
 /* 12 */
@@ -2574,6 +2584,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	'use strict';
+
+	module.exports = {};
+	//# sourceMappingURL=flow_interfaces.js.map
+
 
 /***/ },
 /* 15 */
@@ -3038,6 +3052,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}();
 
 	module.exports = CryptoJS;
+	//# sourceMappingURL=hmac-sha256.js.map
+
 
 /***/ },
 /* 16 */
@@ -3110,6 +3126,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=responders.js.map
+
 
 /***/ },
 /* 17 */
@@ -3187,6 +3205,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
 	  }
 	};
+	//# sourceMappingURL=utils.js.map
+
 
 /***/ },
 /* 18 */
@@ -3505,6 +3525,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=subscription_manager.js.map
+
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
@@ -3651,6 +3673,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=subscribe.js.map
+
 
 /***/ },
 /* 20 */
@@ -3709,6 +3733,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	};
 	module.exports = exports['default'];
+	//# sourceMappingURL=logger.js.map
+
 
 /***/ },
 /* 21 */
@@ -4014,6 +4040,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=base.js.map
+
 
 /***/ },
 /* 23 */
@@ -4401,6 +4429,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=presence.js.map
+
 
 /***/ },
 /* 24 */
@@ -4473,6 +4503,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-istanbul": "^1.0.0",
 			"gulp-mocha": "^2.2.0",
 			"gulp-rename": "^1.2.2",
+			"gulp-sourcemaps": "^1.6.0",
 			"gulp-uglify": "^1.5.3",
 			"gulp-webpack": "^1.5.0",
 			"imports-loader": "0.6.5",
@@ -4488,6 +4519,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"mocha": "2.5.3",
 			"nock": "^8.0.0",
 			"phantomjs-prebuilt": "2.1.7",
+			"remap-istanbul": "^0.6.4",
 			"run-sequence": "^1.1.5",
 			"sinon": "^1.17.3",
 			"stats-webpack-plugin": "^0.3.1",
@@ -4585,6 +4617,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=time.js.map
+
 
 /***/ },
 /* 26 */
@@ -4738,6 +4772,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=history.js.map
+
 
 /***/ },
 /* 27 */
@@ -4939,6 +4975,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=push.js.map
+
 
 /***/ },
 /* 28 */
@@ -5166,6 +5204,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=access.js.map
+
 
 /***/ },
 /* 29 */
@@ -5378,6 +5418,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=channel_groups.js.map
+
 
 /***/ },
 /* 30 */
@@ -5514,6 +5556,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
+	//# sourceMappingURL=publish.js.map
+
 
 /***/ }
 /******/ ])

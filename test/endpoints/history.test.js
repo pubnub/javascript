@@ -4,7 +4,7 @@
 import assert from 'assert';
 import nock from 'nock';
 import utils from '../utils';
-import PubNub from '../../src/node/index.js';
+import PubNub from '../../lib/node/index.js';
 
 describe('history endpoints', () => {
   let pubnub;
@@ -30,9 +30,9 @@ describe('history endpoints', () => {
 
     pubnub.history({ channel: 'ch1' }, (status, response) => {
       assert.equal(status.error, null);
-      assert.deepStrictEqual(response.startTimeToken, 14648503433058358);
-      assert.deepStrictEqual(response.endTimeToken, 14648990164932163);
-      assert.deepStrictEqual(response.messages, [
+      assert.deepEqual(response.startTimeToken, 14648503433058358);
+      assert.deepEqual(response.endTimeToken, 14648990164932163);
+      assert.deepEqual(response.messages, [
         { timetoken: null, entry: { text: 'hey' } },
         { timetoken: null, entry: { text2: 'hey2' } }
       ]);
@@ -48,9 +48,9 @@ describe('history endpoints', () => {
 
     pubnub.history({ channel: 'ch1', includeTimetoken: true }, (status, response) => {
       assert.equal(status.error, null);
-      assert.deepStrictEqual(response.startTimeToken, 14648503433058358);
-      assert.deepStrictEqual(response.endTimeToken, 14649346364851578);
-      assert.deepStrictEqual(response.messages, [
+      assert.deepEqual(response.startTimeToken, 14648503433058358);
+      assert.deepEqual(response.endTimeToken, 14649346364851578);
+      assert.deepEqual(response.messages, [
         { timetoken: 14648503433058358, entry: { text: 'hey' } },
         { timetoken: 14648503433058360, entry: { text2: 'hey2' } },
       ]);
@@ -68,9 +68,9 @@ describe('history endpoints', () => {
     pubnub.setCipherKey('cipherKey');
     pubnub.history({ channel: 'ch1' }, (status, response) => {
       assert.equal(status.error, null);
-      assert.deepStrictEqual(response.startTimeToken, 14649369736959785);
-      assert.deepStrictEqual(response.endTimeToken, 14649369766426772);
-      assert.deepStrictEqual(response.messages, [
+      assert.deepEqual(response.startTimeToken, 14649369736959785);
+      assert.deepEqual(response.endTimeToken, 14649369766426772);
+      assert.deepEqual(response.messages, [
         { timetoken: null, entry: { text: 'hey' } },
         { timetoken: null, entry: { text2: 'hey2' } }
       ]);
@@ -87,9 +87,9 @@ describe('history endpoints', () => {
     pubnub.setCipherKey('cipherKey');
     pubnub.history({ channel: 'ch1', includeTimetoken: true }, (status, response) => {
       assert.equal(status.error, null);
-      assert.deepStrictEqual(response.startTimeToken, 14649369736959785);
-      assert.deepStrictEqual(response.endTimeToken, 14649369766426772);
-      assert.deepStrictEqual(response.messages, [
+      assert.deepEqual(response.startTimeToken, 14649369736959785);
+      assert.deepEqual(response.endTimeToken, 14649369766426772);
+      assert.deepEqual(response.messages, [
         { timetoken: 14649369736959784, entry: { text: 'hey' } },
         { timetoken: 14649369766426772, entry: { text2: 'hey2' } },
       ]);
