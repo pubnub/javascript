@@ -38,8 +38,9 @@ export default class extends BaseEndoint {
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: timeResponse = {};
-      response.timetoken = payload[0];
+      let response: timeResponse = {
+        timetoken: payload[0]
+      };
 
       callback(status, response);
     });

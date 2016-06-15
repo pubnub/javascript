@@ -158,8 +158,8 @@ export default class extends BaseEndoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    if (operation === 'add') params.add = channels.join(',');
-    if (operation === 'remove') params.remove = channels.join(',');
+    if (operation === 'add') params.add = encodeURIComponent(channels.join(','));
+    if (operation === 'remove') params.remove = encodeURIComponent(channels.join(','));
 
 
     this.networking.GET(params, endpointConfig, (status: statusStruct) => {

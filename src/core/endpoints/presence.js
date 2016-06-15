@@ -1,7 +1,6 @@
 /* @flow */
 
 import Networking from '../components/networking';
-import SubscriptionManager from '../components/subscription_manager';
 import Config from '../components/config';
 import Logger from '../components/logger';
 import Responders from '../presenters/responders';
@@ -11,7 +10,6 @@ import { endpointDefinition, statusStruct } from '../flow_interfaces';
 type presenceConstruct = {
   networking: Networking,
   config: Config,
-  subscriptionManager: SubscriptionManager
 };
 
 type hereNowArguments = {
@@ -70,11 +68,10 @@ export default class extends BaseEndoint {
   _r: Responders;
   _l: Logger;
 
-  constructor({ networking, config, subscriptionManager }: presenceConstruct) {
+  constructor({ networking, config }: presenceConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
-    this.subscriptionManager = subscriptionManager;
     this._r = new Responders('#endpoints/presence');
     this._l = Logger.getLogger('#endpoints/presence');
   }

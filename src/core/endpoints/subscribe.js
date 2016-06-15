@@ -20,6 +20,7 @@ type subscribeArguments = {
   channelGroups: Array<string>,
   timetoken: number,
   filterExpression: ?string,
+  region: ?string,
 }
 
 
@@ -57,7 +58,7 @@ export default class extends BaseEndoint {
     const params = this.createBaseParams(endpointConfig);
 
     if (channelGroups.length > 0) {
-      params['channel-group'] = channelGroups.join(',');
+      params['channel-group'] = encodeURIComponent(channelGroups.join(','));
     }
 
     if (filterExpression && filterExpression.length > 0) {

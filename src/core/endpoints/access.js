@@ -23,6 +23,8 @@ type auditArguments = {
 }
 
 type auditResponse = {
+  channels: Object,
+  channelGroups: Object
 }
 
 type grantArguments = {
@@ -141,15 +143,6 @@ export default class extends BaseEndoint {
 
       callback(status, response);
     });
-
-    /*
-
-
-    let data: Object = { w, r, timestamp };
-
-
-    this._networking.performGrant(stringifiedAuthKeys, data, callback);
-    */
   }
 
   audit(args: auditArguments, callback: Function) {
@@ -192,7 +185,12 @@ export default class extends BaseEndoint {
 
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
-      console.log(status, payload);
+
+      const response: auditResponse = {
+
+      };
+
+      callback(status, response);
     });
   }
 

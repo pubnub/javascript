@@ -73,8 +73,9 @@ export default class extends BaseEndoint {
 
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
-      let response: listChannelsResponse = {};
-      response.channels = payload.payload.channels;
+      let response: listChannelsResponse = {
+        channels: payload.payload.channels
+      };
 
       callback(status, response);
     });
@@ -124,8 +125,9 @@ export default class extends BaseEndoint {
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: listAllGroupsResponse = {};
-      response.groups = payload.payload.groups;
+      let response: listAllGroupsResponse = {
+        groups: payload.payload.groups
+      };
 
       callback(status, response);
     });
