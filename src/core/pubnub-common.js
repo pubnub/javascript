@@ -32,19 +32,28 @@ export default class {
   // tell flow about the mounted endpoint
   time: Function;
   publish: Function;
-  channelGroups: Object;
-  pushNotifications: Object;
-  presence: Object;
-  history: Object;
-  accessManager: Object;
+  history: Function;
 
+  listAllChannelGroups: Function;
+  listChannelsForChannelGroup: Function;
+  addChannelsToChannelGroup: Function;
+  removeChannelsFromChannelGroup: Function;
+  deleteChannelGroup: Function;
+  //
+  addPushNotificationsOnChannels: Function;
+  removePushNotificationsFromChannels: Function;
+  removeAllPushNotificationsFromDeviceWithPushToken: Function;
+  auditPushChannelProvisions: Function;
+  //
+  grant: Function;
+  audit: Function;
   //
   setCipherKey: Function;
 
   constructor(setup: internalSetupStruct) {
     let { sendBeacon, db } = setup;
 
-    this._config = new Config(setup);
+    this._config = new Config({ setup, db });
     this._crypto = new Crypto({ config: this._config });
     this._networking = new Networking({ config: this._config, crypto: this._crypto, sendBeacon });
 
@@ -58,7 +67,6 @@ export default class {
     const accessEndpoints = new AccessEndpoints({ config: this._config, networking: this._networking, crypto: this._crypto });
 
     const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this._config, presenceEndpoints });
-
 
     // mount up the endpoints
     /** channel groups **/
@@ -97,59 +105,11 @@ export default class {
     this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
     /** config **/
     this.setCipherKey = this._config.setCipherKey.bind(this._config);
+    this.getUUID = this._config.getUUID.bind(this._config);
+    this.setUUID = this._config.setUUID.bind(this._config);
   }
 
 
   getVersion(): String { return packageJSON.version; }
 
 }
-  /*
-  let
-
-  let callbacks: callbackStruct = {
-    onMessage: setup.onMessage,
-    onStatus: setup.onStatus,
-    onPresence: setup.onPresence
-  };
-
-  // let state = new State();
-  // let subscriber = new Subscriber({ networking, state, callbacks });
-  // let connectivity = new Connectivity({ eventEmitter, networking, timeEndpoint });
-  // let presenceHeartbeat = new PresenceHeartbeat({ callbacks, state, presenceEndpoints });
-
-  // init the endpoints
-  // let subscribeEndpoints = new SubscribeEndpoints({ networking, callbacks, config });
-
-  let SELF = {
-
-    // subscribe: subscribeEndpoints.subscribe.bind(subscribeEndpoints),
-    // unsubscribe: subscribeEndpoints.unsubscribe.bind(subscribeEndpoints),
-
-    presence: {
-    },
-
-    getPresenceTimeout: config.getPresenceTimeout.bind(config),
-    setPresenceTimeout: config.setPresenceTimeout.bind(config),
-
-    getPresenceAnnounceInterval: config.getPresenceAnnounceInterval.bind(config),
-    setPresenceAnnounceInterval: config.setPresenceAnnounceInterval.bind(config),
-
-    setAuthKey: config.setAuthKey.bind(config),
-
-    setUUID: config.setUUID.bind(config),
-    getUUID: config.getUUID.bind(config),
-
-    // getSubscribedChannels: state.getSubscribedChannels.bind(state),
-
-    stopTimers() {
-      // connectivity.stop();
-      // presenceHeartbeat.stop();
-    },
-
-    shutdown() {
-      SELF.stopTimers();
-      if (shutdown) shutdown();
-    }
-  };
-}
-*/

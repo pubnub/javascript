@@ -58,6 +58,11 @@ export type internalSetupStruct = {
 
 }
 
+type DatabaseInterface = {
+  get: Function,
+  set: Function
+}
+
 type endpointKeyDefinition = {
   required: boolean
 }

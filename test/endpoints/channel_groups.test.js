@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../utils';
 import PubNub from '../../src/node.js/index.js';
 
-describe('channel grou endpoints', () => {
+describe('channel group endpoints', () => {
   let pubnub;
 
   before(() => {

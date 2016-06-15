@@ -1,9 +1,16 @@
 /* @flow */
 
 import uuidGenerator from 'uuid';
-import { internalSetupStruct } from '../flow_interfaces';
+import { internalSetupStruct, DatabaseInterface } from '../flow_interfaces';
+
+type ConfigConstructArgs = {
+  setup: internalSetupStruct,
+  db: DatabaseInterface
+}
 
 export default class {
+
+  _db: DatabaseInterface;
 
   /*
     if instanceId config is true, the SDK will pass the unique instance
@@ -118,7 +125,9 @@ export default class {
   */
   _presenceAnnounceInterval: number;
 
-  constructor(setup: internalSetupStruct) {
+  constructor({ setup, db } : ConfigConstructArgs) {
+    this._db = db;
+
     this.instanceId = uuidGenerator.v4();
     this.authKey = setup.authKey || '';
     this.secretKey = setup.secretKey || '';
@@ -126,7 +135,6 @@ export default class {
     this.publishKey = setup.publishKey;
     this.cipherKey = setup.cipherKey;
     this.baseParams = setup.params || {};
-    this.UUID = setup.uuid || uuidGenerator.v4();
 
     this.origin = setup.origin || 'pubsub.pubnub.com';
     this.secure = setup.ssl || false;
@@ -154,10 +162,18 @@ export default class {
     if (setup.presenceAnnounceInterval) {
       this.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
     }
+
+    this.setUUID(this._decideUUID(setup.uuid)); // UUID decision depends on subKey.
   }
 
   // exposed setters
   setCipherKey(val: string): this { this.cipherKey = val; return this; }
+  getUUID(): string { return this.UUID; }
+  setUUID(val: string): this {
+    if (this._db && this._db.set) this._db.set(this.subscribeKey + 'uuid', val);
+    this.UUID = val;
+    return this;
+  }
 
   getPresenceTimeout(): number { return this._presenceTimeout; }
   setPresenceTimeout(val: number): this {
@@ -187,5 +203,20 @@ export default class {
 
   isSendBeaconEnabled(): boolean { return this._useSendBeacon; }
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
+
+  _decideUUID(providedUUID: string): string {
+    // if the uuid was provided by setup, use this UUID.
+    if (providedUUID) {
+      return providedUUID;
+    }
+
+    // if the database module is enabled and we have something saved, use this.
+    if (this._db && this._db.get && this._db.get(this.subscribeKey + 'uuid')) {
+      return this._db.get(this.subscribeKey + 'uuid');
+    }
+
+    // randomize the UUID and push to storage
+    return uuidGenerator.v4();
+  }
 
 }
