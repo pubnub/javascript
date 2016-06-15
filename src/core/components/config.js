@@ -12,60 +12,12 @@ export default class {
 
   _db: DatabaseInterface;
 
-  /*
-    if instanceId config is true, the SDK will pass the unique instance
-    identifier to the server as instanceId=<UUID>
-  */
-  _useInstanceId: boolean;
-
-  /*
-    if requestId config is true, the SDK will pass a unique request identifier
-    with each request as request_id=<UUID>
-  */
-  _useRequestId: boolean;
-
-  /*
-    configuration to supress leave events; when a presence leave is performed
-    this configuration will disallow the leave event from happening
-  */
-  _suppressLeaveEvents: boolean;
-
-  /*
-    how long to wait for the server when running the subscribe loop
-  */
-  _subscribeRequestTimeout: number;
-
-  /*
-    how long to wait for the server when making transactional requests
-  */
-  _transactionalRequestTimeout: number;
-
-  /*
-    use send beacon API when unsubscribing.
-    https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
-  */
-  _useSendBeacon: boolean;
-
-  /*
-    subsriber key provided by Portal to perform API calls
-  */
   subscribeKey: string;
-
-  /*
-    publish key provided by Portal to perform publish API calls
-  */
   publishKey: string;
-
-  /*
-    secret key provided by Portal to perform Auth (PAM) API calls. Only
-    use on server (node) and do not expose it to customers.
-  */
   secretKey: string;
-
-  /*
-    auth key which will be passed on PAM secured endpoints
-  */
+  cipherKey: string;
   authKey: string;
+  UUID: string;
 
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
@@ -73,31 +25,18 @@ export default class {
   instanceId: string;
 
   /*
-    if passed, all payloads will be encrypted using the cipher key and history
-    fetches will be decrypted using this key.
-  */
-  cipherKey: string;
-
-  /*
-    Unique identifier of this client, will be sent with all request to identify
-    a unique device for presence and billing
-  */
-  UUID: string;
-
-  /*
     base params to be inclded with each call
   */
   baseParams: Object;
-
   /*
     filter expression to pass along when subscribing.
   */
   filterExpression: string;
-
   /*
-    optionally avoid sending leave events for presence events.
+    configuration to supress leave events; when a presence leave is performed
+    this configuration will disallow the leave event from happening
   */
-  _supressLeaveEvents: boolean;
+  suppressLeaveEvents: boolean;
 
   /*
     use SSL for http requests?
@@ -125,6 +64,30 @@ export default class {
   */
   _presenceAnnounceInterval: number;
 
+  /*
+    if instanceId config is true, the SDK will pass the unique instance
+    identifier to the server as instanceId=<UUID>
+  */
+  _useInstanceId: boolean;
+  /*
+    if requestId config is true, the SDK will pass a unique request identifier
+    with each request as request_id=<UUID>
+  */
+  _useRequestId: boolean;
+  /*
+    how long to wait for the server when running the subscribe loop
+  */
+  _subscribeRequestTimeout: number;
+  /*
+    how long to wait for the server when making transactional requests
+  */
+  _transactionalRequestTimeout: number;
+  /*
+    use send beacon API when unsubscribing.
+    https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
+  */
+  _useSendBeacon: boolean;
+
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
 
@@ -145,9 +108,9 @@ export default class {
     }
 
     this.logVerbosity = setup.logVerbosity || false;
+    this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
     this.setRequestIdConfig(setup.useRequestId || false);
-    this.setSupressLeaveEvents(setup.suppressLeaveEvents || false);
     this.setInstanceIdConfig(setup.useInstanceId || false);
 
     // set timeout to how long a transaction request will wait for the server (default 15 seconds)
@@ -197,9 +160,6 @@ export default class {
 
   getTransactionTimeout(): number { return this._transactionalRequestTimeout; }
   setTransactionTimeout(val: number): this { this._transactionalRequestTimeout = val; return this; }
-
-  isSuppressingLeaveEvents(): boolean { return this._suppressLeaveEvents; }
-  setSupressLeaveEvents(val: boolean): this { this._suppressLeaveEvents = val; return this; }
 
   isSendBeaconEnabled(): boolean { return this._useSendBeacon; }
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }

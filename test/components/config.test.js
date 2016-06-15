@@ -58,6 +58,5 @@ describe('components/config', () => {
       assert.equal(dbInstance.get.getCall(0).args[0], 'mySubKeyuuid');
       assert.equal(pubnub.getUUID(), 'dbUUID');
     });
-
   });
 });

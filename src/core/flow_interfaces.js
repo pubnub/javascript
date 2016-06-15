@@ -54,6 +54,8 @@ export type internalSetupStruct = {
 
   proxy: ?proxyStruct, // configuration to support proxy settings.
 
+  suppressLev: ?boolean,
+
   db: Function // get / set implementation to store data
 
 }

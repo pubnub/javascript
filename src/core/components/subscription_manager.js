@@ -113,9 +113,11 @@ export default class {
       if (channelGroup in this._presenceChannelGroups) delete this._channelGroups[channelGroup];
     });
 
-    this._presenceEndpoints.leave({ channels, channelGroups }, (status) => {
-      this._announceStatus(status);
-    });
+    if (this._config.suppressLeaveEvents === false) {
+      this._presenceEndpoints.leave({ channels, channelGroups }, (status) => {
+        this._announceStatus(status);
+      });
+    }
 
     this.reconnect();
   }
