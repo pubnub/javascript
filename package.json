@@ -32,9 +32,6 @@
     "messaging"
   ],
   "dependencies": {
-    "event-emitter": "^0.3.4",
-    "lodash": "^4.1.0",
-    "loglevel": "^1.4.0",
     "superagent": "^2.0.0",
     "uuid": "^2.0.1"
   },
@@ -49,13 +46,13 @@
     "babel-register": "^6.6.5",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
-    "eslint": "2.11.0",
+    "eslint": "2.12.0",
     "eslint-config-airbnb": "9.0.1",
     "eslint-plugin-flowtype": "2.2.7",
     "eslint-plugin-import": "^1.8.1",
-    "eslint-plugin-mocha": "2.2.0",
+    "eslint-plugin-mocha": "3.0.0",
     "eslint-plugin-react": "5.1.1",
-    "flow-bin": "^0.26.0",
+    "flow-bin": "^0.27.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-clean": "^0.3.2",
