@@ -106,8 +106,7 @@ export default class {
       .end((err, resp) => {
         let status: statusStruct = {};
         status.error = err;
-
-        // console.log(err);
+        status.statusCode = resp.status;
 
         if (err) {
           return callback(status, null);
@@ -118,7 +117,7 @@ export default class {
       });
   }
 
-  _logger(options) {
+  _logger(options: Object) {
     if (!options) options = {};
     if (options instanceof superagent.Request) {
       return this._attachSuperagentLogger({}, options);

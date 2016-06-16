@@ -28,7 +28,8 @@ export type proxyStruct = {
 }
 
 export type statusStruct = {
-  error: boolean
+  error: boolean,
+  statusCode: number
 }
 
 export type internalSetupStruct = {

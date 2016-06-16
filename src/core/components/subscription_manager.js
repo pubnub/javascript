@@ -248,7 +248,10 @@ export default class {
   }
 
   _stopSubscribeLoop() {
-    // TODO
+    if (this._subscribeCall) {
+      this._subscribeCall.abort();
+      this._subscribeCall = null;
+    }
   }
 
   _announcePresence(announce: PresenceAnnouncement) {
