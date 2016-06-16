@@ -28,22 +28,32 @@ export default class {
   time: Function;
   publish: Function;
   history: Function;
-
-  listAllChannelGroups: Function;
-  listChannelsForChannelGroup: Function;
-  addChannelsToChannelGroup: Function;
-  removeChannelsFromChannelGroup: Function;
-  deleteChannelGroup: Function;
   //
-  addPushNotificationsOnChannels: Function;
-  removePushNotificationsFromChannels: Function;
-  removeAllPushNotificationsFromDeviceWithPushToken: Function;
-  auditPushChannelProvisions: Function;
+  channelGroups: Object;
+  //
+  push: Object;
+  //
+  hereNow: Function;
+  whereNow: Function;
+  getState: Function;
+  setState: Function;
   //
   grant: Function;
   audit: Function;
   //
+  subscribe: Function;
+  unsubscribe: Function;
+  reconnect: Function;
+  stop: Function;
+
+  addListener: Function;
+  removeListener: Function;
+
   setCipherKey: Function;
+  setUUID: Function;
+  getUUID: Function;
+
+  //
 
   constructor(setup: internalSetupStruct) {
     let { sendBeacon, db } = setup;
@@ -63,18 +73,24 @@ export default class {
 
     const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this._config, presenceEndpoints });
 
-    // mount up the endpoints
+    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
+    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
+
     /** channel groups **/
-    this.listAllChannelGroups = channelGroupEndpoints.listGroups.bind(channelGroupEndpoints);
-    this.listChannelsForChannelGroup = channelGroupEndpoints.listChannels.bind(channelGroupEndpoints);
-    this.addChannelsToChannelGroup = channelGroupEndpoints.addChannels.bind(channelGroupEndpoints);
-    this.removeChannelsFromChannelGroup = channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints);
-    this.deleteChannelGroup = channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints);
+    this.channelGroups = {
+      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
+      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
+      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
+      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
+      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints)
+    };
     /** push **/
-    this.addPushNotificationsOnChannels = pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints);
-    this.removePushNotificationsFromChannels = pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints);
-    this.removeAllPushNotificationsFromDeviceWithPushToken = pushEndpoints.removeDevice.bind(pushEndpoints);
-    this.auditPushChannelProvisions = pushEndpoints.listChannelsForDevice.bind(pushEndpoints);
+    this.push = {
+      addChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
+      removeChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
+      deleteDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
+      listChannels: pushEndpoints.listChannelsForDevice.bind(pushEndpoints)
+    };
     /** presence **/
     this.hereNow = presenceEndpoints.hereNow.bind(presenceEndpoints);
     this.whereNow = presenceEndpoints.whereNow.bind(presenceEndpoints);
@@ -83,21 +99,16 @@ export default class {
     /** PAM **/
     this.grant = accessEndpoints.grant.bind(accessEndpoints);
     this.audit = accessEndpoints.audit.bind(accessEndpoints);
-
+    //
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
     this.history = historyEndpoint.fetch.bind(historyEndpoint);
     this.time = timeEndpoint.fetch.bind(timeEndpoint);
-
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-
     this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(SubscriptionManager);
-
-    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
-    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
     /** config **/
     this.setCipherKey = this._config.setCipherKey.bind(this._config);
     this.getUUID = this._config.getUUID.bind(this._config);

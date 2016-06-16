@@ -197,16 +197,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var subscriptionManager = new _subscription_manager2.default({ subscribeEndpoints: subscribeEndpoints, config: this._config, presenceEndpoints: presenceEndpoints });
 
-	    this.listAllChannelGroups = channelGroupEndpoints.listGroups.bind(channelGroupEndpoints);
-	    this.listChannelsForChannelGroup = channelGroupEndpoints.listChannels.bind(channelGroupEndpoints);
-	    this.addChannelsToChannelGroup = channelGroupEndpoints.addChannels.bind(channelGroupEndpoints);
-	    this.removeChannelsFromChannelGroup = channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints);
-	    this.deleteChannelGroup = channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints);
+	    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
+	    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
 
-	    this.addPushNotificationsOnChannels = pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints);
-	    this.removePushNotificationsFromChannels = pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints);
-	    this.removeAllPushNotificationsFromDeviceWithPushToken = pushEndpoints.removeDevice.bind(pushEndpoints);
-	    this.auditPushChannelProvisions = pushEndpoints.listChannelsForDevice.bind(pushEndpoints);
+	    this.channelGroups = {
+	      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
+	      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
+	      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
+	      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
+	      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints)
+	    };
+
+	    this.push = {
+	      addChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
+	      removeChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
+	      deleteDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
+	      listChannels: pushEndpoints.listChannelsForDevice.bind(pushEndpoints)
+	    };
 
 	    this.hereNow = presenceEndpoints.hereNow.bind(presenceEndpoints);
 	    this.whereNow = presenceEndpoints.whereNow.bind(presenceEndpoints);
@@ -223,12 +230,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-
 	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(_subscription_manager2.default);
-
-	    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
-	    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
 
 	    this.setCipherKey = this._config.setCipherKey.bind(this._config);
 	    this.getUUID = this._config.getUUID.bind(this._config);

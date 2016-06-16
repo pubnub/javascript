@@ -28,7 +28,7 @@ describe('push endpoints', () => {
         .query({ add: 'a%2Cb', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.addPushNotificationsOnChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
+      pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -40,7 +40,7 @@ describe('push endpoints', () => {
         .query({ add: 'a%2Cb', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.addPushNotificationsOnChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
+      pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -52,7 +52,7 @@ describe('push endpoints', () => {
         .query({ add: 'a%2Cb', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.addPushNotificationsOnChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
+      pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -66,7 +66,7 @@ describe('push endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
         .reply(200, '["ch1", "ch2", "ch3"]');
 
-      pubnub.auditPushChannelProvisions({ device: 'coolDevice', pushGateway: 'apns' }, (status, response) => {
+      pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'apns' }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
         assert.equal(scope.isDone(), true);
@@ -79,7 +79,7 @@ describe('push endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
         .reply(200, '["ch1", "ch2", "ch3"]');
 
-      pubnub.auditPushChannelProvisions({ device: 'coolDevice', pushGateway: 'mpns' }, (status, response) => {
+      pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'mpns' }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
         assert.equal(scope.isDone(), true);
@@ -92,7 +92,7 @@ describe('push endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
         .reply(200, '["ch1", "ch2", "ch3"]');
 
-      pubnub.auditPushChannelProvisions({ device: 'coolDevice', pushGateway: 'gcm' }, (status, response) => {
+      pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'gcm' }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
         assert.equal(scope.isDone(), true);
@@ -107,7 +107,7 @@ describe('push endpoints', () => {
         .query({ remove: 'a%2Cb', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.removePushNotificationsFromChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
+      pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -119,7 +119,7 @@ describe('push endpoints', () => {
         .query({ remove: 'a%2Cb', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.removePushNotificationsFromChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
+      pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -131,7 +131,7 @@ describe('push endpoints', () => {
         .query({ remove: 'a%2Cb', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.removePushNotificationsFromChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm', uuid: 'myUUID' }, (status) => {
+      pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm', uuid: 'myUUID' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -145,7 +145,7 @@ describe('push endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.removeAllPushNotificationsFromDeviceWithPushToken({ device: 'niceDevice', pushGateway: 'apns' }, (status) => {
+      pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'apns' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -157,7 +157,7 @@ describe('push endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.removeAllPushNotificationsFromDeviceWithPushToken({ device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
+      pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -169,7 +169,7 @@ describe('push endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
-      pubnub.removeAllPushNotificationsFromDeviceWithPushToken({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
+      pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();

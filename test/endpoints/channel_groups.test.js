@@ -28,7 +28,7 @@ describe('channel group endpoints', () => {
         .query({ add: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
         .reply(200, '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}');
 
-      pubnub.addChannelsToChannelGroup({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
+      pubnub.channelGroups.addChannels({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -36,13 +36,13 @@ describe('channel group endpoints', () => {
     });
   });
 
-  describe('deletion of channels from channel group', () => {
+  describe('removal of channel group', () => {
     it('supports deletion of group', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1/remove')
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
         .reply(200, '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}');
 
-      pubnub.deleteChannelGroup({ channelGroup: 'cg1' }, (status) => {
+      pubnub.channelGroups.deleteGroup({ channelGroup: 'cg1' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
@@ -56,7 +56,7 @@ describe('channel group endpoints', () => {
         .query(true)
         .reply(200, '{"status": 200, "message": "OK", "payload": {"groups": ["a","b"]}, "service": "ChannelGroups"}');
 
-      pubnub.listAllChannelGroups((status, response) => {
+      pubnub.channelGroups.listGroups((status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.groups, ['a', 'b']);
         assert.equal(scope.isDone(), true);
@@ -71,7 +71,7 @@ describe('channel group endpoints', () => {
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
         .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "ChannelGroups"}');
 
-      pubnub.listChannelsForChannelGroup({ channelGroup: 'cg1' }, (status, response) => {
+      pubnub.channelGroups.listChannels({ channelGroup: 'cg1' }, (status, response) => {
         assert.equal(status.error, null);
         assert.deepEqual(response.channels, ['a', 'b']);
         assert.equal(scope.isDone(), true);
@@ -80,13 +80,13 @@ describe('channel group endpoints', () => {
     });
   });
 
-  describe('removal of channel group', () => {
+  describe('deletion of channels from channel group', () => {
     it('works as expected', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1')
         .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
         .reply(200, '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}');
 
-      pubnub.removeChannelsFromChannelGroup({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
+      pubnub.channelGroups.removeChannels({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
         assert.equal(status.error, null);
         assert.equal(scope.isDone(), true);
         done();
