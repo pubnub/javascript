@@ -3,7 +3,6 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
-import Logger from '../components/logger';
 import BaseEndoint from './base.js';
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
@@ -18,7 +17,9 @@ type fetchHistoryArguments = {
   channelGroup: string, // fetch history from channel groups
   start: number, // start timetoken for history fetching
   end: number, // end timetoken for history feting
-  includeToken: boolean, // include time token for each history call
+  includeTimetoken: boolean, // include time token for each history call
+  reverse: boolean,
+  count: number
 }
 
 type historyItem = {
@@ -36,14 +37,12 @@ export default class extends BaseEndoint {
   networking: Networking;
   crypto: Crypto;
   config: Config;
-  _l: Logger;
 
   constructor({ networking, crypto, config }: historyConstruct) {
     super({ config });
     this.networking = networking;
     this.crypto = crypto;
     this.config = config;
-    this._l = Logger.getLogger('#endpoints/history');
   }
 
   fetch(args: fetchHistoryArguments, callback: Function) {
@@ -58,8 +57,8 @@ export default class extends BaseEndoint {
       url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel)
     };
 
-    if (!channel) return callback(this._r.validationError('Missing channel'));
-    if (!callback) return this._l.error('Missing Callback');
+    if (!channel) return callback(this.createValidationError('Missing channel'));
+    if (!callback) return this.log('Missing Callback');
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }

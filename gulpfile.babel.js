@@ -43,8 +43,15 @@ gulp.task('uglify', ['webpack'], () => {
     .pipe(gulp.dest('dist/web'));
 });
 
-gulp.task('lint', ['webpack'], () => {
-  return gulp.src(['src/**/*.js', 'test/**/*.js', '!test/server/monolith.test.js'])
+gulp.task('lint_code', ['webpack'], () => {
+  return gulp.src(['src/**/*.js'])
+      .pipe(eslint())
+      .pipe(eslint.format())
+      .pipe(eslint.failAfterError());
+});
+
+gulp.task('lint_tests', ['webpack'], () => {
+  return gulp.src(['test/**/*.js'])
       .pipe(eslint())
       .pipe(eslint.format())
       .pipe(eslint.failAfterError());
@@ -101,11 +108,13 @@ gulp.task('remap_istanbul', () => {
 gulp.task('webpack', ['compile_web']);
 gulp.task('compile', ['clean', 'babel', 'webpack', 'uglify']);
 
+gulp.task('lint', ['lint_code', 'lint_tests']);
+
 gulp.task('validate', ['lint', 'flow']);
 gulp.task('test_client', (done) => {
   runSequence('karma_client_full', 'karma_client_min', done);
 });
 
 gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_server', 'test_release', 'remap_istanbul', done);
+  runSequence('pre-test', 'test_server', 'test_release', 'remap_istanbul', 'lint', done);
 });

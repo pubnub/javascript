@@ -3,7 +3,6 @@
 import superagent from 'superagent';
 
 import Crypto from './cryptography/index';
-import Responders from '../presenters/responders';
 import Config from './config.js';
 import utils from '../utils';
 
@@ -33,14 +32,10 @@ export default class {
 
   _coreParams: Object; /* items that must be passed with each request. */
 
-  _r: Responders;
-
   constructor({ config, crypto, sendBeacon }: networkingModules) {
     this._config = config;
     this._crypto = crypto;
     this._sendBeacon = sendBeacon;
-
-    this._r = new Responders('#networking');
 
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
@@ -100,7 +95,6 @@ export default class {
   }
 
   _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {
-
     // attach a logger
     if (this._config.logVerbosity) {
       superagentConstruct = superagentConstruct.use(this._logger());

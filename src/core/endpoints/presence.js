@@ -2,8 +2,6 @@
 
 import Networking from '../components/networking';
 import Config from '../components/config';
-import Logger from '../components/logger';
-import Responders from '../presenters/responders';
 import BaseEndoint from './base.js';
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
@@ -65,15 +63,11 @@ type heartbeatArguments = {
 export default class extends BaseEndoint {
   networking: Networking;
   config: Config;
-  _r: Responders;
-  _l: Logger;
 
   constructor({ networking, config }: presenceConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
-    this._r = new Responders('#endpoints/presence');
-    this._l = Logger.getLogger('#endpoints/presence');
   }
 
   whereNow(args: whereNowArguments, callback: Function) {
@@ -87,7 +81,7 @@ export default class extends BaseEndoint {
     };
 
     if (!callback) {
-      return this._l.error('Missing Callback');
+      return this.log('Missing Callback');
     }
 
     // validate this request and return false if stuff is missing
@@ -119,11 +113,11 @@ export default class extends BaseEndoint {
     };
 
     if (!callback) {
-      return this._l.error('Missing Callback');
+      return this.log('Missing Callback');
     }
 
     if (channels.length === 0 && channelGroups.length === 0) {
-      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+      return callback(this.createValidationError('Channel or Channel Group must be supplied'));
     }
 
     // validate this request and return false if stuff is missing
@@ -167,15 +161,15 @@ export default class extends BaseEndoint {
     };
 
     if (!callback) {
-      return this._l.error('Missing Callback');
+      return this.log('Missing Callback');
     }
 
     if (channels.length === 0 && channelGroups.length === 0) {
-      return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+      return callback(this.createValidationError('Channel or Channel Group must be supplied'));
     }
 
     if (!state) {
-      return callback(this._r.validationError('State must be supplied'));
+      return callback(this.createValidationError('State must be supplied'));
     }
 
     // validate this request and return false if stuff is missing
@@ -253,7 +247,7 @@ export default class extends BaseEndoint {
 
     // Make sure we have a Channel
     if (!callback) {
-      return this._l.error('Missing Callback');
+      return this.log('Missing Callback');
     }
 
     if (channelGroups.length > 0) {

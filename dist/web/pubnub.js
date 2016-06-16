@@ -55,9 +55,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
-	var _pubnubCommon = __webpack_require__(2);
+	var _pubnubCommon = __webpack_require__(1);
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
@@ -89,8 +89,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	var initFunction = function initFunction(setup) {
-	  console.log('setup', setup);
-
 	  setup.db = db;
 	  setup.navigatorOnlineCheck = navigatorOnlineCheck;
 	  setup.sendBeacon = sendBeacon;
@@ -105,16 +103,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = initFunction;
 	//# sourceMappingURL=platform.js.map
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 1 */
-/***/ function(module, exports) {
-
-	
-
-/***/ },
-/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -125,7 +116,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -137,43 +128,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _subscription_manager = __webpack_require__(18);
+	var _subscription_manager = __webpack_require__(17);
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _package = __webpack_require__(24);
+	var _package = __webpack_require__(21);
 
 	var _package2 = _interopRequireDefault(_package);
 
-	var _time = __webpack_require__(25);
+	var _time = __webpack_require__(22);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(23);
+	var _presence = __webpack_require__(20);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(26);
+	var _history = __webpack_require__(23);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(27);
+	var _push = __webpack_require__(24);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(28);
+	var _access = __webpack_require__(25);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _channel_groups = __webpack_require__(29);
+	var _channel_groups = __webpack_require__(26);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _subscribe = __webpack_require__(19);
+	var _subscribe = __webpack_require__(18);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _publish = __webpack_require__(30);
+	var _publish = __webpack_require__(27);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
@@ -260,7 +251,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 3 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
@@ -279,15 +270,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
 	var _config = __webpack_require__(11);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _utils = __webpack_require__(17);
+	var _utils = __webpack_require__(16);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -308,8 +295,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._config = config;
 	    this._crypto = crypto;
 	    this._sendBeacon = sendBeacon;
-
-	    this._r = new _responders2.default('#networking');
 
 	    this._maxSubDomain = 20;
 	    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
@@ -426,7 +411,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 	//# sourceMappingURL=networking.js.map
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	
 
 /***/ },
 /* 4 */
@@ -3061,146 +3052,33 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var _class = function () {
-	  function _class(componenetName) {
-	    _classCallCheck(this, _class);
-
-	    this._componentName = componenetName;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'callback',
-	    value: function callback(response, _callback) {
-	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object') {
-	        if (response.error) {
-	          this.error(response, _callback);
-	          return;
-	        }
-	        if (response.payload) {
-	          if (response.next_page) {
-	            if (_callback) _callback(response.payload, response.next_page);
-	          } else {
-	            if (_callback) _callback(response.payload);
-	          }
-	          return;
-	        }
-	      }
-	      if (_callback) _callback(response);
-	    }
-	  }, {
-	    key: 'error',
-	    value: function error(response, callback) {
-	      if ((typeof response === 'undefined' ? 'undefined' : _typeof(response)) === 'object' && response.error) {
-	        var preparedData = _pick(response, ['message', 'payload']);
-	        return this._createError(callback, preparedData, 'httpResultError');
-	      } else {
-	        return this._createError(callback, { message: response }, 'httpResultError');
-	      }
-	    }
-	  }, {
-	    key: 'validationError',
-	    value: function validationError(message) {
-	      return this._createError({ message: message }, 'validationError');
-	    }
-	  }, {
-	    key: '_createError',
-	    value: function _createError(errorPayload, type) {
-	      errorPayload.component = this._componentName;
-	      errorPayload.type = type;
-	      return errorPayload;
-	    }
-	  }]);
-
-	  return _class;
-	}();
-
-	exports.default = _class;
-	module.exports = exports['default'];
-	//# sourceMappingURL=responders.js.map
-
-
-/***/ },
-/* 17 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	function isArray(arg) {
-	  return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === 'number');
-	}
-
-	function each(o, f) {
-	  if (!o || !f) {
-	    return;
-	  }
-
-	  if (isArray(o)) {
-	    for (var i = 0, l = o.length; i < l;) {
-	      f.call(o[i], o[i], i++);
-	    }
-	  } else {
-	    for (var i in o) {
-	      o.hasOwnProperty && o.hasOwnProperty(i) && f.call(o[i], i, o[i]);
-	    }
-	  }
-	}
-
-	function encode(path) {
-	  return encodeURIComponent(path);
-	}
-
-	function map(list, fun) {
-	  var fin = [];
-	  each(list || [], function (k, v) {
-	    fin.push(fun(k, v));
-	  });
-	  return fin;
-	}
-
 	function pamEncode(str) {
 	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
-	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+	    '%' + c.charCodeAt(0).toString(16).toUpperCase();
 	  });
 	}
 
-	function _object_to_key_list(o) {
+	function objectToList(o) {
 	  var l = [];
-	  each(o, function (key) {
-	    l.push(key);
+	  Object.keys(o, function (key) {
+	    return l.push(key);
 	  });
 	  return l;
 	}
 
-	function _object_to_key_list_sorted(o) {
-	  return _object_to_key_list(o).sort();
+	function objectToListSorted(o) {
+	  return objectToList(o).sort();
 	}
 
-	function _get_pam_sign_input_from_params(params) {
-	  var l = _object_to_key_list_sorted(params);
-	  return map(l, function (paramKey) {
+	function signPamFromParams(params) {
+	  var l = objectToListSorted(params);
+	  return l.map(function (paramKey) {
 	    return paramKey + '=' + pamEncode(params[paramKey]);
 	  }).join('&');
 	}
 
 	module.exports = {
-	  encode: encode,
-	  each: each,
-	  isArray: isArray,
-	  map: map,
-	  pamEncode: pamEncode,
-	  _get_pam_sign_input_from_params: _get_pam_sign_input_from_params,
-	  _object_to_key_list_sorted: _object_to_key_list_sorted,
-	  _object_to_key_list: _object_to_key_list,
+	  signPamFromParams: signPamFromParams,
 	  endsWith: function endsWith(searchString, suffix) {
 	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
 	  }
@@ -3209,7 +3087,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
@@ -3220,11 +3098,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _subscribe = __webpack_require__(19);
+	var _subscribe = __webpack_require__(18);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _presence = __webpack_require__(23);
+	var _presence = __webpack_require__(20);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
@@ -3236,7 +3114,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _utils = __webpack_require__(17);
+	var _utils = __webpack_require__(16);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -3527,10 +3405,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 	//# sourceMappingURL=subscription_manager.js.map
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3541,7 +3419,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -3549,15 +3427,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	var _logger = __webpack_require__(20);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -3584,8 +3454,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _this._networking = networking;
 	    _this._config = config;
-	    _this._r = new _responders2.default('#endpoints/subscribe');
-	    _this._l = _logger2.default.getLogger('#endpoints/subscribe');
 	    return _this;
 	  }
 
@@ -3677,10 +3545,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -3688,297 +3556,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _loglevel = __webpack_require__(21);
-
-	var _loglevel2 = _interopRequireDefault(_loglevel);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var moduleLogger = function () {
-	  function moduleLogger(moduleName) {
-	    _classCallCheck(this, moduleLogger);
-
-	    this._moduleName = moduleName;
-	  }
-
-	  _createClass(moduleLogger, [{
-	    key: '__commonLogger',
-	    value: function __commonLogger(level, payload) {
-	      _loglevel2.default[level]({
-	        component: this._moduleName,
-	        data: payload,
-	        timestamp: new Date()
-	      });
-	    }
-	  }, {
-	    key: 'error',
-	    value: function error(payload) {
-	      this.__commonLogger('error', payload);
-	    }
-	  }, {
-	    key: 'debug',
-	    value: function debug(payload) {
-	      this.__commonLogger('debug', payload);
-	    }
-	  }]);
-
-	  return moduleLogger;
-	}();
-
-	exports.default = {
-	  getLogger: function getLogger(moduleName) {
-	    return new moduleLogger(moduleName);
-	  }
-	};
-	module.exports = exports['default'];
-	//# sourceMappingURL=logger.js.map
-
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(console) {/*
-	* loglevel - https://github.com/pimterry/loglevel
-	*
-	* Copyright (c) 2013 Tim Perry
-	* Licensed under the MIT license.
-	*/
-	(function (root, definition) {
-	    "use strict";
-	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_FACTORY__ = (definition), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	    } else if (typeof module === 'object' && module.exports) {
-	        module.exports = definition();
-	    } else {
-	        root.log = definition();
-	    }
-	}(this, function () {
-	    "use strict";
-	    var noop = function() {};
-	    var undefinedType = "undefined";
-
-	    function realMethod(methodName) {
-	        if (typeof console === undefinedType) {
-	            return false; // We can't build a real method without a console to log to
-	        } else if (console[methodName] !== undefined) {
-	            return bindMethod(console, methodName);
-	        } else if (console.log !== undefined) {
-	            return bindMethod(console, 'log');
-	        } else {
-	            return noop;
-	        }
-	    }
-
-	    function bindMethod(obj, methodName) {
-	        var method = obj[methodName];
-	        if (typeof method.bind === 'function') {
-	            return method.bind(obj);
-	        } else {
-	            try {
-	                return Function.prototype.bind.call(method, obj);
-	            } catch (e) {
-	                // Missing bind shim or IE8 + Modernizr, fallback to wrapping
-	                return function() {
-	                    return Function.prototype.apply.apply(method, [obj, arguments]);
-	                };
-	            }
-	        }
-	    }
-
-	    // these private functions always need `this` to be set properly
-
-	    function enableLoggingWhenConsoleArrives(methodName, level, loggerName) {
-	        return function () {
-	            if (typeof console !== undefinedType) {
-	                replaceLoggingMethods.call(this, level, loggerName);
-	                this[methodName].apply(this, arguments);
-	            }
-	        };
-	    }
-
-	    function replaceLoggingMethods(level, loggerName) {
-	        /*jshint validthis:true */
-	        for (var i = 0; i < logMethods.length; i++) {
-	            var methodName = logMethods[i];
-	            this[methodName] = (i < level) ?
-	                noop :
-	                this.methodFactory(methodName, level, loggerName);
-	        }
-	    }
-
-	    function defaultMethodFactory(methodName, level, loggerName) {
-	        /*jshint validthis:true */
-	        return realMethod(methodName) ||
-	               enableLoggingWhenConsoleArrives.apply(this, arguments);
-	    }
-
-	    var logMethods = [
-	        "trace",
-	        "debug",
-	        "info",
-	        "warn",
-	        "error"
-	    ];
-
-	    function Logger(name, defaultLevel, factory) {
-	      var self = this;
-	      var currentLevel;
-	      var storageKey = "loglevel";
-	      if (name) {
-	        storageKey += ":" + name;
-	      }
-
-	      function persistLevelIfPossible(levelNum) {
-	          var levelName = (logMethods[levelNum] || 'silent').toUpperCase();
-
-	          // Use localStorage if available
-	          try {
-	              window.localStorage[storageKey] = levelName;
-	              return;
-	          } catch (ignore) {}
-
-	          // Use session cookie as fallback
-	          try {
-	              window.document.cookie =
-	                encodeURIComponent(storageKey) + "=" + levelName + ";";
-	          } catch (ignore) {}
-	      }
-
-	      function getPersistedLevel() {
-	          var storedLevel;
-
-	          try {
-	              storedLevel = window.localStorage[storageKey];
-	          } catch (ignore) {}
-
-	          if (typeof storedLevel === undefinedType) {
-	              try {
-	                  var cookie = window.document.cookie;
-	                  var location = cookie.indexOf(
-	                      encodeURIComponent(storageKey) + "=");
-	                  if (location) {
-	                      storedLevel = /^([^;]+)/.exec(cookie.slice(location))[1];
-	                  }
-	              } catch (ignore) {}
-	          }
-
-	          // If the stored level is not valid, treat it as if nothing was stored.
-	          if (self.levels[storedLevel] === undefined) {
-	              storedLevel = undefined;
-	          }
-
-	          return storedLevel;
-	      }
-
-	      /*
-	       *
-	       * Public API
-	       *
-	       */
-
-	      self.levels = { "TRACE": 0, "DEBUG": 1, "INFO": 2, "WARN": 3,
-	          "ERROR": 4, "SILENT": 5};
-
-	      self.methodFactory = factory || defaultMethodFactory;
-
-	      self.getLevel = function () {
-	          return currentLevel;
-	      };
-
-	      self.setLevel = function (level, persist) {
-	          if (typeof level === "string" && self.levels[level.toUpperCase()] !== undefined) {
-	              level = self.levels[level.toUpperCase()];
-	          }
-	          if (typeof level === "number" && level >= 0 && level <= self.levels.SILENT) {
-	              currentLevel = level;
-	              if (persist !== false) {  // defaults to true
-	                  persistLevelIfPossible(level);
-	              }
-	              replaceLoggingMethods.call(self, level, name);
-	              if (typeof console === undefinedType && level < self.levels.SILENT) {
-	                  return "No console available for logging";
-	              }
-	          } else {
-	              throw "log.setLevel() called with invalid level: " + level;
-	          }
-	      };
-
-	      self.setDefaultLevel = function (level) {
-	          if (!getPersistedLevel()) {
-	              self.setLevel(level, false);
-	          }
-	      };
-
-	      self.enableAll = function(persist) {
-	          self.setLevel(self.levels.TRACE, persist);
-	      };
-
-	      self.disableAll = function(persist) {
-	          self.setLevel(self.levels.SILENT, persist);
-	      };
-
-	      // Initialize with the right level
-	      var initialLevel = getPersistedLevel();
-	      if (initialLevel == null) {
-	          initialLevel = defaultLevel == null ? "WARN" : defaultLevel;
-	      }
-	      self.setLevel(initialLevel, false);
-	    }
-
-	    /*
-	     *
-	     * Package-level API
-	     *
-	     */
-
-	    var defaultLogger = new Logger();
-
-	    var _loggersByName = {};
-	    defaultLogger.getLogger = function getLogger(name) {
-	        if (typeof name !== "string" || name === "") {
-	          throw new TypeError("You must supply a name when creating a logger.");
-	        }
-
-	        var logger = _loggersByName[name];
-	        if (!logger) {
-	          logger = _loggersByName[name] = new Logger(
-	            name, defaultLogger.getLevel(), defaultLogger.methodFactory);
-	        }
-	        return logger;
-	    };
-
-	    // Grab the current global log variable in case of overwrite
-	    var _log = (typeof window !== undefinedType) ? window.log : undefined;
-	    defaultLogger.noConflict = function() {
-	        if (typeof window !== undefinedType &&
-	               window.log === defaultLogger) {
-	            window.log = _log;
-	        }
-
-	        return defaultLogger;
-	    };
-
-	    return defaultLogger;
-	}));
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -3987,10 +3565,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _config2 = _interopRequireDefault(_config);
 
 	var _flow_interfaces = __webpack_require__(14);
-
-	var _utils = __webpack_require__(17);
-
-	var _utils2 = _interopRequireDefault(_utils);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4008,14 +3582,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(_class, [{
 	    key: 'validateEndpointConfig',
 	    value: function validateEndpointConfig(endpointConfig) {
+	      if (!endpointConfig) {
+	        return false;
+	      }
 	      return true;
 	    }
 	  }, {
 	    key: 'createBaseParams',
 	    value: function createBaseParams(endpointConfig) {
+	      var _this = this;
+
 	      var data = {};
 
-	      _utils2.default.each(this._config.baseParams, function (key, value) {
+	      Object.keys(this._config.baseParams).forEach(function (key) {
+	        var value = _this._config.baseParams[key];
 	        if (!(key in data)) data[key] = value;
 	      });
 
@@ -4033,6 +3613,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      return data;
 	    }
+	  }, {
+	    key: 'createValidationError',
+	    value: function createValidationError(message) {
+	      return this._createError({ message: message }, 'validationError');
+	    }
+	  }, {
+	    key: '_createError',
+	    value: function _createError(errorPayload, type) {
+	      errorPayload.type = type;
+	      return errorPayload;
+	    }
+	  }, {
+	    key: 'log',
+	    value: function log() {
+	      for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
+	        params[_key] = arguments[_key];
+	      }
+
+	      console.log.apply(console, params);
+	    }
 	  }]);
 
 	  return _class;
@@ -4042,9 +3642,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 	//# sourceMappingURL=base.js.map
 
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 23 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4055,7 +3656,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -4063,15 +3664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _logger = __webpack_require__(20);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4098,8 +3691,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _this.networking = networking;
 	    _this.config = config;
-	    _this._r = new _responders2.default('#endpoints/presence');
-	    _this._l = _logger2.default.getLogger('#endpoints/presence');
 	    return _this;
 	  }
 
@@ -4118,7 +3709,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      };
 
 	      if (!callback) {
-	        return this._l.error('Missing Callback');
+	        return this.log('Missing Callback');
 	      }
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4157,11 +3748,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      };
 
 	      if (!callback) {
-	        return this._l.error('Missing Callback');
+	        return this.log('Missing Callback');
 	      }
 
 	      if (channels.length === 0 && channelGroups.length === 0) {
-	        return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+	        return callback(this.createValidationError('Channel or Channel Group must be supplied'));
 	      }
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4211,15 +3802,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      };
 
 	      if (!callback) {
-	        return this._l.error('Missing Callback');
+	        return this.log('Missing Callback');
 	      }
 
 	      if (channels.length === 0 && channelGroups.length === 0) {
-	        return callback(this._r.validationError('Channel or Channel Group must be supplied'));
+	        return callback(this.createValidationError('Channel or Channel Group must be supplied'));
 	      }
 
 	      if (!state) {
-	        return callback(this._r.validationError('State must be supplied'));
+	        return callback(this.createValidationError('State must be supplied'));
 	      }
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4310,7 +3901,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (includeState) params.state = 1;
 
 	      if (!callback) {
-	        return this._l.error('Missing Callback');
+	        return this.log('Missing Callback');
 	      }
 
 	      if (channelGroups.length > 0) {
@@ -4433,7 +4024,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 21 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -4536,7 +4127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 25 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4547,7 +4138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -4555,7 +4146,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4621,7 +4212,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4632,7 +4223,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -4644,11 +4235,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _logger = __webpack_require__(20);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4677,7 +4264,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this.networking = networking;
 	    _this.crypto = crypto;
 	    _this.config = config;
-	    _this._l = _logger2.default.getLogger('#endpoints/history');
 	    return _this;
 	  }
 
@@ -4704,8 +4290,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel)
 	      };
 
-	      if (!channel) return callback(this._r.validationError('Missing channel'));
-	      if (!callback) return this._l.error('Missing Callback');
+	      if (!channel) return callback(this.createValidationError('Missing channel'));
+	      if (!callback) return this.log('Missing Callback');
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -4776,7 +4362,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4787,7 +4373,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -4795,11 +4381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4826,7 +4408,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _this.networking = networking;
 	    _this.config = config;
-	    _this._r = new _responders2.default('endpoints/push');
 	    return _this;
 	  }
 
@@ -4845,11 +4426,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      };
 
 	      if (!device) {
-	        return callback(this._r.validationError('Missing Device ID (device)'));
+	        return callback(this.createValidationError('Missing Device ID (device)'));
 	      }
 
 	      if (!pushGateway) {
-	        return callback(this._r.validationError('Missing GW Type (pushGateway: gcm,apns, mpns)'));
+	        return callback(this.createValidationError('Missing GW Type (pushGateway: gcm,apns, mpns)'));
 	      }
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4884,11 +4465,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      };
 
 	      if (!device) {
-	        return callback(this._r.validationError('Missing Device ID (device)'));
+	        return callback(this.createValidationError('Missing Device ID (device)'));
 	      }
 
 	      if (!pushGateway) {
-	        return callback(this._r.validationError('Missing GW Type (pushGateway: gcm or apns)'));
+	        return callback(this.createValidationError('Missing GW Type (pushGateway: gcm or apns)'));
 	      }
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4939,19 +4520,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      };
 
 	      if (!device) {
-	        return callback(this._r.validationError('Missing Device ID (device)'));
+	        return callback(this.createValidationError('Missing Device ID (device)'));
 	      }
 
 	      if (!pushGateway) {
-	        return callback(this._r.validationError('Missing GW Type (pushGateway: gcm or apns)'));
+	        return callback(this.createValidationError('Missing GW Type (pushGateway: gcm or apns)'));
 	      }
 
 	      if (!operation) {
-	        return callback(this._r.validationError('Missing GW Operation (operation: add or remove)'));
+	        return callback(this.createValidationError('Missing GW Operation (operation: add or remove)'));
 	      }
 
 	      if (!channels) {
-	        return callback(this._r.validationError('Missing gw destination Channel (channel)'));
+	        return callback(this.createValidationError('Missing gw destination Channel (channel)'));
 	      }
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4979,10 +4560,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -4990,7 +4571,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -5002,19 +4583,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _cryptography2 = _interopRequireDefault(_cryptography);
 
-	var _logger = __webpack_require__(20);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _responders = __webpack_require__(16);
-
-	var _responders2 = _interopRequireDefault(_responders);
-
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
-	var _utils = __webpack_require__(17);
+	var _utils = __webpack_require__(16);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -5043,8 +4616,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this.networking = networking;
 	    _this.config = config;
 	    _this.crypto = crypto;
-	    _this._r = new _responders2.default('#endpoints/PAM');
-	    _this._l = _logger2.default.getLogger('#endpoints/PAM');
 	    return _this;
 	  }
 
@@ -5074,7 +4645,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/v1/auth/grant/sub-key/' + this.config.subscribeKey
 	      };
 
-	      if (!callback) return this._l.error('Missing Callback');
+	      if (!callback) return this.log('Missing Callback');
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -5104,7 +4675,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      var signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\ngrant\n';
-	      signInput += _utils2.default._get_pam_sign_input_from_params(params);
+	      signInput += _utils2.default.signPamFromParams(params);
 
 	      params.signature = this.crypto.HMACSHA256(signInput);
 
@@ -5185,13 +4756,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      var signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\naudit\n';
-	      signInput += _utils2.default._get_pam_sign_input_from_params(params);
+	      signInput += _utils2.default.signPamFromParams(params);
 
 	      params.signature = this.crypto.HMACSHA256(signInput);
 
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
-
+	        console.log(payload);
 	        var response = {};
 
 	        callback(status, response);
@@ -5206,9 +4777,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 	//# sourceMappingURL=access.js.map
 
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 29 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5219,21 +4791,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
 	var _config = __webpack_require__(11);
 
 	var _config2 = _interopRequireDefault(_config);
-
-	var _logger = __webpack_require__(20);
-
-	var _logger2 = _interopRequireDefault(_logger);
 
 	var _flow_interfaces = __webpack_require__(14);
 
@@ -5258,7 +4826,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _this.networking = networking;
 	    _this.config = config;
-	    _this.logger = _logger2.default.getLogger('#endpoints/channel_groups');
 	    return _this;
 	  }
 
@@ -5277,7 +4844,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
 	      };
 
-	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -5309,7 +4876,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove'
 	      };
 
-	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -5366,8 +4933,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
 	      };
 
-	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
-	      if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
+	      if (channels.length === 0) return callback(this.createValidationError('Missing Channel'));
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -5397,8 +4964,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
 	      };
 
-	      if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
-	      if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
+	      if (channels.length === 0) return callback(this.createValidationError('Missing Channel'));
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -5422,7 +4989,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5435,7 +5002,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _networking = __webpack_require__(3);
+	var _networking = __webpack_require__(2);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
@@ -5447,11 +5014,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _logger = __webpack_require__(20);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _base = __webpack_require__(22);
+	var _base = __webpack_require__(19);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -5480,7 +5043,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this.networking = networking;
 	    _this.config = config;
 	    _this.crypto = crypto;
-	    _this._l = _logger2.default.getLogger('#endpoints/publish');
 	    return _this;
 	  }
 
@@ -5504,8 +5066,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0'
 	      };
 
-	      if (!message) return callback(this._r.validationError('Missing Message'));
-	      if (!channel) return callback(this._r.validationError('Missing Channel'));
+	      if (!message) return callback(this.createValidationError('Missing Message'));
+	      if (!channel) return callback(this.createValidationError('Missing Channel'));
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;

@@ -3,8 +3,6 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography';
-import Logger from '../components/logger';
-import Responders from '../presenters/responders';
 import BaseEndoint from './base.js';
 import utils from '../utils.js';
 
@@ -49,16 +47,12 @@ type grantResponse = {
 export default class extends BaseEndoint {
   networking: Networking;
   config: Config;
-  _r: Responders;
-  _l: Logger;
 
   constructor({ networking, config, crypto }: accessConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
     this.crypto = crypto;
-    this._r = new Responders('#endpoints/PAM');
-    this._l = Logger.getLogger('#endpoints/PAM');
   }
 
   grant(args: grantArguments, callback: Function) {
@@ -72,7 +66,7 @@ export default class extends BaseEndoint {
       url: '/v1/auth/grant/sub-key/' + this.config.subscribeKey
     };
 
-    if (!callback) return this._l.error('Missing Callback');
+    if (!callback) return this.log('Missing Callback');
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }
@@ -101,7 +95,7 @@ export default class extends BaseEndoint {
     }
 
     let signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\ngrant\n';
-    signInput += utils._get_pam_sign_input_from_params(params);
+    signInput += utils.signPamFromParams(params);
 
     params.signature = this.crypto.HMACSHA256(signInput);
 
@@ -179,15 +173,14 @@ export default class extends BaseEndoint {
     }
 
     let signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\naudit\n';
-    signInput += utils._get_pam_sign_input_from_params(params);
+    signInput += utils.signPamFromParams(params);
 
     params.signature = this.crypto.HMACSHA256(signInput);
 
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
-
+      console.log(payload); // eslint-disable-line no-console
       const response: auditResponse = {
-
       };
 
       callback(status, response);

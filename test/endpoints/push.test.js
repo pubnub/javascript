@@ -176,5 +176,4 @@ describe('push endpoints', () => {
       });
     });
   });
-
 });

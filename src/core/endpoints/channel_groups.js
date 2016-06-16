@@ -3,7 +3,6 @@
 import BaseEndoint from './base.js';
 import Networking from '../components/networking';
 import Config from '../components/config';
-import Logger from '../components/logger';
 
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
@@ -42,13 +41,11 @@ type listChannelsResponse = {
 export default class extends BaseEndoint {
   networking: Networking;
   config: Config;
-  logger: Logger;
 
   constructor({ networking, config }: channelGroupConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
-    this.logger = Logger.getLogger('#endpoints/channel_groups');
   }
 
   listChannels(args: listChannelsParams, callback: Function) {
@@ -63,7 +60,7 @@ export default class extends BaseEndoint {
       url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
     };
 
-    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+    if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }
@@ -93,7 +90,7 @@ export default class extends BaseEndoint {
       url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove'
     };
 
-    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
+    if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }
@@ -145,8 +142,8 @@ export default class extends BaseEndoint {
       url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
     };
 
-    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
-    if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+    if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
+    if (channels.length === 0) return callback(this.createValidationError('Missing Channel'));
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }
@@ -172,8 +169,8 @@ export default class extends BaseEndoint {
       url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
     };
 
-    if (!channelGroup) return callback(this._r.validationError('Missing Channel Group'));
-    if (channels.length === 0) return callback(this._r.validationError('Missing Channel'));
+    if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
+    if (channels.length === 0) return callback(this.createValidationError('Missing Channel'));
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }

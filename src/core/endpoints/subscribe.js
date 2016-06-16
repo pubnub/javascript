@@ -3,8 +3,6 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 
-import Responders from '../presenters/responders';
-import Logger from '../components/logger';
 import BaseEndoint from './base.js';
 
 import { endpointDefinition, statusStruct, PublishMetaData,
@@ -28,15 +26,10 @@ export default class extends BaseEndoint {
   _networking: Networking;
   _config: Config;
 
-  _r: Responders;
-  _l: Logger;
-
   constructor({ networking, config }: pubSubConstruct) {
     super({ networking });
     this._networking = networking;
     this._config = config;
-    this._r = new Responders('#endpoints/subscribe');
-    this._l = Logger.getLogger('#endpoints/subscribe');
   }
 
   subscribe(args: subscribeArguments, callback: Function) {

@@ -77,5 +77,4 @@ describe('publish endpoints', () => {
       done();
     });
   });
-
 });

@@ -3,7 +3,6 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
-import Logger from '../components/logger';
 import BaseEndoint from './base.js';
 
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
@@ -30,14 +29,12 @@ export default class extends BaseEndoint {
   networking: Networking;
   config: Config;
   crypto: Crypto;
-  _l: Logger;
 
   constructor({ networking, config, crypto }: publishConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
     this.crypto = crypto;
-    this._l = Logger.getLogger('#endpoints/publish');
   }
 
   publish(args: publishArguments, callback: Function) {
@@ -52,8 +49,8 @@ export default class extends BaseEndoint {
       url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0'
     };
 
-    if (!message) return callback(this._r.validationError('Missing Message'));
-    if (!channel) return callback(this._r.validationError('Missing Channel'));
+    if (!message) return callback(this.createValidationError('Missing Message'));
+    if (!channel) return callback(this.createValidationError('Missing Channel'));
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }

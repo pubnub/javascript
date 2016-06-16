@@ -175,9 +175,10 @@ export default class {
     this._presenceEndpoints.heartbeat({
       channels: presenceChannels,
       channelGroups: presenceChannelGroups,
-      state: presenceState }, (status) => {
-          console.log(status);
-    });
+      state: presenceState },
+        (status) => {
+          console.log(status); // eslint-disable-line no-console
+        });
   }
 
   _startSubscribeLoop() {
