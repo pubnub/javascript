@@ -3061,7 +3061,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function objectToList(o) {
 	  var l = [];
-	  Object.keys(o, function (key) {
+	  Object.keys(o).forEach(function (key) {
 	    return l.push(key);
 	  });
 	  return l;
@@ -3375,7 +3375,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: '_stopSubscribeLoop',
-	    value: function _stopSubscribeLoop() {}
+	    value: function _stopSubscribeLoop() {
+	      if (this._subscribeCall) {
+	        this._subscribeCall.abort();
+	        this._subscribeCall = null;
+	      }
+	    }
 	  }, {
 	    key: '_announcePresence',
 	    value: function _announcePresence(announce) {
@@ -4561,7 +4566,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -4679,39 +4684,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
-
-	        var channelsResponse = {};
-	        var channelGroupsResponse = {};
-
-	        if (channels.length === 1 && channelGroups.length === 0) {
-	          channelsResponse[payload.payload.channel] = payload.payload.auths;
-	        }
-
-	        if (channelGroups.length === 1 && channels.length === 0) {
-	          channelGroupsResponse[payload.payload['channel-groups']] = payload.payload.auths;
-	        }
-
-	        if (channels.length > 1) {
-	          Object.keys(payload.payload.channels).forEach(function (channelName) {
-	            channelsResponse[channelName] = payload.payload.channels[channelName].auths;
-	          });
-	        }
-
-	        if (channelGroups.length > 1) {
-	          Object.keys(payload.payload['channel-groups']).forEach(function (channelGroupName) {
-	            channelGroupsResponse[channelGroupName] = payload.payload['channel-groups'][channelGroupName].auths;
-	          });
-	        }
-
-	        var response = {
-	          ttl: payload.payload.ttl,
-	          level: payload.payload.level,
-	          subscribeKey: payload.payload.subscribe_key,
-	          channels: channelsResponse,
-	          channelGroups: channelGroupsResponse
-	        };
-
-	        callback(status, response);
+	        callback(status, payload.payload);
 	      });
 	    }
 	  }, {
@@ -4760,10 +4733,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
-	        console.log(payload);
-	        var response = {};
-
-	        callback(status, response);
+	        callback(status, payload.payload);
 	      });
 	    }
 	  }]);
@@ -4775,7 +4745,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 	//# sourceMappingURL=access.js.map
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
 /* 26 */

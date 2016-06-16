@@ -20,11 +20,6 @@ type auditArguments = {
   authKeys: Array<string>,
 }
 
-type auditResponse = {
-  channels: Object,
-  channelGroups: Object
-}
-
 type grantArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
@@ -34,15 +29,6 @@ type grantArguments = {
   manage: boolean,
   authKeys: Array<string>
 }
-
-type grantResponse = {
-  ttl: number,
-  level: string,
-  subscribeKey: string,
-  channels: Object,
-  channelGroups: Object
-}
-
 
 export default class extends BaseEndoint {
   networking: Networking;
@@ -101,41 +87,7 @@ export default class extends BaseEndoint {
 
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
-
-      let channelsResponse = {};
-      let channelGroupsResponse = {};
-
-      // grant to singular channel
-      if (channels.length === 1 && channelGroups.length === 0) {
-        channelsResponse[payload.payload.channel] = payload.payload.auths;
-      }
-
-      // grant to singular channel groups
-      if (channelGroups.length === 1 && channels.length === 0) {
-        channelGroupsResponse[payload.payload['channel-groups']] = payload.payload.auths;
-      }
-
-      if (channels.length > 1) {
-        Object.keys(payload.payload.channels).forEach((channelName) => {
-          channelsResponse[channelName] = payload.payload.channels[channelName].auths;
-        });
-      }
-
-      if (channelGroups.length > 1) {
-        Object.keys(payload.payload['channel-groups']).forEach((channelGroupName) => {
-          channelGroupsResponse[channelGroupName] = payload.payload['channel-groups'][channelGroupName].auths;
-        });
-      }
-
-      const response: grantResponse = {
-        ttl: payload.payload.ttl,
-        level: payload.payload.level,
-        subscribeKey: payload.payload.subscribe_key,
-        channels: channelsResponse,
-        channelGroups: channelGroupsResponse
-      };
-
-      callback(status, response);
+      callback(status, payload.payload);
     });
   }
 
@@ -179,12 +131,7 @@ export default class extends BaseEndoint {
 
     this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
-      console.log(payload); // eslint-disable-line no-console
-      const response: auditResponse = {
-      };
-
-      callback(status, response);
+      callback(status, payload.payload);
     });
   }
-
 }

@@ -9,7 +9,6 @@ import PubNub from '../../lib/node/index.js';
 describe('access endpoints', () => {
   let pubnub;
 
-  /*
   before(() => {
     nock.disableNetConnect();
   });
@@ -17,18 +16,10 @@ describe('access endpoints', () => {
   after(() => {
     nock.enableNetConnect();
   });
-  */
 
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', secretKey: 'mySecretKey', uuid: 'myUUID', logVerbosity: true });
-  });
-
-  describe.skip('#grant', () => {
-    it('sample grant', () => {
-      pubnub.grant({ channels: ['ch1', 'ch2'], authKeys: ['key1', 'key2'] }, (status, response) => {
-        console.log(status, response);
-      });
-    });
+    pubnub._config.baseParams.pnsdk = 'PubNub-JS-Nodejs/suchJavascript';
   });
 });

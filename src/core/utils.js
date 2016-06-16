@@ -1,7 +1,7 @@
 /* @flow */
 /* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
-function pamEncode(str) {
+function pamEncode(str): string {
   return encodeURIComponent(str).replace(/[!'()*~]/g, (c) => {
     '%' + c.charCodeAt(0).toString(16).toUpperCase();
   });
@@ -9,7 +9,7 @@ function pamEncode(str) {
 
 function objectToList(o: Object): Array<mixed> {
   let l = [];
-  Object.keys(o, (key) => l.push(key));
+  Object.keys(o).forEach((key) => l.push(key));
   return l;
 }
 

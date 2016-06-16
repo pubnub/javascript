@@ -7,11 +7,6 @@ import SubscriptionManager from './components/subscription_manager';
 
 import packageJSON from '../../package.json';
 
-/*
-import PresenceHeartbeat from './iterators/presence_heartbeat';
-import Subscriber from './iterators/subscriber';
-*/
-
 import TimeEndpoint from './endpoints/time';
 import PresenceEndpoints from './endpoints/presence';
 import HistoryEndpoint from './endpoints/history';
