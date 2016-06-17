@@ -1,4 +1,4 @@
-/*! 3.15.0 / titanium */
+/*! 3.15.1 / titanium */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -172,7 +172,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    host: url.split(pubNubCore.URLBIT)[2],
 	    port: 80,
 	    mode: Ti.Network.READ_WRITE_MODE,
-	    timeout: pubNubCore.XHRTME,
+	    timeout: pubNubCore.DEF_TIMEOUT,
 	    error: fail,
 	    connected: function () {
 	      sock.write(wbuffer);
@@ -238,7 +238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    success(response);
 	  };
 
-	  timer = pubNubCore.timeout(function () { done(1); }, pubNubCore.XHRTME);
+	  timer = pubNubCore.timeout(function () { done(1); }, pubNubCore.DEF_TIMEOUT);
 
 	  // Send
 	  try {
@@ -247,7 +247,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      done(1);
 	    };
 	    xhr.onload = finished;
-	    xhr.timeout = pubNubCore.XHRTME;
+	    xhr.timeout = pubNubCore.DEF_TIMEOUT;
 
 	    xhr.open('GET', url, true);
 	    xhr.send();
@@ -524,7 +524,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.15.0",
+		"version": "3.15.1",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [

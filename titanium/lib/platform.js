@@ -115,7 +115,7 @@ function xdr_tcp(setup) {
     host: url.split(pubNubCore.URLBIT)[2],
     port: 80,
     mode: Ti.Network.READ_WRITE_MODE,
-    timeout: pubNubCore.XHRTME,
+    timeout: pubNubCore.DEF_TIMEOUT,
     error: fail,
     connected: function () {
       sock.write(wbuffer);
@@ -181,7 +181,7 @@ function xdr_http_client(setup) {
     success(response);
   };
 
-  timer = pubNubCore.timeout(function () { done(1); }, pubNubCore.XHRTME);
+  timer = pubNubCore.timeout(function () { done(1); }, pubNubCore.DEF_TIMEOUT);
 
   // Send
   try {
@@ -190,7 +190,7 @@ function xdr_http_client(setup) {
       done(1);
     };
     xhr.onload = finished;
-    xhr.timeout = pubNubCore.XHRTME;
+    xhr.timeout = pubNubCore.DEF_TIMEOUT;
 
     xhr.open('GET', url, true);
     xhr.send();
