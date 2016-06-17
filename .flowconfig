@@ -1,9 +1,8 @@
 [ignore]
-.*/node_modules/.*
+.*/test/.*
 
 [include]
 .*/src/.*
-.*/test/.*
 
 [libs]
 ./core/src/flow_interfaces.js

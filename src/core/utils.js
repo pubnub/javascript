@@ -1,10 +1,7 @@
 /* @flow */
-/* eslint no-unused-expressions: 0, block-scoped-var: 0, no-redeclare: 0, guard-for-in: 0 */
 
-function pamEncode(str): string {
-  return encodeURIComponent(str).replace(/[!'()*~]/g, (c) => {
-    '%' + c.charCodeAt(0).toString(16).toUpperCase();
-  });
+function pamEncode(str: string): string {
+  return encodeURIComponent(str).replace(/[!'()*~]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 }
 
 function objectToList(o: Object): Array<mixed> {

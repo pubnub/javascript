@@ -1,6 +1,8 @@
 /* @flow */
 
-import pubNubCore from '../core/pubnub-common.js';
+import PubNubCore from '../core/pubnub-common.js';
+import packageJSON from '../../package.json';
+import { internalSetupStruct } from '../core/flow_interfaces';
 
 /**
  * LOCAL STORAGE
@@ -34,22 +36,18 @@ function sendBeacon(url: string) {
   }
 }
 
-type webSetupType = {
-  db: Function,
-  navigatorOnlineCheck: Function,
-  sendBeacon: ?Function,
+
+export default class extends PubNubCore {
+
+  constructor(setup: internalSetupStruct) {
+    setup.db = db;
+    setup.navigatorOnlineCheck = navigatorOnlineCheck;
+    setup.sendBeacon = sendBeacon;
+    setup.params = {
+      pnsdk: 'PubNub-JS-Web/' + packageJSON.version
+    };
+
+    super(setup);
+  }
+
 }
-
-let initFunction = function (setup: webSetupType): Object {
-  setup.db = db;
-  setup.navigatorOnlineCheck = navigatorOnlineCheck;
-  setup.sendBeacon = sendBeacon;
-  let PN = pubNubCore(setup);
-
-  window.addEventListener('beforeunload', PN.unloadTriggered);
-  window.addEventListener('offline', PN.offlineTriggered);
-
-  return PN;
-};
-
-module.exports = initFunction;

@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
-import BaseEndoint from './base.js';
+import BaseEndpoint from './base.js';
 
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
@@ -25,7 +25,7 @@ type publishArguments = {
   meta: Object // psv2 supports filtering by metadata
 }
 
-export default class extends BaseEndoint {
+export default class extends BaseEndpoint {
   networking: Networking;
   config: Config;
   crypto: Crypto;

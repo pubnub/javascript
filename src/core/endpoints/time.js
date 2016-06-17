@@ -2,7 +2,7 @@
 
 import Networking from '../components/networking';
 import Config from '../components/config';
-import BaseEndoint from './base.js';
+import BaseEndpoint from './base.js';
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type timeConstruct = {
@@ -14,11 +14,13 @@ type timeResponse = {
   timetoken: number
 };
 
-export default class extends BaseEndoint {
+export default class extends BaseEndpoint {
+
+  _networking: Networking;
 
   constructor({ networking, config }: timeConstruct) {
     super({ config });
-    this.networking = networking;
+    this._networking = networking;
   }
 
   fetch(callback: Function) {
@@ -35,7 +37,7 @@ export default class extends BaseEndoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: timeResponse = {

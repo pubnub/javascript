@@ -3,6 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import { endpointDefinition } from '../flow_interfaces';
+import uuidGenerator from 'uuid';
 
 type baseConstruct = {
   config: Config
@@ -25,7 +26,7 @@ export default class {
     return true;
   }
 
-  createBaseParams(endpointConfig: endpointDefinition) {
+  createBaseParams(endpointConfig: endpointDefinition): Object {
     let data = {};
 
     Object.keys(this._config.baseParams).forEach((key) => {
@@ -33,8 +34,12 @@ export default class {
       if (!(key in data)) data[key] = value;
     });
 
-    if (this._config.isInstanceIdEnabled()) {
-      data.instanceid = this._config.getInstanceId();
+    if (this._config.useInstanceId) {
+      data.instanceid = this._config.instanceId;
+    }
+
+    if (this._config.useRequestId) {
+      data.requestid = uuidGenerator.v4();
     }
 
     if (endpointConfig.params.authKey && this._config.authKey) {
@@ -44,6 +49,7 @@ export default class {
     if (endpointConfig.params.uuid && this._config.UUID) {
       data.uuid = this._config.UUID;
     }
+
 
     return data;
   }
@@ -57,7 +63,7 @@ export default class {
     return errorPayload;
   }
 
-  log(...params: mixed) {
+  log(...params: any) {
     console.log.apply(console, params); // eslint-disable-line no-console
   }
 

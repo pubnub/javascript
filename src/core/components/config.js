@@ -43,16 +43,17 @@ export default class {
   */
   secure: boolean;
 
-  /*
-    Custom optional origin.
-  */
+  // Custom optional origin.
   origin: string;
 
-  /*
-    log verbosity: true to output lots of info
-  */
-
+  // log verbosity: true to output lots of info
   logVerbosity: boolean;
+
+  // if instanceId config is true, the SDK will pass the unique instance identifier to the server as instanceId=<UUID>
+  useInstanceId: boolean;
+
+  // if requestId config is true, the SDK will pass a unique request identifier with each request as request_id=<UUID>
+  useRequestId: boolean;
 
   /*
     how long the server will wait before declaring that the client is gone.
@@ -64,16 +65,6 @@ export default class {
   */
   _presenceAnnounceInterval: number;
 
-  /*
-    if instanceId config is true, the SDK will pass the unique instance
-    identifier to the server as instanceId=<UUID>
-  */
-  _useInstanceId: boolean;
-  /*
-    if requestId config is true, the SDK will pass a unique request identifier
-    with each request as request_id=<UUID>
-  */
-  _useRequestId: boolean;
   /*
     how long to wait for the server when running the subscribe loop
   */
@@ -110,8 +101,8 @@ export default class {
     this.logVerbosity = setup.logVerbosity || false;
     this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
-    this.setRequestIdConfig(setup.useRequestId || false);
-    this.setInstanceIdConfig(setup.useInstanceId || false);
+    this.useInstanceId = setup.useInstanceId || false;
+    this.useRequestId = setup.useRequestId || false;
 
     // set timeout to how long a transaction request will wait for the server (default 15 seconds)
     this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
@@ -149,12 +140,6 @@ export default class {
   setPresenceAnnounceInterval(val: number): this { this._presenceAnnounceInterval = val; return this; }
 
   // deprecated setters.
-  isInstanceIdEnabled(): boolean { return this._useInstanceId; }
-  setInstanceIdConfig(val: boolean): this { this._useInstanceId = val; return this; }
-
-  isRequestIdEnabled(): boolean { return this._useRequestId; }
-  setRequestIdConfig(val: boolean): this { this._useRequestId = val; return this; }
-
   getSubscribeTimeout(): number { return this._subscribeRequestTimeout; }
   setSubscribeTimeout(val: number): this { this._subscribeRequestTimeout = val; return this; }
 

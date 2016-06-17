@@ -31,7 +31,7 @@ gulp.task('babel', ['clean'], () => {
 });
 
 gulp.task('compile_web', ['babel'], () => {
-  return gulp.src('lib/web/platform.js')
+  return gulp.src('lib/web/index.js')
     .pipe(gulpWebpack(webpackConfig))
     .pipe(gulp.dest('dist/web'));
 });
@@ -116,5 +116,5 @@ gulp.task('test_client', (done) => {
 });
 
 gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_server', 'test_release', 'remap_istanbul', 'lint', done);
+  runSequence('pre-test', 'test_server', 'test_release', 'remap_istanbul', 'lint', 'flow', done);
 });

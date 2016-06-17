@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 
-import BaseEndoint from './base.js';
+import BaseEndpoint from './base.js';
 
 import { endpointDefinition, statusStruct, PublishMetaData,
   SubscribeMetadata, SubscribeMessage, SubscribeEnvelope } from '../flow_interfaces';
@@ -22,12 +22,12 @@ type subscribeArguments = {
 }
 
 
-export default class extends BaseEndoint {
+export default class extends BaseEndpoint {
   _networking: Networking;
   _config: Config;
 
   constructor({ networking, config }: pubSubConstruct) {
-    super({ networking });
+    super({ config });
     this._networking = networking;
     this._config = config;
   }

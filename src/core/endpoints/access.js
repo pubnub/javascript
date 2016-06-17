@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography';
-import BaseEndoint from './base.js';
+import BaseEndpoint from './base.js';
 import utils from '../utils.js';
 
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
@@ -30,15 +30,16 @@ type grantArguments = {
   authKeys: Array<string>
 }
 
-export default class extends BaseEndoint {
-  networking: Networking;
-  config: Config;
+export default class extends BaseEndpoint {
+  _networking: Networking;
+  _config: Config;
+  _crypto: Crypto;
 
   constructor({ networking, config, crypto }: accessConstruct) {
     super({ config });
-    this.networking = networking;
-    this.config = config;
-    this.crypto = crypto;
+    this._networking = networking;
+    this._config = config;
+    this._crypto = crypto;
   }
 
   grant(args: grantArguments, callback: Function) {
@@ -49,7 +50,7 @@ export default class extends BaseEndoint {
         publishKey: { required: true },
         uuid: { required: true }
       },
-      url: '/v1/auth/grant/sub-key/' + this.config.subscribeKey
+      url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey
     };
 
     if (!callback) return this.log('Missing Callback');
@@ -80,12 +81,12 @@ export default class extends BaseEndoint {
       params.ttl = ttl;
     }
 
-    let signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\ngrant\n';
+    let signInput = this._config.subscribeKey + '\n' + this._config.publishKey + '\ngrant\n';
     signInput += utils.signPamFromParams(params);
 
-    params.signature = this.crypto.HMACSHA256(signInput);
+    params.signature = this._crypto.HMACSHA256(signInput);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
       callback(status, payload.payload);
     });
@@ -99,11 +100,11 @@ export default class extends BaseEndoint {
         publishKey: { required: true },
         uuid: { required: true }
       },
-      url: '/v1/auth/audit/sub-key/' + this.config.subscribeKey
+      url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey
     };
 
     // Make sure we have a Channel
-    if (!callback) return this._l.error('Missing Callback');
+    if (!callback) return this.log('Missing Callback');
 
     // validate this request and return false if stuff is missing
     if (!this.validateEndpointConfig(endpointConfig)) { return; }
@@ -124,12 +125,12 @@ export default class extends BaseEndoint {
       params.auth = authKeys.join(',');
     }
 
-    let signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\naudit\n';
+    let signInput = this._config.subscribeKey + '\n' + this._config.publishKey + '\naudit\n';
     signInput += utils.signPamFromParams(params);
 
-    params.signature = this.crypto.HMACSHA256(signInput);
+    params.signature = this._crypto.HMACSHA256(signInput);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
       callback(status, payload.payload);
     });

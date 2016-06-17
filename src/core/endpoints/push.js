@@ -2,7 +2,7 @@
 
 import Networking from '../components/networking';
 import Config from '../components/config';
-import BaseEndoint from './base.js';
+import BaseEndpoint from './base.js';
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type pushConstruct = {
@@ -37,7 +37,7 @@ type listChannelsResponse = {
   channels: Array<string>
 }
 
-export default class extends BaseEndoint {
+export default class extends BaseEndpoint {
   networking: Networking;
   config: Config;
 

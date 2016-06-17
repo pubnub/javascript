@@ -4,7 +4,6 @@ import superagent from 'superagent';
 
 import Crypto from './cryptography/index';
 import Config from './config.js';
-import utils from '../utils';
 
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
@@ -44,10 +43,10 @@ export default class {
     this._coreParams = {};
 
     // create initial origins
-    this.shiftStandardOrigin(false);
+    this.shiftStandardOrigin();
   }
 
-  nextOrigin(failover: boolean): string {
+  nextOrigin(): string {
     // if a custom origin is supplied, use do not bother with shuffling subdomains
     if (this._providedFQDN.indexOf('pubsub.') === -1) {
       return this._providedFQDN;
@@ -55,15 +54,13 @@ export default class {
 
     let newSubDomain: string;
 
-    if (failover) {
-      newSubDomain = utils.generateUUID().split('-')[0];
-    } else {
-      this._currentSubDomain = this._currentSubDomain + 1;
+    this._currentSubDomain = this._currentSubDomain + 1;
 
-      if (this._currentSubDomain >= this._maxSubDomain) { this._currentSubDomain = 1; }
-
-      newSubDomain = this._currentSubDomain.toString();
+    if (this._currentSubDomain >= this._maxSubDomain) {
+      this._currentSubDomain = 1;
     }
+
+    newSubDomain = this._currentSubDomain.toString();
 
     return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
   }
@@ -94,7 +91,7 @@ export default class {
     return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
   }
 
-  _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): superagent {
+  _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): Object {
     // attach a logger
     if (this._config.logVerbosity) {
       superagentConstruct = superagentConstruct.use(this._logger());
@@ -117,16 +114,12 @@ export default class {
       });
   }
 
-  _logger(options: Object) {
+  _logger(options: ?Object): Function {
     if (!options) options = {};
-    if (options instanceof superagent.Request) {
-      return this._attachSuperagentLogger({}, options);
-    } else {
-      return this._attachSuperagentLogger.bind(null, options);
-    }
+    return this._attachSuperagentLogger.bind(null, options);
   }
 
-  _attachSuperagentLogger(options, req) {
+  _attachSuperagentLogger(options: Object, req: Object) {
     let start = new Date().getTime();
     let timestamp = new Date().toISOString();
     console.log('<<<<<');                                               // eslint-disable-line no-console

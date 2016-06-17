@@ -57,11 +57,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _pubnubCommon = __webpack_require__(1);
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
+	var _package = __webpack_require__(21);
+
+	var _package2 = _interopRequireDefault(_package);
+
+	var _flow_interfaces = __webpack_require__(14);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	var db = {
 	  get: function get(key) {
@@ -88,20 +104,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 
-	var initFunction = function initFunction(setup) {
-	  setup.db = db;
-	  setup.navigatorOnlineCheck = navigatorOnlineCheck;
-	  setup.sendBeacon = sendBeacon;
-	  var PN = (0, _pubnubCommon2.default)(setup);
+	var _class = function (_PubNubCore) {
+	  _inherits(_class, _PubNubCore);
 
-	  window.addEventListener('beforeunload', PN.unloadTriggered);
-	  window.addEventListener('offline', PN.offlineTriggered);
+	  function _class(setup) {
+	    _classCallCheck(this, _class);
 
-	  return PN;
-	};
+	    setup.db = db;
+	    setup.navigatorOnlineCheck = navigatorOnlineCheck;
+	    setup.sendBeacon = sendBeacon;
+	    setup.params = {
+	      pnsdk: 'PubNub-JS-Web/' + _package2.default.version
+	    };
 
-	module.exports = initFunction;
-	//# sourceMappingURL=platform.js.map
+	    return _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, setup));
+	  }
+
+	  return _class;
+	}(_pubnubCommon2.default);
+
+	exports.default = _class;
+	module.exports = exports['default'];
+	//# sourceMappingURL=index.js.map
 
 
 /***/ },
@@ -128,7 +152,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _subscription_manager = __webpack_require__(17);
+	var _subscription_manager = __webpack_require__(16);
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
@@ -140,7 +164,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _presence = __webpack_require__(20);
+	var _presence = __webpack_require__(19);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
@@ -160,7 +184,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
-	var _subscribe = __webpack_require__(18);
+	var _subscribe = __webpack_require__(17);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
@@ -277,10 +301,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _utils = __webpack_require__(16);
-
-	var _utils2 = _interopRequireDefault(_utils);
-
 	var _flow_interfaces = __webpack_require__(14);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -305,29 +325,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
 	    this._coreParams = {};
 
-	    this.shiftStandardOrigin(false);
+	    this.shiftStandardOrigin();
 	  }
 
 	  _createClass(_class, [{
 	    key: 'nextOrigin',
-	    value: function nextOrigin(failover) {
+	    value: function nextOrigin() {
 	      if (this._providedFQDN.indexOf('pubsub.') === -1) {
 	        return this._providedFQDN;
 	      }
 
 	      var newSubDomain = void 0;
 
-	      if (failover) {
-	        newSubDomain = _utils2.default.generateUUID().split('-')[0];
-	      } else {
-	        this._currentSubDomain = this._currentSubDomain + 1;
+	      this._currentSubDomain = this._currentSubDomain + 1;
 
-	        if (this._currentSubDomain >= this._maxSubDomain) {
-	          this._currentSubDomain = 1;
-	        }
-
-	        newSubDomain = this._currentSubDomain.toString();
+	      if (this._currentSubDomain >= this._maxSubDomain) {
+	        this._currentSubDomain = 1;
 	      }
+
+	      newSubDomain = this._currentSubDomain.toString();
 
 	      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
 	    }
@@ -381,11 +397,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_logger',
 	    value: function _logger(options) {
 	      if (!options) options = {};
-	      if (options instanceof _superagent2.default.Request) {
-	        return this._attachSuperagentLogger({}, options);
-	      } else {
-	        return this._attachSuperagentLogger.bind(null, options);
-	      }
+	      return this._attachSuperagentLogger.bind(null, options);
 	    }
 	  }, {
 	    key: '_attachSuperagentLogger',
@@ -2217,8 +2229,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.logVerbosity = setup.logVerbosity || false;
 	    this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
-	    this.setRequestIdConfig(setup.useRequestId || false);
-	    this.setInstanceIdConfig(setup.useInstanceId || false);
+	    this.useInstanceId = setup.useInstanceId || false;
+	    this.useRequestId = setup.useRequestId || false;
 
 	    this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
 
@@ -2273,26 +2285,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setPresenceAnnounceInterval',
 	    value: function setPresenceAnnounceInterval(val) {
 	      this._presenceAnnounceInterval = val;return this;
-	    }
-	  }, {
-	    key: 'isInstanceIdEnabled',
-	    value: function isInstanceIdEnabled() {
-	      return this._useInstanceId;
-	    }
-	  }, {
-	    key: 'setInstanceIdConfig',
-	    value: function setInstanceIdConfig(val) {
-	      this._useInstanceId = val;return this;
-	    }
-	  }, {
-	    key: 'isRequestIdEnabled',
-	    value: function isRequestIdEnabled() {
-	      return this._useRequestId;
-	    }
-	  }, {
-	    key: 'setRequestIdConfig',
-	    value: function setRequestIdConfig(val) {
-	      this._useRequestId = val;return this;
 	    }
 	  }, {
 	    key: 'getSubscribeTimeout',
@@ -3052,46 +3044,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 16 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	function pamEncode(str) {
-	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
-	    '%' + c.charCodeAt(0).toString(16).toUpperCase();
-	  });
-	}
-
-	function objectToList(o) {
-	  var l = [];
-	  Object.keys(o).forEach(function (key) {
-	    return l.push(key);
-	  });
-	  return l;
-	}
-
-	function objectToListSorted(o) {
-	  return objectToList(o).sort();
-	}
-
-	function signPamFromParams(params) {
-	  var l = objectToListSorted(params);
-	  return l.map(function (paramKey) {
-	    return paramKey + '=' + pamEncode(params[paramKey]);
-	  }).join('&');
-	}
-
-	module.exports = {
-	  signPamFromParams: signPamFromParams,
-	  endsWith: function endsWith(searchString, suffix) {
-	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
-	  }
-	};
-	//# sourceMappingURL=utils.js.map
-
-
-/***/ },
-/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
@@ -3102,11 +3054,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _subscribe = __webpack_require__(18);
+	var _subscribe = __webpack_require__(17);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _presence = __webpack_require__(20);
+	var _presence = __webpack_require__(19);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
@@ -3118,7 +3070,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _utils = __webpack_require__(16);
+	var _utils = __webpack_require__(20);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -3417,7 +3369,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3436,7 +3388,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -3459,7 +3411,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, _class);
 
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { networking: networking }));
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
 
 	    _this._networking = networking;
 	    _this._config = config;
@@ -3554,7 +3506,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
@@ -3574,6 +3526,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _config2 = _interopRequireDefault(_config);
 
 	var _flow_interfaces = __webpack_require__(14);
+
+	var _uuid = __webpack_require__(12);
+
+	var _uuid2 = _interopRequireDefault(_uuid);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3608,8 +3564,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!(key in data)) data[key] = value;
 	      });
 
-	      if (this._config.isInstanceIdEnabled()) {
-	        data.instanceid = this._config.getInstanceId();
+	      if (this._config.useInstanceId) {
+	        data.instanceid = this._config.instanceId;
+	      }
+
+	      if (this._config.useRequestId) {
+	        data.requestid = _uuid2.default.v4();
 	      }
 
 	      if (endpointConfig.params.authKey && this._config.authKey) {
@@ -3654,7 +3614,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3673,7 +3633,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -3687,8 +3647,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -4033,6 +3993,46 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 20 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	function pamEncode(str) {
+	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
+	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+	  });
+	}
+
+	function objectToList(o) {
+	  var l = [];
+	  Object.keys(o).forEach(function (key) {
+	    return l.push(key);
+	  });
+	  return l;
+	}
+
+	function objectToListSorted(o) {
+	  return objectToList(o).sort();
+	}
+
+	function signPamFromParams(params) {
+	  var l = objectToListSorted(params);
+	  return l.map(function (paramKey) {
+	    return paramKey + '=' + pamEncode(params[paramKey]);
+	  }).join('&');
+	}
+
+	module.exports = {
+	  signPamFromParams: signPamFromParams,
+	  endsWith: function endsWith(searchString, suffix) {
+	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+	  }
+	};
+	//# sourceMappingURL=utils.js.map
+
+
+/***/ },
 /* 21 */
 /***/ function(module, exports) {
 
@@ -4152,7 +4152,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4166,8 +4166,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -4177,7 +4177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
 
-	    _this.networking = networking;
+	    _this._networking = networking;
 	    return _this;
 	  }
 
@@ -4197,7 +4197,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var params = this.createBaseParams(endpointConfig);
 
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	      this._networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 
 	        var response = {
@@ -4241,7 +4241,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4255,8 +4255,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -4387,7 +4387,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4401,8 +4401,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -4589,11 +4589,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _cryptography2 = _interopRequireDefault(_cryptography);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
-	var _utils = __webpack_require__(16);
+	var _utils = __webpack_require__(20);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4607,8 +4607,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -4619,9 +4619,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
 
-	    _this.networking = networking;
-	    _this.config = config;
-	    _this.crypto = crypto;
+	    _this._networking = networking;
+	    _this._config = config;
+	    _this._crypto = crypto;
 	    return _this;
 	  }
 
@@ -4648,7 +4648,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          publishKey: { required: true },
 	          uuid: { required: true }
 	        },
-	        url: '/v1/auth/grant/sub-key/' + this.config.subscribeKey
+	        url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey
 	      };
 
 	      if (!callback) return this.log('Missing Callback');
@@ -4680,12 +4680,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        params.ttl = ttl;
 	      }
 
-	      var signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\ngrant\n';
+	      var signInput = this._config.subscribeKey + '\n' + this._config.publishKey + '\ngrant\n';
 	      signInput += _utils2.default.signPamFromParams(params);
 
-	      params.signature = this.crypto.HMACSHA256(signInput);
+	      params.signature = this._crypto.HMACSHA256(signInput);
 
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	      this._networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 	        callback(status, payload.payload);
 	      });
@@ -4704,10 +4704,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          publishKey: { required: true },
 	          uuid: { required: true }
 	        },
-	        url: '/v1/auth/audit/sub-key/' + this.config.subscribeKey
+	        url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey
 	      };
 
-	      if (!callback) return this._l.error('Missing Callback');
+	      if (!callback) return this.log('Missing Callback');
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
 	        return;
@@ -4729,12 +4729,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        params.auth = authKeys.join(',');
 	      }
 
-	      var signInput = this.config.subscribeKey + '\n' + this.config.publishKey + '\naudit\n';
+	      var signInput = this._config.subscribeKey + '\n' + this._config.publishKey + '\naudit\n';
 	      signInput += _utils2.default.signPamFromParams(params);
 
-	      params.signature = this.crypto.HMACSHA256(signInput);
+	      params.signature = this._crypto.HMACSHA256(signInput);
 
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
+	      this._networking.GET(params, endpointConfig, function (status, payload) {
 	        if (status.error) return callback(status);
 	        callback(status, payload.payload);
 	      });
@@ -4761,7 +4761,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4783,8 +4783,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -4984,7 +4984,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _base = __webpack_require__(19);
+	var _base = __webpack_require__(18);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -4998,8 +4998,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;

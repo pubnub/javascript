@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
-import BaseEndoint from './base.js';
+import BaseEndpoint from './base.js';
 import { endpointDefinition, statusStruct } from '../flow_interfaces';
 
 type historyConstruct = {
@@ -23,7 +23,7 @@ type fetchHistoryArguments = {
 }
 
 type historyItem = {
-  timetoken: number,
+  timetoken: number | null,
   entry: any,
 }
 
@@ -33,7 +33,7 @@ type historyResponse = {
   endTimeToken: number,
 }
 
-export default class extends BaseEndoint {
+export default class extends BaseEndpoint {
   networking: Networking;
   crypto: Crypto;
   config: Config;
@@ -105,7 +105,7 @@ export default class extends BaseEndoint {
     return response;
   }
 
-  __processMessage(message) {
+  __processMessage(message: String) {
     if (!this.config.cipherKey) return message;
 
     try {
