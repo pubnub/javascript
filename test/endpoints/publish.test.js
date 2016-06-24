@@ -19,7 +19,7 @@ describe('publish endpoints', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID'});
+    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
   });
 
   it('publishes a complex object via GET', (done) => {
