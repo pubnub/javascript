@@ -248,6 +248,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.audit = accessEndpoints.audit.bind(accessEndpoints);
 
 	    this.publish = publishEndpoints.publish.bind(publishEndpoints);
+	    this.fire = publishEndpoints.fire.bind(publishEndpoints);
 	    this.history = historyEndpoint.fetch.bind(historyEndpoint);
 	    this.time = timeEndpoint.fetch.bind(timeEndpoint);
 
@@ -383,12 +384,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return superagentConstruct.type('json').timeout(timeout || this._config.getTransactionTimeout()).end(function (err, resp) {
 	        var status = {};
 	        status.error = err;
-	        status.statusCode = resp.status;
 
 	        if (err) {
 	          return callback(status, null);
 	        }
 
+	        status.statusCode = resp.status;
 	        var parsedResponse = JSON.parse(resp.text);
 	        return callback(status, parsedResponse);
 	      });
@@ -3402,8 +3403,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_BaseEndoint) {
-	  _inherits(_class, _BaseEndoint);
+	var _class = function (_BaseEndpoint) {
+	  _inherits(_class, _BaseEndpoint);
 
 	  function _class(_ref) {
 	    var networking = _ref.networking;
@@ -5017,6 +5018,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
+	    key: 'fire',
+	    value: function fire(args, callback) {
+	      args.replicate = false;
+	      args.storeInHistory = false;
+	      this.publish(args, callback);
+	    }
+	  }, {
 	    key: 'publish',
 	    value: function publish(args, callback) {
 	      var message = args.message;
@@ -5024,6 +5032,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var meta = args.meta;
 	      var _args$sendByPost = args.sendByPost;
 	      var sendByPost = _args$sendByPost === undefined ? false : _args$sendByPost;
+	      var _args$replicate = args.replicate;
+	      var replicate = _args$replicate === undefined ? true : _args$replicate;
 	      var storeInHistory = args.storeInHistory;
 
 	      var endpointConfig = {
@@ -5051,6 +5061,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else {
 	          params.store = '0';
 	        }
+	      }
+
+	      if (replicate === false) {
+	        params.norep = 'true';
 	      }
 
 	      if (meta && (typeof meta === 'undefined' ? 'undefined' : _typeof(meta)) === 'object') {

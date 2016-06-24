@@ -103,12 +103,12 @@ export default class {
       .end((err, resp) => {
         let status: statusStruct = {};
         status.error = err;
-        status.statusCode = resp.status;
 
         if (err) {
           return callback(status, null);
         }
 
+        status.statusCode = resp.status;
         let parsedResponse = JSON.parse(resp.text);
         return callback(status, parsedResponse);
       });

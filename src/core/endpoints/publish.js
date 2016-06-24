@@ -22,7 +22,8 @@ type publishArguments = {
   channel: string, // the destination of our dispatch
   sendByPost: boolean | null, // use POST when dispatching the message
   storeInHistory: boolean | null, // store the published message in remote history
-  meta: Object // psv2 supports filtering by metadata
+  meta: Object, // psv2 supports filtering by metadata
+  replicate: boolean | null // indicates to server on replication status to other data centers.
 }
 
 export default class extends BaseEndpoint {
@@ -37,8 +38,14 @@ export default class extends BaseEndpoint {
     this.crypto = crypto;
   }
 
+  fire(args: publishArguments, callback: Function) {
+    args.replicate = false;
+    args.storeInHistory = false;
+    this.publish(args, callback);
+  }
+
   publish(args: publishArguments, callback: Function) {
-    const { message, channel, meta, sendByPost = false, storeInHistory } = args;
+    const { message, channel, meta, sendByPost = false, replicate = true, storeInHistory } = args;
     const endpointConfig: endpointDefinition = {
       params: {
         authKey: { required: false },
@@ -63,6 +70,10 @@ export default class extends BaseEndpoint {
       } else {
         params.store = '0';
       }
+    }
+
+    if (replicate === false) {
+      params.norep = 'true';
     }
 
     if (meta && typeof meta === 'object') {

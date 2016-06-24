@@ -27,6 +27,7 @@ export default class {
   // tell flow about the mounted endpoint
   time: Function;
   publish: Function;
+  fire: Function;
   history: Function;
   //
   channelGroups: Object;
@@ -101,6 +102,7 @@ export default class {
     this.audit = accessEndpoints.audit.bind(accessEndpoints);
     //
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
+    this.fire = publishEndpoints.fire.bind(publishEndpoints);
     this.history = historyEndpoint.fetch.bind(historyEndpoint);
     this.time = timeEndpoint.fetch.bind(timeEndpoint);
     // subscription related methods
