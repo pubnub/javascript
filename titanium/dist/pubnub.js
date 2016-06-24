@@ -1,4 +1,4 @@
-/*! 3.15.1 / titanium */
+/*! 3.15.2 / titanium */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -524,7 +524,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.15.1",
+		"version": "3.15.2",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
@@ -1538,6 +1538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var err = args['error'] || msg['error'] || function () {};
 	      var post = args['post'] || false;
 	      var store = ('store_in_history' in args) ? args['store_in_history'] : true;
+	      var replicate = ('replicate' in args) ? args['replicate'] : true;
 	      var jsonp = jsonp_cb();
 	      var add_msg = 'push';
 	      var params;
@@ -1571,6 +1572,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      if (!store) params['store'] = '0';
+	      if (!replicate) params['norep'] = 'true';
 
 	      if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
 
@@ -1592,6 +1594,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      // Send Message
 	      publish();
+	    },
+
+	    fire: function (args, callback) {
+	      args.store_in_history = false;
+	      args.replicate = false;
+	      SELF['publish'](args, callback);
 	    },
 
 	    /*

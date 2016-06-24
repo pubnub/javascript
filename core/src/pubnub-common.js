@@ -917,6 +917,7 @@ function PN_API(setup) {
       var err = args['error'] || msg['error'] || function () {};
       var post = args['post'] || false;
       var store = ('store_in_history' in args) ? args['store_in_history'] : true;
+      var replicate = ('replicate' in args) ? args['replicate'] : true;
       var jsonp = jsonp_cb();
       var add_msg = 'push';
       var params;
@@ -950,6 +951,7 @@ function PN_API(setup) {
       }
 
       if (!store) params['store'] = '0';
+      if (!replicate) params['norep'] = 'true';
 
       if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
 
@@ -971,6 +973,12 @@ function PN_API(setup) {
 
       // Send Message
       publish();
+    },
+
+    fire: function (args, callback) {
+      args.store_in_history = false;
+      args.replicate = false;
+      SELF['publish'](args, callback);
     },
 
     /*
