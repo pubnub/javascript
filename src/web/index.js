@@ -2,7 +2,7 @@
 
 import PubNubCore from '../core/pubnub-common.js';
 import packageJSON from '../../package.json';
-import { internalSetupStruct } from '../core/flow_interfaces';
+import { InternalSetupStruct } from '../core/flow_interfaces';
 
 /**
  * LOCAL STORAGE
@@ -39,7 +39,7 @@ function sendBeacon(url: string) {
 
 export default class extends PubNubCore {
 
-  constructor(setup: internalSetupStruct) {
+  constructor(setup: InternalSetupStruct) {
     setup.db = db;
     setup.navigatorOnlineCheck = navigatorOnlineCheck;
     setup.sendBeacon = sendBeacon;

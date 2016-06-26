@@ -108,7 +108,7 @@ export default class {
     return base64Encrypted || data;
   }
 
-  decrypt(data: Object, options: ?Object): Object | string | null {
+  decrypt(data: Object, options: ?Object): Object | null {
     if (!this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);

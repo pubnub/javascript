@@ -5,9 +5,9 @@ import superagent from 'superagent';
 import Crypto from './cryptography/index';
 import Config from './config.js';
 
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type networkingModules = {
+type NetworkingModules = {
   crypto: Crypto,
   config: Config,
   sendBeacon: Function
@@ -31,7 +31,7 @@ export default class {
 
   _coreParams: Object; /* items that must be passed with each request. */
 
-  constructor({ config, crypto, sendBeacon }: networkingModules) {
+  constructor({ config, crypto, sendBeacon }: NetworkingModules) {
     this._config = config;
     this._crypto = crypto;
     this._sendBeacon = sendBeacon;
@@ -76,7 +76,7 @@ export default class {
     return this._standardOrigin;
   }
 
-  POST(params : Object, body: string, endpoint: endpointDefinition, callback: Function): superagent {
+  POST(params : Object, body: string, endpoint: EndpointDefinition, callback: Function): superagent {
     let superagentConstruct = superagent
       .post(this.getStandardOrigin() + endpoint.url)
       .query(params)
@@ -84,7 +84,7 @@ export default class {
     return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
   }
 
-  GET(params : Object, endpoint: endpointDefinition, callback: Function): superagent {
+  GET(params : Object, endpoint: EndpointDefinition, callback: Function): superagent {
     let superagentConstruct = superagent
       .get(this.getStandardOrigin() + endpoint.url)
       .query(params);
@@ -101,7 +101,7 @@ export default class {
       .type('json')
       .timeout(timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
-        let status: statusStruct = {};
+        let status: StatusStruct = {};
         status.error = err;
 
         if (err) {

@@ -4,37 +4,37 @@ import BaseEndpoint from './base.js';
 import Networking from '../components/networking';
 import Config from '../components/config';
 
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type channelGroupConstruct = {
+type ChannelGroupConstruct = {
   networking: Networking,
   config: Config
 };
 
-type listChannelsParams = {
+type ListChannelsParams = {
   channelGroup: string,
 }
 
-type deleteGroupParams = {
+type DeleteGroupParams = {
   channelGroup: string,
 }
 
-type addChannelParams = {
+type AddChannelParams = {
   channels: Array<string>,
   channelGroup: string,
 }
 
-type removeChannelParams = {
+type RemoveChannelParams = {
   channels: Array<string>,
   channelGroup: string,
 }
 
 
-type listAllGroupsResponse = {
+type ListAllGroupsResponse = {
   groups: Array<string>
 }
 
-type listChannelsResponse = {
+type ListChannelsResponse = {
   channels: Array<string>
 }
 
@@ -42,16 +42,16 @@ export default class extends BaseEndpoint {
   networking: Networking;
   config: Config;
 
-  constructor({ networking, config }: channelGroupConstruct) {
+  constructor({ networking, config }: ChannelGroupConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
   }
 
-  listChannels(args: listChannelsParams, callback: Function) {
+  listChannels(args: ListChannelsParams, callback: Function) {
     let { channelGroup } = args;
 
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false },
@@ -68,9 +68,9 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
-      let response: listChannelsResponse = {
+      let response: ListChannelsResponse = {
         channels: payload.payload.channels
       };
 
@@ -78,10 +78,10 @@ export default class extends BaseEndpoint {
     });
   }
 
-  deleteGroup(args: deleteGroupParams, callback: Function) {
+  deleteGroup(args: DeleteGroupParams, callback: Function) {
     let { channelGroup } = args;
 
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false },
@@ -98,13 +98,13 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
       callback(status);
     });
   }
 
   listGroups(callback: Function) {
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false },
@@ -119,10 +119,10 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: listAllGroupsResponse = {
+      let response: ListAllGroupsResponse = {
         groups: payload.payload.groups
       };
 
@@ -130,10 +130,10 @@ export default class extends BaseEndpoint {
     });
   }
 
-  addChannels(args: addChannelParams, callback: Function) {
+  addChannels(args: AddChannelParams, callback: Function) {
     let { channelGroup, channels = [] } = args;
 
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false },
@@ -152,15 +152,15 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.add = channels.join(',');
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
       callback(status);
     });
   }
 
-  removeChannels(args: removeChannelParams, callback: Function) {
+  removeChannels(args: RemoveChannelParams, callback: Function) {
     let { channelGroup, channels = [] } = args;
 
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false },
@@ -179,7 +179,7 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.remove = channels.join(',');
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
       callback(status);
     });
   }

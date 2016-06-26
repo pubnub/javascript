@@ -43,14 +43,14 @@ gulp.task('uglify', ['webpack'], () => {
     .pipe(gulp.dest('dist/web'));
 });
 
-gulp.task('lint_code', ['webpack'], () => {
+gulp.task('lint_code', [], () => {
   return gulp.src(['src/**/*.js'])
       .pipe(eslint())
       .pipe(eslint.format())
       .pipe(eslint.failAfterError());
 });
 
-gulp.task('lint_tests', ['webpack'], () => {
+gulp.task('lint_tests', [], () => {
   return gulp.src(['test/**/*.js'])
       .pipe(eslint())
       .pipe(eslint.format())

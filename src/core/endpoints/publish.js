@@ -5,19 +5,19 @@ import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
 import BaseEndpoint from './base.js';
 
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type publishConstruct = {
+type PublishConstruct = {
   networking: Networking,
   config: Config,
   crypto: Crypto
 };
 
-type publishResponse = {
+type PublishResponse = {
   timetoken: number
 };
 
-type publishArguments = {
+type PublishArguments = {
   message: Object | string | number | boolean, // the contents of the dispatch
   channel: string, // the destination of our dispatch
   sendByPost: boolean | null, // use POST when dispatching the message
@@ -31,20 +31,20 @@ export default class extends BaseEndpoint {
   config: Config;
   crypto: Crypto;
 
-  constructor({ networking, config, crypto }: publishConstruct) {
+  constructor({ networking, config, crypto }: PublishConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
     this.crypto = crypto;
   }
 
-  fire(args: publishArguments, callback: Function) {
+  fire(args: PublishArguments, callback: Function) {
     args.replicate = false;
     args.storeInHistory = false;
     this.publish(args, callback);
   }
 
-  publish(args: publishArguments, callback: Function) {
+  publish(args: PublishArguments, callback: Function) {
     const { message, channel, meta, sendByPost = false, replicate = true, storeInHistory } = args;
     const endpointConfig: endpointDefinition = {
       params: {
@@ -83,7 +83,7 @@ export default class extends BaseEndpoint {
     let onCallback = (status: statusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: publishResponse = {
+      let response: PublishResponse = {
         timetoken: payload[2]
       };
 

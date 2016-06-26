@@ -4,27 +4,27 @@ import PresenceEndpoints from '../endpoints/presence';
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
 import utils from '../utils';
-import { MessageAnnouncement, SubscribeEnvelope, statusStruct, callbackStruct, PresenceAnnouncement } from '../flow_interfaces';
+import { MessageAnnouncement, SubscribeEnvelope, StatusStruct, CallbackStruct, PresenceAnnouncement } from '../flow_interfaces';
 
-type subscribeArgs = {
+type SubscribeArgs = {
   channels: Array<string>,
   channelGroups: Array<string>,
   withPresence: ?boolean,
   timetoken: ?number
 }
 
-type unsubscribeArgs = {
+type UnsubscribeArgs = {
   channels: Array<string>,
   channelGroups: Array<string>
 }
 
-type stateArgs = {
+type StateArgs = {
   channels: Array<string>,
   channelGroups: Array<string>,
   state: Object
 }
 
-type subscriptionManagerConsturct = {
+type SubscriptionManagerConsturct = {
     subscribeEndpoints: SubscribeEndpoints,
     presenceEndpoints: PresenceEndpoints,
     config: Config,
@@ -47,11 +47,11 @@ export default class {
   _subscribeEndpoints: SubscribeEndpoints;
   _presenceEndpoints: PresenceEndpoints;
 
-  _listeners: Array<callbackStruct>;
+  _listeners: Array<CallbackStruct>;
 
   _heartbeatTimer: number;
 
-  constructor({ subscribeEndpoints, presenceEndpoints, config, crypto }: subscriptionManagerConsturct) {
+  constructor({ subscribeEndpoints, presenceEndpoints, config, crypto }: SubscriptionManagerConsturct) {
     this._channels = {};
     this._presenceChannels = {};
 
@@ -68,7 +68,7 @@ export default class {
     this._listeners = [];
   }
 
-  adaptStateChange(args: stateArgs, callback: Function) {
+  adaptStateChange(args: StateArgs, callback: Function) {
     const { state, channels = [], channelGroups = [] } = args;
 
     channels.forEach((channel) => {
@@ -82,7 +82,7 @@ export default class {
     this._presenceEndpoints.setState({ state, channels, channelGroups }, callback);
   }
 
-  adaptSubscribeChange(args: subscribeArgs) {
+  adaptSubscribeChange(args: SubscribeArgs) {
     const { timetoken, channels = [], channelGroups = [], withPresence = false } = args;
 
     if (timetoken) this._timetoken = timetoken;
@@ -100,7 +100,7 @@ export default class {
     this.reconnect();
   }
 
-  adaptUnsubscribeChange(args: unsubscribeArgs) {
+  adaptUnsubscribeChange(args: UnsubscribeArgs) {
     const { channels = [], channelGroups = [] } = args;
 
     channels.forEach((channel) => {
@@ -122,11 +122,11 @@ export default class {
     this.reconnect();
   }
 
-  addListener(newListeners: callbackStruct) {
+  addListener(newListeners: CallbackStruct) {
     this._listeners.push(newListeners);
   }
 
-  removeListener(deprecatedListeners: callbackStruct) {
+  removeListener(deprecatedListeners: CallbackStruct) {
     const listenerPosition = this._listeners.indexOf(deprecatedListeners);
     if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
   }
@@ -200,7 +200,7 @@ export default class {
       timetoken: this._timetoken,
       filterExpression: this._config.filterExpression,
       region: this._region
-    }, (status: statusStruct, payload: SubscribeEnvelope) => {
+    }, (status: StatusStruct, payload: SubscribeEnvelope) => {
       if (status.error) {
         this._startSubscribeLoop();
         return;

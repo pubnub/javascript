@@ -16,7 +16,7 @@ import ChannelGroupEndpoints from './endpoints/channel_groups';
 import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
 
-import { internalSetupStruct } from './flow_interfaces';
+import { InternalSetupStruct } from './flow_interfaces';
 
 export default class {
 
@@ -50,13 +50,16 @@ export default class {
   addListener: Function;
   removeListener: Function;
 
+  getAuthKey: Function;
+  setAuthKey: Function;
+
   setCipherKey: Function;
   setUUID: Function;
   getUUID: Function;
 
   //
 
-  constructor(setup: internalSetupStruct) {
+  constructor(setup: InternalSetupStruct) {
     let { sendBeacon, db } = setup;
 
     this._config = new Config({ setup, db });
@@ -112,6 +115,9 @@ export default class {
     this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(SubscriptionManager);
     /** config **/
+    this.getAuthKey = this._config.getAuthKey.bind(this._config);
+    this.setAuthKey = this._config.setAuthKey.bind(this._config);
+
     this.setCipherKey = this._config.setCipherKey.bind(this._config);
     this.getUUID = this._config.getUUID.bind(this._config);
     this.setUUID = this._config.setUUID.bind(this._config);

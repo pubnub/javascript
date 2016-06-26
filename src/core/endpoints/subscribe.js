@@ -5,15 +5,15 @@ import Config from '../components/config';
 
 import BaseEndpoint from './base.js';
 
-import { endpointDefinition, statusStruct, PublishMetaData,
+import { EndpointDefinition, StatusStruct, PublishMetaData,
   SubscribeMetadata, SubscribeMessage, SubscribeEnvelope } from '../flow_interfaces';
 
-type pubSubConstruct = {
+type PubSubConstruct = {
   networking: Networking,
   config: Config,
 };
 
-type subscribeArguments = {
+type SubscribeArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   timetoken: number,
@@ -26,16 +26,16 @@ export default class extends BaseEndpoint {
   _networking: Networking;
   _config: Config;
 
-  constructor({ networking, config }: pubSubConstruct) {
+  constructor({ networking, config }: PubSubConstruct) {
     super({ config });
     this._networking = networking;
     this._config = config;
   }
 
-  subscribe(args: subscribeArguments, callback: Function) {
+  subscribe(args: SubscribeArguments, callback: Function) {
     let { channels = [], channelGroups = [], timetoken, filterExpression, region } = args;
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: {},
@@ -66,7 +66,7 @@ export default class extends BaseEndpoint {
       params.tr = region;
     }
 
-    return this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    return this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
       const messages: Array<SubscribeMessage> = [];

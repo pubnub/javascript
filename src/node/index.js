@@ -2,7 +2,7 @@
 
 import PubNubCore from '../core/pubnub-common.js';
 import packageJSON from '../../package.json';
-import { internalSetupStruct } from '../core/flow_interfaces';
+import { InternalSetupStruct } from '../core/flow_interfaces';
 
 let Database = class {
 
@@ -23,7 +23,7 @@ let Database = class {
 
 export default class extends PubNubCore {
 
-  constructor(setup: internalSetupStruct) {
+  constructor(setup: InternalSetupStruct) {
     setup.db = new Database();
     setup.params = {
       pnsdk: 'PubNub-JS-Nodejs/' + packageJSON.version

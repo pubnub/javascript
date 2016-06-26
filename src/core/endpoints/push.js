@@ -3,37 +3,37 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndpoint from './base.js';
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type pushConstruct = {
+type PushConstruct = {
   networking: Networking,
   config: Config
 };
 
-type provisionDeviceArgs = {
+type ProvisionDeviceArgs = {
   operation: 'add' | 'remove',
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
   channels: Array<string>
 };
 
-type modifyDeviceArgs = {
+type ModifyDeviceArgs = {
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
   channels: Array<string>
 };
 
-type listChannelsArgs = {
+type ListChannelsArgs = {
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
 };
 
-type removeDeviceAargs = {
+type RemoveDeviceAargs = {
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
 };
 
-type listChannelsResponse = {
+type ListChannelsResponse = {
   channels: Array<string>
 }
 
@@ -41,15 +41,15 @@ export default class extends BaseEndpoint {
   networking: Networking;
   config: Config;
 
-  constructor({ networking, config }: pushConstruct) {
+  constructor({ networking, config }: PushConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
   }
 
-  listChannelsForDevice(args: listChannelsArgs, callback: Function) {
+  listChannelsForDevice(args: ListChannelsArgs, callback: Function) {
     let { pushGateway, device } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false }
@@ -71,10 +71,10 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Array<string>) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Array<string>) => {
       if (status.error) return callback(status);
 
-      let response: listChannelsResponse = {
+      let response: ListChannelsResponse = {
         channels: payload
       };
 
@@ -82,9 +82,9 @@ export default class extends BaseEndpoint {
     });
   }
 
-  removeDevice(args: removeDeviceAargs, callback: Function) {
+  removeDevice(args: RemoveDeviceAargs, callback: Function) {
     let { pushGateway, device } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false }
@@ -106,26 +106,26 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
       callback(status);
     });
   }
 
-  addDeviceToPushChannels(args: modifyDeviceArgs, callback: Function) {
+  addDeviceToPushChannels(args: ModifyDeviceArgs, callback: Function) {
     let { pushGateway, device, channels } = args;
     const payload = { operation: 'add', pushGateway, device, channels };
     this.__provisionDevice(payload, callback);
   }
 
-  removeDeviceFromPushChannels(args: modifyDeviceArgs, callback: Function) {
+  removeDeviceFromPushChannels(args: ModifyDeviceArgs, callback: Function) {
     let { pushGateway, device, channels } = args;
     const payload = { operation: 'remove', pushGateway, device, channels };
     this.__provisionDevice(payload, callback);
   }
 
-  __provisionDevice(args: provisionDeviceArgs, callback: Function) {
+  __provisionDevice(args: ProvisionDeviceArgs, callback: Function) {
     let { operation, pushGateway, device, channels } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         uuid: { required: false }
@@ -159,7 +159,7 @@ export default class extends BaseEndpoint {
     if (operation === 'remove') params.remove = encodeURIComponent(channels.join(','));
 
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
       callback(status);
     });
   }

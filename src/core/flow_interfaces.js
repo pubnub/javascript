@@ -7,24 +7,24 @@ declare module 'superagent' {
   declare function type(): superagent;
 }
 
-export type callbackStruct = {
+export type CallbackStruct = {
   status: Function,
   presence: Function,
   message: Function
 }
 
-export type proxyStruct = {
+export type ProxyStruct = {
   port: number,
   hostname: string,
   headers: Object
 }
 
-export type statusStruct = {
+export type StatusStruct = {
   error: boolean,
   statusCode: number
 }
 
-export type internalSetupStruct = {
+export type InternalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing
   subscribeKey: string, // API key required to subscribe
@@ -45,7 +45,7 @@ export type internalSetupStruct = {
   subscribeRequestTimeout: ?number, // how long to wait for subscribe requst
   transactionalRequestTimeout: ?number, // how long to wait for transactional requests
 
-  proxy: ?proxyStruct, // configuration to support proxy settings.
+  proxy: ?ProxyStruct, // configuration to support proxy settings.
 
   suppressLev: ?boolean,
 
@@ -58,22 +58,22 @@ type DatabaseInterface = {
   set: Function
 }
 
-type endpointKeyDefinition = {
+type EndpointKeyDefinition = {
   required: boolean
 }
 
-type supportedParams = {
-  subscribeKey: endpointKeyDefinition,
-  uuid: endpointKeyDefinition,
+type SupportedParams = {
+  subscribeKey: EndpointKeyDefinition,
+  uuid: EndpointKeyDefinition,
 }
 
 export type endpointDefinition = {
-  params: supportedParams,
+  params: SupportedParams,
   timeout: number,
   url: string
 }
 
-export type stateChangeAnnouncement = {
+export type StateChangeAnnouncement = {
   state: Object,
   channels: Array<string>,
   channelGroups: Array<string>

@@ -1,10 +1,10 @@
 /* @flow */
 
 import uuidGenerator from 'uuid';
-import { internalSetupStruct, DatabaseInterface } from '../flow_interfaces';
+import { InternalSetupStruct, DatabaseInterface } from '../flow_interfaces';
 
 type ConfigConstructArgs = {
-  setup: internalSetupStruct,
+  setup: InternalSetupStruct,
   db: DatabaseInterface
 }
 
@@ -83,11 +83,11 @@ export default class {
     this._db = db;
 
     this.instanceId = uuidGenerator.v4();
-    this.authKey = setup.authKey || '';
     this.secretKey = setup.secretKey || '';
     this.subscribeKey = setup.subscribeKey;
     this.publishKey = setup.publishKey;
-    this.cipherKey = setup.cipherKey;
+    this.setAuthKey(setup.authKey);
+    this.setCipherKey(setup.cipherKey);
     this.baseParams = setup.params || {};
 
     this.origin = setup.origin || 'pubsub.pubnub.com';
@@ -121,6 +121,8 @@ export default class {
   }
 
   // exposed setters
+  getAuthKey(): string { return this.authKey; }
+  setAuthKey(val: string): this { this.authKey = val; return this; }
   setCipherKey(val: string): this { this.cipherKey = val; return this; }
   getUUID(): string { return this.UUID; }
   setUUID(val: string): this {

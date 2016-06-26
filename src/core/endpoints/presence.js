@@ -3,58 +3,58 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndpoint from './base.js';
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type presenceConstruct = {
+type PresenceConstruct = {
   networking: Networking,
   config: Config,
 };
 
-type hereNowArguments = {
+type HereNowArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   includeUUIDs: boolean,
   includeState: boolean
 }
 
-type whereNowArguments = {
+type WhereNowArguments = {
   uuid: string,
 }
 
-type whereNowResponse = {
+type WhereNowResponse = {
   channels: Array<string>,
 }
 
 //
 
-type getStateArguments = {
+type GetStateArguments = {
   uuid: string,
   channels: Array<string>,
   channelGroups: Array<string>
 }
 
-type getStateResponse = {
+type GetStateResponse = {
   channels: Object
 }
 
 //
 
-type setStateArguments = {
+type SetStateArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   state: Object
 }
 
-type setStateResponse = {
+type SetStateResponse = {
   state: Object
 }
 
-type leaveArguments = {
+type LeaveArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
 }
 
-type heartbeatArguments = {
+type HeartbeatArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   state: Object
@@ -64,15 +64,15 @@ export default class extends BaseEndpoint {
   networking: Networking;
   config: Config;
 
-  constructor({ networking, config }: presenceConstruct) {
+  constructor({ networking, config }: PresenceConstruct) {
     super({ config });
     this.networking = networking;
     this.config = config;
   }
 
-  whereNow(args: whereNowArguments, callback: Function) {
+  whereNow(args: WhereNowArguments, callback: Function) {
     let { uuid = this.config.UUID } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false },
         authKey: { required: false }
@@ -90,10 +90,10 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: whereNowResponse = {
+      let response: WhereNowResponse = {
         channels: payload.payload.channels
       };
 
@@ -101,10 +101,10 @@ export default class extends BaseEndpoint {
     });
   }
 
-  getState(args: getStateArguments, callback: Function) {
+  getState(args: GetStateArguments, callback: Function) {
     let { uuid = this.config.UUID, channels = [], channelGroups = [] } = args;
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false },
         authKey: { required: false }
@@ -130,7 +130,7 @@ export default class extends BaseEndpoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
       let channelsResponse = {};
@@ -141,7 +141,7 @@ export default class extends BaseEndpoint {
         channelsResponse = payload.payload;
       }
 
-      let response: getStateResponse = {
+      let response: GetStateResponse = {
         channels: channelsResponse
       };
 
@@ -149,10 +149,10 @@ export default class extends BaseEndpoint {
     });
   }
 
-  setState(args: setStateArguments, callback: Function) {
+  setState(args: SetStateArguments, callback: Function) {
     let { state, channels = [], channelGroups = [] } = args;
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false },
         authKey: { required: false }
@@ -184,10 +184,10 @@ export default class extends BaseEndpoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: setStateResponse = {
+      let response: SetStateResponse = {
         state: payload.payload
       };
 
@@ -195,10 +195,10 @@ export default class extends BaseEndpoint {
     });
   }
 
-  leave(args: leaveArguments, callback: Function) {
+  leave(args: LeaveArguments, callback: Function) {
     let { channels = [], channelGroups = [] } = args;
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false },
         authKey: { required: false }
@@ -216,14 +216,14 @@ export default class extends BaseEndpoint {
       params['channel-group'] = encodeURIComponent(channelGroups.join(','));
     }
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) =>
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) =>
       callback(status)
     );
   }
 
-  hereNow(args: hereNowArguments, callback: Function) {
+  hereNow(args: HereNowArguments, callback: Function) {
     let { channels = [], channelGroups = [], includeUUIDs = true, includeState = false } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false },
         authKey: { required: false }
@@ -254,7 +254,7 @@ export default class extends BaseEndpoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct, payload) => {
+    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload) => {
       if (status.error) return callback(status);
 
       let prepareSingularChannel = () => {
@@ -324,10 +324,10 @@ export default class extends BaseEndpoint {
     });
   }
 
-  heartbeat(args: heartbeatArguments, callback: Function) {
+  heartbeat(args: HeartbeatArguments, callback: Function) {
     let { channels = [], channelGroups = [], state = {} } = args;
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false },
         authKey: { required: false }
@@ -348,7 +348,7 @@ export default class extends BaseEndpoint {
     params.state = encodeURIComponent(JSON.stringify(state));
     params.heartbeat = this.config.getPresenceTimeout();
 
-    this.networking.GET(params, endpointConfig, (status: statusStruct) =>
+    this.networking.GET(params, endpointConfig, (status: StatusStruct) =>
       callback(status)
     );
   }

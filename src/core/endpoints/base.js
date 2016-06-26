@@ -2,10 +2,10 @@
 
 import Networking from '../components/networking';
 import Config from '../components/config';
-import { endpointDefinition } from '../flow_interfaces';
+import { EndpointDefinition } from '../flow_interfaces';
 import uuidGenerator from 'uuid';
 
-type baseConstruct = {
+type BaseConstruct = {
   config: Config
 };
 
@@ -15,18 +15,18 @@ export default class {
   _config: Config;
   _componentName: string;
 
-  constructor({ config }: baseConstruct) {
+  constructor({ config }: BaseConstruct) {
     this._config = config;
   }
 
-  validateEndpointConfig(endpointConfig: endpointDefinition) {
+  validateEndpointConfig(endpointConfig: EndpointDefinition): boolean {
     if (!endpointConfig) {
       return false;
     }
     return true;
   }
 
-  createBaseParams(endpointConfig: endpointDefinition): Object {
+  createBaseParams(endpointConfig: EndpointDefinition): Object {
     let data = {};
 
     Object.keys(this._config.baseParams).forEach((key) => {

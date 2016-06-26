@@ -7,6 +7,14 @@ import uuidGenerator from 'uuid';
 import PubNub from '../../lib/core/pubnub-common.js';
 
 describe('components/config', () => {
+  describe('AuthKey Storage', () => {
+    let storageParams = { authKey: 'authKey1' };
+    const pubnub = new PubNub(storageParams);
+    assert.equal(pubnub.getAuthKey(), 'authKey1');
+    pubnub.setAuthKey('authKey2');
+    assert.equal(pubnub.getAuthKey(), 'authKey2');
+  });
+
   describe('UUID storage', () => {
     let database = () => {
       let db = {};

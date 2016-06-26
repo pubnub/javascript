@@ -6,21 +6,21 @@ import Crypto from '../components/cryptography';
 import BaseEndpoint from './base.js';
 import utils from '../utils.js';
 
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type accessConstruct = {
+type AccessConstruct = {
   networking: Networking,
   config: Config,
   crypto: Crypto
 };
 
-type auditArguments = {
+type AuditArguments = {
   channel: string,
   channelGroup: string,
   authKeys: Array<string>,
 }
 
-type grantArguments = {
+type GrantArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   ttl: number,
@@ -35,16 +35,16 @@ export default class extends BaseEndpoint {
   _config: Config;
   _crypto: Crypto;
 
-  constructor({ networking, config, crypto }: accessConstruct) {
+  constructor({ networking, config, crypto }: AccessConstruct) {
     super({ config });
     this._networking = networking;
     this._config = config;
     this._crypto = crypto;
   }
 
-  grant(args: grantArguments, callback: Function) {
+  grant(args: GrantArguments, callback: Function) {
     const { channels = [], channelGroups = [], ttl, read = false, write = false, manage = false, authKeys = [] } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         subscribeKey: { required: true },
         publishKey: { required: true },
@@ -86,15 +86,15 @@ export default class extends BaseEndpoint {
 
     params.signature = this._crypto.HMACSHA256(signInput);
 
-    this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
       callback(status, payload.payload);
     });
   }
 
-  audit(args: auditArguments, callback: Function) {
+  audit(args: AuditArguments, callback: Function) {
     const { channel, channelGroup, authKeys = [] } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         subscribeKey: { required: true },
         publishKey: { required: true },
@@ -130,7 +130,7 @@ export default class extends BaseEndpoint {
 
     params.signature = this._crypto.HMACSHA256(signInput);
 
-    this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
       callback(status, payload.payload);
     });

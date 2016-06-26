@@ -3,14 +3,14 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndpoint from './base.js';
-import { endpointDefinition, statusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
 
-type timeConstruct = {
+type TimeConstruct = {
   networking: Networking,
   config: Config
 };
 
-type timeResponse = {
+type TimeResponse = {
   timetoken: number
 };
 
@@ -18,13 +18,13 @@ export default class extends BaseEndpoint {
 
   _networking: Networking;
 
-  constructor({ networking, config }: timeConstruct) {
+  constructor({ networking, config }: TimeConstruct) {
     super({ config });
     this._networking = networking;
   }
 
   fetch(callback: Function) {
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         uuid: { required: false }
       },
@@ -37,10 +37,10 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this._networking.GET(params, endpointConfig, (status: statusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
-      let response: timeResponse = {
+      let response: TimeResponse = {
         timetoken: payload[0]
       };
 

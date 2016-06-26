@@ -258,6 +258,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(_subscription_manager2.default);
 
+	    this.getAuthKey = this._config.getAuthKey.bind(this._config);
+	    this.setAuthKey = this._config.setAuthKey.bind(this._config);
+
 	    this.setCipherKey = this._config.setCipherKey.bind(this._config);
 	    this.getUUID = this._config.getUUID.bind(this._config);
 	    this.setUUID = this._config.setUUID.bind(this._config);
@@ -2213,11 +2216,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._db = db;
 
 	    this.instanceId = _uuid2.default.v4();
-	    this.authKey = setup.authKey || '';
 	    this.secretKey = setup.secretKey || '';
 	    this.subscribeKey = setup.subscribeKey;
 	    this.publishKey = setup.publishKey;
-	    this.cipherKey = setup.cipherKey;
+	    this.setAuthKey(setup.authKey);
+	    this.setCipherKey(setup.cipherKey);
 	    this.baseParams = setup.params || {};
 
 	    this.origin = setup.origin || 'pubsub.pubnub.com';
@@ -2249,6 +2252,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  _createClass(_class, [{
+	    key: 'getAuthKey',
+	    value: function getAuthKey() {
+	      return this.authKey;
+	    }
+	  }, {
+	    key: 'setAuthKey',
+	    value: function setAuthKey(val) {
+	      this.authKey = val;return this;
+	    }
+	  }, {
 	    key: 'setCipherKey',
 	    value: function setCipherKey(val) {
 	      this.cipherKey = val;return this;
