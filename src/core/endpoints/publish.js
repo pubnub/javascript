@@ -46,7 +46,7 @@ export default class extends BaseEndpoint {
 
   publish(args: PublishArguments, callback: Function) {
     const { message, channel, meta, sendByPost = false, replicate = true, storeInHistory } = args;
-    const endpointConfig: endpointDefinition = {
+    const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
         subscribeKey: { required: true },
@@ -80,7 +80,7 @@ export default class extends BaseEndpoint {
       params.meta = JSON.stringify(meta);
     }
 
-    let onCallback = (status: statusStruct, payload: Object) => {
+    let onCallback = (status: StatusStruct, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: PublishResponse = {
