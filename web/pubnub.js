@@ -97,7 +97,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	  var cookieSet = function (key, value) {
 	    document.cookie = key + '=' + value +
-	      '; expires=Thu, 1 Aug 2030 20:00:00 UTC; path=/';
+	      '; expires=Thu, 1 Aug ' + (new Date().getFullYear() + 1) + ' 20:00:00 UTC; path=/';
 	  };
 	  var cookieTest = (function () {
 	    try {

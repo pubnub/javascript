@@ -1,6 +1,7 @@
 
 6-24-16 * 3.15.2
  - fire() and no-rep
+ - reducing cookie length
 
 6-10-16 * 3.15.1
  - do not reset the time-token when unsubscribing.
