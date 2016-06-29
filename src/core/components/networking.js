@@ -5,7 +5,7 @@ import superagent from 'superagent';
 import Crypto from './cryptography/index';
 import Config from './config.js';
 
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type NetworkingModules = {
   crypto: Crypto,
@@ -101,17 +101,35 @@ export default class {
       .type('json')
       .timeout(timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
-        let status: StatusStruct = {};
-        status.error = err;
+        let status: StatusAnnouncement = {};
+        status.error = err !== null;
 
         if (err) {
+          status.errorData = err;
+          status.category = this._detectErrorCategory(err);
+          status.statusCode = resp.status;
+          console.log("status", status);
+          console.log('err', err);
           return callback(status, null);
         }
 
-        status.statusCode = resp.status;
         let parsedResponse = JSON.parse(resp.text);
         return callback(status, parsedResponse);
       });
+  }
+
+  _detectErrorCategory(err: Object) {
+    if (err.serverError) {
+      return 'PNNetworkIssuesCategory';
+    } else if (err.badRequest) {
+      return 'PNBadRequestCategory';
+    } else if (err.forbidden) {
+      return 'PNAccessDeniedCategory';
+    } else if (err.timeout) {
+      return 'PNTimeoutCategory';
+    } else {
+      return 'PNUnknownCategory';
+    }
   }
 
   _logger(options: ?Object): Function {

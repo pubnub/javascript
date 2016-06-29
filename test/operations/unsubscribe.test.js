@@ -34,7 +34,7 @@ describe('unsubscribe', () => {
 
       pubnub.addListener({
         status(status) {
-          assert.equal(status.error, null);
+          assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
           done();
         }
@@ -50,7 +50,7 @@ describe('unsubscribe', () => {
 
       pubnub.addListener({
         status(status) {
-          assert.equal(status.error, null);
+          assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
           done();
         }
@@ -66,7 +66,7 @@ describe('unsubscribe', () => {
 
       pubnub.addListener({
         status(status) {
-          assert.equal(status.error, null);
+          assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
           done();
         }
@@ -82,7 +82,7 @@ describe('unsubscribe', () => {
 
       pubnub.addListener({
         status(status) {
-          assert.equal(status.error, null);
+          assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
           done();
         }

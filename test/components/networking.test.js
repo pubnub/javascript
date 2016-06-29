@@ -29,9 +29,24 @@ describe('history endpoints', () => {
         .reply(200, [14570763868573725]);
 
       pubnub.time((status) => {
-        assert.deepEqual(status, { error: null, statusCode: 200 });
+        assert.equal(status.error, false);
+        assert.equal(status.statusCode, 200);
         done();
       });
     });
+
+    it('returns a correct status object on 403', (done) => {
+      utils.createNock().get('/time/0')
+        .query(true)
+        .reply(403, [14570763868573725]);
+
+      pubnub.time((status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.statusCode, 403);
+        assert.equal(status.category, 403);
+        done();
+      });
+    });
+
   });
 });

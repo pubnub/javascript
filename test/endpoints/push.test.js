@@ -29,7 +29,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -41,7 +41,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -53,7 +53,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -67,7 +67,7 @@ describe('push endpoints', () => {
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'apns' }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
         assert.equal(scope.isDone(), true);
         done();
@@ -80,7 +80,7 @@ describe('push endpoints', () => {
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'mpns' }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
         assert.equal(scope.isDone(), true);
         done();
@@ -93,7 +93,7 @@ describe('push endpoints', () => {
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'gcm' }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
         assert.equal(scope.isDone(), true);
         done();
@@ -108,7 +108,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -120,7 +120,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -132,7 +132,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm', uuid: 'myUUID' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -146,7 +146,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'apns' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -158,7 +158,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -170,7 +170,7 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });

@@ -3,8 +3,9 @@ import SubscribeEndpoints from '../endpoints/subscribe';
 import PresenceEndpoints from '../endpoints/presence';
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
+import ListenerManager from '../components/listener_manager';
 import utils from '../utils';
-import { MessageAnnouncement, SubscribeEnvelope, StatusStruct, CallbackStruct, PresenceAnnouncement } from '../flow_interfaces';
+import { MessageAnnouncement, SubscribeEnvelope, StatusStruct, PresenceAnnouncement } from '../flow_interfaces';
 
 type SubscribeArgs = {
   channels: Array<string>,
@@ -28,10 +29,17 @@ type SubscriptionManagerConsturct = {
     subscribeEndpoints: SubscribeEndpoints,
     presenceEndpoints: PresenceEndpoints,
     config: Config,
-    crypto: Crypto
+    crypto: Crypto,
+    listenerManager: ListenerManager
 }
 
 export default class {
+
+  _crypto: Crypto;
+  _config: Config;
+  _listenerManager: ListenerManager;
+  _subscribeEndpoints: SubscribeEndpoints;
+  _presenceEndpoints: PresenceEndpoints;
 
   _channels: Object;
   _presenceChannels: Object;
@@ -44,28 +52,22 @@ export default class {
 
   _subscribeCall: Object;
 
-  _subscribeEndpoints: SubscribeEndpoints;
-  _presenceEndpoints: PresenceEndpoints;
-
-  _listeners: Array<CallbackStruct>;
-
   _heartbeatTimer: number;
 
-  constructor({ subscribeEndpoints, presenceEndpoints, config, crypto }: SubscriptionManagerConsturct) {
+  constructor({ subscribeEndpoints, presenceEndpoints, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
+    this._listenerManager = listenerManager;
+    this._config = config;
+    this._subscribeEndpoints = subscribeEndpoints;
+    this._presenceEndpoints = presenceEndpoints;
+    this._crypto = crypto;
+
     this._channels = {};
     this._presenceChannels = {};
 
     this._channelGroups = {};
     this._presenceChannelGroups = {};
 
-    this._config = config;
-    this._subscribeEndpoints = subscribeEndpoints;
-    this._presenceEndpoints = presenceEndpoints;
-    this._crypto = crypto;
-
     this._timetoken = 0;
-
-    this._listeners = [];
   }
 
   adaptStateChange(args: StateArgs, callback: Function) {
@@ -115,20 +117,11 @@ export default class {
 
     if (this._config.suppressLeaveEvents === false) {
       this._presenceEndpoints.leave({ channels, channelGroups }, (status) => {
-        this._announceStatus(status);
+        this._listenerManager.announceStatus(status);
       });
     }
 
     this.reconnect();
-  }
-
-  addListener(newListeners: CallbackStruct) {
-    this._listeners.push(newListeners);
-  }
-
-  removeListener(deprecatedListeners: CallbackStruct) {
-    const listenerPosition = this._listeners.indexOf(deprecatedListeners);
-    if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
   }
 
   reconnect() {
@@ -224,7 +217,7 @@ export default class {
           announce.occupancy = message.payload.occupancy;
           announce.uuid = message.payload.uuid;
           announce.timestamp = message.payload.timestamp;
-          this._announcePresence(announce);
+          this._listenerManager.announcePresence(announce);
         } else {
           let announce: MessageAnnouncement = {};
           announce.actualChannel = (subscriptionMatch != null) ? channel : null;
@@ -237,7 +230,7 @@ export default class {
             announce.message = message.payload;
           }
 
-          this._announceMessage(announce);
+          this._listenerManager.announceMessage(announce);
         }
       });
 
@@ -252,24 +245,6 @@ export default class {
       this._subscribeCall.abort();
       this._subscribeCall = null;
     }
-  }
-
-  _announcePresence(announce: PresenceAnnouncement) {
-    this._listeners.forEach((listener) => {
-      if (listener.presence) listener.presence(announce);
-    });
-  }
-
-  _announceStatus(announce) {
-    this._listeners.forEach((listener) => {
-      if (listener.status) listener.status(announce);
-    });
-  }
-
-  _announceMessage(announce: MessageAnnouncement) {
-    this._listeners.forEach((listener) => {
-      if (listener.message) listener.message(announce);
-    });
   }
 
 }

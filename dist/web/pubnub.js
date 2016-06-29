@@ -65,7 +65,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _package = __webpack_require__(21);
+	var _package = __webpack_require__(22);
 
 	var _package2 = _interopRequireDefault(_package);
 
@@ -156,11 +156,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _package = __webpack_require__(21);
+	var _listener_manager = __webpack_require__(20);
+
+	var _listener_manager2 = _interopRequireDefault(_listener_manager);
+
+	var _package = __webpack_require__(22);
 
 	var _package2 = _interopRequireDefault(_package);
 
-	var _time = __webpack_require__(22);
+	var _time = __webpack_require__(23);
 
 	var _time2 = _interopRequireDefault(_time);
 
@@ -168,19 +172,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(23);
+	var _history = __webpack_require__(24);
 
 	var _history2 = _interopRequireDefault(_history);
 
-	var _push = __webpack_require__(24);
+	var _push = __webpack_require__(25);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(25);
+	var _access = __webpack_require__(26);
 
 	var _access2 = _interopRequireDefault(_access);
 
-	var _channel_groups = __webpack_require__(26);
+	var _channel_groups = __webpack_require__(27);
 
 	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
@@ -188,7 +192,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _publish = __webpack_require__(27);
+	var _publish = __webpack_require__(28);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
@@ -219,10 +223,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var historyEndpoint = new _history2.default({ networking: this._networking, config: this._config, crypto: this._crypto });
 	    var accessEndpoints = new _access2.default({ config: this._config, networking: this._networking, crypto: this._crypto });
 
-	    var subscriptionManager = new _subscription_manager2.default({ subscribeEndpoints: subscribeEndpoints, config: this._config, presenceEndpoints: presenceEndpoints });
+	    var listenerManager = new _listener_manager2.default();
+	    var subscriptionManager = new _subscription_manager2.default({ config: this._config, listenerManager: listenerManager, subscribeEndpoints: subscribeEndpoints, presenceEndpoints: presenceEndpoints });
 
-	    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
-	    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
+	    this.addListener = listenerManager.addListener.bind(listenerManager);
+	    this.removeListener = listenerManager.removeListener.bind(listenerManager);
 
 	    this.channelGroups = {
 	      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
@@ -380,22 +385,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_abstractedXDR',
 	    value: function _abstractedXDR(superagentConstruct, timeout, callback) {
+	      var _this = this;
+
 	      if (this._config.logVerbosity) {
 	        superagentConstruct = superagentConstruct.use(this._logger());
 	      }
 
 	      return superagentConstruct.type('json').timeout(timeout || this._config.getTransactionTimeout()).end(function (err, resp) {
 	        var status = {};
-	        status.error = err;
+	        status.error = err !== null;
 
 	        if (err) {
+	          status.errorData = err;
+	          status.category = _this._detectErrorCategory(err);
+	          status.statusCode = resp.status;
+	          console.log("status", status);
+	          console.log('err', err);
 	          return callback(status, null);
 	        }
 
-	        status.statusCode = resp.status;
 	        var parsedResponse = JSON.parse(resp.text);
 	        return callback(status, parsedResponse);
 	      });
+	    }
+	  }, {
+	    key: '_detectErrorCategory',
+	    value: function _detectErrorCategory(err) {
+	      if (err.serverError) {
+	        return 'PNNetworkIssuesCategory';
+	      } else if (err.badRequest) {
+	        return 'PNBadRequestCategory';
+	      } else if (err.forbidden) {
+	        return 'PNAccessDeniedCategory';
+	      } else if (err.timeout) {
+	        return 'PNTimeoutCategory';
+	      } else {
+	        return 'PNUnknownCategory';
+	      }
 	    }
 	  }, {
 	    key: '_logger',
@@ -3084,7 +3110,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _utils = __webpack_require__(20);
+	var _listener_manager = __webpack_require__(20);
+
+	var _listener_manager2 = _interopRequireDefault(_listener_manager);
+
+	var _utils = __webpack_require__(21);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -3100,8 +3130,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var presenceEndpoints = _ref.presenceEndpoints;
 	    var config = _ref.config;
 	    var crypto = _ref.crypto;
+	    var listenerManager = _ref.listenerManager;
 
 	    _classCallCheck(this, _class);
+
+	    this._listenerManager = listenerManager;
+	    this._config = config;
+	    this._subscribeEndpoints = subscribeEndpoints;
+	    this._presenceEndpoints = presenceEndpoints;
+	    this._crypto = crypto;
 
 	    this._channels = {};
 	    this._presenceChannels = {};
@@ -3109,14 +3146,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._channelGroups = {};
 	    this._presenceChannelGroups = {};
 
-	    this._config = config;
-	    this._subscribeEndpoints = subscribeEndpoints;
-	    this._presenceEndpoints = presenceEndpoints;
-	    this._crypto = crypto;
-
 	    this._timetoken = 0;
-
-	    this._listeners = [];
 	  }
 
 	  _createClass(_class, [{
@@ -3192,22 +3222,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (this._config.suppressLeaveEvents === false) {
 	        this._presenceEndpoints.leave({ channels: channels, channelGroups: channelGroups }, function (status) {
-	          _this3._announceStatus(status);
+	          _this3._listenerManager.announceStatus(status);
 	        });
 	      }
 
 	      this.reconnect();
-	    }
-	  }, {
-	    key: 'addListener',
-	    value: function addListener(newListeners) {
-	      this._listeners.push(newListeners);
-	    }
-	  }, {
-	    key: 'removeListener',
-	    value: function removeListener(deprecatedListeners) {
-	      var listenerPosition = this._listeners.indexOf(deprecatedListeners);
-	      if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
 	    }
 	  }, {
 	    key: 'reconnect',
@@ -3320,7 +3339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            announce.occupancy = message.payload.occupancy;
 	            announce.uuid = message.payload.uuid;
 	            announce.timestamp = message.payload.timestamp;
-	            _this5._announcePresence(announce);
+	            _this5._listenerManager.announcePresence(announce);
 	          } else {
 	            var _announce = {};
 	            _announce.actualChannel = subscriptionMatch != null ? channel : null;
@@ -3333,7 +3352,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	              _announce.message = message.payload;
 	            }
 
-	            _this5._announceMessage(_announce);
+	            _this5._listenerManager.announceMessage(_announce);
 	          }
 	        });
 
@@ -3349,27 +3368,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._subscribeCall.abort();
 	        this._subscribeCall = null;
 	      }
-	    }
-	  }, {
-	    key: '_announcePresence',
-	    value: function _announcePresence(announce) {
-	      this._listeners.forEach(function (listener) {
-	        if (listener.presence) listener.presence(announce);
-	      });
-	    }
-	  }, {
-	    key: '_announceStatus',
-	    value: function _announceStatus(announce) {
-	      this._listeners.forEach(function (listener) {
-	        if (listener.status) listener.status(announce);
-	      });
-	    }
-	  }, {
-	    key: '_announceMessage',
-	    value: function _announceMessage(announce) {
-	      this._listeners.forEach(function (listener) {
-	        if (listener.message) listener.message(announce);
-	      });
 	    }
 	  }]);
 
@@ -4008,6 +4006,71 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _class = function () {
+	  function _class() {
+	    _classCallCheck(this, _class);
+
+	    this._listeners = [];
+	  }
+
+	  _createClass(_class, [{
+	    key: 'addListener',
+	    value: function addListener(newListeners) {
+	      this._listeners.push(newListeners);
+	    }
+	  }, {
+	    key: 'removeListener',
+	    value: function removeListener(deprecatedListeners) {
+	      var listenerPosition = this._listeners.indexOf(deprecatedListeners);
+	      if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
+	    }
+	  }, {
+	    key: 'announcePresence',
+	    value: function announcePresence(announce) {
+	      this._listeners.forEach(function (listener) {
+	        if (listener.presence) listener.presence(announce);
+	      });
+	    }
+	  }, {
+	    key: 'announceStatus',
+	    value: function announceStatus(announce) {
+	      this._listeners.forEach(function (listener) {
+	        if (listener.status) listener.status(announce);
+	      });
+	    }
+	  }, {
+	    key: 'announceMessage',
+	    value: function announceMessage(announce) {
+	      this._listeners.forEach(function (listener) {
+	        if (listener.message) listener.message(announce);
+	      });
+	    }
+	  }]);
+
+	  return _class;
+	}();
+
+	exports.default = _class;
+	module.exports = exports['default'];
+	//# sourceMappingURL=listener_manager.js.map
+
+
+/***/ },
+/* 21 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -4047,7 +4110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -4085,25 +4148,25 @@ return /******/ (function(modules) { // webpackBootstrap
 		],
 		"dependencies": {
 			"superagent": "^2.0.0",
-			"uuid": "^2.0.1"
+			"uuid": "^2.0.2"
 		},
 		"noAnalyze": false,
 		"devDependencies": {
-			"babel-core": "^6.6.5",
-			"babel-eslint": "6.0.4",
+			"babel-core": "^6.10.4",
+			"babel-eslint": "6.1.0",
 			"babel-plugin-add-module-exports": "^0.2.1",
-			"babel-plugin-transform-class-properties": "^6.6.0",
-			"babel-plugin-transform-flow-strip-types": "^6.6.5",
-			"babel-preset-es2015": "^6.6.0",
-			"babel-register": "^6.6.5",
+			"babel-plugin-transform-class-properties": "^6.10.2",
+			"babel-plugin-transform-flow-strip-types": "^6.8.0",
+			"babel-preset-es2015": "^6.9.0",
+			"babel-register": "^6.9.0",
 			"chai": "^3.5.0",
-			"chai-as-promised": "^5.2.0",
-			"eslint": "2.12.0",
+			"chai-as-promised": "^5.3.0",
+			"eslint": "2.13.1",
 			"eslint-config-airbnb": "9.0.1",
-			"eslint-plugin-flowtype": "2.2.7",
-			"eslint-plugin-import": "^1.8.1",
+			"eslint-plugin-flowtype": "2.3.0",
+			"eslint-plugin-import": "^1.9.2",
 			"eslint-plugin-mocha": "3.0.0",
-			"eslint-plugin-react": "5.1.1",
+			"eslint-plugin-react": "5.2.2",
 			"flow-bin": "^0.27.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
@@ -4115,27 +4178,27 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-mocha": "^2.2.0",
 			"gulp-rename": "^1.2.2",
 			"gulp-sourcemaps": "^1.6.0",
-			"gulp-uglify": "^1.5.3",
+			"gulp-uglify": "^1.5.4",
 			"gulp-webpack": "^1.5.0",
 			"imports-loader": "0.6.5",
 			"isparta": "^4.0.0",
 			"json-loader": "0.5.4",
-			"karma": "0.13.22",
+			"karma": "1.1.0",
 			"karma-babel-preprocessor": "^6.0.1",
 			"karma-chai": "0.1.0",
 			"karma-chrome-launcher": "^1.0.1",
-			"karma-mocha": "^1.0.1",
-			"karma-phantomjs-launcher": "1.0.0",
+			"karma-mocha": "^1.1.1",
+			"karma-phantomjs-launcher": "1.0.1",
 			"karma-spec-reporter": "0.0.26",
 			"mocha": "2.5.3",
 			"nock": "^8.0.0",
 			"phantomjs-prebuilt": "2.1.7",
 			"remap-istanbul": "^0.6.4",
-			"run-sequence": "^1.1.5",
-			"sinon": "^1.17.3",
+			"run-sequence": "^1.2.1",
+			"sinon": "^1.17.4",
 			"stats-webpack-plugin": "^0.3.1",
-			"uglify-js": "^2.6.2",
-			"webpack": "^1.12.14",
+			"uglify-js": "^2.6.4",
+			"webpack": "^1.13.1",
 			"webpack-dev-server": "1.14.1",
 			"webpack-stats-plugin": "^0.1.1"
 		},
@@ -4147,7 +4210,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4232,7 +4295,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4382,7 +4445,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4580,7 +4643,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4607,7 +4670,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _base2 = _interopRequireDefault(_base);
 
-	var _utils = __webpack_require__(20);
+	var _utils = __webpack_require__(21);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4764,7 +4827,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4973,7 +5036,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

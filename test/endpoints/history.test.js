@@ -29,7 +29,7 @@ describe('history endpoints', () => {
 
 
     pubnub.history({ channel: 'ch1' }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.startTimeToken, 14648503433058358);
       assert.deepEqual(response.endTimeToken, 14648990164932163);
       assert.deepEqual(response.messages, [
@@ -47,7 +47,7 @@ describe('history endpoints', () => {
       .reply(200, '[[{"message":{"text":"hey"},"timetoken":14648503433058358},{"message":{"text2":"hey2"},"timetoken":14648503433058359}],14648503433058358,14649346364851578]');
 
     pubnub.history({ channel: 'ch1', includeTimetoken: true }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.startTimeToken, 14648503433058358);
       assert.deepEqual(response.endTimeToken, 14649346364851578);
       assert.deepEqual(response.messages, [
@@ -67,7 +67,7 @@ describe('history endpoints', () => {
 
     pubnub.setCipherKey('cipherKey');
     pubnub.history({ channel: 'ch1' }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.startTimeToken, 14649369736959785);
       assert.deepEqual(response.endTimeToken, 14649369766426772);
       assert.deepEqual(response.messages, [
@@ -86,7 +86,7 @@ describe('history endpoints', () => {
 
     pubnub.setCipherKey('cipherKey');
     pubnub.history({ channel: 'ch1', includeTimetoken: true }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.startTimeToken, 14649369736959785);
       assert.deepEqual(response.endTimeToken, 14649369766426772);
       assert.deepEqual(response.messages, [

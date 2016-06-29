@@ -19,11 +19,6 @@ export type ProxyStruct = {
   headers: Object
 }
 
-export type StatusStruct = {
-  error: boolean,
-  statusCode: number
-}
-
 export type InternalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing
@@ -138,5 +133,14 @@ type MessageAnnouncement = {
   timetoken: number,
   userMetadata: Object
 }
+
+export type StatusAnnouncement = {
+  error: boolean,
+  statusCode: number,
+  category: string,
+  errorData: Object
+}
+
+// *****************************************************************************
 
 module.exports = {};

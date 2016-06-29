@@ -4,6 +4,7 @@ import Networking from './components/networking';
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
+import ListenerManager from './components/listener_manager';
 
 import packageJSON from '../../package.json';
 
@@ -75,10 +76,11 @@ export default class {
     const historyEndpoint = new HistoryEndpoint({ networking: this._networking, config: this._config, crypto: this._crypto });
     const accessEndpoints = new AccessEndpoints({ config: this._config, networking: this._networking, crypto: this._crypto });
 
-    const subscriptionManager = new SubscriptionManager({ subscribeEndpoints, config: this._config, presenceEndpoints });
+    const listenerManager = new ListenerManager();
+    const subscriptionManager = new SubscriptionManager({ config: this._config, listenerManager, subscribeEndpoints, presenceEndpoints });
 
-    this.addListener = subscriptionManager.addListener.bind(subscriptionManager);
-    this.removeListener = subscriptionManager.removeListener.bind(subscriptionManager);
+    this.addListener = listenerManager.addListener.bind(listenerManager);
+    this.removeListener = listenerManager.removeListener.bind(listenerManager);
 
     /** channel groups **/
     this.channelGroups = {

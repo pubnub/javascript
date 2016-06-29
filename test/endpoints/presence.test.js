@@ -30,7 +30,7 @@ describe('presence endpoints', () => {
 
 
       pubnub.whereNow({}, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['a', 'b']);
         assert.equal(scope.isDone(), true);
         done();
@@ -44,7 +44,7 @@ describe('presence endpoints', () => {
 
 
       pubnub.whereNow({ uuid: 'otherUUID' }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['a', 'b']);
         assert.equal(scope.isDone(), true);
         done();
@@ -60,7 +60,7 @@ describe('presence endpoints', () => {
 
 
       pubnub.getState({ channels: ['testChannel'] }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, { testChannel: { age: 20, status: 'online' } });
         assert.equal(scope.isDone(), true);
         done();
@@ -74,7 +74,7 @@ describe('presence endpoints', () => {
 
 
       pubnub.getState({ uuid: 'otherUUID', channels: ['testChannel'] }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, { testChannel: { age: 20, status: 'online' } });
         assert.equal(scope.isDone(), true);
         done();
@@ -88,7 +88,7 @@ describe('presence endpoints', () => {
 
 
       pubnub.getState({ channels: ['ch1', 'ch2'] }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, { ch1: { age: 20, status: 'online' }, ch2: { age: 100, status: 'offline' } });
         assert.equal(scope.isDone(), true);
         done();
@@ -102,7 +102,7 @@ describe('presence endpoints', () => {
 
 
       pubnub.getState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, { ch1: { age: 20, status: 'online' }, ch2: { age: 100, status: 'offline' } });
         assert.equal(scope.isDone(), true);
         done();

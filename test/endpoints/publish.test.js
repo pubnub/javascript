@@ -28,7 +28,7 @@ describe('publish endpoints', () => {
       .reply(200, '[1,"Sent","14647523059145592"]');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
       done();
@@ -41,7 +41,7 @@ describe('publish endpoints', () => {
     .reply(200, '[1,"Sent","14647523059145592"]');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', replicate: false }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
       done();
@@ -56,7 +56,7 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
       done();
@@ -69,7 +69,7 @@ describe('publish endpoints', () => {
       .reply(200, '[1,"Sent","14647523059145592"]');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', sendByPost: true }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
       done();
@@ -84,7 +84,7 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', sendByPost: true }, (status, response) => {
-      assert.equal(status.error, null);
+      assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
       done();
@@ -98,7 +98,7 @@ describe('publish endpoints', () => {
         .reply(200, '[1,"Sent","14647523059145592"]');
 
       pubnub.fire({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.timetoken, 14647523059145592);
         assert.equal(scope.isDone(), true);
         done();

@@ -29,7 +29,7 @@ describe('channel group endpoints', () => {
         .reply(200, '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}');
 
       pubnub.channelGroups.addChannels({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -43,7 +43,7 @@ describe('channel group endpoints', () => {
         .reply(200, '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}');
 
       pubnub.channelGroups.deleteGroup({ channelGroup: 'cg1' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
@@ -57,7 +57,7 @@ describe('channel group endpoints', () => {
         .reply(200, '{"status": 200, "message": "OK", "payload": {"groups": ["a","b"]}, "service": "ChannelGroups"}');
 
       pubnub.channelGroups.listGroups((status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.groups, ['a', 'b']);
         assert.equal(scope.isDone(), true);
         done();
@@ -72,7 +72,7 @@ describe('channel group endpoints', () => {
         .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "ChannelGroups"}');
 
       pubnub.channelGroups.listChannels({ channelGroup: 'cg1' }, (status, response) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['a', 'b']);
         assert.equal(scope.isDone(), true);
         done();
@@ -87,7 +87,7 @@ describe('channel group endpoints', () => {
         .reply(200, '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}');
 
       pubnub.channelGroups.removeChannels({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
-        assert.equal(status.error, null);
+        assert.equal(status.error, false);
         assert.equal(scope.isDone(), true);
         done();
       });
