@@ -55,6 +55,10 @@ export default class {
   // if requestId config is true, the SDK will pass a unique request identifier with each request as request_id=<UUID>
   useRequestId: boolean;
 
+  // alert when a heartbeat works out.
+  announceSuccessfulHeartbeats: boolean;
+  announceFailedHeartbeats: boolean;
+
   /*
     how long the server will wait before declaring that the client is gone.
   */
@@ -63,7 +67,7 @@ export default class {
   /*
     how often (in seconds) the client should announce its presence to server
   */
-  _presenceAnnounceInterval: number;
+  _heartbeatInterval: number;
 
   /*
     how long to wait for the server when running the subscribe loop
@@ -83,7 +87,7 @@ export default class {
     this._db = db;
 
     this.instanceId = uuidGenerator.v4();
-    this.secretKey = setup.secretKey || '';
+    this.secretKey = setup.secretKey;
     this.subscribeKey = setup.subscribeKey;
     this.publishKey = setup.publishKey;
     this.setAuthKey(setup.authKey);
@@ -101,6 +105,9 @@ export default class {
     this.logVerbosity = setup.logVerbosity || false;
     this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
+    this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
+    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
+
     this.useInstanceId = setup.useInstanceId || false;
     this.useRequestId = setup.useRequestId || false;
 
@@ -113,8 +120,8 @@ export default class {
     // how long the SDK will report the client to be alive before issuing a timeout
     this.setPresenceTimeout(setup.presenceTimeout || 300);
 
-    if (setup.presenceAnnounceInterval) {
-      this.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
+    if (setup.heartbeatInterval) {
+      this.setHeartbeatInterval(setup.heartbeatInterval);
     }
 
     this.setUUID(this._decideUUID(setup.uuid)); // UUID decision depends on subKey.
@@ -134,12 +141,12 @@ export default class {
   getPresenceTimeout(): number { return this._presenceTimeout; }
   setPresenceTimeout(val: number): this {
     this._presenceTimeout = val;
-    this._presenceAnnounceInterval = (this._presenceTimeout / 2) - 1;
+    this.setHeartbeatInterval((this._presenceTimeout / 2) - 1);
     return this;
   }
 
-  getPresenceAnnounceInterval(): number { return this._presenceAnnounceInterval; }
-  setPresenceAnnounceInterval(val: number): this { this._presenceAnnounceInterval = val; return this; }
+  getHeartbeatInterval(): number { return this._heartbeatInterval; }
+  setHeartbeatInterval(val: number): this { this._heartbeatInterval = val; return this; }
 
   // deprecated setters.
   getSubscribeTimeout(): number { return this._subscribeRequestTimeout; }

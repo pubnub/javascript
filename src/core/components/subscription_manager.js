@@ -146,7 +146,7 @@ export default class {
 
   _registerHeartbeatTimer() {
     this._stopHeartbeatTimer();
-    this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getPresenceAnnounceInterval() * 1000);
+    this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
   }
 
   _stopHeartbeatTimer() {
@@ -176,7 +176,11 @@ export default class {
     });
 
     let onHeartbeat = (status: StatusAnnouncement) => {
-      if (status.error) {
+      if (status.error && this._config.announceFailedHeartbeats) {
+        this._listenerManager.announceStatus(status);
+      }
+
+      if (!status.error && this._config.announceSuccessfulHeartbeats) {
         this._listenerManager.announceStatus(status);
       }
     };

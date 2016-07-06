@@ -116,10 +116,10 @@ export default class {
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
     this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(SubscriptionManager);
+
     /** config **/
     this.getAuthKey = this._config.getAuthKey.bind(this._config);
     this.setAuthKey = this._config.setAuthKey.bind(this._config);
-
     this.setCipherKey = this._config.setCipherKey.bind(this._config);
     this.getUUID = this._config.getUUID.bind(this._config);
     this.setUUID = this._config.setUUID.bind(this._config);

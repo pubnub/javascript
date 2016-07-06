@@ -34,7 +34,7 @@ describe('time endpoints', () => {
     });
   });
 
-  it.skip('calls the callback function when fetch failed', (done) => {
+  it('calls the callback function when fetch failed', (done) => {
     utils.createNock().get('/time/0')
       .query(true)
       .reply(500, null);

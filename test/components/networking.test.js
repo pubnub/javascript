@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../utils';
 import PubNub from '../../lib/node/index.js';
 
-describe('history endpoints', () => {
+describe('#components/networking', () => {
   let pubnub;
 
   before(() => {
@@ -43,10 +43,22 @@ describe('history endpoints', () => {
       pubnub.time((status) => {
         assert.equal(status.error, true);
         assert.equal(status.statusCode, 403);
-        assert.equal(status.category, 403);
+        assert.equal(status.category, 'PNAccessDeniedCategory');
         done();
       });
     });
 
+    it('returns a correct status object on 400', (done) => {
+      utils.createNock().get('/time/0')
+        .query(true)
+        .reply(400, [14570763868573725]);
+
+      pubnub.time((status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.statusCode, 400);
+        assert.equal(status.category, 'PNBadRequestCategory');
+        done();
+      });
+    });
   });
 });

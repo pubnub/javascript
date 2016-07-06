@@ -111,8 +111,8 @@ export default class {
         if (err) {
           status.errorData = err;
           status.category = this._detectErrorCategory(err);
-          console.log('status', status);
-          console.log('err', err);
+          // console.log('status', status);
+          // console.log('err', err);
           return callback(status, null);
         }
 
@@ -122,19 +122,15 @@ export default class {
   }
 
   _detectErrorCategory(err: Object): string {
-    console.log('_detectErrorCategory, err', err);
+    if (err.code === 'ENOTFOUND') return 'PNNetworkIssuesCategory';
+    if (err.timeout) return 'PNTimeoutCategory';
 
-    if (err.code === 'ENOTFOUND') {
-      return 'PNNetworkIssuesCategory';
-    } else if (err.badRequest) {
-      return 'PNBadRequestCategory';
-    } else if (err.forbidden) {
-      return 'PNAccessDeniedCategory';
-    } else if (err.timeout) {
-      return 'PNTimeoutCategory';
-    } else {
-      return 'PNUnknownCategory';
+    if (err.response) {
+      if (err.response.badRequest) return 'PNBadRequestCategory';
+      if (err.response.forbidden) return 'PNAccessDeniedCategory';
     }
+
+    return 'PNUnknownCategory';
   }
 
   _logger(options: ?Object): Function {

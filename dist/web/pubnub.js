@@ -265,7 +265,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.getAuthKey = this._config.getAuthKey.bind(this._config);
 	    this.setAuthKey = this._config.setAuthKey.bind(this._config);
-
 	    this.setCipherKey = this._config.setCipherKey.bind(this._config);
 	    this.getUUID = this._config.getUUID.bind(this._config);
 	    this.setUUID = this._config.setUUID.bind(this._config);
@@ -402,8 +401,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (err) {
 	          status.errorData = err;
 	          status.category = _this._detectErrorCategory(err);
-	          console.log('status', status);
-	          console.log('err', err);
+
 	          return callback(status, null);
 	        }
 
@@ -414,19 +412,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_detectErrorCategory',
 	    value: function _detectErrorCategory(err) {
-	      console.log('_detectErrorCategory, err', err);
+	      if (err.code === 'ENOTFOUND') return 'PNNetworkIssuesCategory';
+	      if (err.timeout) return 'PNTimeoutCategory';
 
-	      if (err.code === 'ENOTFOUND') {
-	        return 'PNNetworkIssuesCategory';
-	      } else if (err.badRequest) {
-	        return 'PNBadRequestCategory';
-	      } else if (err.forbidden) {
-	        return 'PNAccessDeniedCategory';
-	      } else if (err.timeout) {
-	        return 'PNTimeoutCategory';
-	      } else {
-	        return 'PNUnknownCategory';
+	      if (err.response) {
+	        if (err.response.badRequest) return 'PNBadRequestCategory';
+	        if (err.response.forbidden) return 'PNAccessDeniedCategory';
 	      }
+
+	      return 'PNUnknownCategory';
 	    }
 	  }, {
 	    key: '_logger',
@@ -2247,7 +2241,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._db = db;
 
 	    this.instanceId = _uuid2.default.v4();
-	    this.secretKey = setup.secretKey || '';
+	    this.secretKey = setup.secretKey;
 	    this.subscribeKey = setup.subscribeKey;
 	    this.publishKey = setup.publishKey;
 	    this.setAuthKey(setup.authKey);
@@ -2264,6 +2258,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.logVerbosity = setup.logVerbosity || false;
 	    this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
+	    this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
+	    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
+
 	    this.useInstanceId = setup.useInstanceId || false;
 	    this.useRequestId = setup.useRequestId || false;
 
@@ -2275,8 +2272,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.setPresenceTimeout(setup.presenceTimeout || 300);
 
-	    if (setup.presenceAnnounceInterval) {
-	      this.setPresenceAnnounceInterval(setup.presenceAnnounceInterval);
+	    if (setup.heartbeatInterval) {
+	      this.setHeartbeatInterval(setup.heartbeatInterval);
 	    }
 
 	    this.setUUID(this._decideUUID(setup.uuid));
@@ -2318,18 +2315,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setPresenceTimeout',
 	    value: function setPresenceTimeout(val) {
 	      this._presenceTimeout = val;
-	      this._presenceAnnounceInterval = this._presenceTimeout / 2 - 1;
+	      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
 	      return this;
 	    }
 	  }, {
-	    key: 'getPresenceAnnounceInterval',
-	    value: function getPresenceAnnounceInterval() {
-	      return this._presenceAnnounceInterval;
+	    key: 'getHeartbeatInterval',
+	    value: function getHeartbeatInterval() {
+	      return this._heartbeatInterval;
 	    }
 	  }, {
-	    key: 'setPresenceAnnounceInterval',
-	    value: function setPresenceAnnounceInterval(val) {
-	      this._presenceAnnounceInterval = val;return this;
+	    key: 'setHeartbeatInterval',
+	    value: function setHeartbeatInterval(val) {
+	      this._heartbeatInterval = val;return this;
 	    }
 	  }, {
 	    key: 'getSubscribeTimeout',
@@ -3091,7 +3088,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -3266,7 +3263,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_registerHeartbeatTimer',
 	    value: function _registerHeartbeatTimer() {
 	      this._stopHeartbeatTimer();
-	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getPresenceAnnounceInterval() * 1000);
+	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
 	    }
 	  }, {
 	    key: '_stopHeartbeatTimer',
@@ -3299,12 +3296,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (channelGroupState) presenceState[channelGroup] = channelGroupState;
 	      });
 
+	      var onHeartbeat = function onHeartbeat(status) {
+	        if (status.error && _this5._config.announceFailedHeartbeats) {
+	          _this5._listenerManager.announceStatus(status);
+	        }
+
+	        if (!status.error && _this5._config.announceSuccessfulHeartbeats) {
+	          _this5._listenerManager.announceStatus(status);
+	        }
+	      };
+
 	      this._presenceEndpoints.heartbeat({
 	        channels: presenceChannels,
 	        channelGroups: presenceChannelGroups,
-	        state: presenceState }, function (status) {
-	        console.log(status);
-	      });
+	        state: presenceState }, onHeartbeat.bind(this));
 	    }
 	  }, {
 	    key: '_startSubscribeLoop',
@@ -3415,7 +3420,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 	//# sourceMappingURL=subscription_manager.js.map
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
 /* 17 */
