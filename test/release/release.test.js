@@ -19,7 +19,7 @@ describe('release should be consistent', () => {
   });
 
   it('with bower valid entry point', () => {
-    assert.equal(bowerJSON.main, 'web/dist/pubnub.min.js');
+    assert.equal(bowerJSON.main, 'dist/web/pubnub.min.js');
   });
 
   it('with npm valid entry point', () => {

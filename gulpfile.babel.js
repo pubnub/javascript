@@ -16,13 +16,14 @@ const gulpIstanbul = require('gulp-istanbul');
 const isparta = require('isparta');
 const sourcemaps = require('gulp-sourcemaps');
 const remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul');
+const packageJSON = require('./package.json');
 
 gulp.task('clean', () => {
-  return gulp.src(['lib', 'dist', 'coverage'], { read: false })
+  return gulp.src(['lib', 'dist', 'coverage', 'upload'], { read: false })
     .pipe(clean());
 });
 
-gulp.task('babel', ['clean'], () => {
+gulp.task('babel', () => {
   return gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
     .pipe(babel())
@@ -30,17 +31,27 @@ gulp.task('babel', ['clean'], () => {
     .pipe(gulp.dest('lib'));
 });
 
-gulp.task('compile_web', ['babel'], () => {
+gulp.task('compile_web', () => {
   return gulp.src('lib/web/index.js')
     .pipe(gulpWebpack(webpackConfig))
     .pipe(gulp.dest('dist/web'));
 });
 
-gulp.task('uglify', ['webpack'], () => {
+gulp.task('create_version', () => {
+  return gulp.src('dist/web/pubnub.js')
+    .pipe(rename('pubnub.' + packageJSON.version + '.js'))
+    .pipe(gulp.dest('upload'));
+});
+
+gulp.task('uglify', () => {
   return gulp.src('dist/web/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
+
     .pipe(rename('pubnub.min.js'))
-    .pipe(gulp.dest('dist/web'));
+    .pipe(gulp.dest('dist/web'))
+
+    .pipe(rename('pubnub.' + packageJSON.version + '.min.js'))
+    .pipe(gulp.dest('upload'));
 });
 
 gulp.task('lint_code', [], () => {
@@ -106,7 +117,9 @@ gulp.task('remap_istanbul', () => {
 });
 
 gulp.task('webpack', ['compile_web']);
-gulp.task('compile', ['clean', 'babel', 'webpack', 'uglify']);
+gulp.task('compile', (done) => {
+  runSequence('clean', 'babel', 'webpack', 'uglify', 'create_version', done);
+});
 
 gulp.task('lint', ['lint_code', 'lint_tests']);
 

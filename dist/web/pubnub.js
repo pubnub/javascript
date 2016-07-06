@@ -4349,8 +4349,6 @@ return /******/ (function(modules) { // webpackBootstrap
 			"babel-preset-es2015": "^6.9.0",
 			"babel-register": "^6.9.0",
 			"chai": "^3.5.0",
-			"chai-as-promised": "^5.3.0",
-			"eslint": "2.13.1",
 			"eslint-config-airbnb": "9.0.1",
 			"eslint-plugin-flowtype": "2.3.0",
 			"eslint-plugin-import": "^1.9.2",
@@ -4388,8 +4386,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"stats-webpack-plugin": "^0.3.1",
 			"uglify-js": "^2.6.4",
 			"webpack": "^1.13.1",
-			"webpack-dev-server": "1.14.1",
-			"webpack-stats-plugin": "^0.1.1"
+			"webpack-dev-server": "1.14.1"
 		},
 		"bundleDependencies": [],
 		"license": "MIT",
