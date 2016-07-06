@@ -1,11 +1,13 @@
 
 import SubscribeEndpoints from '../endpoints/subscribe';
 import PresenceEndpoints from '../endpoints/presence';
+import TimeEndpoints from '../endpoints/time';
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
 import ListenerManager from '../components/listener_manager';
+import ReconnectionManager from '../components/reconnection_manager';
 import utils from '../utils';
-import { MessageAnnouncement, SubscribeEnvelope, StatusStruct, PresenceAnnouncement } from '../flow_interfaces';
+import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 
 type SubscribeArgs = {
   channels: Array<string>,
@@ -28,6 +30,7 @@ type StateArgs = {
 type SubscriptionManagerConsturct = {
     subscribeEndpoints: SubscribeEndpoints,
     presenceEndpoints: PresenceEndpoints,
+    timeEndpoints: TimeEndpoints,
     config: Config,
     crypto: Crypto,
     listenerManager: ListenerManager
@@ -38,6 +41,7 @@ export default class {
   _crypto: Crypto;
   _config: Config;
   _listenerManager: ListenerManager;
+  _reconnectionManager: ReconnectionManager;
   _subscribeEndpoints: SubscribeEndpoints;
   _presenceEndpoints: PresenceEndpoints;
 
@@ -54,11 +58,12 @@ export default class {
 
   _heartbeatTimer: number;
 
-  constructor({ subscribeEndpoints, presenceEndpoints, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
+  constructor({ subscribeEndpoints, presenceEndpoints, timeEndpoints, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
     this._config = config;
     this._subscribeEndpoints = subscribeEndpoints;
     this._presenceEndpoints = presenceEndpoints;
+    this._timeEndpoints = timeEndpoints;
     this._crypto = crypto;
 
     this._channels = {};
@@ -68,6 +73,11 @@ export default class {
     this._presenceChannelGroups = {};
 
     this._timetoken = 0;
+
+    this._reconnectionManager = new ReconnectionManager({ timeEndpoints });
+    this._reconnectionManager.onReconnection(() => {
+      this.reconnect();
+    });
   }
 
   adaptStateChange(args: StateArgs, callback: Function) {
@@ -165,13 +175,16 @@ export default class {
       if (channelGroupState) presenceState[channelGroup] = channelGroupState;
     });
 
+    let onHeartbeat = (status: StatusAnnouncement) => {
+      if (status.error) {
+        this._listenerManager.announceStatus(status);
+      }
+    };
+
     this._presenceEndpoints.heartbeat({
       channels: presenceChannels,
       channelGroups: presenceChannelGroups,
-      state: presenceState },
-        (status) => {
-          console.log(status); // eslint-disable-line no-console
-        });
+      state: presenceState }, onHeartbeat.bind(this));
   }
 
   _startSubscribeLoop() {
@@ -189,55 +202,71 @@ export default class {
       return;
     }
 
-    this._subscribeCall = this._subscribeEndpoints.subscribe({ channels, channelGroups,
+    const subscribeArgs = {
+      channels,
+      channelGroups,
       timetoken: this._timetoken,
       filterExpression: this._config.filterExpression,
       region: this._region
-    }, (status: StatusStruct, payload: SubscribeEnvelope) => {
-      if (status.error) {
+    };
+
+    this._subscribeCall = this._subscribeEndpoints.subscribe(subscribeArgs, this._processSubscribeResponse.bind(this));
+  }
+
+  _processSubscribeResponse(status: StatusAnnouncement, payload: SubscribeEnvelope) {
+    if (status.error) {
+      // if we timeout from server, restart the loop.
+      if (status.category === 'PNTimeoutCategory') {
         this._startSubscribeLoop();
-        return;
       }
 
-      payload.messages.forEach((message) => {
-        let channel = message.channel;
-        let subscriptionMatch = message.subscriptionMatch;
-        let publishMetaData = message.publishMetaData;
+      // we lost internet connection, alert the reconnection manager and terminate all loops
+      if (status.category === 'PNNetworkIssuesCategory') {
+        this.disconnect();
+        this._reconnectionManager.startPolling();
+      }
 
-        if (channel === subscriptionMatch) {
-          subscriptionMatch = null;
-        }
+      return;
+    }
 
-        if (utils.endsWith(message.channel, '-pnpres')) {
-          let announce: PresenceAnnouncement = {};
-          announce.actualChannel = (subscriptionMatch != null) ? channel : null;
-          announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-          // announce.state = message.payload.getData())
-          announce.timetoken = publishMetaData.publishTimetoken;
-          announce.occupancy = message.payload.occupancy;
-          announce.uuid = message.payload.uuid;
-          announce.timestamp = message.payload.timestamp;
-          this._listenerManager.announcePresence(announce);
+    payload.messages.forEach((message) => {
+      let channel = message.channel;
+      let subscriptionMatch = message.subscriptionMatch;
+      let publishMetaData = message.publishMetaData;
+
+      if (channel === subscriptionMatch) {
+        subscriptionMatch = null;
+      }
+
+      if (utils.endsWith(message.channel, '-pnpres')) {
+        let announce: PresenceAnnouncement = {};
+        announce.actualChannel = (subscriptionMatch != null) ? channel : null;
+        announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+        // announce.state = message.payload.getData())
+        announce.timetoken = publishMetaData.publishTimetoken;
+        announce.occupancy = message.payload.occupancy;
+        announce.uuid = message.payload.uuid;
+        announce.timestamp = message.payload.timestamp;
+        this._listenerManager.announcePresence(announce);
+      } else {
+        let announce: MessageAnnouncement = {};
+        announce.actualChannel = (subscriptionMatch != null) ? channel : null;
+        announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+        announce.timetoken = publishMetaData.publishTimetoken;
+
+        if (this._config.cipherKey) {
+          announce.message = this._crypto.decrypt(message.payload);
         } else {
-          let announce: MessageAnnouncement = {};
-          announce.actualChannel = (subscriptionMatch != null) ? channel : null;
-          announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-          announce.timetoken = publishMetaData.publishTimetoken;
-
-          if (this._config.cipherKey) {
-            announce.message = this._crypto.decrypt(message.payload);
-          } else {
-            announce.message = message.payload;
-          }
-
-          this._listenerManager.announceMessage(announce);
+          announce.message = message.payload;
         }
-      });
 
-      this._region = payload.metadata.region;
-      this._timetoken = payload.metadata.timetoken;
-      this._startSubscribeLoop();
+        this._listenerManager.announceMessage(announce);
+      }
     });
+
+    this._region = payload.metadata.region;
+    this._timetoken = payload.metadata.timetoken;
+    this._startSubscribeLoop();
   }
 
   _stopSubscribeLoop() {

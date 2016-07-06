@@ -6,7 +6,7 @@ import Crypto from '../components/cryptography';
 import BaseEndpoint from './base.js';
 import utils from '../utils.js';
 
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type AccessConstruct = {
   networking: Networking,
@@ -86,7 +86,7 @@ export default class extends BaseEndpoint {
 
     params.signature = this._crypto.HMACSHA256(signInput);
 
-    this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
       callback(status, payload.payload);
     });
@@ -130,7 +130,7 @@ export default class extends BaseEndpoint {
 
     params.signature = this._crypto.HMACSHA256(signInput);
 
-    this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
       callback(status, payload.payload);
     });

@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndpoint from './base.js';
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type PushConstruct = {
   networking: Networking,
@@ -71,7 +71,7 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Array<string>) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Array<string>) => {
       if (status.error) return callback(status);
 
       let response: ListChannelsResponse = {
@@ -106,7 +106,7 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.type = pushGateway;
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) => {
       callback(status);
     });
   }
@@ -159,7 +159,7 @@ export default class extends BaseEndpoint {
     if (operation === 'remove') params.remove = encodeURIComponent(channels.join(','));
 
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) => {
       callback(status);
     });
   }

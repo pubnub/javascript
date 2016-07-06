@@ -5,7 +5,7 @@ import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
 import BaseEndpoint from './base.js';
 
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type PublishConstruct = {
   networking: Networking,
@@ -80,7 +80,7 @@ export default class extends BaseEndpoint {
       params.meta = JSON.stringify(meta);
     }
 
-    let onCallback = (status: StatusStruct, payload: Object) => {
+    let onCallback = (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: PublishResponse = {

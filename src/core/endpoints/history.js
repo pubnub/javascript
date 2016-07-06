@@ -4,7 +4,7 @@ import Networking from '../components/networking';
 import Config from '../components/config';
 import Crypto from '../components/cryptography/index';
 import BaseEndpoint from './base.js';
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type HistoryConstruct = {
   networking: Networking,
@@ -72,7 +72,7 @@ export default class extends BaseEndpoint {
     if (reverse != null) params.reverse = reverse.toString();
 
     // Send Message
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       callback(status, this._parseResponse(payload, includeTimetoken));

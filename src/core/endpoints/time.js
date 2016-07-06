@@ -3,15 +3,11 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndpoint from './base.js';
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement, TimeResponse } from '../flow_interfaces';
 
 type TimeConstruct = {
   networking: Networking,
   config: Config
-};
-
-type TimeResponse = {
-  timetoken: number
 };
 
 export default class extends BaseEndpoint {
@@ -37,7 +33,7 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: TimeResponse = {

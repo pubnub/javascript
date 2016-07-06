@@ -4,7 +4,7 @@ import BaseEndpoint from './base.js';
 import Networking from '../components/networking';
 import Config from '../components/config';
 
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type ChannelGroupConstruct = {
   networking: Networking,
@@ -68,7 +68,7 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
       let response: ListChannelsResponse = {
         channels: payload.payload.channels
@@ -98,7 +98,7 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) => {
       callback(status);
     });
   }
@@ -119,7 +119,7 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: ListAllGroupsResponse = {
@@ -152,7 +152,7 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.add = channels.join(',');
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) => {
       callback(status);
     });
   }
@@ -179,7 +179,7 @@ export default class extends BaseEndpoint {
     const params = this.createBaseParams(endpointConfig);
     params.remove = channels.join(',');
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) => {
       callback(status);
     });
   }

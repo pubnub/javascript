@@ -3,7 +3,7 @@
 import Networking from '../components/networking';
 import Config from '../components/config';
 import BaseEndpoint from './base.js';
-import { EndpointDefinition, StatusStruct } from '../flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
 type PresenceConstruct = {
   networking: Networking,
@@ -90,7 +90,7 @@ export default class extends BaseEndpoint {
     // create base params
     const params = this.createBaseParams(endpointConfig);
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: WhereNowResponse = {
@@ -130,7 +130,7 @@ export default class extends BaseEndpoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       let channelsResponse = {};
@@ -184,7 +184,7 @@ export default class extends BaseEndpoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       let response: SetStateResponse = {
@@ -216,7 +216,7 @@ export default class extends BaseEndpoint {
       params['channel-group'] = encodeURIComponent(channelGroups.join(','));
     }
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) =>
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) =>
       callback(status)
     );
   }
@@ -254,7 +254,7 @@ export default class extends BaseEndpoint {
       params['channel-group'] = channelGroups.join(',');
     }
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct, payload) => {
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload) => {
       if (status.error) return callback(status);
 
       let prepareSingularChannel = () => {
@@ -348,7 +348,7 @@ export default class extends BaseEndpoint {
     params.state = encodeURIComponent(JSON.stringify(state));
     params.heartbeat = this.config.getPresenceTimeout();
 
-    this.networking.GET(params, endpointConfig, (status: StatusStruct) =>
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) =>
       callback(status)
     );
   }

@@ -5,7 +5,7 @@ import Config from '../components/config';
 
 import BaseEndpoint from './base.js';
 
-import { EndpointDefinition, StatusStruct, PublishMetaData,
+import { EndpointDefinition, StatusAnnouncement, PublishMetaData,
   SubscribeMetadata, SubscribeMessage, SubscribeEnvelope } from '../flow_interfaces';
 
 type PubSubConstruct = {
@@ -66,7 +66,7 @@ export default class extends BaseEndpoint {
       params.tr = region;
     }
 
-    return this._networking.GET(params, endpointConfig, (status: StatusStruct, payload: Object) => {
+    return this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
       if (status.error) return callback(status);
 
       const messages: Array<SubscribeMessage> = [];

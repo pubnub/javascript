@@ -69,7 +69,7 @@ export default class {
 
     const subscribeEndpoints = new SubscribeEndpoints({ networking: this._networking, config: this._config });
     const presenceEndpoints = new PresenceEndpoints({ networking: this._networking, config: this._config });
-    const timeEndpoint = new TimeEndpoint({ networking: this._networking, config: this._config });
+    const timeEndpoints = new TimeEndpoint({ networking: this._networking, config: this._config });
     const pushEndpoints = new PushEndpoint({ networking: this._networking, config: this._config });
     const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this._networking, config: this._config });
     const publishEndpoints = new PublishEndpoints({ networking: this._networking, config: this._config, crypto: this._crypto });
@@ -77,7 +77,7 @@ export default class {
     const accessEndpoints = new AccessEndpoints({ config: this._config, networking: this._networking, crypto: this._crypto });
 
     const listenerManager = new ListenerManager();
-    const subscriptionManager = new SubscriptionManager({ config: this._config, listenerManager, subscribeEndpoints, presenceEndpoints });
+    const subscriptionManager = new SubscriptionManager({ config: this._config, listenerManager, subscribeEndpoints, presenceEndpoints, timeEndpoints });
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
@@ -109,7 +109,7 @@ export default class {
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
     this.fire = publishEndpoints.fire.bind(publishEndpoints);
     this.history = historyEndpoint.fetch.bind(historyEndpoint);
-    this.time = timeEndpoint.fetch.bind(timeEndpoint);
+    this.time = timeEndpoints.fetch.bind(timeEndpoints);
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);

@@ -143,4 +143,12 @@ export type StatusAnnouncement = {
 
 // *****************************************************************************
 
+// Time endpoints
+
+type TimeResponse = {
+  timetoken: number
+};
+
+//
+
 module.exports = {};

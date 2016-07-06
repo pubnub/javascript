@@ -104,11 +104,14 @@ export default class {
         let status: StatusAnnouncement = {};
         status.error = err !== null;
 
+        if (resp && resp.status) {
+          status.statusCode = resp.status;
+        }
+
         if (err) {
           status.errorData = err;
           status.category = this._detectErrorCategory(err);
-          status.statusCode = resp.status;
-          console.log("status", status);
+          console.log('status', status);
           console.log('err', err);
           return callback(status, null);
         }
@@ -118,8 +121,10 @@ export default class {
       });
   }
 
-  _detectErrorCategory(err: Object) {
-    if (err.serverError) {
+  _detectErrorCategory(err: Object): string {
+    console.log('_detectErrorCategory, err', err);
+
+    if (err.code === 'ENOTFOUND') {
       return 'PNNetworkIssuesCategory';
     } else if (err.badRequest) {
       return 'PNBadRequestCategory';
