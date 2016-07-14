@@ -4318,7 +4318,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		"scripts": {
 			"codecov": "cat coverage/*/lcov.info | codecov"
 		},
-		"main": "./node.js/pubnub.js",
+		"main": "./node/pubnub.js",
 		"browser": "./modern/dist/pubnub.js",
 		"repository": {
 			"type": "git",

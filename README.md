@@ -20,9 +20,9 @@ PubNub for JavaScript Docs have been moved to: http://www.pubnub.com/docs/javasc
 ## CDN Links
 
 #### HTTP
-* http://cdn.pubnub.com/pubnub-4.0.0-beta1.min.js
-* http://cdn.pubnub.com/pubnub-4.0.0-beta1.js
+* http://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0-beta1.min.js
+* http://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0-beta1.js
 
 #### HTTPS
-* https://cdn.pubnub.com/pubnub-4.0.0-beta1.min.js
-* https://cdn.pubnub.com/pubnub-4.0.0-beta1.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0-beta1.min.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0-beta1.js
