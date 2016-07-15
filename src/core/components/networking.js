@@ -81,17 +81,17 @@ export default class {
       .post(this.getStandardOrigin() + endpoint.url)
       .query(params)
       .send(body);
-    return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
+    return this._abstractedXDR(superagentConstruct, endpoint, callback);
   }
 
   GET(params : Object, endpoint: EndpointDefinition, callback: Function): superagent {
     let superagentConstruct = superagent
       .get(this.getStandardOrigin() + endpoint.url)
       .query(params);
-    return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
+    return this._abstractedXDR(superagentConstruct, endpoint, callback);
   }
 
-  _abstractedXDR(superagentConstruct: superagent, timeout: number | null | void, callback: Function): Object {
+  _abstractedXDR(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
     // attach a logger
     if (this._config.logVerbosity) {
       superagentConstruct = superagentConstruct.use(this._logger());
@@ -99,10 +99,11 @@ export default class {
 
     return superagentConstruct
       .type('json')
-      .timeout(timeout || this._config.getTransactionTimeout())
+      .timeout(endpoint.timeout || this._config.getTransactionTimeout())
       .end((err, resp) => {
         let status: StatusAnnouncement = {};
         status.error = err !== null;
+        status.operation = endpoint.operation;
 
         if (resp && resp.status) {
           status.statusCode = resp.status;
@@ -111,8 +112,6 @@ export default class {
         if (err) {
           status.errorData = err;
           status.category = this._detectErrorCategory(err);
-          // console.log('status', status);
-          // console.log('err', err);
           return callback(status, null);
         }
 

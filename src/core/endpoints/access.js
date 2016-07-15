@@ -48,9 +48,9 @@ export default class extends BaseEndpoint {
       params: {
         subscribeKey: { required: true },
         publishKey: { required: true },
-        uuid: { required: true }
       },
-      url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey
+      url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey,
+      operation: 'PNAccessManagerGrant'
     };
 
     if (!callback) return this.log('Missing Callback');
@@ -98,9 +98,9 @@ export default class extends BaseEndpoint {
       params: {
         subscribeKey: { required: true },
         publishKey: { required: true },
-        uuid: { required: true }
       },
-      url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey
+      url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey,
+      operation: 'PNAccessManagerAudit'
     };
 
     // Make sure we have a Channel

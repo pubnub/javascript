@@ -27,7 +27,9 @@ export default class {
   }
 
   createBaseParams(endpointConfig: EndpointDefinition): Object {
-    let data = {};
+    let data: Object = {
+      uuid: this._config.UUID
+    };
 
     Object.keys(this._config.baseParams).forEach((key) => {
       let value = this._config.baseParams[key];
@@ -42,14 +44,9 @@ export default class {
       data.requestid = uuidGenerator.v4();
     }
 
-    if (endpointConfig.params.authKey && this._config.authKey) {
+    if (endpointConfig.params && endpointConfig.params.authKey && this._config.authKey) {
       data.auth = this._config.authKey;
     }
-
-    if (endpointConfig.params.uuid && this._config.UUID) {
-      data.uuid = this._config.UUID;
-    }
-
 
     return data;
   }

@@ -373,26 +373,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'POST',
 	    value: function POST(params, body, endpoint, callback) {
 	      var superagentConstruct = _superagent2.default.post(this.getStandardOrigin() + endpoint.url).query(params).send(body);
-	      return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
+	      return this._abstractedXDR(superagentConstruct, endpoint, callback);
 	    }
 	  }, {
 	    key: 'GET',
 	    value: function GET(params, endpoint, callback) {
 	      var superagentConstruct = _superagent2.default.get(this.getStandardOrigin() + endpoint.url).query(params);
-	      return this._abstractedXDR(superagentConstruct, endpoint.timeout, callback);
+	      return this._abstractedXDR(superagentConstruct, endpoint, callback);
 	    }
 	  }, {
 	    key: '_abstractedXDR',
-	    value: function _abstractedXDR(superagentConstruct, timeout, callback) {
+	    value: function _abstractedXDR(superagentConstruct, endpoint, callback) {
 	      var _this = this;
 
 	      if (this._config.logVerbosity) {
 	        superagentConstruct = superagentConstruct.use(this._logger());
 	      }
 
-	      return superagentConstruct.type('json').timeout(timeout || this._config.getTransactionTimeout()).end(function (err, resp) {
+	      return superagentConstruct.type('json').timeout(endpoint.timeout || this._config.getTransactionTimeout()).end(function (err, resp) {
 	        var status = {};
 	        status.error = err !== null;
+	        status.operation = endpoint.operation;
 
 	        if (resp && resp.status) {
 	          status.statusCode = resp.status;
@@ -401,7 +402,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (err) {
 	          status.errorData = err;
 	          status.category = _this._detectErrorCategory(err);
-
 	          return callback(status, null);
 	        }
 
@@ -3486,11 +3486,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: {},
 	          subscribeKey: { required: true }
 	        },
 	        timeout: this._config.getSubscribeTimeout(),
-	        url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0'
+	        url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0',
+	        operation: 'PNSubscribeOperation'
 	      };
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -3610,7 +3610,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function createBaseParams(endpointConfig) {
 	      var _this = this;
 
-	      var data = {};
+	      var data = {
+	        uuid: this._config.UUID
+	      };
 
 	      Object.keys(this._config.baseParams).forEach(function (key) {
 	        var value = _this._config.baseParams[key];
@@ -3625,12 +3627,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        data.requestid = _uuid2.default.v4();
 	      }
 
-	      if (endpointConfig.params.authKey && this._config.authKey) {
+	      if (endpointConfig.params && endpointConfig.params.authKey && this._config.authKey) {
 	        data.auth = this._config.authKey;
-	      }
-
-	      if (endpointConfig.params.uuid && this._config.UUID) {
-	        data.uuid = this._config.UUID;
 	      }
 
 	      return data;
@@ -3724,10 +3722,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var endpointConfig = {
 	        params: {
-	          uuid: { required: false },
 	          authKey: { required: false }
 	        },
-	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid,
+	        operation: 'PNWhereNowOperation'
 	      };
 
 	      if (!callback) {
@@ -3763,10 +3761,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	      var endpointConfig = {
 	        params: {
-	          uuid: { required: false },
 	          authKey: { required: false }
 	        },
-	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid,
+	        operation: 'PNGetStateOperation'
 	      };
 
 	      if (!callback) {
@@ -3817,10 +3815,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	      var endpointConfig = {
 	        params: {
-	          uuid: { required: false },
 	          authKey: { required: false }
 	        },
-	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + this.config.UUID + '/data'
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + this.config.UUID + '/data',
+	        operation: 'PNSetStateOperation'
 	      };
 
 	      if (!callback) {
@@ -3868,10 +3866,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	      var endpointConfig = {
 	        params: {
-	          uuid: { required: false },
 	          authKey: { required: false }
 	        },
-	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave'
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave',
+	        operation: 'PNUnsubscribeOperation'
 	      };
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -3902,10 +3900,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var endpointConfig = {
 	        params: {
-	          uuid: { required: false },
 	          authKey: { required: false }
 	        },
-	        url: '/v2/presence/sub-key/' + this.config.subscribeKey
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey,
+	        operation: 'PNHereNowOperation'
 	      };
 
 	      if (channels.length > 0 || channelGroups.length > 0) {
@@ -4012,10 +4010,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	      var endpointConfig = {
 	        params: {
-	          uuid: { required: false },
 	          authKey: { required: false }
 	        },
-	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat'
+	        url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat',
+	        operation: 'PNHeartbeatOperation'
 	      };
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4098,10 +4096,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'fetch',
 	    value: function fetch(callback) {
 	      var endpointConfig = {
-	        params: {
-	          uuid: { required: false }
-	        },
-	        url: '/time/0'
+	        url: '/time/0',
+	        operation: 'PNTimeOperation'
 	      };
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -4336,13 +4332,13 @@ return /******/ (function(modules) { // webpackBootstrap
 			"messaging"
 		],
 		"dependencies": {
-			"superagent": "^2.0.0",
+			"superagent": "^2.1.0",
 			"uuid": "^2.0.2"
 		},
 		"noAnalyze": false,
 		"devDependencies": {
 			"babel-core": "^6.10.4",
-			"babel-eslint": "6.1.0",
+			"babel-eslint": "6.1.2",
 			"babel-plugin-add-module-exports": "^0.2.1",
 			"babel-plugin-transform-class-properties": "^6.10.2",
 			"babel-plugin-transform-flow-strip-types": "^6.8.0",
@@ -4350,15 +4346,15 @@ return /******/ (function(modules) { // webpackBootstrap
 			"babel-register": "^6.9.0",
 			"chai": "^3.5.0",
 			"eslint-config-airbnb": "9.0.1",
-			"eslint-plugin-flowtype": "2.3.0",
-			"eslint-plugin-import": "^1.9.2",
-			"eslint-plugin-mocha": "3.0.0",
+			"eslint-plugin-flowtype": "2.3.1",
+			"eslint-plugin-import": "^1.10.3",
+			"eslint-plugin-mocha": "4.0.0",
 			"eslint-plugin-react": "5.2.2",
-			"flow-bin": "^0.27.0",
+			"flow-bin": "^0.29.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
-			"gulp-eslint": "^2.0.0",
+			"gulp-eslint": "^3.0.1",
 			"gulp-exec": "^2.1.2",
 			"gulp-flowtype": "^0.4.9",
 			"gulp-istanbul": "^1.0.0",
@@ -4370,7 +4366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"imports-loader": "0.6.5",
 			"isparta": "^4.0.0",
 			"json-loader": "0.5.4",
-			"karma": "1.1.0",
+			"karma": "1.1.1",
 			"karma-babel-preprocessor": "^6.0.1",
 			"karma-chai": "0.1.0",
 			"karma-chrome-launcher": "^1.0.1",
@@ -4381,10 +4377,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			"nock": "^8.0.0",
 			"phantomjs-prebuilt": "2.1.7",
 			"remap-istanbul": "^0.6.4",
-			"run-sequence": "^1.2.1",
+			"run-sequence": "^1.2.2",
 			"sinon": "^1.17.4",
-			"stats-webpack-plugin": "^0.3.1",
-			"uglify-js": "^2.6.4",
+			"stats-webpack-plugin": "^0.4.0",
+			"uglify-js": "^2.7.0",
 			"webpack": "^1.13.1",
 			"webpack-dev-server": "1.14.1"
 		},
@@ -4468,10 +4464,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: { required: false },
 	          subscribeKey: { required: true }
 	        },
-	        url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel)
+	        url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel),
+	        operation: 'PNHistoryOperation'
 	      };
 
 	      if (!channel) return callback(this.createValidationError('Missing channel'));
@@ -4603,10 +4599,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var endpointConfig = {
 	        params: {
-	          authKey: { required: false },
-	          uuid: { required: false }
+	          authKey: { required: false }
 	        },
-	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
+	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device,
+	        operation: 'PNPushNotificationEnabledChannelsOperation'
 	      };
 
 	      if (!device) {
@@ -4642,10 +4638,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var endpointConfig = {
 	        params: {
-	          authKey: { required: false },
-	          uuid: { required: false }
+	          authKey: { required: false }
 	        },
-	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove'
+	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove',
+	        operation: 'PNRemoveAllPushNotificationsOperation'
 	      };
 
 	      if (!device) {
@@ -4697,11 +4693,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var endpointConfig = {
 	        params: {
-	          authKey: { required: false },
-	          uuid: { required: false }
+	          authKey: { required: false }
 	        },
 	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
 	      };
+
+	      if (operation === 'add') {
+	        endpointConfig.operation = 'PNPushNotificationEnabledChannelsOperation';
+	      } else {
+	        endpointConfig.operation = 'PNRemovePushNotificationsFromChannelsOperation';
+	      }
 
 	      if (!device) {
 	        return callback(this.createValidationError('Missing Device ID (device)'));
@@ -4823,10 +4824,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          subscribeKey: { required: true },
-	          publishKey: { required: true },
-	          uuid: { required: true }
+	          publishKey: { required: true }
 	        },
-	        url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey
+	        url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey,
+	        operation: 'PNAccessManagerGrant'
 	      };
 
 	      if (!callback) return this.log('Missing Callback');
@@ -4879,10 +4880,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          subscribeKey: { required: true },
-	          publishKey: { required: true },
-	          uuid: { required: true }
+	          publishKey: { required: true }
 	        },
-	        url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey
+	        url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey,
+	        operation: 'PNAccessManagerAudit'
 	      };
 
 	      if (!callback) return this.log('Missing Callback');
@@ -4986,10 +4987,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: { required: false },
 	          subscribeKey: { required: true }
 	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
+	        operation: 'PNChannelsForGroupOperation'
 	      };
 
 	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -5018,10 +5019,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: { required: false },
 	          subscribeKey: { required: true }
 	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove'
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove',
+	        operation: 'PNRemoveGroupOperation'
 	      };
 
 	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -5042,10 +5043,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: { required: false },
 	          subscribeKey: { required: true }
 	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group'
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group',
+	        operation: 'PNChannelGroupsOperation'
 	      };
 
 	      if (!this.validateEndpointConfig(endpointConfig)) {
@@ -5075,10 +5076,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: { required: false },
 	          subscribeKey: { required: true }
 	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
+	        operation: 'PNAddChannelsToGroupOperation'
 	      };
 
 	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -5106,10 +5107,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var endpointConfig = {
 	        params: {
 	          authKey: { required: false },
-	          uuid: { required: false },
 	          subscribeKey: { required: true }
 	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
+	        operation: 'PNRemoveChannelsFromGroupOperation'
 	      };
 
 	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -5217,10 +5218,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        params: {
 	          authKey: { required: false },
 	          subscribeKey: { required: true },
-	          publishKey: { required: true },
-	          uuid: { required: false }
+	          publishKey: { required: true }
 	        },
-	        url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0'
+	        url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0',
+	        operation: 'PNPublishOperation'
 	      };
 
 	      if (!message) return callback(this.createValidationError('Missing Message'));

@@ -54,10 +54,10 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false },
         subscribeKey: { required: true }
       },
-      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
+      operation: 'PNChannelsForGroupOperation'
     };
 
     if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -84,10 +84,10 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false },
         subscribeKey: { required: true }
       },
-      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove'
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove',
+      operation: 'PNRemoveGroupOperation'
     };
 
     if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -107,10 +107,10 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false },
         subscribeKey: { required: true }
       },
-      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group'
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group',
+      operation: 'PNChannelGroupsOperation'
     };
 
     // validate this request and return false if stuff is missing
@@ -136,10 +136,10 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false },
         subscribeKey: { required: true }
       },
-      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
+      operation: 'PNAddChannelsToGroupOperation'
     };
 
     if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
@@ -163,10 +163,10 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false },
         subscribeKey: { required: true }
       },
-      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup
+      url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
+      operation: 'PNRemoveChannelsFromGroupOperation'
     };
 
     if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));

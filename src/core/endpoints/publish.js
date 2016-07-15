@@ -50,10 +50,10 @@ export default class extends BaseEndpoint {
       params: {
         authKey: { required: false },
         subscribeKey: { required: true },
-        publishKey: { required: true },
-        uuid: { required: false }
+        publishKey: { required: true }
       },
-      url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0'
+      url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0',
+      operation: 'PNPublishOperation'
     };
 
     if (!message) return callback(this.createValidationError('Missing Message'));

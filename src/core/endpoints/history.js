@@ -51,10 +51,10 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false },
         subscribeKey: { required: true }
       },
-      url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel)
+      url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel),
+      operation: 'PNHistoryOperation'
     };
 
     if (!channel) return callback(this.createValidationError('Missing channel'));

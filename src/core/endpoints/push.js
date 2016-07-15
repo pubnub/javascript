@@ -52,9 +52,9 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false }
       },
-      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
+      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device,
+      operation: 'PNPushNotificationEnabledChannelsOperation'
     };
 
     if (!device) {
@@ -87,9 +87,9 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false }
       },
-      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove'
+      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove',
+      operation: 'PNRemoveAllPushNotificationsOperation'
     };
 
     if (!device) {
@@ -128,10 +128,15 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: { required: false }
       },
-      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
+      url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device,
     };
+
+    if (operation === 'add') {
+      endpointConfig.operation = 'PNPushNotificationEnabledChannelsOperation';
+    } else {
+      endpointConfig.operation = 'PNRemovePushNotificationsFromChannelsOperation';
+    }
 
     if (!device) {
       return callback(this.createValidationError('Missing Device ID (device)'));

@@ -38,11 +38,11 @@ export default class extends BaseEndpoint {
     const endpointConfig: EndpointDefinition = {
       params: {
         authKey: { required: false },
-        uuid: {},
         subscribeKey: { required: true }
       },
       timeout: this._config.getSubscribeTimeout(),
-      url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0'
+      url: '/v2/subscribe/' + this._config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0',
+      operation: 'PNSubscribeOperation'
     };
 
     // validate this request and return false if stuff is missing

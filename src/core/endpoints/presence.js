@@ -74,10 +74,10 @@ export default class extends BaseEndpoint {
     let { uuid = this.config.UUID } = args;
     const endpointConfig: EndpointDefinition = {
       params: {
-        uuid: { required: false },
         authKey: { required: false }
       },
-      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/uuid/' + uuid,
+      operation: 'PNWhereNowOperation'
     };
 
     if (!callback) {
@@ -106,10 +106,10 @@ export default class extends BaseEndpoint {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     const endpointConfig: EndpointDefinition = {
       params: {
-        uuid: { required: false },
         authKey: { required: false }
       },
-      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid,
+      operation: 'PNGetStateOperation'
     };
 
     if (!callback) {
@@ -154,10 +154,10 @@ export default class extends BaseEndpoint {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     const endpointConfig: EndpointDefinition = {
       params: {
-        uuid: { required: false },
         authKey: { required: false }
       },
-      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + this.config.UUID + '/data'
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + this.config.UUID + '/data',
+      operation: 'PNSetStateOperation'
     };
 
     if (!callback) {
@@ -200,10 +200,10 @@ export default class extends BaseEndpoint {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     const endpointConfig: EndpointDefinition = {
       params: {
-        uuid: { required: false },
         authKey: { required: false }
       },
-      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave'
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave',
+      operation: 'PNUnsubscribeOperation'
     };
 
     // validate this request and return false if stuff is missing
@@ -225,10 +225,10 @@ export default class extends BaseEndpoint {
     let { channels = [], channelGroups = [], includeUUIDs = true, includeState = false } = args;
     const endpointConfig: EndpointDefinition = {
       params: {
-        uuid: { required: false },
         authKey: { required: false }
       },
-      url: '/v2/presence/sub-key/' + this.config.subscribeKey
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey,
+      operation: 'PNHereNowOperation'
     };
 
     if (channels.length > 0 || channelGroups.length > 0) {
@@ -329,10 +329,10 @@ export default class extends BaseEndpoint {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     const endpointConfig: EndpointDefinition = {
       params: {
-        uuid: { required: false },
         authKey: { required: false }
       },
-      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat'
+      url: '/v2/presence/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat',
+      operation: 'PNHeartbeatOperation'
     };
 
     // validate this request and return false if stuff is missing
