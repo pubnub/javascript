@@ -57,6 +57,7 @@ export default class {
   _subscribeCall: Object;
 
   _heartbeatTimer: number;
+  _subscriptionStatusAnnounced: boolean;
 
   constructor({ subscribeEndpoints, presenceEndpoints, timeEndpoints, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
@@ -73,10 +74,15 @@ export default class {
     this._presenceChannelGroups = {};
 
     this._timetoken = 0;
+    this._subscriptionStatusAnnounced = false;
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoints });
     this._reconnectionManager.onReconnection(() => {
       this.reconnect();
+      let reconnectedStatus: StatusAnnouncement = {};
+      reconnectedStatus.category = 'PNReconnectedCategory';
+      this._subscriptionStatusAnnounced = true;
+      this._listenerManager.announceStatus(status);
     });
   }
 
@@ -109,6 +115,7 @@ export default class {
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
     });
 
+    this._subscriptionStatusAnnounced = false;
     this.reconnect();
   }
 
@@ -231,6 +238,14 @@ export default class {
       }
 
       return;
+    }
+
+    if (!this._subscriptionStatusAnnounced) {
+      let connectedAnnounce: StatusAnnouncement = {};
+      connectedAnnounce.category = 'PNConnectedCategory';
+      connectedAnnounce.operation = status.operation;
+      this._subscriptionStatusAnnounced = true;
+      this._listenerManager.announceStatus(connectedAnnounce);
     }
 
     payload.messages.forEach((message) => {
