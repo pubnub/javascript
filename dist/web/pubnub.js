@@ -3161,10 +3161,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._presenceChannelGroups = {};
 
 	    this._timetoken = 0;
+	    this._subscriptionStatusAnnounced = false;
 
 	    this._reconnectionManager = new _reconnection_manager2.default({ timeEndpoints: timeEndpoints });
 	    this._reconnectionManager.onReconnection(function () {
 	      _this.reconnect();
+	      var reconnectedStatus = {};
+	      reconnectedStatus.category = 'PNReconnectedCategory';
+	      _this._subscriptionStatusAnnounced = true;
+	      _this._listenerManager.announceStatus(status);
 	    });
 	  }
 
@@ -3216,6 +3221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
 	      });
 
+	      this._subscriptionStatusAnnounced = false;
 	      this.reconnect();
 	    }
 	  }, {
@@ -3362,6 +3368,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        return;
+	      }
+
+	      if (!this._subscriptionStatusAnnounced) {
+	        var connectedAnnounce = {};
+	        connectedAnnounce.category = 'PNConnectedCategory';
+	        connectedAnnounce.operation = status.operation;
+	        this._subscriptionStatusAnnounced = true;
+	        this._listenerManager.announceStatus(connectedAnnounce);
 	      }
 
 	      payload.messages.forEach(function (message) {
@@ -4156,9 +4170,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'removeListener',
-	    value: function removeListener(deprecatedListeners) {
-	      var listenerPosition = this._listeners.indexOf(deprecatedListeners);
-	      if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
+	    value: function removeListener(deprecatedListener) {
+	      var newListeners = [];
+
+	      this._listeners.forEach(function (listener) {
+	        if (listener !== deprecatedListener) newListeners.push(listener);
+	      });
+
+	      this._listeners = newListeners;
 	    }
 	  }, {
 	    key: 'announcePresence',
@@ -4332,13 +4351,13 @@ return /******/ (function(modules) { // webpackBootstrap
 			"messaging"
 		],
 		"dependencies": {
-			"superagent": "^2.1.0",
+			"superagent": "^2.0.0",
 			"uuid": "^2.0.2"
 		},
 		"noAnalyze": false,
 		"devDependencies": {
 			"babel-core": "^6.10.4",
-			"babel-eslint": "6.1.2",
+			"babel-eslint": "6.1.0",
 			"babel-plugin-add-module-exports": "^0.2.1",
 			"babel-plugin-transform-class-properties": "^6.10.2",
 			"babel-plugin-transform-flow-strip-types": "^6.8.0",
@@ -4346,15 +4365,15 @@ return /******/ (function(modules) { // webpackBootstrap
 			"babel-register": "^6.9.0",
 			"chai": "^3.5.0",
 			"eslint-config-airbnb": "9.0.1",
-			"eslint-plugin-flowtype": "2.3.1",
-			"eslint-plugin-import": "^1.10.3",
-			"eslint-plugin-mocha": "4.0.0",
+			"eslint-plugin-flowtype": "2.3.0",
+			"eslint-plugin-import": "^1.9.2",
+			"eslint-plugin-mocha": "3.0.0",
 			"eslint-plugin-react": "5.2.2",
-			"flow-bin": "^0.29.0",
+			"flow-bin": "^0.27.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
-			"gulp-eslint": "^3.0.1",
+			"gulp-eslint": "^2.0.0",
 			"gulp-exec": "^2.1.2",
 			"gulp-flowtype": "^0.4.9",
 			"gulp-istanbul": "^1.0.0",
@@ -4366,7 +4385,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"imports-loader": "0.6.5",
 			"isparta": "^4.0.0",
 			"json-loader": "0.5.4",
-			"karma": "1.1.1",
+			"karma": "1.1.0",
 			"karma-babel-preprocessor": "^6.0.1",
 			"karma-chai": "0.1.0",
 			"karma-chrome-launcher": "^1.0.1",
@@ -4377,10 +4396,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			"nock": "^8.0.0",
 			"phantomjs-prebuilt": "2.1.7",
 			"remap-istanbul": "^0.6.4",
-			"run-sequence": "^1.2.2",
+			"run-sequence": "^1.2.1",
 			"sinon": "^1.17.4",
-			"stats-webpack-plugin": "^0.4.0",
-			"uglify-js": "^2.7.0",
+			"stats-webpack-plugin": "^0.3.1",
+			"uglify-js": "^2.6.4",
 			"webpack": "^1.13.1",
 			"webpack-dev-server": "1.14.1"
 		},

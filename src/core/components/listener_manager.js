@@ -13,9 +13,14 @@ export default class {
     this._listeners.push(newListeners);
   }
 
-  removeListener(deprecatedListeners: CallbackStruct) {
-    const listenerPosition = this._listeners.indexOf(deprecatedListeners);
-    if (listenerPosition > -1) this._listeners = this._listeners.splice(listenerPosition, 1);
+  removeListener(deprecatedListener: CallbackStruct) {
+    let newListeners = [];
+
+    this._listeners.forEach((listener) => {
+      if (listener !== deprecatedListener) newListeners.push(listener);
+    });
+
+    this._listeners = newListeners;
   }
 
   announcePresence(announce: PresenceAnnouncement) {
