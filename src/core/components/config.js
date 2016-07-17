@@ -94,6 +94,8 @@ export default class {
     this.setCipherKey(setup.cipherKey);
     this.baseParams = setup.params || {};
 
+    this.setFilterExpression(setup.filterExpression);
+
     this.origin = setup.origin || 'pubsub.pubnub.com';
     this.secure = setup.ssl || false;
 
@@ -137,6 +139,9 @@ export default class {
     this.UUID = val;
     return this;
   }
+
+  getFilterExpression(): string { return this.filterExpression; }
+  setFilterExpression(val: string): this { this.filterExpression = val; return this; }
 
   getPresenceTimeout(): number { return this._presenceTimeout; }
   setPresenceTimeout(val: number): this {

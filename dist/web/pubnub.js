@@ -261,13 +261,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
-	    this.reconnect = subscriptionManager.reconnect.bind(_subscription_manager2.default);
 
 	    this.getAuthKey = this._config.getAuthKey.bind(this._config);
 	    this.setAuthKey = this._config.setAuthKey.bind(this._config);
 	    this.setCipherKey = this._config.setCipherKey.bind(this._config);
 	    this.getUUID = this._config.getUUID.bind(this._config);
 	    this.setUUID = this._config.setUUID.bind(this._config);
+	    this.getFilterExpression = this._config.getFilterExpression.bind(this._config);
+	    this.setFilterExpression = this._config.setFilterExpression.bind(this._config);
 	  }
 
 	  _createClass(_class, [{
@@ -2248,6 +2249,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.setCipherKey(setup.cipherKey);
 	    this.baseParams = setup.params || {};
 
+	    this.setFilterExpression(setup.filterExpression);
+
 	    this.origin = setup.origin || 'pubsub.pubnub.com';
 	    this.secure = setup.ssl || false;
 
@@ -2305,6 +2308,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (this._db && this._db.set) this._db.set(this.subscribeKey + 'uuid', val);
 	      this.UUID = val;
 	      return this;
+	    }
+	  }, {
+	    key: 'getFilterExpression',
+	    value: function getFilterExpression() {
+	      return this.filterExpression;
+	    }
+	  }, {
+	    key: 'setFilterExpression',
+	    value: function setFilterExpression(val) {
+	      this.filterExpression = val;return this;
 	    }
 	  }, {
 	    key: 'getPresenceTimeout',

@@ -1,0 +1,91 @@
+/* global describe, beforeEach, it, before, afterEach, after */
+/* eslint no-console: 0 */
+
+import assert from 'assert';
+import nock from 'nock';
+import utils from '../../utils';
+import PubNub from '../../../lib/node/index.js';
+
+describe('subscribe endpoints', () => {
+  let pubnub;
+  let pubnubWithFiltering;
+
+  before(() => {
+    nock.disableNetConnect();
+  });
+
+  after(() => {
+    nock.enableNetConnect();
+  });
+
+  beforeEach(() => {
+    nock.cleanAll();
+    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
+    pubnubWithFiltering = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', filterExpression: 'hello!' });
+  });
+
+  afterEach(() => {
+    pubnub.stop();
+    pubnubWithFiltering.stop();
+  });
+
+  it('supports addition of multiple channels', (done) => {
+    const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
+      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
+
+    pubnub.addListener({
+      status() {
+        assert.equal(scope.isDone(), true);
+        done();
+      }
+    });
+
+    pubnub.subscribe({ channels: ['coolChannel', 'coolChannel2'] });
+  });
+
+  it('supports addition of multiple channels / channel groups', (done) => {
+    const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
+      .query({ 'channel-group': 'cg1%2Ccg2', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
+
+    pubnub.addListener({
+      status() {
+        assert.equal(scope.isDone(), true);
+        done();
+      }
+    });
+
+    pubnub.subscribe({ channels: ['coolChannel', 'coolChannel2'], channelGroups: ['cg1', 'cg2'] });
+  });
+
+  it('supports just channel group', (done) => {
+    const scope = utils.createNock().get('/v2/subscribe/mySubKey/%2C/0')
+      .query({ 'channel-group': 'cg1%2Ccg2', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
+
+    pubnub.addListener({
+      status() {
+        assert.equal(scope.isDone(), true);
+        done();
+      }
+    });
+
+    pubnub.subscribe({ channelGroups: ['cg1', 'cg2'] });
+  });
+
+  it('supports filter expression', (done) => {
+    const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
+      .query({ 'filter-expr': 'hello!', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
+
+    pubnubWithFiltering.addListener({
+      status() {
+        assert.equal(scope.isDone(), true);
+        done();
+      }
+    });
+
+    pubnubWithFiltering.subscribe({ channels: ['coolChannel', 'coolChannel2'] });
+  });
+});
