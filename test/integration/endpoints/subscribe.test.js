@@ -35,9 +35,11 @@ describe('subscribe endpoints', () => {
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnub.addListener({
-      status() {
-        assert.equal(scope.isDone(), true);
-        done();
+      status(status) {
+        if (status.category === 'PNConnectedCategory') {
+          assert.equal(scope.isDone(), true);
+          done();
+        }
       }
     });
 
@@ -50,9 +52,11 @@ describe('subscribe endpoints', () => {
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnub.addListener({
-      status() {
-        assert.equal(scope.isDone(), true);
-        done();
+      status(status) {
+        if (status.category === 'PNConnectedCategory') {
+          assert.equal(scope.isDone(), true);
+          done();
+        }
       }
     });
 
@@ -65,9 +69,11 @@ describe('subscribe endpoints', () => {
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnub.addListener({
-      status() {
-        assert.equal(scope.isDone(), true);
-        done();
+      status(status) {
+        if (status.category === 'PNConnectedCategory') {
+          assert.equal(scope.isDone(), true);
+          done();
+        }
       }
     });
 
@@ -80,9 +86,11 @@ describe('subscribe endpoints', () => {
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnubWithFiltering.addListener({
-      status() {
-        assert.equal(scope.isDone(), true);
-        done();
+      status(status) {
+        if (status.category === 'PNConnectedCategory') {
+          assert.equal(scope.isDone(), true);
+          done();
+        }
       }
     });
 

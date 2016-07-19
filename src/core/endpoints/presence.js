@@ -345,12 +345,12 @@ export default class extends BaseEndpoint {
       params['channel-group'] = encodeURIComponent(channelGroups.join(','));
     }
 
-    params.state = encodeURIComponent(JSON.stringify(state));
+    params.state = JSON.stringify(state);
     params.heartbeat = this.config.getPresenceTimeout();
 
-    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) =>
-      callback(status)
-    );
+    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement) => {
+      callback(status);
+    });
   }
 
 }

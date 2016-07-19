@@ -153,6 +153,7 @@ export default class {
 
   _registerHeartbeatTimer() {
     this._stopHeartbeatTimer();
+    this._performHeartbeatLoop();
     this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
   }
 
@@ -174,12 +175,12 @@ export default class {
 
     presenceChannels.forEach((channel) => {
       let channelState = this._channels[channel].state;
-      if (channelState) presenceState[channel] = channelState;
+      if (Object.keys(channelState).length) presenceState[channel] = channelState;
     });
 
     presenceChannelGroups.forEach((channelGroup) => {
-      let channelGroupState = this.channelGroup[channelGroup].state;
-      if (channelGroupState) presenceState[channelGroup] = channelGroupState;
+      let channelGroupState = this._channelGroups[channelGroup].state;
+      if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
     });
 
     let onHeartbeat = (status: StatusAnnouncement) => {

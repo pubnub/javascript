@@ -3282,6 +3282,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_registerHeartbeatTimer',
 	    value: function _registerHeartbeatTimer() {
 	      this._stopHeartbeatTimer();
+	      this._performHeartbeatLoop();
 	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
 	    }
 	  }, {
@@ -3307,12 +3308,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      presenceChannels.forEach(function (channel) {
 	        var channelState = _this5._channels[channel].state;
-	        if (channelState) presenceState[channel] = channelState;
+	        if (Object.keys(channelState).length) presenceState[channel] = channelState;
 	      });
 
 	      presenceChannelGroups.forEach(function (channelGroup) {
-	        var channelGroupState = _this5.channelGroup[channelGroup].state;
-	        if (channelGroupState) presenceState[channelGroup] = channelGroupState;
+	        var channelGroupState = _this5._channelGroups[channelGroup].state;
+	        if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
 	      });
 
 	      var onHeartbeat = function onHeartbeat(status) {
@@ -4053,11 +4054,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        params['channel-group'] = encodeURIComponent(channelGroups.join(','));
 	      }
 
-	      params.state = encodeURIComponent(JSON.stringify(state));
+	      params.state = JSON.stringify(state);
 	      params.heartbeat = this.config.getPresenceTimeout();
 
 	      this.networking.GET(params, endpointConfig, function (status) {
-	        return callback(status);
+	        callback(status);
 	      });
 	    }
 	  }]);

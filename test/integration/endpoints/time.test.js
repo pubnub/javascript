@@ -30,7 +30,6 @@ describe('time endpoints', () => {
     pubnub.time((status, response) => {
       assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14570763868573725);
-      console.log(status);
       done();
     });
   });
