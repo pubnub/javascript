@@ -90,7 +90,7 @@ gulp.task('karma_client_min', (done) => {
 
 gulp.task('pre-test', () => {
   return gulp.src(['lib/**/*.js'])
-    .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter }))
+    .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter, includeAllSources: true }))
     .pipe(gulpIstanbul.hookRequire());
 });
 

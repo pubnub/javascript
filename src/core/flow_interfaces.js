@@ -233,6 +233,91 @@ type ListPushChannelsResponse = {
 
 //
 
+// presence
+
+type LeaveArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+}
+
+type HereNowArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  includeUUIDs: boolean,
+  includeState: boolean
+}
+
+type WhereNowArguments = {
+  uuid: string,
+}
+
+type WhereNowResponse = {
+  channels: Array<string>,
+}
+
+//
+
+type GetStateArguments = {
+  uuid: string,
+  channels: Array<string>,
+  channelGroups: Array<string>
+}
+
+type GetStateResponse = {
+  channels: Object
+}
+
+//
+
+type SetStateArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  state: Object
+}
+
+type SetStateResponse = {
+  state: Object
+}
+
+
+type HeartbeatArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  state: Object
+}
+
+//
+
+// subscribe
+
+type SubscribeArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  timetoken: number,
+  filterExpression: ?string,
+  region: ?string,
+}
+
+//
+
+// access manager
+
+type AuditArguments = {
+  channel: string,
+  channelGroup: string,
+  authKeys: Array<string>,
+}
+
+type GrantArguments = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  ttl: number,
+  read: boolean,
+  write: boolean,
+  manage: boolean,
+  authKeys: Array<string>
+}
+
 // publish
 
 type PublishResponse = {

@@ -19,15 +19,22 @@ import * as removePushChannelsConfig from './endpoints/push/remove_push_channels
 import * as listPushChannelsConfig from './endpoints/push/list_push_channels';
 import * as removeDevicePushConfig from './endpoints/push/remove_device';
 
+import * as presenceLeaveEndpointConfig from './endpoints/presence/leave';
+import * as presenceWhereNowEndpointConfig from './endpoints/presence/where_now';
+import * as presenceHeartbeatEndpointConfig from './endpoints/presence/heartbeat';
+import * as presenceGetStateConfig from './endpoints/presence/get_state';
+import * as presenceSetStateConfig from './endpoints/presence/set_state';
+import * as presenceHereNowConfig from './endpoints/presence/here_now';
+
+import * as auditEndpointConfig from './endpoints/access_manager/audit';
+import * as grantEndpointConfig from './endpoints/access_manager/grant';
+
 import * as publishEndpointConfig from './endpoints/publish';
 import * as historyEndpointConfig from './endpoints/history';
 import * as timeEndpointConfig from './endpoints/time';
+import * as subscribeEndpointConfig from './endpoints/subscribe';
 
 import packageJSON from '../../package.json';
-
-import PresenceEndpoints from './endpoints/presence';
-import AccessEndpoints from './endpoints/access';
-import SubscribeEndpoints from './endpoints/subscribe';
 
 import { InternalSetupStruct } from './flow_interfaces';
 
@@ -84,20 +91,20 @@ export default class {
 
     let modules = { config, networking, crypto };
 
-    // old
-    const subscribeEndpoints = new SubscribeEndpoints({ networking: modules.networking, config: modules.config });
-    const presenceEndpoints = new PresenceEndpoints({ networking: modules.networking, config: modules.config });
-    const accessEndpoints = new AccessEndpoints({ config: modules.config, networking: modules.networking, crypto: modules.crypto });
-    //
-
     const listenerManager = new ListenerManager();
 
     // new
     const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
-
+    const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    const heartbeatEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    const setStateEndpoint = endpointCreator.bind(this, modules, presenceSetStateConfig);
+    const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
     //
 
-    const subscriptionManager = new SubscriptionManager({ config: modules.config, listenerManager, subscribeEndpoints, presenceEndpoints, timeEndpoints: timeEndpoint });
+    const subscriptionManager = new SubscriptionManager({ timeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, subscribeEndpoint,
+      config: modules.config,
+      listenerManager,
+    });
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
@@ -118,13 +125,13 @@ export default class {
       listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig)
     };
     /** presence **/
-    this.hereNow = presenceEndpoints.hereNow.bind(presenceEndpoints);
-    this.whereNow = presenceEndpoints.whereNow.bind(presenceEndpoints);
-    this.getState = presenceEndpoints.getState.bind(presenceEndpoints);
+    this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
+    this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
+    this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
     /** PAM **/
-    this.grant = accessEndpoints.grant.bind(accessEndpoints);
-    this.audit = accessEndpoints.audit.bind(accessEndpoints);
+    this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
+    this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
     //
     this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);
 

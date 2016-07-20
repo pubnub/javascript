@@ -49,15 +49,21 @@ export default function (modules, endpoint, ...args) {
   let onResponse = (status: StatusAnnouncement, payload: Object) => {
     if (status.error) return callback(status);
 
-    callback(status, endpoint.handleResponse(modules, payload));
+    callback(status, endpoint.handleResponse(modules, payload, incomingParams));
   };
+
+  let callInstance;
 
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     let url = endpoint.postURL(modules, incomingParams);
     let payload = endpoint.postPayload(modules, incomingParams);
-    networking.POST(outgoingParams, payload, { url }, onResponse);
+    callInstance = networking.POST(outgoingParams, payload, { url, operation: endpoint.getOperation() }, onResponse);
   } else {
     let url = endpoint.getURL(modules, incomingParams);
-    networking.GET(outgoingParams, { url }, onResponse);
+    callInstance = networking.GET(outgoingParams, { url, operation: endpoint.getOperation() }, onResponse);
+  }
+
+  if (endpoint.getOperation === 'PNSubscribeOperation') {
+    return callInstance;
   }
 }

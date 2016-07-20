@@ -1,6 +1,5 @@
 
 import SubscribeEndpoints from '../endpoints/subscribe';
-import PresenceEndpoints from '../endpoints/presence';
 import TimeEndpoints from '../endpoints/time';
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
@@ -29,7 +28,6 @@ type StateArgs = {
 
 type SubscriptionManagerConsturct = {
     subscribeEndpoints: SubscribeEndpoints,
-    presenceEndpoints: PresenceEndpoints,
     timeEndpoints: TimeEndpoints,
     config: Config,
     crypto: Crypto,
@@ -43,7 +41,11 @@ export default class {
   _listenerManager: ListenerManager;
   _reconnectionManager: ReconnectionManager;
   _subscribeEndpoints: SubscribeEndpoints;
-  _presenceEndpoints: PresenceEndpoints;
+
+  _leaveEndpoint: Function;
+  _heartbeatEndpoint: Function;
+  _setStateEndpoint: Function;
+  _subscribeEndpoint: Function;
 
   _channels: Object;
   _presenceChannels: Object;
@@ -59,12 +61,15 @@ export default class {
   _heartbeatTimer: number;
   _subscriptionStatusAnnounced: boolean;
 
-  constructor({ subscribeEndpoints, presenceEndpoints, timeEndpoints, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
+  constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
     this._config = config;
-    this._subscribeEndpoints = subscribeEndpoints;
-    this._presenceEndpoints = presenceEndpoints;
-    this._timeEndpoints = timeEndpoints;
+
+    this._leaveEndpoint = leaveEndpoint;
+    this._heartbeatEndpoint = heartbeatEndpoint;
+    this._setStateEndpoint = setStateEndpoint;
+    this._subscribeEndpoint = subscribeEndpoint;
+
     this._crypto = crypto;
 
     this._channels = {};
@@ -76,7 +81,7 @@ export default class {
     this._timetoken = 0;
     this._subscriptionStatusAnnounced = false;
 
-    this._reconnectionManager = new ReconnectionManager({ timeEndpoints });
+    this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
     this._reconnectionManager.onReconnection(() => {
       this.reconnect();
       let reconnectedStatus: StatusAnnouncement = {};
@@ -97,7 +102,7 @@ export default class {
       if (channelGroup in this._channelGroups) this._channelGroups[channelGroup].state = state;
     });
 
-    this._presenceEndpoints.setState({ state, channels, channelGroups }, callback);
+    this._setStateEndpoint({ state, channels, channelGroups }, callback);
   }
 
   adaptSubscribeChange(args: SubscribeArgs) {
@@ -133,7 +138,7 @@ export default class {
     });
 
     if (this._config.suppressLeaveEvents === false) {
-      this._presenceEndpoints.leave({ channels, channelGroups }, (status) => {
+      this._leaveEndpoint({ channels, channelGroups }, (status) => {
         this._listenerManager.announceStatus(status);
       });
     }
@@ -193,7 +198,7 @@ export default class {
       }
     };
 
-    this._presenceEndpoints.heartbeat({
+    this._heartbeatEndpoint({
       channels: presenceChannels,
       channelGroups: presenceChannelGroups,
       state: presenceState }, onHeartbeat.bind(this));
@@ -222,7 +227,7 @@ export default class {
       region: this._region
     };
 
-    this._subscribeCall = this._subscribeEndpoints.subscribe(subscribeArgs, this._processSubscribeResponse.bind(this));
+    this._subscribeCall = this._subscribeEndpoint(subscribeArgs, this._processSubscribeResponse.bind(this));
   }
 
   _processSubscribeResponse(status: StatusAnnouncement, payload: SubscribeEnvelope) {
