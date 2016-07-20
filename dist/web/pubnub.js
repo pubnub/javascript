@@ -65,7 +65,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _package = __webpack_require__(31);
+	var _package = __webpack_require__(36);
 
 	var _package2 = _interopRequireDefault(_package);
 
@@ -184,7 +184,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var listChannelsInChannelGroupConfig = _interopRequireWildcard(_list_channels);
 
-	var _history = __webpack_require__(30);
+	var _add_push_channels = __webpack_require__(30);
+
+	var addPushChannelsConfig = _interopRequireWildcard(_add_push_channels);
+
+	var _remove_push_channels = __webpack_require__(31);
+
+	var removePushChannelsConfig = _interopRequireWildcard(_remove_push_channels);
+
+	var _list_push_channels = __webpack_require__(32);
+
+	var listPushChannelsConfig = _interopRequireWildcard(_list_push_channels);
+
+	var _remove_device = __webpack_require__(33);
+
+	var removeDevicePushConfig = _interopRequireWildcard(_remove_device);
+
+	var _publish = __webpack_require__(34);
+
+	var publishEndpointConfig = _interopRequireWildcard(_publish);
+
+	var _history = __webpack_require__(35);
 
 	var historyEndpointConfig = _interopRequireWildcard(_history);
 
@@ -192,7 +212,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var timeEndpointConfig = _interopRequireWildcard(_time);
 
-	var _package = __webpack_require__(31);
+	var _package = __webpack_require__(36);
 
 	var _package2 = _interopRequireDefault(_package);
 
@@ -200,21 +220,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _push = __webpack_require__(32);
-
-	var _push2 = _interopRequireDefault(_push);
-
-	var _access = __webpack_require__(33);
+	var _access = __webpack_require__(37);
 
 	var _access2 = _interopRequireDefault(_access);
 
 	var _subscribe = __webpack_require__(17);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
-
-	var _publish = __webpack_require__(34);
-
-	var _publish2 = _interopRequireDefault(_publish);
 
 	var _flow_interfaces = __webpack_require__(14);
 
@@ -226,6 +238,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(setup) {
+	    var _this = this;
+
 	    _classCallCheck(this, _class);
 
 	    var sendBeacon = setup.sendBeacon;
@@ -240,8 +254,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var subscribeEndpoints = new _subscribe2.default({ networking: modules.networking, config: modules.config });
 	    var presenceEndpoints = new _presence2.default({ networking: modules.networking, config: modules.config });
-	    var pushEndpoints = new _push2.default({ networking: modules.networking, config: modules.config });
-	    var publishEndpoints = new _publish2.default({ networking: modules.networking, config: modules.config, crypto: modules.crypto });
 	    var accessEndpoints = new _access2.default({ config: modules.config, networking: modules.networking, crypto: modules.crypto });
 
 
@@ -263,10 +275,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    this.push = {
-	      addChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
-	      removeChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
-	      deleteDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
-	      listChannels: pushEndpoints.listChannelsForDevice.bind(pushEndpoints)
+	      addChannels: _endpoint2.default.bind(this, modules, addPushChannelsConfig),
+	      removeChannels: _endpoint2.default.bind(this, modules, removePushChannelsConfig),
+	      deleteDevice: _endpoint2.default.bind(this, modules, removeDevicePushConfig),
+	      listChannels: _endpoint2.default.bind(this, modules, listPushChannelsConfig)
 	    };
 
 	    this.hereNow = presenceEndpoints.hereNow.bind(presenceEndpoints);
@@ -277,8 +289,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.grant = accessEndpoints.grant.bind(accessEndpoints);
 	    this.audit = accessEndpoints.audit.bind(accessEndpoints);
 
-	    this.publish = publishEndpoints.publish.bind(publishEndpoints);
-	    this.fire = publishEndpoints.fire.bind(publishEndpoints);
+	    this.publish = _endpoint2.default.bind(this, modules, publishEndpointConfig);
+
+	    this.fire = function (args, callback) {
+	      args.replicate = false;
+	      args.storeInHistory = false;
+	      _this.publish(args, callback);
+	    };
+
 	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
 
 	    this.time = timeEndpoint;
@@ -4340,7 +4358,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return;
 	  }
 
-	  var url = endpoint.getURL(modules, incomingParams);
 	  var outgoingParams = endpoint.prepareParams(modules, incomingParams);
 
 	  outgoingParams.uuid = config.UUID;
@@ -4358,11 +4375,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    outgoingParams.requestid = _uuid2.default.v4();
 	  }
 
-	  networking.GET(outgoingParams, { url: url }, function (status, payload) {
+	  var onResponse = function onResponse(status, payload) {
 	    if (status.error) return callback(status);
 
 	    callback(status, endpoint.handleResponse(modules, payload));
-	  });
+	  };
+
+	  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+	    var url = endpoint.postURL(modules, incomingParams);
+	    var payload = endpoint.postPayload(modules, incomingParams);
+	    networking.POST(outgoingParams, payload, { url: url }, onResponse);
+	  } else {
+	    var _url = endpoint.getURL(modules, incomingParams);
+	    networking.GET(outgoingParams, { url: _url }, onResponse);
+	  }
 	};
 
 	var _flow_interfaces = __webpack_require__(14);
@@ -4655,6 +4681,335 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _flow_interfaces = __webpack_require__(14);
 
+	function getOperation() {
+	  return 'PNPushNotificationEnabledChannelsOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var pushGateway = incomingParams.pushGateway;
+	  var channels = incomingParams.channels;
+	  var config = modules.config;
+
+
+	  if (!device) return 'Missing Device ID (device)';
+	  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+	  if (!channels || channels.length === 0) return 'Missing Channels';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var config = modules.config;
+
+	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var pushGateway = incomingParams.pushGateway;
+	  var _incomingParams$chann = incomingParams.channels;
+	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+
+	  return { type: pushGateway, add: encodeURIComponent(channels.join(',')) };
+	}
+
+	function handleResponse() {
+	  return {};
+	}
+	//# sourceMappingURL=add_push_channels.js.map
+
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNPushNotificationEnabledChannelsOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var pushGateway = incomingParams.pushGateway;
+	  var channels = incomingParams.channels;
+	  var config = modules.config;
+
+
+	  if (!device) return 'Missing Device ID (device)';
+	  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+	  if (!channels || channels.length === 0) return 'Missing Channels';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var config = modules.config;
+
+	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var pushGateway = incomingParams.pushGateway;
+	  var _incomingParams$chann = incomingParams.channels;
+	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+
+	  return { type: pushGateway, remove: encodeURIComponent(channels.join(',')) };
+	}
+
+	function handleResponse() {
+	  return {};
+	}
+	//# sourceMappingURL=remove_push_channels.js.map
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNPushNotificationEnabledChannelsOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var pushGateway = incomingParams.pushGateway;
+	  var config = modules.config;
+
+
+	  if (!device) return 'Missing Device ID (device)';
+	  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var config = modules.config;
+
+	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var pushGateway = incomingParams.pushGateway;
+
+	  return { type: pushGateway };
+	}
+
+	function handleResponse(modules, serverResponse) {
+	  return { channels: serverResponse };
+	}
+	//# sourceMappingURL=list_push_channels.js.map
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNRemoveAllPushNotificationsOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var pushGateway = incomingParams.pushGateway;
+	  var config = modules.config;
+
+
+	  if (!device) return 'Missing Device ID (device)';
+	  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var device = incomingParams.device;
+	  var config = modules.config;
+
+	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device + '/remove';
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var pushGateway = incomingParams.pushGateway;
+
+	  return { type: pushGateway };
+	}
+
+	function handleResponse() {
+	  return {};
+	}
+	//# sourceMappingURL=remove_device.js.map
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(console) {'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.usePost = usePost;
+	exports.getURL = getURL;
+	exports.postURL = postURL;
+	exports.postPayload = postPayload;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function prepareMessagePayload(modules, messagePayload) {
+	  var crypto = modules.crypto;
+	  var config = modules.config;
+
+	  var stringifiedPayload = JSON.stringify(messagePayload);
+
+	  if (config.cipherKey) {
+	    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+	    stringifiedPayload = JSON.stringify(stringifiedPayload);
+	  }
+
+	  console.log('prepareMessagePayload', stringifiedPayload);
+
+	  return stringifiedPayload;
+	}
+
+	function getOperation() {
+	  return 'PNPublishOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var message = incomingParams.message;
+	  var channel = incomingParams.channel;
+	  var config = modules.config;
+
+
+	  if (!channel) return 'Missing Channel';
+	  if (!message) return 'Missing Message';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function usePost(modules, incomingParams) {
+	  var _incomingParams$sendB = incomingParams.sendByPost;
+	  var sendByPost = _incomingParams$sendB === undefined ? false : _incomingParams$sendB;
+
+	  return sendByPost;
+	}
+
+	function getURL(modules, incomingParams) {
+	  var config = modules.config;
+	  var channel = incomingParams.channel;
+	  var message = incomingParams.message;
+
+	  var stringifiedPayload = prepareMessagePayload(modules, message);
+	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0/' + encodeURIComponent(stringifiedPayload);
+	}
+
+	function postURL(modules, incomingParams) {
+	  var config = modules.config;
+	  var channel = incomingParams.channel;
+
+	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0';
+	}
+
+	function postPayload(modules, incomingParams) {
+	  var message = incomingParams.message;
+
+	  return prepareMessagePayload(modules, message);
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var meta = incomingParams.meta;
+	  var _incomingParams$repli = incomingParams.replicate;
+	  var replicate = _incomingParams$repli === undefined ? true : _incomingParams$repli;
+	  var storeInHistory = incomingParams.storeInHistory;
+
+	  var params = {};
+
+	  if (storeInHistory != null) {
+	    if (storeInHistory) {
+	      params.store = '1';
+	    } else {
+	      params.store = '0';
+	    }
+	  }
+
+	  if (replicate === false) {
+	    params.norep = 'true';
+	  }
+
+	  if (meta && (typeof meta === 'undefined' ? 'undefined' : _typeof(meta)) === 'object') {
+	    params.meta = JSON.stringify(meta);
+	  }
+
+	  return params;
+	}
+
+	function handleResponse(modules, serverResponse) {
+	  return { timetoken: serverResponse[2] };
+	}
+	//# sourceMappingURL=publish.js.map
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
 	function __processMessage(modules, message) {
 	  var config = modules.config;
 	  var crypto = modules.crypto;
@@ -4736,7 +5091,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 36 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -4833,210 +5188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(2);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(11);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _base = __webpack_require__(18);
-
-	var _base2 = _interopRequireDefault(_base);
-
-	var _flow_interfaces = __webpack_require__(14);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var _class = function (_BaseEndpoint) {
-	  _inherits(_class, _BaseEndpoint);
-
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var config = _ref.config;
-
-	    _classCallCheck(this, _class);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
-
-	    _this.networking = networking;
-	    _this.config = config;
-	    return _this;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'listChannelsForDevice',
-	    value: function listChannelsForDevice(args, callback) {
-	      var pushGateway = args.pushGateway;
-	      var device = args.device;
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false }
-	        },
-	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device,
-	        operation: 'PNPushNotificationEnabledChannelsOperation'
-	      };
-
-	      if (!device) {
-	        return callback(this.createValidationError('Missing Device ID (device)'));
-	      }
-
-	      if (!pushGateway) {
-	        return callback(this.createValidationError('Missing GW Type (pushGateway: gcm,apns, mpns)'));
-	      }
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-	      params.type = pushGateway;
-
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
-	        if (status.error) return callback(status);
-
-	        var response = {
-	          channels: payload
-	        };
-
-	        callback(status, response);
-	      });
-	    }
-	  }, {
-	    key: 'removeDevice',
-	    value: function removeDevice(args, callback) {
-	      var pushGateway = args.pushGateway;
-	      var device = args.device;
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false }
-	        },
-	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device + '/remove',
-	        operation: 'PNRemoveAllPushNotificationsOperation'
-	      };
-
-	      if (!device) {
-	        return callback(this.createValidationError('Missing Device ID (device)'));
-	      }
-
-	      if (!pushGateway) {
-	        return callback(this.createValidationError('Missing GW Type (pushGateway: gcm or apns)'));
-	      }
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-	      params.type = pushGateway;
-
-	      this.networking.GET(params, endpointConfig, function (status) {
-	        callback(status);
-	      });
-	    }
-	  }, {
-	    key: 'addDeviceToPushChannels',
-	    value: function addDeviceToPushChannels(args, callback) {
-	      var pushGateway = args.pushGateway;
-	      var device = args.device;
-	      var channels = args.channels;
-
-	      var payload = { operation: 'add', pushGateway: pushGateway, device: device, channels: channels };
-	      this.__provisionDevice(payload, callback);
-	    }
-	  }, {
-	    key: 'removeDeviceFromPushChannels',
-	    value: function removeDeviceFromPushChannels(args, callback) {
-	      var pushGateway = args.pushGateway;
-	      var device = args.device;
-	      var channels = args.channels;
-
-	      var payload = { operation: 'remove', pushGateway: pushGateway, device: device, channels: channels };
-	      this.__provisionDevice(payload, callback);
-	    }
-	  }, {
-	    key: '__provisionDevice',
-	    value: function __provisionDevice(args, callback) {
-	      var operation = args.operation;
-	      var pushGateway = args.pushGateway;
-	      var device = args.device;
-	      var channels = args.channels;
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false }
-	        },
-	        url: '/v1/push/sub-key/' + this.config.subscribeKey + '/devices/' + device
-	      };
-
-	      if (operation === 'add') {
-	        endpointConfig.operation = 'PNPushNotificationEnabledChannelsOperation';
-	      } else {
-	        endpointConfig.operation = 'PNRemovePushNotificationsFromChannelsOperation';
-	      }
-
-	      if (!device) {
-	        return callback(this.createValidationError('Missing Device ID (device)'));
-	      }
-
-	      if (!pushGateway) {
-	        return callback(this.createValidationError('Missing GW Type (pushGateway: gcm or apns)'));
-	      }
-
-	      if (!operation) {
-	        return callback(this.createValidationError('Missing GW Operation (operation: add or remove)'));
-	      }
-
-	      if (!channels) {
-	        return callback(this.createValidationError('Missing gw destination Channel (channel)'));
-	      }
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-	      params.type = pushGateway;
-
-	      if (operation === 'add') params.add = encodeURIComponent(channels.join(','));
-	      if (operation === 'remove') params.remove = encodeURIComponent(channels.join(','));
-
-	      this.networking.GET(params, endpointConfig, function (status) {
-	        callback(status);
-	      });
-	    }
-	  }]);
-
-	  return _class;
-	}(_base2.default);
-
-	exports.default = _class;
-	module.exports = exports['default'];
-	//# sourceMappingURL=push.js.map
-
-
-/***/ },
-/* 33 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5217,152 +5369,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 	module.exports = exports['default'];
 	//# sourceMappingURL=access.js.map
-
-
-/***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(2);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(11);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _index = __webpack_require__(10);
-
-	var _index2 = _interopRequireDefault(_index);
-
-	var _base = __webpack_require__(18);
-
-	var _base2 = _interopRequireDefault(_base);
-
-	var _flow_interfaces = __webpack_require__(14);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var _class = function (_BaseEndpoint) {
-	  _inherits(_class, _BaseEndpoint);
-
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var config = _ref.config;
-	    var crypto = _ref.crypto;
-
-	    _classCallCheck(this, _class);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
-
-	    _this.networking = networking;
-	    _this.config = config;
-	    _this.crypto = crypto;
-	    return _this;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'fire',
-	    value: function fire(args, callback) {
-	      args.replicate = false;
-	      args.storeInHistory = false;
-	      this.publish(args, callback);
-	    }
-	  }, {
-	    key: 'publish',
-	    value: function publish(args, callback) {
-	      var message = args.message;
-	      var channel = args.channel;
-	      var meta = args.meta;
-	      var _args$sendByPost = args.sendByPost;
-	      var sendByPost = _args$sendByPost === undefined ? false : _args$sendByPost;
-	      var _args$replicate = args.replicate;
-	      var replicate = _args$replicate === undefined ? true : _args$replicate;
-	      var storeInHistory = args.storeInHistory;
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true },
-	          publishKey: { required: true }
-	        },
-	        url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0',
-	        operation: 'PNPublishOperation'
-	      };
-
-	      if (!message) return callback(this.createValidationError('Missing Message'));
-	      if (!channel) return callback(this.createValidationError('Missing Channel'));
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-
-	      if (storeInHistory != null) {
-	        if (storeInHistory) {
-	          params.store = '1';
-	        } else {
-	          params.store = '0';
-	        }
-	      }
-
-	      if (replicate === false) {
-	        params.norep = 'true';
-	      }
-
-	      if (meta && (typeof meta === 'undefined' ? 'undefined' : _typeof(meta)) === 'object') {
-	        params.meta = JSON.stringify(meta);
-	      }
-
-	      var onCallback = function onCallback(status, payload) {
-	        if (status.error) return callback(status);
-
-	        var response = {
-	          timetoken: payload[2]
-	        };
-
-	        callback(status, response);
-	      };
-
-	      var stringifiedPayload = JSON.stringify(message);
-
-	      if (this.config.cipherKey) {
-	        stringifiedPayload = this.crypto.encrypt(stringifiedPayload);
-	        stringifiedPayload = JSON.stringify(stringifiedPayload);
-	      }
-
-	      if (sendByPost) {
-	        this.networking.POST(params, stringifiedPayload, endpointConfig, onCallback);
-	      } else {
-	        endpointConfig.url += '/' + encodeURIComponent(stringifiedPayload);
-	        this.networking.GET(params, endpointConfig, onCallback);
-	      }
-	    }
-	  }]);
-
-	  return _class;
-	}(_base2.default);
-
-	exports.default = _class;
-	module.exports = exports['default'];
-	//# sourceMappingURL=publish.js.map
 
 
 /***/ }

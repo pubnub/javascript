@@ -14,17 +14,20 @@ import * as deleteChannelGroupConfig from './endpoints/channel_groups/delete_gro
 import * as listChannelGroupsConfig from './endpoints/channel_groups/list_groups';
 import * as listChannelsInChannelGroupConfig from './endpoints/channel_groups/list_channels';
 
+import * as addPushChannelsConfig from './endpoints/push/add_push_channels';
+import * as removePushChannelsConfig from './endpoints/push/remove_push_channels';
+import * as listPushChannelsConfig from './endpoints/push/list_push_channels';
+import * as removeDevicePushConfig from './endpoints/push/remove_device';
+
+import * as publishEndpointConfig from './endpoints/publish';
 import * as historyEndpointConfig from './endpoints/history';
 import * as timeEndpointConfig from './endpoints/time';
 
 import packageJSON from '../../package.json';
 
-
 import PresenceEndpoints from './endpoints/presence';
-import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
 import SubscribeEndpoints from './endpoints/subscribe';
-import PublishEndpoints from './endpoints/publish';
 
 import { InternalSetupStruct } from './flow_interfaces';
 
@@ -84,8 +87,6 @@ export default class {
     // old
     const subscribeEndpoints = new SubscribeEndpoints({ networking: modules.networking, config: modules.config });
     const presenceEndpoints = new PresenceEndpoints({ networking: modules.networking, config: modules.config });
-    const pushEndpoints = new PushEndpoint({ networking: modules.networking, config: modules.config });
-    const publishEndpoints = new PublishEndpoints({ networking: modules.networking, config: modules.config, crypto: modules.crypto });
     const accessEndpoints = new AccessEndpoints({ config: modules.config, networking: modules.networking, crypto: modules.crypto });
     //
 
@@ -111,10 +112,10 @@ export default class {
     };
     /** push **/
     this.push = {
-      addChannels: pushEndpoints.addDeviceToPushChannels.bind(pushEndpoints),
-      removeChannels: pushEndpoints.removeDeviceFromPushChannels.bind(pushEndpoints),
-      deleteDevice: pushEndpoints.removeDevice.bind(pushEndpoints),
-      listChannels: pushEndpoints.listChannelsForDevice.bind(pushEndpoints)
+      addChannels: endpointCreator.bind(this, modules, addPushChannelsConfig),
+      removeChannels: endpointCreator.bind(this, modules, removePushChannelsConfig),
+      deleteDevice: endpointCreator.bind(this, modules, removeDevicePushConfig),
+      listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig)
     };
     /** presence **/
     this.hereNow = presenceEndpoints.hereNow.bind(presenceEndpoints);
@@ -125,9 +126,15 @@ export default class {
     this.grant = accessEndpoints.grant.bind(accessEndpoints);
     this.audit = accessEndpoints.audit.bind(accessEndpoints);
     //
-    this.publish = publishEndpoints.publish.bind(publishEndpoints);
-    this.fire = publishEndpoints.fire.bind(publishEndpoints);
-    this.history = endpointCreator.bind(this, modules, historyEndpointConfig) // historyEndpointConfig historyEndpoint.fetch.bind(historyEndpoint);
+    this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);
+
+    this.fire = (args, callback) => {
+      args.replicate = false;
+      args.storeInHistory = false;
+      this.publish(args, callback);
+    };
+
+    this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
 
     this.time = timeEndpoint;
 

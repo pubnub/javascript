@@ -202,4 +202,53 @@ type ListChannelsResponse = {
 
 //
 
+// push
+
+type ProvisionDeviceArgs = {
+  operation: 'add' | 'remove',
+  pushGateway: 'gcm' | 'apns' | 'mpns',
+  device: string,
+  channels: Array<string>
+};
+
+type ModifyDeviceArgs = {
+  pushGateway: 'gcm' | 'apns' | 'mpns',
+  device: string,
+  channels: Array<string>
+};
+
+type ListChannelsArgs = {
+  pushGateway: 'gcm' | 'apns' | 'mpns',
+  device: string,
+};
+
+type RemoveDeviceArgs = {
+  pushGateway: 'gcm' | 'apns' | 'mpns',
+  device: string,
+};
+
+type ListPushChannelsResponse = {
+  channels: Array<string>
+}
+
+//
+
+// publish
+
+type PublishResponse = {
+  timetoken: number
+};
+
+type PublishArguments = {
+  message: Object | string | number | boolean, // the contents of the dispatch
+  channel: string, // the destination of our dispatch
+  sendByPost: boolean | null, // use POST when dispatching the message
+  storeInHistory: boolean | null, // store the published message in remote history
+  meta: Object, // psv2 supports filtering by metadata
+  replicate: boolean | null // indicates to server on replication status to other data centers.
+}
+
+//
+
+
 module.exports = {};

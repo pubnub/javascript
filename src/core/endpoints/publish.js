@@ -1,107 +1,78 @@
 /* @flow */
 
-import Networking from '../components/networking';
-import Config from '../components/config';
-import Crypto from '../components/cryptography/index';
-import BaseEndpoint from './base.js';
+import { PublishResponse, PublishArguments } from '../flow_interfaces';
 
-import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
+function prepareMessagePayload(modules, messagePayload) {
+  const { crypto, config } = modules;
+  let stringifiedPayload = JSON.stringify(messagePayload);
 
-type PublishConstruct = {
-  networking: Networking,
-  config: Config,
-  crypto: Crypto
-};
+  if (config.cipherKey) {
+    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+    stringifiedPayload = JSON.stringify(stringifiedPayload);
+  }
 
-type PublishResponse = {
-  timetoken: number
-};
-
-type PublishArguments = {
-  message: Object | string | number | boolean, // the contents of the dispatch
-  channel: string, // the destination of our dispatch
-  sendByPost: boolean | null, // use POST when dispatching the message
-  storeInHistory: boolean | null, // store the published message in remote history
-  meta: Object, // psv2 supports filtering by metadata
-  replicate: boolean | null // indicates to server on replication status to other data centers.
+  return stringifiedPayload;
 }
 
-export default class extends BaseEndpoint {
-  networking: Networking;
-  config: Config;
-  crypto: Crypto;
+export function getOperation(): string {
+  return 'PNPublishOperation';
+}
 
-  constructor({ networking, config, crypto }: PublishConstruct) {
-    super({ config });
-    this.networking = networking;
-    this.config = config;
-    this.crypto = crypto;
-  }
+export function validateParams(modules, incomingParams: PublishArguments) {
+  let { message, channel } = incomingParams;
+  let { config } = modules;
 
-  fire(args: PublishArguments, callback: Function) {
-    args.replicate = false;
-    args.storeInHistory = false;
-    this.publish(args, callback);
-  }
+  if (!channel) return 'Missing Channel';
+  if (!message) return 'Missing Message';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
 
-  publish(args: PublishArguments, callback: Function) {
-    const { message, channel, meta, sendByPost = false, replicate = true, storeInHistory } = args;
-    const endpointConfig: EndpointDefinition = {
-      params: {
-        authKey: { required: false },
-        subscribeKey: { required: true },
-        publishKey: { required: true }
-      },
-      url: '/publish/' + this.config.publishKey + '/' + this.config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0',
-      operation: 'PNPublishOperation'
-    };
+export function usePost(modules, incomingParams) {
+  let { sendByPost = false } = incomingParams;
+  return sendByPost;
+}
 
-    if (!message) return callback(this.createValidationError('Missing Message'));
-    if (!channel) return callback(this.createValidationError('Missing Channel'));
+export function getURL(modules, incomingParams: PublishArguments): string {
+  const { config } = modules;
+  const { channel, message } = incomingParams;
+  let stringifiedPayload = prepareMessagePayload(modules, message);
+  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0/' + encodeURIComponent(stringifiedPayload);
+}
 
-    // validate this request and return false if stuff is missing
-    if (!this.validateEndpointConfig(endpointConfig)) { return; }
-    // create base params
-    const params = this.createBaseParams(endpointConfig);
+export function postURL(modules, incomingParams: PublishArguments): string {
+  const { config } = modules;
+  const { channel } = incomingParams;
+  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0';
+}
 
-    if (storeInHistory != null) {
-      if (storeInHistory) {
-        params.store = '1';
-      } else {
-        params.store = '0';
-      }
-    }
+export function postPayload(modules, incomingParams: PublishArguments): string {
+  const { message } = incomingParams;
+  return prepareMessagePayload(modules, message);
+}
 
-    if (replicate === false) {
-      params.norep = 'true';
-    }
+export function prepareParams(modules, incomingParams: PublishArguments): Object {
+  const { meta, replicate = true, storeInHistory } = incomingParams;
+  const params = {};
 
-    if (meta && typeof meta === 'object') {
-      params.meta = JSON.stringify(meta);
-    }
-
-    let onCallback = (status: StatusAnnouncement, payload: Object) => {
-      if (status.error) return callback(status);
-
-      let response: PublishResponse = {
-        timetoken: payload[2]
-      };
-
-      callback(status, response);
-    };
-
-    let stringifiedPayload = JSON.stringify(message);
-
-    if (this.config.cipherKey) {
-      stringifiedPayload = this.crypto.encrypt(stringifiedPayload);
-      stringifiedPayload = JSON.stringify(stringifiedPayload);
-    }
-
-    if (sendByPost) {
-      this.networking.POST(params, stringifiedPayload, endpointConfig, onCallback);
+  if (storeInHistory != null) {
+    if (storeInHistory) {
+      params.store = '1';
     } else {
-      endpointConfig.url += '/' + encodeURIComponent(stringifiedPayload);
-      this.networking.GET(params, endpointConfig, onCallback);
+      params.store = '0';
     }
   }
+
+  if (replicate === false) {
+    params.norep = 'true';
+  }
+
+  if (meta && typeof meta === 'object') {
+    params.meta = JSON.stringify(meta);
+  }
+
+  return params;
+}
+
+export function handleResponse(modules, serverResponse: Object): PublishResponse {
+  return { timetoken: serverResponse[2] };
 }

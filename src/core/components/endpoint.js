@@ -29,7 +29,6 @@ export default function (modules, endpoint, ...args) {
     return;
   }
 
-  let url = endpoint.getURL(modules, incomingParams);
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
 
   outgoingParams.uuid = config.UUID;
@@ -47,9 +46,18 @@ export default function (modules, endpoint, ...args) {
     outgoingParams.requestid = uuidGenerator.v4();
   }
 
-  networking.GET(outgoingParams, { url }, (status: StatusAnnouncement, payload: Object) => {
+  let onResponse = (status: StatusAnnouncement, payload: Object) => {
     if (status.error) return callback(status);
 
     callback(status, endpoint.handleResponse(modules, payload));
-  });
+  };
+
+  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    let url = endpoint.postURL(modules, incomingParams);
+    let payload = endpoint.postPayload(modules, incomingParams);
+    networking.POST(outgoingParams, payload, { url }, onResponse);
+  } else {
+    let url = endpoint.getURL(modules, incomingParams);
+    networking.GET(outgoingParams, { url }, onResponse);
+  }
 }

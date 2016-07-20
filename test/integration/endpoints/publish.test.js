@@ -28,6 +28,7 @@ describe('publish endpoints', () => {
       .reply(200, '[1,"Sent","14647523059145592"]');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
+      console.log('status', status);
       assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
@@ -84,6 +85,7 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', sendByPost: true }, (status, response) => {
+      console.log(status);
       assert.equal(status.error, false);
       assert.deepEqual(response.timetoken, 14647523059145592);
       assert.equal(scope.isDone(), true);
