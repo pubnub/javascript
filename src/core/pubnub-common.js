@@ -6,14 +6,23 @@ import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
 import ListenerManager from './components/listener_manager';
 
+import endpointCreator from './components/endpoint';
+
+import * as addChannelsChannelGroupConfig from './endpoints/channel_groups/add_channels';
+import * as removeChannelsChannelGroupConfig from './endpoints/channel_groups/remove_channels';
+import * as deleteChannelGroupConfig from './endpoints/channel_groups/delete_group';
+import * as listChannelGroupsConfig from './endpoints/channel_groups/list_groups';
+import * as listChannelsInChannelGroupConfig from './endpoints/channel_groups/list_channels';
+
+import * as historyEndpointConfig from './endpoints/history';
+import * as timeEndpointConfig from './endpoints/time';
+
 import packageJSON from '../../package.json';
 
-import TimeEndpoint from './endpoints/time';
+
 import PresenceEndpoints from './endpoints/presence';
-import HistoryEndpoint from './endpoints/history';
 import PushEndpoint from './endpoints/push';
 import AccessEndpoints from './endpoints/access';
-import ChannelGroupEndpoints from './endpoints/channel_groups';
 import SubscribeEndpoints from './endpoints/subscribe';
 import PublishEndpoints from './endpoints/publish';
 
@@ -66,32 +75,39 @@ export default class {
   constructor(setup: InternalSetupStruct) {
     let { sendBeacon, db } = setup;
 
-    this._config = new Config({ setup, db });
-    this._crypto = new Crypto({ config: this._config });
-    this._networking = new Networking({ config: this._config, crypto: this._crypto, sendBeacon });
+    const config = new Config({ setup, db });
+    const crypto = new Crypto({ config });
+    const networking = new Networking({ config, crypto, sendBeacon });
 
-    const subscribeEndpoints = new SubscribeEndpoints({ networking: this._networking, config: this._config });
-    const presenceEndpoints = new PresenceEndpoints({ networking: this._networking, config: this._config });
-    const timeEndpoints = new TimeEndpoint({ networking: this._networking, config: this._config });
-    const pushEndpoints = new PushEndpoint({ networking: this._networking, config: this._config });
-    const channelGroupEndpoints = new ChannelGroupEndpoints({ networking: this._networking, config: this._config });
-    const publishEndpoints = new PublishEndpoints({ networking: this._networking, config: this._config, crypto: this._crypto });
-    const historyEndpoint = new HistoryEndpoint({ networking: this._networking, config: this._config, crypto: this._crypto });
-    const accessEndpoints = new AccessEndpoints({ config: this._config, networking: this._networking, crypto: this._crypto });
+    let modules = { config, networking, crypto };
+
+    // old
+    const subscribeEndpoints = new SubscribeEndpoints({ networking: modules.networking, config: modules.config });
+    const presenceEndpoints = new PresenceEndpoints({ networking: modules.networking, config: modules.config });
+    const pushEndpoints = new PushEndpoint({ networking: modules.networking, config: modules.config });
+    const publishEndpoints = new PublishEndpoints({ networking: modules.networking, config: modules.config, crypto: modules.crypto });
+    const accessEndpoints = new AccessEndpoints({ config: modules.config, networking: modules.networking, crypto: modules.crypto });
+    //
 
     const listenerManager = new ListenerManager();
-    const subscriptionManager = new SubscriptionManager({ config: this._config, listenerManager, subscribeEndpoints, presenceEndpoints, timeEndpoints });
+
+    // new
+    const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
+
+    //
+
+    const subscriptionManager = new SubscriptionManager({ config: modules.config, listenerManager, subscribeEndpoints, presenceEndpoints, timeEndpoints: timeEndpoint });
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
 
     /** channel groups **/
     this.channelGroups = {
-      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
-      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
-      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
-      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
-      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints)
+      listGroups: endpointCreator.bind(this, modules, listChannelGroupsConfig),
+      listChannels: endpointCreator.bind(this, modules, listChannelsInChannelGroupConfig),
+      addChannels: endpointCreator.bind(this, modules, addChannelsChannelGroupConfig),
+      removeChannels: endpointCreator.bind(this, modules, removeChannelsChannelGroupConfig),
+      deleteGroup: endpointCreator.bind(this, modules, deleteChannelGroupConfig)
     };
     /** push **/
     this.push = {
@@ -111,8 +127,11 @@ export default class {
     //
     this.publish = publishEndpoints.publish.bind(publishEndpoints);
     this.fire = publishEndpoints.fire.bind(publishEndpoints);
-    this.history = historyEndpoint.fetch.bind(historyEndpoint);
-    this.time = timeEndpoints.fetch.bind(timeEndpoints);
+    this.history = endpointCreator.bind(this, modules, historyEndpointConfig) // historyEndpointConfig historyEndpoint.fetch.bind(historyEndpoint);
+
+    this.time = timeEndpoint;
+
+
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
@@ -120,13 +139,13 @@ export default class {
     this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
 
     /** config **/
-    this.getAuthKey = this._config.getAuthKey.bind(this._config);
-    this.setAuthKey = this._config.setAuthKey.bind(this._config);
-    this.setCipherKey = this._config.setCipherKey.bind(this._config);
-    this.getUUID = this._config.getUUID.bind(this._config);
-    this.setUUID = this._config.setUUID.bind(this._config);
-    this.getFilterExpression = this._config.getFilterExpression.bind(this._config);
-    this.setFilterExpression = this._config.setFilterExpression.bind(this._config);
+    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
+    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
+    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
+    this.getUUID = modules.config.getUUID.bind(modules.config);
+    this.setUUID = modules.config.setUUID.bind(modules.config);
+    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
+    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
   }
 
 

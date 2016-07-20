@@ -149,6 +149,57 @@ type TimeResponse = {
   timetoken: number
 };
 
+// history
+
+type FetchHistoryArguments = {
+  channel: string, // fetch history from a channel
+  channelGroup: string, // fetch history from channel groups
+  start: number, // start timetoken for history fetching
+  end: number, // end timetoken for history feting
+  includeTimetoken: boolean, // include time token for each history call
+  reverse: boolean,
+  count: number
+}
+
+type HistoryItem = {
+  timetoken: number | null,
+  entry: any,
+}
+
+type HistoryResponse = {
+  messages: Array<HistoryItem>,
+  startTimeToken: number,
+  endTimeToken: number,
+}
+
+// CG endpoints
+
+type AddChannelParams = {
+  channels: Array<string>,
+  channelGroup: string,
+}
+
+type RemoveChannelParams = {
+  channels: Array<string>,
+  channelGroup: string,
+}
+
+type DeleteGroupParams = {
+  channelGroup: string,
+}
+
+type ListAllGroupsResponse = {
+  groups: Array<string>
+}
+
+type ListChannelsParams = {
+  channelGroup: string,
+}
+
+type ListChannelsResponse = {
+  channels: Array<string>
+}
+
 //
 
 module.exports = {};

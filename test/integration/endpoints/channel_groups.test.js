@@ -53,7 +53,7 @@ describe('channel group endpoints', () => {
   describe('listing of channel groups', () => {
     it('returns a list of all channel groups', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group')
-        .query(true)
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
         .reply(200, '{"status": 200, "message": "OK", "payload": {"groups": ["a","b"]}, "service": "ChannelGroups"}');
 
       pubnub.channelGroups.listGroups((status, response) => {

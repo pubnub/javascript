@@ -1,44 +1,25 @@
 /* @flow */
 
-import Networking from '../components/networking';
-import Config from '../components/config';
-import BaseEndpoint from './base.js';
-import { EndpointDefinition, StatusAnnouncement, TimeResponse } from '../flow_interfaces';
+import { TimeResponse } from '../flow_interfaces';
 
-type TimeConstruct = {
-  networking: Networking,
-  config: Config
-};
+export function getOperation(): string {
+  return 'PNTimeOperation';
+}
 
-export default class extends BaseEndpoint {
+export function getURL(): string {
+  return '/time/0';
+}
 
-  _networking: Networking;
+export function prepareParams(): Object {
+  return {};
+}
 
-  constructor({ networking, config }: TimeConstruct) {
-    super({ config });
-    this._networking = networking;
-  }
+export function handleResponse(params: Object, serverResponse: Object): TimeResponse {
+  return {
+    timetoken: serverResponse[0]
+  };
+}
 
-  fetch(callback: Function) {
-    const endpointConfig: EndpointDefinition = {
-      url: '/time/0',
-      operation: 'PNTimeOperation'
-    };
-
-    // validate this request and return false if stuff is missing
-    if (!this.validateEndpointConfig(endpointConfig)) { return; }
-
-    // create base params
-    const params = this.createBaseParams(endpointConfig);
-
-    this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
-      if (status.error) return callback(status);
-
-      let response: TimeResponse = {
-        timetoken: payload[0]
-      };
-
-      callback(status, response);
-    });
-  }
+export function validateParams() {
+  // pass
 }

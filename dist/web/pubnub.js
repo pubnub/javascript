@@ -65,7 +65,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _package = __webpack_require__(24);
+	var _package = __webpack_require__(31);
 
 	var _package2 = _interopRequireDefault(_package);
 
@@ -160,43 +160,65 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _listener_manager2 = _interopRequireDefault(_listener_manager);
 
-	var _package = __webpack_require__(24);
+	var _endpoint = __webpack_require__(24);
 
-	var _package2 = _interopRequireDefault(_package);
+	var _endpoint2 = _interopRequireDefault(_endpoint);
+
+	var _add_channels = __webpack_require__(25);
+
+	var addChannelsChannelGroupConfig = _interopRequireWildcard(_add_channels);
+
+	var _remove_channels = __webpack_require__(26);
+
+	var removeChannelsChannelGroupConfig = _interopRequireWildcard(_remove_channels);
+
+	var _delete_group = __webpack_require__(27);
+
+	var deleteChannelGroupConfig = _interopRequireWildcard(_delete_group);
+
+	var _list_groups = __webpack_require__(28);
+
+	var listChannelGroupsConfig = _interopRequireWildcard(_list_groups);
+
+	var _list_channels = __webpack_require__(29);
+
+	var listChannelsInChannelGroupConfig = _interopRequireWildcard(_list_channels);
+
+	var _history = __webpack_require__(30);
+
+	var historyEndpointConfig = _interopRequireWildcard(_history);
 
 	var _time = __webpack_require__(20);
 
-	var _time2 = _interopRequireDefault(_time);
+	var timeEndpointConfig = _interopRequireWildcard(_time);
+
+	var _package = __webpack_require__(31);
+
+	var _package2 = _interopRequireDefault(_package);
 
 	var _presence = __webpack_require__(19);
 
 	var _presence2 = _interopRequireDefault(_presence);
 
-	var _history = __webpack_require__(25);
-
-	var _history2 = _interopRequireDefault(_history);
-
-	var _push = __webpack_require__(26);
+	var _push = __webpack_require__(32);
 
 	var _push2 = _interopRequireDefault(_push);
 
-	var _access = __webpack_require__(27);
+	var _access = __webpack_require__(33);
 
 	var _access2 = _interopRequireDefault(_access);
-
-	var _channel_groups = __webpack_require__(28);
-
-	var _channel_groups2 = _interopRequireDefault(_channel_groups);
 
 	var _subscribe = __webpack_require__(17);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _publish = __webpack_require__(29);
+	var _publish = __webpack_require__(34);
 
 	var _publish2 = _interopRequireDefault(_publish);
 
 	var _flow_interfaces = __webpack_require__(14);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -210,31 +232,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var db = setup.db;
 
 
-	    this._config = new _config2.default({ setup: setup, db: db });
-	    this._crypto = new _index2.default({ config: this._config });
-	    this._networking = new _networking2.default({ config: this._config, crypto: this._crypto, sendBeacon: sendBeacon });
+	    var config = new _config2.default({ setup: setup, db: db });
+	    var crypto = new _index2.default({ config: config });
+	    var networking = new _networking2.default({ config: config, crypto: crypto, sendBeacon: sendBeacon });
 
-	    var subscribeEndpoints = new _subscribe2.default({ networking: this._networking, config: this._config });
-	    var presenceEndpoints = new _presence2.default({ networking: this._networking, config: this._config });
-	    var timeEndpoints = new _time2.default({ networking: this._networking, config: this._config });
-	    var pushEndpoints = new _push2.default({ networking: this._networking, config: this._config });
-	    var channelGroupEndpoints = new _channel_groups2.default({ networking: this._networking, config: this._config });
-	    var publishEndpoints = new _publish2.default({ networking: this._networking, config: this._config, crypto: this._crypto });
-	    var historyEndpoint = new _history2.default({ networking: this._networking, config: this._config, crypto: this._crypto });
-	    var accessEndpoints = new _access2.default({ config: this._config, networking: this._networking, crypto: this._crypto });
+	    var modules = { config: config, networking: networking, crypto: crypto };
+
+	    var subscribeEndpoints = new _subscribe2.default({ networking: modules.networking, config: modules.config });
+	    var presenceEndpoints = new _presence2.default({ networking: modules.networking, config: modules.config });
+	    var pushEndpoints = new _push2.default({ networking: modules.networking, config: modules.config });
+	    var publishEndpoints = new _publish2.default({ networking: modules.networking, config: modules.config, crypto: modules.crypto });
+	    var accessEndpoints = new _access2.default({ config: modules.config, networking: modules.networking, crypto: modules.crypto });
+
 
 	    var listenerManager = new _listener_manager2.default();
-	    var subscriptionManager = new _subscription_manager2.default({ config: this._config, listenerManager: listenerManager, subscribeEndpoints: subscribeEndpoints, presenceEndpoints: presenceEndpoints, timeEndpoints: timeEndpoints });
+
+	    var timeEndpoint = _endpoint2.default.bind(this, modules, timeEndpointConfig);
+
+	    var subscriptionManager = new _subscription_manager2.default({ config: modules.config, listenerManager: listenerManager, subscribeEndpoints: subscribeEndpoints, presenceEndpoints: presenceEndpoints, timeEndpoints: timeEndpoint });
 
 	    this.addListener = listenerManager.addListener.bind(listenerManager);
 	    this.removeListener = listenerManager.removeListener.bind(listenerManager);
 
 	    this.channelGroups = {
-	      listGroups: channelGroupEndpoints.listGroups.bind(channelGroupEndpoints),
-	      listChannels: channelGroupEndpoints.listChannels.bind(channelGroupEndpoints),
-	      addChannels: channelGroupEndpoints.addChannels.bind(channelGroupEndpoints),
-	      removeChannels: channelGroupEndpoints.removeChannels.bind(channelGroupEndpoints),
-	      deleteGroup: channelGroupEndpoints.deleteGroup.bind(channelGroupEndpoints)
+	      listGroups: _endpoint2.default.bind(this, modules, listChannelGroupsConfig),
+	      listChannels: _endpoint2.default.bind(this, modules, listChannelsInChannelGroupConfig),
+	      addChannels: _endpoint2.default.bind(this, modules, addChannelsChannelGroupConfig),
+	      removeChannels: _endpoint2.default.bind(this, modules, removeChannelsChannelGroupConfig),
+	      deleteGroup: _endpoint2.default.bind(this, modules, deleteChannelGroupConfig)
 	    };
 
 	    this.push = {
@@ -254,21 +279,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.publish = publishEndpoints.publish.bind(publishEndpoints);
 	    this.fire = publishEndpoints.fire.bind(publishEndpoints);
-	    this.history = historyEndpoint.fetch.bind(historyEndpoint);
-	    this.time = timeEndpoints.fetch.bind(timeEndpoints);
+	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
+
+	    this.time = timeEndpoint;
 
 	    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
 
-	    this.getAuthKey = this._config.getAuthKey.bind(this._config);
-	    this.setAuthKey = this._config.setAuthKey.bind(this._config);
-	    this.setCipherKey = this._config.setCipherKey.bind(this._config);
-	    this.getUUID = this._config.getUUID.bind(this._config);
-	    this.setUUID = this._config.setUUID.bind(this._config);
-	    this.getFilterExpression = this._config.getFilterExpression.bind(this._config);
-	    this.setFilterExpression = this._config.setFilterExpression.bind(this._config);
+	    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
+	    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
+	    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
+	    this.getUUID = modules.config.getUUID.bind(modules.config);
+	    this.setUUID = modules.config.setUUID.bind(modules.config);
+	    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
+	    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
 	  }
 
 	  _createClass(_class, [{
@@ -4080,77 +4106,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(2);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(11);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _base = __webpack_require__(18);
-
-	var _base2 = _interopRequireDefault(_base);
+	exports.getOperation = getOperation;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+	exports.validateParams = validateParams;
 
 	var _flow_interfaces = __webpack_require__(14);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function getOperation() {
+	  return 'PNTimeOperation';
+	}
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function getURL() {
+	  return '/time/0';
+	}
 
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	function prepareParams() {
+	  return {};
+	}
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	function handleResponse(params, serverResponse) {
+	  return {
+	    timetoken: serverResponse[0]
+	  };
+	}
 
-	var _class = function (_BaseEndpoint) {
-	  _inherits(_class, _BaseEndpoint);
-
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var config = _ref.config;
-
-	    _classCallCheck(this, _class);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
-
-	    _this._networking = networking;
-	    return _this;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'fetch',
-	    value: function fetch(callback) {
-	      var endpointConfig = {
-	        url: '/time/0',
-	        operation: 'PNTimeOperation'
-	      };
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-
-	      this._networking.GET(params, endpointConfig, function (status, payload) {
-	        if (status.error) return callback(status);
-
-	        var response = {
-	          timetoken: payload[0]
-	        };
-
-	        callback(status, response);
-	      });
-	    }
-	  }]);
-
-	  return _class;
-	}(_base2.default);
-
-	exports.default = _class;
-	module.exports = exports['default'];
+	function validateParams() {}
 	//# sourceMappingURL=time.js.map
 
 
@@ -4329,6 +4311,432 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	exports.default = function (modules, endpoint) {
+	  var networking = modules.networking;
+	  var config = modules.config;
+
+	  var callback = null;
+	  var incomingParams = {};
+
+	  if (endpoint.getOperation() === 'PNTimeOperation' || endpoint.getOperation() === 'PNChannelGroupsOperation') {
+	    callback = arguments.length <= 2 ? undefined : arguments[2];
+	  } else {
+	    incomingParams = arguments.length <= 2 ? undefined : arguments[2];
+	    callback = arguments.length <= 3 ? undefined : arguments[3];
+	  }
+
+	  var validationResult = endpoint.validateParams(modules, incomingParams);
+
+	  if (validationResult) {
+	    callback(createValidationError(validationResult));
+	    return;
+	  }
+
+	  var url = endpoint.getURL(modules, incomingParams);
+	  var outgoingParams = endpoint.prepareParams(modules, incomingParams);
+
+	  outgoingParams.uuid = config.UUID;
+
+	  Object.keys(config.baseParams).forEach(function (key) {
+	    var value = config.baseParams[key];
+	    if (!(key in outgoingParams)) outgoingParams[key] = value;
+	  });
+
+	  if (config.useInstanceId) {
+	    outgoingParams.instanceid = config.instanceId;
+	  }
+
+	  if (config.useRequestId) {
+	    outgoingParams.requestid = _uuid2.default.v4();
+	  }
+
+	  networking.GET(outgoingParams, { url: url }, function (status, payload) {
+	    if (status.error) return callback(status);
+
+	    callback(status, endpoint.handleResponse(modules, payload));
+	  });
+	};
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	var _uuid = __webpack_require__(12);
+
+	var _uuid2 = _interopRequireDefault(_uuid);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function createError(errorPayload, type) {
+	  errorPayload.type = type;
+	  return errorPayload;
+	}
+
+	function createValidationError(message) {
+	  return createError({ message: message }, 'validationError');
+	}
+
+	module.exports = exports['default'];
+	//# sourceMappingURL=endpoint.js.map
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNAddChannelsToGroupOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channels = incomingParams.channels;
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+
+	  if (!channelGroup) return 'Missing Channel Group';
+	  if (!channels || channels.length === 0) return 'Missing Channels';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var _incomingParams$chann = incomingParams.channels;
+	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+
+
+	  return {
+	    add: channels.join(',')
+	  };
+	}
+
+	function handleResponse() {
+	  return {};
+	}
+	//# sourceMappingURL=add_channels.js.map
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNRemoveChannelsFromGroupOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channels = incomingParams.channels;
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+
+	  if (!channelGroup) return 'Missing Channel Group';
+	  if (!channels || channels.length === 0) return 'Missing Channels';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var _incomingParams$chann = incomingParams.channels;
+	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+
+
+	  return {
+	    remove: channels.join(',')
+	  };
+	}
+
+	function handleResponse() {
+	  return {};
+	}
+	//# sourceMappingURL=remove_channels.js.map
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNRemoveGroupOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+
+	  if (!channelGroup) return 'Missing Channel Group';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
+	}
+
+	function prepareParams() {
+	  return {};
+	}
+
+	function handleResponse() {
+	  return {};
+	}
+	//# sourceMappingURL=delete_group.js.map
+
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNChannelGroupsOperation';
+	}
+
+	function validateParams(modules) {
+	  var config = modules.config;
+
+
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules) {
+	  var config = modules.config;
+
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group';
+	}
+
+	function prepareParams() {
+	  return {};
+	}
+
+	function handleResponse(modules, payload) {
+	  return {
+	    groups: payload.payload.groups
+	  };
+	}
+	//# sourceMappingURL=list_groups.js.map
+
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNChannelsForGroupOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+
+	  if (!channelGroup) return 'Missing Channel Group';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var channelGroup = incomingParams.channelGroup;
+	  var config = modules.config;
+
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	}
+
+	function prepareParams() {
+	  return {};
+	}
+
+	function handleResponse(modules, payload) {
+	  return {
+	    channels: payload.payload.channels
+	  };
+	}
+	//# sourceMappingURL=list_channels.js.map
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function __processMessage(modules, message) {
+	  var config = modules.config;
+	  var crypto = modules.crypto;
+
+	  if (!config.cipherKey) return message;
+
+	  try {
+	    return crypto.decrypt(message);
+	  } catch (e) {
+	    return message;
+	  }
+	}
+
+	function getOperation() {
+	  return 'PNHistoryOperation';
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channel = incomingParams.channel;
+	  var config = modules.config;
+
+
+	  if (!channel) return 'Missing channel';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var channel = incomingParams.channel;
+	  var config = modules.config;
+
+	  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var start = incomingParams.start;
+	  var end = incomingParams.end;
+	  var includeTimetoken = incomingParams.includeTimetoken;
+	  var reverse = incomingParams.reverse;
+	  var _incomingParams$count = incomingParams.count;
+	  var count = _incomingParams$count === undefined ? 100 : _incomingParams$count;
+
+	  var outgoingParams = {};
+
+	  outgoingParams.count = count;
+	  if (start) outgoingParams.start = start;
+	  if (end) outgoingParams.end = end;
+	  if (includeTimetoken != null) outgoingParams.include_token = includeTimetoken.toString();
+	  if (reverse != null) outgoingParams.reverse = reverse.toString();
+
+	  return outgoingParams;
+	}
+
+	function handleResponse(modules, serverResponse) {
+	  var response = {
+	    messages: [],
+	    startTimeToken: parseInt(serverResponse[1], 10),
+	    endTimeToken: parseInt(serverResponse[2], 10)
+	  };
+
+	  serverResponse[0].forEach(function (serverHistoryItem) {
+	    var item = {
+	      timetoken: null,
+	      entry: null
+	    };
+
+	    if (serverHistoryItem.timetoken) {
+	      item.timetoken = serverHistoryItem.timetoken;
+	      item.entry = __processMessage(modules, serverHistoryItem.message);
+	    } else {
+	      item.entry = __processMessage(modules, serverHistoryItem);
+	    }
+
+	    response.messages.push(item);
+	  });
+
+	  return response;
+	}
+	//# sourceMappingURL=history.js.map
+
+
+/***/ },
+/* 31 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -4425,157 +4833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _networking = __webpack_require__(2);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(11);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _index = __webpack_require__(10);
-
-	var _index2 = _interopRequireDefault(_index);
-
-	var _base = __webpack_require__(18);
-
-	var _base2 = _interopRequireDefault(_base);
-
-	var _flow_interfaces = __webpack_require__(14);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var _class = function (_BaseEndpoint) {
-	  _inherits(_class, _BaseEndpoint);
-
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var crypto = _ref.crypto;
-	    var config = _ref.config;
-
-	    _classCallCheck(this, _class);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
-
-	    _this.networking = networking;
-	    _this.crypto = crypto;
-	    _this.config = config;
-	    return _this;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'fetch',
-	    value: function fetch(args, callback) {
-	      var _this2 = this;
-
-	      var channel = args.channel;
-	      var start = args.start;
-	      var end = args.end;
-	      var includeTimetoken = args.includeTimetoken;
-	      var reverse = args.reverse;
-	      var _args$count = args.count;
-	      var count = _args$count === undefined ? 100 : _args$count;
-
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true }
-	        },
-	        url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel),
-	        operation: 'PNHistoryOperation'
-	      };
-
-	      if (!channel) return callback(this.createValidationError('Missing channel'));
-	      if (!callback) return this.log('Missing Callback');
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-	      params.count = count;
-
-	      if (start) params.start = start;
-	      if (end) params.end = end;
-	      if (includeTimetoken != null) params.include_token = includeTimetoken.toString();
-	      if (reverse != null) params.reverse = reverse.toString();
-
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
-	        if (status.error) return callback(status);
-
-	        callback(status, _this2._parseResponse(payload, includeTimetoken));
-	      });
-	    }
-	  }, {
-	    key: '_parseResponse',
-	    value: function _parseResponse(payload, includeTimetoken) {
-	      var _this3 = this;
-
-	      var response = {
-	        messages: [],
-	        startTimeToken: parseInt(payload[1], 10),
-	        endTimeToken: parseInt(payload[2], 10)
-	      };
-
-	      payload[0].forEach(function (serverHistoryItem) {
-	        var item = {
-	          timetoken: null,
-	          entry: null
-	        };
-
-	        if (includeTimetoken) {
-	          item.timetoken = serverHistoryItem.timetoken;
-	          item.entry = _this3.__processMessage(serverHistoryItem.message);
-	        } else {
-	          item.entry = _this3.__processMessage(serverHistoryItem);
-	        }
-
-	        response.messages.push(item);
-	      });
-
-	      return response;
-	    }
-	  }, {
-	    key: '__processMessage',
-	    value: function __processMessage(message) {
-	      if (!this.config.cipherKey) return message;
-
-	      try {
-	        return this.crypto.decrypt(message);
-	      } catch (e) {
-	        return message;
-	      }
-	    }
-	  }]);
-
-	  return _class;
-	}(_base2.default);
-
-	exports.default = _class;
-	module.exports = exports['default'];
-	//# sourceMappingURL=history.js.map
-
-
-/***/ },
-/* 26 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4778,7 +5036,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4962,216 +5220,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _base = __webpack_require__(18);
-
-	var _base2 = _interopRequireDefault(_base);
-
-	var _networking = __webpack_require__(2);
-
-	var _networking2 = _interopRequireDefault(_networking);
-
-	var _config = __webpack_require__(11);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _flow_interfaces = __webpack_require__(14);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var _class = function (_BaseEndpoint) {
-	  _inherits(_class, _BaseEndpoint);
-
-	  function _class(_ref) {
-	    var networking = _ref.networking;
-	    var config = _ref.config;
-
-	    _classCallCheck(this, _class);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, { config: config }));
-
-	    _this.networking = networking;
-	    _this.config = config;
-	    return _this;
-	  }
-
-	  _createClass(_class, [{
-	    key: 'listChannels',
-	    value: function listChannels(args, callback) {
-	      var channelGroup = args.channelGroup;
-
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true }
-	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
-	        operation: 'PNChannelsForGroupOperation'
-	      };
-
-	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
-	        if (status.error) return callback(status);
-	        var response = {
-	          channels: payload.payload.channels
-	        };
-
-	        callback(status, response);
-	      });
-	    }
-	  }, {
-	    key: 'deleteGroup',
-	    value: function deleteGroup(args, callback) {
-	      var channelGroup = args.channelGroup;
-
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true }
-	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup + '/remove',
-	        operation: 'PNRemoveGroupOperation'
-	      };
-
-	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-
-	      this.networking.GET(params, endpointConfig, function (status) {
-	        callback(status);
-	      });
-	    }
-	  }, {
-	    key: 'listGroups',
-	    value: function listGroups(callback) {
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true }
-	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group',
-	        operation: 'PNChannelGroupsOperation'
-	      };
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-
-	      this.networking.GET(params, endpointConfig, function (status, payload) {
-	        if (status.error) return callback(status);
-
-	        var response = {
-	          groups: payload.payload.groups
-	        };
-
-	        callback(status, response);
-	      });
-	    }
-	  }, {
-	    key: 'addChannels',
-	    value: function addChannels(args, callback) {
-	      var channelGroup = args.channelGroup;
-	      var _args$channels = args.channels;
-	      var channels = _args$channels === undefined ? [] : _args$channels;
-
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true }
-	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
-	        operation: 'PNAddChannelsToGroupOperation'
-	      };
-
-	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
-	      if (channels.length === 0) return callback(this.createValidationError('Missing Channel'));
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-	      params.add = channels.join(',');
-
-	      this.networking.GET(params, endpointConfig, function (status) {
-	        callback(status);
-	      });
-	    }
-	  }, {
-	    key: 'removeChannels',
-	    value: function removeChannels(args, callback) {
-	      var channelGroup = args.channelGroup;
-	      var _args$channels2 = args.channels;
-	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
-
-
-	      var endpointConfig = {
-	        params: {
-	          authKey: { required: false },
-	          subscribeKey: { required: true }
-	        },
-	        url: '/v1/channel-registration/sub-key/' + this.config.subscribeKey + '/channel-group/' + channelGroup,
-	        operation: 'PNRemoveChannelsFromGroupOperation'
-	      };
-
-	      if (!channelGroup) return callback(this.createValidationError('Missing Channel Group'));
-	      if (channels.length === 0) return callback(this.createValidationError('Missing Channel'));
-
-	      if (!this.validateEndpointConfig(endpointConfig)) {
-	        return;
-	      }
-
-	      var params = this.createBaseParams(endpointConfig);
-	      params.remove = channels.join(',');
-
-	      this.networking.GET(params, endpointConfig, function (status) {
-	        callback(status);
-	      });
-	    }
-	  }]);
-
-	  return _class;
-	}(_base2.default);
-
-	exports.default = _class;
-	module.exports = exports['default'];
-	//# sourceMappingURL=channel_groups.js.map
-
-
-/***/ },
-/* 29 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

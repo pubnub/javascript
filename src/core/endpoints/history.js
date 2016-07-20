@@ -1,118 +1,71 @@
 /* @flow */
 
-import Networking from '../components/networking';
-import Config from '../components/config';
-import Crypto from '../components/cryptography/index';
-import BaseEndpoint from './base.js';
-import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
+import { FetchHistoryArguments, HistoryResponse, HistoryItem } from '../flow_interfaces';
 
-type HistoryConstruct = {
-  networking: Networking,
-  crypto: Crypto,
-  config: Config
-};
+function __processMessage(modules, message: Object): Object | null {
+  let { config, crypto } = modules;
+  if (!config.cipherKey) return message;
 
-type FetchHistoryArguments = {
-  channel: string, // fetch history from a channel
-  channelGroup: string, // fetch history from channel groups
-  start: number, // start timetoken for history fetching
-  end: number, // end timetoken for history feting
-  includeTimetoken: boolean, // include time token for each history call
-  reverse: boolean,
-  count: number
-}
-
-type HistoryItem = {
-  timetoken: number | null,
-  entry: any,
-}
-
-type HistoryResponse = {
-  messages: Array<HistoryItem>,
-  startTimeToken: number,
-  endTimeToken: number,
-}
-
-export default class extends BaseEndpoint {
-  networking: Networking;
-  crypto: Crypto;
-  config: Config;
-
-  constructor({ networking, crypto, config }: HistoryConstruct) {
-    super({ config });
-    this.networking = networking;
-    this.crypto = crypto;
-    this.config = config;
+  try {
+    return crypto.decrypt(message);
+  } catch (e) {
+    return message;
   }
+}
 
-  fetch(args: FetchHistoryArguments, callback: Function) {
-    const { channel, start, end, includeTimetoken, reverse, count = 100 } = args;
+export function getOperation(): string {
+  return 'PNHistoryOperation';
+}
 
-    const endpointConfig: EndpointDefinition = {
-      params: {
-        authKey: { required: false },
-        subscribeKey: { required: true }
-      },
-      url: '/v2/history/sub-key/' + this.config.subscribeKey + '/channel/' + encodeURIComponent(channel),
-      operation: 'PNHistoryOperation'
+export function validateParams(modules, incomingParams: FetchHistoryArguments) {
+  let { channel } = incomingParams;
+  let { config } = modules;
+
+  if (!channel) return 'Missing channel';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+export function getURL(modules, incomingParams: FetchHistoryArguments): string {
+  let { channel } = incomingParams;
+  let { config } = modules;
+  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
+}
+
+export function prepareParams(modules, incomingParams: FetchHistoryArguments): Object {
+  const { start, end, includeTimetoken, reverse, count = 100 } = incomingParams;
+  let outgoingParams = {};
+
+  outgoingParams.count = count;
+  if (start) outgoingParams.start = start;
+  if (end) outgoingParams.end = end;
+  if (includeTimetoken != null) outgoingParams.include_token = includeTimetoken.toString();
+  if (reverse != null) outgoingParams.reverse = reverse.toString();
+
+  return outgoingParams;
+}
+
+export function handleResponse(modules, serverResponse: FetchHistoryArguments): HistoryResponse {
+  const response: HistoryResponse = {
+    messages: [],
+    startTimeToken: parseInt(serverResponse[1], 10),
+    endTimeToken: parseInt(serverResponse[2], 10),
+  };
+
+  serverResponse[0].forEach((serverHistoryItem) => {
+    const item: HistoryItem = {
+      timetoken: null,
+      entry: null
     };
 
-    if (!channel) return callback(this.createValidationError('Missing channel'));
-    if (!callback) return this.log('Missing Callback');
-
-    // validate this request and return false if stuff is missing
-    if (!this.validateEndpointConfig(endpointConfig)) { return; }
-    // create base params
-    const params = this.createBaseParams(endpointConfig);
-    params.count = count;
-
-    if (start) params.start = start;
-    if (end) params.end = end;
-    if (includeTimetoken != null) params.include_token = includeTimetoken.toString();
-    if (reverse != null) params.reverse = reverse.toString();
-
-    // Send Message
-    this.networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
-      if (status.error) return callback(status);
-
-      callback(status, this._parseResponse(payload, includeTimetoken));
-    });
-  }
-
-  _parseResponse(payload: Object, includeTimetoken: boolean): HistoryResponse {
-    const response: HistoryResponse = {
-      messages: [],
-      startTimeToken: parseInt(payload[1], 10),
-      endTimeToken: parseInt(payload[2], 10),
-    };
-
-    payload[0].forEach((serverHistoryItem) => {
-      const item: HistoryItem = {
-        timetoken: null,
-        entry: null
-      };
-
-      if (includeTimetoken) {
-        item.timetoken = serverHistoryItem.timetoken;
-        item.entry = this.__processMessage(serverHistoryItem.message);
-      } else {
-        item.entry = this.__processMessage(serverHistoryItem);
-      }
-
-      response.messages.push(item);
-    });
-
-    return response;
-  }
-
-  __processMessage(message: Object): Object | null {
-    if (!this.config.cipherKey) return message;
-
-    try {
-      return this.crypto.decrypt(message);
-    } catch (e) {
-      return message;
+    if (serverHistoryItem.timetoken) {
+      item.timetoken = serverHistoryItem.timetoken;
+      item.entry = __processMessage(modules, serverHistoryItem.message);
+    } else {
+      item.entry = __processMessage(modules, serverHistoryItem);
     }
-  }
 
+    response.messages.push(item);
+  });
+
+  return response;
 }
