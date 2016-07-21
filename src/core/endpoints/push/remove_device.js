@@ -1,12 +1,12 @@
 /* @flow */
 
-import { RemoveDeviceArgs } from '../../flow_interfaces';
+import { RemoveDeviceArgs, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNRemoveAllPushNotificationsOperation';
 }
 
-export function validateParams(modules, incomingParams: RemoveDeviceArgs) {
+export function validateParams(modules: ModulesInject, incomingParams: RemoveDeviceArgs) {
   let { device, pushGateway } = incomingParams;
   let { config } = modules;
 
@@ -15,13 +15,17 @@ export function validateParams(modules, incomingParams: RemoveDeviceArgs) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: RemoveDeviceArgs): string {
+export function getURL(modules: ModulesInject, incomingParams: RemoveDeviceArgs): string {
   let { device } = incomingParams;
   let { config } = modules;
   return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device + '/remove';
 }
 
-export function prepareParams(modules, incomingParams: RemoveDeviceArgs): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: RemoveDeviceArgs): Object {
   let { pushGateway } = incomingParams;
   return { type: pushGateway };
 }

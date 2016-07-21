@@ -1,12 +1,12 @@
 /* @flow */
 
-import { DeleteGroupParams } from '../../flow_interfaces';
+import { DeleteGroupParams, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNRemoveGroupOperation';
 }
 
-export function validateParams(modules, incomingParams: DeleteGroupParams) {
+export function validateParams(modules: ModulesInject, incomingParams: DeleteGroupParams) {
   let { channelGroup } = incomingParams;
   let { config } = modules;
 
@@ -14,10 +14,14 @@ export function validateParams(modules, incomingParams: DeleteGroupParams) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: DeleteGroupParams): string {
+export function getURL(modules: ModulesInject, incomingParams: DeleteGroupParams): string {
   let { channelGroup } = incomingParams;
   let { config } = modules;
   return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
+}
+
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
 }
 
 export function prepareParams(): Object {

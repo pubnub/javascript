@@ -1,12 +1,12 @@
 /* @flow */
 
-import { ListChannelsArgs, ListChannelsResponse } from '../../flow_interfaces';
+import { ListChannelsArgs, ListChannelsResponse, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNPushNotificationEnabledChannelsOperation';
 }
 
-export function validateParams(modules, incomingParams: ListChannelsArgs) {
+export function validateParams(modules: ModulesInject, incomingParams: ListChannelsArgs) {
   let { device, pushGateway } = incomingParams;
   let { config } = modules;
 
@@ -15,17 +15,21 @@ export function validateParams(modules, incomingParams: ListChannelsArgs) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: ListChannelsArgs): string {
+export function getURL(modules: ModulesInject, incomingParams: ListChannelsArgs): string {
   let { device } = incomingParams;
   let { config } = modules;
   return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
 }
 
-export function prepareParams(modules, incomingParams: ListChannelsArgs): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: ListChannelsArgs): Object {
   let { pushGateway } = incomingParams;
   return { type: pushGateway };
 }
 
-export function handleResponse(modules, serverResponse: Array<string>): ListChannelsResponse {
+export function handleResponse(modules: ModulesInject, serverResponse: Array<string>): ListChannelsResponse {
   return { channels: serverResponse };
 }

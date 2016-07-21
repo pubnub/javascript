@@ -1,25 +1,29 @@
 /* @flow */
 
-import { GetStateArguments, GetStateResponse } from '../../flow_interfaces';
+import { GetStateArguments, GetStateResponse, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNGetStateOperation';
 }
 
-export function validateParams(modules) {
+export function validateParams(modules: ModulesInject) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: GetStateArguments): string {
+export function getURL(modules: ModulesInject, incomingParams: GetStateArguments): string {
   let { config } = modules;
   let { uuid = config.UUID, channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
   return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid;
 }
 
-export function prepareParams(modules, incomingParams: GetStateArguments): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: GetStateArguments): Object {
   let { channelGroups = [] } = incomingParams;
   const params = {};
 
@@ -30,7 +34,7 @@ export function prepareParams(modules, incomingParams: GetStateArguments): Objec
   return params;
 }
 
-export function handleResponse(modules, serverResponse: Object, incomingParams: GetStateArguments): GetStateResponse {
+export function handleResponse(modules: ModulesInject, serverResponse: Object, incomingParams: GetStateArguments): GetStateResponse {
   let { channels = [], channelGroups = [] } = incomingParams;
   let channelsResponse = {};
 

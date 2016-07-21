@@ -335,5 +335,8 @@ type PublishArguments = {
 
 //
 
+type ModulesInject = {
+  config: Object;
+}
 
 module.exports = {};

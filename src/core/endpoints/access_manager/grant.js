@@ -1,23 +1,27 @@
 /* @flow */
 
-import { GrantArguments } from '../../flow_interfaces';
+import { GrantArguments, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNAccessManagerGrant';
 }
 
-export function validateParams(modules) {
+export function validateParams(modules: ModulesInject) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules): string {
+export function getURL(modules: ModulesInject): string {
   let { config } = modules;
   return '/v1/auth/grant/sub-key/' + config.subscribeKey;
 }
 
-export function prepareParams(modules, incomingParams: GrantArguments): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: GrantArguments): Object {
   const { channels = [], channelGroups = [], ttl, read = false, write = false, manage = false, authKeys = [] } = incomingParams;
   const params = {};
 

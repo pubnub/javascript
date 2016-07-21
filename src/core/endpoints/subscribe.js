@@ -1,27 +1,33 @@
 /* @flow */
 
-import { SubscribeArguments, PublishMetaData, SubscribeMetadata, SubscribeMessage, SubscribeEnvelope } from '../flow_interfaces';
+import { SubscribeArguments, PublishMetaData, SubscribeMetadata, SubscribeMessage, SubscribeEnvelope, ModulesInject } from '../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNSubscribeOperation';
 }
 
-export function validateParams(modules) {
+export function validateParams(modules: ModulesInject) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: SubscribeArguments): string {
+export function getURL(modules: ModulesInject, incomingParams: SubscribeArguments): string {
   let { config } = modules;
   let { channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
   return '/v2/subscribe/' + config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0';
 }
 
-export function prepareParams(modules, incomingParams: SubscribeArguments): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getSubscribeTimeout();
+}
+
+export function prepareParams({ config }: ModulesInject, incomingParams: SubscribeArguments): Object {
   let { channelGroups = [], timetoken, filterExpression, region } = incomingParams;
-  const params = {};
+  const params: Object = {
+    heartbeat: config.getPresenceTimeout()
+  };
 
   if (channelGroups.length > 0) {
     params['channel-group'] = encodeURIComponent(channelGroups.join(','));
@@ -42,7 +48,7 @@ export function prepareParams(modules, incomingParams: SubscribeArguments): Obje
   return params;
 }
 
-export function handleResponse(modules, serverResponse: Object): SubscribeEnvelope {
+export function handleResponse(modules: ModulesInject, serverResponse: Object): SubscribeEnvelope {
   const messages: Array<SubscribeMessage> = [];
 
   serverResponse.m.forEach((rawMessage) => {

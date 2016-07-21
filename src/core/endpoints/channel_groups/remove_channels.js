@@ -1,12 +1,12 @@
 /* @flow */
 
-import { RemoveChannelParams } from '../../flow_interfaces';
+import { RemoveChannelParams, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNRemoveChannelsFromGroupOperation';
 }
 
-export function validateParams(modules, incomingParams: RemoveChannelParams) {
+export function validateParams(modules: ModulesInject, incomingParams: RemoveChannelParams) {
   let { channels, channelGroup } = incomingParams;
   let { config } = modules;
 
@@ -15,13 +15,17 @@ export function validateParams(modules, incomingParams: RemoveChannelParams) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: RemoveChannelParams): string {
+export function getURL(modules: ModulesInject, incomingParams: RemoveChannelParams): string {
   let { channelGroup } = incomingParams;
   let { config } = modules;
   return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
 }
 
-export function prepareParams(modules, incomingParams: RemoveChannelParams): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: RemoveChannelParams): Object {
   let { channels = [] } = incomingParams;
 
   return {

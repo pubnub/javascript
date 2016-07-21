@@ -1,12 +1,12 @@
 /* @flow */
 
-import { ModifyDeviceArgs } from '../../flow_interfaces';
+import { ModifyDeviceArgs, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNPushNotificationEnabledChannelsOperation';
 }
 
-export function validateParams(modules, incomingParams: ModifyDeviceArgs) {
+export function validateParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs) {
   let { device, pushGateway, channels } = incomingParams;
   let { config } = modules;
 
@@ -16,13 +16,17 @@ export function validateParams(modules, incomingParams: ModifyDeviceArgs) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: ModifyDeviceArgs): string {
+export function getURL(modules: ModulesInject, incomingParams: ModifyDeviceArgs): string {
   let { device } = incomingParams;
   let { config } = modules;
   return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
 }
 
-export function prepareParams(modules, incomingParams: ModifyDeviceArgs): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs): Object {
   let { pushGateway, channels = [] } = incomingParams;
   return { type: pushGateway, add: encodeURIComponent(channels.join(',')) };
 }

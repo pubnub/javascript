@@ -462,7 +462,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        superagentConstruct = superagentConstruct.use(this._logger());
 	      }
 
-	      return superagentConstruct.type('json').timeout(endpoint.timeout || this._config.getTransactionTimeout()).end(function (err, resp) {
+	      return superagentConstruct.type('json').timeout(endpoint.timeout).end(function (err, resp) {
 	        var status = {};
 	        status.error = err !== null;
 	        status.operation = endpoint.operation;
@@ -3533,6 +3533,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -3558,14 +3559,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v2/subscribe/' + config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0';
 	}
 
-	function prepareParams(modules, incomingParams) {
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getSubscribeTimeout();
+	}
+
+	function prepareParams(_ref2, incomingParams) {
+	  var config = _ref2.config;
 	  var _incomingParams$chann2 = incomingParams.channelGroups;
 	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
 	  var timetoken = incomingParams.timetoken;
 	  var filterExpression = incomingParams.filterExpression;
 	  var region = incomingParams.region;
 
-	  var params = {};
+	  var params = {
+	    heartbeat: config.getPresenceTimeout()
+	  };
 
 	  if (channelGroups.length > 0) {
 	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
@@ -3629,6 +3639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.getOperation = getOperation;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 	exports.validateParams = validateParams;
@@ -3643,11 +3654,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/time/0';
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams() {
 	  return {};
 	}
 
-	function handleResponse(params, serverResponse) {
+	function handleResponse(modules, serverResponse) {
 	  return {
 	    timetoken: serverResponse[0]
 	  };
@@ -3901,11 +3918,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
 	    var url = endpoint.postURL(modules, incomingParams);
+	    var networkingParams = { url: url,
+	      operation: endpoint.getOperation(),
+	      timeout: endpoint.getRequestTimeout(modules)
+	    };
 	    var payload = endpoint.postPayload(modules, incomingParams);
-	    callInstance = networking.POST(outgoingParams, payload, { url: url, operation: endpoint.getOperation() }, onResponse);
+	    callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
 	  } else {
 	    var _url = endpoint.getURL(modules, incomingParams);
-	    callInstance = networking.GET(outgoingParams, { url: _url, operation: endpoint.getOperation() }, onResponse);
+	    var _networkingParams = { url: _url,
+	      operation: endpoint.getOperation(),
+	      timeout: endpoint.getRequestTimeout(modules)
+	    };
+	    callInstance = networking.GET(outgoingParams, _networkingParams, onResponse);
 	  }
 
 	  if (endpoint.getOperation === 'PNSubscribeOperation') {
@@ -3950,6 +3975,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -3975,6 +4001,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4005,6 +4037,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4030,6 +4063,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4060,6 +4099,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4085,6 +4125,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams() {
 	  return {};
 	}
@@ -4107,6 +4153,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4129,13 +4176,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group';
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams() {
 	  return {};
 	}
 
-	function handleResponse(modules, payload) {
+	function handleResponse(modules, serverResponse) {
 	  return {
-	    groups: payload.payload.groups
+	    groups: serverResponse.payload.groups
 	  };
 	}
 	//# sourceMappingURL=list_groups.js.map
@@ -4153,6 +4206,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4178,13 +4232,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams() {
 	  return {};
 	}
 
-	function handleResponse(modules, payload) {
+	function handleResponse(modules, serverResponse) {
 	  return {
-	    channels: payload.payload.channels
+	    channels: serverResponse.payload.channels
 	  };
 	}
 	//# sourceMappingURL=list_channels.js.map
@@ -4202,6 +4262,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4229,6 +4290,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4257,6 +4324,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4286,6 +4354,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var pushGateway = incomingParams.pushGateway;
 	  var _incomingParams$chann = incomingParams.channels;
@@ -4312,6 +4386,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4339,6 +4414,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var pushGateway = incomingParams.pushGateway;
 
@@ -4363,6 +4444,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4390,6 +4472,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device + '/remove';
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var pushGateway = incomingParams.pushGateway;
 
@@ -4414,6 +4502,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4437,6 +4526,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave';
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4470,6 +4565,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4494,6 +4590,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/uuid/' + uuid;
 	}
 
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
 	function prepareParams() {
 	  return {};
 	}
@@ -4516,6 +4618,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4539,6 +4642,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat';
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4577,6 +4686,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4602,6 +4712,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4648,6 +4764,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4673,6 +4790,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + config.UUID + '/data';
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4709,6 +4832,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4740,6 +4864,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return baseURL;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4853,6 +4983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4873,6 +5004,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v1/auth/audit/sub-key/' + config.subscribeKey;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4918,6 +5055,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4938,6 +5076,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v1/auth/grant/sub-key/' + config.subscribeKey;
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -5004,6 +5148,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.usePost = usePost;
 	exports.getURL = getURL;
 	exports.postURL = postURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.postPayload = postPayload;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
@@ -5028,10 +5173,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return 'PNPublishOperation';
 	}
 
-	function validateParams(modules, incomingParams) {
+	function validateParams(_ref, incomingParams) {
+	  var config = _ref.config;
 	  var message = incomingParams.message;
 	  var channel = incomingParams.channel;
-	  var config = modules.config;
 
 
 	  if (!channel) return 'Missing Channel';
@@ -5060,6 +5205,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channel = incomingParams.channel;
 
 	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0';
+	}
+
+	function getRequestTimeout(_ref2) {
+	  var config = _ref2.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function postPayload(modules, incomingParams) {
@@ -5113,6 +5264,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -5149,6 +5301,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
 	}
 
 	function prepareParams(modules, incomingParams) {

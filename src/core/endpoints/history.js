@@ -1,6 +1,6 @@
 /* @flow */
 
-import { FetchHistoryArguments, HistoryResponse, HistoryItem } from '../flow_interfaces';
+import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
 
 function __processMessage(modules, message: Object): Object | null {
   let { config, crypto } = modules;
@@ -17,7 +17,7 @@ export function getOperation(): string {
   return 'PNHistoryOperation';
 }
 
-export function validateParams(modules, incomingParams: FetchHistoryArguments) {
+export function validateParams(modules: ModulesInject, incomingParams: FetchHistoryArguments) {
   let { channel } = incomingParams;
   let { config } = modules;
 
@@ -25,13 +25,17 @@ export function validateParams(modules, incomingParams: FetchHistoryArguments) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: FetchHistoryArguments): string {
+export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
   let { channel } = incomingParams;
   let { config } = modules;
   return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
 }
 
-export function prepareParams(modules, incomingParams: FetchHistoryArguments): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
   const { start, end, includeTimetoken, reverse, count = 100 } = incomingParams;
   let outgoingParams = {};
 
@@ -44,7 +48,7 @@ export function prepareParams(modules, incomingParams: FetchHistoryArguments): O
   return outgoingParams;
 }
 
-export function handleResponse(modules, serverResponse: FetchHistoryArguments): HistoryResponse {
+export function handleResponse(modules: ModulesInject, serverResponse: FetchHistoryArguments): HistoryResponse {
   const response: HistoryResponse = {
     messages: [],
     startTimeToken: parseInt(serverResponse[1], 10),

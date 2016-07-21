@@ -1,18 +1,18 @@
 /* @flow */
 
-import { HereNowArguments } from '../../flow_interfaces';
+import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
 
 export function getOperation(): string {
   return 'PNHereNowOperation';
 }
 
-export function validateParams(modules) {
+export function validateParams(modules: ModulesInject) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules, incomingParams: HereNowArguments): string {
+export function getURL(modules: ModulesInject, incomingParams: HereNowArguments): string {
   let { config } = modules;
   let { channels = [], channelGroups = [] } = incomingParams;
   let baseURL = '/v2/presence/sub-key/' + config.subscribeKey;
@@ -25,7 +25,11 @@ export function getURL(modules, incomingParams: HereNowArguments): string {
   return baseURL;
 }
 
-export function prepareParams(modules, incomingParams: HereNowArguments): Object {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function prepareParams(modules: ModulesInject, incomingParams: HereNowArguments): Object {
   let { channelGroups = [], includeUUIDs = true, includeState = false } = incomingParams;
   const params = {};
 
@@ -39,7 +43,7 @@ export function prepareParams(modules, incomingParams: HereNowArguments): Object
   return params;
 }
 
-export function handleResponse(modules, serverResponse: Object, incomingParams: HereNowArguments): Object {
+export function handleResponse(modules: ModulesInject, serverResponse: Object, incomingParams: HereNowArguments): Object {
   let { channels = [], channelGroups = [], includeUUIDs = true, includeState = false } = incomingParams;
 
   let prepareSingularChannel = () => {

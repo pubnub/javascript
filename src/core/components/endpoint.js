@@ -70,11 +70,19 @@ export default function (modules, endpoint, ...args) {
 
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     let url = endpoint.postURL(modules, incomingParams);
+    let networkingParams = { url,
+      operation: endpoint.getOperation(),
+      timeout: endpoint.getRequestTimeout(modules)
+    };
     let payload = endpoint.postPayload(modules, incomingParams);
-    callInstance = networking.POST(outgoingParams, payload, { url, operation: endpoint.getOperation() }, onResponse);
+    callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
   } else {
     let url = endpoint.getURL(modules, incomingParams);
-    callInstance = networking.GET(outgoingParams, { url, operation: endpoint.getOperation() }, onResponse);
+    let networkingParams = { url,
+      operation: endpoint.getOperation(),
+      timeout: endpoint.getRequestTimeout(modules)
+    };
+    callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }
 
   if (endpoint.getOperation === 'PNSubscribeOperation') {

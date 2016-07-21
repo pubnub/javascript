@@ -1,6 +1,6 @@
 /* @flow */
 
-import { PublishResponse, PublishArguments } from '../flow_interfaces';
+import { PublishResponse, PublishArguments, ModulesInject } from '../flow_interfaces';
 
 function prepareMessagePayload(modules, messagePayload) {
   const { crypto, config } = modules;
@@ -18,39 +18,42 @@ export function getOperation(): string {
   return 'PNPublishOperation';
 }
 
-export function validateParams(modules, incomingParams: PublishArguments) {
+export function validateParams({ config}: ModulesInject, incomingParams: PublishArguments) {
   let { message, channel } = incomingParams;
-  let { config } = modules;
 
   if (!channel) return 'Missing Channel';
   if (!message) return 'Missing Message';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function usePost(modules, incomingParams) {
+export function usePost(modules: ModulesInject, incomingParams: PublishArguments) {
   let { sendByPost = false } = incomingParams;
   return sendByPost;
 }
 
-export function getURL(modules, incomingParams: PublishArguments): string {
+export function getURL(modules: ModulesInject, incomingParams: PublishArguments): string {
   const { config } = modules;
   const { channel, message } = incomingParams;
   let stringifiedPayload = prepareMessagePayload(modules, message);
   return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0/' + encodeURIComponent(stringifiedPayload);
 }
 
-export function postURL(modules, incomingParams: PublishArguments): string {
+export function postURL(modules: ModulesInject, incomingParams: PublishArguments): string {
   const { config } = modules;
   const { channel } = incomingParams;
   return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0';
 }
 
-export function postPayload(modules, incomingParams: PublishArguments): string {
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function postPayload(modules: ModulesInject, incomingParams: PublishArguments): string {
   const { message } = incomingParams;
   return prepareMessagePayload(modules, message);
 }
 
-export function prepareParams(modules, incomingParams: PublishArguments): Object {
+export function prepareParams(modules: ModulesInject, incomingParams: PublishArguments): Object {
   const { meta, replicate = true, storeInHistory } = incomingParams;
   const params = {};
 
@@ -73,6 +76,6 @@ export function prepareParams(modules, incomingParams: PublishArguments): Object
   return params;
 }
 
-export function handleResponse(modules, serverResponse: Object): PublishResponse {
+export function handleResponse(modules: ModulesInject, serverResponse: Object): PublishResponse {
   return { timetoken: serverResponse[2] };
 }

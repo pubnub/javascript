@@ -99,7 +99,7 @@ export default class {
 
     return superagentConstruct
       .type('json')
-      .timeout(endpoint.timeout || this._config.getTransactionTimeout())
+      .timeout(endpoint.timeout)
       .end((err, resp) => {
         let status: StatusAnnouncement = {};
         status.error = err !== null;

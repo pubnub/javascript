@@ -31,7 +31,7 @@ describe('subscribe endpoints', () => {
 
   it('supports addition of multiple channels', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
-      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300 })
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnub.addListener({
@@ -48,7 +48,7 @@ describe('subscribe endpoints', () => {
 
   it('supports addition of multiple channels / channel groups', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
-      .query({ 'channel-group': 'cg1%2Ccg2', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ 'channel-group': 'cg1%2Ccg2', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300 })
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnub.addListener({
@@ -65,7 +65,7 @@ describe('subscribe endpoints', () => {
 
   it('supports just channel group', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/%2C/0')
-      .query({ 'channel-group': 'cg1%2Ccg2', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ 'channel-group': 'cg1%2Ccg2', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300 })
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnub.addListener({
@@ -82,7 +82,7 @@ describe('subscribe endpoints', () => {
 
   it('supports filter expression', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
-      .query({ 'filter-expr': 'hello!', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ 'filter-expr': 'hello!', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300 })
       .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
 
     pubnubWithFiltering.addListener({
