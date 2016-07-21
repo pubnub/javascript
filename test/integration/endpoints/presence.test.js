@@ -205,7 +205,7 @@ describe('presence endpoints', () => {
             occupancy: 1,
             occupants: [
               {
-                state: null,
+                state: undefined,
                 uuid: 'user1'
               },
             ]
@@ -215,11 +215,11 @@ describe('presence endpoints', () => {
             occupancy: 2,
             occupants: [
               {
-                state: null,
+                state: undefined,
                 uuid: 'user1'
               },
               {
-                state: null,
+                state: undefined,
                 uuid: 'user3'
               }
             ]

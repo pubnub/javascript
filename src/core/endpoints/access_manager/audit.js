@@ -17,8 +17,12 @@ export function getURL(modules: ModulesInject): string {
   return '/v1/auth/audit/sub-key/' + config.subscribeKey;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }: ModulesInject): number {
   return config.getTransactionTimeout();
+}
+
+export function isAuthSupported(): boolean {
+  return false;
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: AuditArguments): Object {

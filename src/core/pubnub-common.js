@@ -41,8 +41,6 @@ import { InternalSetupStruct } from './flow_interfaces';
 export default class {
 
   _config: Config;
-  _crypto: Crypto;
-  _networking: Networking;
 
   // tell flow about the mounted endpoint
   time: Function;
@@ -85,12 +83,11 @@ export default class {
   constructor(setup: InternalSetupStruct) {
     let { sendBeacon, db } = setup;
 
-    const config = new Config({ setup, db });
+    const config = this._config = new Config({ setup, db });
     const crypto = new Crypto({ config });
     const networking = new Networking({ config, crypto, sendBeacon });
 
     let modules = { config, networking, crypto };
-
     const listenerManager = new ListenerManager();
 
     // new
@@ -101,7 +98,10 @@ export default class {
     const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
     //
 
-    const subscriptionManager = new SubscriptionManager({ timeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, subscribeEndpoint,
+    const subscriptionManager = new SubscriptionManager({
+      timeEndpoint,
+      leaveEndpoint, heartbeatEndpoint, setStateEndpoint,
+      subscribeEndpoint,
       config: modules.config,
       listenerManager,
     });
@@ -144,7 +144,6 @@ export default class {
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
 
     this.time = timeEndpoint;
-
 
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);

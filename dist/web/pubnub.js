@@ -270,12 +270,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var db = setup.db;
 
 
-	    var config = new _config2.default({ setup: setup, db: db });
+	    var config = this._config = new _config2.default({ setup: setup, db: db });
 	    var crypto = new _index2.default({ config: config });
 	    var networking = new _networking2.default({ config: config, crypto: crypto, sendBeacon: sendBeacon });
 
 	    var modules = { config: config, networking: networking, crypto: crypto };
-
 	    var listenerManager = new _listener_manager2.default();
 
 	    var timeEndpoint = _endpoint2.default.bind(this, modules, timeEndpointConfig);
@@ -285,7 +284,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var subscribeEndpoint = _endpoint2.default.bind(this, modules, subscribeEndpointConfig);
 
 
-	    var subscriptionManager = new _subscription_manager2.default({ timeEndpoint: timeEndpoint, leaveEndpoint: leaveEndpoint, heartbeatEndpoint: heartbeatEndpoint, setStateEndpoint: setStateEndpoint, subscribeEndpoint: subscribeEndpoint,
+	    var subscriptionManager = new _subscription_manager2.default({
+	      timeEndpoint: timeEndpoint,
+	      leaveEndpoint: leaveEndpoint, heartbeatEndpoint: heartbeatEndpoint, setStateEndpoint: setStateEndpoint,
+	      subscribeEndpoint: subscribeEndpoint,
 	      config: modules.config,
 	      listenerManager: listenerManager
 	    });
@@ -3947,7 +3949,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    callInstance = networking.GET(outgoingParams, _networkingParams, onResponse);
 	  }
 
-	  if (endpoint.getOperation === 'PNSubscribeOperation') {
+	  if (endpoint.getOperation() === 'PNSubscribeOperation') {
 	    return callInstance;
 	  }
 	};
@@ -5073,6 +5075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -5099,6 +5102,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return false;
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -5145,6 +5152,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -5171,6 +5179,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return false;
 	}
 
 	function prepareParams(modules, incomingParams) {

@@ -89,7 +89,7 @@ export default function (modules, endpoint, ...args) {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }
 
-  if (endpoint.getOperation === 'PNSubscribeOperation') {
+  if (endpoint.getOperation() === 'PNSubscribeOperation') {
     return callInstance;
   }
 }

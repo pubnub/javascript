@@ -21,11 +21,11 @@ export function getURL(modules: ModulesInject, incomingParams: AddChannelParams)
   return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }: ModulesInject): number {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported() {
+export function isAuthSupported(): boolean {
   return true;
 }
 
