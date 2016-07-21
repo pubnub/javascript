@@ -1,23 +1,25 @@
+/* @flow */
 
-/*
+import { GrantArguments } from '../../flow_interfaces';
 
-grant(args: GrantArguments, callback: Function) {
-  const { channels = [], channelGroups = [], ttl, read = false, write = false, manage = false, authKeys = [] } = args;
-  const endpointConfig: EndpointDefinition = {
-    params: {
-      subscribeKey: { required: true },
-      publishKey: { required: true },
-    },
-    url: '/v1/auth/grant/sub-key/' + this._config.subscribeKey,
-    operation: 'PNAccessManagerGrant'
-  };
+export function getOperation(): string {
+  return 'PNAccessManagerGrant';
+}
 
-  if (!callback) return this.log('Missing Callback');
+export function validateParams(modules) {
+  let { config } = modules;
 
-  // validate this request and return false if stuff is missing
-  if (!this.validateEndpointConfig(endpointConfig)) { return; }
-  // create base params
-  const params = this.createBaseParams(endpointConfig);
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+export function getURL(modules): string {
+  let { config } = modules;
+  return '/v1/auth/grant/sub-key/' + config.subscribeKey;
+}
+
+export function prepareParams(modules, incomingParams: GrantArguments): Object {
+  const { channels = [], channelGroups = [], ttl, read = false, write = false, manage = false, authKeys = [] } = incomingParams;
+  const params = {};
 
   params.r = (read) ? '1' : '0';
   params.w = (write) ? '1' : '0';
@@ -40,15 +42,9 @@ grant(args: GrantArguments, callback: Function) {
     params.ttl = ttl;
   }
 
-  let signInput = this._config.subscribeKey + '\n' + this._config.publishKey + '\ngrant\n';
-  signInput += utils.signPamFromParams(params);
-
-  params.signature = this._crypto.HMACSHA256(signInput);
-
-  this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
-    if (status.error) return callback(status);
-    callback(status, payload.payload);
-  });
+  return params;
 }
 
-*/
+export function handleResponse(): Object {
+  return {};
+}

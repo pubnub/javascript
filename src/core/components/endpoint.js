@@ -1,5 +1,6 @@
 import { StatusAnnouncement } from '../flow_interfaces';
 import uuidGenerator from 'uuid';
+import utils from '../utils';
 
 function createError(errorPayload: Object, type: string): Object {
   errorPayload.type = type;
@@ -11,7 +12,7 @@ function createValidationError(message: string): Object {
 }
 
 export default function (modules, endpoint, ...args) {
-  let { networking, config } = modules;
+  let { networking, config, crypto } = modules;
   let callback = null;
   let incomingParams = {};
 
@@ -44,6 +45,19 @@ export default function (modules, endpoint, ...args) {
 
   if (config.useRequestId) {
     outgoingParams.requestid = uuidGenerator.v4();
+  }
+
+  // encrypt the params
+  if (endpoint.getOperation() === 'PNAccessManagerGrant') {
+    let signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
+    signInput += utils.signPamFromParams(outgoingParams);
+    outgoingParams.signature = crypto.HMACSHA256(signInput);
+  }
+
+  if (endpoint.getOperation() === 'PNAccessManagerAudit') {
+    let signInput = config.subscribeKey + '\n' + config.publishKey + '\naudit\n';
+    signInput += utils.signPamFromParams(outgoingParams);
+    outgoingParams.signature = crypto.HMACSHA256(signInput);
   }
 
   let onResponse = (status: StatusAnnouncement, payload: Object) => {

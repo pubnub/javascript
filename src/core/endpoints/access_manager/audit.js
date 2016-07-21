@@ -1,25 +1,25 @@
+/* @flow */
 
+import { AuditArguments } from '../../flow_interfaces';
 
-/*
+export function getOperation(): string {
+  return 'PNAccessManagerAudit';
+}
 
-audit(args: AuditArguments, callback: Function) {
-  const { channel, channelGroup, authKeys = [] } = args;
-  const endpointConfig: EndpointDefinition = {
-    params: {
-      subscribeKey: { required: true },
-      publishKey: { required: true },
-    },
-    url: '/v1/auth/audit/sub-key/' + this._config.subscribeKey,
-    operation: 'PNAccessManagerAudit'
-  };
+export function validateParams(modules) {
+  let { config } = modules;
 
-  // Make sure we have a Channel
-  if (!callback) return this.log('Missing Callback');
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
 
-  // validate this request and return false if stuff is missing
-  if (!this.validateEndpointConfig(endpointConfig)) { return; }
-  // create base params
-  const params = this.createBaseParams(endpointConfig);
+export function getURL(modules): string {
+  let { config } = modules;
+  return '/v1/auth/audit/sub-key/' + config.subscribeKey;
+}
+
+export function prepareParams(modules, incomingParams: AuditArguments): Object {
+  const { channel, channelGroup, authKeys = [] } = incomingParams;
+  const params = {};
 
   params.timestamp = Math.floor(new Date().getTime() / 1000);
 
@@ -35,16 +35,9 @@ audit(args: AuditArguments, callback: Function) {
     params.auth = authKeys.join(',');
   }
 
-  let signInput = this._config.subscribeKey + '\n' + this._config.publishKey + '\naudit\n';
-  signInput += utils.signPamFromParams(params);
-
-  params.signature = this._crypto.HMACSHA256(signInput);
-
-  this._networking.GET(params, endpointConfig, (status: StatusAnnouncement, payload: Object) => {
-    if (status.error) return callback(status);
-    callback(status, payload.payload);
-  });
-}
+  return params;
 }
 
-*/
+export function handleResponse(modules, serverResponse: Object): Object {
+  return serverResponse.payload;
+}

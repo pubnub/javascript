@@ -87,7 +87,7 @@ export function handleResponse(modules, serverResponse: Object, incomingParams: 
           if (includeState) {
             occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
           } else {
-            occupantsList.push({ state: null, uuid: uuidEntry });
+            occupantsList.push({ state: null, uuid: uuidEntry.uuid });
           }
         });
       }

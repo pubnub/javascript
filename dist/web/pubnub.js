@@ -3843,6 +3843,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = function (modules, endpoint) {
 	  var networking = modules.networking;
 	  var config = modules.config;
+	  var crypto = modules.crypto;
 
 	  var callback = null;
 	  var incomingParams = {};
@@ -3878,6 +3879,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    outgoingParams.requestid = _uuid2.default.v4();
 	  }
 
+	  if (endpoint.getOperation() === 'PNAccessManagerGrant') {
+	    var signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
+	    signInput += _utils2.default.signPamFromParams(outgoingParams);
+	    outgoingParams.signature = crypto.HMACSHA256(signInput);
+	  }
+
+	  if (endpoint.getOperation() === 'PNAccessManagerAudit') {
+	    var _signInput = config.subscribeKey + '\n' + config.publishKey + '\naudit\n';
+	    _signInput += _utils2.default.signPamFromParams(outgoingParams);
+	    outgoingParams.signature = crypto.HMACSHA256(_signInput);
+	  }
+
 	  var onResponse = function onResponse(status, payload) {
 	    if (status.error) return callback(status);
 
@@ -3905,6 +3918,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _uuid = __webpack_require__(12);
 
 	var _uuid2 = _interopRequireDefault(_uuid);
+
+	var _utils = __webpack_require__(21);
+
+	var _utils2 = _interopRequireDefault(_utils);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4801,7 +4818,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          if (includeState) {
 	            occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
 	          } else {
-	            occupantsList.push({ state: null, uuid: uuidEntry });
+	            occupantsList.push({ state: null, uuid: uuidEntry.uuid });
 	          }
 	        });
 	      }
@@ -4826,17 +4843,147 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 38 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNAccessManagerAudit';
+	}
+
+	function validateParams(modules) {
+	  var config = modules.config;
+
+
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules) {
+	  var config = modules.config;
+
+	  return '/v1/auth/audit/sub-key/' + config.subscribeKey;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var channel = incomingParams.channel;
+	  var channelGroup = incomingParams.channelGroup;
+	  var _incomingParams$authK = incomingParams.authKeys;
+	  var authKeys = _incomingParams$authK === undefined ? [] : _incomingParams$authK;
+
+	  var params = {};
+
+	  params.timestamp = Math.floor(new Date().getTime() / 1000);
+
+	  if (channel) {
+	    params.channel = channel;
+	  }
+
+	  if (channelGroup) {
+	    params['channel-group'] = channelGroup;
+	  }
+
+	  if (authKeys.length > 0) {
+	    params.auth = authKeys.join(',');
+	  }
+
+	  return params;
+	}
+
+	function handleResponse(modules, serverResponse) {
+	  return serverResponse.payload;
+	}
 	//# sourceMappingURL=audit.js.map
 
 
 /***/ },
 /* 39 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(14);
+
+	function getOperation() {
+	  return 'PNAccessManagerGrant';
+	}
+
+	function validateParams(modules) {
+	  var config = modules.config;
+
+
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules) {
+	  var config = modules.config;
+
+	  return '/v1/auth/grant/sub-key/' + config.subscribeKey;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var _incomingParams$chann = incomingParams.channels;
+	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann2 = incomingParams.channelGroups;
+	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
+	  var ttl = incomingParams.ttl;
+	  var _incomingParams$read = incomingParams.read;
+	  var read = _incomingParams$read === undefined ? false : _incomingParams$read;
+	  var _incomingParams$write = incomingParams.write;
+	  var write = _incomingParams$write === undefined ? false : _incomingParams$write;
+	  var _incomingParams$manag = incomingParams.manage;
+	  var manage = _incomingParams$manag === undefined ? false : _incomingParams$manag;
+	  var _incomingParams$authK = incomingParams.authKeys;
+	  var authKeys = _incomingParams$authK === undefined ? [] : _incomingParams$authK;
+
+	  var params = {};
+
+	  params.r = read ? '1' : '0';
+	  params.w = write ? '1' : '0';
+	  params.m = manage ? '1' : '0';
+	  params.timestamp = Math.floor(new Date().getTime() / 1000);
+
+	  if (channels.length > 0) {
+	    params.channel = channels.join(',');
+	  }
+
+	  if (channelGroups.length > 0) {
+	    params['channel-group'] = channelGroups.join(',');
+	  }
+
+	  if (authKeys.length > 0) {
+	    params.auth = authKeys.join(',');
+	  }
+
+	  if (ttl || ttl === 0) {
+	    params.ttl = ttl;
+	  }
+
+	  return params;
+	}
+
+	function handleResponse() {
+	  return {};
+	}
 	//# sourceMappingURL=grant.js.map
 
 
