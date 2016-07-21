@@ -23,7 +23,7 @@ describe('access endpoints', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', secretKey: 'mySecretKey', uuid: 'myUUID', logVerbosity: true });
+    pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', secretKey: 'mySecretKey', uuid: 'myUUID' });
     pubnub._config.baseParams.pnsdk = 'PubNub-JS-Nodejs/suchJavascript';
   });
 

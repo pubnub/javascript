@@ -25,11 +25,11 @@ export function getURL(modules: ModulesInject, incomingParams: HereNowArguments)
   return baseURL;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }: ModulesInject): number {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported() {
+export function isAuthSupported(): boolean {
   return true;
 }
 
@@ -95,7 +95,7 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object, i
           if (includeState) {
             occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
           } else {
-            occupantsList.push({ state: null, uuid: uuidEntry.uuid });
+            occupantsList.push({ state: null, uuid: uuidEntry });
           }
         });
       }

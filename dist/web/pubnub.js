@@ -5039,7 +5039,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          if (includeState) {
 	            occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
 	          } else {
-	            occupantsList.push({ state: null, uuid: uuidEntry.uuid });
+	            occupantsList.push({ state: null, uuid: uuidEntry });
 	          }
 	        });
 	      }

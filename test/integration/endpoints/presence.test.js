@@ -1,5 +1,4 @@
 /* global describe, beforeEach, it, before, afterEach, after */
-/* eslint no-console: 0 */
 
 import assert from 'assert';
 import nock from 'nock';
@@ -155,35 +154,21 @@ describe('presence endpoints', () => {
   });
 
   describe('#hereNow', () => {
-    it('returns response for multiple channel here now', (done) => {
+    it('returns response for multiple channels', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2')
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
-        .reply(200, '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1","state":{"age":10}}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1","state":{"age":10}},{"uuid":"user3","state":{"age":30}}]}}},"service":"Presence"}');
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": {"game1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}');
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'] }, (status, response) => {
         assert.deepEqual(response.channels, {
-          ch1: {
-            name: 'ch1',
+          game1: {
+            name: 'game1',
             occupancy: 1,
             occupants: [
               {
                 state: null,
-                uuid: 'user1'
+                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e'
               },
-            ]
-          },
-          ch2: {
-            name: 'ch2',
-            occupancy: 2,
-            occupants: [
-              {
-                state: null,
-                uuid: 'user1'
-              },
-              {
-                state: null,
-                uuid: 'user3'
-              }
             ]
           }
         });
@@ -192,7 +177,7 @@ describe('presence endpoints', () => {
       });
     });
 
-    it('returns response for multiple channel here now with state', (done) => {
+    it('returns response for multiple channel with state', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2')
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: 1 })
         .reply(200, '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}');
@@ -254,24 +239,24 @@ describe('presence endpoints', () => {
       });
     });
 
-    it('returns response for multiple channel here now without UUIDS', (done) => {
-      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', disable_uuids: 1 })
-        .reply(200, '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}');
+    it('returns response for channel group ', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', 'channel-group': 'cg1' })
+        .reply(200, ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}');
 
-      pubnub.hereNow({ channels: ['ch1', 'ch2'], includeUUIDs: false }, (status, response) => {
+      pubnub.hereNow({ channelGroups: ['cg1'] }, (status, response) => {
         assert.equal(status.error, false);
         assert.deepEqual(response.channels, {
           ch1: {
             name: 'ch1',
             occupancy: 1,
-            occupants: []
+            occupants: [
+              {
+                state: null,
+                uuid: 'a581c974-e2f9-4088-9cc8-9632708e012d'
+              }
+            ]
           },
-          ch2: {
-            name: 'ch2',
-            occupancy: 2,
-            occupants: []
-          }
         });
         assert.equal(scope.isDone(), true);
         done();
