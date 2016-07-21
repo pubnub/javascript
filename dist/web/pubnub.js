@@ -3534,6 +3534,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -3563,6 +3564,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getSubscribeTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(_ref2, incomingParams) {
@@ -3641,6 +3646,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
+	exports.isAuthSupported = isAuthSupported;
 	exports.handleResponse = handleResponse;
 	exports.validateParams = validateParams;
 
@@ -3662,6 +3668,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function prepareParams() {
 	  return {};
+	}
+
+	function isAuthSupported() {
+	  return false;
 	}
 
 	function handleResponse(modules, serverResponse) {
@@ -3896,6 +3906,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    outgoingParams.requestid = _uuid2.default.v4();
 	  }
 
+	  if (endpoint.isAuthSupported() && config.getAuthKey()) {
+	    outgoingParams.auth = config.getAuthKey();
+	  }
+
 	  if (endpoint.getOperation() === 'PNAccessManagerGrant') {
 	    var signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
 	    signInput += _utils2.default.signPamFromParams(outgoingParams);
@@ -3976,6 +3990,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4009,6 +4024,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var _incomingParams$chann = incomingParams.channels;
 	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
@@ -4038,6 +4057,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4071,6 +4091,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var _incomingParams$chann = incomingParams.channels;
 	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
@@ -4099,6 +4123,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.isAuthSupported = isAuthSupported;
 	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
@@ -4123,6 +4148,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = modules.config;
 
 	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4154,6 +4183,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4182,6 +4212,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams() {
 	  return {};
 	}
@@ -4207,6 +4241,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4238,6 +4273,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams() {
 	  return {};
 	}
@@ -4263,6 +4302,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4296,6 +4336,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4325,6 +4369,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4360,6 +4405,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var pushGateway = incomingParams.pushGateway;
 	  var _incomingParams$chann = incomingParams.channels;
@@ -4387,6 +4436,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4420,6 +4470,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var pushGateway = incomingParams.pushGateway;
 
@@ -4445,6 +4499,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4478,6 +4533,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams(modules, incomingParams) {
 	  var pushGateway = incomingParams.pushGateway;
 
@@ -4503,6 +4562,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4532,6 +4592,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4566,6 +4630,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4596,6 +4661,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function prepareParams() {
 	  return {};
 	}
@@ -4618,6 +4687,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
+	exports.isAuthSupported = isAuthSupported;
 	exports.getRequestTimeout = getRequestTimeout;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
@@ -4642,6 +4712,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat';
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4687,6 +4761,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4718,6 +4793,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4765,6 +4844,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4796,6 +4876,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -4833,6 +4917,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -4870,6 +4955,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(modules, incomingParams) {
@@ -5149,6 +5238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getURL = getURL;
 	exports.postURL = postURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.postPayload = postPayload;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
@@ -5213,6 +5303,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return config.getTransactionTimeout();
 	}
 
+	function isAuthSupported() {
+	  return true;
+	}
+
 	function postPayload(modules, incomingParams) {
 	  var message = incomingParams.message;
 
@@ -5265,6 +5359,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
 	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
@@ -5307,6 +5402,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var config = _ref.config;
 
 	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
 	}
 
 	function prepareParams(modules, incomingParams) {

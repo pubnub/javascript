@@ -23,6 +23,10 @@ export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function prepareParams(modules: ModulesInject, incomingParams: GetStateArguments): Object {
   let { channelGroups = [] } = incomingParams;
   const params = {};

@@ -23,6 +23,10 @@ export function getRequestTimeout({ config }: ModulesInject) {
   return config.getSubscribeTimeout();
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function prepareParams({ config }: ModulesInject, incomingParams: SubscribeArguments): Object {
   let { channelGroups = [], timetoken, filterExpression, region } = incomingParams;
   const params: Object = {

@@ -35,6 +35,10 @@ export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
   const { start, end, includeTimetoken, reverse, count = 100 } = incomingParams;
   let outgoingParams = {};

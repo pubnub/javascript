@@ -19,6 +19,10 @@ export function getURL(modules: ModulesInject, incomingParams: HeartbeatArgument
   return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat';
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }

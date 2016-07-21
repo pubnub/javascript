@@ -24,6 +24,10 @@ export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function prepareParams(): Object {
   return {};
 }

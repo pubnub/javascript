@@ -52,7 +52,6 @@ describe('heartbeat', () => {
 
       pubnub.addListener({
         status(status) {
-          console.log(status);
           if (status.operation === 'PNHeartbeatOperation' && !status.error) {
             assert.equal(status.error, false);
             assert.equal(scope.isDone(), true);

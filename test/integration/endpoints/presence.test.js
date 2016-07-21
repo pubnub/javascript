@@ -19,7 +19,7 @@ describe('presence endpoints', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', uuid: 'myUUID', logVerbosity: true });
+    pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
   });
 
   describe('#whereNow', () => {
@@ -146,7 +146,6 @@ describe('presence endpoints', () => {
 
 
       pubnub.getState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] }, (status, response) => {
-        console.log(status);
         assert.equal(status.error, false);
         assert.deepEqual(response.channels, { ch1: { age: 20, status: 'online' }, ch2: { age: 100, status: 'offline' } });
         assert.equal(scope.isDone(), true);
@@ -237,7 +236,6 @@ describe('presence endpoints', () => {
         .reply(200, '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}');
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'], includeUUIDs: false }, (status, response) => {
-        console.log(status, response);
         assert.equal(status.error, false);
         assert.deepEqual(response.channels, {
           ch1: {
@@ -262,7 +260,6 @@ describe('presence endpoints', () => {
         .reply(200, '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}');
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'], includeUUIDs: false }, (status, response) => {
-        console.log(status, response);
         assert.equal(status.error, false);
         assert.deepEqual(response.channels, {
           ch1: {

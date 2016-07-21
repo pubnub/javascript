@@ -48,6 +48,10 @@ export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function postPayload(modules: ModulesInject, incomingParams: PublishArguments): string {
   const { message } = incomingParams;
   return prepareMessagePayload(modules, message);

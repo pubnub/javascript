@@ -20,6 +20,10 @@ export function getURL(modules: ModulesInject, incomingParams: DeleteGroupParams
   return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }

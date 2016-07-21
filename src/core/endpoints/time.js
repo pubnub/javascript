@@ -18,6 +18,10 @@ export function prepareParams(): Object {
   return {};
 }
 
+export function isAuthSupported() {
+  return false;
+}
+
 export function handleResponse(modules: ModulesInject, serverResponse: Object): TimeResponse {
   return {
     timetoken: serverResponse[0]

@@ -26,6 +26,10 @@ export function getRequestTimeout({ config }: ModulesInject) {
   return config.getTransactionTimeout();
 }
 
+export function isAuthSupported() {
+  return true;
+}
+
 export function prepareParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs): Object {
   let { pushGateway, channels = [] } = incomingParams;
   return { type: pushGateway, remove: encodeURIComponent(channels.join(',')) };

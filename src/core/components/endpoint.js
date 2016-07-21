@@ -47,6 +47,10 @@ export default function (modules, endpoint, ...args) {
     outgoingParams.requestid = uuidGenerator.v4();
   }
 
+  if (endpoint.isAuthSupported() && config.getAuthKey()) {
+    outgoingParams.auth = config.getAuthKey();
+  }
+
   // encrypt the params
   if (endpoint.getOperation() === 'PNAccessManagerGrant') {
     let signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
