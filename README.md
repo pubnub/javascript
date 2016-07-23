@@ -1,4 +1,4 @@
-# PubNub JavaScript SDK
+# PubNub JavaScript SDK (V4)
 
 [![Build Status](https://travis-ci.org/pubnub/javascript.svg?branch=master)](https://travis-ci.org/pubnub/javascript)
 [![Codecov](https://img.shields.io/codecov/c/github/pubnub/javascript.svg?maxAge=2592000)](https://codecov.io/github/pubnub/javascript)
