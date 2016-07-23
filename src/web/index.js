@@ -17,17 +17,6 @@ let db = {
   }
 };
 
-// Test Connection State
-function navigatorOnlineCheck(): boolean | null {
-  // if onLine is not supported, return nothing.
-  if (!('onLine' in navigator)) {
-    return null;
-  }
-
-  return navigator.onLine;
-}
-
-
 function sendBeacon(url: string) {
   if (navigator && navigator.sendBeacon) {
     navigator.sendBeacon(url);
@@ -41,13 +30,16 @@ export default class extends PubNubCore {
 
   constructor(setup: InternalSetupStruct) {
     setup.db = db;
-    setup.navigatorOnlineCheck = navigatorOnlineCheck;
     setup.sendBeacon = sendBeacon;
     setup.params = {
       pnsdk: 'PubNub-JS-Web/' + packageJSON.version
     };
 
     super(setup);
+
+    // mount network events.
+    window.addEventListener('offline', this.stop.bind(this));
+    window.addEventListener('online', this.reconnect.bind(this));
   }
 
 }

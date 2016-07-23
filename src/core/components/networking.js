@@ -94,11 +94,10 @@ export default class {
   _abstractedXDR(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
     // attach a logger
     if (this._config.logVerbosity) {
-      superagentConstruct = superagentConstruct.use(this._logger());
+      superagentConstruct = superagentConstruct.use(this._attachSuperagentLogger);
     }
 
     return superagentConstruct
-      .type('json')
       .timeout(endpoint.timeout)
       .end((err, resp) => {
         let status: StatusAnnouncement = {};
@@ -132,26 +131,28 @@ export default class {
     return 'PNUnknownCategory';
   }
 
-  _logger(options: ?Object): Function {
-    if (!options) options = {};
-    return this._attachSuperagentLogger.bind(null, options);
-  }
+  _attachSuperagentLogger(req: Object) {
+    let _pickLogger = function () {
+      if (console && console.log) return console; // eslint-disable-line no-console
+      if (window && window.console && window.console.log) return window.console;
+      return console;
+    };
 
-  _attachSuperagentLogger(options: Object, req: Object) {
     let start = new Date().getTime();
     let timestamp = new Date().toISOString();
-    console.log('<<<<<');                                               // eslint-disable-line no-console
-    console.log('[' + timestamp + ']', '\n', req.url, '\n', req.qs);    // eslint-disable-line no-console
-    console.log('-----');                                               // eslint-disable-line no-console
+    let logger = _pickLogger();
+    logger.log('<<<<<');                                               // eslint-disable-line no-console
+    logger.log('[' + timestamp + ']', '\n', req.url, '\n', req.qs);    // eslint-disable-line no-console
+    logger.log('-----');                                               // eslint-disable-line no-console
 
     req.on('response', (res) => {
       let now = new Date().getTime();
       let elapsed = now - start;
       let timestampDone = new Date().toISOString();
 
-      console.log('>>>>>>');                                                                                  // eslint-disable-line no-console
-      console.log('[' + timestampDone + ' / ' + elapsed + ']', '\n', req.url, '\n', req.qs, '\n', res.text);  // eslint-disable-line no-console
-      console.log('-----');                                                                                   // eslint-disable-line no-console
+      logger.log('>>>>>>');                                                                                  // eslint-disable-line no-console
+      logger.log('[' + timestampDone + ' / ' + elapsed + ']', '\n', req.url, '\n', req.qs, '\n', res.text);  // eslint-disable-line no-console
+      logger.log('-----');                                                                                   // eslint-disable-line no-console
     });
   }
 }

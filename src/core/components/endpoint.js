@@ -65,9 +65,11 @@ export default function (modules, endpoint, ...args) {
   }
 
   let onResponse = (status: StatusAnnouncement, payload: Object) => {
-    if (status.error) return callback(status);
+    if (callback) {
+      if (status.error) return callback(status);
 
-    callback(status, endpoint.handleResponse(modules, payload, incomingParams));
+      callback(status, endpoint.handleResponse(modules, payload, incomingParams));
+    }
   };
 
   let callInstance;

@@ -3,7 +3,7 @@
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const clean = require('gulp-clean');
-const gulpWebpack = require('gulp-webpack');
+const gulpWebpack = require('webpack-stream');
 const webpackConfig = require('./webpack.config');
 const eslint = require('gulp-eslint');
 const uglify = require('gulp-uglify');
@@ -17,6 +17,7 @@ const isparta = require('isparta');
 const sourcemaps = require('gulp-sourcemaps');
 const remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul');
 const packageJSON = require('./package.json');
+const gzip = require('gulp-gzip');
 
 gulp.task('clean', () => {
   return gulp.src(['lib', 'dist', 'coverage', 'upload'], { read: false })
@@ -40,7 +41,13 @@ gulp.task('compile_web', () => {
 gulp.task('create_version', () => {
   return gulp.src('dist/web/pubnub.js')
     .pipe(rename('pubnub.' + packageJSON.version + '.js'))
-    .pipe(gulp.dest('upload'));
+    .pipe(gulp.dest('upload/normal'));
+});
+
+gulp.task('create_version_gzip', () => {
+  return gulp.src('upload/normal/*.js')
+    .pipe(gzip())
+    .pipe(gulp.dest('upload/gzip'));
 });
 
 gulp.task('uglify', () => {
@@ -51,7 +58,7 @@ gulp.task('uglify', () => {
     .pipe(gulp.dest('dist/web'))
 
     .pipe(rename('pubnub.' + packageJSON.version + '.min.js'))
-    .pipe(gulp.dest('upload'));
+    .pipe(gulp.dest('upload/normal'));
 });
 
 gulp.task('lint_code', [], () => {
@@ -118,7 +125,7 @@ gulp.task('remap_istanbul', () => {
 
 gulp.task('webpack', ['compile_web']);
 gulp.task('compile', (done) => {
-  runSequence('clean', 'babel', 'webpack', 'uglify', 'create_version', done);
+  runSequence('clean', 'babel', 'webpack', 'uglify', 'create_version', 'create_version_gzip', done);
 });
 
 gulp.task('lint', ['lint_code', 'lint_tests']);

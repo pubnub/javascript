@@ -11,11 +11,12 @@ var config = {
     console: 'empty',
     fs: 'empty',
     net: 'empty',
-    tls: 'empty'
+    tls: 'empty',
+    formidable: 'empty'
   },
   output: {
     filename: 'pubnub.js',
-    library: 'PUBNUB',
+    library: 'PubNub',
     libraryTarget: 'umd',
   },
   plugins: [
