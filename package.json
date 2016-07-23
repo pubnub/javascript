@@ -32,7 +32,7 @@
   "noAnalyze": false,
   "devDependencies": {
     "babel-core": "^6.10.4",
-    "babel-eslint": "6.1.2",
+    "babel-eslint": "6.1.0",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-class-properties": "^6.10.2",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
@@ -56,7 +56,6 @@
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^1.5.4",
-    "gulp-webpack": "^1.5.0",
     "imports-loader": "0.6.5",
     "isparta": "^4.0.0",
     "json-loader": "0.5.4",
@@ -76,7 +75,8 @@
     "stats-webpack-plugin": "^0.4.0",
     "uglify-js": "^2.6.4",
     "webpack": "^1.13.1",
-    "webpack-dev-server": "1.14.1"
+    "webpack-dev-server": "1.14.1",
+    "webpack-stream": "^3.2.0"
   },
   "bundleDependencies": [],
   "license": "MIT",
