@@ -5,11 +5,10 @@
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
 
----
+### Looking for Javascript V3 SDK?
+please use the [master_3x ](https://github.com/pubnub/javascript/tree/master_3x) branch
 
-----
-
-PubNub for JavaScript Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
+### PubNub for JavaScript Docs have been moved to: http://www.pubnub.com/docs/javascript/javascript-sdk.html
 
 ## Communication
 
