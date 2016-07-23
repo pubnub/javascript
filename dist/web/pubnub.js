@@ -5446,7 +5446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
 		"scripts": {
-			"codecov": "cat coverage/*/lcov.info | codecov"
+			"codecov": "cat coverage/lcov-report.info | codecov"
 		},
 		"main": "./lib/node/index.js",
 		"browser": "./dist/web/pubnub.min.js",
