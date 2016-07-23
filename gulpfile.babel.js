@@ -118,6 +118,7 @@ gulp.task('remap_istanbul', () => {
         reports: {
           json: './coverage/coverage-final.json',
           html: './coverage/html-report',
+          lcovonly: './coverage/lcov-report.info',
           text: null,
         }
       }));
