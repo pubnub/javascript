@@ -23,7 +23,7 @@ describe('release should be consistent', () => {
   });
 
   it('with npm valid entry point', () => {
-    assert.equal(packageJSON.main, './node/pubnub.js');
+    assert.equal(packageJSON.main, './lib/node/index.js');
   });
 
   it('with updated readme', () => {
