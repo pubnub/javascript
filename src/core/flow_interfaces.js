@@ -31,12 +31,6 @@ export type InternalSetupStruct = {
   sendBeacon: ?Function, // executes a call against the Beacon API
   useSendBeacon: ?boolean, // enable, disable usage of send beacons
 
-  navigatorOnlineCheck: Function, // a function which abstracts out navigator.onLine
-
-  onStatus: Function, // function to call when a status shows up.
-  onPresence: Function, // function to call when new presence data shows up
-  onMessage: Function, // function to call when a new presence shows up
-
   subscribeRequestTimeout: ?number, // how long to wait for subscribe requst
   transactionalRequestTimeout: ?number, // how long to wait for transactional requests
 
