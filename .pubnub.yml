@@ -1,4 +1,5 @@
 name: javascript
+version: 4.0.0
 features:
   access:
     - GRANT
@@ -21,3 +22,5 @@ features:
     - HEARTBEAT
   publish:
    - STORE-FLAG
+   - FIRE
+   - REPLICATION-FLAG
