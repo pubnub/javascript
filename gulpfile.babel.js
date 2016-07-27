@@ -109,7 +109,7 @@ gulp.task('test_release', () => {
 gulp.task('test_server', () => {
   return gulp.src('test/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }))
-    .pipe(gulpIstanbul.writeReports({ reporters: ['json'] }));
+    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov'] }));
 });
 
 gulp.task('remap_istanbul', () => {
@@ -118,7 +118,6 @@ gulp.task('remap_istanbul', () => {
         reports: {
           json: './coverage/coverage-final.json',
           html: './coverage/html-report',
-          lcovonly: './coverage/lcov-report.info',
           text: null,
         }
       }));

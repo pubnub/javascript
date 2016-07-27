@@ -1,4 +1,26 @@
 name: javascript
+version: 4.0.0
 features:
+  access:
+    - GRANT
+    - AUDIT
+  channel-groups:
+    - ADD-CHANNELS
+    - REMOVE-CHANNELS
+    - LIST-GROUPS
+    - LIST-CHANNELS-IN-GROUP
+  push:
+    - ADD-DEVICE-TO-CHANNELS
+    - REMOVE-DEVICE-FROM-CHANNELS
+    - LIST-CHANNELS-FROM-DEVICE
+    - REMOVE-DEVICE
+  presence:
+    - HERE-NOW
+    - WHERE-NOW
+    - SET-STATE
+    - GET-STATE
+    - HEARTBEAT
   publish:
    - STORE-FLAG
+   - FIRE
+   - REPLICATION-FLAG
