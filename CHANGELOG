@@ -1,2 +1,6 @@
+
+8-1-16 * 4.0.1
+ - Fixes to avoid double encoding on JSON payloads.
+
 7-22-16 * 4.0.0
  - New iteration of JS / Node SDK family

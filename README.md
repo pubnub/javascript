@@ -6,7 +6,7 @@
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
 
 ### Looking for Javascript V3 SDK?
-please use the [master_3x ](https://github.com/pubnub/javascript/tree/master_3x) branch
+please use the [master_3x](https://github.com/pubnub/javascript/tree/master_3x) branch
 
 ### PubNub for JavaScript Docs have been moved to:
   * [web](https://www.pubnub.com/docs/javascript/pubnub-javascript-sdk-v4)
@@ -19,9 +19,9 @@ please use the [master_3x ](https://github.com/pubnub/javascript/tree/master_3x)
 ## CDN Links
 
 #### HTTP
-* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.min.js
-* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.js
+* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.1.min.js
+* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.1.js
 
 #### HTTPS
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.min.js
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.1.min.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.1.js
