@@ -1,7 +1,7 @@
-# PubNub JavaScript SDK
+# PubNub JavaScript SDK (V4)
 
 [![Build Status](https://travis-ci.org/pubnub/javascript.svg?branch=master)](https://travis-ci.org/pubnub/javascript)
-[![Codecov](https://img.shields.io/codecov/c/github/pubnub/javascript.svg?maxAge=2592000)](https://codecov.io/github/pubnub/javascript)
+[![codecov](https://codecov.io/gh/pubnub/javascript/branch/master/graph/badge.svg)](https://codecov.io/gh/pubnub/javascript)
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
 
@@ -19,9 +19,9 @@ please use the [master_3x ](https://github.com/pubnub/javascript/tree/master_3x)
 ## CDN Links
 
 #### HTTP
-* http://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0.min.js
-* http://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0.js
+* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.min.js
+* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.js
 
 #### HTTPS
-* https://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0.min.js
-* https://cdn.pubnub.com/sdk/javascript/pubnub-4.0.0.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.min.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.0.js

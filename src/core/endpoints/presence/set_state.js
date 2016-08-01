@@ -33,10 +33,10 @@ export function prepareParams(modules: ModulesInject, incomingParams: SetStateAr
   let { state, channelGroups = [] } = incomingParams;
   const params = {};
 
-  params.state = encodeURIComponent(JSON.stringify(state));
+  params.state = JSON.stringify(state);
 
   if (channelGroups.length > 0) {
-    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+    params['channel-group'] = channelGroups.join(',');
   }
 
   return params;

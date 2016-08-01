@@ -32,7 +32,7 @@ export function isAuthSupported() {
 
 export function prepareParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs): Object {
   let { pushGateway, channels = [] } = incomingParams;
-  return { type: pushGateway, remove: encodeURIComponent(channels.join(',')) };
+  return { type: pushGateway, remove: channels.join(',') };
 }
 
 export function handleResponse(): Object {
