@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "main": "dist/web/pubnub.min.js",
   "license": "https://github.com/pubnub/javascript/blob/master/LICENSE",
   "ignore" : [ "**/*", "!dist/**/*"],
