@@ -32,7 +32,7 @@ export function prepareParams(modules: ModulesInject, incomingParams: GetStateAr
   const params = {};
 
   if (channelGroups.length > 0) {
-    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+    params['channel-group'] = channelGroups.join(',');
   }
 
   return params;

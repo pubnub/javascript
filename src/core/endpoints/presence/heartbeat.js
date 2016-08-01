@@ -33,7 +33,7 @@ export function prepareParams(modules: ModulesInject, incomingParams: HeartbeatA
   const params = {};
 
   if (channelGroups.length > 0) {
-    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+    params['channel-group'] = channelGroups.join(',');
   }
 
   params.state = JSON.stringify(state);
