@@ -7,16 +7,10 @@ rules:
   mocha/no-exclusive-tests: 2
 
   prefer-template: 0
-  func-names: 0
   no-else-return: 0
-  vars-on-top: 0
   max-len: 0
-  wrap-iife: 0
-  new-cap: 0
   consistent-return: 0
-
   prefer-const: 0
-
   comma-dangle: 0
   no-param-reassign: 0
 

@@ -132,7 +132,7 @@ export default class {
   }
 
   _attachSuperagentLogger(req: Object) {
-    let _pickLogger = function () {
+    let _pickLogger = () => {
       if (console && console.log) return console; // eslint-disable-line no-console
       if (window && window.console && window.console.log) return window.console;
       return console;
