@@ -81,7 +81,7 @@ describe('heartbeat', () => {
 
     it('supports heartbeating for multiple channel group', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/heartbeat')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: '300', state: '{}', 'channel-group': 'cg1%2Ccg2' })
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: '300', state: '{}', 'channel-group': 'cg1,cg2' })
         .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
 
       pubnub.addListener({

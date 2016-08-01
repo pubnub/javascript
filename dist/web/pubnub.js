@@ -3550,11 +3550,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  if (channelGroups.length > 0) {
-	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	    params['channel-group'] = channelGroups.join(',');
 	  }
 
 	  if (filterExpression && filterExpression.length > 0) {
-	    params['filter-expr'] = encodeURIComponent(filterExpression);
+	    params['filter-expr'] = filterExpression;
 	  }
 
 	  if (timetoken) {
@@ -4316,7 +4316,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _incomingParams$chann = incomingParams.channels;
 	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
-	  return { type: pushGateway, add: encodeURIComponent(channels.join(',')) };
+	  return { type: pushGateway, add: channels.join(',') };
 	}
 
 	function handleResponse() {
@@ -4383,7 +4383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _incomingParams$chann = incomingParams.channels;
 	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
-	  return { type: pushGateway, remove: encodeURIComponent(channels.join(',')) };
+	  return { type: pushGateway, remove: channels.join(',') };
 	}
 
 	function handleResponse() {
@@ -4574,7 +4574,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var params = {};
 
 	  if (channelGroups.length > 0) {
-	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	    params['channel-group'] = channelGroups.join(',');
 	  }
 
 	  return params;
@@ -4703,7 +4703,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var params = {};
 
 	  if (channelGroups.length > 0) {
-	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	    params['channel-group'] = channelGroups.join(',');
 	  }
 
 	  params.state = JSON.stringify(state);
@@ -4775,7 +4775,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var params = {};
 
 	  if (channelGroups.length > 0) {
-	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	    params['channel-group'] = channelGroups.join(',');
 	  }
 
 	  return params;
@@ -4858,10 +4858,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var params = {};
 
-	  params.state = encodeURIComponent(JSON.stringify(state));
+	  params.state = JSON.stringify(state);
 
 	  if (channelGroups.length > 0) {
-	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	    params['channel-group'] = channelGroups.join(',');
 	  }
 
 	  return params;
@@ -4944,7 +4944,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (includeState) params.state = 1;
 
 	  if (channelGroups.length > 0) {
-	    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+	    params['channel-group'] = channelGroups.join(',');
 	  }
 
 	  return params;
@@ -5446,7 +5446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
 		"scripts": {
-			"codecov": "cat coverage/lcov-report.info | codecov"
+			"codecov": "cat coverage/lcov.info | codecov"
 		},
 		"main": "./lib/node/index.js",
 		"browser": "./dist/web/pubnub.min.js",

@@ -41,7 +41,7 @@ export function prepareParams(modules: ModulesInject, incomingParams: HereNowArg
   if (includeState) params.state = 1;
 
   if (channelGroups.length > 0) {
-    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+    params['channel-group'] = channelGroups.join(',');
   }
 
   return params;
