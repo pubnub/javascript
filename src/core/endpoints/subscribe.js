@@ -34,11 +34,11 @@ export function prepareParams({ config }: ModulesInject, incomingParams: Subscri
   };
 
   if (channelGroups.length > 0) {
-    params['channel-group'] = encodeURIComponent(channelGroups.join(','));
+    params['channel-group'] = channelGroups.join(',');
   }
 
   if (filterExpression && filterExpression.length > 0) {
-    params['filter-expr'] = encodeURIComponent(filterExpression);
+    params['filter-expr'] = filterExpression;
   }
 
   if (timetoken) {
