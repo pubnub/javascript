@@ -24,7 +24,7 @@ export default class {
   }
 
   _performTimeLoop() {
-    this._timeEndpoint.fetch((status: StatusAnnouncement) => {
+    this._timeEndpoint((status: StatusAnnouncement) => {
       if (!status.error) {
         clearInterval(this._timeTimer);
         this._reconnectionCallback();
