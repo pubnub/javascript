@@ -1,4 +1,7 @@
 
+8-1-16 * 4.0.2
+ - Adjustments to internet disconnects on node.
+
 8-1-16 * 4.0.1
  - Fixes to avoid double encoding on JSON payloads.
 

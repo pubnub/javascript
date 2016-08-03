@@ -1,4 +1,4 @@
-/*! 4.0.1 / Consumer  */
+/*! 4.0.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -3221,7 +3221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var reconnectedStatus = {};
 	      reconnectedStatus.category = 'PNReconnectedCategory';
 	      _this._subscriptionStatusAnnounced = true;
-	      _this._listenerManager.announceStatus(status);
+	      _this._listenerManager.announceStatus(reconnectedStatus);
 	    });
 	  }
 
@@ -3767,7 +3767,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function _performTimeLoop() {
 	      var _this = this;
 
-	      this._timeEndpoint.fetch(function (status) {
+	      this._timeEndpoint(function (status) {
 	        if (!status.error) {
 	          clearInterval(_this._timeTimer);
 	          _this._reconnectionCallback();
@@ -5441,7 +5441,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.0.1",
+		"version": "4.0.2",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},

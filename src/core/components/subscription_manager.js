@@ -40,7 +40,6 @@ export default class {
   _config: Config;
   _listenerManager: ListenerManager;
   _reconnectionManager: ReconnectionManager;
-  _subscribeEndpoints: SubscribeEndpoints;
 
   _leaveEndpoint: Function;
   _heartbeatEndpoint: Function;
@@ -87,7 +86,7 @@ export default class {
       let reconnectedStatus: StatusAnnouncement = {};
       reconnectedStatus.category = 'PNReconnectedCategory';
       this._subscriptionStatusAnnounced = true;
-      this._listenerManager.announceStatus(status);
+      this._listenerManager.announceStatus(reconnectedStatus);
     });
   }
 
