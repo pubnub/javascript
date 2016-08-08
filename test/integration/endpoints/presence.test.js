@@ -239,7 +239,7 @@ describe('presence endpoints', () => {
       });
     });
 
-    it('returns response for channel group ', (done) => {
+    it('returns response for channel group', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C')
         .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', 'channel-group': 'cg1' })
         .reply(200, ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}');
@@ -257,6 +257,64 @@ describe('presence endpoints', () => {
               }
             ]
           },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('returns response for global here-now', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": {"ch10": {"uuids": ["2c3b136e-dc9e-4e97-939c-752dbb47acbd"], "occupancy": 1}, "bot_object": {"uuids": ["fb49e109-756f-483e-92dc-d966d73a119d"], "occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}');
+
+      pubnub.hereNow({}, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          bot_object: {
+            name: 'bot_object',
+            occupancy: 1,
+            occupants: [
+              {
+                state: null,
+                uuid: 'fb49e109-756f-483e-92dc-d966d73a119d'
+              }
+            ]
+          },
+          ch10: {
+            name: 'ch10',
+            occupancy: 1,
+            occupants: [
+              {
+                state: null,
+                uuid: '2c3b136e-dc9e-4e97-939c-752dbb47acbd'
+              }
+            ]
+          }
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('returns response for global here-now with uuids disabled', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', disable_uuids: 1 })
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": {"ch10": {"occupancy": 1}, "bot_object": {"occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}');
+
+      pubnub.hereNow({ includeUUIDs: false }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          bot_object: {
+            name: 'bot_object',
+            occupancy: 1,
+            occupants: []
+          },
+          ch10: {
+            name: 'ch10',
+            occupancy: 1,
+            occupants: []
+          }
         });
         assert.equal(scope.isDone(), true);
         done();
