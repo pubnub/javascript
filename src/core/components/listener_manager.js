@@ -41,4 +41,16 @@ export default class {
     });
   }
 
+  announceConnectionRestored() {
+    let reconnectedStatus: StatusAnnouncement = {};
+    reconnectedStatus.category = 'PNReconnectedCategory';
+    this.announceStatus(reconnectedStatus);
+  }
+
+  announceNetworkIssues() {
+    let disconnectedStatus: StatusAnnouncement = {};
+    disconnectedStatus.category = 'PNNetworkIssuesCategory';
+    this.announceStatus(disconnectedStatus);
+  }
+
 }
