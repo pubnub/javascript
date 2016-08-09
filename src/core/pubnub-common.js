@@ -1,5 +1,7 @@
 /* @flow */
 
+import uuidGenerator from 'uuid';
+
 import Networking from './components/networking';
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
@@ -41,6 +43,7 @@ import { InternalSetupStruct } from './flow_interfaces';
 export default class {
 
   _config: Config;
+  _listenerManager: ListenerManager;
 
   // tell flow about the mounted endpoint
   time: Function;
@@ -88,7 +91,7 @@ export default class {
     const networking = new Networking({ config, crypto, sendBeacon });
 
     let modules = { config, networking, crypto };
-    const listenerManager = new ListenerManager();
+    const listenerManager = this._listenerManager = new ListenerManager();
 
     // new
     const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
@@ -162,6 +165,12 @@ export default class {
   }
 
 
-  getVersion(): String { return packageJSON.version; }
+  getVersion(): String {
+    return packageJSON.version;
+  }
+
+  static generateUUID(): string {
+    return uuidGenerator.v4();
+  }
 
 }

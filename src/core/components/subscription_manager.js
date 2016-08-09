@@ -83,10 +83,8 @@ export default class {
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
     this._reconnectionManager.onReconnection(() => {
       this.reconnect();
-      let reconnectedStatus: StatusAnnouncement = {};
-      reconnectedStatus.category = 'PNReconnectedCategory';
       this._subscriptionStatusAnnounced = true;
-      this._listenerManager.announceStatus(reconnectedStatus);
+      this._listenerManager.announceConnectionRestored();
     });
   }
 
@@ -266,7 +264,8 @@ export default class {
         let announce: PresenceAnnouncement = {};
         announce.actualChannel = (subscriptionMatch != null) ? channel : null;
         announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-        // announce.state = message.payload.getData())
+        announce.action = message.payload.action;
+        announce.state = message.payload.data;
         announce.timetoken = publishMetaData.publishTimetoken;
         announce.occupancy = message.payload.occupancy;
         announce.uuid = message.payload.uuid;

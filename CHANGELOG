@@ -1,3 +1,9 @@
+
+8-8-16 * 4.0.4
+ - Adjust handling of presence payloads for state settings
+ - Exposing generateUUID method to create uuids
+ - Triggering disconnect, reconnect events on Web distributions.
+
 8-7-16 * 4.0.3
  - Global Here Now parsing adjustments
 
