@@ -5478,6 +5478,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"codecov": "cat coverage/lcov.info | codecov"
 		},
 		"main": "./lib/node/index.js",
+		"react-native": "./lib/node/index.js",
 		"browser": "./dist/web/pubnub.min.js",
 		"repository": {
 			"type": "git",
