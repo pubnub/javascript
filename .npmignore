@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+javascript.iml
+*.js-e
+*.json-e
+upload/*
+coverage/
+.idea
+*.iml
+
+.babelrc
