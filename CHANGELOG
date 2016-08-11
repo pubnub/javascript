@@ -1,4 +1,7 @@
 
+8-10-16 * 4.0.5
+ - Stop exposing .babelrc which causes unpredictable behavior on react native (!!)
+
 8-8-16 * 4.0.4
  - Adjust handling of presence payloads for state settings
  - Exposing generateUUID method to create uuids
