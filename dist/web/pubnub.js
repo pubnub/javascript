@@ -65,10 +65,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _package = __webpack_require__(41);
-
-	var _package2 = _interopRequireDefault(_package);
-
 	var _flow_interfaces = __webpack_require__(13);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -104,9 +100,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    setup.db = db;
 	    setup.sendBeacon = sendBeacon;
-	    setup.params = {
-	      pnsdk: 'PubNub-JS-Web/' + _package2.default.version
-	    };
+	    setup.sdkFamily = 'Web';
 
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, setup));
 
@@ -158,103 +152,103 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _subscription_manager = __webpack_require__(15);
+	var _subscription_manager = __webpack_require__(16);
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _listener_manager = __webpack_require__(18);
+	var _listener_manager = __webpack_require__(19);
 
 	var _listener_manager2 = _interopRequireDefault(_listener_manager);
 
-	var _endpoint = __webpack_require__(21);
+	var _endpoint = __webpack_require__(22);
 
 	var _endpoint2 = _interopRequireDefault(_endpoint);
 
-	var _add_channels = __webpack_require__(22);
+	var _add_channels = __webpack_require__(23);
 
 	var addChannelsChannelGroupConfig = _interopRequireWildcard(_add_channels);
 
-	var _remove_channels = __webpack_require__(23);
+	var _remove_channels = __webpack_require__(24);
 
 	var removeChannelsChannelGroupConfig = _interopRequireWildcard(_remove_channels);
 
-	var _delete_group = __webpack_require__(24);
+	var _delete_group = __webpack_require__(25);
 
 	var deleteChannelGroupConfig = _interopRequireWildcard(_delete_group);
 
-	var _list_groups = __webpack_require__(25);
+	var _list_groups = __webpack_require__(26);
 
 	var listChannelGroupsConfig = _interopRequireWildcard(_list_groups);
 
-	var _list_channels = __webpack_require__(26);
+	var _list_channels = __webpack_require__(27);
 
 	var listChannelsInChannelGroupConfig = _interopRequireWildcard(_list_channels);
 
-	var _add_push_channels = __webpack_require__(27);
+	var _add_push_channels = __webpack_require__(28);
 
 	var addPushChannelsConfig = _interopRequireWildcard(_add_push_channels);
 
-	var _remove_push_channels = __webpack_require__(28);
+	var _remove_push_channels = __webpack_require__(29);
 
 	var removePushChannelsConfig = _interopRequireWildcard(_remove_push_channels);
 
-	var _list_push_channels = __webpack_require__(29);
+	var _list_push_channels = __webpack_require__(30);
 
 	var listPushChannelsConfig = _interopRequireWildcard(_list_push_channels);
 
-	var _remove_device = __webpack_require__(30);
+	var _remove_device = __webpack_require__(31);
 
 	var removeDevicePushConfig = _interopRequireWildcard(_remove_device);
 
-	var _leave = __webpack_require__(31);
+	var _leave = __webpack_require__(32);
 
 	var presenceLeaveEndpointConfig = _interopRequireWildcard(_leave);
 
-	var _where_now = __webpack_require__(32);
+	var _where_now = __webpack_require__(33);
 
 	var presenceWhereNowEndpointConfig = _interopRequireWildcard(_where_now);
 
-	var _heartbeat = __webpack_require__(33);
+	var _heartbeat = __webpack_require__(34);
 
 	var presenceHeartbeatEndpointConfig = _interopRequireWildcard(_heartbeat);
 
-	var _get_state = __webpack_require__(34);
+	var _get_state = __webpack_require__(35);
 
 	var presenceGetStateConfig = _interopRequireWildcard(_get_state);
 
-	var _set_state = __webpack_require__(35);
+	var _set_state = __webpack_require__(36);
 
 	var presenceSetStateConfig = _interopRequireWildcard(_set_state);
 
-	var _here_now = __webpack_require__(36);
+	var _here_now = __webpack_require__(37);
 
 	var presenceHereNowConfig = _interopRequireWildcard(_here_now);
 
-	var _audit = __webpack_require__(37);
+	var _audit = __webpack_require__(38);
 
 	var auditEndpointConfig = _interopRequireWildcard(_audit);
 
-	var _grant = __webpack_require__(38);
+	var _grant = __webpack_require__(39);
 
 	var grantEndpointConfig = _interopRequireWildcard(_grant);
 
-	var _publish = __webpack_require__(39);
+	var _publish = __webpack_require__(40);
 
 	var publishEndpointConfig = _interopRequireWildcard(_publish);
 
-	var _history = __webpack_require__(40);
+	var _history = __webpack_require__(41);
 
 	var historyEndpointConfig = _interopRequireWildcard(_history);
 
-	var _time = __webpack_require__(17);
+	var _time = __webpack_require__(18);
 
 	var timeEndpointConfig = _interopRequireWildcard(_time);
 
-	var _subscribe = __webpack_require__(16);
+	var _subscribe = __webpack_require__(17);
 
 	var subscribeEndpointConfig = _interopRequireWildcard(_subscribe);
 
-	var _package = __webpack_require__(41);
+	var _package = __webpack_require__(14);
 
 	var _package2 = _interopRequireDefault(_package);
 
@@ -2353,7 +2347,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _hmacSha = __webpack_require__(14);
+	var _hmacSha = __webpack_require__(15);
 
 	var _hmacSha2 = _interopRequireDefault(_hmacSha);
 
@@ -2509,6 +2503,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _flow_interfaces = __webpack_require__(13);
 
+	var _package = __webpack_require__(14);
+
+	var _package2 = _interopRequireDefault(_package);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -2526,9 +2524,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.secretKey = setup.secretKey;
 	    this.subscribeKey = setup.subscribeKey;
 	    this.publishKey = setup.publishKey;
+	    this.sdkFamily = setup.sdkFamily;
+	    this.partnerId = setup.partnerId;
 	    this.setAuthKey(setup.authKey);
 	    this.setCipherKey(setup.cipherKey);
-	    this.baseParams = setup.params || {};
 
 	    this.setFilterExpression(setup.filterExpression);
 
@@ -2653,6 +2652,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._useSendBeacon = val;return this;
 	    }
 	  }, {
+	    key: 'getVersion',
+	    value: function getVersion() {
+	      return _package2.default.version;
+	    }
+	  }, {
 	    key: '_decideUUID',
 	    value: function _decideUUID(providedUUID) {
 	      if (providedUUID) {
@@ -2687,6 +2691,100 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 14 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"name": "pubnub",
+		"preferGlobal": false,
+		"version": "4.0.5",
+		"author": "PubNub <support@pubnub.com>",
+		"description": "Publish & Subscribe Real-time Messaging with PubNub",
+		"bin": {},
+		"scripts": {
+			"codecov": "cat coverage/lcov.info | codecov"
+		},
+		"main": "./lib/node/index.js",
+		"react-native": "./lib/node/index.js",
+		"browser": "./dist/web/pubnub.min.js",
+		"repository": {
+			"type": "git",
+			"url": "git://github.com/pubnub/javascript.git"
+		},
+		"keywords": [
+			"cloud",
+			"publish",
+			"subscribe",
+			"websockets",
+			"comet",
+			"bosh",
+			"xmpp",
+			"real-time",
+			"messaging"
+		],
+		"dependencies": {
+			"superagent": "^2.0.0",
+			"uuid": "^2.0.2"
+		},
+		"noAnalyze": false,
+		"devDependencies": {
+			"babel-core": "^6.10.4",
+			"babel-eslint": "6.1.0",
+			"babel-plugin-add-module-exports": "^0.2.1",
+			"babel-plugin-transform-class-properties": "^6.10.2",
+			"babel-plugin-transform-flow-strip-types": "^6.8.0",
+			"babel-preset-es2015": "^6.9.0",
+			"babel-register": "^6.9.0",
+			"chai": "^3.5.0",
+			"eslint-config-airbnb": "9.0.1",
+			"eslint-plugin-flowtype": "2.3.1",
+			"eslint-plugin-import": "^1.9.2",
+			"eslint-plugin-mocha": "3.0.0",
+			"eslint-plugin-react": "5.2.2",
+			"flow-bin": "^0.29.0",
+			"gulp": "^3.9.1",
+			"gulp-babel": "^6.1.2",
+			"gulp-clean": "^0.3.2",
+			"gulp-eslint": "^2.0.0",
+			"gulp-exec": "^2.1.2",
+			"gulp-flowtype": "^0.4.9",
+			"gulp-gzip": "^1.4.0",
+			"gulp-istanbul": "^1.0.0",
+			"gulp-mocha": "^2.2.0",
+			"gulp-rename": "^1.2.2",
+			"gulp-sourcemaps": "^1.6.0",
+			"gulp-uglify": "^1.5.4",
+			"imports-loader": "0.6.5",
+			"isparta": "^4.0.0",
+			"json-loader": "0.5.4",
+			"karma": "1.1.1",
+			"karma-babel-preprocessor": "^6.0.1",
+			"karma-chai": "0.1.0",
+			"karma-chrome-launcher": "^1.0.1",
+			"karma-mocha": "^1.1.1",
+			"karma-phantomjs-launcher": "1.0.1",
+			"karma-spec-reporter": "0.0.26",
+			"mocha": "2.5.3",
+			"nock": "^8.0.0",
+			"phantomjs-prebuilt": "2.1.7",
+			"remap-istanbul": "^0.6.4",
+			"run-sequence": "^1.2.1",
+			"sinon": "^1.17.4",
+			"stats-webpack-plugin": "^0.4.0",
+			"uglify-js": "^2.6.4",
+			"underscore": "^1.8.3",
+			"webpack": "^1.13.1",
+			"webpack-dev-server": "1.14.1",
+			"webpack-stream": "^3.2.0"
+		},
+		"bundleDependencies": [],
+		"license": "MIT",
+		"engine": {
+			"node": ">=0.8"
+		}
+	};
+
+/***/ },
+/* 15 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -3152,7 +3250,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3163,11 +3261,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _subscribe = __webpack_require__(16);
+	var _subscribe = __webpack_require__(17);
 
 	var _subscribe2 = _interopRequireDefault(_subscribe);
 
-	var _time = __webpack_require__(17);
+	var _time = __webpack_require__(18);
 
 	var _time2 = _interopRequireDefault(_time);
 
@@ -3179,15 +3277,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _listener_manager = __webpack_require__(18);
+	var _listener_manager = __webpack_require__(19);
 
 	var _listener_manager2 = _interopRequireDefault(_listener_manager);
 
-	var _reconnection_manager = __webpack_require__(19);
+	var _reconnection_manager = __webpack_require__(20);
 
 	var _reconnection_manager2 = _interopRequireDefault(_reconnection_manager);
 
-	var _utils = __webpack_require__(20);
+	var _utils = __webpack_require__(21);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -3504,7 +3602,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3616,7 +3714,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3667,7 +3765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3751,7 +3849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3762,7 +3860,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _time = __webpack_require__(17);
+	var _time = __webpack_require__(18);
 
 	var _time2 = _interopRequireDefault(_time);
 
@@ -3814,7 +3912,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3854,7 +3952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3888,11 +3986,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var outgoingParams = endpoint.prepareParams(modules, incomingParams);
 
 	  outgoingParams.uuid = config.UUID;
-
-	  Object.keys(config.baseParams).forEach(function (key) {
-	    var value = config.baseParams[key];
-	    if (!(key in outgoingParams)) outgoingParams[key] = value;
-	  });
+	  outgoingParams.pnsdk = generatePNSDK(config);
 
 	  if (config.useInstanceId) {
 	    outgoingParams.instanceid = config.instanceId;
@@ -3956,9 +4050,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _uuid2 = _interopRequireDefault(_uuid);
 
-	var _utils = __webpack_require__(20);
+	var _utils = __webpack_require__(21);
 
 	var _utils2 = _interopRequireDefault(_utils);
+
+	var _config = __webpack_require__(12);
+
+	var _config2 = _interopRequireDefault(_config);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3971,12 +4069,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return createError({ message: message }, 'validationError');
 	}
 
+	function generatePNSDK(config) {
+	  var base = 'PubNub-JS-' + config.sdkFamily;
+
+	  if (config.partnerId) {
+	    base += '-' + config.partnerId;
+	  }
+
+	  base += '/' + config.getVersion();
+
+	  return base;
+	}
+
 	module.exports = exports['default'];
 	//# sourceMappingURL=endpoint.js.map
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4043,7 +4153,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4110,7 +4220,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4169,7 +4279,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4227,7 +4337,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4288,7 +4398,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4355,7 +4465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4422,7 +4532,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4485,7 +4595,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4548,7 +4658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4616,7 +4726,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4674,7 +4784,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4747,7 +4857,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4830,7 +4940,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4903,7 +5013,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5059,7 +5169,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5136,7 +5246,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5229,7 +5339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 39 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5355,7 +5465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 40 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5462,100 +5572,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	//# sourceMappingURL=history.js.map
 
-
-/***/ },
-/* 41 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"name": "pubnub",
-		"preferGlobal": false,
-		"version": "4.0.5",
-		"author": "PubNub <support@pubnub.com>",
-		"description": "Publish & Subscribe Real-time Messaging with PubNub",
-		"bin": {},
-		"scripts": {
-			"codecov": "cat coverage/lcov.info | codecov"
-		},
-		"main": "./lib/node/index.js",
-		"react-native": "./lib/node/index.js",
-		"browser": "./dist/web/pubnub.min.js",
-		"repository": {
-			"type": "git",
-			"url": "git://github.com/pubnub/javascript.git"
-		},
-		"keywords": [
-			"cloud",
-			"publish",
-			"subscribe",
-			"websockets",
-			"comet",
-			"bosh",
-			"xmpp",
-			"real-time",
-			"messaging"
-		],
-		"dependencies": {
-			"superagent": "^2.0.0",
-			"uuid": "^2.0.2"
-		},
-		"noAnalyze": false,
-		"devDependencies": {
-			"babel-core": "^6.10.4",
-			"babel-eslint": "6.1.0",
-			"babel-plugin-add-module-exports": "^0.2.1",
-			"babel-plugin-transform-class-properties": "^6.10.2",
-			"babel-plugin-transform-flow-strip-types": "^6.8.0",
-			"babel-preset-es2015": "^6.9.0",
-			"babel-register": "^6.9.0",
-			"chai": "^3.5.0",
-			"eslint-config-airbnb": "9.0.1",
-			"eslint-plugin-flowtype": "2.3.1",
-			"eslint-plugin-import": "^1.9.2",
-			"eslint-plugin-mocha": "3.0.0",
-			"eslint-plugin-react": "5.2.2",
-			"flow-bin": "^0.29.0",
-			"gulp": "^3.9.1",
-			"gulp-babel": "^6.1.2",
-			"gulp-clean": "^0.3.2",
-			"gulp-eslint": "^2.0.0",
-			"gulp-exec": "^2.1.2",
-			"gulp-flowtype": "^0.4.9",
-			"gulp-gzip": "^1.4.0",
-			"gulp-istanbul": "^1.0.0",
-			"gulp-mocha": "^2.2.0",
-			"gulp-rename": "^1.2.2",
-			"gulp-sourcemaps": "^1.6.0",
-			"gulp-uglify": "^1.5.4",
-			"imports-loader": "0.6.5",
-			"isparta": "^4.0.0",
-			"json-loader": "0.5.4",
-			"karma": "1.1.1",
-			"karma-babel-preprocessor": "^6.0.1",
-			"karma-chai": "0.1.0",
-			"karma-chrome-launcher": "^1.0.1",
-			"karma-mocha": "^1.1.1",
-			"karma-phantomjs-launcher": "1.0.1",
-			"karma-spec-reporter": "0.0.26",
-			"mocha": "2.5.3",
-			"nock": "^8.0.0",
-			"phantomjs-prebuilt": "2.1.7",
-			"remap-istanbul": "^0.6.4",
-			"run-sequence": "^1.2.1",
-			"sinon": "^1.17.4",
-			"stats-webpack-plugin": "^0.4.0",
-			"uglify-js": "^2.6.4",
-			"underscore": "^1.8.3",
-			"webpack": "^1.13.1",
-			"webpack-dev-server": "1.14.1",
-			"webpack-stream": "^3.2.0"
-		},
-		"bundleDependencies": [],
-		"license": "MIT",
-		"engine": {
-			"node": ">=0.8"
-		}
-	};
 
 /***/ }
 /******/ ])

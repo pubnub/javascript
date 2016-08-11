@@ -8,6 +8,7 @@ import PubNub from '../../../lib/node/index.js';
 
 describe('#components/networking', () => {
   let pubnub;
+  let pubnubPartner;
 
   before(() => {
     nock.disableNetConnect();
@@ -20,6 +21,21 @@ describe('#components/networking', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
+    pubnubPartner = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', partnerId: 'alligator' });
+  });
+
+  describe('supports user-agent generation with partner', () => {
+    it('returns a correct user-agent object', (done) => {
+      utils.createNock().get('/time/0')
+        .query({ uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs-alligator/4.0.5' })
+        .reply(200, [14570763868573725]);
+
+      pubnubPartner.time((status) => {
+        assert.equal(status.error, false);
+        assert.equal(status.statusCode, 200);
+        done();
+      });
+    });
   });
 
   describe('callback handling', () => {

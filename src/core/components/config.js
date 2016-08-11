@@ -2,6 +2,7 @@
 
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface } from '../flow_interfaces';
+import packageJSON from '../../../package.json';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -25,9 +26,15 @@ export default class {
   instanceId: string;
 
   /*
-    base params to be inclded with each call
+    keep track of the SDK family for identifier generator
   */
-  baseParams: Object;
+  sdkFamily: string;
+
+  /*
+    If the SDK is operated by a partner, allow a custom pnsdk item for them.
+  */
+  partnerId: string;
+
   /*
     filter expression to pass along when subscribing.
   */
@@ -90,9 +97,10 @@ export default class {
     this.secretKey = setup.secretKey;
     this.subscribeKey = setup.subscribeKey;
     this.publishKey = setup.publishKey;
+    this.sdkFamily = setup.sdkFamily;
+    this.partnerId = setup.partnerId;
     this.setAuthKey(setup.authKey);
     this.setCipherKey(setup.cipherKey);
-    this.baseParams = setup.params || {};
 
     this.setFilterExpression(setup.filterExpression);
 
@@ -162,6 +170,10 @@ export default class {
 
   isSendBeaconEnabled(): boolean { return this._useSendBeacon; }
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
+
+  getVersion(): string {
+    return packageJSON.version;
+  }
 
   _decideUUID(providedUUID: string): string {
     // if the uuid was provided by setup, use this UUID.

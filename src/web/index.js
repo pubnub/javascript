@@ -1,7 +1,6 @@
 /* @flow */
 
 import PubNubCore from '../core/pubnub-common.js';
-import packageJSON from '../../package.json';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 /**
@@ -31,9 +30,7 @@ export default class extends PubNubCore {
   constructor(setup: InternalSetupStruct) {
     setup.db = db;
     setup.sendBeacon = sendBeacon;
-    setup.params = {
-      pnsdk: 'PubNub-JS-Web/' + packageJSON.version
-    };
+    setup.sdkFamily = 'Web';
 
     super(setup);
 

@@ -1,6 +1,7 @@
 import { StatusAnnouncement } from '../flow_interfaces';
 import uuidGenerator from 'uuid';
 import utils from '../utils';
+import Config from './config';
 
 function createError(errorPayload: Object, type: string): Object {
   errorPayload.type = type;
@@ -9,6 +10,18 @@ function createError(errorPayload: Object, type: string): Object {
 
 function createValidationError(message: string): Object {
   return createError({ message }, 'validationError');
+}
+
+function generatePNSDK(config: Config): string {
+  let base = 'PubNub-JS-' + config.sdkFamily;
+
+  if (config.partnerId) {
+    base += '-' + config.partnerId;
+  }
+
+  base += '/' + config.getVersion();
+
+  return base;
 }
 
 export default function (modules, endpoint, ...args) {
@@ -33,11 +46,7 @@ export default function (modules, endpoint, ...args) {
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
 
   outgoingParams.uuid = config.UUID;
-
-  Object.keys(config.baseParams).forEach((key) => {
-    let value = config.baseParams[key];
-    if (!(key in outgoingParams)) outgoingParams[key] = value;
-  });
+  outgoingParams.pnsdk = generatePNSDK(config);
 
   if (config.useInstanceId) {
     outgoingParams.instanceid = config.instanceId;
