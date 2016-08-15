@@ -1,5 +1,39 @@
 name: javascript
 version: 4.0.5
+schema: 1
+scm: github.com/pubnub/javascript
+changelog:
+  - version: v4.0.5
+    date: 
+    changes:
+      - type: improvement
+        text: Stop exposing .babelrc which causes unpredictable behavior on react native.
+  - version: v4.0.4
+    changes:
+      - type: improvement
+        text: Adjust handling of presence payloads for state settings.
+      - type: feature
+        text: Exposing generateUUID method to create uuids.
+      - type: improvement
+        text: Triggering disconnect, reconnect events on Web distributions.
+      - type: improvement
+        text: React Native adjustments to package.json information.
+  - version: v4.0.3
+    changes:
+      - type: improvement
+        text: Global Here Now parsing adjustments.
+  - version: v4.0.2
+    changes:
+      - type: improvement
+        text: Adjustments to internet disconnects on node.
+  - version: v4.0.1
+    changes:
+      - type: bug
+        text: Fixes to avoid double encoding on JSON payloads.
+  - version: v4.0.0
+    changes:
+      - type: feature
+        text:  New iteration of JS / Node SDK family
 features:
   access:
     - GRANT
