@@ -111,12 +111,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, setup));
 
 	    window.addEventListener('offline', function () {
-	      _this._listenerManager.announceNetworkIssues();
+	      _this._listenerManager.announceNetworkDown();
 	      _this.stop.bind(_this);
 	    });
 
 	    window.addEventListener('online', function () {
-	      _this._listenerManager.announceConnectionRestored();
+	      _this._listenerManager.announceNetworkUp();
 	      _this.reconnect.bind(_this);
 	    });
 	    return _this;
@@ -725,6 +725,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_detectErrorCategory',
 	    value: function _detectErrorCategory(err) {
 	      if (err.code === 'ENOTFOUND') return 'PNNetworkIssuesCategory';
+	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return 'PNNetworkIssuesCategory';
 	      if (err.timeout) return 'PNTimeoutCategory';
 
 	      if (err.response) {
@@ -3199,8 +3200,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(_ref) {
-	    var _this = this;
-
 	    var subscribeEndpoint = _ref.subscribeEndpoint;
 	    var leaveEndpoint = _ref.leaveEndpoint;
 	    var heartbeatEndpoint = _ref.heartbeatEndpoint;
@@ -3232,17 +3231,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._subscriptionStatusAnnounced = false;
 
 	    this._reconnectionManager = new _reconnection_manager2.default({ timeEndpoint: timeEndpoint });
-	    this._reconnectionManager.onReconnection(function () {
-	      _this.reconnect();
-	      _this._subscriptionStatusAnnounced = true;
-	      _this._listenerManager.announceConnectionRestored();
-	    });
 	  }
 
 	  _createClass(_class, [{
 	    key: 'adaptStateChange',
 	    value: function adaptStateChange(args, callback) {
-	      var _this2 = this;
+	      var _this = this;
 
 	      var state = args.state;
 	      var _args$channels = args.channels;
@@ -3252,11 +3246,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	      channels.forEach(function (channel) {
-	        if (channel in _this2._channels) _this2._channels[channel].state = state;
+	        if (channel in _this._channels) _this._channels[channel].state = state;
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        if (channelGroup in _this2._channelGroups) _this2._channelGroups[channelGroup].state = state;
+	        if (channelGroup in _this._channelGroups) _this._channelGroups[channelGroup].state = state;
 	      });
 
 	      this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
@@ -3264,7 +3258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'adaptSubscribeChange',
 	    value: function adaptSubscribeChange(args) {
-	      var _this3 = this;
+	      var _this2 = this;
 
 	      var timetoken = args.timetoken;
 	      var _args$channels2 = args.channels;
@@ -3278,13 +3272,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (timetoken) this._timetoken = timetoken;
 
 	      channels.forEach(function (channel) {
-	        _this3._channels[channel] = { state: {} };
-	        if (withPresence) _this3._presenceChannels[channel] = {};
+	        _this2._channels[channel] = { state: {} };
+	        if (withPresence) _this2._presenceChannels[channel] = {};
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        _this3._channelGroups[channelGroup] = { state: {} };
-	        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
+	        _this2._channelGroups[channelGroup] = { state: {} };
+	        if (withPresence) _this2._presenceChannelGroups[channelGroup] = {};
 	      });
 
 	      this._subscriptionStatusAnnounced = false;
@@ -3293,7 +3287,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'adaptUnsubscribeChange',
 	    value: function adaptUnsubscribeChange(args) {
-	      var _this4 = this;
+	      var _this3 = this;
 
 	      var _args$channels3 = args.channels;
 	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
@@ -3302,18 +3296,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	      channels.forEach(function (channel) {
-	        if (channel in _this4._channels) delete _this4._channels[channel];
-	        if (channel in _this4._presenceChannels) delete _this4._presenceChannels[channel];
+	        if (channel in _this3._channels) delete _this3._channels[channel];
+	        if (channel in _this3._presenceChannels) delete _this3._presenceChannels[channel];
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        if (channelGroup in _this4._channelGroups) delete _this4._channelGroups[channelGroup];
-	        if (channelGroup in _this4._presenceChannelGroups) delete _this4._channelGroups[channelGroup];
+	        if (channelGroup in _this3._channelGroups) delete _this3._channelGroups[channelGroup];
+	        if (channelGroup in _this3._presenceChannelGroups) delete _this3._channelGroups[channelGroup];
 	      });
 
 	      if (this._config.suppressLeaveEvents === false) {
 	        this._leaveEndpoint({ channels: channels, channelGroups: channelGroups }, function (status) {
-	          _this4._listenerManager.announceStatus(status);
+	          _this3._listenerManager.announceStatus(status);
 	        });
 	      }
 
@@ -3349,7 +3343,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_performHeartbeatLoop',
 	    value: function _performHeartbeatLoop() {
-	      var _this5 = this;
+	      var _this4 = this;
 
 	      var presenceChannels = Object.keys(this._channels);
 	      var presenceChannelGroups = Object.keys(this._channelGroups);
@@ -3360,22 +3354,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      presenceChannels.forEach(function (channel) {
-	        var channelState = _this5._channels[channel].state;
+	        var channelState = _this4._channels[channel].state;
 	        if (Object.keys(channelState).length) presenceState[channel] = channelState;
 	      });
 
 	      presenceChannelGroups.forEach(function (channelGroup) {
-	        var channelGroupState = _this5._channelGroups[channelGroup].state;
+	        var channelGroupState = _this4._channelGroups[channelGroup].state;
 	        if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
 	      });
 
 	      var onHeartbeat = function onHeartbeat(status) {
-	        if (status.error && _this5._config.announceFailedHeartbeats) {
-	          _this5._listenerManager.announceStatus(status);
+	        if (status.error && _this4._config.announceFailedHeartbeats) {
+	          _this4._listenerManager.announceStatus(status);
 	        }
 
-	        if (!status.error && _this5._config.announceSuccessfulHeartbeats) {
-	          _this5._listenerManager.announceStatus(status);
+	        if (!status.error && _this4._config.announceSuccessfulHeartbeats) {
+	          _this4._listenerManager.announceStatus(status);
 	        }
 	      };
 
@@ -3422,7 +3416,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_processSubscribeResponse',
 	    value: function _processSubscribeResponse(status, payload) {
-	      var _this6 = this;
+	      var _this5 = this;
 
 	      if (status.error) {
 	        if (status.category === 'PNTimeoutCategory') {
@@ -3431,7 +3425,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        if (status.category === 'PNNetworkIssuesCategory') {
 	          this.disconnect();
+	          this._reconnectionManager.onReconnection(function () {
+	            _this5.reconnect();
+	            _this5._subscriptionStatusAnnounced = true;
+	            var reconnectedAnnounce = {
+	              category: 'PNReconnectedCategory',
+	              operation: status.operation
+	            };
+	            _this5._listenerManager.announceStatus(reconnectedAnnounce);
+	          });
 	          this._reconnectionManager.startPolling();
+	          this._listenerManager.announceStatus(status);
 	        }
 
 	        return;
@@ -3464,20 +3468,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	          announce.occupancy = message.payload.occupancy;
 	          announce.uuid = message.payload.uuid;
 	          announce.timestamp = message.payload.timestamp;
-	          _this6._listenerManager.announcePresence(announce);
+	          _this5._listenerManager.announcePresence(announce);
 	        } else {
 	          var _announce = {};
 	          _announce.actualChannel = subscriptionMatch != null ? channel : null;
 	          _announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
 	          _announce.timetoken = publishMetaData.publishTimetoken;
 
-	          if (_this6._config.cipherKey) {
-	            _announce.message = _this6._crypto.decrypt(message.payload);
+	          if (_this5._config.cipherKey) {
+	            _announce.message = _this5._crypto.decrypt(message.payload);
 	          } else {
 	            _announce.message = message.payload;
 	          }
 
-	          _this6._listenerManager.announceMessage(_announce);
+	          _this5._listenerManager.announceMessage(_announce);
 	        }
 	      });
 
@@ -3727,18 +3731,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    }
 	  }, {
-	    key: 'announceConnectionRestored',
-	    value: function announceConnectionRestored() {
-	      var reconnectedStatus = {};
-	      reconnectedStatus.category = 'PNReconnectedCategory';
-	      this.announceStatus(reconnectedStatus);
+	    key: 'announceNetworkUp',
+	    value: function announceNetworkUp() {
+	      var networkStatus = {};
+	      networkStatus.category = 'PNNetworkUpCategory';
+	      this.announceStatus(networkStatus);
 	    }
 	  }, {
-	    key: 'announceNetworkIssues',
-	    value: function announceNetworkIssues() {
-	      var disconnectedStatus = {};
-	      disconnectedStatus.category = 'PNNetworkIssuesCategory';
-	      this.announceStatus(disconnectedStatus);
+	    key: 'announceNetworkDown',
+	    value: function announceNetworkDown() {
+	      var networkStatus = {};
+	      networkStatus.category = 'PNNetworkDownCategory';
+	      this.announceStatus(networkStatus);
 	    }
 	  }]);
 
