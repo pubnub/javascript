@@ -41,16 +41,16 @@ export default class {
     });
   }
 
-  announceConnectionRestored() {
-    let reconnectedStatus: StatusAnnouncement = {};
-    reconnectedStatus.category = 'PNReconnectedCategory';
-    this.announceStatus(reconnectedStatus);
+  announceNetworkUp() {
+    let networkStatus: StatusAnnouncement = {};
+    networkStatus.category = 'PNNetworkUpCategory';
+    this.announceStatus(networkStatus);
   }
 
-  announceNetworkIssues() {
-    let disconnectedStatus: StatusAnnouncement = {};
-    disconnectedStatus.category = 'PNNetworkIssuesCategory';
-    this.announceStatus(disconnectedStatus);
+  announceNetworkDown() {
+    let networkStatus: StatusAnnouncement = {};
+    networkStatus.category = 'PNNetworkDownCategory';
+    this.announceStatus(networkStatus);
   }
 
 }

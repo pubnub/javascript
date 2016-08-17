@@ -81,11 +81,6 @@ export default class {
     this._subscriptionStatusAnnounced = false;
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
-    this._reconnectionManager.onReconnection(() => {
-      this.reconnect();
-      this._subscriptionStatusAnnounced = true;
-      this._listenerManager.announceConnectionRestored();
-    });
   }
 
   adaptStateChange(args: StateArgs, callback: Function) {
@@ -237,7 +232,17 @@ export default class {
       // we lost internet connection, alert the reconnection manager and terminate all loops
       if (status.category === 'PNNetworkIssuesCategory') {
         this.disconnect();
+        this._reconnectionManager.onReconnection(() => {
+          this.reconnect();
+          this._subscriptionStatusAnnounced = true;
+          let reconnectedAnnounce: StatusAnnouncement = {
+            category: 'PNReconnectedCategory',
+            operation: status.operation
+          };
+          this._listenerManager.announceStatus(reconnectedAnnounce);
+        });
         this._reconnectionManager.startPolling();
+        this._listenerManager.announceStatus(status);
       }
 
       return;
