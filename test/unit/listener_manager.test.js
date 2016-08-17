@@ -116,4 +116,30 @@ describe('components/ListenerManager', () => {
     assert(bool2, 'bool2 was triggered');
     assert(!bool3, 'bool3 was not triggered');
   });
+
+  it('announces network down events', () => {
+    let listeners = new ListenerManager();
+    let listener = {
+      status(status) {
+        assert.deepEqual(status, { category: 'PNNetworkDownCategory' });
+      }
+    };
+
+    listeners.addListener(listener);
+
+    listeners.announceNetworkDown();
+  });
+
+  it('announces network up events', () => {
+    let listeners = new ListenerManager();
+    let listener = {
+      status(status) {
+        assert.deepEqual(status, { category: 'PNNetworkUpCategory' });
+      }
+    };
+
+    listeners.addListener(listener);
+
+    listeners.announceNetworkUp();
+  });
 });
