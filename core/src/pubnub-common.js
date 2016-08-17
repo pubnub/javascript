@@ -196,6 +196,8 @@ function PN_API(setup) {
   var CIPHER_KEY = setup['cipher_key'];
   var UUID = setup['uuid'] || (!setup['unique_uuid'] && db && db['get'](SUBSCRIBE_KEY + 'uuid') || '');
   var USE_INSTANCEID = setup['instance_id'] || false;
+  var PARTNER_ID = setup['partner_id'];
+  var SDK_FAMILY = setup['sdk_family'];
   var INSTANCEID = '';
   var shutdown = setup['shutdown'];
   var use_send_beacon = (typeof setup['use_send_beacon'] != 'undefined') ? setup['use_send_beacon'] : true;
@@ -214,11 +216,26 @@ function PN_API(setup) {
     }
   };
 
+  function _prepareClientIdentifier() {
+    var base = 'PubNub-JS-' + SDK_FAMILY;
+
+    if (PARTNER_ID) {
+      base += '-' + PARTNER_ID;
+    }
+
+    base += '/' + SDK_VER;
+    return base;
+  }
+
   function _get_url_params(data) {
     if (!data) data = {};
     utils.each(params, function (key, value) {
       if (!(key in data)) data[key] = value;
     });
+
+    // add PNSDK to the mix.
+    data.pnsdk = _prepareClientIdentifier();
+
     return data;
   }
 

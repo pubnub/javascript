@@ -5,15 +5,12 @@ require('imports?this=>window!../../core/polyfill/json.js');
 
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');
 var CryptoJS = require('../../core/umd_vendor/hmac-sha256.js');
-var packageJSON = require('../../package.json');
 var pubNubCore = require('../../core/src/pubnub-common.js');
 var WS = require('../../core/umd_vendor/websocket');
 
 /**
  * UTIL LOCALS
  */
-
-var PNSDK = 'PubNub-JS-' + PLATFORM + '/' + packageJSON.version;
 
 /**
  * CONSOLE COMPATIBILITY
@@ -268,7 +265,6 @@ function xdr(setup) {
     };
     xhr.onload = xhr.onloadend = finished;
 
-    data.pnsdk = PNSDK;
     var url = pubNubCore.build_url(setup.url, data);
     xhr.open('GET', url, async);
     if (async) xhr.timeout = xhrtme;
@@ -314,7 +310,7 @@ var CREATE_PUBNUB = function (setup) {
   setup['hmac_SHA256'] = get_hmac_SHA256;
   setup['crypto_obj'] = crypto_obj();
   setup['sendBeacon'] = sendBeacon;
-  setup['params'] = { pnsdk: PNSDK };
+  setup['sdk_family'] = 'Web';
 
   var SELF = function (setup) {
     return CREATE_PUBNUB(setup);

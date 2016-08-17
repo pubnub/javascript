@@ -25,7 +25,7 @@ https.globalAgent.maxSockets = Infinity;
  *     fail    : function() {}
  *  });
  */
-function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, setup) {
+function xdr(proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, setup) {
   var request;
   var response;
   var debug = setup.debug;
@@ -85,8 +85,6 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
   timer = pubNubCore.timeout(function () {
     done(1, { error: true, message: 'timeout' });
   }, xhrtme);
-
-  data.pnsdk = PNSDK;
 
   var options = {};
   var payload = '';
@@ -178,7 +176,7 @@ function xdr(PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL, 
 }
 
 module.exports = {
-  createInstance: function (PNSDK, proxy, keepaliveEnabled) {
+  createInstance: function (proxy, keepaliveEnabled) {
     var keepAliveAgent;
     var keepAliveAgentSSL;
 
@@ -197,7 +195,7 @@ module.exports = {
 
 
     return {
-      request: _.partial(xdr, PNSDK, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL),
+      request: _.partial(xdr, proxy, keepaliveEnabled, keepAliveAgent, keepAliveAgentSSL),
       destroy: function () {
         if (keepAliveAgentSSL && keepAliveAgentSSL.destroy) {
           keepAliveAgentSSL.destroy();
