@@ -2,7 +2,6 @@
 /* eslint no-unused-expressions: 0, no-console: 0, camelcase: 0, curly: 0, no-redeclare: 0 */
 
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');
-var packageJSON = require('../../package.json');
 var pubNubCore = require('../../core/src/pubnub-common.js');
 /* ---------------------------------------------------------------------------
  --------------------------------------------------------------------------- */
@@ -35,11 +34,6 @@ var pubNubCore = require('../../core/src/pubnub-common.js');
  --------------------------------------------------------------------------- */
 
 /**
- * UTIL LOCALS
- */
-var PNSDK = 'PubNub-JS-' + PLATFORM + '/' + packageJSON.version;
-
-/**
  * LOCAL STORAGE OR COOKIE
  */
 var db = (function () {
@@ -66,7 +60,6 @@ var db = (function () {
 function xdr_tcp(setup) {
   var sock;
   var data = setup.data || {};
-  data['pnsdk'] = PNSDK;
   var url = pubNubCore.build_url(setup.url, data);
   var body = [];
   var data = '';
@@ -141,7 +134,6 @@ function xdr_tcp(setup) {
  */
 function xdr_http_client(setup) {
   var data = setup.data || {};
-  data['pnsdk'] = PNSDK;
   var url = pubNubCore.build_url(setup.url, data);
   var xhr;
   var timer;
@@ -243,7 +235,7 @@ function CREATE_PUBNUB(setup) {
   setup['db'] = db;
   setup['xdr'] = setup['native_tcp_socket'] ? xdr_tcp : xdr_http_client;
   setup['crypto_obj'] = crypto_obj();
-  setup['params'] = { pnsdk: PNSDK };
+  setup['sdk_family'] = 'Titatnium';
 
   var SELF = function (setup) {
     return CREATE_PUBNUB(setup);

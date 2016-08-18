@@ -1,6 +1,6 @@
 var webpack = require('webpack');
 
-var WEBPACKED_PLATFORMS = ['web', 'modern', 'webos', 'sencha', 'powerBI', 'phonegap', 'parse', 'titanium'];
+var WEBPACKED_PLATFORMS = ['web', 'modern', 'webos', 'sencha', 'phonegap', 'parse', 'titanium'];
 
 function registerWebpackBuilding(grunt) {
   var compileTargets = ['clean:core'];
@@ -90,7 +90,6 @@ module.exports = function (grunt) {
       sencha: webpackCommonBuilder('sencha', 'modern', []),
       phonegap: webpackCommonBuilder('phonegap', 'modern', []),
       webos: webpackCommonBuilder('webos', 'modern', []),
-      powerBI: webpackCommonBuilder('powerBI', 'web', []),
       parse: webpackCommonBuilder('parse', 'parse', ['crypto', 'buffer']),
       titanium: webpackCommonBuilder('titanium', 'titanium', [])
     },
@@ -238,14 +237,6 @@ module.exports = function (grunt) {
         replacements: [{
           from: /PLATFORM/g,
           to: '\'Titanium\''
-        }]
-      },
-      powerBI: {
-        src: ['powerBI/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'powerBI\''
         }]
       }
     },

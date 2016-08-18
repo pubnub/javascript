@@ -35,10 +35,7 @@
 
 var crypto = require('crypto');
 var Buffer = require('buffer').Buffer;
-var packageJSON = require('../../package.json');
 var pubNubCore = require('../../core/src/pubnub-common.js');
-
-var PNSDK = 'PubNub-JS-' + PLATFORM + '/' + packageJSON.version;
 
 /**
  * UTIL LOCALS
@@ -74,8 +71,6 @@ function xdr(setup) {
   var payload;
   var origin;
   var url;
-
-  data.pnsdk = PNSDK;
 
   if (mode === 'POST') {
     payload = decodeURIComponent(setup.url.pop());
@@ -178,7 +173,7 @@ var CREATE_PUBNUB = function (setup) {
   setup['error'] = setup['error'] || error;
   setup['hmac_SHA256'] = get_hmac_SHA256;
   setup['crypto_obj'] = crypto_obj();
-  setup['params'] = { pnsdk: PNSDK };
+  setup['sdk_family'] = 'Parse';
 
   var SELF = function (setup) {
     return CREATE_PUBNUB(setup);

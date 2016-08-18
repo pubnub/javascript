@@ -32,13 +32,7 @@
 
 var pubNubCore = require('../core/src/pubnub-common.js');
 var XDR = require('./lib/xdr');
-var packageJSON = require('../package.json');
 var crypto = require('crypto');
-
-/**
- * UTIL LOCALS
- */
-var PNSDK = 'PubNub-JS-' + 'Nodejs' + '/' + packageJSON.version;
 
 function getHMACSHA256(data, key) {
   return crypto.createHmac('sha256', new Buffer(key, 'utf8')).update(data).digest('base64');

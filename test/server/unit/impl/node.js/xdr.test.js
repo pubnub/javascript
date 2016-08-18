@@ -25,7 +25,7 @@ describe('#xdr', function () {
   describe('keepAlive', function () {
     describe('on HTTP', function () {
       it('keepAlive agents are enabled when the keepAlive is passed as true', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, true);
+        var xdrInstance = XDR.createInstance(null, true);
         var xdrSetup = { data: {}, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -35,7 +35,7 @@ describe('#xdr', function () {
       });
 
       it('keepAlive agents are enabled when the keepAlive is undefined', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, undefined);
+        var xdrInstance = XDR.createInstance(null, undefined);
         var xdrSetup = { data: {}, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -45,7 +45,7 @@ describe('#xdr', function () {
       });
 
       it('keepAlive agents are enabled when the keepAlive is null', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, null);
+        var xdrInstance = XDR.createInstance(null, null);
         var xdrSetup = { data: {}, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -55,7 +55,7 @@ describe('#xdr', function () {
       });
 
       it('keepAlive agents are disabled when the keepAlive false', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, false);
+        var xdrInstance = XDR.createInstance(null, false);
         var xdrSetup = { data: {}, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -67,7 +67,7 @@ describe('#xdr', function () {
 
     describe('on HTTPS', function () {
       it('keepAlive agents are enabled when the keepAlive is passed as true', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, true);
+        var xdrInstance = XDR.createInstance(null, true);
         var xdrSetup = { data: {}, ssl: true, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -77,7 +77,7 @@ describe('#xdr', function () {
       });
 
       it('keepAlive agents are enabled when the keepAlive is undefined', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, undefined);
+        var xdrInstance = XDR.createInstance(null, undefined);
         var xdrSetup = { data: {}, ssl: true, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -87,7 +87,7 @@ describe('#xdr', function () {
       });
 
       it('keepAlive agents are enabled when the keepAlive is null', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, null);
+        var xdrInstance = XDR.createInstance(null, null);
         var xdrSetup = { data: {}, ssl: true, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -97,7 +97,7 @@ describe('#xdr', function () {
       });
 
       it('keepAlive agents are disabled when the keepAlive false', function () {
-        var xdrInstance = XDR.createInstance('testing1', null, false);
+        var xdrInstance = XDR.createInstance(null, false);
         var xdrSetup = { data: {}, ssl: true, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
         xdrInstance.request(xdrSetup);
@@ -110,7 +110,7 @@ describe('#xdr', function () {
 
   describe('proxy', function () {
     it('does not use proxy if proxy is passed as null', function () {
-      var xdrInstance = XDR.createInstance('testing1', null, false);
+      var xdrInstance = XDR.createInstance(null, false);
       var xdrSetup = { data: {}, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
       xdrInstance.request(xdrSetup);
@@ -118,7 +118,7 @@ describe('#xdr', function () {
       assert.deepEqual(httpMock.args[0][0], {
         hostname: 'pubsub.pubnub.com',
         port: 80,
-        path: '/time/0?pnsdk=testing1',
+        path: '/time/0?',
         headers: null,
         method: 'GET',
         keepAlive: false,
@@ -128,7 +128,7 @@ describe('#xdr', function () {
 
     it('support initialization with proxy components', function () {
       var proxy = { hostname: 'moose.com', port: 1337 };
-      var xdrInstance = XDR.createInstance('testing1', proxy, false);
+      var xdrInstance = XDR.createInstance(proxy, false);
       var xdrSetup = { data: {}, url: ['http://pubsub.pubnub.com', 'time', 0] };
 
       xdrInstance.request(xdrSetup);
@@ -136,7 +136,7 @@ describe('#xdr', function () {
       assert.deepEqual(httpMock.args[0][0], {
         hostname: 'moose.com',
         port: 1337,
-        path: 'http://pubsub.pubnub.com/time/0?pnsdk=testing1',
+        path: 'http://pubsub.pubnub.com/time/0?',
         headers: { Host: 'pubsub.pubnub.com' },
         method: 'GET',
         keepAlive: false,
@@ -146,7 +146,7 @@ describe('#xdr', function () {
 
     it('support initialization with proxy components over https', function () {
       var proxy = { hostname: 'moose.com', port: 1337 };
-      var xdrInstance = XDR.createInstance('testing1', proxy, false);
+      var xdrInstance = XDR.createInstance(proxy, false);
       var xdrSetup = { data: {}, ssl: true, url: ['https://pubsub.pubnub.com', 'time', 0] };
 
       xdrInstance.request(xdrSetup);
@@ -154,7 +154,7 @@ describe('#xdr', function () {
       assert.deepEqual(httpsMock.args[0][0], {
         hostname: 'moose.com',
         port: 1337,
-        path: 'http://pubsub.pubnub.com/time/0?pnsdk=testing1',
+        path: 'http://pubsub.pubnub.com/time/0?',
         headers: { Host: 'pubsub.pubnub.com' },
         method: 'GET',
         keepAlive: false,
@@ -164,7 +164,7 @@ describe('#xdr', function () {
 
     it('support additional headers', function () {
       var proxy = { hostname: 'moose.com', port: 1337, headers: { h1: 'header1', h2: 'header2' } };
-      var xdrInstance = XDR.createInstance('testing1', proxy, false);
+      var xdrInstance = XDR.createInstance(proxy, false);
       var xdrSetup = { data: {}, ssl: true, url: ['https://pubsub.pubnub.com', 'time', 0] };
 
       xdrInstance.request(xdrSetup);
@@ -172,7 +172,7 @@ describe('#xdr', function () {
       assert.deepEqual(httpsMock.args[0][0], {
         hostname: 'moose.com',
         port: 1337,
-        path: 'http://pubsub.pubnub.com/time/0?pnsdk=testing1',
+        path: 'http://pubsub.pubnub.com/time/0?',
         headers: { Host: 'pubsub.pubnub.com', h1: 'header1', h2: 'header2' },
         method: 'GET',
         keepAlive: false,
