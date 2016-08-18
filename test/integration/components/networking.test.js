@@ -5,6 +5,7 @@ import assert from 'assert';
 import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../lib/node/index.js';
+import packageJSON from '../../../package.json';
 
 describe('#components/networking', () => {
   let pubnub;
@@ -27,7 +28,7 @@ describe('#components/networking', () => {
   describe('supports user-agent generation with partner', () => {
     it('returns a correct user-agent object', (done) => {
       utils.createNock().get('/time/0')
-        .query({ uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs-alligator/4.0.5' })
+        .query({ uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs-alligator/' + packageJSON.version })
         .reply(200, [14570763868573725]);
 
       pubnubPartner.time((status) => {

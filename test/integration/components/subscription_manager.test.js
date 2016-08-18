@@ -81,8 +81,6 @@ describe('#components/subscription_manger', () => {
           ]);
           done();
         }
-
-        console.log(messagePayload);
       }
     });
 
@@ -187,7 +185,6 @@ describe('#components/subscription_manger', () => {
 
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
-        console.log(statusPayload);
         if (statusPayload.operation !== 'PNHeartbeatOperation') return;
 
         assert.equal(scope.isDone(), true);

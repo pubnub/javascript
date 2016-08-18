@@ -1,10 +1,17 @@
 name: javascript
-version: 4.0.5
+version: 4.0.6
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.6
+    date:
+    changes:
+      - type: improvement
+        text: Adjustment of reconnection policies for web distributions.
+      - type: improvement
+        text: PNSDK support for partner identification
   - version: v4.0.5
-    date: 
+    date:
     changes:
       - type: improvement
         text: Stop exposing .babelrc which causes unpredictable behavior on react native.

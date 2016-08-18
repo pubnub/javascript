@@ -17,11 +17,5 @@ please use the [master_3x](https://github.com/pubnub/javascript/tree/master_3x) 
 - If you **need help** or have a **general question**, contact <support@pubnub.com>
 
 ## CDN Links
-
-#### HTTP
-* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.5.min.js
-* http://cdn.pubnub.com/sdk/javascript/pubnub.4.0.5.js
-
-#### HTTPS
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.5.min.js
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.5.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.6.min.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.0.6.js
