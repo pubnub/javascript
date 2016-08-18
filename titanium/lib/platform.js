@@ -1,4 +1,4 @@
-/* globals window, console, PLATFORM, Ti */
+/* globals window, console, Ti */
 /* eslint no-unused-expressions: 0, no-console: 0, camelcase: 0, curly: 0, no-redeclare: 0 */
 
 var crypto_obj = require('../../core/umd_vendor/crypto-obj.js');

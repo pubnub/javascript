@@ -1,4 +1,3 @@
-/* globals PLATFORM */
 /* eslint curly: 0, camelcase: 0, dot-notation: 0 */
 
 var pubNubCore = require('../../core/src/pubnub-common.js');

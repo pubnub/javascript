@@ -55,7 +55,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* globals 'Webos' */
 	/* eslint curly: 0, camelcase: 0, dot-notation: 0 */
 
 	var pubNubCore = __webpack_require__(1);

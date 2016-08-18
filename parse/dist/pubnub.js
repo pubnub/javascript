@@ -55,7 +55,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* globals 'Parse', Parse */
+	/* globals Parse */
 	/* eslint camelcase: 0 */
 
 	/* ---------------------------------------------------------------------------

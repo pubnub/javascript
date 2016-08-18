@@ -8,7 +8,7 @@ function registerWebpackBuilding(grunt) {
   WEBPACKED_PLATFORMS.forEach(function (platform) {
     var actions = [];
 
-    ['clean', 'webpack', 'replace', 'uglify'].forEach(function (utility) {
+    ['clean', 'webpack', 'uglify'].forEach(function (utility) {
       actions.push(utility + ':' + platform);
     });
 
@@ -181,64 +181,6 @@ module.exports = function (grunt) {
         'core/src/**/*.js',
         'test/**/*.js'
       ]
-    },
-    replace: {
-      web: {
-        src: ['web/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Web\''
-        }]
-      },
-      modern: {
-        src: ['modern/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Modern\''
-        }]
-      },
-      sencha: {
-        src: ['sencha/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Sencha\''
-        }]
-      },
-      phonegap: {
-        src: ['phonegap/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Phonegap\''
-        }]
-      },
-      webos: {
-        src: ['webos/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Webos\''
-        }]
-      },
-      parse: {
-        src: ['parse/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Parse\''
-        }]
-      },
-      titanium: {
-        src: ['titanium/dist/pubnub.js'],
-        overwrite: true,
-        replacements: [{
-          from: /PLATFORM/g,
-          to: '\'Titanium\''
-        }]
-      }
     },
     copy: {
       main: {

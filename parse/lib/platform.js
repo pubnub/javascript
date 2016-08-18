@@ -1,4 +1,4 @@
-/* globals PLATFORM, Parse */
+/* globals Parse */
 /* eslint camelcase: 0 */
 
 /* ---------------------------------------------------------------------------

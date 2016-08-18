@@ -55,7 +55,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* globals window, console, 'Web' */
+	/* globals window, console */
 	/* eslint no-unused-expressions: 0, no-console: 0, camelcase: 0, curly: 0 */
 
 	__webpack_require__(1);

@@ -1,4 +1,4 @@
-/* globals window, console, PLATFORM */
+/* globals window, console */
 /* eslint no-unused-expressions: 0, no-console: 0, camelcase: 0, curly: 0 */
 
 require('imports?this=>window!../../core/polyfill/json.js');
