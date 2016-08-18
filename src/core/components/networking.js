@@ -121,6 +121,7 @@ export default class {
 
   _detectErrorCategory(err: Object): string {
     if (err.code === 'ENOTFOUND') return 'PNNetworkIssuesCategory';
+    if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) return 'PNNetworkIssuesCategory';
     if (err.timeout) return 'PNTimeoutCategory';
 
     if (err.response) {
