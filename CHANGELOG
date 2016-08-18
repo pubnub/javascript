@@ -1,4 +1,7 @@
 
+8-17-16 * 3.16.0s
+ - support for adjustment of pnsdk for partner.
+
 6-24-16 * 3.15.2
  - fire() and no-rep
  - reducing cookie length
