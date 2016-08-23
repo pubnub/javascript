@@ -65,8 +65,12 @@ export default class {
   //
   subscribe: Function;
   unsubscribe: Function;
+  unsubscribeAll: Function;
   reconnect: Function;
   stop: Function;
+
+  getSubscribedChannels: Function;
+  getSubscribedChannelGroups: Function;
 
   addListener: Function;
   removeListener: Function;
@@ -153,6 +157,11 @@ export default class {
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
     this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
+
+    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+
+    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
+    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
     /** config **/
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);

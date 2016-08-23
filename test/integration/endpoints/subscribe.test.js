@@ -72,6 +72,7 @@ describe('subscribe endpoints', () => {
       status(status) {
         if (status.category === 'PNConnectedCategory') {
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(['cg1', 'cg2'], pubnub.getSubscribedChannelGroups());
           done();
         }
       }
@@ -89,6 +90,7 @@ describe('subscribe endpoints', () => {
       status(status) {
         if (status.category === 'PNConnectedCategory') {
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(['coolChannel', 'coolChannel2'], pubnubWithFiltering.getSubscribedChannels());
           done();
         }
       }

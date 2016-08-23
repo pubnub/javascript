@@ -91,4 +91,24 @@ describe('unsubscribe', () => {
       pubnub.unsubscribe({ channelGroups: ['cg1', 'cg2'] });
     });
   });
+
+  describe('#unsubscribeAll', () => {
+    it('supports leaving channels / channel groups', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/leave')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', 'channel-group': 'cg1,cg2' })
+        .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
+
+      pubnub.addListener({
+        status(status) {
+          if (status.operation !== 'PNUnsubscribeOperation') return;
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      });
+
+      pubnub.subscribe({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] });
+      pubnub.unsubscribeAll();
+    });
+  });
 });

@@ -138,6 +138,18 @@ export default class {
     this.reconnect();
   }
 
+  unsubscribeAll() {
+    this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() });
+  }
+
+  getSubscribedChannels() {
+    return Object.keys(this._channels);
+  }
+
+  getSubscribedChannelGroups() {
+    return Object.keys(this._channelGroups);
+  }
+
   reconnect() {
     this._startSubscribeLoop();
     this._registerHeartbeatTimer();

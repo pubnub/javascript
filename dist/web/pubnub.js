@@ -335,6 +335,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
 
+	    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+
+	    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
+	    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+
 	    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
 	    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
 	    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
@@ -848,9 +853,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (!isObject(obj)) return obj;
 	  var pairs = [];
 	  for (var key in obj) {
-	    if (null != obj[key]) {
-	      pushEncodedKeyValuePair(pairs, key, obj[key]);
-	    }
+	    pushEncodedKeyValuePair(pairs, key, obj[key]);
 	  }
 	  return pairs.join('&');
 	}
@@ -865,18 +868,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	function pushEncodedKeyValuePair(pairs, key, val) {
-	  if (Array.isArray(val)) {
-	    return val.forEach(function(v) {
-	      pushEncodedKeyValuePair(pairs, key, v);
-	    });
-	  } else if (isObject(val)) {
-	    for(var subkey in val) {
-	      pushEncodedKeyValuePair(pairs, key + '[' + subkey + ']', val[subkey]);
+	  if (val != null) {
+	    if (Array.isArray(val)) {
+	      val.forEach(function(v) {
+	        pushEncodedKeyValuePair(pairs, key, v);
+	      });
+	    } else if (isObject(val)) {
+	      for(var subkey in val) {
+	        pushEncodedKeyValuePair(pairs, key + '[' + subkey + ']', val[subkey]);
+	      }
+	    } else {
+	      pairs.push(encodeURIComponent(key)
+	        + '=' + encodeURIComponent(val));
 	    }
-	    return;
+	  } else if (val === null) {
+	    pairs.push(encodeURIComponent(key));
 	  }
-	  pairs.push(encodeURIComponent(key)
-	    + '=' + encodeURIComponent(val));
 	}
 
 	/**
@@ -3410,6 +3417,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      this.reconnect();
+	    }
+	  }, {
+	    key: 'unsubscribeAll',
+	    value: function unsubscribeAll() {
+	      this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() });
+	    }
+	  }, {
+	    key: 'getSubscribedChannels',
+	    value: function getSubscribedChannels() {
+	      return Object.keys(this._channels);
+	    }
+	  }, {
+	    key: 'getSubscribedChannelGroups',
+	    value: function getSubscribedChannelGroups() {
+	      return Object.keys(this._channelGroups);
 	    }
 	  }, {
 	    key: 'reconnect',
