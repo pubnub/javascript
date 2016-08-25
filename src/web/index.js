@@ -8,11 +8,21 @@ import { InternalSetupStruct } from '../core/flow_interfaces';
  */
 let db = {
   get(key: string) {
-    return localStorage.getItem(key);
+    // try catch for operating within iframes which disable localStorage
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
   },
 
   set(key: string, data: any) {
-    return localStorage.setItem(key, data);
+    // try catch for operating within iframes which disable localStorage
+    try {
+      return localStorage.setItem(key, data);
+    } catch (e) {
+      return null;
+    }
   }
 };
 
