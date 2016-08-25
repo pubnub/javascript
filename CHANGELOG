@@ -1,4 +1,7 @@
 
+8-17-16 * 3.16.1
+ - localStorage polyfill for modern browsers.
+
 8-17-16 * 3.16.0s
  - support for adjustment of pnsdk for partner.
 
