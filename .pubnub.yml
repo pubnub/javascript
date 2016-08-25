@@ -1,8 +1,15 @@
 name: javascript
-version: 4.0.6
+version: 4.0.7
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.7
+    date:
+    changes:
+      - type: improvement
+        text: Dependency upgrades
+      - type: improvement
+        text: try..catch wrapped around localStorage for iframe compliance
   - version: v4.0.6
     date:
     changes:

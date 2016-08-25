@@ -1,4 +1,18 @@
 
+## [v4.0.7](https://github.com/pubnub/javascript/tree/v4.0.7)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.6...v4.0.7)
+
+
+- ⭐Dependency upgrades
+
+
+
+- ⭐try..catch wrapped around localStorage for iframe compliance
+
+
+
 ## [v4.0.6](https://github.com/pubnub/javascript/tree/v4.0.6)
 
 
