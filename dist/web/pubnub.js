@@ -77,10 +77,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var db = {
 	  get: function get(key) {
-	    return localStorage.getItem(key);
+	    try {
+	      return localStorage.getItem(key);
+	    } catch (e) {
+	      return null;
+	    }
 	  },
 	  set: function set(key, data) {
-	    return localStorage.setItem(key, data);
+	    try {
+	      return localStorage.setItem(key, data);
+	    } catch (e) {
+	      return null;
+	    }
 	  }
 	};
 
@@ -102,7 +110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    setup.sendBeacon = sendBeacon;
 	    setup.sdkFamily = 'Web';
 
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, setup));
+	    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, setup));
 
 	    window.addEventListener('offline', function () {
 	      _this._listenerManager.announceNetworkDown();
@@ -2752,7 +2760,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"eslint-plugin-import": "^1.9.2",
 			"eslint-plugin-mocha": "3.0.0",
 			"eslint-plugin-react": "5.2.2",
-			"flow-bin": "^0.29.0",
+			"flow-bin": "^0.31.1",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
@@ -2760,11 +2768,11 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-exec": "^2.1.2",
 			"gulp-flowtype": "^0.4.9",
 			"gulp-gzip": "^1.4.0",
-			"gulp-istanbul": "^1.0.0",
+			"gulp-istanbul": "^1.1.1",
 			"gulp-mocha": "^2.2.0",
 			"gulp-rename": "^1.2.2",
 			"gulp-sourcemaps": "^1.6.0",
-			"gulp-uglify": "^1.5.4",
+			"gulp-uglify": "^2.0.0",
 			"imports-loader": "0.6.5",
 			"isparta": "^4.0.0",
 			"json-loader": "0.5.4",
@@ -2777,7 +2785,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"karma-spec-reporter": "0.0.26",
 			"mocha": "2.5.3",
 			"nock": "^8.0.0",
-			"phantomjs-prebuilt": "2.1.7",
+			"phantomjs-prebuilt": "2.1.12",
 			"remap-istanbul": "^0.6.4",
 			"run-sequence": "^1.2.1",
 			"sinon": "^1.17.4",
@@ -2785,7 +2793,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"uglify-js": "^2.6.4",
 			"underscore": "^1.8.3",
 			"webpack": "^1.13.1",
-			"webpack-dev-server": "1.14.1",
+			"webpack-dev-server": "1.15.0",
 			"webpack-stream": "^3.2.0"
 		},
 		"bundleDependencies": [],
