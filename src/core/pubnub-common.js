@@ -74,6 +74,7 @@ export default class {
 
   addListener: Function;
   removeListener: Function;
+  removeAllListeners: Function;
 
   getAuthKey: Function;
   setAuthKey: Function;
