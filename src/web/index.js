@@ -37,12 +37,12 @@ export default class extends PubNubCore {
     // mount network events.
     window.addEventListener('offline', () => {
       this._listenerManager.announceNetworkDown();
-      this.stop.bind(this);
+      this.stop();
     });
 
     window.addEventListener('online', () => {
       this._listenerManager.announceNetworkUp();
-      this.reconnect.bind(this);
+      this.reconnect();
     });
   }
 

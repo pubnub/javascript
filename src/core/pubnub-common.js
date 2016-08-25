@@ -115,6 +115,7 @@ export default class {
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
+    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
 
     /** channel groups **/
     this.channelGroups = {
@@ -156,7 +157,10 @@ export default class {
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
+    this.stop = () => {
+      subscriptionManager.unsubscribeAll();
+      subscriptionManager.disconnect();
+    };
 
     this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
 

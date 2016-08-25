@@ -23,6 +23,7 @@ describe('unsubscribe', () => {
   });
 
   afterEach(() => {
+    pubnub.removeAllListeners();
     pubnub.stop();
   });
 

@@ -23,6 +23,10 @@ export default class {
     this._listeners = newListeners;
   }
 
+  removeAllListeners() {
+    this._listeners = [];
+  }
+
   announcePresence(announce: PresenceAnnouncement) {
     this._listeners.forEach((listener) => {
       if (listener.presence) listener.presence(announce);

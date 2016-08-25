@@ -23,6 +23,7 @@ describe('heartbeat', () => {
   });
 
   afterEach(() => {
+    pubnub.removeAllListeners();
     pubnub.stop();
   });
 

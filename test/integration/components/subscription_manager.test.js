@@ -142,6 +142,7 @@ describe('#components/subscription_manger', () => {
   it('reports when heartbeats failed', (done) => {
     pubnub.addListener({
       status(statusPayload) {
+        if (statusPayload.operation !== 'PNHeartbeatOperation') return;
         let statusWithoutError = _.omit(statusPayload, 'errorData');
         assert.deepEqual({
           category: 'PNUnknownCategory',
@@ -162,6 +163,7 @@ describe('#components/subscription_manger', () => {
 
     pubnub.addListener({
       status(statusPayload) {
+        if (statusPayload.operation !== 'PNHeartbeatOperation') return;
         let statusWithoutError = _.omit(statusPayload, 'errorData');
         assert.equal(scope.isDone(), true);
         assert.deepEqual({

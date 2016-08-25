@@ -106,12 +106,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    window.addEventListener('offline', function () {
 	      _this._listenerManager.announceNetworkDown();
-	      _this.stop.bind(_this);
+	      _this.stop();
 	    });
 
 	    window.addEventListener('online', function () {
 	      _this._listenerManager.announceNetworkUp();
-	      _this.reconnect.bind(_this);
+	      _this.reconnect();
 	    });
 	    return _this;
 	  }
@@ -294,6 +294,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.addListener = listenerManager.addListener.bind(listenerManager);
 	    this.removeListener = listenerManager.removeListener.bind(listenerManager);
+	    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
 
 	    this.channelGroups = {
 	      listGroups: _endpoint2.default.bind(this, modules, listChannelGroupsConfig),
@@ -333,7 +334,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-	    this.stop = subscriptionManager.disconnect.bind(subscriptionManager);
+	    this.stop = function () {
+	      subscriptionManager.unsubscribeAll();
+	      subscriptionManager.disconnect();
+	    };
 
 	    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
 
@@ -3828,6 +3832,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      this._listeners = newListeners;
+	    }
+	  }, {
+	    key: 'removeAllListeners',
+	    value: function removeAllListeners() {
+	      this._listeners = [];
 	    }
 	  }, {
 	    key: 'announcePresence',

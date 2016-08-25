@@ -46,6 +46,7 @@ describe('#components/reconnection_manger', () => {
 
     pubnub.addListener({
       status(statusPayload) {
+        if (statusPayload.operation !== 'PNSubscribeOperation') return;
         let statusWithoutError = _.omit(statusPayload, 'errorData');
         assert.deepEqual({
           category: 'PNNetworkIssuesCategory',
