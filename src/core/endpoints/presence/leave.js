@@ -1,9 +1,10 @@
 /* @flow */
 
 import { LeaveArguments, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNUnsubscribeOperation';
+  return operationConstants.PNUnsubscribeOperation;
 }
 
 export function validateParams(modules: ModulesInject) {

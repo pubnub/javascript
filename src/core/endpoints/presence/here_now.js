@@ -1,9 +1,10 @@
 /* @flow */
 
 import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNHereNowOperation';
+  return operationConstants.PNHereNowOperation;
 }
 
 export function validateParams(modules: ModulesInject) {

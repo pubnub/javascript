@@ -7,7 +7,7 @@ import utils from '../../utils';
 import PubNub from '../../../lib/node/index.js';
 import _ from 'underscore';
 
-describe('#components/subscription_manger', () => {
+describe('#components/subscription_manager', () => {
   let pubnub;
   let pubnubWithPassingHeartbeats;
 
@@ -60,6 +60,8 @@ describe('#components/subscription_manger', () => {
                 text: 'Message'
               },
               subscribedChannel: 'coolChan-bnel',
+              channel: 'coolChannel',
+              subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
             },
             {
@@ -68,6 +70,8 @@ describe('#components/subscription_manger', () => {
                 text: 'Message3',
               },
               subscribedChannel: 'coolChan-bnel',
+              channel: 'coolChannel',
+              subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
             },
             {
@@ -76,6 +80,8 @@ describe('#components/subscription_manger', () => {
                 text: 'Message10',
               },
               subscribedChannel: 'coolChan-bnel',
+              channel: 'coolChannel',
+              subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
             }
           ]);
@@ -96,6 +102,8 @@ describe('#components/subscription_manger', () => {
       presence(presencePayload) {
         assert.equal(scope.isDone(), true);
         assert.deepEqual({
+          channel: 'coolChannel',
+          subscription: null,
           actualChannel: null,
           occupancy: 1,
           subscribedChannel: 'coolChannel-pnpres',
@@ -123,6 +131,8 @@ describe('#components/subscription_manger', () => {
 
         assert.equal(scope.isDone(), true);
         assert.deepEqual({
+          channel: 'ch10',
+          subscription: null,
           actualChannel: null,
           occupancy: 3,
           subscribedChannel: 'ch10-pnpres',
@@ -142,7 +152,7 @@ describe('#components/subscription_manger', () => {
   it('reports when heartbeats failed', (done) => {
     pubnub.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== 'PNHeartbeatOperation') return;
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
         let statusWithoutError = _.omit(statusPayload, 'errorData');
         assert.deepEqual({
           category: 'PNUnknownCategory',
@@ -163,7 +173,7 @@ describe('#components/subscription_manger', () => {
 
     pubnub.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== 'PNHeartbeatOperation') return;
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
         let statusWithoutError = _.omit(statusPayload, 'errorData');
         assert.equal(scope.isDone(), true);
         assert.deepEqual({
@@ -187,7 +197,7 @@ describe('#components/subscription_manger', () => {
 
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== 'PNHeartbeatOperation') return;
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
         assert.equal(scope.isDone(), true);
         assert.deepEqual({

@@ -1,9 +1,10 @@
 /* @flow */
 
 import { HeartbeatArguments, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNHeartbeatOperation';
+  return operationConstants.PNHeartbeatOperation;
 }
 
 export function validateParams(modules: ModulesInject) {

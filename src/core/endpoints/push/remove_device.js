@@ -1,9 +1,10 @@
 /* @flow */
 
 import { RemoveDeviceArgs, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNRemoveAllPushNotificationsOperation';
+  return operationConstants.PNRemoveAllPushNotificationsOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: RemoveDeviceArgs) {
@@ -21,11 +22,11 @@ export function getURL(modules: ModulesInject, incomingParams: RemoveDeviceArgs)
   return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device + '/remove';
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }: ModulesInject): number {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported() {
+export function isAuthSupported(): boolean {
   return true;
 }
 

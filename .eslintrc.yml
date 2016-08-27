@@ -5,6 +5,7 @@ plugins:
   - flowtype
 rules:
   mocha/no-exclusive-tests: 2
+  flowtype/require-valid-file-annotation: 2
 
   prefer-template: 0
   no-else-return: 0

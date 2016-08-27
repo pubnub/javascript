@@ -1,9 +1,10 @@
 /* @flow */
 
 import { AuditArguments, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNAccessManagerAudit';
+  return operationConstants.PNAccessManagerAudit;
 }
 
 export function validateParams(modules: ModulesInject) {

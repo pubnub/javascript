@@ -1,9 +1,10 @@
 /* @flow */
 
 import { RemoveChannelParams, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNRemoveChannelsFromGroupOperation';
+  return operationConstants.PNRemoveChannelsFromGroupOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: RemoveChannelParams) {

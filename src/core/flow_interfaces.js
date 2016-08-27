@@ -112,8 +112,12 @@ type PresenceAnnouncement = {
   occupancy: number,
   state: Object,
 
-  subscribedChannel: string,
-  actualChannel: string,
+  subscribedChannel: string, // deprecated
+  actualChannel: string,     // deprecated
+
+  channel: string,
+  subscription: string,
+
   timetoken: number,
   userMetadata: Object
 }
@@ -122,8 +126,12 @@ type MessageAnnouncement = {
 
   message: Object,
 
-  subscribedChannel: string,
-  actualChannel: string,
+  subscribedChannel: string, // deprecated
+  actualChannel: string,     // deprecated
+
+  channel: string,
+  subscription: string,
+
   timetoken: number,
   userMetadata: Object
 }
