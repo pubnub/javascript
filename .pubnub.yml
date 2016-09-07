@@ -81,6 +81,7 @@ features:
     - PUBLISH-SYNC
     - PUBLISH-ASYNC
     - FIRE
+    - REPLICATION-FLAG
   storage:
     - REVERSE
     - INCLUDE-TIMETOKEN
