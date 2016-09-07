@@ -73,6 +73,27 @@ features:
     - GET-STATE
     - HEARTBEAT
   publish:
-   - STORE-FLAG
-   - FIRE
-   - REPLICATION-FLAG
+    - STORE-FLAG
+    - RAW-JSON
+    - WITH-METADATA
+    - GET
+    - POST
+    - PUBLISH-SYNC
+    - PUBLISH-ASYNC
+    - FIRE
+  storage:
+    - REVERSE
+    - INCLUDE-TIMETOKEN
+    - START-END
+    - COUNT
+  time:
+    - TIME
+  subscribe:
+    - CHANNELS
+    - CHANNEL-GROUPS
+    - PRESENCE-CHANNELS
+    - PRESENCE-CHANNELS-GROUPS
+    - WITH-TIMETOKEN
+    - WILDCARD
+    - FILTER-EXPRESSION
+    - WITH-USERSTATE
