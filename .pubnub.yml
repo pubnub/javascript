@@ -1,4 +1,41 @@
 name: javascript
-features:
+ access:
+    - GRANT
+  channel-groups:
+    - ADD-CHANNELS
+    - REMOVE-CHANNELS
+    - LIST-GROUPS
+    - LIST-CHANNELS-IN-GROUP
+  push:
+    - ADD-DEVICE-TO-CHANNELS
+    - REMOVE-DEVICE-FROM-CHANNELS
+    - LIST-CHANNELS-FROM-DEVICE
+    - REMOVE-DEVICE
+  presence:
+    - HERE-NOW
+    - WHERE-NOW
+    - SET-STATE
+    - GET-STATE
+    - HEARTBEAT
   publish:
-   - STORE-FLAG
+    - STORE-FLAG
+    - RAW-JSON
+    - WITH-METADATA
+    - GET
+    - POST
+    - PUBLISH-SYNC
+    - PUBLISH-ASYNC
+  storage:
+    - REVERSE
+    - INCLUDE-TIMETOKEN
+    - START-END
+    - COUNT
+  time:
+    - TIME
+  subscribe:
+    - CHANNELS
+    - CHANNEL-GROUPS
+    - PRESENCE-CHANNELS
+    - PRESENCE-CHANNELS-GROUPS
+    - WITH-TIMETOKEN
+    - WITH-USERSTATE
