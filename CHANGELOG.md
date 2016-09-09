@@ -1,8 +1,8 @@
 
-## [v4.0.8](https://github.com/pubnub/javascript/tree/v4.0.8)
+## [v4.0.9](https://github.com/pubnub/javascript/tree/v4.0.9)
 
 
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.7...v4.0.8)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.8...v4.0.9)
 
 
 - ⭐channel / subscription items are populated in
@@ -10,6 +10,16 @@
 
 
 - ⭐constants for operation and category are exposed on global object
+
+
+
+## [v4.0.8](https://github.com/pubnub/javascript/tree/v4.0.8)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.7...v4.0.8)
+
+
+- ⭐re-publish of v4.0.7
 
 
 
