@@ -1,8 +1,15 @@
 name: javascript
-version: 4.0.7
+version: 4.0.8
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.8
+    date:
+    changes:
+      - type: improvement
+        text: channel / subscription items are populated in
+      - type: improvement
+        text: constants for operation and category are exposed on global object
   - version: v4.0.7
     date:
     changes:
