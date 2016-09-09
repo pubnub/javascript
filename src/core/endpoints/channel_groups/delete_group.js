@@ -1,9 +1,10 @@
 /* @flow */
 
 import { DeleteGroupParams, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNRemoveGroupOperation';
+  return operationConstants.PNRemoveGroupOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: DeleteGroupParams) {

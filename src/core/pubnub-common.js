@@ -37,6 +37,8 @@ import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
 
 import packageJSON from '../../package.json';
+import OPERATIONS from './constants/operations';
+import CATEGORIES from './constants/categories';
 
 import { InternalSetupStruct } from './flow_interfaces';
 
@@ -110,6 +112,7 @@ export default class {
       timeEndpoint,
       leaveEndpoint, heartbeatEndpoint, setStateEndpoint,
       subscribeEndpoint,
+      crypto: modules.crypto,
       config: modules.config,
       listenerManager,
     });
@@ -186,5 +189,8 @@ export default class {
   static generateUUID(): string {
     return uuidGenerator.v4();
   }
+
+  static OPERATIONS = OPERATIONS;
+  static CATEGORIES = CATEGORIES;
 
 }

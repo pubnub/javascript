@@ -1,12 +1,11 @@
-
-import SubscribeEndpoints from '../endpoints/subscribe';
-import TimeEndpoints from '../endpoints/time';
+/* @flow */
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
 import ListenerManager from '../components/listener_manager';
 import ReconnectionManager from '../components/reconnection_manager';
 import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
+import categoryConstants from '../constants/categories';
 
 type SubscribeArgs = {
   channels: Array<string>,
@@ -27,8 +26,11 @@ type StateArgs = {
 }
 
 type SubscriptionManagerConsturct = {
-    subscribeEndpoints: SubscribeEndpoints,
-    timeEndpoints: TimeEndpoints,
+    leaveEndpoint: Function,
+    subscribeEndpoint: Function,
+    timeEndpoint: Function,
+    heartbeatEndpoint: Function,
+    setStateEndpoint: Function,
     config: Config,
     crypto: Crypto,
     listenerManager: ListenerManager
@@ -55,9 +57,9 @@ export default class {
   _timetoken: number;
   _region: number;
 
-  _subscribeCall: Object;
+  _subscribeCall: ?Object;
+  _heartbeatTimer: ?number;
 
-  _heartbeatTimer: number;
   _subscriptionStatusAnnounced: boolean;
 
   constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
@@ -237,18 +239,18 @@ export default class {
   _processSubscribeResponse(status: StatusAnnouncement, payload: SubscribeEnvelope) {
     if (status.error) {
       // if we timeout from server, restart the loop.
-      if (status.category === 'PNTimeoutCategory') {
+      if (status.category === categoryConstants.PNTimeoutCategory) {
         this._startSubscribeLoop();
       }
 
       // we lost internet connection, alert the reconnection manager and terminate all loops
-      if (status.category === 'PNNetworkIssuesCategory') {
+      if (status.category === categoryConstants.PNNetworkIssuesCategory) {
         this.disconnect();
         this._reconnectionManager.onReconnection(() => {
           this.reconnect();
           this._subscriptionStatusAnnounced = true;
           let reconnectedAnnounce: StatusAnnouncement = {
-            category: 'PNReconnectedCategory',
+            category: categoryConstants.PNReconnectedCategory,
             operation: status.operation
           };
           this._listenerManager.announceStatus(reconnectedAnnounce);
@@ -262,7 +264,7 @@ export default class {
 
     if (!this._subscriptionStatusAnnounced) {
       let connectedAnnounce: StatusAnnouncement = {};
-      connectedAnnounce.category = 'PNConnectedCategory';
+      connectedAnnounce.category = categoryConstants.PNConnectedCategory;
       connectedAnnounce.operation = status.operation;
       this._subscriptionStatusAnnounced = true;
       this._listenerManager.announceStatus(connectedAnnounce);
@@ -279,8 +281,22 @@ export default class {
 
       if (utils.endsWith(message.channel, '-pnpres')) {
         let announce: PresenceAnnouncement = {};
+        announce.channel = null;
+        announce.subscription = null;
+
+        // deprecated -->
         announce.actualChannel = (subscriptionMatch != null) ? channel : null;
         announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+        // <-- deprecated
+
+        if (channel) {
+          announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
+        }
+
+        if (subscriptionMatch) {
+          announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
+        }
+
         announce.action = message.payload.action;
         announce.state = message.payload.data;
         announce.timetoken = publishMetaData.publishTimetoken;
@@ -290,8 +306,16 @@ export default class {
         this._listenerManager.announcePresence(announce);
       } else {
         let announce: MessageAnnouncement = {};
+        announce.channel = null;
+        announce.subscription = null;
+
+        // deprecated -->
         announce.actualChannel = (subscriptionMatch != null) ? channel : null;
         announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+        // <-- deprecated
+
+        announce.channel = channel;
+        announce.subscription = subscriptionMatch;
         announce.timetoken = publishMetaData.publishTimetoken;
 
         if (this._config.cipherKey) {

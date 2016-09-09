@@ -1,9 +1,10 @@
 /* @flow */
 
 import { ListChannelsArgs, ListChannelsResponse, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNPushNotificationEnabledChannelsOperation';
+  return operationConstants.PNPushNotificationEnabledChannelsOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: ListChannelsArgs) {

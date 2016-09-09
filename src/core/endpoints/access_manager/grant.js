@@ -1,9 +1,10 @@
 /* @flow */
 
 import { GrantArguments, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNAccessManagerGrant';
+  return operationConstants.PNAccessManagerGrant;
 }
 
 export function validateParams(modules: ModulesInject) {

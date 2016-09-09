@@ -4,6 +4,7 @@ import superagent from 'superagent';
 
 import Crypto from './cryptography/index';
 import Config from './config.js';
+import categoryConstants from '../constants/categories';
 
 import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
 
@@ -120,16 +121,16 @@ export default class {
   }
 
   _detectErrorCategory(err: Object): string {
-    if (err.code === 'ENOTFOUND') return 'PNNetworkIssuesCategory';
-    if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) return 'PNNetworkIssuesCategory';
-    if (err.timeout) return 'PNTimeoutCategory';
+    if (err.code === 'ENOTFOUND') return categoryConstants.PNNetworkIssuesCategory;
+    if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) return categoryConstants.PNNetworkIssuesCategory;
+    if (err.timeout) return categoryConstants.PNTimeoutCategory;
 
     if (err.response) {
-      if (err.response.badRequest) return 'PNBadRequestCategory';
-      if (err.response.forbidden) return 'PNAccessDeniedCategory';
+      if (err.response.badRequest) return categoryConstants.PNBadRequestCategory;
+      if (err.response.forbidden) return categoryConstants.PNAccessDeniedCategory;
     }
 
-    return 'PNUnknownCategory';
+    return categoryConstants.PNUnknownCategory;
   }
 
   _attachSuperagentLogger(req: Object) {

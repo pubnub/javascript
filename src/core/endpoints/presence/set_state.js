@@ -1,9 +1,10 @@
 /* @flow */
 
 import { SetStateArguments, SetStateResponse, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNSetStateOperation';
+  return operationConstants.PNSetStateOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: SetStateArguments) {

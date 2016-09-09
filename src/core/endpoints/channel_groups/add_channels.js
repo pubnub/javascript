@@ -1,9 +1,10 @@
 /* @flow */
 
 import { AddChannelParams, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return 'PNAddChannelsToGroupOperation';
+  return operationConstants.PNAddChannelsToGroupOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: AddChannelParams) {

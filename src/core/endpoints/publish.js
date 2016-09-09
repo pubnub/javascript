@@ -1,6 +1,7 @@
 /* @flow */
 
 import { PublishResponse, PublishArguments, ModulesInject } from '../flow_interfaces';
+import operationConstants from '../constants/operations';
 
 function prepareMessagePayload(modules, messagePayload) {
   const { crypto, config } = modules;
@@ -15,7 +16,7 @@ function prepareMessagePayload(modules, messagePayload) {
 }
 
 export function getOperation(): string {
-  return 'PNPublishOperation';
+  return operationConstants.PNPublishOperation;
 }
 
 export function validateParams({ config}: ModulesInject, incomingParams: PublishArguments) {

@@ -1,9 +1,10 @@
 /* @flow */
 
 import { SubscribeArguments, PublishMetaData, SubscribeMetadata, SubscribeMessage, SubscribeEnvelope, ModulesInject } from '../flow_interfaces';
+import operationConstants from '../constants/operations';
 
 export function getOperation(): string {
-  return 'PNSubscribeOperation';
+  return operationConstants.PNSubscribeOperation;
 }
 
 export function validateParams(modules: ModulesInject) {

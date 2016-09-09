@@ -2,6 +2,7 @@ import { StatusAnnouncement } from '../flow_interfaces';
 import uuidGenerator from 'uuid';
 import utils from '../utils';
 import Config from './config';
+import operationConstants from '../constants/operations';
 
 function createError(errorPayload: Object, type: string): Object {
   errorPayload.type = type;
@@ -29,7 +30,7 @@ export default function (modules, endpoint, ...args) {
   let callback = null;
   let incomingParams = {};
 
-  if (endpoint.getOperation() === 'PNTimeOperation' || endpoint.getOperation() === 'PNChannelGroupsOperation') {
+  if (endpoint.getOperation() === operationConstants.PNTimeOperation || endpoint.getOperation() === operationConstants.PNChannelGroupsOperation) {
     callback = args[0];
   } else {
     incomingParams = args[0];
@@ -61,13 +62,13 @@ export default function (modules, endpoint, ...args) {
   }
 
   // encrypt the params
-  if (endpoint.getOperation() === 'PNAccessManagerGrant') {
+  if (endpoint.getOperation() === operationConstants.PNAccessManagerGrant) {
     let signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
     signInput += utils.signPamFromParams(outgoingParams);
     outgoingParams.signature = crypto.HMACSHA256(signInput);
   }
 
-  if (endpoint.getOperation() === 'PNAccessManagerAudit') {
+  if (endpoint.getOperation() === operationConstants.PNAccessManagerAudit) {
     let signInput = config.subscribeKey + '\n' + config.publishKey + '\naudit\n';
     signInput += utils.signPamFromParams(outgoingParams);
     outgoingParams.signature = crypto.HMACSHA256(signInput);
@@ -100,7 +101,7 @@ export default function (modules, endpoint, ...args) {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }
 
-  if (endpoint.getOperation() === 'PNSubscribeOperation') {
+  if (endpoint.getOperation() === operationConstants.PNSubscribeOperation) {
     return callInstance;
   }
 }

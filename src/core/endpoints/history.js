@@ -1,6 +1,7 @@
 /* @flow */
 
 import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
+import operationConstants from '../constants/operations';
 
 function __processMessage(modules, message: Object): Object | null {
   let { config, crypto } = modules;
@@ -14,7 +15,7 @@ function __processMessage(modules, message: Object): Object | null {
 }
 
 export function getOperation(): string {
-  return 'PNHistoryOperation';
+  return operationConstants.PNHistoryOperation;
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: FetchHistoryArguments) {

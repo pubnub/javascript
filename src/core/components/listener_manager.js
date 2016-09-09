@@ -1,5 +1,6 @@
 /* @flow */
 import { MessageAnnouncement, StatusAnnouncement, CallbackStruct, PresenceAnnouncement } from '../flow_interfaces';
+import categoryConstants from '../constants/categories';
 
 export default class {
 
@@ -47,13 +48,13 @@ export default class {
 
   announceNetworkUp() {
     let networkStatus: StatusAnnouncement = {};
-    networkStatus.category = 'PNNetworkUpCategory';
+    networkStatus.category = categoryConstants.PNNetworkUpCategory;
     this.announceStatus(networkStatus);
   }
 
   announceNetworkDown() {
     let networkStatus: StatusAnnouncement = {};
-    networkStatus.category = 'PNNetworkDownCategory';
+    networkStatus.category = categoryConstants.PNNetworkDownCategory;
     this.announceStatus(networkStatus);
   }
 
