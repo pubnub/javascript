@@ -456,8 +456,6 @@ function PN_API(setup) {
       requestConfig.data = requestData;
     }
 
-    console.log(requestConfig);
-
     return xdr(requestConfig);
   }
 
