@@ -157,6 +157,7 @@ function PN_API(setup) {
   var SUBSCRIBE_KEY = setup['subscribe_key'];
   var AUTH_KEY = setup['auth_key'] || '';
   var SECRET_KEY = setup['secret_key'] || '';
+  var SIGN_REQUESTS = setup['sign_requests'] || false;
   var hmac_SHA256 = setup['hmac_SHA256'];
   var SSL = setup['ssl'] ? 's' : '';
   var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
@@ -342,7 +343,7 @@ function PN_API(setup) {
       PUB_QUEUE.sending = 1;
     }
 
-    xdr(PUB_QUEUE.shift());
+    executeRequest(PUB_QUEUE.shift());
   }
 
   function each_channel_group(callback) {
@@ -424,6 +425,42 @@ function PN_API(setup) {
     }
   }
 
+  /*
+    Abstraction over XHR to allow common parameter modification before
+    dispatching to the networking layer.
+  */
+  function executeRequest(requestConfig) {
+    var operationType = requestConfig['operation'];
+    var timestamp = Math.floor(new Date().getTime() / 1000);
+    var requestData = requestConfig.data || {};
+
+    if ((SIGN_REQUESTS && SECRET_KEY) || operationType === 'PNAccessManagerGrant' || operationType === 'PNAccessManagerAudit') {
+      requestData.timestamp = timestamp;
+      var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
+
+      if (operationType === 'PNAccessManagerGrant') {
+        signInput += 'grant' + '\n';
+      } else if (operationType === 'PNAccessManagerAudit') {
+        signInput += 'audit' + '\n';
+      } else {
+        signInput += '/' + requestConfig['url'] + '\n';
+      }
+
+      signInput += _get_pam_sign_input_from_params(requestData);
+      var signature = hmac_SHA256(signInput, SECRET_KEY);
+
+      signature = signature.replace(/\+/g, '-');
+      signature = signature.replace(/\//g, '_');
+
+      requestData['signature'] = signature;
+      requestConfig.data = requestData;
+    }
+
+    console.log(requestConfig);
+
+    return xdr(requestConfig);
+  }
+
   function CR(args, callback, url1, data) {
     var callback = args['callback'] || callback;
     var err = args['error'] || error;
@@ -444,7 +481,7 @@ function PN_API(setup) {
 
     if (jsonp) data['callback'] = jsonp;
 
-    xdr({
+    executeRequest({
       callback: jsonp,
       data: _get_url_params(data),
       success: function (response) {
@@ -500,7 +537,7 @@ function PN_API(setup) {
       }
 
 
-      xdr({
+      executeRequest({
         blocking: blocking || SSL,
         callback: jsonp,
         data: params,
@@ -555,7 +592,7 @@ function PN_API(setup) {
         }
       }
 
-      xdr({
+      executeRequest({
         blocking: blocking || SSL,
         callback: jsonp,
         data: params,
@@ -787,7 +824,7 @@ function PN_API(setup) {
       if (string_msg_token) params['string_message_token'] = 'true';
 
       // Send Message
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: _get_url_params(params),
         success: function (response) {
@@ -872,7 +909,7 @@ function PN_API(setup) {
       ];
 
       // Start (or Stop) Replay!
-      xdr({
+      executeRequest({
         callback: jsonp,
         success: function (response) {
           _invoke_callback(response, callback, err);
@@ -903,7 +940,7 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: _get_url_params(data),
         url: [STD_ORIGIN, 'time', jsonp],
@@ -1321,7 +1358,7 @@ function PN_API(setup) {
         if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
         start_presence_heartbeat();
-        SUB_RECEIVER = xdr({
+        SUB_RECEIVER = executeRequest({
           timeout: sub_timeout,
           callback: jsonp,
           fail: function (response) {
@@ -1513,7 +1550,7 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: _get_url_params(data),
         success: function (response) {
@@ -1548,7 +1585,7 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: _get_url_params(data),
         success: function (response) {
@@ -1623,7 +1660,7 @@ function PN_API(setup) {
         ];
       }
 
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: _get_url_params(data),
         success: function (response) {
@@ -1665,10 +1702,7 @@ function PN_API(setup) {
       if (!PUBLISH_KEY) return error('Missing Publish Key');
       if (!SECRET_KEY) return error('Missing Secret Key');
 
-      var timestamp = Math.floor(new Date().getTime() / 1000);
-      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'grant' + '\n';
-
-      var data = { w: w, r: r, timestamp: timestamp };
+      var data = { w: w, r: r };
 
       if (args['manage']) {
         data['m'] = m;
@@ -1694,16 +1728,8 @@ function PN_API(setup) {
 
       if (!auth_key) delete data['auth'];
 
-      sign_input += _get_pam_sign_input_from_params(data);
-
-      var signature = hmac_SHA256(sign_input, SECRET_KEY);
-
-      signature = signature.replace(/\+/g, '-');
-      signature = signature.replace(/\//g, '_');
-
-      data['signature'] = signature;
-
-      xdr({
+      executeRequest({
+        operation: 'PNAccessManagerGrant',
         callback: jsonp,
         data: data,
         success: function (response) {
@@ -1764,7 +1790,7 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) params['instanceid'] = INSTANCEID;
 
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: params,
         success: function (response) {
@@ -1801,10 +1827,7 @@ function PN_API(setup) {
       if (!PUBLISH_KEY) return error('Missing Publish Key');
       if (!SECRET_KEY) return error('Missing Secret Key');
 
-      var timestamp = Math.floor(new Date().getTime() / 1000);
-      var sign_input = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n' + 'audit' + '\n';
-
-      var data = { timestamp: timestamp };
+      var data = {};
       if (jsonp != '0') {
         data['callback'] = jsonp;
       }
@@ -1818,15 +1841,8 @@ function PN_API(setup) {
 
       if (!auth_key) delete data['auth'];
 
-      sign_input += _get_pam_sign_input_from_params(data);
-
-      var signature = hmac_SHA256(sign_input, SECRET_KEY);
-
-      signature = signature.replace(/\+/g, '-');
-      signature = signature.replace(/\//g, '_');
-
-      data['signature'] = signature;
-      xdr({
+      executeRequest({
+        operation: 'PNAccessManagerAudit',
         callback: jsonp,
         data: data,
         success: function (response) {
@@ -1896,7 +1912,7 @@ function PN_API(setup) {
 
       if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-      xdr({
+      executeRequest({
         callback: jsonp,
         data: _get_url_params(data),
         url: [
