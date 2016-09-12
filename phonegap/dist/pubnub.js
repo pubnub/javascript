@@ -1,4 +1,4 @@
-/*! 3.16.1 / phonegap */
+/*! 3.16.2 / phonegap */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -850,10 +850,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function executeRequest(requestConfig) {
 	    var operationType = requestConfig['operation'];
 	    var timestamp = Math.floor(new Date().getTime() / 1000);
-	    var requestData = requestConfig.data || {};
+	    var requestData = requestConfig['data'] || {};
 
-	    if (SECRET_KEY || operationType === 'PNAccessManagerGrant' || operationType === 'PNAccessManagerAudit') {
-	      requestData.timestamp = timestamp;
+	    if (SECRET_KEY) {
+	      requestData['timestamp'] = timestamp;
 	      var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
 
 	      if (operationType === 'PNAccessManagerGrant') {
@@ -871,7 +871,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      signature = signature.replace(/\//g, '_');
 
 	      requestData['signature'] = signature;
-	      requestConfig.data = requestData;
+	      requestConfig['data'] = requestData;
 	    }
 
 	    return xdr(requestConfig);
@@ -2463,7 +2463,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.16.1",
+		"version": "3.16.2",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [

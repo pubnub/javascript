@@ -27,9 +27,6 @@ describe('release should be consistent', function () {
   });
 
   it('with updated readme', function () {
-    assert(readMe.indexOf('http://cdn.pubnub.com/pubnub-' + versionFile + '.js') > 1);
-    assert(readMe.indexOf('http://cdn.pubnub.com/pubnub-' + versionFile + '.min.js') > 1);
-
     assert(readMe.indexOf('https://cdn.pubnub.com/pubnub-' + versionFile + '.js') > 1);
     assert(readMe.indexOf('https://cdn.pubnub.com/pubnub-' + versionFile + '.min.js') > 1);
   });

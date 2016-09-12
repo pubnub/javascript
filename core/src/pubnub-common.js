@@ -431,10 +431,10 @@ function PN_API(setup) {
   function executeRequest(requestConfig) {
     var operationType = requestConfig['operation'];
     var timestamp = Math.floor(new Date().getTime() / 1000);
-    var requestData = requestConfig.data || {};
+    var requestData = requestConfig['data'] || {};
 
     if (SECRET_KEY) {
-      requestData.timestamp = timestamp;
+      requestData['timestamp'] = timestamp;
       var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
 
       if (operationType === 'PNAccessManagerGrant') {
@@ -452,7 +452,7 @@ function PN_API(setup) {
       signature = signature.replace(/\//g, '_');
 
       requestData['signature'] = signature;
-      requestConfig.data = requestData;
+      requestConfig['data'] = requestData;
     }
 
     return xdr(requestConfig);
