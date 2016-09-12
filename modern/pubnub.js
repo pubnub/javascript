@@ -1,4 +1,4 @@
-/*! 3.16.2 / modern */
+/*! 3.16.3 / modern */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -853,6 +853,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var requestData = requestConfig['data'] || {};
 
 	    if (SECRET_KEY) {
+	      // delete the auth key if it comes up empty.
+	      if (!requestData['auth']) {
+	        delete requestData['auth'];
+	      }
+
 	      requestData['timestamp'] = timestamp;
 	      var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
 
@@ -861,7 +866,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      } else if (operationType === 'PNAccessManagerAudit') {
 	        signInput += 'audit' + '\n';
 	      } else {
-	        signInput += '/' + requestConfig['url'] + '\n';
+	        var newPath = requestConfig['url'].slice();
+	        newPath.shift();
+	        signInput += '/' + newPath.join('/') + '\n';
 	      }
 
 	      signInput += _get_pam_sign_input_from_params(requestData);
@@ -2463,7 +2470,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.16.2",
+		"version": "3.16.3",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [

@@ -434,6 +434,11 @@ function PN_API(setup) {
     var requestData = requestConfig['data'] || {};
 
     if (SECRET_KEY) {
+      // delete the auth key if it comes up empty.
+      if (!requestData['auth']) {
+        delete requestData['auth'];
+      }
+
       requestData['timestamp'] = timestamp;
       var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
 
@@ -442,7 +447,9 @@ function PN_API(setup) {
       } else if (operationType === 'PNAccessManagerAudit') {
         signInput += 'audit' + '\n';
       } else {
-        signInput += '/' + requestConfig['url'] + '\n';
+        var newPath = requestConfig['url'].slice();
+        newPath.shift();
+        signInput += '/' + newPath.join('/') + '\n';
       }
 
       signInput += _get_pam_sign_input_from_params(requestData);
