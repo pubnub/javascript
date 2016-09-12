@@ -157,7 +157,6 @@ function PN_API(setup) {
   var SUBSCRIBE_KEY = setup['subscribe_key'];
   var AUTH_KEY = setup['auth_key'] || '';
   var SECRET_KEY = setup['secret_key'] || '';
-  var SIGN_REQUESTS = setup['sign_requests'] || false;
   var hmac_SHA256 = setup['hmac_SHA256'];
   var SSL = setup['ssl'] ? 's' : '';
   var ORIGIN = 'http' + SSL + '://' + (setup['origin'] || 'pubsub.pubnub.com');
@@ -434,7 +433,7 @@ function PN_API(setup) {
     var timestamp = Math.floor(new Date().getTime() / 1000);
     var requestData = requestConfig.data || {};
 
-    if ((SIGN_REQUESTS && SECRET_KEY) || operationType === 'PNAccessManagerGrant' || operationType === 'PNAccessManagerAudit') {
+    if (SECRET_KEY || operationType === 'PNAccessManagerGrant' || operationType === 'PNAccessManagerAudit') {
       requestData.timestamp = timestamp;
       var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
 
