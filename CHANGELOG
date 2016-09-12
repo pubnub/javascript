@@ -1,4 +1,7 @@
 
+9-12-16 * 3.16.2
+ - signing all requests if secret key is provided
+
 8-17-16 * 3.16.1
  - localStorage polyfill for modern browsers.
 
