@@ -433,7 +433,7 @@ function PN_API(setup) {
     var timestamp = Math.floor(new Date().getTime() / 1000);
     var requestData = requestConfig.data || {};
 
-    if (SECRET_KEY || operationType === 'PNAccessManagerGrant' || operationType === 'PNAccessManagerAudit') {
+    if (SECRET_KEY) {
       requestData.timestamp = timestamp;
       var signInput = SUBSCRIBE_KEY + '\n' + PUBLISH_KEY + '\n';
 
