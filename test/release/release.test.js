@@ -6,6 +6,7 @@ let path = require('path');
 
 let packageJSON = require('../../package.json');
 let bowerJSON = require('../../bower.json');
+
 let versionFile = fs.readFileSync(path.resolve(__dirname, '../../VERSION'), 'UTF-8').trim();
 let readMe = fs.readFileSync(path.resolve(__dirname, '../..//README.md'), 'UTF-8');
 

@@ -1,4 +1,4 @@
-/*! 4.0.8 / Consumer  */
+/*! 4.0.9 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -302,7 +302,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var subscriptionManager = new _subscription_manager2.default({
 	      timeEndpoint: timeEndpoint,
-	      leaveEndpoint: leaveEndpoint, heartbeatEndpoint: heartbeatEndpoint, setStateEndpoint: setStateEndpoint,
+	      leaveEndpoint: leaveEndpoint,
+	      heartbeatEndpoint: heartbeatEndpoint,
+	      setStateEndpoint: setStateEndpoint,
 	      subscribeEndpoint: subscribeEndpoint,
 	      crypto: modules.crypto,
 	      config: modules.config,
@@ -2731,7 +2733,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.0.8",
+		"version": "4.0.9",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -2757,58 +2759,58 @@ return /******/ (function(modules) { // webpackBootstrap
 			"messaging"
 		],
 		"dependencies": {
-			"superagent": "^2.0.0",
+			"superagent": "^2.2.0",
 			"uuid": "^2.0.2"
 		},
 		"noAnalyze": false,
 		"devDependencies": {
-			"babel-core": "^6.10.4",
-			"babel-eslint": "6.1.0",
+			"babel-core": "^6.14.0",
+			"babel-eslint": "6.1.2",
 			"babel-plugin-add-module-exports": "^0.2.1",
-			"babel-plugin-transform-class-properties": "^6.10.2",
-			"babel-plugin-transform-flow-strip-types": "^6.8.0",
-			"babel-preset-es2015": "^6.9.0",
-			"babel-register": "^6.9.0",
+			"babel-plugin-transform-class-properties": "^6.11.5",
+			"babel-plugin-transform-flow-strip-types": "^6.14.0",
+			"babel-preset-es2015": "^6.14.0",
+			"babel-register": "^6.14.0",
 			"chai": "^3.5.0",
-			"eslint-config-airbnb": "9.0.1",
-			"eslint-plugin-flowtype": "2.11.4",
-			"eslint-plugin-import": "^1.9.2",
-			"eslint-plugin-mocha": "3.0.0",
-			"eslint-plugin-react": "5.2.2",
-			"flow-bin": "^0.31.1",
+			"eslint-config-airbnb": "11.1.0",
+			"eslint-plugin-flowtype": "2.17.1",
+			"eslint-plugin-import": "^1.15.0",
+			"eslint-plugin-mocha": "4.5.1",
+			"eslint-plugin-react": "6.2.1",
+			"flow-bin": "^0.32.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
-			"gulp-eslint": "^2.0.0",
+			"gulp-eslint": "^3.0.1",
 			"gulp-exec": "^2.1.2",
-			"gulp-flowtype": "^0.4.9",
+			"gulp-flowtype": "^1.0.0",
 			"gulp-gzip": "^1.4.0",
 			"gulp-istanbul": "^1.1.1",
-			"gulp-mocha": "^2.2.0",
+			"gulp-mocha": "^3.0.1",
 			"gulp-rename": "^1.2.2",
 			"gulp-sourcemaps": "^1.6.0",
 			"gulp-uglify": "^2.0.0",
 			"imports-loader": "0.6.5",
 			"isparta": "^4.0.0",
 			"json-loader": "0.5.4",
-			"karma": "1.1.1",
+			"karma": "1.3.0",
 			"karma-babel-preprocessor": "^6.0.1",
 			"karma-chai": "0.1.0",
-			"karma-chrome-launcher": "^1.0.1",
+			"karma-chrome-launcher": "^2.0.0",
 			"karma-mocha": "^1.1.1",
-			"karma-phantomjs-launcher": "1.0.1",
+			"karma-phantomjs-launcher": "1.0.2",
 			"karma-spec-reporter": "0.0.26",
-			"mocha": "2.5.3",
+			"mocha": "3.0.2",
 			"nock": "^8.0.0",
 			"phantomjs-prebuilt": "2.1.12",
 			"remap-istanbul": "^0.6.4",
-			"run-sequence": "^1.2.1",
-			"sinon": "^1.17.4",
-			"stats-webpack-plugin": "^0.4.0",
-			"uglify-js": "^2.6.4",
+			"run-sequence": "^1.2.2",
+			"sinon": "^1.17.5",
+			"stats-webpack-plugin": "^0.4.2",
+			"uglify-js": "^2.7.3",
 			"underscore": "^1.8.3",
-			"webpack": "^1.13.1",
-			"webpack-dev-server": "1.15.0",
+			"webpack": "^1.13.2",
+			"webpack-dev-server": "1.15.1",
 			"webpack-stream": "^3.2.0"
 		},
 		"bundleDependencies": [],
@@ -4091,11 +4093,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	};
 
-	var _flow_interfaces = __webpack_require__(13);
-
 	var _uuid = __webpack_require__(2);
 
 	var _uuid2 = _interopRequireDefault(_uuid);
+
+	var _flow_interfaces = __webpack_require__(13);
 
 	var _utils = __webpack_require__(22);
 

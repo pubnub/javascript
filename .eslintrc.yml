@@ -17,4 +17,6 @@ rules:
   no-param-reassign: 0
 
   no-underscore-dangle: 0
-  arrow-body-style: 0
+  no-prototype-builtins: 0
+  import/no-extraneous-dependencies: 0
+  class-methods-use-this: 0

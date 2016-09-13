@@ -1,4 +1,5 @@
 /* @flow */
+/* global localStorage, navigator, window */
 
 import PubNubCore from '../core/pubnub-common.js';
 import { InternalSetupStruct } from '../core/flow_interfaces';

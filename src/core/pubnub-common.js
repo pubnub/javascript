@@ -110,7 +110,9 @@ export default class {
 
     const subscriptionManager = new SubscriptionManager({
       timeEndpoint,
-      leaveEndpoint, heartbeatEndpoint, setStateEndpoint,
+      leaveEndpoint,
+      heartbeatEndpoint,
+      setStateEndpoint,
       subscribeEndpoint,
       crypto: modules.crypto,
       config: modules.config,
@@ -170,6 +172,8 @@ export default class {
 
     this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
     this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+
+    // mount
 
     /** config **/
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);

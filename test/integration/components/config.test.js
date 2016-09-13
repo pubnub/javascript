@@ -19,7 +19,7 @@ describe('components/config', () => {
     let database = () => {
       let db = {};
       return {
-        get: (key) => db[key],
+        get: key => db[key],
         set: (key, value) => { db[key] = value; }
       };
     };

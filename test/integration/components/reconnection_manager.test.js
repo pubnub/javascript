@@ -4,9 +4,10 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import nock from 'nock';
+import _ from 'underscore';
+
 import utils from '../../utils';
 import PubNub from '../../../lib/node/index.js';
-import _ from 'underscore';
 
 describe('#components/reconnection_manger', () => {
   let pubnub;
