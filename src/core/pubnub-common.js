@@ -88,6 +88,9 @@ export default class {
   getFilterExpression: Function;
   setFilterExpression: Function;
 
+  encrypt: Function;
+  decrypt: Function;
+
   //
 
   constructor(setup: InternalSetupStruct) {
@@ -173,7 +176,9 @@ export default class {
     this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
     this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
-    // mount
+    // mount crypto
+    this.encrypt = crypto.encrypt.bind(crypto);
+    this.decrypt = crypto.decrypt.bind(crypto);
 
     /** config **/
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);

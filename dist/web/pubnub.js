@@ -363,6 +363,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
 	    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
+	    this.encrypt = crypto.encrypt.bind(crypto);
+	    this.decrypt = crypto.decrypt.bind(crypto);
+
 	    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
 	    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
 	    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
@@ -2485,24 +2488,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'encrypt',
-	    value: function encrypt(data, options) {
-	      if (!this._config.cipherKey) return data;
+	    value: function encrypt(data, customCipherKey, options) {
+	      if (!customCipherKey && !this._config.cipherKey) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
-	      var cipherKey = this._getPaddedKey(this._config.cipherKey, options);
+	      var cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
 	      var encryptedHexArray = _hmacSha2.default.AES.encrypt(data, cipherKey, { iv: iv, mode: mode }).ciphertext;
 	      var base64Encrypted = encryptedHexArray.toString(_hmacSha2.default.enc.Base64);
 	      return base64Encrypted || data;
 	    }
 	  }, {
 	    key: 'decrypt',
-	    value: function decrypt(data, options) {
-	      if (!this._config.cipherKey) return data;
+	    value: function decrypt(data, customCipherKey, options) {
+	      if (!customCipherKey && !this._config.cipherKey) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
 	      var mode = this._getMode(options);
-	      var cipherKey = this._getPaddedKey(this._config.cipherKey, options);
+	      var cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
 	      try {
 	        var ciphertext = _hmacSha2.default.enc.Base64.parse(data);
 	        var plainJSON = _hmacSha2.default.AES.decrypt({ ciphertext: ciphertext }, cipherKey, { iv: iv, mode: mode }).toString(_hmacSha2.default.enc.Utf8);
