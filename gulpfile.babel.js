@@ -47,7 +47,7 @@ gulp.task('create_version', () => {
 
 gulp.task('create_version_gzip', () => {
   return gulp.src('upload/normal/*.js')
-    .pipe(gzip({ append: true, extension: 'js' }))
+    .pipe(gzip({ append: false }))
     .pipe(gulp.dest('upload/gzip'));
 });
 
