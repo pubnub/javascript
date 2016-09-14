@@ -1,4 +1,14 @@
 
+## [v4.0.10](https://github.com/pubnub/javascript/tree/v4.0.10)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.9...v4.0.10)
+
+
+- ⭐expose decryption and encryption as a global
+
+
+
 ## [v4.0.9](https://github.com/pubnub/javascript/tree/v4.0.9)
 
 

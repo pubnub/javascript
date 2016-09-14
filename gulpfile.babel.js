@@ -1,6 +1,7 @@
 /* eslint no-console: 0, arrow-body-style: 0 */
 
 const gulp = require('gulp');
+const path = require('path');
 const babel = require('gulp-babel');
 const clean = require('gulp-clean');
 const gulpWebpack = require('webpack-stream');
@@ -46,7 +47,7 @@ gulp.task('create_version', () => {
 
 gulp.task('create_version_gzip', () => {
   return gulp.src('upload/normal/*.js')
-    .pipe(gzip({ append: true }))
+    .pipe(gzip({ append: false }))
     .pipe(gulp.dest('upload/gzip'));
 });
 
@@ -85,13 +86,13 @@ gulp.task('flow', (cb) => {
 
 gulp.task('karma_client_full', (done) => {
   new Karma({
-    configFile: __dirname + '/test/karma.full.conf.js',
+    configFile: path.join(__dirname, '/test/karma.full.conf.js'),
   }, done).start();
 });
 
 gulp.task('karma_client_min', (done) => {
   new Karma({
-    configFile: __dirname + '/test/karma.min.conf.js',
+    configFile: path.join(__dirname, '/test/karma.min.conf.js'),
   }, done).start();
 });
 

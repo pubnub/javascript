@@ -3,8 +3,9 @@
 
 import assert from 'assert';
 import nock from 'nock';
-import utils from '../../utils';
 import sinon from 'sinon';
+
+import utils from '../../utils';
 import PubNub from '../../../lib/node/index.js';
 
 describe('access endpoints', () => {
@@ -24,7 +25,7 @@ describe('access endpoints', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', secretKey: 'mySecretKey', uuid: 'myUUID' });
-    pubnub._config.getVersion = () => { return 'suchJavascript'; };
+    pubnub._config.getVersion = () => 'suchJavascript';
   });
 
   describe('#audit', () => {
@@ -111,7 +112,9 @@ describe('access endpoints', () => {
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
         signature: 'GorjdSX4ct8sUbAAbMqq0ighKvVud8L5CpD2Z+RDnSQ=',
-        r: 0, w: 0, m: 0
+        r: 0,
+        w: 0,
+        m: 0
       })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
@@ -131,7 +134,9 @@ describe('access endpoints', () => {
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
         signature: 'MiYApTnEe6n67rqlMgFiU4csLnu+XJWIB8aAHWuKLhY=',
-        r: 1, w: 1, m: 0
+        r: 1,
+        w: 1,
+        m: 0
       })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
@@ -151,7 +156,9 @@ describe('access endpoints', () => {
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
         signature: 'i4U3Cg3Sa5pCXAYOCGcqndwk/DZ1qyQc6J6xqT42uEc=',
-        r: 1, w: 1, m: 0,
+        r: 1,
+        w: 1,
+        m: 0,
         ttl: 1337
       })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');

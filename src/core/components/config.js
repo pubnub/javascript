@@ -1,4 +1,5 @@
 /* @flow */
+/* global location */
 
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface } from '../flow_interfaces';

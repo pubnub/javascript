@@ -1,12 +1,12 @@
 /* @flow */
 
 function pamEncode(str: string): string {
-  return encodeURIComponent(str).replace(/[!'()*~]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+  return encodeURIComponent(str).replace(/[!'()*~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 }
 
 function objectToList(o: Object): Array<mixed> {
   let l = [];
-  Object.keys(o).forEach((key) => l.push(key));
+  Object.keys(o).forEach(key => l.push(key));
   return l;
 }
 
@@ -16,7 +16,7 @@ function objectToListSorted(o: Object): Array<mixed> {
 
 function signPamFromParams(params: Object): string {
   let l = objectToListSorted(params);
-  return l.map((paramKey) => paramKey + '=' + pamEncode(params[paramKey])).join('&');
+  return l.map(paramKey => paramKey + '=' + pamEncode(params[paramKey])).join('&');
 }
 
 module.exports = {

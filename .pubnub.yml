@@ -1,8 +1,13 @@
 name: javascript
-version: 4.0.9
+version: 4.0.10
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.10
+    date:
+    changes:
+      - type: improvement
+        text: expose decryption and encryption as a global
   - version: v4.0.9
     date:
     changes:

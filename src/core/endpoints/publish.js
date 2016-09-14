@@ -19,7 +19,7 @@ export function getOperation(): string {
   return operationConstants.PNPublishOperation;
 }
 
-export function validateParams({ config}: ModulesInject, incomingParams: PublishArguments) {
+export function validateParams({ config }: ModulesInject, incomingParams: PublishArguments) {
   let { message, channel } = incomingParams;
 
   if (!channel) return 'Missing Channel';
