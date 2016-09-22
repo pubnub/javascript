@@ -593,7 +593,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */(function(global) {
 	var rng;
 
-	if (global.crypto && crypto.getRandomValues) {
+	var crypto = global.crypto || global.msCrypto; // for IE 11
+	if (crypto && crypto.getRandomValues) {
 	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
 	  // Moderately fast, high quality
 	  var _rnds8 = new Uint8Array(16);
@@ -1588,24 +1589,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  // progress
-	  var handleProgress = function(e){
+	  var handleProgress = function(direction, e) {
 	    if (e.total > 0) {
 	      e.percent = e.loaded / e.total * 100;
 	    }
-	    e.direction = 'download';
+	    e.direction = direction;
 	    self.emit('progress', e);
-	  };
-	  if (this.hasListeners('progress')) {
-	    xhr.onprogress = handleProgress;
 	  }
-	  try {
-	    if (xhr.upload && this.hasListeners('progress')) {
-	      xhr.upload.onprogress = handleProgress;
+	  if (this.hasListeners('progress')) {
+	    try {
+	      xhr.onprogress = handleProgress.bind(null, 'download');
+	      if (xhr.upload) {
+	        xhr.upload.onprogress = handleProgress.bind(null, 'upload');
+	      }
+	    } catch(e) {
+	      // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+	      // Reported here:
+	      // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
 	    }
-	  } catch(e) {
-	    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
-	    // Reported here:
-	    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
 	  }
 
 	  // timeout
@@ -2044,6 +2045,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this._fullfilledPromise.then(resolve, reject);
 	}
 
+	exports.catch = function(cb) {
+	  return this.then(undefined, cb);
+	};
+
 	/**
 	 * Allow for extension
 	 */
@@ -2133,21 +2138,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
-	 * Write the field `name` and `val` for "multipart/form-data"
-	 * request bodies.
+	 * Write the field `name` and `val`, or multiple fields with one object
+	 * for "multipart/form-data" request bodies.
 	 *
 	 * ``` js
 	 * request.post('/upload')
 	 *   .field('foo', 'bar')
 	 *   .end(callback);
+	 *
+	 * request.post('/upload')
+	 *   .field({ foo: 'bar', baz: 'qux' })
+	 *   .end(callback);
 	 * ```
 	 *
-	 * @param {String} name
+	 * @param {String|Object} name
 	 * @param {String|Blob|File|Buffer|fs.ReadStream} val
 	 * @return {Request} for chaining
 	 * @api public
 	 */
 	exports.field = function(name, val) {
+
+	  // name should be either a string or an object.
+	  if (null === name ||  undefined === name) {
+	    throw new Error('.field(name, val) name can not be empty');
+	  }
+
+	  if (isObject(name)) {
+	    for (var key in name) {
+	      this.field(key, name[key]);
+	    }
+	    return this;
+	  }
+
+	  // val should be defined now
+	  if (null === val || undefined === val) {
+	    throw new Error('.field(name, val) val can not be empty');
+	  }
 	  this._getFormData().append(name, val);
 	  return this;
 	};
@@ -2762,8 +2788,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			"messaging"
 		],
 		"dependencies": {
-			"superagent": "^2.2.0",
-			"uuid": "^2.0.2"
+			"superagent": "^2.3.0",
+			"uuid": "^2.0.3"
 		},
 		"noAnalyze": false,
 		"devDependencies": {
@@ -2776,10 +2802,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			"babel-register": "^6.14.0",
 			"chai": "^3.5.0",
 			"eslint-config-airbnb": "11.1.0",
-			"eslint-plugin-flowtype": "2.17.1",
+			"eslint-plugin-flowtype": "2.19.0",
 			"eslint-plugin-import": "^1.15.0",
 			"eslint-plugin-mocha": "4.5.1",
-			"eslint-plugin-react": "6.2.1",
+			"eslint-plugin-react": "6.3.0",
 			"flow-bin": "^0.32.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
@@ -2808,12 +2834,12 @@ return /******/ (function(modules) { // webpackBootstrap
 			"phantomjs-prebuilt": "2.1.12",
 			"remap-istanbul": "^0.6.4",
 			"run-sequence": "^1.2.2",
-			"sinon": "^1.17.5",
+			"sinon": "^1.17.6",
 			"stats-webpack-plugin": "^0.4.2",
 			"uglify-js": "^2.7.3",
 			"underscore": "^1.8.3",
 			"webpack": "^1.13.2",
-			"webpack-dev-server": "1.15.1",
+			"webpack-dev-server": "1.16.1",
 			"webpack-stream": "^3.2.0"
 		},
 		"bundleDependencies": [],
