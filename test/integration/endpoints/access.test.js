@@ -6,7 +6,7 @@ import nock from 'nock';
 import sinon from 'sinon';
 
 import utils from '../../utils';
-import PubNub from '../../../lib/node/index.js';
+import PubNub from '../../../lib/node/index';
 
 describe('access endpoints', () => {
   let pubnub;

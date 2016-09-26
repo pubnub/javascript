@@ -1,6 +1,6 @@
  /* @flow */
 
-import PubNubCore from '../core/pubnub-common.js';
+import PubNubCore from '../core/pubnub-common';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 let Database = class {

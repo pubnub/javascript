@@ -1,7 +1,7 @@
 /* @flow */
 
 import Config from '../config';
-import CryptoJS from './hmac-sha256.js';
+import CryptoJS from './hmac-sha256';
 
 type CryptoConstruct = {
   config: Config,

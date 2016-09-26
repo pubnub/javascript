@@ -4,7 +4,7 @@
 import superagent from 'superagent';
 
 import Crypto from './cryptography/index';
-import Config from './config.js';
+import Config from './config';
 import categoryConstants from '../constants/categories';
 
 import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
