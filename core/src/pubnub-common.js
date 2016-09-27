@@ -104,13 +104,14 @@ function PNmessage(args) {
       m['pn_apns'] = {
         aps: {
           alert: msg['apns']['alert'],
-          badge: msg['apns']['badge']
+          badge: msg['apns']['badge'],
+          sound: msg['apns']['sound']
         }
       };
       for (var k in msg['apns']) {
         m['pn_apns'][k] = msg['apns'][k];
       }
-      var exclude1 = ['badge', 'alert'];
+      var exclude1 = ['badge', 'alert', 'sound'];
       for (var k in exclude1) {
         delete m['pn_apns'][exclude1[k]];
       }
