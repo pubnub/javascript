@@ -3,7 +3,7 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import uuidGenerator from 'uuid';
-import PubNub from '../../lib/node/index.js';
+import PubNub from '../../lib/node/index';
 
 describe('#core / mounting point', () => {
   beforeEach(() => {

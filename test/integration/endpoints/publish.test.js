@@ -4,7 +4,7 @@
 import assert from 'assert';
 import nock from 'nock';
 import utils from '../../utils';
-import PubNub from '../../../lib/node/index.js';
+import PubNub from '../../../lib/node/index';
 
 describe('publish endpoints', () => {
   let pubnub;
