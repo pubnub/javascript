@@ -1,7 +1,7 @@
 {
   "name": "pubnub",
   "preferGlobal": false,
-  "version": "4.0.10",
+  "version": "4.0.11",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -33,7 +33,7 @@
   "noAnalyze": false,
   "devDependencies": {
     "babel-core": "^6.14.0",
-    "babel-eslint": "6.1.2",
+    "babel-eslint": "7.0.0",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-class-properties": "^6.11.5",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
@@ -68,7 +68,7 @@
     "karma-mocha": "^1.2.0",
     "karma-phantomjs-launcher": "1.0.2",
     "karma-spec-reporter": "0.0.26",
-    "mocha": "3.0.2",
+    "mocha": "3.1.0",
     "nock": "^8.0.0",
     "phantomjs-prebuilt": "2.1.12",
     "remap-istanbul": "^0.6.4",

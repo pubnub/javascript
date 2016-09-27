@@ -1,8 +1,13 @@
 name: javascript
-version: 4.0.10
+version: 4.0.11
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.11
+    date:
+    changes:
+      - type: improvement
+        text: dependency upgrades
   - version: v4.0.10
     date:
     changes:

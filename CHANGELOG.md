@@ -1,4 +1,14 @@
 
+## [v4.0.11](https://github.com/pubnub/javascript/tree/v4.0.11)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.10...v4.0.11)
+
+
+- ⭐dependency upgrades
+
+
+
 ## [v4.0.10](https://github.com/pubnub/javascript/tree/v4.0.10)
 
 
