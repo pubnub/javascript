@@ -1468,15 +1468,16 @@ function PN_API(setup) {
                 var channel2 = list2.shift();
 
                 var chobj = {};
+                var default_chobj = { callback: function () {} };
 
                 if (channel2) {
                   if (channel && channel.indexOf('-pnpres') >= 0
                     && channel2.indexOf('-pnpres') < 0) {
                     channel2 += '-pnpres';
                   }
-                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || { callback: function () {} };
+                  chobj = CHANNEL_GROUPS[channel2] || CHANNELS[channel2] || default_chobj;
                 } else {
-                  chobj = CHANNELS[channel];
+                  chobj = CHANNELS[channel] || default_chobj;
                 }
 
                 var r = [
