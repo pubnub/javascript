@@ -38,6 +38,10 @@ describe('subscribe endpoints', () => {
       status(status) {
         if (status.category === 'PNConnectedCategory') {
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(pubnub.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(pubnub.getSubscribedChannelGroups(), []);
+          assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(status.affectedChannelGroups, []);
           done();
         }
       }
@@ -55,6 +59,10 @@ describe('subscribe endpoints', () => {
       status(status) {
         if (status.category === 'PNConnectedCategory') {
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(pubnub.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(pubnub.getSubscribedChannelGroups(), ['cg1', 'cg2']);
+          assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
           done();
         }
       }
@@ -72,7 +80,10 @@ describe('subscribe endpoints', () => {
       status(status) {
         if (status.category === 'PNConnectedCategory') {
           assert.equal(scope.isDone(), true);
-          assert.deepEqual(['cg1', 'cg2'], pubnub.getSubscribedChannelGroups());
+          assert.deepEqual(pubnub.getSubscribedChannels(), []);
+          assert.deepEqual(pubnub.getSubscribedChannelGroups(), ['cg1', 'cg2']);
+          assert.deepEqual(status.affectedChannels, []);
+          assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
           done();
         }
       }
@@ -90,7 +101,10 @@ describe('subscribe endpoints', () => {
       status(status) {
         if (status.category === 'PNConnectedCategory') {
           assert.equal(scope.isDone(), true);
-          assert.deepEqual(['coolChannel', 'coolChannel2'], pubnubWithFiltering.getSubscribedChannels());
+          assert.deepEqual(pubnubWithFiltering.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(pubnubWithFiltering.getSubscribedChannelGroups(), []);
+          assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(status.affectedChannelGroups, []);
           done();
         }
       }

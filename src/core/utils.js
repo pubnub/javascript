@@ -4,13 +4,13 @@ function pamEncode(str: string): string {
   return encodeURIComponent(str).replace(/[!'()*~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 }
 
-function objectToList(o: Object): Array<mixed> {
+function objectToList(o: Object): Array<any> {
   let l = [];
   Object.keys(o).forEach(key => l.push(key));
   return l;
 }
 
-function objectToListSorted(o: Object): Array<mixed> {
+function objectToListSorted(o: Object): Array<any> {
   return objectToList(o).sort();
 }
 

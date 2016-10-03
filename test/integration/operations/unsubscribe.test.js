@@ -37,6 +37,8 @@ describe('unsubscribe', () => {
         status(status) {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, ['ch1']);
+          assert.deepEqual(status.affectedChannelGroups, []);
           done();
         }
       });
@@ -53,6 +55,8 @@ describe('unsubscribe', () => {
         status(status) {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, ['ch1', 'ch2']);
+          assert.deepEqual(status.affectedChannelGroups, []);
           done();
         }
       });
@@ -69,6 +73,8 @@ describe('unsubscribe', () => {
         status(status) {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, []);
+          assert.deepEqual(status.affectedChannelGroups, ['cg1']);
           done();
         }
       });
@@ -85,6 +91,8 @@ describe('unsubscribe', () => {
         status(status) {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, []);
+          assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
           done();
         }
       });
@@ -104,6 +112,8 @@ describe('unsubscribe', () => {
           if (status.operation !== 'PNUnsubscribeOperation') return;
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, ['ch1', 'ch2']);
+          assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
           done();
         }
       });
