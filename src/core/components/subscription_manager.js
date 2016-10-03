@@ -62,6 +62,11 @@ export default class {
 
   _subscriptionStatusAnnounced: boolean;
 
+  // store pending connection elements
+  _pendingChannelSubscriptions: Array<string>;
+  _pendingChannelGroupSubscriptions: Array<string>;
+  //
+
   constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
     this._config = config;
@@ -78,6 +83,9 @@ export default class {
 
     this._channelGroups = {};
     this._presenceChannelGroups = {};
+
+    this._pendingChannelSubscriptions = [];
+    this._pendingChannelGroupSubscriptions = [];
 
     this._timetoken = 0;
     this._subscriptionStatusAnnounced = false;
@@ -104,14 +112,18 @@ export default class {
 
     if (timetoken) this._timetoken = timetoken;
 
-    channels.forEach((channel) => {
+    channels.forEach((channel: string) => {
       this._channels[channel] = { state: {} };
       if (withPresence) this._presenceChannels[channel] = {};
+
+      this._pendingChannelSubscriptions.push(channel);
     });
 
-    channelGroups.forEach((channelGroup) => {
+    channelGroups.forEach((channelGroup: string) => {
       this._channelGroups[channelGroup] = { state: {} };
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
+
+      this._pendingChannelGroupSubscriptions.push(channelGroup);
     });
 
     this._subscriptionStatusAnnounced = false;
@@ -133,6 +145,8 @@ export default class {
 
     if (this._config.suppressLeaveEvents === false) {
       this._leaveEndpoint({ channels, channelGroups }, (status) => {
+        status.affectedChannels = channels;
+        status.affectedChannelGroups = channelGroups;
         this._listenerManager.announceStatus(status);
       });
     }
@@ -144,11 +158,11 @@ export default class {
     this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() });
   }
 
-  getSubscribedChannels() {
+  getSubscribedChannels(): Array<string> {
     return Object.keys(this._channels);
   }
 
-  getSubscribedChannelGroups() {
+  getSubscribedChannelGroups(): Array<string> {
     return Object.keys(this._channelGroups);
   }
 
@@ -266,8 +280,14 @@ export default class {
       let connectedAnnounce: StatusAnnouncement = {};
       connectedAnnounce.category = categoryConstants.PNConnectedCategory;
       connectedAnnounce.operation = status.operation;
+      connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
+      connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
       this._subscriptionStatusAnnounced = true;
       this._listenerManager.announceStatus(connectedAnnounce);
+
+      // clear the pending connections list
+      this._pendingChannelSubscriptions = [];
+      this._pendingChannelGroupSubscriptions = [];
     }
 
     payload.messages.forEach((message) => {

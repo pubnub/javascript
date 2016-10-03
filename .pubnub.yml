@@ -1,8 +1,13 @@
 name: javascript
-version: 4.0.11
+version: 4.0.12
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.12
+    date:
+    changes:
+      - type: improvement
+        text: affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events2
   - version: v4.0.11
     date:
     changes:

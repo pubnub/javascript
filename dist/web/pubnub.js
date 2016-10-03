@@ -1,4 +1,4 @@
-/*! 4.0.11 / Consumer  */
+/*! 4.0.12 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -702,7 +702,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'shiftStandardOrigin',
 	    value: function shiftStandardOrigin() {
-	      var failover = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+	      var failover = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
 	      this._standardOrigin = this.nextOrigin(failover);
 
@@ -2762,7 +2762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.0.11",
+		"version": "4.0.12",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -2793,20 +2793,20 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 		"noAnalyze": false,
 		"devDependencies": {
-			"babel-core": "^6.14.0",
+			"babel-core": "^6.17.0",
 			"babel-eslint": "7.0.0",
 			"babel-plugin-add-module-exports": "^0.2.1",
-			"babel-plugin-transform-class-properties": "^6.11.5",
+			"babel-plugin-transform-class-properties": "^6.16.0",
 			"babel-plugin-transform-flow-strip-types": "^6.14.0",
-			"babel-preset-es2015": "^6.14.0",
-			"babel-register": "^6.14.0",
+			"babel-preset-es2015": "^6.16.0",
+			"babel-register": "^6.16.3",
 			"chai": "^3.5.0",
 			"eslint-config-airbnb": "12.0.0",
 			"eslint-plugin-flowtype": "2.19.0",
-			"eslint-plugin-import": "^1.16.0",
-			"eslint-plugin-mocha": "4.5.1",
+			"eslint-plugin-import": "^2.0.0",
+			"eslint-plugin-mocha": "4.6.0",
 			"eslint-plugin-react": "6.3.0",
-			"flow-bin": "^0.32.0",
+			"flow-bin": "^0.33.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
@@ -3419,6 +3419,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._channelGroups = {};
 	    this._presenceChannelGroups = {};
 
+	    this._pendingChannelSubscriptions = [];
+	    this._pendingChannelGroupSubscriptions = [];
+
 	    this._timetoken = 0;
 	    this._subscriptionStatusAnnounced = false;
 
@@ -3466,11 +3469,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels.forEach(function (channel) {
 	        _this2._channels[channel] = { state: {} };
 	        if (withPresence) _this2._presenceChannels[channel] = {};
+
+	        _this2._pendingChannelSubscriptions.push(channel);
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
 	        _this2._channelGroups[channelGroup] = { state: {} };
 	        if (withPresence) _this2._presenceChannelGroups[channelGroup] = {};
+
+	        _this2._pendingChannelGroupSubscriptions.push(channelGroup);
 	      });
 
 	      this._subscriptionStatusAnnounced = false;
@@ -3499,6 +3506,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (this._config.suppressLeaveEvents === false) {
 	        this._leaveEndpoint({ channels: channels, channelGroups: channelGroups }, function (status) {
+	          status.affectedChannels = channels;
+	          status.affectedChannelGroups = channelGroups;
 	          _this3._listenerManager.announceStatus(status);
 	        });
 	      }
@@ -3652,8 +3661,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var connectedAnnounce = {};
 	        connectedAnnounce.category = _categories2.default.PNConnectedCategory;
 	        connectedAnnounce.operation = status.operation;
+	        connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
+	        connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
 	        this._subscriptionStatusAnnounced = true;
 	        this._listenerManager.announceStatus(connectedAnnounce);
+
+	        this._pendingChannelSubscriptions = [];
+	        this._pendingChannelGroupSubscriptions = [];
 	      }
 
 	      payload.messages.forEach(function (message) {
@@ -5532,7 +5546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;

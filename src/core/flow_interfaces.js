@@ -140,7 +140,11 @@ export type StatusAnnouncement = {
   error: boolean,
   statusCode: number,
   category: string,
-  errorData: Object
+  errorData: Object,
+
+  // send back channel, channel groups that were affected by this operation
+  affectedChannels: Array<String>,
+  affectedChannelGroups: Array<String>,
 }
 
 // *****************************************************************************

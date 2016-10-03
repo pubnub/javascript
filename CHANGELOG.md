@@ -1,4 +1,14 @@
 
+## [v4.0.12](https://github.com/pubnub/javascript/tree/v4.0.12)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.11...v4.0.12)
+
+
+- ⭐affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events2
+
+
+
 ## [v4.0.11](https://github.com/pubnub/javascript/tree/v4.0.11)
 
 
