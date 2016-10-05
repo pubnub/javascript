@@ -71,9 +71,11 @@ describe('heartbeat', () => {
 
       pubnub.addListener({
         status(status) {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          if (status.operation === 'PNHeartbeatOperation' && !status.error) {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          }
         }
       });
 
@@ -87,9 +89,11 @@ describe('heartbeat', () => {
 
       pubnub.addListener({
         status(status) {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          if (status.operation === 'PNHeartbeatOperation' && !status.error) {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          }
         }
       });
 

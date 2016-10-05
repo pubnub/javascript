@@ -2803,7 +2803,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"chai": "^3.5.0",
 			"eslint-config-airbnb": "12.0.0",
 			"eslint-plugin-flowtype": "2.19.0",
-			"eslint-plugin-import": "^2.0.0",
+			"eslint-plugin-import": "^1.16.0",
 			"eslint-plugin-mocha": "4.6.0",
 			"eslint-plugin-react": "6.3.0",
 			"flow-bin": "^0.33.0",
@@ -3637,9 +3637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (status.error) {
 	        if (status.category === _categories2.default.PNTimeoutCategory) {
 	          this._startSubscribeLoop();
-	        }
-
-	        if (status.category === _categories2.default.PNNetworkIssuesCategory) {
+	        } else if (status.category === _categories2.default.PNNetworkIssuesCategory) {
 	          this.disconnect();
 	          this._reconnectionManager.onReconnection(function () {
 	            _this5.reconnect();
@@ -3651,6 +3649,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            _this5._listenerManager.announceStatus(reconnectedAnnounce);
 	          });
 	          this._reconnectionManager.startPolling();
+	          this._listenerManager.announceStatus(status);
+	        } else {
 	          this._listenerManager.announceStatus(status);
 	        }
 

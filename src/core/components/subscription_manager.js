@@ -255,10 +255,8 @@ export default class {
       // if we timeout from server, restart the loop.
       if (status.category === categoryConstants.PNTimeoutCategory) {
         this._startSubscribeLoop();
-      }
-
-      // we lost internet connection, alert the reconnection manager and terminate all loops
-      if (status.category === categoryConstants.PNNetworkIssuesCategory) {
+      } else if (status.category === categoryConstants.PNNetworkIssuesCategory) {
+        // we lost internet connection, alert the reconnection manager and terminate all loops
         this.disconnect();
         this._reconnectionManager.onReconnection(() => {
           this.reconnect();
@@ -270,6 +268,8 @@ export default class {
           this._listenerManager.announceStatus(reconnectedAnnounce);
         });
         this._reconnectionManager.startPolling();
+        this._listenerManager.announceStatus(status);
+      } else {
         this._listenerManager.announceStatus(status);
       }
 
