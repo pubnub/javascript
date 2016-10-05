@@ -1,11 +1,21 @@
 
+## [v4.0.13](https://github.com/pubnub/javascript/tree/v4.0.13)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.12...v4.0.13)
+
+
+- ⭐propogate status events to the status callback on subscribe operations.
+
+
+
 ## [v4.0.12](https://github.com/pubnub/javascript/tree/v4.0.12)
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.11...v4.0.12)
 
 
-- ⭐affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events2
+- ⭐affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events
 
 
 

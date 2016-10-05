@@ -1,13 +1,18 @@
 name: javascript
-version: 4.0.12
+version: 4.0.13
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.0.13
+    date:
+    changes:
+      - type: improvement
+        text: propogate status events to the status callback on subscribe operations.
   - version: v4.0.12
     date:
     changes:
       - type: improvement
-        text: affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events2
+        text: affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events
   - version: v4.0.11
     date:
     changes:
