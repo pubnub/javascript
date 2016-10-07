@@ -14,6 +14,14 @@ function createValidationError(message: string): Object {
   return createError({ message }, 'validationError');
 }
 
+function decideURL(endpoint, modules, incomingParams) {
+  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    return endpoint.postURL(modules, incomingParams);
+  } else {
+    return endpoint.getURL(modules, incomingParams);
+  }
+}
+
 function generatePNSDK(config: Config): string {
   let base = 'PubNub-JS-' + config.sdkFamily;
 
@@ -62,15 +70,18 @@ export default function (modules, endpoint, ...args) {
     outgoingParams.auth = config.getAuthKey();
   }
 
-  // encrypt the params
-  if (endpoint.getOperation() === operationConstants.PNAccessManagerGrant) {
-    let signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
-    signInput += utils.signPamFromParams(outgoingParams);
-    outgoingParams.signature = crypto.HMACSHA256(signInput);
-  }
+  if (config.secretKey) {
+    outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+    let signInput = config.subscribeKey + '\n' + config.publishKey + '\n';
 
-  if (endpoint.getOperation() === operationConstants.PNAccessManagerAudit) {
-    let signInput = config.subscribeKey + '\n' + config.publishKey + '\naudit\n';
+    if (endpoint.getOperation() === operationConstants.PNAccessManagerGrant) {
+      signInput += 'grant\n';
+    } else if (endpoint.getOperation() === operationConstants.PNAccessManagerAudit) {
+      signInput += 'audit\n';
+    } else {
+      signInput += decideURL(endpoint, modules, incomingParams) + '\n';
+    }
+
     signInput += utils.signPamFromParams(outgoingParams);
     outgoingParams.signature = crypto.HMACSHA256(signInput);
   }
@@ -84,21 +95,16 @@ export default function (modules, endpoint, ...args) {
   };
 
   let callInstance;
+  let url = decideURL(endpoint, modules, incomingParams);
+  let networkingParams = { url,
+    operation: endpoint.getOperation(),
+    timeout: endpoint.getRequestTimeout(modules)
+  };
 
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
-    let url = endpoint.postURL(modules, incomingParams);
-    let networkingParams = { url,
-      operation: endpoint.getOperation(),
-      timeout: endpoint.getRequestTimeout(modules)
-    };
     let payload = endpoint.postPayload(modules, incomingParams);
     callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
   } else {
-    let url = endpoint.getURL(modules, incomingParams);
-    let networkingParams = { url,
-      operation: endpoint.getOperation(),
-      timeout: endpoint.getRequestTimeout(modules)
-    };
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }
 

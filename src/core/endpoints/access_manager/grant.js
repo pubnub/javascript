@@ -33,7 +33,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: GrantArgum
   params.r = (read) ? '1' : '0';
   params.w = (write) ? '1' : '0';
   params.m = (manage) ? '1' : '0';
-  params.timestamp = Math.floor(new Date().getTime() / 1000);
 
   if (channels.length > 0) {
     params.channel = channels.join(',');

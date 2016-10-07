@@ -30,8 +30,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: AuditArgum
   const { channel, channelGroup, authKeys = [] } = incomingParams;
   const params = {};
 
-  params.timestamp = Math.floor(new Date().getTime() / 1000);
-
   if (channel) {
     params.channel = channel;
   }

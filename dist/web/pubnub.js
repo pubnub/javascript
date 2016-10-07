@@ -4092,16 +4092,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    outgoingParams.auth = config.getAuthKey();
 	  }
 
-	  if (endpoint.getOperation() === _operations2.default.PNAccessManagerGrant) {
-	    var signInput = config.subscribeKey + '\n' + config.publishKey + '\ngrant\n';
+	  if (config.secretKey) {
+	    outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+	    var signInput = config.subscribeKey + '\n' + config.publishKey + '\n';
+
+	    if (endpoint.getOperation() === _operations2.default.PNAccessManagerGrant) {
+	      signInput += 'grant\n';
+	    } else if (endpoint.getOperation() === _operations2.default.PNAccessManagerAudit) {
+	      signInput += 'audit\n';
+	    } else {
+	      signInput += decideURL(endpoint, modules, incomingParams) + '\n';
+	    }
+
 	    signInput += _utils2.default.signPamFromParams(outgoingParams);
 	    outgoingParams.signature = crypto.HMACSHA256(signInput);
-	  }
-
-	  if (endpoint.getOperation() === _operations2.default.PNAccessManagerAudit) {
-	    var _signInput = config.subscribeKey + '\n' + config.publishKey + '\naudit\n';
-	    _signInput += _utils2.default.signPamFromParams(outgoingParams);
-	    outgoingParams.signature = crypto.HMACSHA256(_signInput);
 	  }
 
 	  var onResponse = function onResponse(status, payload) {
@@ -4113,22 +4117,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  var callInstance = void 0;
+	  var url = decideURL(endpoint, modules, incomingParams);
+	  var networkingParams = { url: url,
+	    operation: endpoint.getOperation(),
+	    timeout: endpoint.getRequestTimeout(modules)
+	  };
 
 	  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
-	    var url = endpoint.postURL(modules, incomingParams);
-	    var networkingParams = { url: url,
-	      operation: endpoint.getOperation(),
-	      timeout: endpoint.getRequestTimeout(modules)
-	    };
 	    var payload = endpoint.postPayload(modules, incomingParams);
 	    callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
 	  } else {
-	    var _url = endpoint.getURL(modules, incomingParams);
-	    var _networkingParams = { url: _url,
-	      operation: endpoint.getOperation(),
-	      timeout: endpoint.getRequestTimeout(modules)
-	    };
-	    callInstance = networking.GET(outgoingParams, _networkingParams, onResponse);
+	    callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
 	  }
 
 	  if (endpoint.getOperation() === _operations2.default.PNSubscribeOperation) {
@@ -4163,6 +4162,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function createValidationError(message) {
 	  return createError({ message: message }, 'validationError');
+	}
+
+	function decideURL(endpoint, modules, incomingParams) {
+	  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+	    return endpoint.postURL(modules, incomingParams);
+	  } else {
+	    return endpoint.getURL(modules, incomingParams);
+	  }
 	}
 
 	function generatePNSDK(config) {
@@ -5414,8 +5421,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var params = {};
 
-	  params.timestamp = Math.floor(new Date().getTime() / 1000);
-
 	  if (channel) {
 	    params.channel = channel;
 	  }
@@ -5509,7 +5514,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  params.r = read ? '1' : '0';
 	  params.w = write ? '1' : '0';
 	  params.m = manage ? '1' : '0';
-	  params.timestamp = Math.floor(new Date().getTime() / 1000);
 
 	  if (channels.length > 0) {
 	    params.channel = channels.join(',');
