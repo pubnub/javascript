@@ -55,7 +55,7 @@ export default class {
   _presenceChannelGroups: Object;
 
   _timetoken: number;
-  _region: number;
+  _region: ?number;
 
   _subscribeCall: ?Object;
   _heartbeatTimer: ?number;
@@ -149,6 +149,15 @@ export default class {
         status.affectedChannelGroups = channelGroups;
         this._listenerManager.announceStatus(status);
       });
+    }
+
+    // if we have nothing to subscribe to, reset the timetoken.
+    if (Object.keys(this._channels).length === 0 &&
+      Object.keys(this._presenceChannels).length === 0 &&
+      Object.keys(this._channelGroups).length === 0 &&
+      Object.keys(this._presenceChannelGroups).length === 0) {
+      this._timetoken = 0;
+      this._region = null;
     }
 
     this.reconnect();

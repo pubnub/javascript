@@ -1,4 +1,4 @@
-/*! 4.0.13 / Consumer  */
+/*! 4.0.14.beta2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2762,7 +2762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.0.13",
+		"version": "4.0.14.beta2",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -3510,6 +3510,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	          status.affectedChannelGroups = channelGroups;
 	          _this3._listenerManager.announceStatus(status);
 	        });
+	      }
+
+	      if (Object.keys(this._channels).length === 0 && Object.keys(this._presenceChannels).length === 0 && Object.keys(this._channelGroups).length === 0 && Object.keys(this._presenceChannelGroups).length === 0) {
+	        this._timetoken = 0;
+	        this._region = null;
 	      }
 
 	      this.reconnect();
