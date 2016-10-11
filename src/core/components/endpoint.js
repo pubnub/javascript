@@ -54,6 +54,12 @@ export default function (modules, endpoint, ...args) {
   }
 
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
+  let url = decideURL(endpoint, modules, incomingParams);
+  let callInstance;
+  let networkingParams = { url,
+    operation: endpoint.getOperation(),
+    timeout: endpoint.getRequestTimeout(modules)
+  };
 
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
@@ -79,7 +85,7 @@ export default function (modules, endpoint, ...args) {
     } else if (endpoint.getOperation() === operationConstants.PNAccessManagerAudit) {
       signInput += 'audit\n';
     } else {
-      signInput += decideURL(endpoint, modules, incomingParams) + '\n';
+      signInput += url + '\n';
     }
 
     signInput += utils.signPamFromParams(outgoingParams);
@@ -92,13 +98,6 @@ export default function (modules, endpoint, ...args) {
 
       callback(status, endpoint.handleResponse(modules, payload, incomingParams));
     }
-  };
-
-  let callInstance;
-  let url = decideURL(endpoint, modules, incomingParams);
-  let networkingParams = { url,
-    operation: endpoint.getOperation(),
-    timeout: endpoint.getRequestTimeout(modules)
   };
 
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {

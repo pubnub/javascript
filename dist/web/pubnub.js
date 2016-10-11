@@ -4076,6 +4076,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  var outgoingParams = endpoint.prepareParams(modules, incomingParams);
+	  var url = decideURL(endpoint, modules, incomingParams);
+	  var callInstance = void 0;
+	  var networkingParams = { url: url,
+	    operation: endpoint.getOperation(),
+	    timeout: endpoint.getRequestTimeout(modules)
+	  };
 
 	  outgoingParams.uuid = config.UUID;
 	  outgoingParams.pnsdk = generatePNSDK(config);
@@ -4101,7 +4107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (endpoint.getOperation() === _operations2.default.PNAccessManagerAudit) {
 	      signInput += 'audit\n';
 	    } else {
-	      signInput += decideURL(endpoint, modules, incomingParams) + '\n';
+	      signInput += url + '\n';
 	    }
 
 	    signInput += _utils2.default.signPamFromParams(outgoingParams);
@@ -4114,13 +4120,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      callback(status, endpoint.handleResponse(modules, payload, incomingParams));
 	    }
-	  };
-
-	  var callInstance = void 0;
-	  var url = decideURL(endpoint, modules, incomingParams);
-	  var networkingParams = { url: url,
-	    operation: endpoint.getOperation(),
-	    timeout: endpoint.getRequestTimeout(modules)
 	  };
 
 	  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
