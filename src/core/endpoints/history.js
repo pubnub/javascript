@@ -41,7 +41,7 @@ export function isAuthSupported(): boolean {
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
-  const { start, end, includeTimetoken, reverse, count = 100, stringifiedTimeToken = true } = incomingParams;
+  const { start, end, includeTimetoken, reverse, count = 100, stringifiedTimeToken = false } = incomingParams;
   let outgoingParams = {};
 
   outgoingParams.count = count;
