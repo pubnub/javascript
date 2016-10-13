@@ -5747,7 +5747,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	function prepareParams(modules, incomingParams) {
 	  var start = incomingParams.start;
 	  var end = incomingParams.end;
-	  var includeTimetoken = incomingParams.includeTimetoken;
+	  var _incomingParams$inclu = incomingParams.includeTimetoken;
+	  var includeTimetoken = _incomingParams$inclu === undefined ? false : _incomingParams$inclu;
 	  var reverse = incomingParams.reverse;
 	  var _incomingParams$count = incomingParams.count;
 	  var count = _incomingParams$count === undefined ? 100 : _incomingParams$count;
@@ -5759,8 +5760,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  outgoingParams.count = count;
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
-	  if (stringifiedTimeToken) outgoingParams.string_message_token = stringifiedTimeToken;
-	  if (includeTimetoken != null) outgoingParams.include_token = includeTimetoken.toString();
+	  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
+	  if (includeTimetoken) outgoingParams.include_token = 'true';
 	  if (reverse != null) outgoingParams.reverse = reverse.toString();
 
 	  return outgoingParams;
