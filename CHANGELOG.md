@@ -1,4 +1,18 @@
 
+## [v4.1.0](https://github.com/pubnub/javascript/tree/v4.1.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.13...v4.1.0)
+
+
+- ⭐reset timetoken when all unsubscribes happen
+
+
+
+- ⭐sign requests when a a secret key is passed
+
+
+
 ## [v4.0.13](https://github.com/pubnub/javascript/tree/v4.0.13)
 
 

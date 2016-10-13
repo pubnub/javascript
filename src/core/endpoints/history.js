@@ -32,21 +32,22 @@ export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArgum
   return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }: ModulesInject): boolean {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported() {
+export function isAuthSupported(): boolean {
   return true;
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
-  const { start, end, includeTimetoken, reverse, count = 100 } = incomingParams;
+  const { start, end, includeTimetoken, reverse, count = 100, stringifiedTimeToken = true } = incomingParams;
   let outgoingParams = {};
 
   outgoingParams.count = count;
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
+  if (stringifiedTimeToken) outgoingParams.string_message_token = stringifiedTimeToken;
   if (includeTimetoken != null) outgoingParams.include_token = includeTimetoken.toString();
   if (reverse != null) outgoingParams.reverse = reverse.toString();
 
@@ -56,8 +57,8 @@ export function prepareParams(modules: ModulesInject, incomingParams: FetchHisto
 export function handleResponse(modules: ModulesInject, serverResponse: FetchHistoryArguments): HistoryResponse {
   const response: HistoryResponse = {
     messages: [],
-    startTimeToken: parseInt(serverResponse[1], 10),
-    endTimeToken: parseInt(serverResponse[2], 10),
+    startTimeToken: serverResponse[1],
+    endTimeToken: serverResponse[2],
   };
 
   serverResponse[0].forEach((serverHistoryItem) => {

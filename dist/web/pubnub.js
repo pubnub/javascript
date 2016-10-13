@@ -5747,17 +5747,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	function prepareParams(modules, incomingParams) {
 	  var start = incomingParams.start;
 	  var end = incomingParams.end;
-	  var includeTimetoken = incomingParams.includeTimetoken;
+	  var _incomingParams$inclu = incomingParams.includeTimetoken;
+	  var includeTimetoken = _incomingParams$inclu === undefined ? false : _incomingParams$inclu;
 	  var reverse = incomingParams.reverse;
 	  var _incomingParams$count = incomingParams.count;
 	  var count = _incomingParams$count === undefined ? 100 : _incomingParams$count;
+	  var _incomingParams$strin = incomingParams.stringifiedTimeToken;
+	  var stringifiedTimeToken = _incomingParams$strin === undefined ? true : _incomingParams$strin;
 
 	  var outgoingParams = {};
 
 	  outgoingParams.count = count;
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
-	  if (includeTimetoken != null) outgoingParams.include_token = includeTimetoken.toString();
+	  if (stringifiedTimeToken) outgoingParams.string_message_token = stringifiedTimeToken;
+	  if (includeTimetoken) outgoingParams.include_token = includeTimetoken.toString();
 	  if (reverse != null) outgoingParams.reverse = reverse.toString();
 
 	  return outgoingParams;
@@ -5766,8 +5770,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse(modules, serverResponse) {
 	  var response = {
 	    messages: [],
-	    startTimeToken: parseInt(serverResponse[1], 10),
-	    endTimeToken: parseInt(serverResponse[2], 10)
+	    startTimeToken: serverResponse[1],
+	    endTimeToken: serverResponse[2]
 	  };
 
 	  serverResponse[0].forEach(function (serverHistoryItem) {

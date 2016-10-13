@@ -1,8 +1,15 @@
 name: javascript
-version: 4.0.13
+version: 4.1.0
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.1.0
+    date:
+    changes:
+      - type: improvement
+        text: reset timetoken when all unsubscribes happen
+      - type: improvement
+        text: sign requests when a a secret key is passed
   - version: v4.0.13
     date:
     changes:
