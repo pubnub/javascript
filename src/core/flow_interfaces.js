@@ -160,22 +160,22 @@ type TimeResponse = {
 type FetchHistoryArguments = {
   channel: string, // fetch history from a channel
   channelGroup: string, // fetch history from channel groups
-  start: number, // start timetoken for history fetching
-  end: number, // end timetoken for history feting
+  start: number | string, // start timetoken for history fetching
+  end: number | string, // end timetoken for history feting
   includeTimetoken: boolean, // include time token for each history call
   reverse: boolean,
   count: number
 }
 
 type HistoryItem = {
-  timetoken: number | null,
+  timetoken: number | string | null,
   entry: any,
 }
 
 type HistoryResponse = {
   messages: Array<HistoryItem>,
-  startTimeToken: number,
-  endTimeToken: number,
+  startTimeToken: number | string,
+  endTimeToken: number | string,
 }
 
 // CG endpoints

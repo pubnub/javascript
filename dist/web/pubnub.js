@@ -1,4 +1,4 @@
-/*! 4.0.14.beta2 / Consumer  */
+/*! 4.1.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2762,7 +2762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.0.14.beta2",
+		"version": "4.1.0",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -5747,8 +5747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function prepareParams(modules, incomingParams) {
 	  var start = incomingParams.start;
 	  var end = incomingParams.end;
-	  var _incomingParams$inclu = incomingParams.includeTimetoken;
-	  var includeTimetoken = _incomingParams$inclu === undefined ? false : _incomingParams$inclu;
+	  var includeTimetoken = incomingParams.includeTimetoken;
 	  var reverse = incomingParams.reverse;
 	  var _incomingParams$count = incomingParams.count;
 	  var count = _incomingParams$count === undefined ? 100 : _incomingParams$count;
@@ -5761,7 +5760,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
 	  if (stringifiedTimeToken) outgoingParams.string_message_token = stringifiedTimeToken;
-	  if (includeTimetoken) outgoingParams.include_token = includeTimetoken.toString();
+	  if (includeTimetoken != null) outgoingParams.include_token = includeTimetoken.toString();
 	  if (reverse != null) outgoingParams.reverse = reverse.toString();
 
 	  return outgoingParams;
