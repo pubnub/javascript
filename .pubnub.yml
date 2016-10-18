@@ -1,8 +1,13 @@
 name: javascript
-version: 4.1.0
+version: 4.1.1
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.1.0
+    date:
+    changes:
+      - type: improvement
+        text: fix state setting for channels with reserved tags.
   - version: v4.1.0
     date:
     changes:

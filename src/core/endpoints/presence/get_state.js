@@ -17,7 +17,7 @@ export function getURL(modules: ModulesInject, incomingParams: GetStateArguments
   let { config } = modules;
   let { uuid = config.UUID, channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid;
+  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + uuid;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): number {

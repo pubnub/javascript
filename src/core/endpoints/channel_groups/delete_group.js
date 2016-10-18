@@ -18,7 +18,7 @@ export function validateParams(modules: ModulesInject, incomingParams: DeleteGro
 export function getURL(modules: ModulesInject, incomingParams: DeleteGroupParams): string {
   let { channelGroup } = incomingParams;
   let { config } = modules;
-  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
+  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup) + '/remove';
 }
 
 export function isAuthSupported() {

@@ -1,4 +1,4 @@
-/*! 4.1.0 / Consumer  */
+/*! 4.1.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2762,7 +2762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.1.0",
+		"version": "4.1.1",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -4236,7 +4236,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4309,7 +4309,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4380,7 +4380,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup + '/remove';
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup) + '/remove';
 	}
 
 	function isAuthSupported() {
@@ -4509,7 +4509,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + channelGroup;
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5079,7 +5079,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + uuid;
+	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + uuid;
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5168,7 +5168,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + stringifiedChannels + '/uuid/' + config.UUID + '/data';
+	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
 	}
 
 	function getRequestTimeout(_ref) {

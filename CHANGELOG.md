@@ -2,6 +2,16 @@
 ## [v4.1.0](https://github.com/pubnub/javascript/tree/v4.1.0)
 
 
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.0...v4.1.0)
+
+
+- ⭐fix state setting for channels with reserved tags.
+
+
+
+## [v4.1.0](https://github.com/pubnub/javascript/tree/v4.1.0)
+
+
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.13...v4.1.0)
 
 
