@@ -3,7 +3,7 @@ version: 4.1.1
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
-  - version: v4.1.0
+  - version: v4.1.1
     date:
     changes:
       - type: improvement
