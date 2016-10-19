@@ -19,9 +19,19 @@ function signPamFromParams(params: Object): string {
   return l.map(paramKey => paramKey + '=' + pamEncode(params[paramKey])).join('&');
 }
 
-module.exports = {
-  signPamFromParams,
-  endsWith(searchString: string, suffix: string): boolean {
-    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
-  }
-};
+function endsWith(searchString: string, suffix: string): boolean {
+  return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+}
+
+function createPromise() {
+  let successResolve;
+  let failureResolve;
+  let promise = new Promise((fulfill, reject) => {
+    successResolve = fulfill;
+    failureResolve = reject;
+  });
+
+  return { promise, reject: failureResolve, fulfill: successResolve };
+}
+
+module.exports = { signPamFromParams, endsWith, createPromise };

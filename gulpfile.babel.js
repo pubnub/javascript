@@ -27,9 +27,9 @@ gulp.task('clean', () => {
 
 gulp.task('babel', () => {
   return gulp.src('src/**/*.js')
-    // .pipe(sourcemaps.init())
+    .pipe(sourcemaps.init())
     .pipe(babel())
-    // .pipe(sourcemaps.write('.'))
+    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('lib'));
 });
 

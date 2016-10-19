@@ -92,11 +92,29 @@ export default function (modules, endpoint, ...args) {
     outgoingParams.signature = crypto.HMACSHA256(signInput);
   }
 
-  let onResponse = (status: StatusAnnouncement, payload: Object) => {
-    if (callback) {
-      if (status.error) return callback(status);
+  let promiseComponent = null;
 
-      callback(status, endpoint.handleResponse(modules, payload, incomingParams));
+  // bridge in Promise support.
+  if (Promise && !callback) {
+    promiseComponent = utils.createPromise();
+  }
+
+  let onResponse = (status: StatusAnnouncement, payload: Object) => {
+    if (status.error) {
+      if (callback) {
+        callback(status);
+      } else if (promiseComponent) {
+        promiseComponent.reject({ status });
+      }
+      return;
+    }
+
+    let parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
+
+    if (callback) {
+      callback(status, parsedPayload);
+    } else if (promiseComponent) {
+      promiseComponent.fulfill({ status, response: parsedPayload });
     }
   };
 
@@ -109,5 +127,9 @@ export default function (modules, endpoint, ...args) {
 
   if (endpoint.getOperation() === operationConstants.PNSubscribeOperation) {
     return callInstance;
+  }
+
+  if (promiseComponent) {
+    return promiseComponent.promise;
   }
 }

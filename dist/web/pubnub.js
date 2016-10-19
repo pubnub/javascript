@@ -4014,12 +4014,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }).join('&');
 	}
 
-	module.exports = {
-	  signPamFromParams: signPamFromParams,
-	  endsWith: function endsWith(searchString, suffix) {
-	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
-	  }
-	};
+	function endsWith(searchString, suffix) {
+	  return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+	}
+
+	function createPromise() {
+	  var successResolve = void 0;
+	  var failureResolve = void 0;
+	  var promise = new Promise(function (fulfill, reject) {
+	    successResolve = fulfill;
+	    failureResolve = reject;
+	  });
+
+	  return { promise: promise, reject: failureResolve, fulfill: successResolve };
+	}
+
+	module.exports = { signPamFromParams: signPamFromParams, endsWith: endsWith, createPromise: createPromise };
 
 /***/ },
 /* 23 */
@@ -4092,11 +4102,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	    outgoingParams.signature = crypto.HMACSHA256(signInput);
 	  }
 
-	  var onResponse = function onResponse(status, payload) {
-	    if (callback) {
-	      if (status.error) return callback(status);
+	  var promiseComponent = null;
 
-	      callback(status, endpoint.handleResponse(modules, payload, incomingParams));
+	  if (Promise && !callback) {
+	    promiseComponent = _utils2.default.createPromise();
+	  }
+
+	  var onResponse = function onResponse(status, payload) {
+	    if (status.error) {
+	      if (callback) {
+	        callback(status);
+	      } else if (promiseComponent) {
+	        promiseComponent.reject({ status: status });
+	      }
+	      return;
+	    }
+
+	    var parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
+
+	    if (callback) {
+	      callback(status, parsedPayload);
+	    } else if (promiseComponent) {
+	      promiseComponent.fulfill({ status: status, response: parsedPayload });
 	    }
 	  };
 
@@ -4109,6 +4136,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (endpoint.getOperation() === _operations2.default.PNSubscribeOperation) {
 	    return callInstance;
+	  }
+
+	  if (promiseComponent) {
+	    return promiseComponent.promise;
 	  }
 	};
 

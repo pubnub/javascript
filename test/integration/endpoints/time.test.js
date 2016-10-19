@@ -34,6 +34,18 @@ describe('time endpoints', () => {
     });
   });
 
+  it('calls the callback function when time is fetched via promise', (done) => {
+    utils.createNock().get('/time/0')
+      .query(true)
+      .reply(200, [14570763868573725]);
+
+    pubnub.time().then(({ status, response }) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.timetoken, 14570763868573725);
+      done();
+    });
+  });
+
   it('calls the callback function when fetch failed', (done) => {
     utils.createNock().get('/time/0')
       .query(true)
@@ -41,6 +53,17 @@ describe('time endpoints', () => {
 
     pubnub.time((status, response) => {
       assert.equal(response, null);
+      assert.equal(status.error, true);
+      done();
+    });
+  });
+
+  it('calls the callback function when fetch failed', (done) => {
+    utils.createNock().get('/time/0')
+      .query(true)
+      .reply(500, null);
+
+    pubnub.time().catch(({ status }) => {
       assert.equal(status.error, true);
       done();
     });
