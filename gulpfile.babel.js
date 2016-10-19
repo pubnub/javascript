@@ -27,14 +27,14 @@ gulp.task('clean', () => {
 
 gulp.task('babel', () => {
   return gulp.src('src/**/*.js')
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(babel())
-    .pipe(sourcemaps.write('.'))
+    // .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('lib'));
 });
 
 gulp.task('compile_web', () => {
-  return gulp.src('lib/web/index.js')
+  return gulp.src('src/web/index.js')
     .pipe(gulpWebpack(webpackConfig))
     .pipe(gulp.dest('dist/web'));
 });

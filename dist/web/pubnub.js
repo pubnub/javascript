@@ -129,8 +129,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=index.js.map
-
 
 /***/ },
 /* 1 */
@@ -394,8 +392,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	_class.CATEGORIES = _categories2.default;
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=pubnub-common.js.map
-
 
 /***/ },
 /* 2 */
@@ -800,8 +796,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=networking.js.map
-
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
 
 /***/ },
@@ -2548,8 +2542,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=index.js.map
-
 
 /***/ },
 /* 12 */
@@ -2742,8 +2734,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=config.js.map
-
 
 /***/ },
 /* 13 */
@@ -2752,8 +2742,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	module.exports = {};
-	//# sourceMappingURL=flow_interfaces.js.map
-
 
 /***/ },
 /* 14 */
@@ -2794,18 +2782,19 @@ return /******/ (function(modules) { // webpackBootstrap
 		"noAnalyze": false,
 		"devDependencies": {
 			"babel-core": "^6.17.0",
-			"babel-eslint": "7.0.0",
+			"babel-eslint": "^7.0.0",
+			"babel-loader": "^6.2.5",
 			"babel-plugin-add-module-exports": "^0.2.1",
 			"babel-plugin-transform-class-properties": "^6.16.0",
 			"babel-plugin-transform-flow-strip-types": "^6.14.0",
 			"babel-preset-es2015": "^6.16.0",
 			"babel-register": "^6.16.3",
 			"chai": "^3.5.0",
-			"eslint-config-airbnb": "12.0.0",
-			"eslint-plugin-flowtype": "2.19.0",
+			"eslint-config-airbnb": "^12.0.0",
+			"eslint-plugin-flowtype": "^2.19.0",
 			"eslint-plugin-import": "^1.16.0",
-			"eslint-plugin-mocha": "4.6.0",
-			"eslint-plugin-react": "6.3.0",
+			"eslint-plugin-mocha": "^4.6.0",
+			"eslint-plugin-react": "^6.3.0",
 			"flow-bin": "^0.33.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
@@ -2819,19 +2808,19 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-rename": "^1.2.2",
 			"gulp-sourcemaps": "^1.6.0",
 			"gulp-uglify": "^2.0.0",
-			"imports-loader": "0.6.5",
+			"imports-loader": "^0.6.5",
 			"isparta": "^4.0.0",
-			"json-loader": "0.5.4",
-			"karma": "1.3.0",
+			"json-loader": "^0.5.4",
+			"karma": "^1.3.0",
 			"karma-babel-preprocessor": "^6.0.1",
-			"karma-chai": "0.1.0",
+			"karma-chai": "^0.1.0",
 			"karma-chrome-launcher": "^2.0.0",
 			"karma-mocha": "^1.2.0",
-			"karma-phantomjs-launcher": "1.0.2",
-			"karma-spec-reporter": "0.0.26",
-			"mocha": "3.1.0",
+			"karma-phantomjs-launcher": "^1.0.2",
+			"karma-spec-reporter": "^0.0.26",
+			"mocha": "^3.1.0",
 			"nock": "^8.0.0",
-			"phantomjs-prebuilt": "2.1.12",
+			"phantomjs-prebuilt": "^2.1.12",
 			"remap-istanbul": "^0.6.4",
 			"run-sequence": "^1.2.2",
 			"sinon": "^1.17.6",
@@ -2839,7 +2828,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"uglify-js": "^2.7.3",
 			"underscore": "^1.8.3",
 			"webpack": "^1.13.2",
-			"webpack-dev-server": "1.16.1",
+			"webpack-dev-server": "^1.16.1",
 			"webpack-stream": "^3.2.0"
 		},
 		"bundleDependencies": [],
@@ -3312,8 +3301,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}();
 
 	module.exports = CryptoJS;
-	//# sourceMappingURL=hmac-sha256.js.map
-
 
 /***/ },
 /* 16 */
@@ -3345,8 +3332,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	};
 	module.exports = exports['default'];
-	//# sourceMappingURL=categories.js.map
-
 
 /***/ },
 /* 17 */
@@ -3750,8 +3735,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=subscription_manager.js.map
-
 
 /***/ },
 /* 18 */
@@ -3845,8 +3828,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=listener_manager.js.map
-
 
 /***/ },
 /* 19 */
@@ -3908,8 +3889,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = _class;
 	module.exports = exports['default'];
-	//# sourceMappingURL=reconnection_manager.js.map
-
 
 /***/ },
 /* 20 */
@@ -3965,8 +3944,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams() {}
-	//# sourceMappingURL=time.js.map
-
 
 /***/ },
 /* 21 */
@@ -4005,8 +3982,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  PNAccessManagerAudit: 'PNAccessManagerAudit'
 	};
 	module.exports = exports['default'];
-	//# sourceMappingURL=operations.js.map
-
 
 /***/ },
 /* 22 */
@@ -4045,8 +4020,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
 	  }
 	};
-	//# sourceMappingURL=utils.js.map
-
 
 /***/ },
 /* 23 */
@@ -4189,8 +4162,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = exports['default'];
-	//# sourceMappingURL=endpoint.js.map
-
 
 /***/ },
 /* 24 */
@@ -4262,8 +4233,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=add_channels.js.map
-
 
 /***/ },
 /* 25 */
@@ -4335,8 +4304,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=remove_channels.js.map
-
 
 /***/ },
 /* 26 */
@@ -4400,8 +4367,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=delete_group.js.map
-
 
 /***/ },
 /* 27 */
@@ -4464,8 +4429,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    groups: serverResponse.payload.groups
 	  };
 	}
-	//# sourceMappingURL=list_groups.js.map
-
 
 /***/ },
 /* 28 */
@@ -4531,8 +4494,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    channels: serverResponse.payload.channels
 	  };
 	}
-	//# sourceMappingURL=list_channels.js.map
-
 
 /***/ },
 /* 29 */
@@ -4604,8 +4565,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=add_push_channels.js.map
-
 
 /***/ },
 /* 30 */
@@ -4677,8 +4636,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=remove_push_channels.js.map
-
 
 /***/ },
 /* 31 */
@@ -4746,8 +4703,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse(modules, serverResponse) {
 	  return { channels: serverResponse };
 	}
-	//# sourceMappingURL=list_push_channels.js.map
-
 
 /***/ },
 /* 32 */
@@ -4815,8 +4770,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=remove_device.js.map
-
 
 /***/ },
 /* 33 */
@@ -4889,8 +4842,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=leave.js.map
-
 
 /***/ },
 /* 34 */
@@ -4953,8 +4904,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse(modules, serverResponse) {
 	  return { channels: serverResponse.payload.channels };
 	}
-	//# sourceMappingURL=where_now.js.map
-
 
 /***/ },
 /* 35 */
@@ -5032,8 +4981,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=heartbeat.js.map
-
 
 /***/ },
 /* 36 */
@@ -5121,8 +5068,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return { channels: channelsResponse };
 	}
-	//# sourceMappingURL=get_state.js.map
-
 
 /***/ },
 /* 37 */
@@ -5200,8 +5145,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse(modules, serverResponse) {
 	  return { state: serverResponse.payload };
 	}
-	//# sourceMappingURL=set_state.js.map
-
 
 /***/ },
 /* 38 */
@@ -5362,8 +5305,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return response;
 	}
-	//# sourceMappingURL=here_now.js.map
-
 
 /***/ },
 /* 39 */
@@ -5443,8 +5384,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse(modules, serverResponse) {
 	  return serverResponse.payload;
 	}
-	//# sourceMappingURL=audit.js.map
-
 
 /***/ },
 /* 40 */
@@ -5541,8 +5480,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse() {
 	  return {};
 	}
-	//# sourceMappingURL=grant.js.map
-
 
 /***/ },
 /* 41 */
@@ -5673,8 +5610,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function handleResponse(modules, serverResponse) {
 	  return { timetoken: serverResponse[2] };
 	}
-	//# sourceMappingURL=publish.js.map
-
 
 /***/ },
 /* 42 */
@@ -5792,8 +5727,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return response;
 	}
-	//# sourceMappingURL=history.js.map
-
 
 /***/ },
 /* 43 */
@@ -5910,8 +5843,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return { messages: messages, metadata: metadata };
 	}
-	//# sourceMappingURL=subscribe.js.map
-
 
 /***/ }
 /******/ ])
