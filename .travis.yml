@@ -4,16 +4,20 @@ node_js:
   - '4'
   - '5'
   - '6'
-
+env:
+  - CXX=g++-4.8
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
 before_install:
   npm install --global yarn gulp-cli
-
 install:
   yarn install
-
 script:
   gulp test
-
 after_success:
   - npm install codecov
   - npm run codecov
