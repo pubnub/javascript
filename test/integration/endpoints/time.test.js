@@ -39,8 +39,7 @@ describe('time endpoints', () => {
       .query(true)
       .reply(200, [14570763868573725]);
 
-    pubnub.time().then(({ status, response }) => {
-      assert.equal(status.error, false);
+    pubnub.time().then((response) => {
       assert.deepEqual(response.timetoken, 14570763868573725);
       done();
     });
@@ -63,8 +62,11 @@ describe('time endpoints', () => {
       .query(true)
       .reply(500, null);
 
-    pubnub.time().catch(({ status }) => {
-      assert.equal(status.error, true);
+    pubnub.time().catch((ex) => {
+      assert(ex instanceof Error);
+      assert.equal(ex.message, 'PubNub call failed, check status for details');
+      assert.equal(ex.status.error, true);
+      assert.equal(ex.status.statusCode, 500);
       done();
     });
   });

@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/pubnub/javascript/branch/master/graph/badge.svg)](https://codecov.io/gh/pubnub/javascript)
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
+[![Known Vulnerabilities](https://snyk.io/test/npm/pubnub/badge.svg)](https://snyk.io/test/npm/pubnub)
 
 ### Looking for Javascript V3 SDK?
 please use the [master_3x](https://github.com/pubnub/javascript/tree/master_3x) branch

@@ -5,6 +5,15 @@ import utils from '../utils';
 import Config from './config';
 import operationConstants from '../constants/operations';
 
+class PubNubError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = this.constructor.name;
+    this.status = status;
+    this.message = message;
+  }
+}
+
 function createError(errorPayload: Object, type: string): Object {
   errorPayload.type = type;
   return errorPayload;
@@ -104,7 +113,7 @@ export default function (modules, endpoint, ...args) {
       if (callback) {
         callback(status);
       } else if (promiseComponent) {
-        promiseComponent.reject({ status });
+        promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', status));
       }
       return;
     }
@@ -114,7 +123,7 @@ export default function (modules, endpoint, ...args) {
     if (callback) {
       callback(status, parsedPayload);
     } else if (promiseComponent) {
-      promiseComponent.fulfill({ status, response: parsedPayload });
+      promiseComponent.fulfill(parsedPayload);
     }
   };
 

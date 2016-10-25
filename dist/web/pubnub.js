@@ -280,8 +280,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, _class);
 
-	    var sendBeacon = setup.sendBeacon;
-	    var db = setup.db;
+	    var sendBeacon = setup.sendBeacon,
+	        db = setup.db;
 
 
 	    var config = this._config = new _config2.default({ setup: setup, db: db });
@@ -657,9 +657,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(_ref) {
-	    var config = _ref.config;
-	    var crypto = _ref.crypto;
-	    var sendBeacon = _ref.sendBeacon;
+	    var config = _ref.config,
+	        crypto = _ref.crypto,
+	        sendBeacon = _ref.sendBeacon;
 
 	    _classCallCheck(this, _class);
 
@@ -2571,8 +2571,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(_ref) {
-	    var setup = _ref.setup;
-	    var db = _ref.db;
+	    var setup = _ref.setup,
+	        db = _ref.db;
 
 	    _classCallCheck(this, _class);
 
@@ -3377,14 +3377,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _class = function () {
 	  function _class(_ref) {
-	    var subscribeEndpoint = _ref.subscribeEndpoint;
-	    var leaveEndpoint = _ref.leaveEndpoint;
-	    var heartbeatEndpoint = _ref.heartbeatEndpoint;
-	    var setStateEndpoint = _ref.setStateEndpoint;
-	    var timeEndpoint = _ref.timeEndpoint;
-	    var config = _ref.config;
-	    var crypto = _ref.crypto;
-	    var listenerManager = _ref.listenerManager;
+	    var subscribeEndpoint = _ref.subscribeEndpoint,
+	        leaveEndpoint = _ref.leaveEndpoint,
+	        heartbeatEndpoint = _ref.heartbeatEndpoint,
+	        setStateEndpoint = _ref.setStateEndpoint,
+	        timeEndpoint = _ref.timeEndpoint,
+	        config = _ref.config,
+	        crypto = _ref.crypto,
+	        listenerManager = _ref.listenerManager;
 
 	    _classCallCheck(this, _class);
 
@@ -3418,11 +3418,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function adaptStateChange(args, callback) {
 	      var _this = this;
 
-	      var state = args.state;
-	      var _args$channels = args.channels;
-	      var channels = _args$channels === undefined ? [] : _args$channels;
-	      var _args$channelGroups = args.channelGroups;
-	      var channelGroups = _args$channelGroups === undefined ? [] : _args$channelGroups;
+	      var state = args.state,
+	          _args$channels = args.channels,
+	          channels = _args$channels === undefined ? [] : _args$channels,
+	          _args$channelGroups = args.channelGroups,
+	          channelGroups = _args$channelGroups === undefined ? [] : _args$channelGroups;
 
 
 	      channels.forEach(function (channel) {
@@ -3440,13 +3440,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function adaptSubscribeChange(args) {
 	      var _this2 = this;
 
-	      var timetoken = args.timetoken;
-	      var _args$channels2 = args.channels;
-	      var channels = _args$channels2 === undefined ? [] : _args$channels2;
-	      var _args$channelGroups2 = args.channelGroups;
-	      var channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
-	      var _args$withPresence = args.withPresence;
-	      var withPresence = _args$withPresence === undefined ? false : _args$withPresence;
+	      var timetoken = args.timetoken,
+	          _args$channels2 = args.channels,
+	          channels = _args$channels2 === undefined ? [] : _args$channels2,
+	          _args$channelGroups2 = args.channelGroups,
+	          channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2,
+	          _args$withPresence = args.withPresence,
+	          withPresence = _args$withPresence === undefined ? false : _args$withPresence;
 
 
 	      if (timetoken) this._timetoken = timetoken;
@@ -3473,10 +3473,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function adaptUnsubscribeChange(args) {
 	      var _this3 = this;
 
-	      var _args$channels3 = args.channels;
-	      var channels = _args$channels3 === undefined ? [] : _args$channels3;
-	      var _args$channelGroups3 = args.channelGroups;
-	      var channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
+	      var _args$channels3 = args.channels,
+	          channels = _args$channels3 === undefined ? [] : _args$channels3,
+	          _args$channelGroups3 = args.channelGroups,
+	          channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
 
 
 	      channels.forEach(function (channel) {
@@ -4042,9 +4042,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 	exports.default = function (modules, endpoint) {
-	  var networking = modules.networking;
-	  var config = modules.config;
-	  var crypto = modules.crypto;
+	  var networking = modules.networking,
+	      config = modules.config,
+	      crypto = modules.crypto;
 
 	  var callback = null;
 	  var incomingParams = {};
@@ -4113,7 +4113,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (callback) {
 	        callback(status);
 	      } else if (promiseComponent) {
-	        promiseComponent.reject({ status: status });
+	        promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', status));
 	      }
 	      return;
 	    }
@@ -4123,7 +4123,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (callback) {
 	      callback(status, parsedPayload);
 	    } else if (promiseComponent) {
-	      promiseComponent.fulfill({ status: status, response: parsedPayload });
+	      promiseComponent.fulfill(parsedPayload);
 	    }
 	  };
 
@@ -4162,6 +4162,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _operations2 = _interopRequireDefault(_operations);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var PubNubError = function (_Error) {
+	  _inherits(PubNubError, _Error);
+
+	  function PubNubError(message, status) {
+	    _classCallCheck(this, PubNubError);
+
+	    var _this = _possibleConstructorReturn(this, (PubNubError.__proto__ || Object.getPrototypeOf(PubNubError)).call(this, message));
+
+	    _this.name = _this.constructor.name;
+	    _this.status = status;
+	    _this.message = message;
+	    return _this;
+	  }
+
+	  return PubNubError;
+	}(Error);
 
 	function createError(errorPayload, type) {
 	  errorPayload.type = type;
@@ -4224,8 +4247,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams(modules, incomingParams) {
-	  var channels = incomingParams.channels;
-	  var channelGroup = incomingParams.channelGroup;
+	  var channels = incomingParams.channels,
+	      channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
 
@@ -4252,8 +4275,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 
 	  return {
@@ -4295,8 +4318,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams(modules, incomingParams) {
-	  var channels = incomingParams.channels;
-	  var channelGroup = incomingParams.channelGroup;
+	  var channels = incomingParams.channels,
+	      channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
 
@@ -4323,8 +4346,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 
 	  return {
@@ -4556,9 +4579,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams(modules, incomingParams) {
-	  var device = incomingParams.device;
-	  var pushGateway = incomingParams.pushGateway;
-	  var channels = incomingParams.channels;
+	  var device = incomingParams.device,
+	      pushGateway = incomingParams.pushGateway,
+	      channels = incomingParams.channels;
 	  var config = modules.config;
 
 
@@ -4586,9 +4609,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var pushGateway = incomingParams.pushGateway;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var pushGateway = incomingParams.pushGateway,
+	      _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  return { type: pushGateway, add: channels.join(',') };
 	}
@@ -4627,9 +4650,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams(modules, incomingParams) {
-	  var device = incomingParams.device;
-	  var pushGateway = incomingParams.pushGateway;
-	  var channels = incomingParams.channels;
+	  var device = incomingParams.device,
+	      pushGateway = incomingParams.pushGateway,
+	      channels = incomingParams.channels;
 	  var config = modules.config;
 
 
@@ -4657,9 +4680,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var pushGateway = incomingParams.pushGateway;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var pushGateway = incomingParams.pushGateway,
+	      _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  return { type: pushGateway, remove: channels.join(',') };
 	}
@@ -4698,8 +4721,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams(modules, incomingParams) {
-	  var device = incomingParams.device;
-	  var pushGateway = incomingParams.pushGateway;
+	  var device = incomingParams.device,
+	      pushGateway = incomingParams.pushGateway;
 	  var config = modules.config;
 
 
@@ -4765,8 +4788,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function validateParams(modules, incomingParams) {
-	  var device = incomingParams.device;
-	  var pushGateway = incomingParams.pushGateway;
+	  var device = incomingParams.device,
+	      pushGateway = incomingParams.pushGateway;
 	  var config = modules.config;
 
 
@@ -4840,8 +4863,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave';
@@ -4858,8 +4881,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
+	  var _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
 
 	  var params = {};
 
@@ -4912,8 +4935,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$uuid = incomingParams.uuid;
-	  var uuid = _incomingParams$uuid === undefined ? config.UUID : _incomingParams$uuid;
+	  var _incomingParams$uuid = incomingParams.uuid,
+	      uuid = _incomingParams$uuid === undefined ? config.UUID : _incomingParams$uuid;
 
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/uuid/' + uuid;
 	}
@@ -4974,8 +4997,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat';
@@ -4992,10 +5015,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
-	  var _incomingParams$state = incomingParams.state;
-	  var state = _incomingParams$state === undefined ? {} : _incomingParams$state;
+	  var _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2,
+	      _incomingParams$state = incomingParams.state,
+	      state = _incomingParams$state === undefined ? {} : _incomingParams$state;
 	  var config = modules.config;
 
 	  var params = {};
@@ -5051,10 +5074,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$uuid = incomingParams.uuid;
-	  var uuid = _incomingParams$uuid === undefined ? config.UUID : _incomingParams$uuid;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$uuid = incomingParams.uuid,
+	      uuid = _incomingParams$uuid === undefined ? config.UUID : _incomingParams$uuid,
+	      _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + uuid;
@@ -5071,8 +5094,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
+	  var _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
 
 	  var params = {};
 
@@ -5084,10 +5107,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function handleResponse(modules, serverResponse, incomingParams) {
-	  var _incomingParams$chann3 = incomingParams.channels;
-	  var channels = _incomingParams$chann3 === undefined ? [] : _incomingParams$chann3;
-	  var _incomingParams$chann4 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann4 === undefined ? [] : _incomingParams$chann4;
+	  var _incomingParams$chann3 = incomingParams.channels,
+	      channels = _incomingParams$chann3 === undefined ? [] : _incomingParams$chann3,
+	      _incomingParams$chann4 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann4 === undefined ? [] : _incomingParams$chann4;
 
 	  var channelsResponse = {};
 
@@ -5140,8 +5163,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
@@ -5158,9 +5181,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var state = incomingParams.state;
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
+	  var state = incomingParams.state,
+	      _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
 
 	  var params = {};
 
@@ -5215,10 +5238,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann,
+	      _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
 
 	  var baseURL = '/v2/presence/sub-key/' + config.subscribeKey;
 
@@ -5241,12 +5264,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann3 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann3 === undefined ? [] : _incomingParams$chann3;
-	  var _incomingParams$inclu = incomingParams.includeUUIDs;
-	  var includeUUIDs = _incomingParams$inclu === undefined ? true : _incomingParams$inclu;
-	  var _incomingParams$inclu2 = incomingParams.includeState;
-	  var includeState = _incomingParams$inclu2 === undefined ? false : _incomingParams$inclu2;
+	  var _incomingParams$chann3 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann3 === undefined ? [] : _incomingParams$chann3,
+	      _incomingParams$inclu = incomingParams.includeUUIDs,
+	      includeUUIDs = _incomingParams$inclu === undefined ? true : _incomingParams$inclu,
+	      _incomingParams$inclu2 = incomingParams.includeState,
+	      includeState = _incomingParams$inclu2 === undefined ? false : _incomingParams$inclu2;
 
 	  var params = {};
 
@@ -5261,14 +5284,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function handleResponse(modules, serverResponse, incomingParams) {
-	  var _incomingParams$chann4 = incomingParams.channels;
-	  var channels = _incomingParams$chann4 === undefined ? [] : _incomingParams$chann4;
-	  var _incomingParams$chann5 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann5 === undefined ? [] : _incomingParams$chann5;
-	  var _incomingParams$inclu3 = incomingParams.includeUUIDs;
-	  var includeUUIDs = _incomingParams$inclu3 === undefined ? true : _incomingParams$inclu3;
-	  var _incomingParams$inclu4 = incomingParams.includeState;
-	  var includeState = _incomingParams$inclu4 === undefined ? false : _incomingParams$inclu4;
+	  var _incomingParams$chann4 = incomingParams.channels,
+	      channels = _incomingParams$chann4 === undefined ? [] : _incomingParams$chann4,
+	      _incomingParams$chann5 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann5 === undefined ? [] : _incomingParams$chann5,
+	      _incomingParams$inclu3 = incomingParams.includeUUIDs,
+	      includeUUIDs = _incomingParams$inclu3 === undefined ? true : _incomingParams$inclu3,
+	      _incomingParams$inclu4 = incomingParams.includeState,
+	      includeState = _incomingParams$inclu4 === undefined ? false : _incomingParams$inclu4;
 
 
 	  var prepareSingularChannel = function prepareSingularChannel() {
@@ -5390,10 +5413,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var channel = incomingParams.channel;
-	  var channelGroup = incomingParams.channelGroup;
-	  var _incomingParams$authK = incomingParams.authKeys;
-	  var authKeys = _incomingParams$authK === undefined ? [] : _incomingParams$authK;
+	  var channel = incomingParams.channel,
+	      channelGroup = incomingParams.channelGroup,
+	      _incomingParams$authK = incomingParams.authKeys,
+	      authKeys = _incomingParams$authK === undefined ? [] : _incomingParams$authK;
 
 	  var params = {};
 
@@ -5469,19 +5492,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
-	  var ttl = incomingParams.ttl;
-	  var _incomingParams$read = incomingParams.read;
-	  var read = _incomingParams$read === undefined ? false : _incomingParams$read;
-	  var _incomingParams$write = incomingParams.write;
-	  var write = _incomingParams$write === undefined ? false : _incomingParams$write;
-	  var _incomingParams$manag = incomingParams.manage;
-	  var manage = _incomingParams$manag === undefined ? false : _incomingParams$manag;
-	  var _incomingParams$authK = incomingParams.authKeys;
-	  var authKeys = _incomingParams$authK === undefined ? [] : _incomingParams$authK;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann,
+	      _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2,
+	      ttl = incomingParams.ttl,
+	      _incomingParams$read = incomingParams.read,
+	      read = _incomingParams$read === undefined ? false : _incomingParams$read,
+	      _incomingParams$write = incomingParams.write,
+	      write = _incomingParams$write === undefined ? false : _incomingParams$write,
+	      _incomingParams$manag = incomingParams.manage,
+	      manage = _incomingParams$manag === undefined ? false : _incomingParams$manag,
+	      _incomingParams$authK = incomingParams.authKeys,
+	      authKeys = _incomingParams$authK === undefined ? [] : _incomingParams$authK;
 
 	  var params = {};
 
@@ -5544,8 +5567,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function prepareMessagePayload(modules, messagePayload) {
-	  var crypto = modules.crypto;
-	  var config = modules.config;
+	  var crypto = modules.crypto,
+	      config = modules.config;
 
 	  var stringifiedPayload = JSON.stringify(messagePayload);
 
@@ -5563,8 +5586,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function validateParams(_ref, incomingParams) {
 	  var config = _ref.config;
-	  var message = incomingParams.message;
-	  var channel = incomingParams.channel;
+	  var message = incomingParams.message,
+	      channel = incomingParams.channel;
 
 
 	  if (!channel) return 'Missing Channel';
@@ -5573,16 +5596,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function usePost(modules, incomingParams) {
-	  var _incomingParams$sendB = incomingParams.sendByPost;
-	  var sendByPost = _incomingParams$sendB === undefined ? false : _incomingParams$sendB;
+	  var _incomingParams$sendB = incomingParams.sendByPost,
+	      sendByPost = _incomingParams$sendB === undefined ? false : _incomingParams$sendB;
 
 	  return sendByPost;
 	}
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var channel = incomingParams.channel;
-	  var message = incomingParams.message;
+	  var channel = incomingParams.channel,
+	      message = incomingParams.message;
 
 	  var stringifiedPayload = prepareMessagePayload(modules, message);
 	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0/' + encodeURIComponent(stringifiedPayload);
@@ -5612,10 +5635,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var meta = incomingParams.meta;
-	  var _incomingParams$repli = incomingParams.replicate;
-	  var replicate = _incomingParams$repli === undefined ? true : _incomingParams$repli;
-	  var storeInHistory = incomingParams.storeInHistory;
+	  var meta = incomingParams.meta,
+	      _incomingParams$repli = incomingParams.replicate,
+	      replicate = _incomingParams$repli === undefined ? true : _incomingParams$repli,
+	      storeInHistory = incomingParams.storeInHistory;
 
 	  var params = {};
 
@@ -5668,8 +5691,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function __processMessage(modules, message) {
-	  var config = modules.config;
-	  var crypto = modules.crypto;
+	  var config = modules.config,
+	      crypto = modules.crypto;
 
 	  if (!config.cipherKey) return message;
 
@@ -5711,15 +5734,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var start = incomingParams.start;
-	  var end = incomingParams.end;
-	  var _incomingParams$inclu = incomingParams.includeTimetoken;
-	  var includeTimetoken = _incomingParams$inclu === undefined ? false : _incomingParams$inclu;
-	  var reverse = incomingParams.reverse;
-	  var _incomingParams$count = incomingParams.count;
-	  var count = _incomingParams$count === undefined ? 100 : _incomingParams$count;
-	  var _incomingParams$strin = incomingParams.stringifiedTimeToken;
-	  var stringifiedTimeToken = _incomingParams$strin === undefined ? false : _incomingParams$strin;
+	  var start = incomingParams.start,
+	      end = incomingParams.end,
+	      _incomingParams$inclu = incomingParams.includeTimetoken,
+	      includeTimetoken = _incomingParams$inclu === undefined ? false : _incomingParams$inclu,
+	      reverse = incomingParams.reverse,
+	      _incomingParams$count = incomingParams.count,
+	      count = _incomingParams$count === undefined ? 100 : _incomingParams$count,
+	      _incomingParams$strin = incomingParams.stringifiedTimeToken,
+	      stringifiedTimeToken = _incomingParams$strin === undefined ? false : _incomingParams$strin;
 
 	  var outgoingParams = {};
 
@@ -5797,8 +5820,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$chann = incomingParams.channels;
-	  var channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/subscribe/' + config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0';
@@ -5816,11 +5839,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function prepareParams(_ref2, incomingParams) {
 	  var config = _ref2.config;
-	  var _incomingParams$chann2 = incomingParams.channelGroups;
-	  var channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
-	  var timetoken = incomingParams.timetoken;
-	  var filterExpression = incomingParams.filterExpression;
-	  var region = incomingParams.region;
+	  var _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2,
+	      timetoken = incomingParams.timetoken,
+	      filterExpression = incomingParams.filterExpression,
+	      region = incomingParams.region;
 
 	  var params = {
 	    heartbeat: config.getPresenceTimeout()

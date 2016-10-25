@@ -6,10 +6,11 @@ node_js:
   - '6'
 
 before_install:
+  npm install --global yarn
   npm install --global gulp-cli
 
 install:
-  npm install
+  yarn install
 
 script:
   gulp test
