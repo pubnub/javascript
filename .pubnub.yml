@@ -3,7 +3,7 @@ version: 4.1.1
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
-  - version: v4.1.0
+  - version: v4.1.1
     date:
     changes:
       - type: improvement
@@ -93,6 +93,8 @@ changelog:
       - type: feature
         text:  New iteration of JS / Node SDK family
 features:
+  notify:
+    - REQUEST-MESSAGE-COUNT-EXCEEDED
   access:
     - ACCESS-GRANT
   channel-groups:

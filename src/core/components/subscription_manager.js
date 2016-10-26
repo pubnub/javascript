@@ -299,7 +299,17 @@ export default class {
       this._pendingChannelGroupSubscriptions = [];
     }
 
-    payload.messages.forEach((message) => {
+    let messages = payload.messages || [];
+    let { requestMessageCountThreshold } = this._config;
+
+    if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
+      let countAnnouncement: StatusAnnouncement = {};
+      countAnnouncement.category = categoryConstants.PNRequestMessageCountExceededCategory;
+      countAnnouncement.operation = status.operation;
+      this._listenerManager.announceStatus(countAnnouncement);
+    }
+
+    messages.forEach((message) => {
       let channel = message.channel;
       let subscriptionMatch = message.subscriptionMatch;
       let publishMetaData = message.publishMetaData;

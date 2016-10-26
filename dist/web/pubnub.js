@@ -2605,6 +2605,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.useInstanceId = setup.useInstanceId || false;
 	    this.useRequestId = setup.useRequestId || false;
 
+	    this.requestMessageCountThreshold = setup.requestMessageCountThreshold;
+
 	    this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
 
 	    this.setSubscribeTimeout(setup.subscribeRequestTimeout || 310 * 1000);
@@ -3328,7 +3330,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  PNReconnectedCategory: 'PNReconnectedCategory',
 
-	  PNConnectedCategory: 'PNConnectedCategory'
+	  PNConnectedCategory: 'PNConnectedCategory',
+
+	  PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory'
 
 	};
 	module.exports = exports['default'];
@@ -3660,7 +3664,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._pendingChannelGroupSubscriptions = [];
 	      }
 
-	      payload.messages.forEach(function (message) {
+	      var messages = payload.messages || [];
+	      var requestMessageCountThreshold = this._config.requestMessageCountThreshold;
+
+
+	      if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
+	        var countAnnouncement = {};
+	        countAnnouncement.category = _categories2.default.PNRequestMessageCountExceededCategory;
+	        countAnnouncement.operation = status.operation;
+	        this._listenerManager.announceStatus(countAnnouncement);
+	      }
+
+	      messages.forEach(function (message) {
 	        var channel = message.channel;
 	        var subscriptionMatch = message.subscriptionMatch;
 	        var publishMetaData = message.publishMetaData;

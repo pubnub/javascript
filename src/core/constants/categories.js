@@ -24,6 +24,8 @@ export default {
   // on reconnection
   PNReconnectedCategory: 'PNReconnectedCategory',
 
-  PNConnectedCategory: 'PNConnectedCategory'
+  PNConnectedCategory: 'PNConnectedCategory',
+
+  PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory'
 
 };

@@ -11,6 +11,7 @@ import PubNub from '../../../lib/node/index';
 describe('#components/subscription_manager', () => {
   let pubnub;
   let pubnubWithPassingHeartbeats;
+  let pubnubWithLimitedQueue;
 
   before(() => {
     nock.disableNetConnect();
@@ -24,11 +25,13 @@ describe('#components/subscription_manager', () => {
     nock.cleanAll();
     pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
     pubnubWithPassingHeartbeats = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', announceSuccessfulHeartbeats: true });
+    pubnubWithLimitedQueue = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', requestMessageCountThreshold: 1 });
   });
 
   afterEach(() => {
     pubnub.stop();
     pubnubWithPassingHeartbeats.stop();
+    pubnubWithLimitedQueue.stop();
   });
 
   it('passes the correct message information', (done) => {
@@ -211,5 +214,25 @@ describe('#components/subscription_manager', () => {
     });
 
     pubnubWithPassingHeartbeats.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
+  });
+
+  it('reports when the queue is beyond set threshold', (done) => {
+    const scope = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300 })
+      .reply(200, '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}');
+
+
+    pubnubWithLimitedQueue.addListener({
+      status(statusPayload) {
+        if (statusPayload.category !== PubNub.CATEGORIES.PNRequestMessageCountExceededCategory) return;
+
+        assert.equal(scope.isDone(), true);
+        assert.equal(statusPayload.category, PubNub.CATEGORIES.PNRequestMessageCountExceededCategory);
+        assert.equal(statusPayload.operation, PubNub.OPERATIONS.PNSubscribeOperation);
+        done();
+      }
+    });
+
+    pubnubWithLimitedQueue.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 });

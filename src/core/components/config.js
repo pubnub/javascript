@@ -91,6 +91,11 @@ export default class {
   */
   _useSendBeacon: boolean;
 
+  /*
+    if set, the SDK will alert if more messages arrive in one subscribe than the theshold
+  */
+  requestMessageCountThreshold: number;
+
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
 
@@ -121,6 +126,8 @@ export default class {
 
     this.useInstanceId = setup.useInstanceId || false;
     this.useRequestId = setup.useRequestId || false;
+
+    this.requestMessageCountThreshold = setup.requestMessageCountThreshold;
 
     // set timeout to how long a transaction request will wait for the server (default 15 seconds)
     this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
