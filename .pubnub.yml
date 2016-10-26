@@ -1,8 +1,17 @@
 name: javascript
-version: 4.1.1
+version: 4.2.0
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.2.0
+    date:
+    changes:
+      - type: improvement
+        text: Add optional support for promises on all endpoints.
+      - type: improvement
+        text: History always returns timetokens in the payloads.
+      - type: improvement
+        text: Optionally, if queue size is set, send status on queue size threshold
   - version: v4.1.1
     date:
     changes:

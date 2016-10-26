@@ -1,8 +1,26 @@
 
-## [v4.1.0](https://github.com/pubnub/javascript/tree/v4.1.0)
+## [v4.2.0](https://github.com/pubnub/javascript/tree/v4.2.0)
 
 
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.0...v4.1.0)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.1...v4.2.0)
+
+
+- ⭐Add optional support for promises on all endpoints.
+
+
+
+- ⭐History always returns timetokens in the payloads.
+
+
+
+- ⭐Optionally, if queue size is set, send status on queue size threshold
+
+
+
+## [v4.1.1](https://github.com/pubnub/javascript/tree/v4.1.1)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.0...v4.1.1)
 
 
 - ⭐fix state setting for channels with reserved tags.
