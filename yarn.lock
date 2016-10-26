@@ -2660,9 +2660,9 @@ gulp-rename@^1.2.0, gulp-rename@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/gulp-rename/-/gulp-rename-1.2.2.tgz#3ad4428763f05e2764dec1c67d868db275687817"
 
-gulp-sourcemaps@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/gulp-sourcemaps/-/gulp-sourcemaps-2.2.0.tgz#dea8a4dc9aa74630a04ae9cf1871a7a08bc1310d"
+gulp-sourcemaps@^1.6.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/gulp-sourcemaps/-/gulp-sourcemaps-1.9.0.tgz#d85c060aa775ec30e9b9fb8c2f38c4f2d5135385"
   dependencies:
     acorn "4.X"
     convert-source-map "1.X"
@@ -2671,7 +2671,7 @@ gulp-sourcemaps@^2.2.0:
     detect-newline "2.X"
     graceful-fs "4.X"
     source-map "0.X"
-    strip-bom "3.X"
+    strip-bom "2.X"
     through2 "2.X"
     vinyl "1.X"
 
@@ -3268,7 +3268,7 @@ istanbul-threshold-checker@^0.1.0:
     istanbul "0.3.*"
     lodash "3.6.*"
 
-istanbul@^0.4.0, istanbul@0.4.5:
+istanbul@^0.4.0:
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/istanbul/-/istanbul-0.4.5.tgz#65c7d73d4c4da84d4f3ac310b918fb0b8033733b"
   dependencies:
@@ -3295,6 +3295,25 @@ istanbul@0.3.*:
     async "1.x"
     escodegen "1.7.x"
     esprima "2.5.x"
+    fileset "0.2.x"
+    handlebars "^4.0.1"
+    js-yaml "3.x"
+    mkdirp "0.5.x"
+    nopt "3.x"
+    once "1.x"
+    resolve "1.1.x"
+    supports-color "^3.1.0"
+    which "^1.1.1"
+    wordwrap "^1.0.0"
+
+istanbul@0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/istanbul/-/istanbul-0.4.3.tgz#5b714ee0ae493ac5ef204b99f3872bceef73d53a"
+  dependencies:
+    abbrev "1.0.x"
+    async "1.x"
+    escodegen "1.8.x"
+    esprima "2.7.x"
     fileset "0.2.x"
     handlebars "^4.0.1"
     js-yaml "3.x"
@@ -4103,9 +4122,9 @@ negotiator@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.1.tgz#2b327184e8992101177b28563fb5e7102acd0ca9"
 
-nock@^9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/nock/-/nock-9.0.0.tgz#e1e4212eabed6fa8174bbfcb99b198a9767ea037"
+nock@^8.0.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/nock/-/nock-8.2.0.tgz#98e815d9ec6c0d12016b0fadf2d9b0a910cc2096"
   dependencies:
     chai ">=1.9.2 <4.0.0"
     debug "^2.2.0"
@@ -4770,13 +4789,13 @@ regjsparser@^0.1.4:
   dependencies:
     jsesc "~0.5.0"
 
-remap-istanbul@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/remap-istanbul/-/remap-istanbul-0.7.0.tgz#c360dadaea641dba734cb6a58cabe9ebd88a2858"
+remap-istanbul@^0.6.4:
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/remap-istanbul/-/remap-istanbul-0.6.4.tgz#ac551eff1aa641504b4f318d0303dda61e3bb695"
   dependencies:
     amdefine "1.0.0"
     gulp-util "3.0.7"
-    istanbul "0.4.5"
+    istanbul "0.4.3"
     source-map ">=0.5.6"
     through2 "2.0.1"
 
@@ -5348,13 +5367,13 @@ strip-bom@^1.0.0:
     first-chunk-stream "^1.0.0"
     is-utf8 "^0.2.0"
 
-strip-bom@^2.0.0:
+strip-bom@^2.0.0, strip-bom@2.X:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/strip-bom/-/strip-bom-2.0.0.tgz#6219a85616520491f35788bdbf1447a99c7e6b0e"
   dependencies:
     is-utf8 "^0.2.0"
 
-strip-bom@^3.0.0, strip-bom@3.X:
+strip-bom@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/strip-bom/-/strip-bom-3.0.0.tgz#2334c18e9c759f7bdd56fdef7e9ae3d588e68ed3"
 

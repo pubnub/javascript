@@ -5736,21 +5736,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	function prepareParams(modules, incomingParams) {
 	  var start = incomingParams.start,
 	      end = incomingParams.end,
-	      _incomingParams$inclu = incomingParams.includeTimetoken,
-	      includeTimetoken = _incomingParams$inclu === undefined ? false : _incomingParams$inclu,
 	      reverse = incomingParams.reverse,
 	      _incomingParams$count = incomingParams.count,
 	      count = _incomingParams$count === undefined ? 100 : _incomingParams$count,
 	      _incomingParams$strin = incomingParams.stringifiedTimeToken,
 	      stringifiedTimeToken = _incomingParams$strin === undefined ? false : _incomingParams$strin;
 
-	  var outgoingParams = {};
+	  var outgoingParams = {
+	    include_token: 'true'
+	  };
 
 	  outgoingParams.count = count;
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
 	  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
-	  if (includeTimetoken) outgoingParams.include_token = 'true';
 	  if (reverse != null) outgoingParams.reverse = reverse.toString();
 
 	  return outgoingParams;
@@ -5765,16 +5764,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  serverResponse[0].forEach(function (serverHistoryItem) {
 	    var item = {
-	      timetoken: null,
-	      entry: null
+	      timetoken: serverHistoryItem.timetoken,
+	      entry: __processMessage(modules, serverHistoryItem.message)
 	    };
-
-	    if (serverHistoryItem.timetoken) {
-	      item.timetoken = serverHistoryItem.timetoken;
-	      item.entry = __processMessage(modules, serverHistoryItem.message);
-	    } else {
-	      item.entry = __processMessage(modules, serverHistoryItem);
-	    }
 
 	    response.messages.push(item);
 	  });

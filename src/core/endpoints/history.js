@@ -41,14 +41,15 @@ export function isAuthSupported(): boolean {
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
-  const { start, end, includeTimetoken = false, reverse, count = 100, stringifiedTimeToken = false } = incomingParams;
-  let outgoingParams = {};
+  const { start, end, reverse, count = 100, stringifiedTimeToken = false } = incomingParams;
+  let outgoingParams: Object = {
+    include_token: 'true'
+  };
 
   outgoingParams.count = count;
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
-  if (includeTimetoken) outgoingParams.include_token = 'true';
   if (reverse != null) outgoingParams.reverse = reverse.toString();
 
   return outgoingParams;
@@ -63,16 +64,9 @@ export function handleResponse(modules: ModulesInject, serverResponse: FetchHist
 
   serverResponse[0].forEach((serverHistoryItem) => {
     const item: HistoryItem = {
-      timetoken: null,
-      entry: null
+      timetoken: serverHistoryItem.timetoken,
+      entry: __processMessage(modules, serverHistoryItem.message)
     };
-
-    if (serverHistoryItem.timetoken) {
-      item.timetoken = serverHistoryItem.timetoken;
-      item.entry = __processMessage(modules, serverHistoryItem.message);
-    } else {
-      item.entry = __processMessage(modules, serverHistoryItem);
-    }
 
     response.messages.push(item);
   });
