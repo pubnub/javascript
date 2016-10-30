@@ -98,7 +98,12 @@ export default function (modules, endpoint, ...args) {
     }
 
     signInput += utils.signPamFromParams(outgoingParams);
-    outgoingParams.signature = crypto.HMACSHA256(signInput);
+
+    let signature = crypto.HMACSHA256(signInput);
+    signature = signature.replace(/\+/g, '-');
+    signature = signature.replace(/\//g, '_');
+
+    outgoingParams.signature = signature;
   }
 
   let promiseComponent = null;

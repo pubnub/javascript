@@ -4114,7 +4114,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    signInput += _utils2.default.signPamFromParams(outgoingParams);
-	    outgoingParams.signature = crypto.HMACSHA256(signInput);
+
+	    var signature = crypto.HMACSHA256(signInput);
+	    signature = signature.replace(/\+/g, '-');
+	    signature = signature.replace(/\//g, '_');
+
+	    outgoingParams.signature = signature;
 	  }
 
 	  var promiseComponent = null;

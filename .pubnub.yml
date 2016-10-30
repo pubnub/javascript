@@ -1,8 +1,13 @@
 name: javascript
-version: 4.2.0
+version: 4.2.1
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.2.1
+    date:
+    changes:
+      - type: improvement
+        text: encode signatures to avoid sending restricted characters
   - version: v4.2.0
     date:
     changes:

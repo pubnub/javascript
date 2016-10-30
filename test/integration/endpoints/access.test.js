@@ -31,7 +31,7 @@ describe('access endpoints', () => {
   describe('#audit', () => {
     it('issues the correct RESTful request for channels', (done) => {
       const scope = utils.createNock().get('/v1/auth/audit/sub-key/mySubscribeKey')
-      .query({ timestamp: 1317427200, channel: 'ch1', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: '4EgDD2LM2BO9GqEwlHDeSBbCM0muLh+Y1s1FY3FrRQI=' })
+      .query({ timestamp: 1317427200, channel: 'ch1', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: '4EgDD2LM2BO9GqEwlHDeSBbCM0muLh-Y1s1FY3FrRQI=' })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
       pubnub.audit({ channel: 'ch1' }, (status, response) => {
@@ -79,7 +79,7 @@ describe('access endpoints', () => {
 
     it('issues the correct RESTful request for keys', (done) => {
       const scope = utils.createNock().get('/v1/auth/audit/sub-key/mySubscribeKey')
-      .query({ timestamp: 1317427200, auth: 'key1,key2', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'jax2fEP+dRB6kV+pYQGIOEYQJZ3rugoZuYDH+rxPyk4=' })
+      .query({ timestamp: 1317427200, auth: 'key1,key2', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'jax2fEP-dRB6kV-pYQGIOEYQJZ3rugoZuYDH-rxPyk4=' })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
       pubnub.audit({ authKeys: ['key1', 'key2'] }, (status, response) => {
@@ -111,7 +111,7 @@ describe('access endpoints', () => {
         auth: 'key1,key2',
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-        signature: 'GorjdSX4ct8sUbAAbMqq0ighKvVud8L5CpD2Z+RDnSQ=',
+        signature: 'GorjdSX4ct8sUbAAbMqq0ighKvVud8L5CpD2Z-RDnSQ=',
         r: 0,
         w: 0,
         m: 0
@@ -133,7 +133,7 @@ describe('access endpoints', () => {
         auth: 'key1,key2',
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-        signature: 'MiYApTnEe6n67rqlMgFiU4csLnu+XJWIB8aAHWuKLhY=',
+        signature: 'MiYApTnEe6n67rqlMgFiU4csLnu-XJWIB8aAHWuKLhY=',
         r: 1,
         w: 1,
         m: 0
@@ -155,7 +155,7 @@ describe('access endpoints', () => {
         auth: 'key1,key2',
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-        signature: 'i4U3Cg3Sa5pCXAYOCGcqndwk/DZ1qyQc6J6xqT42uEc=',
+        signature: 'i4U3Cg3Sa5pCXAYOCGcqndwk_DZ1qyQc6J6xqT42uEc=',
         r: 1,
         w: 1,
         m: 0,
