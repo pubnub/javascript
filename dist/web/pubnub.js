@@ -1,4 +1,4 @@
-/*! 4.2.0 / Consumer  */
+/*! 4.2.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2752,7 +2752,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "4.2.0",
+		"version": "4.2.1",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -3437,7 +3437,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (channelGroup in _this._channelGroups) _this._channelGroups[channelGroup].state = state;
 	      });
 
-	      this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
+	      return this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
 	    }
 	  }, {
 	    key: 'adaptSubscribeChange',

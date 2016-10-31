@@ -3,6 +3,11 @@ version: 4.2.1
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.2.2
+    date:
+    changes:
+      - type: improvement
+        text: add promise support on setState operation (@jskrzypek)
   - version: v4.2.1
     date:
     changes:

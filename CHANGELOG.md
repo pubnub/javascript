@@ -1,4 +1,14 @@
 
+## [v4.2.2](https://github.com/pubnub/javascript/tree/v4.2.2)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.1...v4.2.2)
+
+
+- ⭐add promise support on setState operation (@jskrzypek)
+
+
+
 ## [v4.2.1](https://github.com/pubnub/javascript/tree/v4.2.1)
 
 
