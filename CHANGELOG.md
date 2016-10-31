@@ -9,6 +9,10 @@
 
 
 
+- ⭐add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
+
+
+
 ## [v4.2.1](https://github.com/pubnub/javascript/tree/v4.2.1)
 
 
