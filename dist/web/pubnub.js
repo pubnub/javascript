@@ -3504,6 +3504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (Object.keys(this._channels).length === 0 && Object.keys(this._presenceChannels).length === 0 && Object.keys(this._channelGroups).length === 0 && Object.keys(this._presenceChannelGroups).length === 0) {
 	        this._timetoken = 0;
 	        this._region = null;
+	        this._reconnectionManager.stopPolling();
 	      }
 
 	      this.reconnect();
@@ -3534,6 +3535,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function disconnect() {
 	      this._stopSubscribeLoop();
 	      this._stopHeartbeatTimer();
+	      this._reconnectionManager.stopPolling();
 	    }
 	  }, {
 	    key: '_registerHeartbeatTimer',
@@ -3884,6 +3886,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'startPolling',
 	    value: function startPolling() {
 	      this._timeTimer = setInterval(this._performTimeLoop.bind(this), 3000);
+	    }
+	  }, {
+	    key: 'stopPolling',
+	    value: function stopPolling() {
+	      clearInterval(this._timeTimer);
 	    }
 	  }, {
 	    key: '_performTimeLoop',
