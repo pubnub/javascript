@@ -1,5 +1,5 @@
 name: javascript
-version: 4.2.1
+version: 4.2.2
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
@@ -8,6 +8,8 @@ changelog:
     changes:
       - type: improvement
         text: add promise support on setState operation (@jskrzypek)
+      - type: improvement
+        text: add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
   - version: v4.2.1
     date:
     changes:
