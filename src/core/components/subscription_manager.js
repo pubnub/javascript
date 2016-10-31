@@ -104,7 +104,7 @@ export default class {
       if (channelGroup in this._channelGroups) this._channelGroups[channelGroup].state = state;
     });
 
-    this._setStateEndpoint({ state, channels, channelGroups }, callback);
+    return this._setStateEndpoint({ state, channels, channelGroups }, callback);
   }
 
   adaptSubscribeChange(args: SubscribeArgs) {

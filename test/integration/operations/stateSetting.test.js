@@ -78,5 +78,20 @@ describe('setting state operation', () => {
         done();
       });
     });
+
+    it('supports promises', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/uuid/myUUID/data')
+        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: '{"hello":"there"}' })
+        .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
+
+      let promise = pubnub.setState({ channels: ['ch1'], state: { hello: 'there' } });
+      assert.ok(promise);
+      assert(typeof promise.then === 'function');
+      promise.then((response) => {
+        assert.deepEqual(response.state, { age: 20, status: 'online' });
+        assert.equal(scope.isDone(), true);
+        done();
+      }).catch(done);
+    });
   });
 });
