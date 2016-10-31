@@ -158,6 +158,7 @@ export default class {
       Object.keys(this._presenceChannelGroups).length === 0) {
       this._timetoken = 0;
       this._region = null;
+      this._reconnectionManager.stopPolling();
     }
 
     this.reconnect();
@@ -183,6 +184,7 @@ export default class {
   disconnect() {
     this._stopSubscribeLoop();
     this._stopHeartbeatTimer();
+    this._reconnectionManager.stopPolling();
   }
 
   _registerHeartbeatTimer() {
