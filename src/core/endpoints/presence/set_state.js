@@ -2,6 +2,7 @@
 
 import { SetStateArguments, SetStateResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNSetStateOperation;
@@ -19,7 +20,7 @@ export function getURL(modules: ModulesInject, incomingParams: SetStateArguments
   let { config } = modules;
   let { channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
+  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + utils.encodeString(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
 }
 
 export function getRequestTimeout({ config }: ModulesInject): number {

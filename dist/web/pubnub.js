@@ -4051,7 +4051,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return { promise: promise, reject: failureResolve, fulfill: successResolve };
 	}
 
-	module.exports = { signPamFromParams: signPamFromParams, endsWith: endsWith, createPromise: createPromise };
+	function encodeString(input) {
+	  return encodeURIComponent(input).replace(/[!~\*'\(\)]/g, function (x) {
+	    return '%' + x.charCodeAt(0).toString(16);
+	  });
+	}
+
+	module.exports = { signPamFromParams: signPamFromParams, endsWith: endsWith, createPromise: createPromise, encodeString: encodeString };
 
 /***/ },
 /* 23 */
@@ -4267,6 +4273,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -4288,7 +4298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + _utils2.default.encodeString(channelGroup);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4338,6 +4348,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -4359,7 +4373,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + _utils2.default.encodeString(channelGroup);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4409,6 +4423,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -4428,7 +4446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup) + '/remove';
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + _utils2.default.encodeString(channelGroup) + '/remove';
 	}
 
 	function isAuthSupported() {
@@ -4534,6 +4552,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -4553,7 +4575,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channelGroup = incomingParams.channelGroup;
 	  var config = modules.config;
 
-	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
+	  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + _utils2.default.encodeString(channelGroup);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4875,6 +4897,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -4894,7 +4920,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/leave';
+	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(stringifiedChannels) + '/leave';
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5009,6 +5035,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -5028,7 +5058,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/heartbeat';
+	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(stringifiedChannels) + '/heartbeat';
 	}
 
 	function isAuthSupported() {
@@ -5086,6 +5116,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -5107,7 +5141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + uuid;
+	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(stringifiedChannels) + '/uuid/' + uuid;
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5173,6 +5207,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -5194,7 +5232,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
+	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5250,6 +5288,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -5274,7 +5316,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (channels.length > 0 || channelGroups.length > 0) {
 	    var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	    baseURL += '/channel/' + encodeURIComponent(stringifiedChannels);
+	    baseURL += '/channel/' + _utils2.default.encodeString(stringifiedChannels);
 	  }
 
 	  return baseURL;
@@ -5591,6 +5633,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function prepareMessagePayload(modules, messagePayload) {
@@ -5635,14 +5681,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      message = incomingParams.message;
 
 	  var stringifiedPayload = prepareMessagePayload(modules, message);
-	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0/' + encodeURIComponent(stringifiedPayload);
+	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + _utils2.default.encodeString(channel) + '/0/' + _utils2.default.encodeString(stringifiedPayload);
 	}
 
 	function postURL(modules, incomingParams) {
 	  var config = modules.config;
 	  var channel = incomingParams.channel;
 
-	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + encodeURIComponent(channel) + '/0';
+	  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + _utils2.default.encodeString(channel) + '/0';
 	}
 
 	function getRequestTimeout(_ref2) {
@@ -5715,6 +5761,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function __processMessage(modules, message) {
@@ -5747,7 +5797,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var channel = incomingParams.channel;
 	  var config = modules.config;
 
-	  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
+	  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(channel);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5824,6 +5874,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _operations2 = _interopRequireDefault(_operations);
 
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
@@ -5843,7 +5897,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-	  return '/v2/subscribe/' + config.subscribeKey + '/' + encodeURIComponent(stringifiedChannels) + '/0';
+	  return '/v2/subscribe/' + config.subscribeKey + '/' + _utils2.default.encodeString(stringifiedChannels) + '/0';
 	}
 
 	function getRequestTimeout(_ref) {

@@ -2,6 +2,7 @@
 
 import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNHereNowOperation;
@@ -20,7 +21,7 @@ export function getURL(modules: ModulesInject, incomingParams: HereNowArguments)
 
   if (channels.length > 0 || channelGroups.length > 0) {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    baseURL += '/channel/' + encodeURIComponent(stringifiedChannels);
+    baseURL += '/channel/' + utils.encodeString(stringifiedChannels);
   }
 
   return baseURL;
