@@ -1,4 +1,14 @@
 
+## [v4.2.3](https://github.com/pubnub/javascript/tree/v4.2.3)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.2...v4.2.3)
+
+
+- ⭐fixes on encoding of apostraphes.
+
+
+
 ## [v4.2.2](https://github.com/pubnub/javascript/tree/v4.2.2)
 
 
@@ -6,6 +16,10 @@
 
 
 - ⭐add promise support on setState operation (@jskrzypek)
+
+
+
+- ⭐add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
 
 
 
