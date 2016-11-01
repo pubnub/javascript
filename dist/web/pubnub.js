@@ -4011,18 +4011,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	function pamEncode(str) {
-	  return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
-	    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-	  });
-	}
-
 	function objectToList(o) {
 	  var l = [];
 	  Object.keys(o).forEach(function (key) {
 	    return l.push(key);
 	  });
 	  return l;
+	}
+
+	function encodeString(input) {
+	  return encodeURIComponent(input).replace(/[!~*'()]/g, function (x) {
+	    return '%' + x.charCodeAt(0).toString(16).toUpperCase();
+	  });
 	}
 
 	function objectToListSorted(o) {
@@ -4032,7 +4032,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function signPamFromParams(params) {
 	  var l = objectToListSorted(params);
 	  return l.map(function (paramKey) {
-	    return paramKey + '=' + pamEncode(params[paramKey]);
+	    return paramKey + '=' + encodeString(params[paramKey]);
 	  }).join('&');
 	}
 
@@ -4049,12 +4049,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 
 	  return { promise: promise, reject: failureResolve, fulfill: successResolve };
-	}
-
-	function encodeString(input) {
-	  return encodeURIComponent(input).replace(/[!~\*'\(\)]/g, function (x) {
-	    return '%' + x.charCodeAt(0).toString(16);
-	  });
 	}
 
 	module.exports = { signPamFromParams: signPamFromParams, endsWith: endsWith, createPromise: createPromise, encodeString: encodeString };
