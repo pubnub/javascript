@@ -2,6 +2,7 @@
 
 import { ListChannelsParams, ListChannelsResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNChannelsForGroupOperation;
@@ -18,7 +19,7 @@ export function validateParams(modules: ModulesInject, incomingParams: ListChann
 export function getURL(modules: ModulesInject, incomingParams: ListChannelsParams): string {
   let { channelGroup } = incomingParams;
   let { config } = modules;
-  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + encodeURIComponent(channelGroup);
+  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + utils.encodeString(channelGroup);
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

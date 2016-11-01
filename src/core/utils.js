@@ -34,4 +34,8 @@ function createPromise() {
   return { promise, reject: failureResolve, fulfill: successResolve };
 }
 
-module.exports = { signPamFromParams, endsWith, createPromise };
+function encodeString(input: string): string {
+  return encodeURIComponent(input).replace(/[!~\*'\(\)]/g, x => '%' + x.charCodeAt(0).toString(16));
+}
+
+module.exports = { signPamFromParams, endsWith, createPromise, encodeString };

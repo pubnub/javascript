@@ -2,6 +2,7 @@
 
 import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
+import utils from '../utils';
 
 function __processMessage(modules, message: Object): Object | null {
   let { config, crypto } = modules;
@@ -29,7 +30,7 @@ export function validateParams(modules: ModulesInject, incomingParams: FetchHist
 export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
   let { channel } = incomingParams;
   let { config } = modules;
-  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + encodeURIComponent(channel);
+  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + utils.encodeString(channel);
 }
 
 export function getRequestTimeout({ config }: ModulesInject): boolean {

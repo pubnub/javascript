@@ -1,8 +1,13 @@
 name: javascript
-version: 4.2.2
+version: 4.2.3
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.2.3
+    date:
+    changes:
+      - type: improvement
+        text: fixes on encoding of apostraphes.
   - version: v4.2.2
     date:
     changes:
