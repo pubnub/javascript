@@ -1,4 +1,14 @@
 
+## [v4.2.4](https://github.com/pubnub/javascript/tree/v4.2.4)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.3...v4.2.4)
+
+
+- ⭐detection of support of promises improved.
+
+
+
 ## [v4.2.3](https://github.com/pubnub/javascript/tree/v4.2.3)
 
 
