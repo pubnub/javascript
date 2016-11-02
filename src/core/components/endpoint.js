@@ -109,7 +109,7 @@ export default function (modules, endpoint, ...args) {
   let promiseComponent = null;
 
   // bridge in Promise support.
-  if (Promise && !callback) {
+  if (typeof Promise !== 'undefined' && !callback) {
     promiseComponent = utils.createPromise();
   }
 

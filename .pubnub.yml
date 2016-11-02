@@ -1,8 +1,13 @@
 name: javascript
-version: 4.2.3
+version: 4.2.4
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.2.4
+    date:
+    changes:
+      - type: improvement
+        text: detection of support of promises improved.
   - version: v4.2.3
     date:
     changes:
