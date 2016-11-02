@@ -4131,7 +4131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var promiseComponent = null;
 
-	  if (Promise && !callback) {
+	  if (typeof Promise !== 'undefined' && !callback) {
 	    promiseComponent = _utils2.default.createPromise();
 	  }
 
