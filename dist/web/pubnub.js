@@ -3722,6 +3722,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _announce.channel = channel;
 	          _announce.subscription = subscriptionMatch;
 	          _announce.timetoken = publishMetaData.publishTimetoken;
+	          _announce.publisher = message.issuingClientId;
 
 	          if (_this5._config.cipherKey) {
 	            _announce.message = _this5._crypto.decrypt(message.payload);

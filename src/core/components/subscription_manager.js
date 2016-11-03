@@ -358,6 +358,7 @@ export default class {
         announce.channel = channel;
         announce.subscription = subscriptionMatch;
         announce.timetoken = publishMetaData.publishTimetoken;
+        announce.publisher = message.issuingClientId;
 
         if (this._config.cipherKey) {
           announce.message = this._crypto.decrypt(message.payload);

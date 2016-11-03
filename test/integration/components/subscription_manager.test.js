@@ -37,15 +37,15 @@ describe('#components/subscription_manager', () => {
   it('passes the correct message information', (done) => {
     const scope1 = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
       .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}');
+      .reply(200, '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}');
 
     const scope2 = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
       .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300, tt: 3, tr: 1 })
-      .reply(200, '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}');
+      .reply(200, '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}');
 
     const scope3 = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
       .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', heartbeat: 300, tt: 10, tr: 1 })
-      .reply(200, '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel"}]}');
+      .reply(200, '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel"}]}');
 
     let incomingPayloads = [];
 
@@ -67,6 +67,7 @@ describe('#components/subscription_manager', () => {
               channel: 'coolChannel',
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
+              publisher: 'client1'
             },
             {
               actualChannel: 'coolChannel',
@@ -77,6 +78,7 @@ describe('#components/subscription_manager', () => {
               channel: 'coolChannel',
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
+              publisher: 'client2'
             },
             {
               actualChannel: 'coolChannel',
@@ -87,6 +89,7 @@ describe('#components/subscription_manager', () => {
               channel: 'coolChannel',
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
+              publisher: 'client3'
             }
           ]);
           done();

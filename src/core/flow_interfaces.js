@@ -133,7 +133,8 @@ type MessageAnnouncement = {
   subscription: string,
 
   timetoken: number,
-  userMetadata: Object
+  userMetadata: Object,
+  publisher: string
 }
 
 export type StatusAnnouncement = {
