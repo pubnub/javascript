@@ -129,8 +129,6 @@ changelog:
       - type: feature
         text:  New iteration of JS / Node SDK family
 features:
-  notify:
-    - REQUEST-MESSAGE-COUNT-EXCEEDED
   access:
     - ACCESS-GRANT
   channel-groups:
@@ -138,6 +136,8 @@ features:
     - CHANNEL-GROUPS-REMOVE-CHANNELS
     - CHANNEL-GROUPS-REMOVE-GROUPS
     - CHANNEL-GROUPS-LIST-CHANNELS-IN-GROUP
+  notify:
+    - REQUEST-MESSAGE-COUNT-EXCEEDED    
   push:
     - PUSH-ADD-DEVICE-TO-CHANNELS
     - PUSH-REMOVE-DEVICE-FROM-CHANNELS
