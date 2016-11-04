@@ -1,4 +1,4 @@
-/*! 4.2.4 / Consumer  */
+/*! 4.2.5 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2751,8 +2751,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 		"name": "pubnub",
-		"preferGlobal": false,
-		"version": "4.2.4",
+		"version": "4.2.5",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -2783,9 +2782,9 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 		"noAnalyze": false,
 		"devDependencies": {
-			"babel-core": "^6.17.0",
-			"babel-eslint": "^7.0.0",
-			"babel-loader": "^6.2.5",
+			"babel-core": "^6.18.2",
+			"babel-eslint": "^7.1.0",
+			"babel-loader": "^6.2.7",
 			"babel-plugin-add-module-exports": "^0.2.1",
 			"babel-plugin-transform-class-properties": "^6.16.0",
 			"babel-plugin-transform-flow-strip-types": "^6.14.0",
@@ -2797,7 +2796,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"eslint-plugin-import": "^1.16.0",
 			"eslint-plugin-mocha": "^4.6.0",
 			"eslint-plugin-react": "^6.3.0",
-			"flow-bin": "^0.33.0",
+			"flow-bin": "^0.34.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
@@ -2829,7 +2828,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"stats-webpack-plugin": "^0.4.2",
 			"uglify-js": "^2.7.3",
 			"underscore": "^1.8.3",
-			"webpack": "^1.13.2",
+			"webpack": "^1.13.3",
 			"webpack-dev-server": "^1.16.1",
 			"webpack-stream": "^3.2.0"
 		},

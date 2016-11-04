@@ -1,11 +1,21 @@
 
+## [v4.2.5](https://github.com/pubnub/javascript/tree/v4.2.5)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.4...v4.2.5)
+
+
+- ⭐SDK reports on the id of the publisher in the message
+
+
+
 ## [v4.2.4](https://github.com/pubnub/javascript/tree/v4.2.4)
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.3...v4.2.4)
 
 
-- ⭐detection of support of promises improved.
+- ⭐Detection of support of promises improved.
 
 
 
@@ -15,7 +25,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.2...v4.2.3)
 
 
-- ⭐fixes on encoding of apostraphes.
+- ⭐Fixes on encoding of apostraphes.
 
 
 
@@ -25,11 +35,11 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.1...v4.2.2)
 
 
-- ⭐add promise support on setState operation (@jskrzypek)
+- ⭐Add promise support on setState operation (@jskrzypek)
 
 
 
-- ⭐add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
+- ⭐Add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
 
 
 
@@ -39,7 +49,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.0...v4.2.1)
 
 
-- ⭐encode signatures to avoid sending restricted characters
+- ⭐Encode signatures to avoid sending restricted characters
 
 
 
@@ -67,7 +77,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.0...v4.1.1)
 
 
-- ⭐fix state setting for channels with reserved tags.
+- ⭐Fix state setting for channels with reserved tags.
 
 
 
@@ -77,11 +87,11 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.13...v4.1.0)
 
 
-- ⭐reset timetoken when all unsubscribes happen
+- ⭐Reset timetoken when all unsubscribes happen
 
 
 
-- ⭐sign requests when a a secret key is passed
+- ⭐Sign requests when a a secret key is passed
 
 
 
@@ -91,7 +101,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.12...v4.0.13)
 
 
-- ⭐propogate status events to the status callback on subscribe operations.
+- ⭐Propogate status events to the status callback on subscribe operations.
 
 
 
@@ -111,7 +121,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.10...v4.0.11)
 
 
-- ⭐dependency upgrades
+- ⭐Dependency upgrades
 
 
 
@@ -121,7 +131,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.9...v4.0.10)
 
 
-- ⭐expose decryption and encryption as a global
+- ⭐Expose decryption and encryption as a global
 
 
 
@@ -131,11 +141,11 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.8...v4.0.9)
 
 
-- ⭐channel / subscription items are populated in
+- ⭐Channel / subscription items are populated in
 
 
 
-- ⭐constants for operation and category are exposed on global object
+- ⭐Constants for operation and category are exposed on global object
 
 
 
@@ -145,7 +155,7 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.7...v4.0.8)
 
 
-- ⭐re-publish of v4.0.7
+- ⭐Re-publish of v4.0.7
 
 
 
@@ -159,7 +169,7 @@
 
 
 
-- ⭐try..catch wrapped around localStorage for iframe compliance
+- ⭐Try..catch wrapped around localStorage for iframe compliance
 
 
 
