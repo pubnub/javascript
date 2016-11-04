@@ -1,30 +1,35 @@
 name: javascript
-version: 4.2.4
+version: 4.2.5
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.2.5
+    date:
+    changes:
+      - type: improvement
+        text: SDK reports on the id of the publisher in the message
   - version: v4.2.4
     date:
     changes:
       - type: improvement
-        text: detection of support of promises improved.
+        text: Detection of support of promises improved.
   - version: v4.2.3
     date:
     changes:
       - type: improvement
-        text: fixes on encoding of apostraphes.
+        text: Fixes on encoding of apostraphes.
   - version: v4.2.2
     date:
     changes:
       - type: improvement
-        text: add promise support on setState operation (@jskrzypek)
+        text: Add promise support on setState operation (@jskrzypek)
       - type: improvement
-        text: add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
+        text: Add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
   - version: v4.2.1
     date:
     changes:
       - type: improvement
-        text: encode signatures to avoid sending restricted characters
+        text: Encode signatures to avoid sending restricted characters
   - version: v4.2.0
     date:
     changes:
@@ -38,19 +43,19 @@ changelog:
     date:
     changes:
       - type: improvement
-        text: fix state setting for channels with reserved tags.
+        text: Fix state setting for channels with reserved tags.
   - version: v4.1.0
     date:
     changes:
       - type: improvement
-        text: reset timetoken when all unsubscribes happen
+        text: Reset timetoken when all unsubscribes happen
       - type: improvement
-        text: sign requests when a a secret key is passed
+        text: Sign requests when a a secret key is passed
   - version: v4.0.13
     date:
     changes:
       - type: improvement
-        text: propogate status events to the status callback on subscribe operations.
+        text: Propogate status events to the status callback on subscribe operations.
   - version: v4.0.12
     date:
     changes:
@@ -60,31 +65,31 @@ changelog:
     date:
     changes:
       - type: improvement
-        text: dependency upgrades
+        text: Dependency upgrades
   - version: v4.0.10
     date:
     changes:
       - type: improvement
-        text: expose decryption and encryption as a global
+        text: Expose decryption and encryption as a global
   - version: v4.0.9
     date:
     changes:
       - type: improvement
-        text: channel / subscription items are populated in
+        text: Channel / subscription items are populated in
       - type: improvement
-        text: constants for operation and category are exposed on global object
+        text: Constants for operation and category are exposed on global object
   - version: v4.0.8
     date:
     changes:
       - type: improvement
-        text: re-publish of v4.0.7
+        text: Re-publish of v4.0.7
   - version: v4.0.7
     date:
     changes:
       - type: improvement
         text: Dependency upgrades
       - type: improvement
-        text: try..catch wrapped around localStorage for iframe compliance
+        text: Try..catch wrapped around localStorage for iframe compliance
   - version: v4.0.6
     date:
     changes:
@@ -168,3 +173,4 @@ features:
     - SUBSCRIBE-WITH-TIMETOKEN
     - SUBSCRIBE-WILDCARD
     - SUBSCRIBE-FILTER-EXPRESSION
+    - SUBSCRIBE-PUBLISHER-UUID
