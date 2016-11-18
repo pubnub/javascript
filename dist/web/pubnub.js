@@ -246,11 +246,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var historyEndpointConfig = _interopRequireWildcard(_history);
 
+	var _fetch_messages = __webpack_require__(43);
+
+	var fetchMessagesEndpointConfig = _interopRequireWildcard(_fetch_messages);
+
 	var _time = __webpack_require__(20);
 
 	var timeEndpointConfig = _interopRequireWildcard(_time);
 
-	var _subscribe = __webpack_require__(43);
+	var _subscribe = __webpack_require__(44);
 
 	var subscribeEndpointConfig = _interopRequireWildcard(_subscribe);
 
@@ -345,6 +349,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
+	    this.fetchMessages = _endpoint2.default.bind(this, modules, fetchMessagesEndpointConfig);
 
 	    this.time = timeEndpoint;
 
@@ -2793,10 +2798,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			"chai": "^3.5.0",
 			"eslint-config-airbnb": "^12.0.0",
 			"eslint-plugin-flowtype": "^2.19.0",
-			"eslint-plugin-import": "^1.16.0",
+			"eslint-plugin-import": "^2.2.0",
 			"eslint-plugin-mocha": "^4.6.0",
 			"eslint-plugin-react": "^6.3.0",
-			"flow-bin": "^0.34.0",
+			"flow-bin": "^0.35.0",
 			"gulp": "^3.9.1",
 			"gulp-babel": "^6.1.2",
 			"gulp-clean": "^0.3.2",
@@ -2807,7 +2812,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-istanbul": "^1.1.1",
 			"gulp-mocha": "^3.0.1",
 			"gulp-rename": "^1.2.2",
-			"gulp-sourcemaps": "^1.6.0",
+			"gulp-sourcemaps": "^2.2.0",
 			"gulp-uglify": "^2.0.0",
 			"imports-loader": "^0.6.5",
 			"isparta": "^4.0.0",
@@ -2822,7 +2827,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"mocha": "^3.1.0",
 			"nock": "^8.0.0",
 			"phantomjs-prebuilt": "^2.1.12",
-			"remap-istanbul": "^0.6.4",
+			"remap-istanbul": "^0.7.0",
 			"run-sequence": "^1.2.2",
 			"sinon": "^1.17.6",
 			"stats-webpack-plugin": "^0.4.2",
@@ -3980,6 +3985,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  PNTimeOperation: 'PNTimeOperation',
 
 	  PNHistoryOperation: 'PNHistoryOperation',
+	  PNFetchMessagesOperation: 'PNFetchMessagesOperation',
 
 	  PNSubscribeOperation: 'PNSubscribeOperation',
 	  PNUnsubscribeOperation: 'PNUnsubscribeOperation',
@@ -5705,7 +5711,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var meta = incomingParams.meta,
 	      _incomingParams$repli = incomingParams.replicate,
 	      replicate = _incomingParams$repli === undefined ? true : _incomingParams$repli,
-	      storeInHistory = incomingParams.storeInHistory;
+	      storeInHistory = incomingParams.storeInHistory,
+	      ttl = incomingParams.ttl;
 
 	  var params = {};
 
@@ -5715,6 +5722,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else {
 	      params.store = '0';
 	    }
+	  }
+
+	  if (ttl) {
+	    params.ttl = ttl;
 	  }
 
 	  if (replicate === false) {
@@ -5847,6 +5858,116 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(13);
+
+	var _operations = __webpack_require__(21);
+
+	var _operations2 = _interopRequireDefault(_operations);
+
+	var _utils = __webpack_require__(22);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function __processMessage(modules, message) {
+	  var config = modules.config,
+	      crypto = modules.crypto;
+
+	  if (!config.cipherKey) return message;
+
+	  try {
+	    return crypto.decrypt(message);
+	  } catch (e) {
+	    return message;
+	  }
+	}
+
+	function getOperation() {
+	  return _operations2.default.PNFetchMessagesOperation;
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channels = incomingParams.channels;
+	  var config = modules.config;
+
+
+	  if (!channels || channels.length === 0) return 'Missing channels';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var config = modules.config;
+
+
+	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+	  return '/v3/history/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(stringifiedChannels);
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var start = incomingParams.start,
+	      end = incomingParams.end,
+	      count = incomingParams.count;
+
+	  var outgoingParams = {};
+
+	  if (count) outgoingParams.max = count;
+	  if (start) outgoingParams.start = start;
+	  if (end) outgoingParams.end = end;
+
+	  return outgoingParams;
+	}
+
+	function handleResponse(modules, serverResponse) {
+	  var response = {
+	    channels: {}
+	  };
+
+	  Object.keys(serverResponse.channels || {}).forEach(function (channelName) {
+	    response.channels[channelName] = [];
+
+	    (serverResponse.channels[channelName] || []).forEach(function (messageEnvelope) {
+	      var announce = {};
+	      announce.channel = channelName;
+	      announce.subscription = null;
+	      announce.timetoken = messageEnvelope.timetoken;
+	      announce.message = __processMessage(modules, messageEnvelope.message);
+	      response.channels[channelName].push(announce);
+	    });
+	  });
+
+	  return response;
+	}
+
+/***/ },
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

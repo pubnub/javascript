@@ -60,7 +60,7 @@ export function postPayload(modules: ModulesInject, incomingParams: PublishArgum
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: PublishArguments): Object {
-  const { meta, replicate = true, storeInHistory } = incomingParams;
+  const { meta, replicate = true, storeInHistory, ttl } = incomingParams;
   const params = {};
 
   if (storeInHistory != null) {
@@ -69,6 +69,10 @@ export function prepareParams(modules: ModulesInject, incomingParams: PublishArg
     } else {
       params.store = '0';
     }
+  }
+
+  if (ttl) {
+    params.ttl = ttl;
   }
 
   if (replicate === false) {

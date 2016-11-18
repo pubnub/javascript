@@ -132,7 +132,7 @@ type MessageAnnouncement = {
   channel: string,
   subscription: string,
 
-  timetoken: number,
+  timetoken: number | string,
   userMetadata: Object,
   publisher: string
 }
@@ -157,14 +157,19 @@ type TimeResponse = {
 };
 
 // history
-
 type FetchHistoryArguments = {
   channel: string, // fetch history from a channel
-  channelGroup: string, // fetch history from channel groups
   start: number | string, // start timetoken for history fetching
-  end: number | string, // end timetoken for history feting
+  end: number | string, // end timetoken for history fetching
   includeTimetoken: boolean, // include time token for each history call
   reverse: boolean,
+  count: number
+}
+
+type FetchMessagesArguments = {
+  channels: string, // fetch history from a channel
+  start: number | string, // start timetoken for history fetching
+  end: number | string, // end timetoken for history fetching
   count: number
 }
 
@@ -177,6 +182,10 @@ type HistoryResponse = {
   messages: Array<HistoryItem>,
   startTimeToken: number | string,
   endTimeToken: number | string,
+}
+
+type HistoryV3Response = {
+  channels: Object
 }
 
 // CG endpoints

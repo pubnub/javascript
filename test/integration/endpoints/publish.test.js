@@ -63,6 +63,50 @@ describe('publish endpoints', () => {
     });
   });
 
+  it('supports ttl param', (done) => {
+    const scope = utils.createNock().get('/publish/myPublishKey/mySubKey/0/ch1/0/%22toDEeIZkmIyoiLpSojGu7n3%2B2t1rn7%2FDsrEZ1r8JKR4%3D%22')
+      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', auth: 'myAuthKey', ttl: '10' })
+      .reply(200, '[1,"Sent","14647523059145592"]');
+
+    pubnub.setCipherKey('myCipherKey');
+    pubnub.publish({ message: { such: 'object' }, channel: 'ch1', ttl: 10 }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.timetoken, 14647523059145592);
+      assert.equal(scope.isDone(), true);
+      done();
+    });
+  });
+
+  it('supports storeInHistory=0', (done) => {
+    const scope = utils.createNock().get('/publish/myPublishKey/mySubKey/0/ch1/0/%22toDEeIZkmIyoiLpSojGu7n3%2B2t1rn7%2FDsrEZ1r8JKR4%3D%22')
+      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', auth: 'myAuthKey', store: '0' })
+      .reply(200, '[1,"Sent","14647523059145592"]');
+
+    pubnub.setCipherKey('myCipherKey');
+
+    pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: false }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.timetoken, 14647523059145592);
+      assert.equal(scope.isDone(), true);
+      done();
+    });
+  });
+
+  it('supports storeInHistory=1', (done) => {
+    const scope = utils.createNock().get('/publish/myPublishKey/mySubKey/0/ch1/0/%22toDEeIZkmIyoiLpSojGu7n3%2B2t1rn7%2FDsrEZ1r8JKR4%3D%22')
+      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', auth: 'myAuthKey', store: '1' })
+      .reply(200, '[1,"Sent","14647523059145592"]');
+
+    pubnub.setCipherKey('myCipherKey');
+
+    pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: true }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.timetoken, 14647523059145592);
+      assert.equal(scope.isDone(), true);
+      done();
+    });
+  });
+
   it('publishes a complex object via POST', (done) => {
     const scope = utils.createNock().post('/publish/myPublishKey/mySubKey/0/ch1/0', '{"such":"object"}')
       .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', auth: 'myAuthKey' })

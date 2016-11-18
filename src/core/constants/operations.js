@@ -3,8 +3,9 @@ export default {
   PNTimeOperation: 'PNTimeOperation',
 
   PNHistoryOperation: 'PNHistoryOperation',
+  PNFetchMessagesOperation: 'PNFetchMessagesOperation',
 
-  // pubsuv
+  // pubsub
   PNSubscribeOperation: 'PNSubscribeOperation',
   PNUnsubscribeOperation: 'PNUnsubscribeOperation',
   PNPublishOperation: 'PNPublishOperation',

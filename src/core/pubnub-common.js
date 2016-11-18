@@ -33,6 +33,7 @@ import * as grantEndpointConfig from './endpoints/access_manager/grant';
 
 import * as publishEndpointConfig from './endpoints/publish';
 import * as historyEndpointConfig from './endpoints/history';
+import * as fetchMessagesEndpointConfig from './endpoints/fetch_messages';
 import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
 
@@ -51,7 +52,10 @@ export default class {
   time: Function;
   publish: Function;
   fire: Function;
+
   history: Function;
+  fetchMessages: Function;
+
   //
   channelGroups: Object;
   //
@@ -159,6 +163,7 @@ export default class {
     };
 
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
+    this.fetchMessages = endpointCreator.bind(this, modules, fetchMessagesEndpointConfig);
 
     this.time = timeEndpoint;
 
