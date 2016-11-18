@@ -15,7 +15,7 @@ export function validateParams(modules: ModulesInject) {
 
 export function getURL(modules: ModulesInject): string {
   let { config } = modules;
-  return '/v1/auth/audit/sub-key/' + config.subscribeKey;
+  return '/v2/auth/audit/sub-key/' + config.subscribeKey;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): number {

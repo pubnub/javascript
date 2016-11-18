@@ -43,8 +43,22 @@ function generatePNSDK(config: Config): string {
   return base;
 }
 
+function signRequest(modules, url, outgoingParams) {
+  let { config, crypto } = modules;
+
+  outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+  let signInput = config.subscribeKey + '\n' + config.publishKey + '\n' + url + '\n';
+  signInput += utils.signPamFromParams(outgoingParams);
+
+  let signature = crypto.HMACSHA256(signInput);
+  signature = signature.replace(/\+/g, '-');
+  signature = signature.replace(/\//g, '_');
+
+  outgoingParams.signature = signature;
+}
+
 export default function (modules, endpoint, ...args) {
-  let { networking, config, crypto } = modules;
+  let { networking, config } = modules;
   let callback = null;
   let incomingParams = {};
 
@@ -86,24 +100,7 @@ export default function (modules, endpoint, ...args) {
   }
 
   if (config.secretKey) {
-    outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
-    let signInput = config.subscribeKey + '\n' + config.publishKey + '\n';
-
-    if (endpoint.getOperation() === operationConstants.PNAccessManagerGrant) {
-      signInput += 'grant\n';
-    } else if (endpoint.getOperation() === operationConstants.PNAccessManagerAudit) {
-      signInput += 'audit\n';
-    } else {
-      signInput += url + '\n';
-    }
-
-    signInput += utils.signPamFromParams(outgoingParams);
-
-    let signature = crypto.HMACSHA256(signInput);
-    signature = signature.replace(/\+/g, '-');
-    signature = signature.replace(/\//g, '_');
-
-    outgoingParams.signature = signature;
+    signRequest(modules, url, outgoingParams);
   }
 
   let promiseComponent = null;

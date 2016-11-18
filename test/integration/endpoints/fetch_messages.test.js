@@ -79,7 +79,6 @@ describe('fetch messages endpoints', () => {
 
     pubnub.setCipherKey('cipherKey');
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
-      console.log(status, response);
       assert.equal(status.error, false);
       assert.deepEqual(response, {
         channels: {

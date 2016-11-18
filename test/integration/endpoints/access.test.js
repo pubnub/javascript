@@ -30,8 +30,8 @@ describe('access endpoints', () => {
 
   describe('#audit', () => {
     it('issues the correct RESTful request for channels', (done) => {
-      const scope = utils.createNock().get('/v1/auth/audit/sub-key/mySubscribeKey')
-      .query({ timestamp: 1317427200, channel: 'ch1', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: '4EgDD2LM2BO9GqEwlHDeSBbCM0muLh-Y1s1FY3FrRQI=' })
+      const scope = utils.createNock().get('/v2/auth/audit/sub-key/mySubscribeKey')
+      .query({ timestamp: 1317427200, channel: 'ch1', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'T7d76LD7SJJdhaljs8yku5cY04TvynsCVBs2D8FMF8Y=' })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
       pubnub.audit({ channel: 'ch1' }, (status, response) => {
@@ -54,8 +54,8 @@ describe('access endpoints', () => {
     });
 
     it('issues the correct RESTful request for channel groups', (done) => {
-      const scope = utils.createNock().get('/v1/auth/audit/sub-key/mySubscribeKey')
-      .query({ timestamp: 1317427200, 'channel-group': 'cg1', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'J9kaoNajCy6eMCGmL4Fs6LjePhhgkwL6UNW5lry2c4A=' })
+      const scope = utils.createNock().get('/v2/auth/audit/sub-key/mySubscribeKey')
+      .query({ timestamp: 1317427200, 'channel-group': 'cg1', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'P3xBKue_zoj23Kc0JcTDmeLO751R_bYtr74LFEyfwZM=' })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
       pubnub.audit({ channelGroup: 'cg1' }, (status, response) => {
@@ -78,8 +78,8 @@ describe('access endpoints', () => {
     });
 
     it('issues the correct RESTful request for keys', (done) => {
-      const scope = utils.createNock().get('/v1/auth/audit/sub-key/mySubscribeKey')
-      .query({ timestamp: 1317427200, auth: 'key1,key2', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'jax2fEP-dRB6kV-pYQGIOEYQJZ3rugoZuYDH-rxPyk4=' })
+      const scope = utils.createNock().get('/v2/auth/audit/sub-key/mySubscribeKey')
+      .query({ timestamp: 1317427200, auth: 'key1,key2', uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs/suchJavascript', signature: 'OlwW-JbL2_pnp9qLaCnQwc2oWAoybQYi4wqLOegc1Kg=' })
       .reply(200, '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}');
 
       pubnub.audit({ authKeys: ['key1', 'key2'] }, (status, response) => {
@@ -104,14 +104,14 @@ describe('access endpoints', () => {
 
   describe('#grant', () => {
     it('issues the correct RESTful request for channels', (done) => {
-      const scope = utils.createNock().get('/v1/auth/grant/sub-key/mySubscribeKey')
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey')
       .query({
         timestamp: 1317427200,
         channel: 'ch1,ch2',
         auth: 'key1,key2',
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-        signature: 'GorjdSX4ct8sUbAAbMqq0ighKvVud8L5CpD2Z-RDnSQ=',
+        signature: 'eHfy2MycQdZySF95iavsSftLDD0oG5umBKgTxHbMFwg=',
         r: 0,
         w: 0,
         m: 0
@@ -126,14 +126,14 @@ describe('access endpoints', () => {
     });
 
     it('issues the correct RESTful request for channels groups', (done) => {
-      const scope = utils.createNock().get('/v1/auth/grant/sub-key/mySubscribeKey')
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey')
       .query({
         timestamp: 1317427200,
         'channel-group': 'cg1,cg2',
         auth: 'key1,key2',
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-        signature: 'MiYApTnEe6n67rqlMgFiU4csLnu-XJWIB8aAHWuKLhY=',
+        signature: 'B4QZ4K5nd_eI0AT6JAw4Ubk57x87-Ze7jsihw-vV--A=',
         r: 1,
         w: 1,
         m: 0
@@ -148,14 +148,14 @@ describe('access endpoints', () => {
     });
 
     it('issues the correct RESTful request for channels groups w/ ttl', (done) => {
-      const scope = utils.createNock().get('/v1/auth/grant/sub-key/mySubscribeKey')
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey')
       .query({
         timestamp: 1317427200,
         'channel-group': 'cg1,cg2',
         auth: 'key1,key2',
         uuid: 'myUUID',
         pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-        signature: 'i4U3Cg3Sa5pCXAYOCGcqndwk_DZ1qyQc6J6xqT42uEc=',
+        signature: 'CAPs9l4jliNPnle-Tx7PjZCLTYQYg9CU9YKaiAYTuRQ=',
         r: 1,
         w: 1,
         m: 0,

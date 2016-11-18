@@ -4071,8 +4071,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.default = function (modules, endpoint) {
 	  var networking = modules.networking,
-	      config = modules.config,
-	      crypto = modules.crypto;
+	      config = modules.config;
 
 	  var callback = null;
 	  var incomingParams = {};
@@ -4115,24 +4114,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if (config.secretKey) {
-	    outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
-	    var signInput = config.subscribeKey + '\n' + config.publishKey + '\n';
-
-	    if (endpoint.getOperation() === _operations2.default.PNAccessManagerGrant) {
-	      signInput += 'grant\n';
-	    } else if (endpoint.getOperation() === _operations2.default.PNAccessManagerAudit) {
-	      signInput += 'audit\n';
-	    } else {
-	      signInput += url + '\n';
-	    }
-
-	    signInput += _utils2.default.signPamFromParams(outgoingParams);
-
-	    var signature = crypto.HMACSHA256(signInput);
-	    signature = signature.replace(/\+/g, '-');
-	    signature = signature.replace(/\//g, '_');
-
-	    outgoingParams.signature = signature;
+	    signRequest(modules, url, outgoingParams);
 	  }
 
 	  var promiseComponent = null;
@@ -4246,6 +4228,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	  base += '/' + config.getVersion();
 
 	  return base;
+	}
+
+	function signRequest(modules, url, outgoingParams) {
+	  var config = modules.config,
+	      crypto = modules.crypto;
+
+
+	  outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+	  var signInput = config.subscribeKey + '\n' + config.publishKey + '\n' + url + '\n';
+	  signInput += _utils2.default.signPamFromParams(outgoingParams);
+
+	  var signature = crypto.HMACSHA256(signInput);
+	  signature = signature.replace(/\+/g, '-');
+	  signature = signature.replace(/\//g, '_');
+
+	  outgoingParams.signature = signature;
 	}
 
 	module.exports = exports['default'];
@@ -5468,7 +5466,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function getURL(modules) {
 	  var config = modules.config;
 
-	  return '/v1/auth/audit/sub-key/' + config.subscribeKey;
+	  return '/v2/auth/audit/sub-key/' + config.subscribeKey;
 	}
 
 	function getRequestTimeout(_ref) {
@@ -5547,7 +5545,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function getURL(modules) {
 	  var config = modules.config;
 
-	  return '/v1/auth/grant/sub-key/' + config.subscribeKey;
+	  return '/v2/auth/grant/sub-key/' + config.subscribeKey;
 	}
 
 	function getRequestTimeout(_ref) {
