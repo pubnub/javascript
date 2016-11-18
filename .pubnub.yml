@@ -1,8 +1,19 @@
 name: javascript
-version: 4.2.5
+version: 4.3.0
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.3.0
+    date:
+    changes:
+      - type: improvement
+        text: bulk history expoed via pubnub.fetchMessages
+      - type: improvement
+        text: publish supports custom ttl interval
+      - type: improvement
+        text: v2 for audit and grant; no consumer facing changes.
+      - type: improvement
+        text: fixes for param validation on usage of promises
   - version: v4.2.5
     date:
     changes:

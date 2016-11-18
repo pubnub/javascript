@@ -1,4 +1,4 @@
-/*! 4.2.5 / Consumer  */
+/*! 4.3.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2756,7 +2756,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 		"name": "pubnub",
-		"version": "4.2.5",
+		"version": "4.3.0",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
