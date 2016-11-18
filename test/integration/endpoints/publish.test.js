@@ -22,6 +22,19 @@ describe('publish endpoints', () => {
     pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', authKey: 'myAuthKey' });
   });
 
+  describe('##validation', () => {
+    it('fails if channel is missing', (done) => {
+      const scope = utils.createNock().get('/publish/*')
+        .reply(200, '[1,"Sent","14647523059145592"]');
+
+      pubnub.publish({ message: { such: 'object' } }).catch((err) => {
+        assert.equal(scope.isDone(), false);
+        assert.equal(err.status.message, 'Missing Channel');
+        done();
+      });
+    });
+  });
+
   it('publishes a complex object via GET', (done) => {
     const scope = utils.createNock().get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
       .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', auth: 'myAuthKey' })

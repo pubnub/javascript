@@ -4074,6 +4074,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      config = modules.config;
 
 	  var callback = null;
+	  var promiseComponent = null;
 	  var incomingParams = {};
 
 	  if (endpoint.getOperation() === _operations2.default.PNTimeOperation || endpoint.getOperation() === _operations2.default.PNChannelGroupsOperation) {
@@ -4083,10 +4084,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    callback = arguments.length <= 3 ? undefined : arguments[3];
 	  }
 
+	  if (typeof Promise !== 'undefined' && !callback) {
+	    promiseComponent = _utils2.default.createPromise();
+	  }
+
 	  var validationResult = endpoint.validateParams(modules, incomingParams);
 
 	  if (validationResult) {
-	    callback(createValidationError(validationResult));
+	    if (callback) {
+	      return callback(createValidationError(validationResult));
+	    } else if (promiseComponent) {
+	      promiseComponent.reject(new PubNubError('Validation failed, check status for details', createValidationError(validationResult)));
+	      return promiseComponent.promise;
+	    }
 	    return;
 	  }
 
@@ -4115,12 +4125,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (config.secretKey) {
 	    signRequest(modules, url, outgoingParams);
-	  }
-
-	  var promiseComponent = null;
-
-	  if (typeof Promise !== 'undefined' && !callback) {
-	    promiseComponent = _utils2.default.createPromise();
 	  }
 
 	  var onResponse = function onResponse(status, payload) {

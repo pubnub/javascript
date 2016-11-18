@@ -60,6 +60,7 @@ function signRequest(modules, url, outgoingParams) {
 export default function (modules, endpoint, ...args) {
   let { networking, config } = modules;
   let callback = null;
+  let promiseComponent = null;
   let incomingParams = {};
 
   if (endpoint.getOperation() === operationConstants.PNTimeOperation || endpoint.getOperation() === operationConstants.PNChannelGroupsOperation) {
@@ -69,10 +70,20 @@ export default function (modules, endpoint, ...args) {
     callback = args[1];
   }
 
+  // bridge in Promise support.
+  if (typeof Promise !== 'undefined' && !callback) {
+    promiseComponent = utils.createPromise();
+  }
+
   let validationResult = endpoint.validateParams(modules, incomingParams);
 
   if (validationResult) {
-    callback(createValidationError(validationResult));
+    if (callback) {
+      return callback(createValidationError(validationResult));
+    } else if (promiseComponent) {
+      promiseComponent.reject(new PubNubError('Validation failed, check status for details', createValidationError(validationResult)));
+      return promiseComponent.promise;
+    }
     return;
   }
 
@@ -101,13 +112,6 @@ export default function (modules, endpoint, ...args) {
 
   if (config.secretKey) {
     signRequest(modules, url, outgoingParams);
-  }
-
-  let promiseComponent = null;
-
-  // bridge in Promise support.
-  if (typeof Promise !== 'undefined' && !callback) {
-    promiseComponent = utils.createPromise();
   }
 
   let onResponse = (status: StatusAnnouncement, payload: Object) => {
