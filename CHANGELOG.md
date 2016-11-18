@@ -1,4 +1,26 @@
 
+## [v4.3.0](https://github.com/pubnub/javascript/tree/v4.3.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.5...v4.3.0)
+
+
+- ⭐bulk history exposed via pubnub.fetchMessages
+
+
+
+- ⭐publish supports custom ttl interval
+
+
+
+- ⭐v2 for audit and grant; no consumer facing changes.
+
+
+
+- ⭐fixes for param validation on usage of promises
+
+
+
 ## [v4.2.5](https://github.com/pubnub/javascript/tree/v4.2.5)
 
 

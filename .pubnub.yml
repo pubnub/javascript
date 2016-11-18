@@ -7,7 +7,7 @@ changelog:
     date:
     changes:
       - type: improvement
-        text: bulk history expoed via pubnub.fetchMessages
+        text: bulk history exposed via pubnub.fetchMessages
       - type: improvement
         text: publish supports custom ttl interval
       - type: improvement
