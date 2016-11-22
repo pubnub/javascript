@@ -72,7 +72,12 @@ export default class {
   subscribe: Function;
   unsubscribe: Function;
   unsubscribeAll: Function;
+
+  disconnect: Function;
   reconnect: Function;
+
+
+  destroy: Function;
   stop: Function;
 
   getSubscribedChannels: Function;
@@ -105,15 +110,15 @@ export default class {
     const networking = new Networking({ config, crypto, sendBeacon });
 
     let modules = { config, networking, crypto };
-    const listenerManager = this._listenerManager = new ListenerManager();
 
-    // new
     const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
     const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
     const heartbeatEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
     const setStateEndpoint = endpointCreator.bind(this, modules, presenceSetStateConfig);
     const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
-    //
+
+    // managers
+    const listenerManager = this._listenerManager = new ListenerManager();
 
     const subscriptionManager = new SubscriptionManager({
       timeEndpoint,
@@ -123,7 +128,7 @@ export default class {
       subscribeEndpoint,
       crypto: modules.crypto,
       config: modules.config,
-      listenerManager,
+      listenerManager
     });
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
@@ -170,11 +175,17 @@ export default class {
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-    this.stop = () => {
+
+    this.destroy = () => {
       subscriptionManager.unsubscribeAll();
       subscriptionManager.disconnect();
     };
+
+    // --- deprecated  ------------------
+    this.stop = this.destroy; // --------
+    // --- deprecated  ------------------
 
     this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
 
@@ -199,6 +210,23 @@ export default class {
   getVersion(): String {
     return packageJSON.version;
   }
+
+  // network hooks to indicate network changes
+  __networkDownDetected() {
+    this._listenerManager.announceNetworkDown();
+
+    if (this._config.restore) {
+      this.disconnect();
+    } else {
+      this.destroy();
+    }
+  }
+
+  __networkUpDetected() {
+    this._listenerManager.announceNetworkUp();
+    this.reconnect();
+  }
+
 
   static generateUUID(): string {
     return uuidGenerator.v4();

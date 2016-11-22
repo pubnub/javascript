@@ -113,13 +113,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, setup));
 
 	    window.addEventListener('offline', function () {
-	      _this._listenerManager.announceNetworkDown();
-	      _this.stop();
+	      _this.__networkDownDetected();
 	    });
 
 	    window.addEventListener('online', function () {
-	      _this._listenerManager.announceNetworkUp();
-	      _this.reconnect();
+	      _this.__networkUpDetected();
 	    });
 	    return _this;
 	  }
@@ -293,7 +291,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var networking = new _networking2.default({ config: config, crypto: crypto, sendBeacon: sendBeacon });
 
 	    var modules = { config: config, networking: networking, crypto: crypto };
-	    var listenerManager = this._listenerManager = new _listener_manager2.default();
 
 	    var timeEndpoint = _endpoint2.default.bind(this, modules, timeEndpointConfig);
 	    var leaveEndpoint = _endpoint2.default.bind(this, modules, presenceLeaveEndpointConfig);
@@ -301,6 +298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var setStateEndpoint = _endpoint2.default.bind(this, modules, presenceSetStateConfig);
 	    var subscribeEndpoint = _endpoint2.default.bind(this, modules, subscribeEndpointConfig);
 
+	    var listenerManager = this._listenerManager = new _listener_manager2.default();
 
 	    var subscriptionManager = new _subscription_manager2.default({
 	      timeEndpoint: timeEndpoint,
@@ -355,11 +353,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+	    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-	    this.stop = function () {
+
+	    this.destroy = function () {
 	      subscriptionManager.unsubscribeAll();
 	      subscriptionManager.disconnect();
 	    };
+
+	    this.stop = this.destroy;
 
 	    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
 
@@ -383,6 +385,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function getVersion() {
 	      return _package2.default.version;
 	    }
+	  }, {
+	    key: '__networkDownDetected',
+	    value: function __networkDownDetected() {
+	      this._listenerManager.announceNetworkDown();
+
+	      if (this._config.restore) {
+	        this.disconnect();
+	      } else {
+	        this.destroy();
+	      }
+	    }
+	  }, {
+	    key: '__networkUpDetected',
+	    value: function __networkUpDetected() {
+	      this._listenerManager.announceNetworkUp();
+	      this.reconnect();
+	    }
 	  }], [{
 	    key: 'generateUUID',
 	    value: function generateUUID() {
@@ -402,11 +421,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	//     uuid.js
-	//
-	//     Copyright (c) 2010-2012 Robert Kieffer
-	//     MIT License - http://opensource.org/licenses/mit-license.php
-
 	// Unique ID creation requires a high quality random # generator.  We feature
 	// detect to determine the best RNG source, normalizing to a function that
 	// returns 128-bits of randomness, since that's what's usually required
@@ -415,33 +429,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Maps for number <-> hex string conversion
 	var _byteToHex = [];
 	var _hexToByte = {};
-	for (var i = 0; i < 256; i++) {
+	for (var i = 0; i < 256; ++i) {
 	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
 	  _hexToByte[_byteToHex[i]] = i;
 	}
 
-	// **`parse()` - Parse a UUID into it's component bytes**
-	function parse(s, buf, offset) {
-	  var i = (buf && offset) || 0, ii = 0;
-
-	  buf = buf || [];
-	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
-	    if (ii < 16) { // Don't overflow!
-	      buf[i + ii++] = _hexToByte[oct];
-	    }
-	  });
-
-	  // Zero out remaining bytes if string was short
-	  while (ii < 16) {
-	    buf[i + ii++] = 0;
-	  }
-
-	  return buf;
-	}
-
-	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
-	function unparse(buf, offset) {
-	  var i = offset || 0, bth = _byteToHex;
+	function buff_to_string(buf, offset) {
+	  var i = offset || 0;
+	  var bth = _byteToHex;
 	  return  bth[buf[i++]] + bth[buf[i++]] +
 	          bth[buf[i++]] + bth[buf[i++]] + '-' +
 	          bth[buf[i++]] + bth[buf[i++]] + '-' +
@@ -541,11 +536,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // `node`
 	  var node = options.node || _nodeId;
-	  for (var n = 0; n < 6; n++) {
+	  for (var n = 0; n < 6; ++n) {
 	    b[i + n] = node[n];
 	  }
 
-	  return buf ? buf : unparse(b);
+	  return buf ? buf : buff_to_string(b);
 	}
 
 	// **`v4()` - Generate random UUID**
@@ -569,20 +564,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Copy bytes to buffer, if provided
 	  if (buf) {
-	    for (var ii = 0; ii < 16; ii++) {
+	    for (var ii = 0; ii < 16; ++ii) {
 	      buf[i + ii] = rnds[ii];
 	    }
 	  }
 
-	  return buf || unparse(rnds);
+	  return buf || buff_to_string(rnds);
 	}
 
 	// Export public API
 	var uuid = v4;
 	uuid.v1 = v1;
 	uuid.v4 = v4;
-	uuid.parse = parse;
-	uuid.unparse = unparse;
 
 	module.exports = uuid;
 
@@ -2596,6 +2589,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.origin = setup.origin || 'pubsub.pubnub.com';
 	    this.secure = setup.ssl || false;
+	    this.restore = setup.restore || false;
 
 	    if (typeof location !== 'undefined' && location.protocol === 'https:') {
 	      this.secure = true;
@@ -2783,7 +2777,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		],
 		"dependencies": {
 			"superagent": "^2.3.0",
-			"uuid": "^2.0.3"
+			"uuid": "^3.0.0"
 		},
 		"noAnalyze": false,
 		"devDependencies": {
@@ -2796,7 +2790,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"babel-preset-es2015": "^6.16.0",
 			"babel-register": "^6.16.3",
 			"chai": "^3.5.0",
-			"eslint-config-airbnb": "^12.0.0",
+			"eslint-config-airbnb": "^13.0.0",
 			"eslint-plugin-flowtype": "^2.19.0",
 			"eslint-plugin-import": "^2.2.0",
 			"eslint-plugin-mocha": "^4.6.0",

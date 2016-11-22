@@ -96,6 +96,12 @@ export default class {
   */
   requestMessageCountThreshold: number;
 
+  /*
+    Restore subscription list on disconnection.
+   */
+  restore: boolean;
+
+
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
 
@@ -112,6 +118,7 @@ export default class {
 
     this.origin = setup.origin || 'pubsub.pubnub.com';
     this.secure = setup.ssl || false;
+    this.restore = setup.restore || false;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
