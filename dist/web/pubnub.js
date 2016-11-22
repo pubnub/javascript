@@ -1,4 +1,4 @@
-/*! 4.3.0 / Consumer  */
+/*! 4.3.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2750,7 +2750,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 		"name": "pubnub",
-		"version": "4.3.0",
+		"version": "4.3.1",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"bin": {},
@@ -2810,6 +2810,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"gulp-uglify": "^2.0.0",
 			"imports-loader": "^0.6.5",
 			"isparta": "^4.0.0",
+			"js-yaml": "^3.7.0",
 			"json-loader": "^0.5.4",
 			"karma": "^1.3.0",
 			"karma-babel-preprocessor": "^6.0.1",

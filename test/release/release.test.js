@@ -3,17 +3,19 @@
 let assert = require('assert');
 let fs = require('fs');
 let path = require('path');
+let yaml = require('js-yaml');
 
 let packageJSON = require('../../package.json');
 let bowerJSON = require('../../bower.json');
 
-let readMe = fs.readFileSync(path.resolve(__dirname, '../..//README.md'), 'UTF-8');
+let pubnubyml = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, '../../.pubnub.yml'), 'utf8'));
+
+let readMe = fs.readFileSync(path.resolve(__dirname, '../../README.md'), 'UTF-8');
 
 describe('release should be consistent', () => {
-  it('with a matching bower and npm module', () => {
-    assert.equal(packageJSON.version, bowerJSON.version);
+  it('with a matching pubnubyml and npm module', () => {
+    assert.equal(packageJSON.version, pubnubyml.version);
   });
-
 
   it('with bower valid entry point', () => {
     assert.equal(bowerJSON.main, 'dist/web/pubnub.min.js');

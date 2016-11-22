@@ -1,4 +1,14 @@
 
+## [v4.3.1](https://github.com/pubnub/javascript/tree/v4.3.1)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.0...v4.3.1)
+
+
+- ⭐SDK now supports the restore config to allow message catch-up
+
+
+
 ## [v4.3.0](https://github.com/pubnub/javascript/tree/v4.3.0)
 
 
