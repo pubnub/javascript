@@ -1,5 +1,7 @@
 /* global describe, it, __dirname */
 
+import PubNub from '../../lib/node/index';
+
 let assert = require('assert');
 let fs = require('fs');
 let path = require('path');
@@ -23,6 +25,10 @@ describe('release should be consistent', () => {
 
   it('with npm valid entry point', () => {
     assert.equal(packageJSON.main, './lib/node/index.js');
+  });
+
+  it('with correct version in code', () => {
+    assert.equal(packageJSON.version, new PubNub({}).getVersion());
   });
 
   it('with updated readme', () => {

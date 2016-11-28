@@ -37,7 +37,6 @@ import * as fetchMessagesEndpointConfig from './endpoints/fetch_messages';
 import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
 
-import packageJSON from '../../package.json';
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
@@ -207,8 +206,8 @@ export default class {
   }
 
 
-  getVersion(): String {
-    return packageJSON.version;
+  getVersion(): string {
+    return this._config.getVersion();
   }
 
   // network hooks to indicate network changes

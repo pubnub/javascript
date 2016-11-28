@@ -3,7 +3,6 @@
 
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface } from '../flow_interfaces';
-import packageJSON from '../../../package.json';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -187,7 +186,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return packageJSON.version;
+    return '4.3.1';
   }
 
   _decideUUID(providedUUID: string): string {
