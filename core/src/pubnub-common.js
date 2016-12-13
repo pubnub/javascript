@@ -36,13 +36,17 @@ function unique() {
 var nextorigin = (function () {
   var max = 20;
   var ori = Math.floor(Math.random() * max);
-  return function (origin, failover) {
-    return origin.indexOf('pubsub.') > 0
-      && origin.replace(
-        'pubsub', 'ps' + (
-          failover ? utils.generateUUID().split('-')[0] :
-            (++ori < max ? ori : ori = 1)
-        )) || origin;
+  return function (origin) {
+    var protocol = origin.split('://')[0];
+    var host = origin.split('://')[1];
+
+    if (host.match('^ps')) {
+      return protocol + '://' + host.replace('ps', 'ps' + (++ori < max ? ori : ori = 1));
+    } else if (host.match('^pubsub')) {
+      return protocol + '://' + host.replace('pubsub', 'ps' + (++ori < max ? ori : ori = 1));
+    } else {
+      return origin;
+    }
   };
 })();
 
@@ -1294,8 +1298,8 @@ function PN_API(setup) {
           utils.timeout(CONNECT, windowing);
         } else {
           // New Origin on Failed Connection
-          STD_ORIGIN = nextorigin(ORIGIN, 1);
-          SUB_ORIGIN = nextorigin(ORIGIN, 1);
+          STD_ORIGIN = nextorigin(ORIGIN);
+          SUB_ORIGIN = nextorigin(ORIGIN);
 
           // Re-test Connection
           utils.timeout(function () {

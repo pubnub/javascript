@@ -1,4 +1,4 @@
-/*! 3.16.3 / parse */
+/*! 3.16.5 / parse */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("crypto"), require("buffer"));
@@ -318,13 +318,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	var nextorigin = (function () {
 	  var max = 20;
 	  var ori = Math.floor(Math.random() * max);
-	  return function (origin, failover) {
-	    return origin.indexOf('pubsub.') > 0
-	      && origin.replace(
-	        'pubsub', 'ps' + (
-	          failover ? utils.generateUUID().split('-')[0] :
-	            (++ori < max ? ori : ori = 1)
-	        )) || origin;
+	  return function (origin) {
+	    var protocol = origin.split('://')[0];
+	    var host = origin.split('://')[1];
+
+	    if (host.match('^ps')) {
+	      return protocol + '://' + host.replace('ps', 'ps' + (++ori < max ? ori : ori = 1));
+	    } else if (host.match('^pubsub')) {
+	      return protocol + '://' + host.replace('pubsub', 'ps' + (++ori < max ? ori : ori = 1));
+	    } else {
+	      return origin;
+	    }
 	  };
 	})();
 
@@ -1576,8 +1580,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          utils.timeout(CONNECT, windowing);
 	        } else {
 	          // New Origin on Failed Connection
-	          STD_ORIGIN = nextorigin(ORIGIN, 1);
-	          SUB_ORIGIN = nextorigin(ORIGIN, 1);
+	          STD_ORIGIN = nextorigin(ORIGIN);
+	          SUB_ORIGIN = nextorigin(ORIGIN);
 
 	          // Re-test Connection
 	          utils.timeout(function () {
@@ -2335,7 +2339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 		"name": "pubnub",
 		"preferGlobal": false,
-		"version": "3.16.3",
+		"version": "3.16.5",
 		"author": "PubNub <support@pubnub.com>",
 		"description": "Publish & Subscribe Real-time Messaging with PubNub",
 		"contributors": [
