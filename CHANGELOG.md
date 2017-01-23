@@ -1,4 +1,48 @@
 
+## [v4.4.0](https://github.com/pubnub/javascript/tree/v4.4.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.3...v4.4.0)
+
+
+- ⭐upgrade dependencies; fix up linting.
+
+
+
+- ⭐handle network outage cases for correct reporting.
+
+
+
+## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.3...v4.3.3)
+
+
+- ⭐bump version after v3 release.
+
+
+
+## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.2...v4.3.3)
+
+
+- ⭐bump version after v3 release.
+
+
+
+## [v4.3.2](https://github.com/pubnub/javascript/tree/v4.3.2)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.1...v4.3.2)
+
+
+- ⭐removes bundling of package.json into the dist file
+
+
+
 ## [v4.3.1](https://github.com/pubnub/javascript/tree/v4.3.1)
 
 
