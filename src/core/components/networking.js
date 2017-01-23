@@ -123,6 +123,10 @@ export default class {
 
   _detectErrorCategory(err: Object): string {
     if (err.code === 'ENOTFOUND') return categoryConstants.PNNetworkIssuesCategory;
+    if (err.code === 'ECONNREFUSED') return categoryConstants.PNNetworkIssuesCategory;
+    if (err.code === 'ECONNRESET') return categoryConstants.PNNetworkIssuesCategory;
+    if (err.code === 'EAI_AGAIN') return categoryConstants.PNNetworkIssuesCategory;
+
     if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) return categoryConstants.PNNetworkIssuesCategory;
     if (err.timeout) return categoryConstants.PNTimeoutCategory;
 
