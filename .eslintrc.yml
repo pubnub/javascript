@@ -7,7 +7,6 @@ rules:
   mocha/no-exclusive-tests: 2
   flowtype/require-valid-file-annotation: 2
 
-  prefer-template: 0
   no-else-return: 0
   max-len: 0
   new-cap: 0
@@ -20,3 +19,4 @@ rules:
   no-prototype-builtins: 0
   import/no-extraneous-dependencies: 0
   class-methods-use-this: 0
+  no-await-in-loop: 0

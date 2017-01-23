@@ -20,7 +20,7 @@ export function validateParams(modules: ModulesInject, incomingParams: RemoveCha
 export function getURL(modules: ModulesInject, incomingParams: RemoveChannelParams): string {
   let { channelGroup } = incomingParams;
   let { config } = modules;
-  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group/' + utils.encodeString(channelGroup);
+  return `/v1/channel-registration/sub-key/${config.subscribeKey}/channel-group/${utils.encodeString(channelGroup)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

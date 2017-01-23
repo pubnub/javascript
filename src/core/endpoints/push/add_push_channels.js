@@ -20,7 +20,7 @@ export function validateParams(modules: ModulesInject, incomingParams: ModifyDev
 export function getURL(modules: ModulesInject, incomingParams: ModifyDeviceArgs): string {
   let { device } = incomingParams;
   let { config } = modules;
-  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device;
+  return `/v1/push/sub-key/${config.subscribeKey}/devices/${device}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

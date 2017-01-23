@@ -157,7 +157,7 @@ export default class {
   setCipherKey(val: string): this { this.cipherKey = val; return this; }
   getUUID(): string { return this.UUID; }
   setUUID(val: string): this {
-    if (this._db && this._db.set) this._db.set(this.subscribeKey + 'uuid', val);
+    if (this._db && this._db.set) this._db.set(`${this.subscribeKey}uuid`, val);
     this.UUID = val;
     return this;
   }
@@ -196,8 +196,8 @@ export default class {
     }
 
     // if the database module is enabled and we have something saved, use this.
-    if (this._db && this._db.get && this._db.get(this.subscribeKey + 'uuid')) {
-      return this._db.get(this.subscribeKey + 'uuid');
+    if (this._db && this._db.get && this._db.get(`${this.subscribeKey}uuid`)) {
+      return this._db.get(`${this.subscribeKey}uuid`);
     }
 
     // randomize the UUID and push to storage

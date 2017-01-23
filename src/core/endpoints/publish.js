@@ -37,13 +37,13 @@ export function getURL(modules: ModulesInject, incomingParams: PublishArguments)
   const { config } = modules;
   const { channel, message } = incomingParams;
   let stringifiedPayload = prepareMessagePayload(modules, message);
-  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + utils.encodeString(channel) + '/0/' + utils.encodeString(stringifiedPayload);
+  return `/publish/${config.publishKey}/${config.subscribeKey}/0/${utils.encodeString(channel)}/0/${utils.encodeString(stringifiedPayload)}`;
 }
 
 export function postURL(modules: ModulesInject, incomingParams: PublishArguments): string {
   const { config } = modules;
   const { channel } = incomingParams;
-  return '/publish/' + config.publishKey + '/' + config.subscribeKey + '/0/' + utils.encodeString(channel) + '/0';
+  return `/publish/${config.publishKey}/${config.subscribeKey}/0/${utils.encodeString(channel)}/0`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

@@ -241,10 +241,10 @@ export default class {
     let channelGroups = [];
 
     Object.keys(this._channels).forEach(channel => channels.push(channel));
-    Object.keys(this._presenceChannels).forEach(channel => channels.push(channel + '-pnpres'));
+    Object.keys(this._presenceChannels).forEach(channel => channels.push(`${channel}-pnpres`));
 
     Object.keys(this._channelGroups).forEach(channelGroup => channelGroups.push(channelGroup));
-    Object.keys(this._presenceChannelGroups).forEach(channelGroup => channelGroups.push(channelGroup + '-pnpres'));
+    Object.keys(this._presenceChannelGroups).forEach(channelGroup => channelGroups.push(`${channelGroup}-pnpres`));
 
     if (channels.length === 0 && channelGroups.length === 0) {
       return;

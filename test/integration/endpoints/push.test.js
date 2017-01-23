@@ -25,7 +25,7 @@ describe('push endpoints', () => {
   describe('adding channels to device', () => {
     it('supports addition of multiple channels for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
-        .query({ add: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
+        .query({ add: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
@@ -37,7 +37,7 @@ describe('push endpoints', () => {
 
     it('supports addition of multiple channels for microsoft', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
-        .query({ add: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
+        .query({ add: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'mpns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
@@ -49,7 +49,7 @@ describe('push endpoints', () => {
 
     it('supports addition of multiple channels for google', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
-        .query({ add: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
+        .query({ add: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'gcm', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
@@ -63,7 +63,7 @@ describe('push endpoints', () => {
   describe('listing channels for device', () => {
     it('supports channel listing for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/coolDevice')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'apns' }, (status, response) => {
@@ -76,7 +76,7 @@ describe('push endpoints', () => {
 
     it('supports channel listing for microsoft', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/coolDevice')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'mpns', uuid: 'myUUID' })
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'mpns' }, (status, response) => {
@@ -89,7 +89,7 @@ describe('push endpoints', () => {
 
     it('supports channel listing for google', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/coolDevice')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'gcm', uuid: 'myUUID' })
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'gcm' }, (status, response) => {
@@ -104,7 +104,7 @@ describe('push endpoints', () => {
   describe('supports deletion of channels', () => {
     it('supports removal of multiple channels for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
-        .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
+        .query({ remove: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
@@ -116,7 +116,7 @@ describe('push endpoints', () => {
 
     it('supports removal of multiple channels for microsoft', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
-        .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
+        .query({ remove: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'mpns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
@@ -128,7 +128,7 @@ describe('push endpoints', () => {
 
     it('supports removal of multiple channels for google', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
-        .query({ remove: 'a,b', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
+        .query({ remove: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'gcm', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm', uuid: 'myUUID' }, (status) => {
@@ -142,7 +142,7 @@ describe('push endpoints', () => {
   describe('supports removal of device', () => {
     it('supports removal of device for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'apns', uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'apns' }, (status) => {
@@ -154,7 +154,7 @@ describe('push endpoints', () => {
 
     it('supports removal of device for microsoft', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'mpns', uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'mpns', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'mpns' }, (status) => {
@@ -166,7 +166,7 @@ describe('push endpoints', () => {
 
     it('supports removal of device for google', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), type: 'gcm', uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'gcm', uuid: 'myUUID' })
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {

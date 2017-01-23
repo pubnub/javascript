@@ -32,7 +32,7 @@ describe('release should be consistent', () => {
   });
 
   it('with updated readme', () => {
-    assert(readMe.indexOf('https://cdn.pubnub.com/sdk/javascript/pubnub.' + packageJSON.version + '.js') > 1);
-    assert(readMe.indexOf('https://cdn.pubnub.com/sdk/javascript/pubnub.' + packageJSON.version + '.min.js') > 1);
+    assert(readMe.indexOf(`https://cdn.pubnub.com/sdk/javascript/pubnub.${packageJSON.version}.js`) > 1);
+    assert(readMe.indexOf(`https://cdn.pubnub.com/sdk/javascript/pubnub.${packageJSON.version}.min.js`) > 1);
   });
 });

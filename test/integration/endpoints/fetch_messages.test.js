@@ -24,7 +24,7 @@ describe('fetch messages endpoints', () => {
 
   it('supports payload', (done) => {
     const scope = utils.createNock().get('/v3/history/sub-key/mySubKey/channel/ch1%2Cch2')
-      .query({ max: '10', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ max: '10', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
       .reply(200, '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }');
 
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
@@ -74,7 +74,7 @@ describe('fetch messages endpoints', () => {
 
   it('supports encrypted payload', (done) => {
     const scope = utils.createNock().get('/v3/history/sub-key/mySubKey/channel/ch1%2Cch2')
-      .query({ max: '10', pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ max: '10', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
       .reply(200, '{ "channels": { "ch1": [{"message":"zFJeF9BVABL80GUiQEBjLg==","timetoken":"11"}, {"message":"zFJeF9BVABL80GUiQEBjLg==","timetoken":"12"}], "ch2": [{"message":"HIq4MTi9nk/KEYlHOKpMCaH78ZXppGynDHrgY9nAd3s=","timetoken":"21"}, {"message":"HIq4MTi9nk/KEYlHOKpMCaH78ZXppGynDHrgY9nAd3s=","timetoken":"22"}] } }');
 
     pubnub.setCipherKey('cipherKey');

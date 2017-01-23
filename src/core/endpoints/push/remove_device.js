@@ -19,7 +19,7 @@ export function validateParams(modules: ModulesInject, incomingParams: RemoveDev
 export function getURL(modules: ModulesInject, incomingParams: RemoveDeviceArgs): string {
   let { device } = incomingParams;
   let { config } = modules;
-  return '/v1/push/sub-key/' + config.subscribeKey + '/devices/' + device + '/remove';
+  return `/v1/push/sub-key/${config.subscribeKey}/devices/${device}/remove`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): number {

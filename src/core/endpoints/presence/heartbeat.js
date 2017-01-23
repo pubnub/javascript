@@ -18,7 +18,7 @@ export function getURL(modules: ModulesInject, incomingParams: HeartbeatArgument
   let { config } = modules;
   let { channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + utils.encodeString(stringifiedChannels) + '/heartbeat';
+  return `/v2/presence/sub-key/${config.subscribeKey}/channel/${utils.encodeString(stringifiedChannels)}/heartbeat`;
 }
 
 export function isAuthSupported() {

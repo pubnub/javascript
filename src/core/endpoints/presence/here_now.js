@@ -17,11 +17,11 @@ export function validateParams(modules: ModulesInject) {
 export function getURL(modules: ModulesInject, incomingParams: HereNowArguments): string {
   let { config } = modules;
   let { channels = [], channelGroups = [] } = incomingParams;
-  let baseURL = '/v2/presence/sub-key/' + config.subscribeKey;
+  let baseURL = `/v2/presence/sub-key/${config.subscribeKey}`;
 
   if (channels.length > 0 || channelGroups.length > 0) {
     let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-    baseURL += '/channel/' + utils.encodeString(stringifiedChannels);
+    baseURL += `/channel/${utils.encodeString(stringifiedChannels)}`;
   }
 
   return baseURL;

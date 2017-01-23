@@ -25,7 +25,7 @@ describe('setting state operation', () => {
   describe('#setState', () => {
     it('supports updating for one channel', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/uuid/myUUID/data')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: '{"hello":"there"}' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"hello":"there"}' })
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
@@ -39,7 +39,7 @@ describe('setting state operation', () => {
 
     it('supports updating for multiple channels', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/data')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: '{"hello":"there"}' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"hello":"there"}' })
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
@@ -53,7 +53,7 @@ describe('setting state operation', () => {
 
     it('supports updating for one channel group', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/uuid/myUUID/data')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: '{"hello":"there"}', 'channel-group': 'cg1' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"hello":"there"}', 'channel-group': 'cg1' })
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
@@ -67,7 +67,7 @@ describe('setting state operation', () => {
 
     it('supports updating for multiple channel group', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/uuid/myUUID/data')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: '{"hello":"there"}', 'channel-group': 'cg1,cg2' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"hello":"there"}', 'channel-group': 'cg1,cg2' })
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
 
@@ -81,7 +81,7 @@ describe('setting state operation', () => {
 
     it('supports promises', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/uuid/myUUID/data')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', state: '{"hello":"there"}' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"hello":"there"}' })
         .reply(200, '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online" }, "service": "Presence"}');
 
       let promise = pubnub.setState({ channels: ['ch1'], state: { hello: 'there' } });

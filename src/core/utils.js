@@ -7,7 +7,7 @@ function objectToList(o: Object): Array<any> {
 }
 
 function encodeString(input: string): string {
-  return encodeURIComponent(input).replace(/[!~*'()]/g, x => '%' + x.charCodeAt(0).toString(16).toUpperCase());
+  return encodeURIComponent(input).replace(/[!~*'()]/g, x => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
 }
 
 function objectToListSorted(o: Object): Array<any> {
@@ -16,7 +16,7 @@ function objectToListSorted(o: Object): Array<any> {
 
 function signPamFromParams(params: Object): string {
   let l = objectToListSorted(params);
-  return l.map(paramKey => paramKey + '=' + encodeString(params[paramKey])).join('&');
+  return l.map(paramKey => `${paramKey}=${encodeString(params[paramKey])}`).join('&');
 }
 
 function endsWith(searchString: string, suffix: string): boolean {

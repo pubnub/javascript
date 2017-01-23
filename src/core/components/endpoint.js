@@ -32,13 +32,13 @@ function decideURL(endpoint, modules, incomingParams) {
 }
 
 function generatePNSDK(config: Config): string {
-  let base = 'PubNub-JS-' + config.sdkFamily;
+  let base = `PubNub-JS-${config.sdkFamily}`;
 
   if (config.partnerId) {
-    base += '-' + config.partnerId;
+    base += `-${config.partnerId}`;
   }
 
-  base += '/' + config.getVersion();
+  base += `/${config.getVersion()}`;
 
   return base;
 }
@@ -47,7 +47,7 @@ function signRequest(modules, url, outgoingParams) {
   let { config, crypto } = modules;
 
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
-  let signInput = config.subscribeKey + '\n' + config.publishKey + '\n' + url + '\n';
+  let signInput = `${config.subscribeKey}\n${config.publishKey}\n${url}\n`;
   signInput += utils.signPamFromParams(outgoingParams);
 
   let signature = crypto.HMACSHA256(signInput);

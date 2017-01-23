@@ -64,7 +64,7 @@ export default class {
 
     newSubDomain = this._currentSubDomain.toString();
 
-    return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
+    return this._providedFQDN.replace('pubsub', `ps${newSubDomain}`);
   }
 
   // origin operations
@@ -149,7 +149,7 @@ export default class {
     let timestamp = new Date().toISOString();
     let logger = _pickLogger();
     logger.log('<<<<<');                                               // eslint-disable-line no-console
-    logger.log('[' + timestamp + ']', '\n', req.url, '\n', req.qs);    // eslint-disable-line no-console
+    logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs);    // eslint-disable-line no-console
     logger.log('-----');                                               // eslint-disable-line no-console
 
     req.on('response', (res) => {
@@ -158,7 +158,7 @@ export default class {
       let timestampDone = new Date().toISOString();
 
       logger.log('>>>>>>');                                                                                  // eslint-disable-line no-console
-      logger.log('[' + timestampDone + ' / ' + elapsed + ']', '\n', req.url, '\n', req.qs, '\n', res.text);  // eslint-disable-line no-console
+      logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text);  // eslint-disable-line no-console
       logger.log('-----');                                                                                   // eslint-disable-line no-console
     });
   }

@@ -30,7 +30,7 @@ export function validateParams(modules: ModulesInject, incomingParams: FetchHist
 export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
   let { channel } = incomingParams;
   let { config } = modules;
-  return '/v2/history/sub-key/' + config.subscribeKey + '/channel/' + utils.encodeString(channel);
+  return `/v2/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): boolean {

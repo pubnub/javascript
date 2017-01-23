@@ -32,7 +32,7 @@ export function getURL(modules: ModulesInject, incomingParams: FetchMessagesArgu
   let { config } = modules;
 
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return '/v3/history/sub-key/' + config.subscribeKey + '/channel/' + utils.encodeString(stringifiedChannels);
+  return `/v3/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(stringifiedChannels)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): boolean {

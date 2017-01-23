@@ -15,7 +15,7 @@ export function validateParams(modules: ModulesInject) {
 
 export function getURL(modules: ModulesInject): string {
   let { config } = modules;
-  return '/v1/channel-registration/sub-key/' + config.subscribeKey + '/channel-group';
+  return `/v1/channel-registration/sub-key/${config.subscribeKey}/channel-group`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

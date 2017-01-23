@@ -28,7 +28,7 @@ describe('#components/networking', () => {
   describe('supports user-agent generation with partner', () => {
     it('returns a correct user-agent object', (done) => {
       utils.createNock().get('/time/0')
-        .query({ uuid: 'myUUID', pnsdk: 'PubNub-JS-Nodejs-alligator/' + packageJSON.version })
+        .query({ uuid: 'myUUID', pnsdk: `PubNub-JS-Nodejs-alligator/${packageJSON.version}` })
         .reply(200, [14570763868573725]);
 
       pubnubPartner.time((status) => {

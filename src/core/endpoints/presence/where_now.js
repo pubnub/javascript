@@ -16,7 +16,7 @@ export function validateParams(modules: ModulesInject) {
 export function getURL(modules: ModulesInject, incomingParams: WhereNowArguments): string {
   let { config } = modules;
   let { uuid = config.UUID } = incomingParams;
-  return '/v2/presence/sub-key/' + config.subscribeKey + '/uuid/' + uuid;
+  return `/v2/presence/sub-key/${config.subscribeKey}/uuid/${uuid}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

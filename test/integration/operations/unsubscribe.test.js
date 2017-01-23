@@ -30,7 +30,7 @@ describe('unsubscribe', () => {
   describe('#unsubscribe', () => {
     it('supports leaving for one channel', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/leave')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
         .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
 
       pubnub.addListener({
@@ -48,7 +48,7 @@ describe('unsubscribe', () => {
 
     it('supports leaving for multiple channels', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/leave')
-      .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID' })
+      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
       .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
 
       pubnub.addListener({
@@ -66,7 +66,7 @@ describe('unsubscribe', () => {
 
     it('supports leaving for one channel group', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/leave')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', 'channel-group': 'cg1' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', 'channel-group': 'cg1' })
         .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
 
       pubnub.addListener({
@@ -84,7 +84,7 @@ describe('unsubscribe', () => {
 
     it('supports leaving for multiple channel group', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/leave')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', 'channel-group': 'cg1,cg2' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', 'channel-group': 'cg1,cg2' })
         .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
 
       pubnub.addListener({
@@ -104,7 +104,7 @@ describe('unsubscribe', () => {
   describe('#unsubscribeAll', () => {
     it('supports leaving channels / channel groups', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/leave')
-        .query({ pnsdk: 'PubNub-JS-Nodejs/' + pubnub.getVersion(), uuid: 'myUUID', 'channel-group': 'cg1,cg2' })
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', 'channel-group': 'cg1,cg2' })
         .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
 
       pubnub.addListener({

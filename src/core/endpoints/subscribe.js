@@ -18,7 +18,7 @@ export function getURL(modules: ModulesInject, incomingParams: SubscribeArgument
   let { config } = modules;
   let { channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return '/v2/subscribe/' + config.subscribeKey + '/' + utils.encodeString(stringifiedChannels) + '/0';
+  return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(stringifiedChannels)}/0`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {
