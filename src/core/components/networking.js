@@ -102,7 +102,6 @@ export default class {
     if (this._config.proxy) {
       require('superagent-proxy')(superagent); //eslint-disable-line
       superagentConstruct = superagentConstruct.proxy(this._config.proxy);
-      console.log(this._config.proxy)
     }
 
     return superagentConstruct
