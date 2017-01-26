@@ -20,6 +20,8 @@ export default class {
   authKey: string;
   UUID: string;
 
+  proxy: string;
+
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
   */
@@ -118,6 +120,7 @@ export default class {
     this.origin = setup.origin || 'pubsub.pubnub.com';
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
+    this.proxy = setup.proxy;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {

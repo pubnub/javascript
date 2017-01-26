@@ -13,7 +13,8 @@ var config = {
     fs: 'empty',
     net: 'empty',
     tls: 'empty',
-    formidable: 'empty'
+    formidable: 'empty',
+    'superagent-proxy': 'empty',
   },
   output: {
     filename: 'pubnub.js',
@@ -29,7 +30,9 @@ var config = {
       exclude: [/node_modules[\\\/]react/]
     })
   ],
-  externals: [],
+  externals: [{
+    'superagent-proxy': 'superagent-proxy'
+  }],
   profile: true
 };
 

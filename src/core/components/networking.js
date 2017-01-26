@@ -99,6 +99,12 @@ export default class {
       superagentConstruct = superagentConstruct.use(this._attachSuperagentLogger);
     }
 
+    if (this._config.proxy) {
+      require('superagent-proxy')(superagent); //eslint-disable-line
+      superagentConstruct = superagentConstruct.proxy(this._config.proxy);
+      console.log(this._config.proxy)
+    }
+
     return superagentConstruct
       .timeout(endpoint.timeout)
       .end((err, resp) => {
