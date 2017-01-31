@@ -110,6 +110,11 @@ export default class {
   adaptSubscribeChange(args: SubscribeArgs) {
     const { timetoken, channels = [], channelGroups = [], withPresence = false } = args;
 
+    if (!this._config.subscribeKey || this._config.subscribeKey === '') {
+      if (console && console.log) console.log('subscribe key missing; aborting subscribe') //eslint-disable-line
+      return;
+    }
+
     if (timetoken) this._timetoken = timetoken;
 
     channels.forEach((channel: string) => {

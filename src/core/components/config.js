@@ -107,9 +107,9 @@ export default class {
     this._db = db;
 
     this.instanceId = uuidGenerator.v4();
-    this.secretKey = setup.secretKey;
-    this.subscribeKey = setup.subscribeKey;
-    this.publishKey = setup.publishKey;
+    this.secretKey = setup.secretKey || setup.secret_key;
+    this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
+    this.publishKey = setup.publishKey || setup.publish_key;
     this.sdkFamily = setup.sdkFamily;
     this.partnerId = setup.partnerId;
     this.setAuthKey(setup.authKey);
@@ -189,7 +189,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.4.0';
+    return '4.4.1';
   }
 
   _decideUUID(providedUUID: string): string {
