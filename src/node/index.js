@@ -1,7 +1,12 @@
  /* @flow */
 
+import superagent from 'superagent';
+import superagentProxy from 'superagent-proxy';
+
 import PubNubCore from '../core/pubnub-common';
 import { InternalSetupStruct } from '../core/flow_interfaces';
+
+superagentProxy(superagent);
 
 let Database = class {
 

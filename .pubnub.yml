@@ -1,8 +1,13 @@
 name: javascript
-version: 4.4.1
+version: 4.4.2
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.4.2
+    date:
+    changes:
+      - type: improvement
+        text: adjust compilation for webpack based compilations
   - version: v4.4.1
     date:
     changes:
