@@ -1,4 +1,14 @@
 
+## [v4.4.1](https://github.com/pubnub/javascript/tree/v4.4.1)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.0...v4.4.1)
+
+
+- ⭐proxy support for node
+
+
+
 ## [v4.4.0](https://github.com/pubnub/javascript/tree/v4.4.0)
 
 
