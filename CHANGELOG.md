@@ -1,4 +1,14 @@
 
+## [v4.4.2](https://github.com/pubnub/javascript/tree/v4.4.2)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.1...v4.4.2)
+
+
+- ⭐adjust compilation for webpack based compilations
+
+
+
 ## [v4.4.1](https://github.com/pubnub/javascript/tree/v4.4.1)
 
 
