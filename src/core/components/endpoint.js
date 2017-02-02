@@ -16,6 +16,7 @@ class PubNubError extends Error {
 
 function createError(errorPayload: Object, type: string): Object {
   errorPayload.type = type;
+  errorPayload.error = true;
   return errorPayload;
 }
 

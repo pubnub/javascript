@@ -4503,6 +4503,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function createError(errorPayload, type) {
 	  errorPayload.type = type;
+	  errorPayload.error = true;
 	  return errorPayload;
 	}
 
