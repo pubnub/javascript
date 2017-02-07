@@ -20,3 +20,4 @@ rules:
   import/no-extraneous-dependencies: 0
   class-methods-use-this: 0
   no-await-in-loop: 0
+  no-multi-assign: 0

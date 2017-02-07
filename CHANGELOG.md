@@ -1,4 +1,14 @@
 
+## [v4.4.3](https://github.com/pubnub/javascript/tree/v4.4.3)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.2...v4.4.3)
+
+
+- ⭐downgrade superagent to v2; add new entry point for react native.
+
+
+
 ## [v4.4.2](https://github.com/pubnub/javascript/tree/v4.4.2)
 
 
