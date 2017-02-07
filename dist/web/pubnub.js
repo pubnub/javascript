@@ -65,7 +65,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -148,123 +148,123 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _config = __webpack_require__(17);
+	var _config = __webpack_require__(14);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _index = __webpack_require__(16);
+	var _index = __webpack_require__(13);
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _subscription_manager = __webpack_require__(21);
+	var _subscription_manager = __webpack_require__(18);
 
 	var _subscription_manager2 = _interopRequireDefault(_subscription_manager);
 
-	var _listener_manager = __webpack_require__(22);
+	var _listener_manager = __webpack_require__(19);
 
 	var _listener_manager2 = _interopRequireDefault(_listener_manager);
 
-	var _endpoint = __webpack_require__(27);
+	var _endpoint = __webpack_require__(24);
 
 	var _endpoint2 = _interopRequireDefault(_endpoint);
 
-	var _add_channels = __webpack_require__(28);
+	var _add_channels = __webpack_require__(25);
 
 	var addChannelsChannelGroupConfig = _interopRequireWildcard(_add_channels);
 
-	var _remove_channels = __webpack_require__(29);
+	var _remove_channels = __webpack_require__(26);
 
 	var removeChannelsChannelGroupConfig = _interopRequireWildcard(_remove_channels);
 
-	var _delete_group = __webpack_require__(30);
+	var _delete_group = __webpack_require__(27);
 
 	var deleteChannelGroupConfig = _interopRequireWildcard(_delete_group);
 
-	var _list_groups = __webpack_require__(31);
+	var _list_groups = __webpack_require__(28);
 
 	var listChannelGroupsConfig = _interopRequireWildcard(_list_groups);
 
-	var _list_channels = __webpack_require__(32);
+	var _list_channels = __webpack_require__(29);
 
 	var listChannelsInChannelGroupConfig = _interopRequireWildcard(_list_channels);
 
-	var _add_push_channels = __webpack_require__(33);
+	var _add_push_channels = __webpack_require__(30);
 
 	var addPushChannelsConfig = _interopRequireWildcard(_add_push_channels);
 
-	var _remove_push_channels = __webpack_require__(34);
+	var _remove_push_channels = __webpack_require__(31);
 
 	var removePushChannelsConfig = _interopRequireWildcard(_remove_push_channels);
 
-	var _list_push_channels = __webpack_require__(35);
+	var _list_push_channels = __webpack_require__(32);
 
 	var listPushChannelsConfig = _interopRequireWildcard(_list_push_channels);
 
-	var _remove_device = __webpack_require__(36);
+	var _remove_device = __webpack_require__(33);
 
 	var removeDevicePushConfig = _interopRequireWildcard(_remove_device);
 
-	var _leave = __webpack_require__(37);
+	var _leave = __webpack_require__(34);
 
 	var presenceLeaveEndpointConfig = _interopRequireWildcard(_leave);
 
-	var _where_now = __webpack_require__(38);
+	var _where_now = __webpack_require__(35);
 
 	var presenceWhereNowEndpointConfig = _interopRequireWildcard(_where_now);
 
-	var _heartbeat = __webpack_require__(39);
+	var _heartbeat = __webpack_require__(36);
 
 	var presenceHeartbeatEndpointConfig = _interopRequireWildcard(_heartbeat);
 
-	var _get_state = __webpack_require__(40);
+	var _get_state = __webpack_require__(37);
 
 	var presenceGetStateConfig = _interopRequireWildcard(_get_state);
 
-	var _set_state = __webpack_require__(41);
+	var _set_state = __webpack_require__(38);
 
 	var presenceSetStateConfig = _interopRequireWildcard(_set_state);
 
-	var _here_now = __webpack_require__(42);
+	var _here_now = __webpack_require__(39);
 
 	var presenceHereNowConfig = _interopRequireWildcard(_here_now);
 
-	var _audit = __webpack_require__(43);
+	var _audit = __webpack_require__(40);
 
 	var auditEndpointConfig = _interopRequireWildcard(_audit);
 
-	var _grant = __webpack_require__(44);
+	var _grant = __webpack_require__(41);
 
 	var grantEndpointConfig = _interopRequireWildcard(_grant);
 
-	var _publish = __webpack_require__(45);
+	var _publish = __webpack_require__(42);
 
 	var publishEndpointConfig = _interopRequireWildcard(_publish);
 
-	var _history = __webpack_require__(46);
+	var _history = __webpack_require__(43);
 
 	var historyEndpointConfig = _interopRequireWildcard(_history);
 
-	var _fetch_messages = __webpack_require__(47);
+	var _fetch_messages = __webpack_require__(44);
 
 	var fetchMessagesEndpointConfig = _interopRequireWildcard(_fetch_messages);
 
-	var _time = __webpack_require__(24);
+	var _time = __webpack_require__(21);
 
 	var timeEndpointConfig = _interopRequireWildcard(_time);
 
-	var _subscribe = __webpack_require__(48);
+	var _subscribe = __webpack_require__(45);
 
 	var subscribeEndpointConfig = _interopRequireWildcard(_subscribe);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _categories = __webpack_require__(20);
+	var _categories = __webpack_require__(17);
 
 	var _categories2 = _interopRequireDefault(_categories);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -656,19 +656,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
-	var _index = __webpack_require__(16);
+	var _index = __webpack_require__(13);
 
 	var _index2 = _interopRequireDefault(_index);
 
-	var _config = __webpack_require__(17);
+	var _config = __webpack_require__(14);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _categories = __webpack_require__(20);
+	var _categories = __webpack_require__(17);
 
 	var _categories2 = _interopRequireDefault(_categories);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -843,11 +843,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	var Emitter = __webpack_require__(9);
-	var RequestBase = __webpack_require__(10);
+	var requestBase = __webpack_require__(10);
 	var isObject = __webpack_require__(11);
-	var isFunction = __webpack_require__(12);
-	var ResponseBase = __webpack_require__(13);
-	var shouldRetry = __webpack_require__(15);
 
 	/**
 	 * Noop.
@@ -859,21 +856,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Expose `request`.
 	 */
 
-	var request = exports = module.exports = function(method, url) {
-	  // callback
-	  if ('function' == typeof url) {
-	    return new exports.Request('GET', method).end(url);
-	  }
-
-	  // url first
-	  if (1 == arguments.length) {
-	    return new exports.Request('GET', method);
-	  }
-
-	  return new exports.Request(method, url);
-	}
-
-	exports.Request = Request;
+	var request = module.exports = __webpack_require__(12).bind(null, Request);
 
 	/**
 	 * Determine XHR.
@@ -1077,6 +1060,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
+	 * Return the mime type for the given `str`.
+	 *
+	 * @param {String} str
+	 * @return {String}
+	 * @api private
+	 */
+
+	function type(str){
+	  return str.split(/ *; */).shift();
+	};
+
+	/**
+	 * Return header field parameters.
+	 *
+	 * @param {String} str
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function params(str){
+	  return str.split(/ *; */).reduce(function(obj, str){
+	    var parts = str.split(/ *= */),
+	        key = parts.shift(),
+	        val = parts.shift();
+
+	    if (key && val) obj[key] = val;
+	    return obj;
+	  }, {});
+	};
+
+	/**
 	 * Initialize a new `Response` with the given `xhr`.
 	 *
 	 *  - set flags (.ok, .error, etc)
@@ -1122,7 +1136,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api private
 	 */
 
-	function Response(req) {
+	function Response(req, options) {
+	  options = options || {};
 	  this.req = req;
 	  this.xhr = this.req.xhr;
 	  // responseText is accessible only if responseType is '' or 'text' and on older browsers
@@ -1130,29 +1145,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	     ? this.xhr.responseText
 	     : null;
 	  this.statusText = this.req.xhr.statusText;
-	  var status = this.xhr.status;
-	  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
-	  if (status === 1223) {
-	      status = 204;
-	  }
-	  this._setStatusProperties(status);
+	  this._setStatusProperties(this.xhr.status);
 	  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
 	  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
 	  // getResponseHeader still works. so we get content-type even if getting
 	  // other headers fails.
 	  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
 	  this._setHeaderProperties(this.header);
-
-	  if (null === this.text && req._responseType) {
-	    this.body = this.xhr.response;
-	  } else {
-	    this.body = this.req.method != 'HEAD'
-	      ? this._parseBody(this.text ? this.text : this.xhr.response)
-	      : null;
-	  }
+	  this.body = this.req.method != 'HEAD'
+	    ? this._parseBody(this.text ? this.text : this.xhr.response)
+	    : null;
 	}
 
-	ResponseBase(Response.prototype);
+	/**
+	 * Get case-insensitive `field` value.
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api public
+	 */
+
+	Response.prototype.get = function(field){
+	  return this.header[field.toLowerCase()];
+	};
+
+	/**
+	 * Set header related properties:
+	 *
+	 *   - `.type` the content type without params
+	 *
+	 * A response of "Content-Type: text/plain; charset=utf-8"
+	 * will provide you with a `.type` of "text/plain".
+	 *
+	 * @param {Object} header
+	 * @api private
+	 */
+
+	Response.prototype._setHeaderProperties = function(header){
+	  // content-type
+	  var ct = this.header['content-type'] || '';
+	  this.type = type(ct);
+
+	  // params
+	  var obj = params(ct);
+	  for (var key in obj) this[key] = obj[key];
+	};
 
 	/**
 	 * Parse the given body `str`.
@@ -1167,15 +1204,64 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	Response.prototype._parseBody = function(str){
 	  var parse = request.parse[this.type];
-	  if(this.req._parser) {
-	    return this.req._parser(this, str);
-	  }
 	  if (!parse && isJSON(this.type)) {
 	    parse = request.parse['application/json'];
 	  }
 	  return parse && str && (str.length || str instanceof Object)
 	    ? parse(str)
 	    : null;
+	};
+
+	/**
+	 * Set flags such as `.ok` based on `status`.
+	 *
+	 * For example a 2xx response will give you a `.ok` of __true__
+	 * whereas 5xx will be __false__ and `.error` will be __true__. The
+	 * `.clientError` and `.serverError` are also available to be more
+	 * specific, and `.statusType` is the class of error ranging from 1..5
+	 * sometimes useful for mapping respond colors etc.
+	 *
+	 * "sugar" properties are also defined for common cases. Currently providing:
+	 *
+	 *   - .noContent
+	 *   - .badRequest
+	 *   - .unauthorized
+	 *   - .notAcceptable
+	 *   - .notFound
+	 *
+	 * @param {Number} status
+	 * @api private
+	 */
+
+	Response.prototype._setStatusProperties = function(status){
+	  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+	  if (status === 1223) {
+	    status = 204;
+	  }
+
+	  var type = status / 100 | 0;
+
+	  // status / class
+	  this.status = this.statusCode = status;
+	  this.statusType = type;
+
+	  // basics
+	  this.info = 1 == type;
+	  this.ok = 2 == type;
+	  this.clientError = 4 == type;
+	  this.serverError = 5 == type;
+	  this.error = (4 == type || 5 == type)
+	    ? this.toError()
+	    : false;
+
+	  // sugar
+	  this.accepted = 202 == status;
+	  this.noContent = 204 == status;
+	  this.badRequest = 400 == status;
+	  this.unauthorized = 401 == status;
+	  this.notAcceptable = 406 == status;
+	  this.notFound = 404 == status;
+	  this.forbidden = 403 == status;
 	};
 
 	/**
@@ -1231,17 +1317,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      err.parse = true;
 	      err.original = e;
 	      // issue #675: return the raw response if the response parsing fails
-	      if (self.xhr) {
-	        // ie9 doesn't have 'response' property
-	        err.rawResponse = typeof self.xhr.responseType == 'undefined' ? self.xhr.responseText : self.xhr.response;
-	        // issue #876: return the http status code if the response parsing fails
-	        err.status = self.xhr.status ? self.xhr.status : null;
-	        err.statusCode = err.status; // backwards-compat only
-	      } else {
-	        err.rawResponse = null;
-	        err.status = null;
-	      }
-
+	      err.rawResponse = self.xhr && self.xhr.responseText ? self.xhr.responseText : null;
+	      // issue #876: return the http status code if the response parsing fails
+	      err.statusCode = self.xhr && self.xhr.status ? self.xhr.status : null;
 	      return self.callback(err);
 	    }
 
@@ -1249,7 +1327,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var new_err;
 	    try {
-	      if (!self._isResponseOK(res)) {
+	      if (res.status < 200 || res.status >= 300) {
 	        new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
 	        new_err.original = err;
 	        new_err.response = res;
@@ -1269,11 +1347,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
-	 * Mixin `Emitter` and `RequestBase`.
+	 * Mixin `Emitter` and `requestBase`.
 	 */
 
 	Emitter(Request.prototype);
-	RequestBase(Request.prototype);
+	for (var key in requestBase) {
+	  Request.prototype[key] = requestBase[key];
+	}
 
 	/**
 	 * Set Content-Type to `type`, mapping values from `request.types`.
@@ -1299,6 +1379,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	Request.prototype.type = function(type){
 	  this.set('Content-Type', request.types[type] || type);
+	  return this;
+	};
+
+	/**
+	 * Set responseType to `val`. Presently valid responseTypes are 'blob' and
+	 * 'arraybuffer'.
+	 *
+	 * Examples:
+	 *
+	 *      req.get('/')
+	 *        .responseType('blob')
+	 *        .end(callback);
+	 *
+	 * @param {String} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.responseType = function(val){
+	  this._responseType = val;
 	  return this;
 	};
 
@@ -1340,13 +1440,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	Request.prototype.auth = function(user, pass, options){
 	  if (!options) {
 	    options = {
-	      type: 'function' === typeof btoa ? 'basic' : 'auto',
+	      type: 'basic'
 	    }
 	  }
 
 	  switch (options.type) {
 	    case 'basic':
-	      this.set('Authorization', 'Basic ' + btoa(user + ':' + pass));
+	      var str = btoa(user + ':' + pass);
+	      this.set('Authorization', 'Basic ' + str);
 	    break;
 
 	    case 'auto':
@@ -1358,18 +1459,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
-	 * Add query-string `val`.
-	 *
-	 * Examples:
-	 *
-	 *   request.get('/shoes')
-	 *     .query('size=10')
-	 *     .query({ color: 'blue' })
-	 *
-	 * @param {Object|String} val
-	 * @return {Request} for chaining
-	 * @api public
-	 */
+	* Add query-string `val`.
+	*
+	* Examples:
+	*
+	*   request.get('/shoes')
+	*     .query('size=10')
+	*     .query({ color: 'blue' })
+	*
+	* @param {Object|String} val
+	* @return {Request} for chaining
+	* @api public
+	*/
 
 	Request.prototype.query = function(val){
 	  if ('string' != typeof val) val = serialize(val);
@@ -1379,7 +1480,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Queue the given `file` as an attachment to the specified `field`,
-	 * with optional `options` (or filename).
+	 * with optional `filename`.
 	 *
 	 * ``` js
 	 * request.post('/upload')
@@ -1389,17 +1490,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @param {String} field
 	 * @param {Blob|File} file
-	 * @param {String|Object} options
+	 * @param {String} filename
 	 * @return {Request} for chaining
 	 * @api public
 	 */
 
-	Request.prototype.attach = function(field, file, options){
-	  if (this._data) {
-	    throw Error("superagent can't mix .send() and .attach()");
-	  }
-
-	  this._getFormData().append(field, file, options || file.name);
+	Request.prototype.attach = function(field, file, filename){
+	  this._getFormData().append(field, file, filename || file.name);
 	  return this;
 	};
 
@@ -1420,19 +1517,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	Request.prototype.callback = function(err, res){
-	  // console.log(this._retries, this._maxRetries)
-	  if (this._maxRetries && this._retries++ < this._maxRetries && shouldRetry(err, res)) {
-	    return this._retry();
-	  }
-
 	  var fn = this._callback;
 	  this.clearTimeout();
-
-	  if (err) {
-	    if (this._maxRetries) err.retries = this._retries - 1;
-	    this.emit('error', err);
-	  }
-
 	  fn(err, res);
 	};
 
@@ -1453,15 +1539,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.callback(err);
 	};
 
-	// This only warns, because the request is still likely to work
-	Request.prototype.buffer = Request.prototype.ca = Request.prototype.agent = function(){
-	  console.warn("This is not supported in browser version of superagent");
-	  return this;
-	};
+	/**
+	 * Invoke callback with timeout error.
+	 *
+	 * @api private
+	 */
 
-	// This throws, because it can't send/receive data as expected
-	Request.prototype.pipe = Request.prototype.write = function(){
-	  throw Error("Streaming is not supported in browser version of superagent");
+	Request.prototype._timeoutError = function(){
+	  var timeout = this._timeout;
+	  var err = new Error('timeout of ' + timeout + 'ms exceeded');
+	  err.timeout = timeout;
+	  this.callback(err);
 	};
 
 	/**
@@ -1473,35 +1561,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	Request.prototype._appendQueryString = function(){
 	  var query = this._query.join('&');
 	  if (query) {
-	    this.url += (this.url.indexOf('?') >= 0 ? '&' : '?') + query;
-	  }
-
-	  if (this._sort) {
-	    var index = this.url.indexOf('?');
-	    if (index >= 0) {
-	      var queryArr = this.url.substring(index + 1).split('&');
-	      if (isFunction(this._sort)) {
-	        queryArr.sort(this._sort);
-	      } else {
-	        queryArr.sort();
-	      }
-	      this.url = this.url.substring(0, index) + '?' + queryArr.join('&');
-	    }
+	    this.url += ~this.url.indexOf('?')
+	      ? '&' + query
+	      : '?' + query;
 	  }
 	};
-
-	/**
-	 * Check if `obj` is a host object,
-	 * we don't want to serialize these :)
-	 *
-	 * @param {Object} obj
-	 * @return {Boolean}
-	 * @api private
-	 */
-	Request.prototype._isHost = function _isHost(obj) {
-	  // Native objects stringify to [object File], [object Blob], [object FormData], etc.
-	  return obj && 'object' === typeof obj && !Array.isArray(obj) && Object.prototype.toString.call(obj) !== '[object Object]';
-	}
 
 	/**
 	 * Initiate request, invoking callback `fn(res)`
@@ -1513,44 +1577,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	Request.prototype.end = function(fn){
-	  if (this._endCalled) {
-	    console.warn("Warning: .end() was called twice. This is not supported in superagent");
-	  }
-	  this._endCalled = true;
+	  var self = this;
+	  var xhr = this.xhr = request.getXHR();
+	  var timeout = this._timeout;
+	  var data = this._formData || this._data;
 
 	  // store callback
 	  this._callback = fn || noop;
 
-	  // querystring
-	  this._appendQueryString();
-
-	  return this._end();
-	};
-
-	Request.prototype._end = function() {
-	  var self = this;
-	  var xhr = this.xhr = request.getXHR();
-	  var data = this._formData || this._data;
-
-	  this._setTimeouts();
-
 	  // state change
 	  xhr.onreadystatechange = function(){
-	    var readyState = xhr.readyState;
-	    if (readyState >= 2 && self._responseTimeoutTimer) {
-	      clearTimeout(self._responseTimeoutTimer);
-	    }
-	    if (4 != readyState) {
-	      return;
-	    }
+	    if (4 != xhr.readyState) return;
 
 	    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
 	    // result in the error "Could not complete the operation due to error c00c023f"
 	    var status;
 	    try { status = xhr.status } catch(e) { status = 0; }
 
-	    if (!status) {
-	      if (self.timedout || self._aborted) return;
+	    if (0 == status) {
+	      if (self.timedout) return self._timeoutError();
+	      if (self._aborted) return;
 	      return self.crossDomainError();
 	    }
 	    self.emit('end');
@@ -1577,29 +1623,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }
 
+	  // timeout
+	  if (timeout && !this._timer) {
+	    this._timer = setTimeout(function(){
+	      self.timedout = true;
+	      self.abort();
+	    }, timeout);
+	  }
+
+	  // querystring
+	  this._appendQueryString();
+
 	  // initiate request
-	  try {
-	    if (this.username && this.password) {
-	      xhr.open(this.method, this.url, true, this.username, this.password);
-	    } else {
-	      xhr.open(this.method, this.url, true);
-	    }
-	  } catch (err) {
-	    // see #1149
-	    return this.callback(err);
+	  if (this.username && this.password) {
+	    xhr.open(this.method, this.url, true, this.username, this.password);
+	  } else {
+	    xhr.open(this.method, this.url, true);
 	  }
 
 	  // CORS
 	  if (this._withCredentials) xhr.withCredentials = true;
 
 	  // body
-	  if (!this._formData && 'GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !this._isHost(data)) {
+	  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !this._isHost(data)) {
 	    // serialize stuff
 	    var contentType = this._header['content-type'];
 	    var serialize = this._serializer || request.serialize[contentType ? contentType.split(';')[0] : ''];
-	    if (!serialize && isJSON(contentType)) {
-	      serialize = request.serialize['application/json'];
-	    }
+	    if (!serialize && isJSON(contentType)) serialize = request.serialize['application/json'];
 	    if (serialize) data = serialize(data);
 	  }
 
@@ -1621,6 +1671,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  xhr.send(typeof data !== 'undefined' ? data : null);
 	  return this;
 	};
+
+
+	/**
+	 * Expose `Request`.
+	 */
+
+	request.Request = Request;
 
 	/**
 	 * GET `url` with optional callback `fn(res)`.
@@ -1928,48 +1985,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	var isObject = __webpack_require__(11);
 
 	/**
-	 * Expose `RequestBase`.
-	 */
-
-	module.exports = RequestBase;
-
-	/**
-	 * Initialize a new `RequestBase`.
-	 *
-	 * @api public
-	 */
-
-	function RequestBase(obj) {
-	  if (obj) return mixin(obj);
-	}
-
-	/**
-	 * Mixin the prototype properties.
-	 *
-	 * @param {Object} obj
-	 * @return {Object}
-	 * @api private
-	 */
-
-	function mixin(obj) {
-	  for (var key in RequestBase.prototype) {
-	    obj[key] = RequestBase.prototype[key];
-	  }
-	  return obj;
-	}
-
-	/**
 	 * Clear previous timeout.
 	 *
 	 * @return {Request} for chaining
 	 * @api public
 	 */
 
-	RequestBase.prototype.clearTimeout = function _clearTimeout(){
+	exports.clearTimeout = function _clearTimeout(){
+	  this._timeout = 0;
 	  clearTimeout(this._timer);
-	  clearTimeout(this._responseTimeoutTimer);
-	  delete this._timer;
-	  delete this._responseTimeoutTimer;
 	  return this;
 	};
 
@@ -1982,31 +2006,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.parse = function parse(fn){
+	exports.parse = function parse(fn){
 	  this._parser = fn;
-	  return this;
-	};
-
-	/**
-	 * Set format of binary response body.
-	 * In browser valid formats are 'blob' and 'arraybuffer',
-	 * which return Blob and ArrayBuffer, respectively.
-	 *
-	 * In Node all values result in Buffer.
-	 *
-	 * Examples:
-	 *
-	 *      req.get('/')
-	 *        .responseType('blob')
-	 *        .end(callback);
-	 *
-	 * @param {String} val
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	RequestBase.prototype.responseType = function(val){
-	  this._responseType = val;
 	  return this;
 	};
 
@@ -2019,92 +2020,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.serialize = function serialize(fn){
+	exports.serialize = function serialize(fn){
 	  this._serializer = fn;
 	  return this;
 	};
 
 	/**
-	 * Set timeouts.
+	 * Set timeout to `ms`.
 	 *
-	 * - response timeout is time between sending request and receiving the first byte of the response. Includes DNS and connection time.
-	 * - deadline is the time from start of the request to receiving response body in full. If the deadline is too short large files may not load at all on slow connections.
-	 *
-	 * Value of 0 or false means no timeout.
-	 *
-	 * @param {Number|Object} ms or {response, read, deadline}
+	 * @param {Number} ms
 	 * @return {Request} for chaining
 	 * @api public
 	 */
 
-	RequestBase.prototype.timeout = function timeout(options){
-	  if (!options || 'object' !== typeof options) {
-	    this._timeout = options;
-	    this._responseTimeout = 0;
-	    return this;
-	  }
-
-	  if ('undefined' !== typeof options.deadline) {
-	    this._timeout = options.deadline;
-	  }
-	  if ('undefined' !== typeof options.response) {
-	    this._responseTimeout = options.response;
-	  }
+	exports.timeout = function timeout(ms){
+	  this._timeout = ms;
 	  return this;
-	};
-
-	/**
-	 * Set number of retry attempts on error.
-	 *
-	 * Failed requests will be retried 'count' times if timeout or err.code >= 500.
-	 *
-	 * @param {Number} count
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	RequestBase.prototype.retry = function retry(count){
-	  this._maxRetries = count || 1;
-	  this._retries = 0;
-	  return this;
-	};
-
-	/**
-	 * Retry request
-	 *
-	 * @return {Request} for chaining
-	 * @api private
-	 */
-
-	RequestBase.prototype._retry = function() {
-	  this.clearTimeout();
-
-	  // node
-	  if (this.req) {
-	    this.req = null;
-	    this.req = this.request();
-	  }
-
-	  this._aborted = false;
-	  this.timedout = false;
-
-	  return this._end();
 	};
 
 	/**
 	 * Promise support
 	 *
 	 * @param {Function} resolve
-	 * @param {Function} [reject]
+	 * @param {Function} reject
 	 * @return {Request}
 	 */
 
-	RequestBase.prototype.then = function then(resolve, reject) {
+	exports.then = function then(resolve, reject) {
 	  if (!this._fullfilledPromise) {
 	    var self = this;
-	    if (this._endCalled) {
-	      console.warn("Warning: superagent request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises");
-	    }
 	    this._fullfilledPromise = new Promise(function(innerResolve, innerReject){
 	      self.end(function(err, res){
 	        if (err) innerReject(err); else innerResolve(res);
@@ -2114,7 +2058,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this._fullfilledPromise.then(resolve, reject);
 	}
 
-	RequestBase.prototype.catch = function(cb) {
+	exports.catch = function(cb) {
 	  return this.then(undefined, cb);
 	};
 
@@ -2122,28 +2066,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Allow for extension
 	 */
 
-	RequestBase.prototype.use = function use(fn) {
+	exports.use = function use(fn) {
 	  fn(this);
 	  return this;
 	}
-
-	RequestBase.prototype.ok = function(cb) {
-	  if ('function' !== typeof cb) throw Error("Callback required");
-	  this._okCallback = cb;
-	  return this;
-	};
-
-	RequestBase.prototype._isResponseOK = function(res) {
-	  if (!res) {
-	    return false;
-	  }
-
-	  if (this._okCallback) {
-	    return this._okCallback(res);
-	  }
-
-	  return res.status >= 200 && res.status < 300;
-	};
 
 
 	/**
@@ -2155,7 +2081,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.get = function(field){
+	exports.get = function(field){
 	  return this._header[field.toLowerCase()];
 	};
 
@@ -2171,7 +2097,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @deprecated
 	 */
 
-	RequestBase.prototype.getHeader = RequestBase.prototype.get;
+	exports.getHeader = exports.get;
 
 	/**
 	 * Set header `field` to `val`, or multiple fields with one object.
@@ -2194,7 +2120,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.set = function(field, val){
+	exports.set = function(field, val){
 	  if (isObject(field)) {
 	    for (var key in field) {
 	      this.set(key, field[key]);
@@ -2218,7 +2144,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @param {String} field
 	 */
-	RequestBase.prototype.unset = function(field){
+	exports.unset = function(field){
 	  delete this._header[field.toLowerCase()];
 	  delete this.header[field];
 	  return this;
@@ -2243,15 +2169,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Request} for chaining
 	 * @api public
 	 */
-	RequestBase.prototype.field = function(name, val) {
+	exports.field = function(name, val) {
 
 	  // name should be either a string or an object.
 	  if (null === name ||  undefined === name) {
 	    throw new Error('.field(name, val) name can not be empty');
-	  }
-
-	  if (this._data) {
-	    console.error(".field() can't be used if .send() is used. Please use only .send() or only .field() & .attach()");
 	  }
 
 	  if (isObject(name)) {
@@ -2261,19 +2183,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this;
 	  }
 
-	  if (Array.isArray(val)) {
-	    for (var i in val) {
-	      this.field(name, val[i]);
-	    }
-	    return this;
-	  }
-
 	  // val should be defined now
 	  if (null === val || undefined === val) {
 	    throw new Error('.field(name, val) val can not be empty');
-	  }
-	  if ('boolean' === typeof val) {
-	    val = '' + val;
 	  }
 	  this._getFormData().append(name, val);
 	  return this;
@@ -2285,7 +2197,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Request}
 	 * @api public
 	 */
-	RequestBase.prototype.abort = function(){
+	exports.abort = function(){
 	  if (this._aborted) {
 	    return this;
 	  }
@@ -2308,7 +2220,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.withCredentials = function(){
+	exports.withCredentials = function(){
 	  // This is browser-only functionality. Node side is no-op.
 	  this._withCredentials = true;
 	  return this;
@@ -2322,7 +2234,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.redirects = function(n){
+	exports.redirects = function(n){
 	  this._maxRedirects = n;
 	  return this;
 	};
@@ -2336,7 +2248,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.toJSON = function(){
+	exports.toJSON = function(){
 	  return {
 	    method: this.method,
 	    url: this.url,
@@ -2345,6 +2257,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	};
 
+	/**
+	 * Check if `obj` is a host object,
+	 * we don't want to serialize these :)
+	 *
+	 * TODO: future proof, move to compoent land
+	 *
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	exports._isHost = function _isHost(obj) {
+	  var str = {}.toString.call(obj);
+
+	  switch (str) {
+	    case '[object File]':
+	    case '[object Blob]':
+	    case '[object FormData]':
+	      return true;
+	    default:
+	      return false;
+	  }
+	}
 
 	/**
 	 * Send `data` as the request body, defaulting the `.type()` to "json" when
@@ -2386,26 +2321,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @api public
 	 */
 
-	RequestBase.prototype.send = function(data){
-	  var isObj = isObject(data);
+	exports.send = function(data){
+	  var obj = isObject(data);
 	  var type = this._header['content-type'];
 
-	  if (this._formData) {
-	    console.error(".send() can't be used if .attach() or .field() is used. Please use only .send() or only .field() & .attach()");
-	  }
-
-	  if (isObj && !this._data) {
-	    if (Array.isArray(data)) {
-	      this._data = [];
-	    } else if (!this._isHost(data)) {
-	      this._data = {};
-	    }
-	  } else if (data && this._data && this._isHost(this._data)) {
-	    throw Error("Can't merge these send calls");
-	  }
-
 	  // merge
-	  if (isObj && isObject(this._data)) {
+	  if (obj && isObject(this._data)) {
 	    for (var key in data) {
 	      this._data[key] = data[key];
 	    }
@@ -2424,84 +2345,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._data = data;
 	  }
 
-	  if (!isObj || this._isHost(data)) {
-	    return this;
-	  }
+	  if (!obj || this._isHost(data)) return this;
 
 	  // default to json
 	  if (!type) this.type('json');
 	  return this;
 	};
-
-
-	/**
-	 * Sort `querystring` by the sort function
-	 *
-	 *
-	 * Examples:
-	 *
-	 *       // default order
-	 *       request.get('/user')
-	 *         .query('name=Nick')
-	 *         .query('search=Manny')
-	 *         .sortQuery()
-	 *         .end(callback)
-	 *
-	 *       // customized sort function
-	 *       request.get('/user')
-	 *         .query('name=Nick')
-	 *         .query('search=Manny')
-	 *         .sortQuery(function(a, b){
-	 *           return a.length - b.length;
-	 *         })
-	 *         .end(callback)
-	 *
-	 *
-	 * @param {Function} sort
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	RequestBase.prototype.sortQuery = function(sort) {
-	  // _sort default to true but otherwise can be a function or boolean
-	  this._sort = typeof sort === 'undefined' ? true : sort;
-	  return this;
-	};
-
-	/**
-	 * Invoke callback with timeout error.
-	 *
-	 * @api private
-	 */
-
-	RequestBase.prototype._timeoutError = function(reason, timeout){
-	  if (this._aborted) {
-	    return;
-	  }
-	  var err = new Error(reason + timeout + 'ms exceeded');
-	  err.timeout = timeout;
-	  err.code = 'ECONNABORTED';
-	  this.timedout = true;
-	  this.abort();
-	  this.callback(err);
-	};
-
-	RequestBase.prototype._setTimeouts = function() {
-	  var self = this;
-
-	  // deadline
-	  if (this._timeout && !this._timer) {
-	    this._timer = setTimeout(function(){
-	      self._timeoutError('Timeout of ', self._timeout);
-	    }, this._timeout);
-	  }
-	  // response timeout
-	  if (this._responseTimeout && !this._responseTimeoutTimer) {
-	    this._responseTimeoutTimer = setTimeout(function(){
-	      self._timeoutError('Response timeout of ', self._responseTimeout);
-	    }, this._responseTimeout);
-	  }
-	}
 
 
 /***/ },
@@ -2525,266 +2374,44 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 12 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
+	// The node and browser modules expose versions of this with the
+	// appropriate constructor function bound as first argument
 	/**
-	 * Check if `fn` is a function.
+	 * Issue a request:
 	 *
-	 * @param {Function} fn
-	 * @return {Boolean}
-	 * @api private
+	 * Examples:
+	 *
+	 *    request('GET', '/users').end(callback)
+	 *    request('/users').end(callback)
+	 *    request('/users', callback)
+	 *
+	 * @param {String} method
+	 * @param {String|Function} url or callback
+	 * @return {Request}
+	 * @api public
 	 */
-	var isObject = __webpack_require__(11);
 
-	function isFunction(fn) {
-	  var tag = isObject(fn) ? Object.prototype.toString.call(fn) : '';
-	  return tag === '[object Function]';
+	function request(RequestConstructor, method, url) {
+	  // callback
+	  if ('function' == typeof url) {
+	    return new RequestConstructor('GET', method).end(url);
+	  }
+
+	  // url first
+	  if (2 == arguments.length) {
+	    return new RequestConstructor('GET', method);
+	  }
+
+	  return new RequestConstructor(method, url);
 	}
 
-	module.exports = isFunction;
+	module.exports = request;
 
 
 /***/ },
 /* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Module dependencies.
-	 */
-
-	var utils = __webpack_require__(14);
-
-	/**
-	 * Expose `ResponseBase`.
-	 */
-
-	module.exports = ResponseBase;
-
-	/**
-	 * Initialize a new `ResponseBase`.
-	 *
-	 * @api public
-	 */
-
-	function ResponseBase(obj) {
-	  if (obj) return mixin(obj);
-	}
-
-	/**
-	 * Mixin the prototype properties.
-	 *
-	 * @param {Object} obj
-	 * @return {Object}
-	 * @api private
-	 */
-
-	function mixin(obj) {
-	  for (var key in ResponseBase.prototype) {
-	    obj[key] = ResponseBase.prototype[key];
-	  }
-	  return obj;
-	}
-
-	/**
-	 * Get case-insensitive `field` value.
-	 *
-	 * @param {String} field
-	 * @return {String}
-	 * @api public
-	 */
-
-	ResponseBase.prototype.get = function(field){
-	    return this.header[field.toLowerCase()];
-	};
-
-	/**
-	 * Set header related properties:
-	 *
-	 *   - `.type` the content type without params
-	 *
-	 * A response of "Content-Type: text/plain; charset=utf-8"
-	 * will provide you with a `.type` of "text/plain".
-	 *
-	 * @param {Object} header
-	 * @api private
-	 */
-
-	ResponseBase.prototype._setHeaderProperties = function(header){
-	    // TODO: moar!
-	    // TODO: make this a util
-
-	    // content-type
-	    var ct = header['content-type'] || '';
-	    this.type = utils.type(ct);
-
-	    // params
-	    var params = utils.params(ct);
-	    for (var key in params) this[key] = params[key];
-
-	    this.links = {};
-
-	    // links
-	    try {
-	        if (header.link) {
-	            this.links = utils.parseLinks(header.link);
-	        }
-	    } catch (err) {
-	        // ignore
-	    }
-	};
-
-	/**
-	 * Set flags such as `.ok` based on `status`.
-	 *
-	 * For example a 2xx response will give you a `.ok` of __true__
-	 * whereas 5xx will be __false__ and `.error` will be __true__. The
-	 * `.clientError` and `.serverError` are also available to be more
-	 * specific, and `.statusType` is the class of error ranging from 1..5
-	 * sometimes useful for mapping respond colors etc.
-	 *
-	 * "sugar" properties are also defined for common cases. Currently providing:
-	 *
-	 *   - .noContent
-	 *   - .badRequest
-	 *   - .unauthorized
-	 *   - .notAcceptable
-	 *   - .notFound
-	 *
-	 * @param {Number} status
-	 * @api private
-	 */
-
-	ResponseBase.prototype._setStatusProperties = function(status){
-	    var type = status / 100 | 0;
-
-	    // status / class
-	    this.status = this.statusCode = status;
-	    this.statusType = type;
-
-	    // basics
-	    this.info = 1 == type;
-	    this.ok = 2 == type;
-	    this.redirect = 3 == type;
-	    this.clientError = 4 == type;
-	    this.serverError = 5 == type;
-	    this.error = (4 == type || 5 == type)
-	        ? this.toError()
-	        : false;
-
-	    // sugar
-	    this.accepted = 202 == status;
-	    this.noContent = 204 == status;
-	    this.badRequest = 400 == status;
-	    this.unauthorized = 401 == status;
-	    this.notAcceptable = 406 == status;
-	    this.forbidden = 403 == status;
-	    this.notFound = 404 == status;
-	};
-
-
-/***/ },
-/* 14 */
-/***/ function(module, exports) {
-
-	
-	/**
-	 * Return the mime type for the given `str`.
-	 *
-	 * @param {String} str
-	 * @return {String}
-	 * @api private
-	 */
-
-	exports.type = function(str){
-	  return str.split(/ *; */).shift();
-	};
-
-	/**
-	 * Return header field parameters.
-	 *
-	 * @param {String} str
-	 * @return {Object}
-	 * @api private
-	 */
-
-	exports.params = function(str){
-	  return str.split(/ *; */).reduce(function(obj, str){
-	    var parts = str.split(/ *= */);
-	    var key = parts.shift();
-	    var val = parts.shift();
-
-	    if (key && val) obj[key] = val;
-	    return obj;
-	  }, {});
-	};
-
-	/**
-	 * Parse Link header fields.
-	 *
-	 * @param {String} str
-	 * @return {Object}
-	 * @api private
-	 */
-
-	exports.parseLinks = function(str){
-	  return str.split(/ *, */).reduce(function(obj, str){
-	    var parts = str.split(/ *; */);
-	    var url = parts[0].slice(1, -1);
-	    var rel = parts[1].split(/ *= */)[1].slice(1, -1);
-	    obj[rel] = url;
-	    return obj;
-	  }, {});
-	};
-
-	/**
-	 * Strip content related fields from `header`.
-	 *
-	 * @param {Object} header
-	 * @return {Object} header
-	 * @api private
-	 */
-
-	exports.cleanHeader = function(header, shouldStripCookie){
-	  delete header['content-type'];
-	  delete header['content-length'];
-	  delete header['transfer-encoding'];
-	  delete header['host'];
-	  if (shouldStripCookie) {
-	    delete header['cookie'];
-	  }
-	  return header;
-	};
-
-/***/ },
-/* 15 */
-/***/ function(module, exports) {
-
-	var ERROR_CODES = [
-	  'ECONNRESET',
-	  'ETIMEDOUT',
-	  'EADDRINFO',
-	  'ESOCKETTIMEDOUT'
-	];
-
-	/**
-	 * Determine if a request should be retried.
-	 * (Borrowed from segmentio/superagent-retry)
-	 *
-	 * @param {Error} err
-	 * @param {Response} [res]
-	 * @returns {Boolean}
-	 */
-	module.exports = function shouldRetry(err, res) {
-	  if (err && err.code && ~ERROR_CODES.indexOf(err.code)) return true;
-	  if (res && res.status && res.status >= 500) return true;
-	  // Superagent timeout
-	  if (err && 'timeout' in err && err.code == 'ECONNABORTED') return true;
-	  return false;
-	};
-
-/***/ },
-/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2795,11 +2422,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _config = __webpack_require__(17);
+	var _config = __webpack_require__(14);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _hmacSha = __webpack_require__(19);
+	var _hmacSha = __webpack_require__(16);
 
 	var _hmacSha2 = _interopRequireDefault(_hmacSha);
 
@@ -2936,7 +2563,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 17 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2951,7 +2578,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _uuid2 = _interopRequireDefault(_uuid);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3128,7 +2755,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 18 */
+/* 15 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3136,7 +2763,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {};
 
 /***/ },
-/* 19 */
+/* 16 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -3600,7 +3227,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = CryptoJS;
 
 /***/ },
-/* 20 */
+/* 17 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3633,7 +3260,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 21 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3644,29 +3271,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _cryptography = __webpack_require__(16);
+	var _cryptography = __webpack_require__(13);
 
 	var _cryptography2 = _interopRequireDefault(_cryptography);
 
-	var _config = __webpack_require__(17);
+	var _config = __webpack_require__(14);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _listener_manager = __webpack_require__(22);
+	var _listener_manager = __webpack_require__(19);
 
 	var _listener_manager2 = _interopRequireDefault(_listener_manager);
 
-	var _reconnection_manager = __webpack_require__(23);
+	var _reconnection_manager = __webpack_require__(20);
 
 	var _reconnection_manager2 = _interopRequireDefault(_reconnection_manager);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _categories = __webpack_require__(20);
+	var _categories = __webpack_require__(17);
 
 	var _categories2 = _interopRequireDefault(_categories);
 
@@ -4055,7 +3682,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 22 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4066,9 +3693,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _categories = __webpack_require__(20);
+	var _categories = __webpack_require__(17);
 
 	var _categories2 = _interopRequireDefault(_categories);
 
@@ -4148,7 +3775,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 23 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4159,11 +3786,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _time = __webpack_require__(24);
+	var _time = __webpack_require__(21);
 
 	var _time2 = _interopRequireDefault(_time);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4214,7 +3841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 24 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4230,9 +3857,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.handleResponse = handleResponse;
 	exports.validateParams = validateParams;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -4269,7 +3896,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function validateParams() {}
 
 /***/ },
-/* 25 */
+/* 22 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -4308,7 +3935,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 26 */
+/* 23 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -4356,7 +3983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { signPamFromParams: signPamFromParams, endsWith: endsWith, createPromise: createPromise, encodeString: encodeString };
 
 /***/ },
-/* 27 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4462,17 +4089,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _uuid2 = _interopRequireDefault(_uuid);
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
-	var _config = __webpack_require__(17);
+	var _config = __webpack_require__(14);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -4550,7 +4177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 28 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4566,13 +4193,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4625,7 +4252,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 29 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4641,13 +4268,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4700,7 +4327,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 30 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4716,13 +4343,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4767,7 +4394,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 31 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4783,9 +4410,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -4829,7 +4456,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 32 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4845,13 +4472,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -4898,7 +4525,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 33 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4914,9 +4541,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -4969,7 +4596,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 34 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4985,9 +4612,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -5040,7 +4667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 35 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5056,9 +4683,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -5107,7 +4734,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 36 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5123,9 +4750,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -5174,7 +4801,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 37 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5190,13 +4817,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -5250,7 +4877,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 38 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5266,9 +4893,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -5312,7 +4939,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 39 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5328,13 +4955,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -5393,7 +5020,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 40 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5409,13 +5036,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -5484,7 +5111,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 41 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5500,13 +5127,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -5565,7 +5192,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 42 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5581,13 +5208,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -5729,7 +5356,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 43 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5745,9 +5372,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -5808,7 +5435,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 44 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5824,9 +5451,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
@@ -5904,7 +5531,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 45 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5926,13 +5553,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -6043,7 +5670,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 46 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6059,13 +5686,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -6156,7 +5783,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 47 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6172,13 +5799,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
@@ -6266,7 +5893,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 48 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6282,13 +5909,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
-	var _flow_interfaces = __webpack_require__(18);
+	var _flow_interfaces = __webpack_require__(15);
 
-	var _operations = __webpack_require__(25);
+	var _operations = __webpack_require__(22);
 
 	var _operations2 = _interopRequireDefault(_operations);
 
-	var _utils = __webpack_require__(26);
+	var _utils = __webpack_require__(23);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
