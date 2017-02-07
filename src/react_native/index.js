@@ -24,7 +24,7 @@ export default class extends PubNubCore {
 
   constructor(setup: InternalSetupStruct) {
     setup.db = new Database();
-    setup.sdkFamily = 'Nodejs';
+    setup.sdkFamily = 'ReactNative';
     super(setup);
   }
 
