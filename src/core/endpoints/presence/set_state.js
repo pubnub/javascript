@@ -10,10 +10,11 @@ export function getOperation(): string {
 
 export function validateParams(modules: ModulesInject, incomingParams: SetStateArguments) {
   let { config } = modules;
-  let { state } = incomingParams;
+  let { state, channels = [], channelGroups = [] } = incomingParams;
 
   if (!state) return 'Missing State';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+  if (channels.length === 0 && channelGroups.length === 0) return 'Please provide a list of channels and/or channel-groups';
 }
 
 export function getURL(modules: ModulesInject, incomingParams: SetStateArguments): string {

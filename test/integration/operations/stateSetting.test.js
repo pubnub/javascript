@@ -23,6 +23,14 @@ describe('setting state operation', () => {
   });
 
   describe('#setState', () => {
+    it('fails if no channels are provided', (done) => {
+      pubnub.setState({ state: { hello: 'there' } }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.message, 'Please provide a list of channels and/or channel-groups');
+        done();
+      });
+    });
+
     it('supports updating for one channel', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/uuid/myUUID/data')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"hello":"there"}' })
