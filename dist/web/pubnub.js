@@ -5145,17 +5145,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function validateParams(modules, incomingParams) {
 	  var config = modules.config;
-	  var state = incomingParams.state;
+	  var state = incomingParams.state,
+	      _incomingParams$chann = incomingParams.channels,
+	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann,
+	      _incomingParams$chann2 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
 
 
 	  if (!state) return 'Missing State';
 	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	  if (channels.length === 0 && channelGroups.length === 0) return 'Please provide a list of channels and/or channel-groups';
 	}
 
 	function getURL(modules, incomingParams) {
 	  var config = modules.config;
-	  var _incomingParams$chann = incomingParams.channels,
-	      channels = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
+	  var _incomingParams$chann3 = incomingParams.channels,
+	      channels = _incomingParams$chann3 === undefined ? [] : _incomingParams$chann3;
 
 	  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
 	  return '/v2/presence/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(stringifiedChannels) + '/uuid/' + config.UUID + '/data';
@@ -5173,8 +5178,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function prepareParams(modules, incomingParams) {
 	  var state = incomingParams.state,
-	      _incomingParams$chann2 = incomingParams.channelGroups,
-	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2;
+	      _incomingParams$chann4 = incomingParams.channelGroups,
+	      channelGroups = _incomingParams$chann4 === undefined ? [] : _incomingParams$chann4;
 
 	  var params = {};
 
