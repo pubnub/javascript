@@ -184,6 +184,7 @@ changelog:
 features:
   access:
     - ACCESS-GRANT
+    - ACCESS-SECRET-KEY-ALL-ACCESS
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
