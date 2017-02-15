@@ -3,7 +3,7 @@
 import assert from 'assert';
 import nock from 'nock';
 import utils from '../../utils';
-import PubNub from '../../../lib/node/index';
+import PubNub from '../../../src/node/index';
 
 describe('presence endpoints', () => {
   let pubnub;

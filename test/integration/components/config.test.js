@@ -4,7 +4,7 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import uuidGenerator from 'uuid';
-import PubNub from '../../../lib/core/pubnub-common';
+import PubNub from '../../../src/core/pubnub-common';
 
 describe('components/config', () => {
   describe('AuthKey Storage', () => {

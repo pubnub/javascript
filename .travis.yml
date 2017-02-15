@@ -20,5 +20,5 @@ install:
 script:
   gulp test
 after_success:
-  - npm install codecov
-  - npm run codecov
+  - npm install codecov codacy-coverage
+  - cat ./coverage/lcov.info | node_modules/.bin/codacy-coverage

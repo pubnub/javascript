@@ -1,6 +1,6 @@
 /* global describe, it, __dirname */
 
-import PubNub from '../../lib/node/index';
+import PubNub from '../../src/node/index';
 
 let assert = require('assert');
 let fs = require('fs');
