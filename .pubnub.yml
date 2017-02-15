@@ -1,8 +1,15 @@
 name: javascript
-version: 4.4.3
+version: 4.4.4
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.4.4
+    date:
+    changes:
+      - type: improvement
+        text: add guard to check for channel or channel group on state setting
+      - type: improvement
+        text: add guard to check for publish, secret keys when performing a grant
   - version: v4.4.3
     date:
     changes:

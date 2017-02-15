@@ -1,4 +1,18 @@
 
+## [v4.4.4](https://github.com/pubnub/javascript/tree/v4.4.4)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.3...v4.4.4)
+
+
+- ⭐add guard to check for channel or channel group on state setting
+
+
+
+- ⭐add guard to check for publish, secret keys when performing a grant
+
+
+
 ## [v4.4.3](https://github.com/pubnub/javascript/tree/v4.4.3)
 
 

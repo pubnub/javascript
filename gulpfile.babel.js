@@ -16,7 +16,6 @@ const runSequence = require('run-sequence');
 const gulpIstanbul = require('gulp-istanbul');
 const isparta = require('isparta');
 const sourcemaps = require('gulp-sourcemaps');
-const remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul');
 const packageJSON = require('./package.json');
 const gzip = require('gulp-gzip');
 
