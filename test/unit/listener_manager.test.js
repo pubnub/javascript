@@ -1,7 +1,7 @@
 /* global describe, beforeEach, it, before, afterEach, after */
 
 import assert from 'assert';
-import ListenerManager from '../../lib/core/components/listener_manager';
+import ListenerManager from '../../src/core/components/listener_manager';
 
 describe('components/ListenerManager', () => {
   it('supports removal of listeners', () => {

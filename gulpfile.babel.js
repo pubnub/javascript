@@ -41,7 +41,7 @@ gulp.task('compile_web', () => {
 
 gulp.task('create_version', () => {
   return gulp.src('dist/web/pubnub.js')
-    .pipe(rename('pubnub.' + packageJSON.version + '.js'))
+    .pipe(rename(`pubnub.${packageJSON.version}.js`))
     .pipe(gulp.dest('upload/normal'));
 });
 
@@ -58,7 +58,7 @@ gulp.task('uglify', () => {
     .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/web'))
 
-    .pipe(rename('pubnub.' + packageJSON.version + '.min.js'))
+    .pipe(rename(`pubnub.${packageJSON.version}.min.js`))
     .pipe(gulp.dest('upload/normal'));
 });
 
@@ -97,7 +97,7 @@ gulp.task('karma_client_min', (done) => {
 });
 
 gulp.task('pre-test', () => {
-  return gulp.src(['lib/**/*.js'])
+  return gulp.src(['src/**/*.js'])
     .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter, includeAllSources: true }))
     .pipe(gulpIstanbul.hookRequire());
 });
@@ -110,18 +110,7 @@ gulp.task('test_release', () => {
 gulp.task('test_server', () => {
   return gulp.src('test/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }))
-    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov'] }));
-});
-
-gulp.task('remap_istanbul', () => {
-  return gulp.src('./coverage/coverage-final.json')
-      .pipe(remapIstanbul({
-        reports: {
-          json: './coverage/coverage-final.json',
-          html: './coverage/html-report',
-          text: null,
-        }
-      }));
+    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
 gulp.task('webpack', ['compile_web']);
@@ -137,5 +126,5 @@ gulp.task('test_client', (done) => {
 });
 
 gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_server', 'test_release', 'remap_istanbul', 'lint', 'flow', done);
+  runSequence('pre-test', 'test_server', 'test_release', 'lint', 'flow', done);
 });

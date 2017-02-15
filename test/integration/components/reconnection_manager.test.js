@@ -7,7 +7,7 @@ import nock from 'nock';
 import _ from 'underscore';
 
 import utils from '../../utils';
-import PubNub from '../../../lib/node/index';
+import PubNub from '../../../src/node/index';
 
 describe('#components/reconnection_manger', () => {
   let pubnub;
