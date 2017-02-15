@@ -1,4 +1,4 @@
-/*! 4.4.3 / Consumer  */
+/*! 4.4.4 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -2731,7 +2731,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.4.3';
+	      return '4.4.4';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -5473,6 +5473,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	  if (!config.publishKey) return 'Missing Publish Key';
+	  if (!config.secretKey) return 'Missing Secret Key';
 	}
 
 	function getURL(modules) {

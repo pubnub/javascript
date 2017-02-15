@@ -11,6 +11,8 @@ export function validateParams(modules: ModulesInject) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+  if (!config.publishKey) return 'Missing Publish Key';
+  if (!config.secretKey) return 'Missing Secret Key';
 }
 
 export function getURL(modules: ModulesInject): string {
