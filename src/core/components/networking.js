@@ -2,7 +2,7 @@
 /* global window */
 
 import superagent from 'superagent';
-
+import AgentKeepAlive from 'agentkeepalive';
 import Crypto from './cryptography/index';
 import Config from './config';
 import categoryConstants from '../constants/categories';
@@ -101,6 +101,32 @@ export default class {
 
     if (this._config.proxy) {
       superagentConstruct = superagentConstruct.proxy(this._config.proxy);
+    }
+
+    if (this._config.keepAlive && typeof this._config.keepAlive === 'boolean') {
+      let agentKeepAlive = {};
+
+      if (this._config.secure) {
+        agentKeepAlive = new AgentKeepAlive.HttpsAgent();
+      } else {
+        agentKeepAlive = new AgentKeepAlive();
+      }
+
+      superagentConstruct = superagentConstruct
+          .set('Connection', 'keep-alive')
+          .agent(agentKeepAlive);
+    } else if (this._config.keepAlive && typeof this._config.keepAlive === 'object') {
+      let agentKeepAlive = {};
+
+      if (this._config.secure) {
+        agentKeepAlive = new AgentKeepAlive.HttpsAgent(this._config.keepAlive);
+      } else {
+        agentKeepAlive = new AgentKeepAlive(this._config.keepAlive);
+      }
+
+      superagentConstruct = superagentConstruct
+          .set('Connection', 'keep-alive')
+          .agent(agentKeepAlive);
     }
 
     return superagentConstruct

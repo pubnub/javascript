@@ -19,6 +19,15 @@ export type ProxyStruct = {
   headers: Object
 }
 
+export type KeepAliveStruct = {
+  keepAlive: number,
+  keepAliveMsecs: number,
+  freeSocketKeepAliveTimeout: number,
+  timeout: number,
+  maxSockets: number,
+  maxFreeSockets: number
+}
+
 export type InternalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing
@@ -35,6 +44,8 @@ export type InternalSetupStruct = {
   transactionalRequestTimeout: ?number, // how long to wait for transactional requests
 
   proxy: ?ProxyStruct, // configuration to support proxy settings.
+
+  keepAlive: ?boolean | ?KeepAliveStruct, // configuration to support connection keep-alive
 
   suppressLev: ?boolean,
 
