@@ -2,24 +2,16 @@
 /* global window */
 
 import superagent from 'superagent';
-import AgentKeepAlive from 'agentkeepalive';
-import Crypto from './cryptography/index';
-import Config from './config';
-import categoryConstants from '../constants/categories';
+import Config from '../core/components/config';
+import categoryConstants from '../core/constants/categories';
 
-import { EndpointDefinition, StatusAnnouncement } from '../flow_interfaces';
-
-type NetworkingModules = {
-  crypto: Crypto,
-  config: Config,
-  sendBeacon: Function
-}
+import { EndpointDefinition, StatusAnnouncement } from '../core/flow_interfaces';
 
 export default class {
   _sendBeacon: Function;
+  _agentKeepAlive: Function;
 
   _config: Config;
-  _crypto: Crypto;
 
   _maxSubDomain: number;
   _currentSubDomain: number;
@@ -33,14 +25,11 @@ export default class {
 
   _coreParams: Object; /* items that must be passed with each request. */
 
-  constructor({ config, crypto, sendBeacon }: NetworkingModules) {
+  init(config: Config) {
     this._config = config;
-    this._crypto = crypto;
-    this._sendBeacon = sendBeacon;
 
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
-
     this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
     this._coreParams = {};
 
@@ -103,30 +92,8 @@ export default class {
       superagentConstruct = superagentConstruct.proxy(this._config.proxy);
     }
 
-    if (this._config.keepAlive && typeof this._config.keepAlive === 'boolean') {
-      let agentKeepAlive = {};
-
-      if (this._config.secure) {
-        agentKeepAlive = new AgentKeepAlive.HttpsAgent();
-      } else {
-        agentKeepAlive = new AgentKeepAlive();
-      }
-
-      superagentConstruct = superagentConstruct
-          .set('Connection', 'keep-alive')
-          .agent(agentKeepAlive);
-    } else if (this._config.keepAlive && typeof this._config.keepAlive === 'object') {
-      let agentKeepAlive = {};
-
-      if (this._config.secure) {
-        agentKeepAlive = new AgentKeepAlive.HttpsAgent(this._config.keepAlive);
-      } else {
-        agentKeepAlive = new AgentKeepAlive(this._config.keepAlive);
-      }
-
-      superagentConstruct = superagentConstruct
-          .set('Connection', 'keep-alive')
-          .agent(agentKeepAlive);
+    if (this._config.keepAlive && this._agentKeepAlive) {
+      superagentConstruct = this._agentKeepAlive(superagentConstruct);
     }
 
     return superagentConstruct

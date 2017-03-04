@@ -45,12 +45,14 @@ export type InternalSetupStruct = {
 
   proxy: ?ProxyStruct, // configuration to support proxy settings.
 
-  keepAlive: ?boolean | ?KeepAliveStruct, // configuration to support connection keep-alive
+  keepAlive: ?boolean, // is keep-alive enabled?
+
+  keepAliveSettings: ?KeepAliveStruct, // configuration on keep-alive usage
 
   suppressLev: ?boolean,
 
-  db: Function // get / set implementation to store data
-
+  db: Function, // get / set implementation to store data
+  networking: Function // component of networking to use
 }
 
 type DatabaseInterface = {

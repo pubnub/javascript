@@ -65,7 +65,9 @@ export default class {
   useRequestId: boolean;
 
   // use connection keep-alive for http requests
-  keepAlive: ?boolean | ?KeepAliveStruct;
+  keepAlive: ?boolean;
+
+  keepAliveSettings: ?KeepAliveStruct;
 
   // alert when a heartbeat works out.
   announceSuccessfulHeartbeats: boolean;
@@ -125,6 +127,7 @@ export default class {
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
     this.keepAlive = setup.keepAlive;
+    this.keepAliveSettings = setup.keepAliveSettings;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
