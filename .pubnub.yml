@@ -37,11 +37,6 @@ changelog:
     changes:
       - type: improvement
         text: bump version after v3 release.
-  - version: v4.3.3
-    date:
-    changes:
-      - type: improvement
-        text: bump version after v3 release.
   - version: v4.3.2
     date:
     changes:
