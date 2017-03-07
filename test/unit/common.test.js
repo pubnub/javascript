@@ -15,7 +15,7 @@ describe('#core / mounting point', () => {
   });
 
   it('supports UUID generation', () => {
-    assert.equal(PubNub.generateUUID(), 'pn-uuidCustom');
+    assert.equal(PubNub.generateUUID(), 'uuidCustom');
   });
 
   it('supports encryption', () => {
