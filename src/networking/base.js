@@ -5,7 +5,7 @@ import superagent from 'superagent';
 import Config from '../core/components/config';
 import categoryConstants from '../core/constants/categories';
 
-import { EndpointDefinition, StatusAnnouncement } from '../core/flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement, NetworkingModules } from '../core/flow_interfaces';
 
 export default class {
   _sendBeacon: Function;
@@ -24,6 +24,13 @@ export default class {
   _requestTimeout: number;
 
   _coreParams: Object; /* items that must be passed with each request. */
+
+  constructor(modules: NetworkingModules) {
+    let { agentKeepAliveModule, sendBeaconModule } = modules;
+
+    this._agentKeepAlive = agentKeepAliveModule;
+    this._sendBeacon = sendBeaconModule;
+  }
 
   init(config: Config) {
     this._config = config;

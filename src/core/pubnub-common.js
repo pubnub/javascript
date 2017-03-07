@@ -108,7 +108,7 @@ export default class {
     const crypto = new Crypto({ config });
 
     if (!networking) {
-      networking = new Networking();
+      networking = new Networking({});
     }
 
     networking.init(config);

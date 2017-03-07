@@ -4,19 +4,19 @@ import AgentKeepAlive from 'agentkeepalive';
 import Networking from './base';
 
 function agentKeepAlive(superagentConstruct) {
-  let Agent = null;
+  let AgentClass = null;
   let agent = null;
 
   if (this._config.secure) {
-    Agent = AgentKeepAlive.HttpsAgent;
+    AgentClass = AgentKeepAlive.HttpsAgent;
   } else {
-    Agent = AgentKeepAlive;
+    AgentClass = AgentKeepAlive;
   }
 
   if (this._config.keepAliveSettings) {
-    agent = new Agent(this._config.keepAliveSettings);
+    agent = new AgentClass(this._config.keepAliveSettings);
   } else {
-    agent = new Agent();
+    agent = new AgentClass();
   }
 
   return superagentConstruct.set('Connection', 'keep-alive').agent(agent);
@@ -25,7 +25,10 @@ function agentKeepAlive(superagentConstruct) {
 export default class extends Networking {
 
   constructor() {
-    super();
-    this._agentKeepAlive = agentKeepAlive;
+    let modules = {
+      agentKeepAliveModule: agentKeepAlive
+    };
+
+    super(modules);
   }
 }

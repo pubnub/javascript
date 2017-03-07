@@ -28,6 +28,11 @@ export type KeepAliveStruct = {
   maxFreeSockets: number
 }
 
+export type NetworkingModules = {
+  agentKeepAliveModule: ?Function,
+  sendBeaconModule: ?Function
+}
+
 export type InternalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing

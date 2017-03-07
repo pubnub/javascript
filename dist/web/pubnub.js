@@ -282,7 +282,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var crypto = new _index2.default({ config: config });
 
 	    if (!networking) {
-	      networking = new _base2.default();
+	      networking = new _base2.default({});
 	    }
 
 	    networking.init(config);
@@ -672,7 +672,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._db = db;
 
-	    this.instanceId = _uuid2.default.v4();
+	    this.instanceId = 'pn-' + _uuid2.default.v4();
 	    this.secretKey = setup.secretKey || setup.secret_key;
 	    this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
 	    this.publishKey = setup.publishKey || setup.publish_key;
@@ -825,7 +825,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._db.get(this.subscribeKey + 'uuid');
 	      }
 
-	      return _uuid2.default.v4();
+	      return 'pn-' + _uuid2.default.v4();
 	    }
 	  }]);
 
@@ -1490,8 +1490,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var _class = function () {
-	  function _class() {
+	  function _class(modules) {
 	    _classCallCheck(this, _class);
+
+	    var agentKeepAliveModule = modules.agentKeepAliveModule,
+	        sendBeaconModule = modules.sendBeaconModule;
+
+
+	    this._agentKeepAlive = agentKeepAliveModule;
+	    this._sendBeacon = sendBeaconModule;
 	  }
 
 	  _createClass(_class, [{
@@ -1582,7 +1589,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          status.category = _this._detectErrorCategory(err);
 	          return callback(status, null);
 	        }
-	        console.log(resp);
+
 	        var parsedResponse = JSON.parse(resp.text);
 	        return callback(status, parsedResponse);
 	      });
@@ -6058,11 +6065,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _class() {
 	    _classCallCheck(this, _class);
 
-	    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
-
-	    _this._agentKeepAlive = agentKeepAlive;
-	    _this._sendBeacon = sendBeacon;
-	    return _this;
+	    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, { agentKeepAliveModule: agentKeepAlive, sendBeaconModule: sendBeacon }));
 	  }
 
 	  return _class;

@@ -18,8 +18,6 @@ function sendBeacon(url: string) {
 export default class extends Networking {
 
   constructor() {
-    super();
-    this._agentKeepAlive = agentKeepAlive;
-    this._sendBeacon = sendBeacon;
+    super({ agentKeepAliveModule: agentKeepAlive, sendBeaconModule: sendBeacon });
   }
 }
