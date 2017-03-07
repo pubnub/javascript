@@ -2,7 +2,7 @@
 /* global location */
 
 import uuidGenerator from 'uuid';
-import { InternalSetupStruct, DatabaseInterface } from '../flow_interfaces';
+import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -64,6 +64,11 @@ export default class {
   // if requestId config is true, the SDK will pass a unique request identifier with each request as request_id=<UUID>
   useRequestId: boolean;
 
+  // use connection keep-alive for http requests
+  keepAlive: ?boolean;
+
+  keepAliveSettings: ?KeepAliveStruct;
+
   // alert when a heartbeat works out.
   announceSuccessfulHeartbeats: boolean;
   announceFailedHeartbeats: boolean;
@@ -121,6 +126,8 @@ export default class {
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
+    this.keepAlive = setup.keepAlive;
+    this.keepAliveSettings = setup.keepAliveSettings;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {

@@ -19,6 +19,15 @@ export type ProxyStruct = {
   headers: Object
 }
 
+export type KeepAliveStruct = {
+  keepAlive: number,
+  keepAliveMsecs: number,
+  freeSocketKeepAliveTimeout: number,
+  timeout: number,
+  maxSockets: number,
+  maxFreeSockets: number
+}
+
 export type InternalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
   publishKey: ?string, // API key required for publishing
@@ -36,10 +45,14 @@ export type InternalSetupStruct = {
 
   proxy: ?ProxyStruct, // configuration to support proxy settings.
 
+  keepAlive: ?boolean, // is keep-alive enabled?
+
+  keepAliveSettings: ?KeepAliveStruct, // configuration on keep-alive usage
+
   suppressLev: ?boolean,
 
-  db: Function // get / set implementation to store data
-
+  db: Function, // get / set implementation to store data
+  networking: Function // component of networking to use
 }
 
 type DatabaseInterface = {

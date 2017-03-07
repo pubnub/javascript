@@ -4,6 +4,7 @@ import superagent from 'superagent';
 import superagentProxy from 'superagent-proxy';
 
 import PubNubCore from '../core/pubnub-common';
+import Networking from '../networking/node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 superagentProxy(superagent);
@@ -29,6 +30,7 @@ export default class extends PubNubCore {
 
   constructor(setup: InternalSetupStruct) {
     setup.db = new Database();
+    setup.networking = new Networking();
     setup.sdkFamily = 'Nodejs';
     super(setup);
   }
