@@ -228,7 +228,7 @@ export default class {
 
 
   static generateUUID(): string {
-    return uuidGenerator.v4();
+    return `pn-${uuidGenerator.v4()}`;
   }
 
   static OPERATIONS = OPERATIONS;
