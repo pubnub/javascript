@@ -25,10 +25,6 @@ function agentKeepAlive(superagentConstruct) {
 export default class extends Networking {
 
   constructor() {
-    let modules = {
-      agentKeepAliveModule: agentKeepAlive
-    };
-
-    super(modules);
+    super({ agentKeepAliveModule: agentKeepAlive });
   }
 }
