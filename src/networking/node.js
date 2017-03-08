@@ -1,5 +1,4 @@
 /* @flow */
-/* global window */
 import AgentKeepAlive from 'agentkeepalive';
 import Networking from './base';
 
@@ -19,7 +18,7 @@ function agentKeepAlive(superagentConstruct) {
     agent = new AgentClass();
   }
 
-  return superagentConstruct.set('Connection', 'keep-alive').agent(agent);
+  return superagentConstruct.agent(agent);
 }
 
 export default class extends Networking {

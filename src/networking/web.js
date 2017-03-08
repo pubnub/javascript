@@ -3,10 +3,6 @@
 
 import Networking from './base';
 
-function agentKeepAlive(superagentConstruct) {
-  return superagentConstruct.set('Connection', 'keep-alive');
-}
-
 function sendBeacon(url: string) {
   if (navigator && navigator.sendBeacon) {
     navigator.sendBeacon(url);
@@ -18,6 +14,6 @@ function sendBeacon(url: string) {
 export default class extends Networking {
 
   constructor() {
-    super({ agentKeepAliveModule: agentKeepAlive, sendBeaconModule: sendBeacon });
+    super({ sendBeaconModule: sendBeacon });
   }
 }

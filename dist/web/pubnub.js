@@ -1,4 +1,4 @@
-/*! 4.4.4 / Consumer  */
+/*! 4.5.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -812,7 +812,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.4.4';
+	      return '4.5.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -6047,10 +6047,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	function agentKeepAlive(superagentConstruct) {
-	  return superagentConstruct.set('Connection', 'keep-alive');
-	}
-
 	function sendBeacon(url) {
 	  if (navigator && navigator.sendBeacon) {
 	    navigator.sendBeacon(url);
@@ -6065,7 +6061,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _class() {
 	    _classCallCheck(this, _class);
 
-	    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, { agentKeepAliveModule: agentKeepAlive, sendBeaconModule: sendBeacon }));
+	    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, { sendBeaconModule: sendBeacon }));
 	  }
 
 	  return _class;
