@@ -2,6 +2,7 @@
 /* global localStorage, navigator, window */
 
 import PubNubCore from '../core/pubnub-common';
+import Networking from '../networking/web';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 /**
@@ -27,21 +28,12 @@ let db = {
   }
 };
 
-function sendBeacon(url: string) {
-  if (navigator && navigator.sendBeacon) {
-    navigator.sendBeacon(url);
-  } else {
-    return false;
-  }
-}
-
-
 export default class extends PubNubCore {
 
   constructor(setup: InternalSetupStruct) {
     setup.db = db;
-    setup.sendBeacon = sendBeacon;
     setup.sdkFamily = 'Web';
+    setup.networking = new Networking();
 
     super(setup);
 

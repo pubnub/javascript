@@ -41,7 +41,7 @@ describe('components/config', () => {
     it('generates the UUID if it is not provided', () => {
       let storageParams = {};
       const pubnub = new PubNub(storageParams);
-      assert.equal(pubnub.getUUID(), 'uuidCustom');
+      assert.equal(pubnub.getUUID(), 'pn-uuidCustom');
     });
 
     it('checks UUID from database if db object is provided', () => {
@@ -52,7 +52,7 @@ describe('components/config', () => {
       const pubnub = new PubNub(storageParams);
       assert.equal(dbInstance.get.callCount, 1);
       assert.equal(dbInstance.get.getCall(0).args[0], 'mySubKeyuuid');
-      assert.equal(pubnub.getUUID(), 'uuidCustom');
+      assert.equal(pubnub.getUUID(), 'pn-uuidCustom');
     });
 
     it('uses UUID from database if db object is provided', () => {

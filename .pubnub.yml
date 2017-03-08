@@ -1,8 +1,13 @@
 name: javascript
-version: 4.4.4
+version: 4.5.0
 schema: 1
 scm: github.com/pubnub/javascript
 changelog:
+  - version: v4.5.0
+    date:
+    changes:
+      - type: feature
+        text: add optional support for keepAlive by passing the keepAlive config into the init logic
   - version: v4.4.4
     date:
     changes:
