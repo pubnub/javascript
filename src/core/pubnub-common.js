@@ -4,7 +4,6 @@ import uuidGenerator from 'uuid';
 
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
-import Networking from '../networking/base';
 import SubscriptionManager from './components/subscription_manager';
 import ListenerManager from './components/listener_manager';
 
@@ -106,10 +105,6 @@ export default class {
 
     const config = this._config = new Config({ setup, db });
     const crypto = new Crypto({ config });
-
-    if (!networking) {
-      networking = new Networking({});
-    }
 
     networking.init(config);
 
