@@ -1,13 +1,9 @@
  /* @flow */
 
-import superagent from 'superagent';
-import superagentProxy from 'superagent-proxy';
-
 import PubNubCore from '../core/pubnub-common';
-import Networking from '../networking/node';
+import Networking from '../networking';
+import { keepAlive, get, post, proxy } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
-
-superagentProxy(superagent);
 
 let Database = class {
 
@@ -27,12 +23,10 @@ let Database = class {
 };
 
 export default class extends PubNubCore {
-
   constructor(setup: InternalSetupStruct) {
     setup.db = new Database();
-    setup.networking = new Networking();
+    setup.networking = new Networking({ keepAlive, get, post, proxy });
     setup.sdkFamily = 'Nodejs';
     super(setup);
   }
-
 }

@@ -29,8 +29,10 @@ export type KeepAliveStruct = {
 }
 
 export type NetworkingModules = {
-  agentKeepAliveModule: ?Function,
-  sendBeaconModule: ?Function
+  keepAlive: ?Function,
+  sendBeacon: ?Function,
+  get: Function,
+  post: Function
 }
 
 export type InternalSetupStruct = {
