@@ -239,3 +239,26 @@ features:
     - SUBSCRIBE-WILDCARD
     - SUBSCRIBE-FILTER-EXPRESSION
     - SUBSCRIBE-PUBLISHER-UUID
+supported-platforms:
+  - 
+    version: Pubnub Javascript for Web
+    platforms:
+      - Safari 10
+      - Mozilla Firefox 51
+      - Google Chrome 56
+      - Opera 41
+      - IE 11 or Above
+      - Microsoft Edge 38
+    frameworks:
+      - Angular 1
+      - Angular 2 using Javascript Plain
+  - 
+    version: Pubnub Javascript for Node
+    platforms:
+      - OSX 10.12
+      - Ubuntu 14.04 and above
+      - Windows 7, 8, 10
+    frameworks:
+      - Ionic 1
+      - Cordova 6.5.0
+      - PhoneGap 6.4.5
