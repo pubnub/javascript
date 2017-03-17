@@ -2,7 +2,8 @@
 
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
-import { keepAlive, get, post, proxy } from '../networking/modules/web-node';
+import { get, post } from '../networking/modules/web-node';
+import { keepAlive, proxy } from '../networking/modules/node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 let Database = class {
