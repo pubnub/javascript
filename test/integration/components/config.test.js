@@ -6,7 +6,8 @@ import sinon from 'sinon';
 import uuidGenerator from 'uuid';
 import PubNub from '../../../src/core/pubnub-common';
 import Networking from '../../../src/networking';
-import { keepAlive, get, post, proxy } from '../../../src/networking/modules/web-node';
+import { get, post } from '../../../src/networking/modules/web-node';
+import { keepAlive, proxy } from '../../../src/networking/modules/node';
 
 describe('components/config', () => {
   describe('AuthKey Storage', () => {

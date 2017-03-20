@@ -349,6 +349,15 @@ export default class {
         announce.occupancy = message.payload.occupancy;
         announce.uuid = message.payload.uuid;
         announce.timestamp = message.payload.timestamp;
+
+        if (message.payload.join) {
+          announce.join = message.payload.join;
+        }
+
+        if (message.payload.leave) {
+          announce.leave = message.payload.leave;
+        }
+
         this._listenerManager.announcePresence(announce);
       } else {
         let announce: MessageAnnouncement = {};
