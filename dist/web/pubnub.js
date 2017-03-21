@@ -1535,7 +1535,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._pendingChannelSubscriptions = [];
 	    this._pendingChannelGroupSubscriptions = [];
 
-	    this._timetoken = 0;
+	    this._currentTimetoken = 0;
+	    this._lastTimetoken = 0;
+
 	    this._subscriptionStatusAnnounced = false;
 
 	    this._reconnectionManager = new _reconnection_manager2.default({ timeEndpoint: timeEndpoint });
@@ -1582,7 +1584,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	      }
 
-	      if (timetoken) this._timetoken = timetoken;
+	      if (timetoken) {
+	        this._lastTimetoken = this._currentTimetoken;
+	        this._currentTimetoken = timetoken;
+	      }
 
 	      channels.forEach(function (channel) {
 	        _this2._channels[channel] = { state: {} };
@@ -1626,12 +1631,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._leaveEndpoint({ channels: channels, channelGroups: channelGroups }, function (status) {
 	          status.affectedChannels = channels;
 	          status.affectedChannelGroups = channelGroups;
+	          status.currentTimetoken = _this3._currentTimetoken;
+	          status.lastTimetoken = _this3._lastTimetoken;
 	          _this3._listenerManager.announceStatus(status);
 	        });
 	      }
 
 	      if (Object.keys(this._channels).length === 0 && Object.keys(this._presenceChannels).length === 0 && Object.keys(this._channelGroups).length === 0 && Object.keys(this._presenceChannelGroups).length === 0) {
-	        this._timetoken = 0;
+	        this._lastTimetoken = 0;
+	        this._currentTimetoken = 0;
 	        this._region = null;
 	        this._reconnectionManager.stopPolling();
 	      }
@@ -1747,7 +1755,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var subscribeArgs = {
 	        channels: channels,
 	        channelGroups: channelGroups,
-	        timetoken: this._timetoken,
+	        timetoken: this._currentTimetoken,
 	        filterExpression: this._config.filterExpression,
 	        region: this._region
 	      };
@@ -1769,7 +1777,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            _this5._subscriptionStatusAnnounced = true;
 	            var reconnectedAnnounce = {
 	              category: _categories2.default.PNReconnectedCategory,
-	              operation: status.operation
+	              operation: status.operation,
+	              lastTimetoken: _this5._lastTimetoken,
+	              currentTimetoken: _this5._currentTimetoken
 	            };
 	            _this5._listenerManager.announceStatus(reconnectedAnnounce);
 	          });
@@ -1782,12 +1792,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	      }
 
+	      this._lastTimetoken = this._currentTimetoken;
+	      this._currentTimetoken = payload.metadata.timetoken;
+
 	      if (!this._subscriptionStatusAnnounced) {
 	        var connectedAnnounce = {};
 	        connectedAnnounce.category = _categories2.default.PNConnectedCategory;
 	        connectedAnnounce.operation = status.operation;
 	        connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
 	        connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
+	        connectedAnnounce.lastTimetoken = this._lastTimetoken;
+	        connectedAnnounce.currentTimetoken = this._currentTimetoken;
 	        this._subscriptionStatusAnnounced = true;
 	        this._listenerManager.announceStatus(connectedAnnounce);
 
@@ -1873,7 +1888,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      this._region = payload.metadata.region;
-	      this._timetoken = payload.metadata.timetoken;
 	      this._startSubscribeLoop();
 	    }
 	  }, {
