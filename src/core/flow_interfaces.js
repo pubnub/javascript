@@ -160,6 +160,8 @@ export type StatusAnnouncement = {
   statusCode: number,
   category: string,
   errorData: Object,
+  lastTimetoken: number,
+  currentTimetoken: number,
 
   // send back channel, channel groups that were affected by this operation
   affectedChannels: Array<String>,

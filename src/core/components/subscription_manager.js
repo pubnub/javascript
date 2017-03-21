@@ -54,7 +54,8 @@ export default class {
   _channelGroups: Object;
   _presenceChannelGroups: Object;
 
-  _timetoken: number;
+  _currentTimetoken: number;
+  _lastTimetoken: number;
   _region: ?number;
 
   _subscribeCall: ?Object;
@@ -87,7 +88,9 @@ export default class {
     this._pendingChannelSubscriptions = [];
     this._pendingChannelGroupSubscriptions = [];
 
-    this._timetoken = 0;
+    this._currentTimetoken = 0;
+    this._lastTimetoken = 0;
+
     this._subscriptionStatusAnnounced = false;
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
@@ -115,7 +118,10 @@ export default class {
       return;
     }
 
-    if (timetoken) this._timetoken = timetoken;
+    if (timetoken) {
+      this._lastTimetoken = this._currentTimetoken;
+      this._currentTimetoken = timetoken;
+    }
 
     channels.forEach((channel: string) => {
       this._channels[channel] = { state: {} };
@@ -152,6 +158,8 @@ export default class {
       this._leaveEndpoint({ channels, channelGroups }, (status) => {
         status.affectedChannels = channels;
         status.affectedChannelGroups = channelGroups;
+        status.currentTimetoken = this._currentTimetoken;
+        status.lastTimetoken = this._lastTimetoken;
         this._listenerManager.announceStatus(status);
       });
     }
@@ -161,7 +169,8 @@ export default class {
       Object.keys(this._presenceChannels).length === 0 &&
       Object.keys(this._channelGroups).length === 0 &&
       Object.keys(this._presenceChannelGroups).length === 0) {
-      this._timetoken = 0;
+      this._lastTimetoken = 0;
+      this._currentTimetoken = 0;
       this._region = null;
       this._reconnectionManager.stopPolling();
     }
@@ -258,7 +267,7 @@ export default class {
     const subscribeArgs = {
       channels,
       channelGroups,
-      timetoken: this._timetoken,
+      timetoken: this._currentTimetoken,
       filterExpression: this._config.filterExpression,
       region: this._region
     };
@@ -279,7 +288,9 @@ export default class {
           this._subscriptionStatusAnnounced = true;
           let reconnectedAnnounce: StatusAnnouncement = {
             category: categoryConstants.PNReconnectedCategory,
-            operation: status.operation
+            operation: status.operation,
+            lastTimetoken: this._lastTimetoken,
+            currentTimetoken: this._currentTimetoken
           };
           this._listenerManager.announceStatus(reconnectedAnnounce);
         });
@@ -292,12 +303,18 @@ export default class {
       return;
     }
 
+    this._lastTimetoken = this._currentTimetoken;
+    this._currentTimetoken = payload.metadata.timetoken;
+
+
     if (!this._subscriptionStatusAnnounced) {
       let connectedAnnounce: StatusAnnouncement = {};
       connectedAnnounce.category = categoryConstants.PNConnectedCategory;
       connectedAnnounce.operation = status.operation;
       connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
       connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
+      connectedAnnounce.lastTimetoken = this._lastTimetoken;
+      connectedAnnounce.currentTimetoken = this._currentTimetoken;
       this._subscriptionStatusAnnounced = true;
       this._listenerManager.announceStatus(connectedAnnounce);
 
@@ -376,7 +393,6 @@ export default class {
     });
 
     this._region = payload.metadata.region;
-    this._timetoken = payload.metadata.timetoken;
     this._startSubscribeLoop();
   }
 
