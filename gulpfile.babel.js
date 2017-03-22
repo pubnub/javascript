@@ -38,6 +38,12 @@ gulp.task('compile_web', () => {
     .pipe(gulp.dest('dist/web'));
 });
 
+gulp.task('compile_titanium', () => {
+  return gulp.src('src/titanium/index.js')
+    .pipe(gulpWebpack(webpackConfig))
+    .pipe(gulp.dest('dist/titanium'));
+});
+
 gulp.task('create_version', () => {
   return gulp.src('dist/web/pubnub.js')
     .pipe(rename(`pubnub.${packageJSON.version}.js`))
@@ -89,12 +95,6 @@ gulp.task('karma_client_full', (done) => {
   }, done).start();
 });
 
-gulp.task('karma_client_min', (done) => {
-  new Karma({
-    configFile: path.join(__dirname, '/test/karma.min.conf.js'),
-  }, done).start();
-});
-
 gulp.task('pre-test', () => {
   return gulp.src(['src/**/*.js'])
     .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter, includeAllSources: true }))
@@ -110,6 +110,12 @@ gulp.task('test_server', () => {
   return gulp.src('test/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
+});
+
+gulp.task('test_titanium', (done) => {
+  new Karma({
+    configFile: path.join(__dirname, '/karma/titanium.config.js'),
+  }, done).start();
 });
 
 gulp.task('webpack', ['compile_web']);
