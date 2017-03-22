@@ -1,0 +1,135 @@
+ts	1489617015000
+app.test.js	1892
+titanium
+	Ti
+		API.js	1447
+		Accelerometer.js	809
+		Analytics.js	785
+		App
+			Properties.js	1852
+		App.js	499
+		Blob.js	1043
+		BlobStream.js	119
+		Buffer.js	2564
+		BufferStream.js	121
+		Codec.js	1853
+		Facebook
+			LoginButton.js	1925
+		Facebook.js	4993
+		Filesystem
+			File.js	245
+			FileStream.js	130
+		Filesystem.js	1976
+		Geolocation.js	5297
+		Gesture.js	2866
+		IOStream.js	1119
+		Locale.js	2399
+		Map
+			Annotation.js	1010
+			View.js	236
+		Map.js	551
+		Media
+			AudioPlayer.js	132
+			Sound.js	126
+			VideoPlayer.js	7941
+		Media.js	1325
+		Network
+			HTTPClient.js	5395
+		Network.js	1890
+		Platform
+			DisplayCaps.js	529
+		Platform.js	2969
+		UI
+			2DMatrix.js	2230
+			ActivityIndicator.js	3793
+			ActivityIndicatorStyle.js	177
+			AlertDialog.js	2784
+			Animation.js	11955
+			Button.js	5063
+			Clipboard.js	1156
+			EmailDialog.js	1104
+			ImageView.js	6595
+			Label.js	4350
+			MobileWeb
+				NavigationGroup.js	5898
+				TableViewSeparatorStyle.js	171
+			MobileWeb.js	263
+			OptionDialog.js	2559
+			Picker.js	7955
+			PickerColumn.js	7695
+			PickerRow.js	434
+			ProgressBar.js	2488
+			ScrollView.js	4436
+			ScrollableView.js	11800
+			Slider.js	3177
+			Switch.js	4161
+			Tab.js	2992
+			TabGroup.js	8090
+			TableView.js	11732
+			TableViewRow.js	4079
+			TableViewSection.js	5079
+			TextArea.js	842
+			TextField.js	3310
+			View.js	2025
+			WebView.js	5738
+			Window.js	2210
+		UI.js	15038
+		Utils.js	9689
+		XML.js	1436
+		Yahoo.js	652
+		_
+			Evented.js	1716
+			Filesystem
+				Local.js	13753
+			Gestures
+				DoubleTap.js	1586
+				Dragging.js	2055
+				LongPress.js	1466
+				Pinch.js	3159
+				SingleTap.js	1700
+				Swipe.js	2464
+				TouchCancel.js	452
+				TouchEnd.js	438
+				TouchMove.js	444
+				TouchStart.js	446
+				TwoFingerTap.js	4532
+			Layouts
+				Base.js	3953
+				Composite.js	16661
+				ConstrainingHorizontal.js	16296
+				ConstrainingVertical.js	16301
+				Horizontal.js	14389
+				Vertical.js	13611
+			Layouts.js	506
+			Map
+				Google.js	14036
+			UI
+				Element.js	22068
+				FontWidget.js	2304
+				KineticScrollView.js	15200
+				SuperView.js	1289
+				TextBox.js	3204
+				WebViewBridge.js	544
+				Widget.js	201
+				blank.html	39
+			analytics.js	4558
+			browser.js	187
+			colors.js	3818
+			css.js	719
+			declare.js	2893
+			dom.js	3781
+			encoding.js	1240
+			event.js	349
+			has.js	1127
+			image.js	317
+			include.js	1213
+			lang.js	6715
+			ready.js	1436
+			string.js	10228
+			style.js	1645
+			text.js	729
+		_.js	1833
+	Ti.js	6757
+	dependencies.json	10476
+	package.json	646
+titanium.js	481747
