@@ -258,7 +258,9 @@ supported-platforms:
       - OSX 10.12 and up
       - Ubuntu 14.04 and above
       - Windows 7, 8, 10
-    frameworks:
-      - Ionic 1
-      - Cordova 6.5.0
-      - PhoneGap 6.4.5
+    editors:
+      - 0.12 
+      - 4
+      - 5
+      - 6
+      - 7
