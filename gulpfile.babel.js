@@ -75,11 +75,13 @@ gulp.task('lint_code', [], () => {
 });
 
 gulp.task('lint_tests', [], () => {
-  return gulp.src(['test/**/*.js'])
+  return gulp.src(['test/**/*.js', '!test/titanium/*.js'])
       .pipe(eslint())
       .pipe(eslint.format())
       .pipe(eslint.failAfterError());
 });
+
+gulp.task('lint', ['lint_code', 'lint_tests']);
 
 gulp.task('flow', (cb) => {
   return exec('./node_modules/.bin/flow --show-all-errors', (err, stdout, stderr) => {
@@ -89,11 +91,7 @@ gulp.task('flow', (cb) => {
   });
 });
 
-gulp.task('karma_client_full', (done) => {
-  new Karma({
-    configFile: path.join(__dirname, '/test/karma.full.conf.js'),
-  }, done).start();
-});
+gulp.task('validate', ['lint', 'flow']);
 
 gulp.task('pre-test', () => {
   return gulp.src(['src/**/*.js'])
@@ -106,8 +104,12 @@ gulp.task('test_release', () => {
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('test_server', () => {
-  return gulp.src('test/**/*.test.js', { read: false })
+gulp.task('test_client', (done) => {
+  runSequence('karma_client_full', 'karma_client_min', done);
+});
+
+gulp.task('test_node', () => {
+  return gulp.src(['test/**/*.test.js', '!test/titanium/*.js'], { read: false })
     .pipe(mocha({ reporter: 'spec' }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
@@ -118,18 +120,11 @@ gulp.task('test_titanium', (done) => {
   }, done).start();
 });
 
+gulp.task('test', (done) => {
+  runSequence('pre-test', 'test_node', 'test_release', 'validate', done);
+});
+
 gulp.task('webpack', ['compile_web']);
 gulp.task('compile', (done) => {
   runSequence('clean', 'babel', 'webpack', 'uglify', 'create_version', 'create_version_gzip', done);
-});
-
-gulp.task('lint', ['lint_code', 'lint_tests']);
-
-gulp.task('validate', ['lint', 'flow']);
-gulp.task('test_client', (done) => {
-  runSequence('karma_client_full', 'karma_client_min', done);
-});
-
-gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_server', 'test_release', 'lint', 'flow', done);
 });
