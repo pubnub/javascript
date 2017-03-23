@@ -29,10 +29,10 @@ let Database = class {
 export default class extends PubNubCore {
 
   constructor(setup: InternalSetupStruct) {
-    setup.db = new Database();
-    setup.networking = new Networking();
-    setup.sdkFamily = 'Nodejs';
-    super(setup);
+        setup.db = new Database();
+        setup.networking = new Networking();
+        setup.sdkFamily = 'Nodejs';
+        super(setup);
   }
 
 }
