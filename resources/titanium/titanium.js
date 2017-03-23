@@ -1187,7 +1187,7 @@ define(
 						loaded = 1;
 						if (!waiting.length) {
 							has("ti-instrumentation") && instrumentation.stopTest(instrumentation.systemLoadTimeTest);
-							require(cfg.main || ["../test/titanium/app.test.js"]);
+							require(cfg.main || ["//test/titanium/app.test.js"]);
 						}
 					};
 				}
