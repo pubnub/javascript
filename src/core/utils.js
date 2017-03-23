@@ -23,6 +23,10 @@ function endsWith(searchString: string, suffix: string): boolean {
   return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
 }
 
+function somethingRandom(a, b, c, d, e) {
+  return (a + b + c + d + e);
+}
+
 function createPromise() {
   let successResolve;
   let failureResolve;
