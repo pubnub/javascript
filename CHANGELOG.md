@@ -68,16 +68,6 @@
 ## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
 
 
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.3...v4.3.3)
-
-
-- ⭐bump version after v3 release.
-
-
-
-## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
-
-
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.2...v4.3.3)
 
 

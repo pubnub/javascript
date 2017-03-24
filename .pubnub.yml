@@ -45,11 +45,6 @@ changelog:
     changes:
       - type: improvement
         text: bump version after v3 release.
-  - version: v4.3.3
-    date:
-    changes:
-      - type: improvement
-        text: bump version after v3 release.
   - version: v4.3.2
     date:
     changes:
@@ -199,6 +194,7 @@ changelog:
 features:
   access:
     - ACCESS-GRANT
+    - ACCESS-SECRET-KEY-ALL-ACCESS
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -243,3 +239,28 @@ features:
     - SUBSCRIBE-WILDCARD
     - SUBSCRIBE-FILTER-EXPRESSION
     - SUBSCRIBE-PUBLISHER-UUID
+supported-platforms:
+  - 
+    version: Pubnub Javascript for Web
+    platforms:
+      - Safari 10 and up
+      - Mozilla Firefox 51 and up
+      - Google Chrome 56 and up
+      - Opera 41  and up
+      - IE 11  and up
+      - Microsoft Edge 38 and up
+    frameworks:
+      - Angular 1
+      - Angular 2 using Javascript Plain
+  - 
+    version: Pubnub Javascript for Node
+    platforms:
+      - OSX 10.12 and up
+      - Ubuntu 14.04 and above
+      - Windows 7, 8, 10
+    editors:
+      - 0.12 
+      - 4
+      - 5
+      - 6
+      - 7
