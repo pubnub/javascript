@@ -4390,7 +4390,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}();
 
 	exports.default = _class;
-	;
 	module.exports = exports["default"];
 
 /***/ },

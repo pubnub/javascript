@@ -18,6 +18,7 @@ const isparta = require('isparta');
 const sourcemaps = require('gulp-sourcemaps');
 const packageJSON = require('./package.json');
 const gzip = require('gulp-gzip');
+const unzip = require('gulp-unzip');
 
 gulp.task('clean', () => {
   return gulp.src(['lib', 'dist', 'coverage', 'upload'], { read: false })
@@ -30,6 +31,12 @@ gulp.task('babel', () => {
     .pipe(babel())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('lib'));
+});
+
+gulp.task('unzip_titanium_sdk', () => {
+  return gulp.src("resources/titanium.zip")
+    .pipe(unzip())
+    .pipe(gulp.dest('resources/'));
 });
 
 gulp.task('compile_web', () => {
@@ -114,7 +121,7 @@ gulp.task('test_node', () => {
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
-gulp.task('test_titanium', (done) => {
+gulp.task('test_titanium', ['unzip_titanium_sdk'], (done) => {
   new Karma({
     configFile: path.join(__dirname, '/karma/titanium.config.js'),
   }, done).start();
