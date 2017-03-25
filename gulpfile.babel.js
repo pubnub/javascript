@@ -82,7 +82,7 @@ gulp.task('lint_code', [], () => {
 });
 
 gulp.task('lint_tests', [], () => {
-  return gulp.src(['test/**/*.js', '!test/titanium/*.js'])
+  return gulp.src(['test/**/*.js', '!test/dist/*.js'])
       .pipe(eslint())
       .pipe(eslint.format())
       .pipe(eslint.failAfterError());
@@ -106,17 +106,14 @@ gulp.task('pre-test', () => {
     .pipe(gulpIstanbul.hookRequire());
 });
 
-gulp.task('test_release', () => {
-  return gulp.src('test/release/**/*.test.js', { read: false })
-    .pipe(mocha({ reporter: 'spec' }));
-});
-
-gulp.task('test_client', (done) => {
-  runSequence('karma_client_full', 'karma_client_min', done);
+gulp.task('test_web', (done) => {
+  new Karma({
+    configFile: path.join(__dirname, '/karma/web.config.js'),
+  }, done).start();
 });
 
 gulp.task('test_node', () => {
-  return gulp.src(['test/**/*.test.js', '!test/titanium/*.js'], { read: false })
+  return gulp.src(['test/**/*.test.js', '!test/dist/*.js'], { read: false })
     .pipe(mocha({ reporter: 'spec' }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
@@ -127,11 +124,19 @@ gulp.task('test_titanium', ['unzip_titanium_sdk'], (done) => {
   }, done).start();
 });
 
-gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_node', 'test_release', 'validate', done);
+gulp.task('test_release', () => {
+  return gulp.src('test/release/**/*.test.js', { read: false })
+    .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('webpack', ['compile_web']);
+gulp.task('test', (done) => {
+  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_release', 'validate', done);
+});
+
+gulp.task('webpack', (done) => {
+  runSequence('compile_web', 'compile_titanium', done);
+});
+
 gulp.task('compile', (done) => {
   runSequence('clean', 'babel', 'webpack', 'uglify', 'create_version', 'create_version_gzip', done);
 });

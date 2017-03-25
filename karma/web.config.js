@@ -15,8 +15,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      '../dist/titanium/pubnub.js',
-      '../resources/titanium/titanium.js',
+      '../dist/web/pubnub.js',
       '../test/dist/web-titanium.test.js'
     ],
 
