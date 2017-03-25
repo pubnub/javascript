@@ -60,6 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.default = undefined;
 
 	var _pubnubCommon = __webpack_require__(1);
 
@@ -85,23 +86,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _class = function (_PubNubCore) {
-	  _inherits(_class, _PubNubCore);
+	var PubNub = function (_PubNubCore) {
+	  _inherits(PubNub, _PubNubCore);
 
-	  function _class(setup) {
-	    _classCallCheck(this, _class);
+	  function PubNub(setup) {
+	    _classCallCheck(this, PubNub);
 
 	    setup.db = new _common2.default();
 	    setup.sdkFamily = 'TitaniumSDK';
 	    setup.networking = new _networking2.default({ get: _titanium.get, post: _titanium.post });
 
-	    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, setup));
+	    return _possibleConstructorReturn(this, (PubNub.__proto__ || Object.getPrototypeOf(PubNub)).call(this, setup));
 	  }
 
-	  return _class;
+	  return PubNub;
 	}(_pubnubCommon2.default);
 
-	exports.default = _class;
+	exports.default = PubNub;
 	module.exports = exports['default'];
 
 /***/ },
@@ -4507,7 +4508,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return callback(status, null);
 	  };
 
-	  xhr.timeout = 5000;
+	  xhr.timeout = Infinity;
 
 	  xhr.send(body);
 	}

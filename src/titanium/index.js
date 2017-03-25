@@ -7,7 +7,7 @@ import Database from '../db/common';
 import { get, post } from '../networking/modules/titanium';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
-export default class extends PubNubCore {
+class PubNub extends PubNubCore {
   constructor(setup: InternalSetupStruct) {
     setup.db = new Database();
     setup.sdkFamily = 'TitaniumSDK';
@@ -16,3 +16,5 @@ export default class extends PubNubCore {
     super(setup);
   }
 }
+
+export { PubNub as default };
