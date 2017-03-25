@@ -101,7 +101,7 @@ function xdr(xhr: any, method: string, url: string, params: Object, body: Object
     return callback(status, null);
   };
 
-  xhr.timeout = 5000;
+  xhr.timeout = Infinity;
 
   xhr.send(body);
 }
