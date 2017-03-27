@@ -34,7 +34,7 @@ gulp.task('babel', () => {
 });
 
 gulp.task('unzip_titanium_sdk', () => {
-  return gulp.src("resources/titanium.zip")
+  return gulp.src('resources/titanium.zip')
     .pipe(unzip())
     .pipe(gulp.dest('resources/'));
 });

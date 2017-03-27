@@ -1,7 +1,7 @@
 // Karma configuration
 // Generated on Tue Mar 24 2015 04:20:15 GMT-0700 (Pacific Daylight Time)
 // TODO: copy test file from javascript repo and invoke it in angular environment
-module.exports = function (config) {
+export default (config) => {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -26,7 +26,7 @@ module.exports = function (config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: { 'dist/*.js': ['coverage']},
+    preprocessors: { 'dist/*.js': ['coverage'] },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
