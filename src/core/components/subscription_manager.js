@@ -375,6 +375,10 @@ export default class {
           announce.leave = message.payload.leave;
         }
 
+        if (message.payload.timeout) {
+          announce.timeout = message.payload.timeout;
+        }
+
         this._listenerManager.announcePresence(announce);
       } else {
         let announce: MessageAnnouncement = {};

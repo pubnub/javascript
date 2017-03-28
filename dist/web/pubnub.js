@@ -1,4 +1,4 @@
-/*! 4.5.0 / Consumer  */
+/*! 4.6.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -814,7 +814,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.5.0';
+	      return '4.6.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1860,6 +1860,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	          if (message.payload.leave) {
 	            announce.leave = message.payload.leave;
+	          }
+
+	          if (message.payload.timeout) {
+	            announce.timeout = message.payload.timeout;
 	          }
 
 	          _this5._listenerManager.announcePresence(announce);
