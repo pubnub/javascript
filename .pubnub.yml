@@ -11,6 +11,8 @@ changelog:
     changes:
       - type: feature
         text: add support for presence deltas.
+      - type: feature
+        text: keep track of new and upcoming timetokens on status messages
   - version: v4.5.0
     date:
     changes:

@@ -7,6 +7,9 @@
 - 🌟add support for presence deltas.
 
 
+- 🌟keep track of new and upcoming timetokens on status messages
+
+
 
 
 ## [v4.5.0](https://github.com/pubnub/javascript/tree/v4.5.0)
