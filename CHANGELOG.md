@@ -1,7 +1,7 @@
-## [v4.6.1](https://github.com/pubnub/javascript/tree/v4.6.1)
+## [v4.7.0](https://github.com/pubnub/javascript/tree/v4.7.0)
 
 
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.6.0...v4.6.1)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.6.0...v4.7.0)
 
 - 🌟add support for titanium SDK
 
