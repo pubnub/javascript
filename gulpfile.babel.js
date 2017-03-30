@@ -63,12 +63,23 @@ gulp.task('create_version_gzip', () => {
     .pipe(gulp.dest('upload/gzip'));
 });
 
-gulp.task('uglify', () => {
+gulp.task('uglify_web', () => {
   return gulp.src('dist/web/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
 
     .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/web'))
+
+    .pipe(rename(`pubnub.${packageJSON.version}.min.js`))
+    .pipe(gulp.dest('upload/normal'));
+});
+
+gulp.task('uglify_titanium', () => {
+  return gulp.src('dist/titanium/pubnub.js')
+    .pipe(uglify({ mangle: true, compress: true }))
+
+    .pipe(rename('pubnub.min.js'))
+    .pipe(gulp.dest('dist/titanium'))
 
     .pipe(rename(`pubnub.${packageJSON.version}.min.js`))
     .pipe(gulp.dest('upload/normal'));
@@ -138,5 +149,5 @@ gulp.task('webpack', (done) => {
 });
 
 gulp.task('compile', (done) => {
-  runSequence('clean', 'babel', 'webpack', 'uglify', 'create_version', 'create_version_gzip', done);
+  runSequence('clean', 'babel', 'webpack', 'uglify_web', 'uglify_titanium', 'create_version', 'create_version_gzip', done);
 });
