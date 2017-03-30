@@ -69,7 +69,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _webNode = __webpack_require__(41);
+	var _web = __webpack_require__(41);
+
+	var _web2 = _interopRequireDefault(_web);
+
+	var _webNode = __webpack_require__(42);
 
 	var _flow_interfaces = __webpack_require__(8);
 
@@ -80,23 +84,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var db = {
-	  get: function get(key) {
-	    try {
-	      return localStorage.getItem(key);
-	    } catch (e) {
-	      return null;
-	    }
-	  },
-	  set: function set(key, data) {
-	    try {
-	      return localStorage.setItem(key, data);
-	    } catch (e) {
-	      return null;
-	    }
-	  }
-	};
 
 	function sendBeacon(url) {
 	  if (navigator && navigator.sendBeacon) {
@@ -112,7 +99,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function _class(setup) {
 	    _classCallCheck(this, _class);
 
-	    setup.db = db;
+	    setup.db = _web2.default;
 	    setup.sdkFamily = 'Web';
 	    setup.networking = new _networking2.default({ get: _webNode.get, post: _webNode.post, sendBeacon: sendBeacon });
 
@@ -4385,6 +4372,33 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 41 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = {
+	  get: function get(key) {
+	    try {
+	      return localStorage.getItem(key);
+	    } catch (e) {
+	      return null;
+	    }
+	  },
+	  set: function set(key, data) {
+	    try {
+	      return localStorage.setItem(key, data);
+	    } catch (e) {
+	      return null;
+	    }
+	  }
+	};
+	module.exports = exports["default"];
+
+/***/ },
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4395,7 +4409,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.get = get;
 	exports.post = post;
 
-	var _superagent = __webpack_require__(42);
+	var _superagent = __webpack_require__(43);
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
@@ -4474,7 +4488,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4491,9 +4505,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  root = this;
 	}
 
-	var Emitter = __webpack_require__(43);
-	var requestBase = __webpack_require__(44);
-	var isObject = __webpack_require__(45);
+	var Emitter = __webpack_require__(44);
+	var requestBase = __webpack_require__(45);
+	var isObject = __webpack_require__(46);
 
 	/**
 	 * Noop.
@@ -4505,7 +4519,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Expose `request`.
 	 */
 
-	var request = module.exports = __webpack_require__(46).bind(null, Request);
+	var request = module.exports = __webpack_require__(47).bind(null, Request);
 
 	/**
 	 * Determine XHR.
@@ -5456,7 +5470,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -5625,13 +5639,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 44 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module of mixed-in functions shared between node and client code
 	 */
-	var isObject = __webpack_require__(45);
+	var isObject = __webpack_require__(46);
 
 	/**
 	 * Clear previous timeout.
@@ -6003,7 +6017,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 45 */
+/* 46 */
 /***/ function(module, exports) {
 
 	/**
@@ -6022,7 +6036,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 46 */
+/* 47 */
 /***/ function(module, exports) {
 
 	// The node and browser modules expose versions of this with the
