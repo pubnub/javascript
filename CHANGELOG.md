@@ -1,3 +1,4 @@
+
 ## [v4.7.0](https://github.com/pubnub/javascript/tree/v4.7.0)
 
 
@@ -5,10 +6,12 @@
 
 - 🌟add support for titanium SDK
 
-- 🌟fix issue with React-Native SDK
 
-- 🌟Validate web distribution
 
+- ⭐fix support for react-native SDK
+
+
+- ⭐add validation for web distribution
 
 
 
