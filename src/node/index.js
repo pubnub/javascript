@@ -2,26 +2,10 @@
 
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
+import Database from '../db/common';
 import { get, post } from '../networking/modules/web-node';
 import { keepAlive, proxy } from '../networking/modules/node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
-
-let Database = class {
-
-  storage: Object;
-
-  constructor() {
-    this.storage = {};
-  }
-
-  get(key) {
-    return this.storage[key];
-  }
-
-  set(key, value) {
-    this.storage[key] = value;
-  }
-};
 
 export default class extends PubNubCore {
   constructor(setup: InternalSetupStruct) {

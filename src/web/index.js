@@ -1,33 +1,11 @@
 /* @flow */
-/* global localStorage, navigator, window */
+/* global navigator, window */
 
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
+import db from '../db/web';
 import { get, post } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
-
-/**
- * LOCAL STORAGE
- */
-let db = {
-  get(key: string) {
-    // try catch for operating within iframes which disable localStorage
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      return null;
-    }
-  },
-
-  set(key: string, data: any) {
-    // try catch for operating within iframes which disable localStorage
-    try {
-      return localStorage.setItem(key, data);
-    } catch (e) {
-      return null;
-    }
-  }
-};
 
 function sendBeacon(url: string) {
   if (navigator && navigator.sendBeacon) {

@@ -1,16 +1,20 @@
 /* @flow */
+/* global localStorage, navigator, window */
 
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import Database from '../db/common';
-import { get, post } from '../networking/modules/web-node';
+import { get, post } from '../networking/modules/titanium';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
-export default class extends PubNubCore {
+class PubNub extends PubNubCore {
   constructor(setup: InternalSetupStruct) {
     setup.db = new Database();
+    setup.sdkFamily = 'TitaniumSDK';
     setup.networking = new Networking({ get, post });
-    setup.sdkFamily = 'ReactNative';
+
     super(setup);
   }
 }
+
+export { PubNub as default };
