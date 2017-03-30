@@ -1,5 +1,6 @@
 [ignore]
 .*/test/.*
+.*/node_modules/nock/node_modules/changelog/examples/node.json
 
 [include]
 .*/src/.*

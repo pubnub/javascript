@@ -90,7 +90,9 @@ describe('#components/reconnection_manger', () => {
         } else if (statusPayload.category === 'PNReconnectedCategory') {
           assert.deepEqual({
             category: 'PNReconnectedCategory',
-            operation: 'PNSubscribeOperation'
+            operation: 'PNSubscribeOperation',
+            currentTimetoken: 0,
+            lastTimetoken: 0
           }, statusPayload);
           done();
         }

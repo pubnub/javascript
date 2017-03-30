@@ -1,4 +1,17 @@
 
+## [v4.6.0](https://github.com/pubnub/javascript/tree/v4.6.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.5.0...v4.6.0)
+
+- 🌟add support for presence deltas.
+
+
+- 🌟keep track of new and upcoming timetokens on status messages
+
+
+
+
 ## [v4.5.0](https://github.com/pubnub/javascript/tree/v4.5.0)
 
 
@@ -62,16 +75,6 @@
 
 
 - ⭐handle network outage cases for correct reporting.
-
-
-
-## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
-
-
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.3...v4.3.3)
-
-
-- ⭐bump version after v3 release.
 
 
 
