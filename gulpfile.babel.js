@@ -77,12 +77,8 @@ gulp.task('uglify_web', () => {
 gulp.task('uglify_titanium', () => {
   return gulp.src('dist/titanium/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
-
     .pipe(rename('pubnub.min.js'))
-    .pipe(gulp.dest('dist/titanium'))
-
-    .pipe(rename(`pubnub.${packageJSON.version}.min.js`))
-    .pipe(gulp.dest('upload/normal'));
+    .pipe(gulp.dest('dist/titanium'));
 });
 
 gulp.task('lint_code', [], () => {
