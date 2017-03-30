@@ -1,11 +1,20 @@
 name: javascript
-version: 4.6.0
+version: 4.6.1
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.6.1
+    date:
+    changes:
+      - type: feature
+        text: add support for titanium SDK
+      - type: improvement
+        text: fix support for react-native SDK
+      - type: improvement
+        text: add validation for web distribution
   - version: v4.6.0
     date:
     changes:
