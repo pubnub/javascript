@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.4.4",
+  "version": "4.6.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -26,6 +26,7 @@
     "messaging"
   ],
   "dependencies": {
+    "agentkeepalive": "^3.1.0",
     "superagent": "^2.3.0",
     "superagent-proxy": "^1.0.2",
     "uuid": "^3.0.1"

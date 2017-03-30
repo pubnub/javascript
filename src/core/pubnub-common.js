@@ -2,7 +2,6 @@
 
 import uuidGenerator from 'uuid';
 
-import Networking from './components/networking';
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
@@ -102,11 +101,12 @@ export default class {
   //
 
   constructor(setup: InternalSetupStruct) {
-    let { sendBeacon, db } = setup;
+    let { db, networking } = setup;
 
     const config = this._config = new Config({ setup, db });
     const crypto = new Crypto({ config });
-    const networking = new Networking({ config, crypto, sendBeacon });
+
+    networking.init(config);
 
     let modules = { config, networking, crypto };
 

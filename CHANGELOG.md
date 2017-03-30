@@ -1,4 +1,27 @@
 
+## [v4.6.0](https://github.com/pubnub/javascript/tree/v4.6.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.5.0...v4.6.0)
+
+- 🌟add support for presence deltas.
+
+
+- 🌟keep track of new and upcoming timetokens on status messages
+
+
+
+
+## [v4.5.0](https://github.com/pubnub/javascript/tree/v4.5.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.4...v4.5.0)
+
+- 🌟add optional support for keepAlive by passing the keepAlive config into the init logic
+
+
+
+
 ## [v4.4.4](https://github.com/pubnub/javascript/tree/v4.4.4)
 
 
@@ -6,7 +29,6 @@
 
 
 - ⭐add guard to check for channel or channel group on state setting
-
 
 
 - ⭐add guard to check for publish, secret keys when performing a grant
@@ -52,18 +74,7 @@
 - ⭐upgrade dependencies; fix up linting.
 
 
-
 - ⭐handle network outage cases for correct reporting.
-
-
-
-## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
-
-
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.3...v4.3.3)
-
-
-- ⭐bump version after v3 release.
 
 
 
@@ -106,13 +117,10 @@
 - ⭐bulk history exposed via pubnub.fetchMessages
 
 
-
 - ⭐publish supports custom ttl interval
 
 
-
 - ⭐v2 for audit and grant; no consumer facing changes.
-
 
 
 - ⭐fixes for param validation on usage of promises
@@ -158,7 +166,6 @@
 - ⭐Add promise support on setState operation (@jskrzypek)
 
 
-
 - ⭐Add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
 
 
@@ -182,9 +189,7 @@
 - ⭐Add optional support for promises on all endpoints.
 
 
-
 - ⭐History always returns timetokens in the payloads.
-
 
 
 - ⭐Optionally, if queue size is set, send status on queue size threshold
@@ -208,7 +213,6 @@
 
 
 - ⭐Reset timetoken when all unsubscribes happen
-
 
 
 - ⭐Sign requests when a a secret key is passed
@@ -264,7 +268,6 @@
 - ⭐Channel / subscription items are populated in
 
 
-
 - ⭐Constants for operation and category are exposed on global object
 
 
@@ -288,7 +291,6 @@
 - ⭐Dependency upgrades
 
 
-
 - ⭐Try..catch wrapped around localStorage for iframe compliance
 
 
@@ -300,7 +302,6 @@
 
 
 - ⭐Adjustment of reconnection policies for web distributions.
-
 
 
 - ⭐PNSDK support for partner identification
@@ -325,14 +326,11 @@
 
 - ⭐Adjust handling of presence payloads for state settings.
 
-
 - 🌟Exposing generateUUID method to create uuids.
 
 
 
-
 - ⭐Triggering disconnect, reconnect events on Web distributions.
-
 
 
 - ⭐React Native adjustments to package.json information.

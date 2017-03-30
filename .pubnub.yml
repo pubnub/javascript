@@ -1,8 +1,23 @@
 name: javascript
-version: 4.4.4
+version: 4.6.0
 schema: 1
 scm: github.com/pubnub/javascript
+files:
+  - dist/web/pubnub.js
+  - dist/web/pubnub.min.js
 changelog:
+  - version: v4.6.0
+    date:
+    changes:
+      - type: feature
+        text: add support for presence deltas.
+      - type: feature
+        text: keep track of new and upcoming timetokens on status messages
+  - version: v4.5.0
+    date:
+    changes:
+      - type: feature
+        text: add optional support for keepAlive by passing the keepAlive config into the init logic
   - version: v4.4.4
     date:
     changes:
@@ -32,11 +47,6 @@ changelog:
         text: upgrade dependencies; fix up linting.
       - type: improvement
         text: handle network outage cases for correct reporting.
-  - version: v4.3.3
-    date:
-    changes:
-      - type: improvement
-        text: bump version after v3 release.
   - version: v4.3.3
     date:
     changes:
@@ -236,3 +246,28 @@ features:
     - SUBSCRIBE-WILDCARD
     - SUBSCRIBE-FILTER-EXPRESSION
     - SUBSCRIBE-PUBLISHER-UUID
+supported-platforms:
+  -
+    version: Pubnub Javascript for Web
+    platforms:
+      - Safari 10 and up
+      - Mozilla Firefox 51 and up
+      - Google Chrome 56 and up
+      - Opera 41  and up
+      - IE 11  and up
+      - Microsoft Edge 38 and up
+    frameworks:
+      - Angular 1
+      - Angular 2 using Javascript Plain
+  -
+    version: Pubnub Javascript for Node
+    platforms:
+      - OSX 10.12 and up
+      - Ubuntu 14.04 and above
+      - Windows 7, 8, 10
+    editors:
+      - 0.12
+      - 4
+      - 5
+      - 6
+      - 7
