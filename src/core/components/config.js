@@ -107,6 +107,10 @@ export default class {
    */
   restore: boolean;
 
+  /*
+    Function used to decrypt old version messages.
+   */
+  fallbackDecrypt: Function;
 
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
@@ -159,6 +163,8 @@ export default class {
     }
 
     this.setUUID(this._decideUUID(setup.uuid)); // UUID decision depends on subKey.
+
+    this.setFallbackDecrypt(setup.fallbackDecrypt);
   }
 
   // exposed setters
@@ -197,6 +203,11 @@ export default class {
 
   getVersion(): string {
     return '4.7.0';
+  }
+
+  setFallbackDecrypt(val: Function): this {
+    this.fallbackDecrypt = val || (() => null);
+    return this;
   }
 
   _decideUUID(providedUUID: string): string {

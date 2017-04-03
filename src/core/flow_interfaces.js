@@ -59,7 +59,9 @@ export type InternalSetupStruct = {
   suppressLev: ?boolean,
 
   db: Function, // get / set implementation to store data
-  networking: Function // component of networking to use
+  networking: Function, // component of networking to use
+
+  fallbackDecrypt: Function // function used to decrypt old version messages
 }
 
 type DatabaseInterface = {

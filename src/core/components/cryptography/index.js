@@ -120,7 +120,7 @@ export default class {
       let plaintext = JSON.parse(plainJSON);
       return plaintext;
     } catch (e) {
-      return null;
+      return this._config.fallbackDecrypt(data, customCipherKey || this._config.cipherKey);
     }
   }
 
