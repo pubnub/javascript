@@ -296,6 +296,8 @@ export default class {
         });
         this._reconnectionManager.startPolling();
         this._listenerManager.announceStatus(status);
+      } else if (status.category === categoryConstants.PNBadRequestCategory) {
+        this._stopHeartbeatTimer();
       } else {
         this._listenerManager.announceStatus(status);
       }
