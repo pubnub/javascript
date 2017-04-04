@@ -2,6 +2,7 @@
 /* global fetch, XMLHttpRequest, window, console */
 
 import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
+import { buildUrl } from '../utils';
 
 declare var fetch: any;
 
@@ -27,40 +28,9 @@ function log(url, qs, res) {
   logger.log('-----');
 }
 
-function encodedKeyValuePair(pairs, key: string, value: Object): void {
-  if (value != null) {
-    if (Array.isArray(value)) {
-      value.forEach((item) => {
-        encodedKeyValuePair(pairs, key, item);
-      });
-    } else if (typeof value === 'object') {
-      Object.keys(value).forEach((subkey) => {
-        encodedKeyValuePair(pairs, `${key}[${subkey}]`, value[subkey]);
-      });
-    } else {
-      pairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
-    }
-  } else if (value === null) {
-    pairs.push(encodeURIComponent(`${encodeURIComponent(key)}`));
-  }
-}
-
-function buildUrl(url: string, params: Object) {
-  let pairs = [];
-
-  Object.keys(params).forEach((key) => {
-    encodedKeyValuePair(pairs, key, params[key]);
-  });
-
-  return `${url}?${pairs.join('&')}`;
-}
-
 function xdr(method: string, url: string, params: Object, body: string, endpoint: EndpointDefinition, callback: Function): void {
   let status: StatusAnnouncement = {};
   status.operation = endpoint.operation;
-
-  // let timeout = Infinity;
-  // let mode = 'cors';
 
   fetch(buildUrl(url, params), { method, body })
     .then((response) => {
@@ -92,7 +62,7 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
 export function get(params: Object, endpoint: EndpointDefinition, callback: Function) {
   let url = this.getStandardOrigin() + endpoint.url;
 
-  return xdr.call(this, 'GET', url, params, {}, endpoint, callback);
+  return xdr.call(this, 'GET', url, params, undefined, endpoint, callback);
 }
 
 export function post(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
