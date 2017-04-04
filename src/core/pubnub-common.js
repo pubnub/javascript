@@ -177,8 +177,8 @@ export default class {
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
-    this.destroy = () => {
-      subscriptionManager.unsubscribeAll();
+    this.destroy = (isOffline: boolean) => {
+      subscriptionManager.unsubscribeAll(isOffline);
       subscriptionManager.disconnect();
     };
 
@@ -217,7 +217,7 @@ export default class {
     if (this._config.restore) {
       this.disconnect();
     } else {
-      this.destroy();
+      this.destroy(true);
     }
   }
 

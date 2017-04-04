@@ -141,7 +141,7 @@ export default class {
     this.reconnect();
   }
 
-  adaptUnsubscribeChange(args: UnsubscribeArgs) {
+  adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
     const { channels = [], channelGroups = [] } = args;
 
     channels.forEach((channel) => {
@@ -154,7 +154,7 @@ export default class {
       if (channelGroup in this._presenceChannelGroups) delete this._channelGroups[channelGroup];
     });
 
-    if (this._config.suppressLeaveEvents === false) {
+    if (this._config.suppressLeaveEvents === false && !isOffline) {
       this._leaveEndpoint({ channels, channelGroups }, (status) => {
         status.affectedChannels = channels;
         status.affectedChannelGroups = channelGroups;
@@ -178,8 +178,8 @@ export default class {
     this.reconnect();
   }
 
-  unsubscribeAll() {
-    this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() });
+  unsubscribeAll(isOffline: boolean) {
+    this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() }, isOffline);
   }
 
   getSubscribedChannels(): Array<string> {
