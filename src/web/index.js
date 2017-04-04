@@ -17,7 +17,7 @@ function sendBeacon(url: string) {
 
 export default class extends PubNubCore {
   constructor(setup: InternalSetupStruct) {
-    // exctract config.
+    // extract config.
     const { listenToBrowserNetworkEvents = true } = setup;
 
     setup.db = db;
