@@ -17,20 +17,25 @@ function sendBeacon(url: string) {
 
 export default class extends PubNubCore {
   constructor(setup: InternalSetupStruct) {
+    // exctract config.
+    const { listenToBrowserNetworkEvents = true } = setup;
+
     setup.db = db;
     setup.sdkFamily = 'Web';
     setup.networking = new Networking({ get, post, sendBeacon });
 
     super(setup);
 
-    // mount network events.
-    window.addEventListener('offline', () => {
-      this.__networkDownDetected();
-    });
+    if (listenToBrowserNetworkEvents) {
+      // mount network events.
+      window.addEventListener('offline', () => {
+        this.networkDownDetected();
+      });
 
-    window.addEventListener('online', () => {
-      this.__networkUpDetected();
-    });
+      window.addEventListener('online', () => {
+        this.networkUpDetected();
+      });
+    }
   }
 
 }

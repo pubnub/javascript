@@ -211,7 +211,7 @@ export default class {
   }
 
   // network hooks to indicate network changes
-  __networkDownDetected() {
+  networkDownDetected() {
     this._listenerManager.announceNetworkDown();
 
     if (this._config.restore) {
@@ -221,7 +221,7 @@ export default class {
     }
   }
 
-  __networkUpDetected() {
+  networkUpDetected() {
     this._listenerManager.announceNetworkUp();
     this.reconnect();
   }
