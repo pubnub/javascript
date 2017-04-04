@@ -11,6 +11,7 @@ export default class extends PubNubCore {
     setup.db = new Database();
     setup.networking = new Networking({ get, post });
     setup.sdkFamily = 'ReactNative';
+    setup.ssl = true;
     super(setup);
   }
 }
