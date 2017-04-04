@@ -131,13 +131,19 @@ gulp.task('test_titanium', ['unzip_titanium_sdk'], (done) => {
   }, done).start();
 });
 
+gulp.task('test_react-native', () => {
+  return gulp.src('test/dist/react-native.test.js', { read: false })
+    .pipe(mocha({ reporter: 'spec' }))
+    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
+});
+
 gulp.task('test_release', () => {
   return gulp.src('test/release/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }));
 });
 
 gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_release', 'validate', done);
+  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_react-native', 'test_release', 'validate', done);
 });
 
 gulp.task('webpack', (done) => {
