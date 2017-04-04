@@ -1,15 +1,15 @@
 /* @flow */
 
-export function encodedKeyValuePair(pairs, key: string, value: Object): void {
+export function encodedKeyValuePair(pairs: Array<string>, key: string, value: Object): void {
   if (value != null) {
     if (Array.isArray(value)) {
       value.forEach((item) => {
         encodedKeyValuePair(pairs, key, item);
-    });
+      });
     } else if (typeof value === 'object') {
       Object.keys(value).forEach((subkey) => {
         encodedKeyValuePair(pairs, `${key}[${subkey}]`, value[subkey]);
-    });
+      });
     } else {
       pairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
     }

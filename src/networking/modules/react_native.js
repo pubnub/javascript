@@ -62,7 +62,7 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
 export function get(params: Object, endpoint: EndpointDefinition, callback: Function) {
   let url = this.getStandardOrigin() + endpoint.url;
 
-  return xdr.call(this, 'GET', url, params, undefined, endpoint, callback);
+  return xdr.call(this, 'GET', url, params, '', endpoint, callback);
 }
 
 export function post(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
