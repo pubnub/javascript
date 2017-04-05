@@ -326,8 +326,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
-	    this.destroy = function () {
-	      subscriptionManager.unsubscribeAll();
+	    this.destroy = function (isOffline) {
+	      subscriptionManager.unsubscribeAll(isOffline);
 	      subscriptionManager.disconnect();
 	    };
 
@@ -356,19 +356,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this._config.getVersion();
 	    }
 	  }, {
-	    key: '__networkDownDetected',
-	    value: function __networkDownDetected() {
+	    key: 'networkDownDetected',
+	    value: function networkDownDetected() {
 	      this._listenerManager.announceNetworkDown();
 
 	      if (this._config.restore) {
 	        this.disconnect();
 	      } else {
-	        this.destroy();
+	        this.destroy(true);
 	      }
 	    }
 	  }, {
-	    key: '__networkUpDetected',
-	    value: function __networkUpDetected() {
+	    key: 'networkUpDetected',
+	    value: function networkUpDetected() {
 	      this._listenerManager.announceNetworkUp();
 	      this.reconnect();
 	    }
@@ -1579,7 +1579,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'adaptUnsubscribeChange',
-	    value: function adaptUnsubscribeChange(args) {
+	    value: function adaptUnsubscribeChange(args, isOffline) {
 	      var _this3 = this;
 
 	      var _args$channels3 = args.channels,
@@ -1598,7 +1598,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (channelGroup in _this3._presenceChannelGroups) delete _this3._channelGroups[channelGroup];
 	      });
 
-	      if (this._config.suppressLeaveEvents === false) {
+	      if (this._config.suppressLeaveEvents === false && !isOffline) {
 	        this._leaveEndpoint({ channels: channels, channelGroups: channelGroups }, function (status) {
 	          status.affectedChannels = channels;
 	          status.affectedChannelGroups = channelGroups;
@@ -1619,8 +1619,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'unsubscribeAll',
-	    value: function unsubscribeAll() {
-	      this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() });
+	    value: function unsubscribeAll(isOffline) {
+	      this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() }, isOffline);
 	    }
 	  }, {
 	    key: 'getSubscribedChannels',
