@@ -143,7 +143,9 @@ gulp.task('test_release', () => {
 });
 
 gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_react-native', 'test_release', 'validate', done);
+  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_react-native', 'test_release', 'validate', () => {
+    process.exit();
+  });
 });
 
 gulp.task('webpack', (done) => {
