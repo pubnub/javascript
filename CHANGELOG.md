@@ -1,4 +1,14 @@
 
+## [v4.8.0](https://github.com/pubnub/javascript/tree/v4.8.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.7.0...v4.8.0)
+
+- 🌟allow manual control over network state via listenToBrowserNetworkEvents
+
+
+
+
 ## [v4.7.0](https://github.com/pubnub/javascript/tree/v4.7.0)
 
 

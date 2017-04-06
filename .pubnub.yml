@@ -1,11 +1,16 @@
 name: javascript
-version: 4.7.0
+version: 4.8.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.8.0
+    date:
+    changes:
+      - type: feature
+        text: allow manual control over network state via listenToBrowserNetworkEvents
   - version: v4.7.0
     date:
     changes:
