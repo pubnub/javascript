@@ -65,6 +65,9 @@ export default class {
 
   _subscriptionStatusAnnounced: boolean;
 
+  _autoNetworkDetection: boolean;
+  _isOnline: boolean;
+
   // store pending connection elements
   _pendingChannelSubscriptions: Array<string>;
   _pendingChannelGroupSubscriptions: Array<string>;
@@ -95,6 +98,8 @@ export default class {
     this._storedTimetoken = null;
 
     this._subscriptionStatusAnnounced = false;
+
+    this._isOnline = true;
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
   }
@@ -248,6 +253,13 @@ export default class {
         this._listenerManager.announceStatus(status);
       }
 
+      if (status.error && this._config.autoNetworkDetection && this._isOnline) {
+        this._isOnline = false;
+        this.disconnect();
+        this._listenerManager.announceNetworkDown();
+        this.reconnect();
+      }
+
       if (!status.error && this._config.announceSuccessfulHeartbeats) {
         this._listenerManager.announceStatus(status);
       }
@@ -294,6 +306,10 @@ export default class {
         // we lost internet connection, alert the reconnection manager and terminate all loops
         this.disconnect();
         this._reconnectionManager.onReconnection(() => {
+          if (this._config.autoNetworkDetection && !this._isOnline) {
+            this._isOnline = true;
+            this._listenerManager.announceNetworkUp();
+          }
           this.reconnect();
           this._subscriptionStatusAnnounced = true;
           let reconnectedAnnounce: StatusAnnouncement = {

@@ -20,8 +20,8 @@ describe('subscribe endpoints', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
-    pubnubWithFiltering = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', filterExpression: 'hello!' });
+    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', autoNetworkDetection: false });
+    pubnubWithFiltering = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', filterExpression: 'hello!', autoNetworkDetection: false });
   });
 
   afterEach(() => {
