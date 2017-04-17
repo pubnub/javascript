@@ -57,7 +57,7 @@ describe('#core / mounting point', () => {
 
     let pn = new PubNub({ customEncrypt, customDecrypt });
 
-    let ciphertext = pn.encrypt({ hi: 'there' }, 'customKey');
+    let ciphertext = pn.encrypt({ hi: 'there' });
 
     assert.deepEqual(pn.decrypt(ciphertext), { hi: 'there' });
   });
