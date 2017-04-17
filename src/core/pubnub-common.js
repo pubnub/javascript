@@ -192,8 +192,8 @@ export default class {
     this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
     // mount crypto
-    this.encrypt = crypto.pnEncrypt.bind(crypto);
-    this.decrypt = crypto.pnDecrypt.bind(crypto);
+    this.encrypt = crypto.encrypt.bind(crypto);
+    this.decrypt = crypto.decrypt.bind(crypto);
 
     /** config **/
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
