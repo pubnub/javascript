@@ -360,8 +360,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
 	    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
-	    this.encrypt = crypto.encrypt.bind(crypto);
-	    this.decrypt = crypto.decrypt.bind(crypto);
+	    this.encrypt = crypto.pnEncrypt.bind(crypto);
+	    this.decrypt = crypto.pnDecrypt.bind(crypto);
 
 	    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
 	    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
@@ -685,6 +685,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.keepAlive = setup.keepAlive;
 	    this.keepAliveSettings = setup.keepAliveSettings;
 
+	    this.customEncrypt = setup.customEncrypt;
+	    this.customDecrypt = setup.customDecrypt;
+
 	    if (typeof location !== 'undefined' && location.protocol === 'https:') {
 	      this.secure = true;
 	    }
@@ -956,6 +959,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'encrypt',
 	    value: function encrypt(data, customCipherKey, options) {
+	      if (this._config.customEncrypt) {
+	        return this._config.customEncrypt(data);
+	      } else {
+	        return this.pnEncrypt(data, customCipherKey, options);
+	      }
+	    }
+	  }, {
+	    key: 'decrypt',
+	    value: function decrypt(data, customCipherKey, options) {
+	      if (this._config.customDecrypt) {
+	        return this._config.customDecrypt(data);
+	      } else {
+	        return this.pnDecrypt(data, customCipherKey, options);
+	      }
+	    }
+	  }, {
+	    key: 'pnEncrypt',
+	    value: function pnEncrypt(data, customCipherKey, options) {
 	      if (!customCipherKey && !this._config.cipherKey) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);
@@ -966,8 +987,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return base64Encrypted || data;
 	    }
 	  }, {
-	    key: 'decrypt',
-	    value: function decrypt(data, customCipherKey, options) {
+	    key: 'pnDecrypt',
+	    value: function pnDecrypt(data, customCipherKey, options) {
 	      if (!customCipherKey && !this._config.cipherKey) return data;
 	      options = this._parseOptions(options);
 	      var iv = this._getIV(options);

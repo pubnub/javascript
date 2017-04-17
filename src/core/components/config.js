@@ -108,6 +108,12 @@ export default class {
   restore: boolean;
 
 
+  /*
+    support custom encryption and decryption functions.
+  */
+  customEncrypt: Function // function to support custome encryption of messages
+  customDecrypt: Function // function used to decrypt old version messages
+
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
 
@@ -128,6 +134,9 @@ export default class {
     this.proxy = setup.proxy;
     this.keepAlive = setup.keepAlive;
     this.keepAliveSettings = setup.keepAliveSettings;
+
+    this.customEncrypt = setup.customEncrypt;
+    this.customDecrypt = setup.customDecrypt;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {

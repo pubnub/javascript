@@ -98,6 +98,22 @@ export default class {
   }
 
   encrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
+    if (this._config.customEncrypt) {
+      return this._config.customEncrypt(data);
+    } else {
+      return this.pnEncrypt(data, customCipherKey, options);
+    }
+  }
+
+  decrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
+    if (this._config.customDecrypt) {
+      return this._config.customDecrypt(data);
+    } else {
+      return this.pnDecrypt(data, customCipherKey, options);
+    }
+  }
+
+  pnEncrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
     if (!customCipherKey && !this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);
@@ -108,7 +124,7 @@ export default class {
     return base64Encrypted || data;
   }
 
-  decrypt(data: Object, customCipherKey: ?string, options: ?Object): Object | null {
+  pnDecrypt(data: Object, customCipherKey: ?string, options: ?Object): Object | null {
     if (!customCipherKey && !this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let iv = this._getIV(options);
