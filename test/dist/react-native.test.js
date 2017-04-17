@@ -8,7 +8,7 @@ let pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
 
 let listener = null;
 
-describe('#distribution test', function () {
+describe('#distribution test (rkt-native)', function () {
   it('should have to subscribe a channel', (done) => {
     listener = {
       status: (st) => {

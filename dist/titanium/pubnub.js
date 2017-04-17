@@ -1508,6 +1508,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._currentTimetoken = 0;
 	    this._lastTimetoken = 0;
+	    this._storedTimetoken = null;
 
 	    this._subscriptionStatusAnnounced = false;
 
@@ -1558,6 +1559,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (timetoken) {
 	        this._lastTimetoken = this._currentTimetoken;
 	        this._currentTimetoken = timetoken;
+	      }
+
+	      if (this._currentTimetoken !== '0') {
+	        this._storedTimetoken = this._currentTimetoken;
+	        this._currentTimetoken = 0;
 	      }
 
 	      channels.forEach(function (channel) {
@@ -1611,6 +1617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (Object.keys(this._channels).length === 0 && Object.keys(this._presenceChannels).length === 0 && Object.keys(this._channelGroups).length === 0 && Object.keys(this._presenceChannelGroups).length === 0) {
 	        this._lastTimetoken = 0;
 	        this._currentTimetoken = 0;
+	        this._storedTimetoken = null;
 	        this._region = null;
 	        this._reconnectionManager.stopPolling();
 	      }
@@ -1766,14 +1773,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	      }
 
-	      this._lastTimetoken = this._currentTimetoken;
-	      this._currentTimetoken = payload.metadata.timetoken;
+	      if (this._storedTimetoken) {
+	        this._currentTimetoken = this._storedTimetoken;
+	        this._storedTimetoken = null;
+	      } else {
+	        this._lastTimetoken = this._currentTimetoken;
+	        this._currentTimetoken = payload.metadata.timetoken;
+	      }
 
 	      if (!this._subscriptionStatusAnnounced) {
 	        var connectedAnnounce = {};
 	        connectedAnnounce.category = _categories2.default.PNConnectedCategory;
 	        connectedAnnounce.operation = status.operation;
 	        connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
+	        connectedAnnounce.subscribedChannels = this.getSubscribedChannels();
 	        connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
 	        connectedAnnounce.lastTimetoken = this._lastTimetoken;
 	        connectedAnnounce.currentTimetoken = this._currentTimetoken;

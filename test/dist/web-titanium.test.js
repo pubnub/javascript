@@ -6,7 +6,7 @@ var pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
 
 var listener = null;
 
-describe('#distribution test', function () {
+describe('#distribution test (titanium)', function () {
   it('should have to subscribe a channel', function (done) {
     listener = {
       status: function (st) {
