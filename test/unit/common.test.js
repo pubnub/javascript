@@ -4,6 +4,7 @@ import assert from 'assert';
 import sinon from 'sinon';
 import uuidGenerator from 'uuid';
 import PubNub from '../../src/node/index';
+import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 
 describe('#core / mounting point', () => {
   beforeEach(() => {
@@ -43,4 +44,21 @@ describe('#core / mounting point', () => {
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), { hi: 'there' });
   });
 
+  it('supports custom encryption/decryption', () => {
+    let customEncrypt = (data) => {
+      let cipher = CryptoJS.AES.encrypt(JSON.stringify(data), 'customKey');
+      return cipher.toString();
+    };
+
+    let customDecrypt = (data) => {
+      let bytes = CryptoJS.AES.decrypt(data, 'customKey');
+      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    };
+
+    let pn = new PubNub({ customEncrypt, customDecrypt });
+
+    let ciphertext = pn.encrypt({ hi: 'there' }, 'customKey');
+
+    assert.deepEqual(pn.decrypt(ciphertext), { hi: 'there' });
+  });
 });
