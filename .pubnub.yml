@@ -1,5 +1,5 @@
 name: javascript
-version: 4.8.0
+version: 4.9.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
