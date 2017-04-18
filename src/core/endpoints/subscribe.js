@@ -71,6 +71,7 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object): 
       issuingClientId: rawMessage.i,
       subscribeKey: rawMessage.k,
       originationTimetoken: rawMessage.o,
+      userMetadata: rawMessage.u,
       publishMetaData
     };
     messages.push(parsedMessage);

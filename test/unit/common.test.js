@@ -42,5 +42,4 @@ describe('#core / mounting point', () => {
     let pn = new PubNub({});
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), { hi: 'there' });
   });
-
 });
