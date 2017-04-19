@@ -22,9 +22,7 @@ let config = {
     libraryTarget: 'umd',
   },
   plugins: [
-    new webpack.BannerPlugin(`${packageJSON.version} / Consumer `, {
-      raw: false, entryOnly: true,
-    }),
+    new webpack.BannerPlugin({banner: `${packageJSON.version} / Consumer `, raw: false }),
     new StatsPlugin('stats.json', {
       chunkModules: true,
       exclude: ['node_modules']
