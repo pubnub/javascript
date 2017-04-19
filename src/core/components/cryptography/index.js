@@ -105,7 +105,7 @@ export default class {
     }
   }
 
-  decrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
+  decrypt(data: Object, customCipherKey: ?string, options: ?Object): Object | string | null {
     if (this._config.customDecrypt) {
       return this._config.customDecrypt(data);
     } else {
