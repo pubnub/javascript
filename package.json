@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.9.0",
+  "version": "4.9.1",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -55,7 +55,7 @@
     "gulp-flowtype": "^1.0.0",
     "gulp-gzip": "^1.4.0",
     "gulp-istanbul": "^1.1.1",
-    "gulp-mocha": "^4.3.0",
+    "gulp-mocha": "^3.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^2.4.0",
     "gulp-uglify": "^2.0.1",

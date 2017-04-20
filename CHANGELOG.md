@@ -1,3 +1,24 @@
+## [v4.9.1](https://github.com/pubnub/javascript/tree/v4.9.1)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.9.0...v4.9.1)
+
+- 🌟add support custom encryption and decryption
+
+
+
+## [v4.9.0](https://github.com/pubnub/javascript/tree/v4.9.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.8.0...v4.9.0)
+
+- 🌟integrate fetch for react-native SDK
+
+- 🌟announce when subscription get reactivated
+
+- 🐛stop heartbeats for responses with status PNBadRequestCategory
+
+
 
 ## [v4.8.0](https://github.com/pubnub/javascript/tree/v4.8.0)
 
@@ -8,7 +29,6 @@
 
 
 
-
 ## [v4.7.0](https://github.com/pubnub/javascript/tree/v4.7.0)
 
 
@@ -16,10 +36,7 @@
 
 - 🌟add support for titanium SDK
 
-
-
 - ⭐fix support for react-native SDK
-
 
 - ⭐add validation for web distribution
 

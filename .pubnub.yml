@@ -1,11 +1,25 @@
 name: javascript
-version: 4.9.0
+version: 4.9.1
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.9.1
+    date:
+    changes:
+      - type: feature
+        text: add support custom encryption and decryption
+  - version: v4.9.0
+    date:
+    changes:
+      - type: feature
+        text: integrate fetch for react-native SDK
+      - type: improvement
+        text: announce when subscription get reactivated
+      - type: fix
+        text: stop heartbeats for responses with status PNBadRequestCategory
   - version: v4.8.0
     date:
     changes:

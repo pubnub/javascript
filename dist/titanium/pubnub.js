@@ -1,4 +1,4 @@
-/*! 4.9.0 / Consumer  */
+/*! 4.9.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -338,8 +338,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
 	    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
-	    this.encrypt = crypto.pnEncrypt.bind(crypto);
-	    this.decrypt = crypto.pnDecrypt.bind(crypto);
+	    this.encrypt = crypto.encrypt.bind(crypto);
+	    this.decrypt = crypto.decrypt.bind(crypto);
 
 	    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
 	    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
@@ -788,7 +788,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.9.0';
+	      return '4.9.1';
 	    }
 	  }, {
 	    key: '_decideUUID',
