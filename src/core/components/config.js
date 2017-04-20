@@ -109,7 +109,7 @@ export default class {
 
 
   /*
-    support custom encryption and decryption functions.
+    support customp encryption and decryption functions.
   */
   customEncrypt: Function // function to support custome encryption of messages
   customDecrypt: Function // function used to decrypt old version messages
@@ -205,7 +205,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.8.0';
+    return '4.9.0';
   }
 
   _decideUUID(providedUUID: string): string {
