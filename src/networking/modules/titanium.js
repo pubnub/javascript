@@ -2,6 +2,7 @@
 /* global Ti, XMLHttpRequest, window, console */
 
 import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
+import { buildUrl } from '../utils';
 
 declare var Ti: any;
 
@@ -40,34 +41,6 @@ function keepAlive(xhr: any): void {
   if (Ti.Platform.osname !== 'mobileweb' && this._config.keepAlive) {
     xhr.enableKeepAlive = true;
   }
-}
-
-function encodedKeyValuePair(pairs, key: string, value: Object): void {
-  if (value != null) {
-    if (Array.isArray(value)) {
-      value.forEach((item) => {
-        encodedKeyValuePair(pairs, key, item);
-      });
-    } else if (typeof value === 'object') {
-      Object.keys(value).forEach((subkey) => {
-        encodedKeyValuePair(pairs, `${key}[${subkey}]`, value[subkey]);
-      });
-    } else {
-      pairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
-    }
-  } else if (value === null) {
-    pairs.push(encodeURIComponent(`${encodeURIComponent(key)}`));
-  }
-}
-
-function buildUrl(url: string, params: Object) {
-  let pairs = [];
-
-  Object.keys(params).forEach((key) => {
-    encodedKeyValuePair(pairs, key, params[key]);
-  });
-
-  return `${url}?${pairs.join('&')}`;
 }
 
 function xdr(xhr: any, method: string, url: string, params: Object, body: Object, endpoint: EndpointDefinition, callback: Function): void {

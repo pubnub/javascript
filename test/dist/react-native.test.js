@@ -1,15 +1,17 @@
-/* global describe, beforeEach, it, before, afterEach, after, PubNub, chai */
-/* eslint no-console: 0 */
+import fetch from 'node-fetch';
+import { expect } from 'chai';
+import PubNub from '../../src/react_native';
 
-var expect = chai.expect;
-var pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
+global.fetch = fetch;
 
-var listener = null;
+let pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
 
-describe('#distribution test (titanium)', function () {
-  it('should have to subscribe a channel', function (done) {
+let listener = null;
+
+describe('#distribution test (rkt-native)', function () {
+  it('should have to subscribe a channel', (done) => {
     listener = {
-      status: function (st) {
+      status: (st) => {
         expect(st.operation).to.be.equal('PNSubscribeOperation');
         done();
       }
@@ -19,65 +21,68 @@ describe('#distribution test (titanium)', function () {
     pubnub.subscribe({channels: ['mychannel1']});
   });
 
-  it('should have to receive message from a channel', function (done) {
-    pubnub.addListener({
-      message: function (m) {
+  it('should have to receive message from a channel', (done) => {
+    pubnub.removeListener(listener);
+
+    listener = {
+      message: (m) => {
         expect(m.channel).to.be.equal('mychannel2');
-        expect(m.message.text).to.be.equal('hello Titanium SDK');
+        expect(m.message.text).to.be.equal('hello React-Native SDK');
         done();
       }
-    });
+    };
 
+    pubnub.addListener(listener);
     pubnub.subscribe({channels: ['mychannel2']});
-    pubnub.publish({ channel: 'mychannel2', message: { text: 'hello Titanium SDK' }});
+    pubnub.publish({ channel: 'mychannel2', message: { text: 'hello React-Native SDK' }});
   });
 
-  it('should have to set state', function (done) {
-    pubnub.setState({ channels: ['mychannel1'], state: { hello: 'there' } }, function (status, response) {
+  it('should have to set state', (done) => {
+    pubnub.setState({ channels: ['mychannel1'], state: { hello: 'there' } }, (status, response) => {
       expect(status.error).to.be.equal(false);
       expect(response.state.hello).to.be.equal('there');
       done();
     });
   });
 
-  it('should have to get the time', function (done) {
-    pubnub.time(function (status) {
+  it('should have to get the time', (done) => {
+    pubnub.time((status) => {
       expect(status.operation).to.be.equal('PNTimeOperation');
       expect(status.statusCode).to.be.equal(200);
       done();
     });
   });
 
-  it('should have to get the last message', function (done) {
+  it('should have to get the last message', (done) => {
     pubnub.history({
       channel : 'mychannel2',
       count: 1,
       reverse : false
-    }, function(status, response) {
+    }, (status, response) => {
       expect(response.messages).to.have.length(1);
       done();
     });
   });
 
-  it('should have to add a channel group', function (done) {
+  it('should have to add a channel group', (done) => {
     pubnub.channelGroups.addChannels(
       {
         channels: ['ch1', 'ch2'],
         channelGroup: "myChannelGroup"
       },
-      function(status) {
+      (status) => {
         expect(status.error).to.be.equal(false);
         done();
       }
     );
   });
 
-  it('should have to list the channels', function (done) {
+  it('should have to list the channels', (done) => {
     pubnub.channelGroups.listChannels(
       {
         channelGroup: "myChannelGroup"
       },
-      function (status, response) {
+      (status, response) => {
         expect(status.error).to.be.equal(false);
         expect(response.channels).to.have.length(2);
         done();
