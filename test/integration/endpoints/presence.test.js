@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it, before, afterEach, after */
+/* global describe, beforeEach, it, before, after */
 
 import assert from 'assert';
 import nock from 'nock';

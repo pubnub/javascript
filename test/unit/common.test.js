@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it, before, afterEach, after */
+/* global describe, beforeEach, it , afterEach */
 
 import assert from 'assert';
 import sinon from 'sinon';

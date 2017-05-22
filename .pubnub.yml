@@ -1,11 +1,16 @@
 name: javascript
-version: 4.9.1
+version: 4.9.2
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.9.2
+    date:
+    changes:
+      - type: feature
+        text: metadata is now passed on message envelope
   - version: v4.9.1
     date:
     changes:

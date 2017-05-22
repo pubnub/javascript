@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it, before, afterEach, after */
+/* global describe, beforeEach, it, afterEach */
 /* eslint no-console: 0, object-shorthand: 0 */
 
 import assert from 'assert';

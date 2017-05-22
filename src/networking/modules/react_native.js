@@ -1,5 +1,5 @@
 /* @flow */
-/* global fetch, XMLHttpRequest, window, console */
+/* global console */
 
 import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';

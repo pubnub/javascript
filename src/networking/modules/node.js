@@ -1,5 +1,4 @@
 /* @flow */
-/* global window */
 
 import superagent from 'superagent';
 import superagentProxy from 'superagent-proxy';

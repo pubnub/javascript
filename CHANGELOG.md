@@ -1,4 +1,14 @@
 
+## [v4.9.2](https://github.com/pubnub/javascript/tree/v4.9.2)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.9.1...v4.9.2)
+
+- 🌟metadata is now passed on message envelope
+
+
+
+
 ## [v4.9.1](https://github.com/pubnub/javascript/tree/v4.9.1)
 
 

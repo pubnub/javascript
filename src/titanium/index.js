@@ -1,5 +1,4 @@
 /* @flow */
-/* global localStorage, navigator, window */
 
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';

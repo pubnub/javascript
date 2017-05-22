@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it, before, afterEach, after */
+/* global describe, it */
 
 import assert from 'assert';
 import ListenerManager from '../../src/core/components/listener_manager';

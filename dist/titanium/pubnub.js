@@ -1,4 +1,4 @@
-/*! 4.9.1 / Consumer  */
+/*! 4.9.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -788,7 +788,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.9.1';
+	      return '4.9.2';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1888,6 +1888,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _announce.subscription = subscriptionMatch;
 	          _announce.timetoken = publishMetaData.publishTimetoken;
 	          _announce.publisher = message.issuingClientId;
+
+	          if (message.userMetadata) {
+	            _announce.userMetadata = message.userMetadata;
+	          }
 
 	          if (_this5._config.cipherKey) {
 	            _announce.message = _this5._crypto.decrypt(message.payload);
@@ -4276,6 +4280,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      issuingClientId: rawMessage.i,
 	      subscribeKey: rawMessage.k,
 	      originationTimetoken: rawMessage.o,
+	      userMetadata: rawMessage.u,
 	      publishMetaData: publishMetaData
 	    };
 	    messages.push(parsedMessage);
