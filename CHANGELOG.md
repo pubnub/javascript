@@ -1,3 +1,12 @@
+## [v4.10.0](https://github.com/pubnub/javascript/tree/v4.10.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.9.2...v4.10.0)
+
+- 🐛 fix issue of net with Android for react-native
+
+
+
 
 ## [v4.9.2](https://github.com/pubnub/javascript/tree/v4.9.2)
 
