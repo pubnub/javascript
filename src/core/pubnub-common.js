@@ -163,7 +163,7 @@ export default class {
     this.fire = (args, callback) => {
       args.replicate = false;
       args.storeInHistory = false;
-      this.publish(args, callback);
+      return this.publish(args, callback);
     };
 
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
