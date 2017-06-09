@@ -1,4 +1,4 @@
-/*! 4.10.0 / Consumer  */
+/*! 4.11.0.beta1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -313,7 +313,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.fire = function (args, callback) {
 	      args.replicate = false;
 	      args.storeInHistory = false;
-	      _this.publish(args, callback);
+	      return _this.publish(args, callback);
 	    };
 
 	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
@@ -662,6 +662,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.proxy = setup.proxy;
 	    this.keepAlive = setup.keepAlive;
 	    this.keepAliveSettings = setup.keepAliveSettings;
+	    this.autoNetworkDetection = setup.autoNetworkDetection || false;
 
 	    this.customEncrypt = setup.customEncrypt;
 	    this.customDecrypt = setup.customDecrypt;
@@ -1533,6 +1534,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._subscriptionStatusAnnounced = false;
 
+	    this._isOnline = true;
+
 	    this._reconnectionManager = new _reconnection_manager2.default({ timeEndpoint: timeEndpoint });
 	  }
 
@@ -1716,6 +1719,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _this4._listenerManager.announceStatus(status);
 	        }
 
+	        if (status.error && _this4._config.autoNetworkDetection && _this4._isOnline) {
+	          _this4._isOnline = false;
+	          _this4.disconnect();
+	          _this4._listenerManager.announceNetworkDown();
+	          _this4.reconnect();
+	        }
+
 	        if (!status.error && _this4._config.announceSuccessfulHeartbeats) {
 	          _this4._listenerManager.announceStatus(status);
 	        }
@@ -1771,7 +1781,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	          this._startSubscribeLoop();
 	        } else if (status.category === _categories2.default.PNNetworkIssuesCategory) {
 	          this.disconnect();
+
+	          if (status.error && this._config.autoNetworkDetection && this._isOnline) {
+	            this._isOnline = false;
+	            this._listenerManager.announceNetworkDown();
+	          }
+
 	          this._reconnectionManager.onReconnection(function () {
+	            if (_this5._config.autoNetworkDetection && !_this5._isOnline) {
+	              _this5._isOnline = true;
+	              _this5._listenerManager.announceNetworkUp();
+	            }
 	            _this5.reconnect();
 	            _this5._subscriptionStatusAnnounced = true;
 	            var reconnectedAnnounce = {
@@ -1782,6 +1802,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            };
 	            _this5._listenerManager.announceStatus(reconnectedAnnounce);
 	          });
+
 	          this._reconnectionManager.startPolling();
 	          this._listenerManager.announceStatus(status);
 	        } else if (status.category === _categories2.default.PNBadRequestCategory) {
