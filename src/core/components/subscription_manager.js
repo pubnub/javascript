@@ -305,6 +305,12 @@ export default class {
       } else if (status.category === categoryConstants.PNNetworkIssuesCategory) {
         // we lost internet connection, alert the reconnection manager and terminate all loops
         this.disconnect();
+
+        if (status.error && this._config.autoNetworkDetection && this._isOnline) {
+          this._isOnline = false;
+          this._listenerManager.announceNetworkDown();
+        }
+
         this._reconnectionManager.onReconnection(() => {
           if (this._config.autoNetworkDetection && !this._isOnline) {
             this._isOnline = true;
@@ -320,6 +326,7 @@ export default class {
           };
           this._listenerManager.announceStatus(reconnectedAnnounce);
         });
+
         this._reconnectionManager.startPolling();
         this._listenerManager.announceStatus(status);
       } else if (status.category === categoryConstants.PNBadRequestCategory) {
