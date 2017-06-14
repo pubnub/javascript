@@ -74,7 +74,7 @@ function xdr(xhr: any, method: string, url: string, params: Object, body: Object
     return callback(status, null);
   };
 
-  xhr.timeout = Infinity;
+  xhr.timeout = Ti.Platform.osname === 'android' ? 2147483647 : Infinity;
 
   xhr.send(body);
 }

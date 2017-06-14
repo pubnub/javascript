@@ -1,4 +1,4 @@
-/*! 4.11.0.beta1 / Consumer  */
+/*! 4.11.0-beta.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -4560,7 +4560,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return callback(status, null);
 	  };
 
-	  xhr.timeout = Infinity;
+	  xhr.timeout = Ti.Platform.osname === 'android' ? 2147483647 : Infinity;
 
 	  xhr.send(body);
 	}
