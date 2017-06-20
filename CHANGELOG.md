@@ -1,4 +1,20 @@
 
+## [v4.12.0](https://github.com/pubnub/javascript/tree/v4.12.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.10.0...v4.12.0)
+
+
+- ⭐fix issue of net with android for titanium
+
+- 🌟add additional hooks for connectivity
+
+
+- 🌟add auto network detection
+
+
+
+
 ## [v4.10.0](https://github.com/pubnub/javascript/tree/v4.10.0)
 
 

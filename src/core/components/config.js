@@ -209,7 +209,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.11.0-beta.1';
+    return '4.12.0';
   }
 
   _decideUUID(providedUUID: string): string {

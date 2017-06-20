@@ -1,12 +1,12 @@
 name: javascript
-version: 4.11.0-beta.1
+version: 4.12.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
-  - version: v4.11.0-beta.1
+  - version: v4.12.0
     date:
     changes:
       - type: improvement
