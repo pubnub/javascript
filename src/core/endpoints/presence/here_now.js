@@ -109,11 +109,16 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object, i
   };
 
   let response;
-  if (channels.length > 1 || channelGroups.length > 0 || (channelGroups.length === 0 && channels.length === 0)) {
-    response = prepareMultipleChannel();
-  } else {
-    response = prepareSingularChannel();
-  }
 
-  return response;
+  if (serverResponse.status !== 200) {
+    return response;
+  } else {
+    if (channels.length > 1 || channelGroups.length > 0 || (channelGroups.length === 0 && channels.length === 0)) {
+      response = prepareMultipleChannel();
+    } else {
+      response = prepareSingularChannel();
+    }
+
+    return response;
+  }
 }
