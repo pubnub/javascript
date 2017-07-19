@@ -64,7 +64,9 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object, i
       occupancy: serverResponse.occupancy
     };
 
-    if (includeUUIDs) {
+    // We have had issues in the past with server returning responses
+    // that contain no uuids array
+    if (includeUUIDs && serverResponse.hasOwnProperty('uuids')) {
       serverResponse.uuids.forEach((uuidEntry) => {
         if (includeState) {
           occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
