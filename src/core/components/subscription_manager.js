@@ -1,6 +1,7 @@
 /* @flow */
 import Crypto from '../components/cryptography';
 import Config from '../components/config';
+import Telemetry from '../components/telemetry';
 import ListenerManager from '../components/listener_manager';
 import ReconnectionManager from '../components/reconnection_manager';
 import utils from '../utils';
@@ -33,6 +34,7 @@ type SubscriptionManagerConsturct = {
     setStateEndpoint: Function,
     config: Config,
     crypto: Crypto,
+    telemetry: Telemetry,
     listenerManager: ListenerManager
 }
 
@@ -73,7 +75,7 @@ export default class {
   _pendingChannelGroupSubscriptions: Array<string>;
   //
 
-  constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
+  constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, telemetry, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
     this._config = config;
 
@@ -83,6 +85,7 @@ export default class {
     this._subscribeEndpoint = subscribeEndpoint;
 
     this._crypto = crypto;
+    this._telemetry = telemetry;
 
     this._channels = {};
     this._presenceChannels = {};
@@ -208,12 +211,14 @@ export default class {
   reconnect() {
     this._startSubscribeLoop();
     this._registerHeartbeatTimer();
+    this._telemetry.startPolling();
   }
 
   disconnect() {
     this._stopSubscribeLoop();
     this._stopHeartbeatTimer();
     this._reconnectionManager.stopPolling();
+    this._telemetry.stopPolling();
   }
 
   _registerHeartbeatTimer() {

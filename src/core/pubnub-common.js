@@ -4,6 +4,7 @@ import uuidGenerator from 'uuid';
 
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
+import Telemetry from './components/telemetry';
 import SubscriptionManager from './components/subscription_manager';
 import ListenerManager from './components/listener_manager';
 
@@ -105,10 +106,11 @@ export default class {
 
     const config = this._config = new Config({ setup, db });
     const crypto = new Crypto({ config });
+    const telemetry = new Telemetry();
 
     networking.init(config);
 
-    let modules = { config, networking, crypto };
+    let modules = { config, networking, crypto, telemetry };
 
     const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
     const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
@@ -127,6 +129,7 @@ export default class {
       subscribeEndpoint,
       crypto: modules.crypto,
       config: modules.config,
+      telemetry: modules.telemetry,
       listenerManager
     });
 
