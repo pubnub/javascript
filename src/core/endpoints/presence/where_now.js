@@ -34,7 +34,7 @@ export function prepareParams(): Object {
 export function handleResponse(modules: ModulesInject, serverResponse: Object): WhereNowResponse {
   // This is a quick fix for when the server does not include a payload
   // in where now responses
-  if (!serverResponse.hasOwnProperty('payload')) {
+  if (!serverResponse.payload) {
     return { channels: [] };
   }
   return { channels: serverResponse.payload.channels };

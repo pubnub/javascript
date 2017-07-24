@@ -49,6 +49,20 @@ describe('presence endpoints', () => {
         done();
       });
     });
+
+    it('returns empty response object when serverResponse has no payload', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/uuid/')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
+        .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
+
+
+      pubnub.whereNow({ uuid: '' }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, []);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
   });
 
   describe('#setState', () => {
