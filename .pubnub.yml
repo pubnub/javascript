@@ -301,7 +301,7 @@ supported-platforms:
       - Mozilla Firefox 51 and up
       - Google Chrome 56 and up
       - Opera 41  and up
-      - IE 11  and up
+      - IE 9 and up
       - Microsoft Edge 38 and up
     frameworks:
       - Angular 1

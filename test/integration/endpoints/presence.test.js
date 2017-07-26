@@ -49,6 +49,20 @@ describe('presence endpoints', () => {
         done();
       });
     });
+
+    it('returns empty response object when serverResponse has no payload', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/uuid/')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
+        .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
+
+
+      pubnub.whereNow({ uuid: '' }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, []);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
   });
 
   describe('#setState', () => {
@@ -154,12 +168,56 @@ describe('presence endpoints', () => {
   });
 
   describe('#hereNow', () => {
+    it('returns response for a single channel', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/game1')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
+        .reply(200, '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}');
+
+      pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          game1: {
+            name: 'game1',
+            occupancy: 1,
+            occupants: [
+              {
+                state: null,
+                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e'
+              },
+            ]
+          }
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('returns response for single channel when uuids not in response payload', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/game1')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
+        .reply(200, '{"status": 200, "message": "OK", "occupancy": 1, "service": "Presence"}');
+
+      pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          game1: {
+            name: 'game1',
+            occupancy: 1,
+            occupants: []
+          }
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
     it('returns response for multiple channels', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
         .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": {"game1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}');
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'] }, (status, response) => {
+        assert.equal(status.error, false);
         assert.deepEqual(response.channels, {
           game1: {
             name: 'game1',
