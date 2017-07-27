@@ -5,7 +5,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-describe.only('presence endpoints', () => {
+describe('presence endpoints', () => {
   let pubnub;
 
   before(() => {
@@ -327,7 +327,6 @@ describe.only('presence endpoints', () => {
         .reply(200, '{"status": 503, "message": "Service Unavailable", "error": 1, "service": "Presence"}');
 
       pubnub.hereNow({ includeUUIDs: false }, (status) => {
-        console.log(status);
         assert.equal(status.error, true);
         assert.equal(scope.isDone(), true);
         done();
