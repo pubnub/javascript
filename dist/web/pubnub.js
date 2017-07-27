@@ -4436,6 +4436,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (err.code === 'ECONNRESET') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.code === 'EAI_AGAIN') return _categories2.default.PNNetworkIssuesCategory;
 
+	      if (err.code === 503) return _categories2.default.PNServiceUnavailable;
+
 	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
 
@@ -4557,6 +4559,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    var parsedResponse = JSON.parse(resp.text);
+
+	    if (parsedResponse.error && parsedResponse.error === 1 && parsedResponse.status && parsedResponse.message && parsedResponse.service) {
+	      status.errorData = parsedResponse;
+	      status.statusCode = parsedResponse.status;
+	      status.error = true;
+	      status.category = _this._detectErrorCategory(status);
+	      return callback(status, null);
+	    }
+
 	    return callback(status, parsedResponse);
 	  });
 	}
