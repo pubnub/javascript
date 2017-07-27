@@ -22,11 +22,11 @@ export function getURL(modules: ModulesInject, incomingParams: HeartbeatArgument
   let querystring = '';
 
   Object.keys(fields).forEach((key) => {
-    querystring += (querystring !== '' ? '&' : '') + `${key}=${fields[key]}`;
+    querystring += `${(querystring !== '' ? '&' : '')}${key}=${fields[key]}`;
   });
 
   if (querystring !== '') {
-    querystring = '?' + querystring;
+    querystring = `?${querystring}`;
   }
 
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';

@@ -33,8 +33,8 @@ export default class {
 
     this._latencies[param].times.push(time);
 
-    let sum = this._latencies[param].times.reduce((sum, val) => {
-      return sum + val;
+    let sum = this._latencies[param].times.reduce((acc, val) => {
+      return acc + val;
     }, 0);
 
     this._latencies[param].avg = Math.round((sum / this._latencies[param].times.length) * 1000) / 1000;
