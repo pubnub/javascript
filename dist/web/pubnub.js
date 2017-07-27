@@ -808,7 +808,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.12.0';
+	      return '4.13.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4435,8 +4435,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (err.code === 'ECONNREFUSED') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.code === 'ECONNRESET') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.code === 'EAI_AGAIN') return _categories2.default.PNNetworkIssuesCategory;
-
-	      if (err.code === 503) return _categories2.default.PNServiceUnavailable;
 
 	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
