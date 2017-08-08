@@ -1,5 +1,4 @@
 /* @flow */
-/* global window */
 
 import Config from '../core/components/config';
 import categoryConstants from '../core/constants/categories';

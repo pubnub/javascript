@@ -218,6 +218,12 @@ export default class {
 
   _registerHeartbeatTimer() {
     this._stopHeartbeatTimer();
+
+    // if the interval is 0, do not queue up heartbeating
+    if (this._config.getHeartbeatInterval() === 0) {
+      return;
+    }
+
     this._performHeartbeatLoop();
     this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
   }
