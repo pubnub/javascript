@@ -1699,6 +1699,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_registerHeartbeatTimer',
 	    value: function _registerHeartbeatTimer() {
 	      this._stopHeartbeatTimer();
+
+	      if (this._config.getHeartbeatInterval() === 0) {
+	        return;
+	      }
+
 	      this._performHeartbeatLoop();
 	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
 	    }
