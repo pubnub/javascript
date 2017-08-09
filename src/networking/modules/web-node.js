@@ -78,3 +78,10 @@ export function post(params: Object, body: string, endpoint: EndpointDefinition,
     .send(body);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
+
+export function del(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {
+  let superagentConstruct = superagent
+    .delete(this.getStandardOrigin() + endpoint.url)
+    .query(params);
+  return xdr.call(this, superagentConstruct, endpoint, callback);
+}
