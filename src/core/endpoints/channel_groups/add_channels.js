@@ -2,6 +2,7 @@
 
 import { AddChannelParams, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import { validate } from '../../parameters';
 import utils from '../../utils';
 
 export function getOperation(): string {
@@ -15,6 +16,8 @@ export function validateParams(modules: ModulesInject, incomingParams: AddChanne
   if (!channelGroup) return 'Missing Channel Group';
   if (!channels || channels.length === 0) return 'Missing Channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  return validate('add_channels', incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: AddChannelParams): string {

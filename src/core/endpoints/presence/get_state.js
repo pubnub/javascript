@@ -2,16 +2,19 @@
 
 import { GetStateArguments, GetStateResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import { validate } from '../../parameters';
 import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNGetStateOperation;
 }
 
-export function validateParams(modules: ModulesInject) {
+export function validateParams(modules: ModulesInject, incomingParams: GetStateArguments) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  return validate('get_state', incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: GetStateArguments): string {

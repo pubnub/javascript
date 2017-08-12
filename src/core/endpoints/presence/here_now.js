@@ -2,16 +2,19 @@
 
 import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import { validate } from '../../parameters';
 import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNHereNowOperation;
 }
 
-export function validateParams(modules: ModulesInject) {
+export function validateParams(modules: ModulesInject, incomingParams: HereNowArguments) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  return validate('here_now', incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: HereNowArguments): string {

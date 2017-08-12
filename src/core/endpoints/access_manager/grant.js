@@ -2,17 +2,20 @@
 
 import { GrantArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import { validate } from '../../parameters';
 
 export function getOperation(): string {
   return operationConstants.PNAccessManagerGrant;
 }
 
-export function validateParams(modules: ModulesInject) {
+export function validateParams(modules: ModulesInject, incomingParams: GrantArguments) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
   if (!config.publishKey) return 'Missing Publish Key';
   if (!config.secretKey) return 'Missing Secret Key';
+
+  return validate('grant', incomingParams);
 }
 
 export function getURL(modules: ModulesInject): string {

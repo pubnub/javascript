@@ -6,6 +6,7 @@ import ReconnectionManager from '../components/reconnection_manager';
 import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
+import { validate } from '../parameters';
 
 type SubscribeArgs = {
   channels: Array<string>,
@@ -106,6 +107,12 @@ export default class {
 
   adaptStateChange(args: StateArgs, callback: Function) {
     const { state, channels = [], channelGroups = [] } = args;
+
+    let notValid = validate('set_state', args);
+
+    if (notValid !== undefined) {
+      throw new Error(notValid);
+    }
 
     channels.forEach((channel) => {
       if (channel in this._channels) this._channels[channel].state = state;

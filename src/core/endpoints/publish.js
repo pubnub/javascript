@@ -2,6 +2,7 @@
 
 import { PublishResponse, PublishArguments, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
+import { validate } from '../parameters';
 import utils from '../utils';
 
 function prepareMessagePayload(modules, messagePayload) {
@@ -26,6 +27,8 @@ export function validateParams({ config }: ModulesInject, incomingParams: Publis
   if (!channel) return 'Missing Channel';
   if (!message) return 'Missing Message';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  return validate('publish', incomingParams);
 }
 
 export function usePost(modules: ModulesInject, incomingParams: PublishArguments) {

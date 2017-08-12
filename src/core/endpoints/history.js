@@ -1,6 +1,7 @@
 /* @flow */
 
 import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
+import { validate } from '../parameters';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
@@ -25,6 +26,8 @@ export function validateParams(modules: ModulesInject, incomingParams: FetchHist
 
   if (!channel) return 'Missing channel';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  return validate('history', incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
