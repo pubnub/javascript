@@ -132,7 +132,7 @@ export default class {
     this.setFilterExpression(setup.filterExpression);
 
     this.origin = setup.origin || 'pubsub.pubnub.com';
-    this.secure = setup.ssl || false;
+    this.secure = setup.ssl || true;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
     this.keepAlive = setup.keepAlive;
