@@ -1,4 +1,14 @@
 
+## [v4.14.0](https://github.com/pubnub/javascript/tree/v4.14.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.13.0...v4.14.0)
+
+
+- ⭐Allow disable of heartbeats by passing interval = 0
+
+
+
 ## [v4.13.0](https://github.com/pubnub/javascript/tree/v4.13.0)
 
 
