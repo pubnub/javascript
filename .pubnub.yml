@@ -1,11 +1,16 @@
 name: javascript
-version: 4.13.0
+version: 4.14.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.14.0
+    date:
+    changes:
+      - type: improvement
+        text: Allow disable of heartbeats by passing interval = 0
   - version: v4.13.0
     date:
     changes:
