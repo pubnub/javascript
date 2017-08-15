@@ -135,4 +135,68 @@ describe('#parameters validator', () => {
       done();
     });
   });
+
+  it('prevent to execute list_channels with a wrong value', (done) => {
+    pubnub.channelGroups.listChannels({ channelGroup: true }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute list_channels with an invalid parameter', (done) => {
+    pubnub.channelGroups.listChannels({ channelGroups: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute remove_channels with a wrong value', (done) => {
+    pubnub.channelGroups.removeChannels({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute remove_channels with an invalid parameter', (done) => {
+    pubnub.channelGroups.removeChannels({ channel: ['ch1'] }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute delete_group with a wrong value', (done) => {
+    pubnub.channelGroups.deleteGroup({ channelGroup: true }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute delete_group with an invalid parameter', (done) => {
+    pubnub.channelGroups.deleteGroup({ channel: 'cg1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute history with a wrong value', (done) => {
+    pubnub.history({ channel: true }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute history with an invalid parameter', (done) => {
+    pubnub.history({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
 });
