@@ -2,7 +2,7 @@
 
 import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
-import { validate } from '../../parameters';
+import validate from '../../parameters_validator';
 import utils from '../../utils';
 
 export function getOperation(): string {

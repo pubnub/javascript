@@ -6,7 +6,7 @@ import ReconnectionManager from '../components/reconnection_manager';
 import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
-import { validate } from '../parameters';
+import validate from '../parameters_validator';
 
 type SubscribeArgs = {
   channels: Array<string>,

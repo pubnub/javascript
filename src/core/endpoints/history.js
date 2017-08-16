@@ -1,7 +1,7 @@
 /* @flow */
 
 import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
-import { validate } from '../parameters';
+import validate from '../parameters_validator';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 

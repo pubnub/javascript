@@ -2,7 +2,7 @@
 
 import { ModifyDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
-import { validate } from '../../parameters';
+import validate from '../../parameters_validator';
 
 export function getOperation(): string {
   return operationConstants.PNPushNotificationEnabledChannelsOperation;

@@ -147,9 +147,9 @@ const endpoints = {
     pushGateway: 'string',
     callback: 'function'
   }
-}
+};
 
-export function validate(endpointName, incomingParams) {
+export default function (endpointName, incomingParams) {
   let result;
 
   Object.keys(incomingParams).forEach((key) => {

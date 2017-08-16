@@ -3,7 +3,7 @@
 
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
-import { validate } from '../parameters';
+import validate from '../parameters_validator';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
