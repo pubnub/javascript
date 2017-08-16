@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it , afterEach */
+/* global describe, it */
 
 import assert from 'assert';
 import PubNub from '../../src/node/index';
@@ -6,8 +6,66 @@ import PubNub from '../../src/node/index';
 let pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', authKey: 'myAuthKey' });
 
 describe('#parameters validator', () => {
+  it('prevent to execute constructor with wrong value', (done) => {
+    try {
+      let p = new PubNub({ subscribeKey: true });
+
+      p.subscribe({ channels: 'ch1' });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
+  it('prevent to execute constructor with invalid parameter', (done) => {
+    try {
+      let p = new PubNub({ subscribeK: 'mySubKey' });
+
+      p.subscribe({ channels: 'ch1' });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
+  it('prevent to execute subscribe with a wrong value', (done) => {
+    try {
+      pubnub.subscribe({ channels: 'ch1' });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
+  it('prevent to execute subscribe with an invalid parameter', (done) => {
+    try {
+      pubnub.subscribe({ channel: ['ch1'] });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
+  it('prevent to execute unsubscribe with a wrong value', (done) => {
+    try {
+      pubnub.unsubscribe({ channels: 'ch1' });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
+  it('prevent to execute unsubscribe with an invalid parameter', (done) => {
+    try {
+      pubnub.unsubscribe({ channel: ['ch1'] });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
   it('prevent to execute publish with a wrong value', (done) => {
-    pubnub.publish({ channel: ['ch1', 'ch2'], message: 'Hello World!' }, (status, response) => {
+    pubnub.publish({ channel: ['ch1', 'ch2'], message: 'Hello World!' }, (status) => {
       assert.equal(status.error, true);
       assert.equal(status.type, 'validationError');
       done();
@@ -200,7 +258,7 @@ describe('#parameters validator', () => {
     });
   });
 
-  it('prevent to execute fetch with a wrong value', (done) => {
+  it('prevent to execute fetchMessages with a wrong value', (done) => {
     pubnub.fetchMessages({ channels: 'ch1' }, (status) => {
       assert.equal(status.error, true);
       assert.equal(status.type, 'validationError');
