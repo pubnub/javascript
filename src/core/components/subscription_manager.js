@@ -128,6 +128,12 @@ export default class {
   adaptSubscribeChange(args: SubscribeArgs) {
     const { timetoken, channels = [], channelGroups = [], withPresence = false } = args;
 
+    let notValid = validate('subscribe', args);
+
+    if (notValid !== undefined) {
+      throw new Error(notValid);
+    }
+
     if (!this._config.subscribeKey || this._config.subscribeKey === '') {
       if (console && console.log) console.log('subscribe key missing; aborting subscribe') //eslint-disable-line
       return;
@@ -164,6 +170,12 @@ export default class {
 
   adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
     const { channels = [], channelGroups = [] } = args;
+
+    let notValid = validate('unsubscribe', args);
+
+    if (notValid !== undefined) {
+      throw new Error(notValid);
+    }
 
     channels.forEach((channel) => {
       if (channel in this._channels) delete this._channels[channel];
