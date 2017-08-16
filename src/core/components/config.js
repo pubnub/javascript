@@ -3,6 +3,7 @@
 
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
+import { validate } from '../parameters';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -118,6 +119,12 @@ export default class {
   customDecrypt: Function // function used to decrypt old version messages
 
   constructor({ setup, db } : ConfigConstructArgs) {
+    let notValid = validate('setup', setup);
+
+    if (notValid !== undefined) {
+      throw new Error(notValid);
+    }
+
     this._db = db;
 
     this.instanceId = `pn-${uuidGenerator.v4()}`;

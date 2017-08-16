@@ -4,6 +4,7 @@ const endpoints = {
     publishKey: 'string',
     cipherKey: 'string',
     authKey: 'string',
+    secretKey: 'string',
     logVerbosity: 'boolean',
     uuid: 'string',
     ssl: 'boolean',
@@ -13,7 +14,18 @@ const endpoints = {
     restore: 'boolean',
     keepAlive: 'boolean',
     keepAliveSettings: 'object',
-    useInstanceId: 'boolean'
+    useInstanceId: 'boolean',
+    sdkFamily: '*ignore',
+    networking: '*ignore',
+    db: '*ignore',
+    customDecrypt: 'function',
+    customEncrypt: 'function',
+    partnerId: '*ignore',
+    autoNetworkDetection: '*ignore',
+    announceSuccessfulHeartbeats: '*ignore',
+    requestMessageCountThreshold: '*ignore',
+    filterExpression: '*ignore',
+    removeAllListeners: '*ignore'
   },
   publish: {
     message: 'object',
