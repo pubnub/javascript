@@ -199,4 +199,84 @@ describe('#parameters validator', () => {
       done();
     });
   });
+
+  it('prevent to execute fetch with a wrong value', (done) => {
+    pubnub.fetchMessages({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute fetchMessages with an invalid parameter', (done) => {
+    pubnub.fetchMessages({ channel: ['ch1'] }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_add_channels  with a wrong value', (done) => {
+    pubnub.push.addChannels({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_add_channels with an invalid parameter', (done) => {
+    pubnub.push.addChannels({ channel: ['ch1'] }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_list_channels  with a wrong value', (done) => {
+    pubnub.push.listChannels({ device: true }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_list_channels with an invalid parameter', (done) => {
+    pubnub.push.listChannels({ devices: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_remove_channels  with a wrong value', (done) => {
+    pubnub.push.removeChannels({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_remove_channels with an invalid parameter', (done) => {
+    pubnub.push.removeChannels({ channel: ['ch1'] }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_delete_device  with a wrong value', (done) => {
+    pubnub.push.deleteDevice({ device: true }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('prevent to execute push_delete_device with an invalid parameter', (done) => {
+    pubnub.push.deleteDevice({ devices: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
 });
