@@ -7,16 +7,16 @@ export default function (expectedParams, incomingParams) {
 
     if (!expected) {
       result = `The param: (${key}) is not valid!`;
-      return;
+      return true;
     } else if (expected === '*ignore') {
-      return;
+      return true;
     } else if (expected === 'array' && Array.isArray(incomingParams[key])) {
-      return;
+      return true;
     } else if (expected === 'object') {
-      return;
+      return true;
     } else if (received !== expected) {
       result = `The type expected for the param (${key}) has to be ${expected} but was received ${received}`;
-      return;
+      return true;
     }
   });
 
