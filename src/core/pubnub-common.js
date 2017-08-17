@@ -134,7 +134,7 @@ export default class {
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
     this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
 
-    /** channel groups **/
+    /* channel groups */
     this.channelGroups = {
       listGroups: endpointCreator.bind(this, modules, listChannelGroupsConfig),
       listChannels: endpointCreator.bind(this, modules, listChannelsInChannelGroupConfig),
@@ -142,19 +142,19 @@ export default class {
       removeChannels: endpointCreator.bind(this, modules, removeChannelsChannelGroupConfig),
       deleteGroup: endpointCreator.bind(this, modules, deleteChannelGroupConfig)
     };
-    /** push **/
+    /* push */
     this.push = {
       addChannels: endpointCreator.bind(this, modules, addPushChannelsConfig),
       removeChannels: endpointCreator.bind(this, modules, removePushChannelsConfig),
       deleteDevice: endpointCreator.bind(this, modules, removeDevicePushConfig),
       listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig)
     };
-    /** presence **/
+    /* presence */
     this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
     this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
-    /** PAM **/
+    /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
     //
@@ -195,7 +195,7 @@ export default class {
     this.encrypt = crypto.encrypt.bind(crypto);
     this.decrypt = crypto.decrypt.bind(crypto);
 
-    /** config **/
+    /* config */
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
     this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
     this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
@@ -203,6 +203,8 @@ export default class {
     this.setUUID = modules.config.setUUID.bind(modules.config);
     this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
+
+    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
   }
 
 
