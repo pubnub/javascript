@@ -3,6 +3,7 @@
 import { GetStateArguments, GetStateResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { getState as expectedParams } from '../../parameters';
 import utils from '../../utils';
 
 export function getOperation(): string {
@@ -14,7 +15,7 @@ export function validateParams(modules: ModulesInject, incomingParams: GetStateA
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('get_state', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: GetStateArguments): string {

@@ -4,6 +4,7 @@
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
 import validate from '../parameters_validator';
+import { setup as expectedParams } from '../parameters';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -119,7 +120,7 @@ export default class {
   customDecrypt: Function // function used to decrypt old version messages
 
   constructor({ setup, db } : ConfigConstructArgs) {
-    let notValid = validate('setup', setup);
+    let notValid = validate(expectedParams, setup);
 
     if (notValid !== undefined) {
       throw new Error(notValid);

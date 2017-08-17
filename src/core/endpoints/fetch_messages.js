@@ -3,6 +3,7 @@
 import { FetchMessagesArguments, FetchMessagesResponse, MessageAnnouncement, HistoryV3Response, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import validate from '../parameters_validator';
+import { fetchMessages as expectedParams } from '../parameters';
 import utils from '../utils';
 
 function __processMessage(modules, message: Object): Object | null {
@@ -27,7 +28,7 @@ export function validateParams(modules: ModulesInject, incomingParams: FetchMess
   if (!channels || channels.length === 0) return 'Missing channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('fetch_messages', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: FetchMessagesArguments): string {

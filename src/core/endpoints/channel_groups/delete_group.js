@@ -3,6 +3,7 @@
 import { DeleteGroupParams, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { deleteGroup as expectedParams } from '../../parameters';
 import utils from '../../utils';
 
 export function getOperation(): string {
@@ -16,7 +17,7 @@ export function validateParams(modules: ModulesInject, incomingParams: DeleteGro
   if (!channelGroup) return 'Missing Channel Group';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('delete_group', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: DeleteGroupParams): string {

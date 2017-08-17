@@ -3,6 +3,7 @@
 import { ListChannelsArgs, ListChannelsResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { listPushChannels as expectedParams } from '../../parameters';
 
 export function getOperation(): string {
   return operationConstants.PNPushNotificationEnabledChannelsOperation;
@@ -16,7 +17,7 @@ export function validateParams(modules: ModulesInject, incomingParams: ListChann
   if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('list_push_channels', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: ListChannelsArgs): string {

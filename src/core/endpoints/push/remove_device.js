@@ -3,6 +3,7 @@
 import { RemoveDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { removeDevice as expectedParams } from '../../parameters';
 
 export function getOperation(): string {
   return operationConstants.PNRemoveAllPushNotificationsOperation;
@@ -16,7 +17,7 @@ export function validateParams(modules: ModulesInject, incomingParams: RemoveDev
   if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('remove_device', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: RemoveDeviceArgs): string {

@@ -3,6 +3,7 @@
 import { ModifyDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { addPushChannels as expectedParams } from '../../parameters';
 
 export function getOperation(): string {
   return operationConstants.PNPushNotificationEnabledChannelsOperation;
@@ -17,7 +18,7 @@ export function validateParams(modules: ModulesInject, incomingParams: ModifyDev
   if (!channels || channels.length === 0) return 'Missing Channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('add_push_channels', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: ModifyDeviceArgs): string {

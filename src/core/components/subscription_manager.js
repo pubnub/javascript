@@ -7,6 +7,7 @@ import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 import validate from '../parameters_validator';
+import { subscribe as subscribeExpected, setState as setStateExpected, unsubscribe as unsubscribeExpected } from '../parameters';
 
 type SubscribeArgs = {
   channels: Array<string>,
@@ -108,7 +109,7 @@ export default class {
   adaptStateChange(args: StateArgs, callback: Function) {
     const { state, channels = [], channelGroups = [] } = args;
 
-    let notValid = validate('set_state', args);
+    let notValid = validate(setStateExpected, args);
 
     if (notValid !== undefined) {
       throw new Error(notValid);
@@ -128,7 +129,7 @@ export default class {
   adaptSubscribeChange(args: SubscribeArgs) {
     const { timetoken, channels = [], channelGroups = [], withPresence = false } = args;
 
-    let notValid = validate('subscribe', args);
+    let notValid = validate(subscribeExpected, args);
 
     if (notValid !== undefined) {
       throw new Error(notValid);
@@ -171,7 +172,7 @@ export default class {
   adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
     const { channels = [], channelGroups = [] } = args;
 
-    let notValid = validate('unsubscribe', args);
+    let notValid = validate(unsubscribeExpected, args);
 
     if (notValid !== undefined) {
       throw new Error(notValid);

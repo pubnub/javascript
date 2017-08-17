@@ -3,6 +3,7 @@
 import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { hereNow as expectedParams } from '../../parameters';
 import utils from '../../utils';
 
 export function getOperation(): string {
@@ -14,7 +15,7 @@ export function validateParams(modules: ModulesInject, incomingParams: HereNowAr
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('here_now', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: HereNowArguments): string {

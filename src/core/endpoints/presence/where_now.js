@@ -3,6 +3,7 @@
 import { WhereNowArguments, WhereNowResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
+import { whereNow as expectedParams } from '../../parameters';
 
 export function getOperation(): string {
   return operationConstants.PNWhereNowOperation;
@@ -13,7 +14,7 @@ export function validateParams(modules: ModulesInject, incomingParams: WhereNowA
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
-  return validate('where_now', incomingParams);
+  return validate(expectedParams, incomingParams);
 }
 
 export function getURL(modules: ModulesInject, incomingParams: WhereNowArguments): string {
