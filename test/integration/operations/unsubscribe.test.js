@@ -28,6 +28,24 @@ describe('unsubscribe', () => {
   });
 
   describe('#unsubscribe', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      try {
+        pubnub.unsubscribe({ channels: 'ch1' });
+      } catch (err) {
+        assert.notEqual(err, '');
+        done();
+      }
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      try {
+        pubnub.unsubscribe({ channel: ['ch1'] });
+      } catch (err) {
+        assert.notEqual(err, '');
+        done();
+      }
+    });
+
     it('supports leaving for one channel', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/leave')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })

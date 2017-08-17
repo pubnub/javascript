@@ -103,6 +103,22 @@ describe('access endpoints', () => {
   });
 
   describe('#grant', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.grant({ channels: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.grant({ channel: ['ch1'] }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('issues the correct RESTful request for channels', (done) => {
       const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey')
       .query({

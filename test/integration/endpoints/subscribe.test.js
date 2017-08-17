@@ -29,6 +29,24 @@ describe('subscribe endpoints', () => {
     pubnubWithFiltering.stop();
   });
 
+  it('fails if an argument has a wrong value', (done) => {
+    try {
+      pubnub.subscribe({ channels: 'ch1' });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
+  it('fails if an arguments is invalid', (done) => {
+    try {
+      pubnub.subscribe({ channel: ['ch1'] });
+    } catch (err) {
+      assert.notEqual(err, '');
+      done();
+    }
+  });
+
   it('supports addition of multiple channels', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
       .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })

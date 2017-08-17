@@ -23,6 +23,22 @@ describe('push endpoints', () => {
   });
 
   describe('adding channels to device', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.push.addChannels({ channels: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.push.addChannels({ channel: ['ch1'] }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('supports addition of multiple channels for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
         .query({ add: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
@@ -61,6 +77,22 @@ describe('push endpoints', () => {
   });
 
   describe('listing channels for device', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.push.listChannels({ device: true }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.push.listChannels({ devices: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('supports channel listing for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/coolDevice')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
@@ -102,6 +134,22 @@ describe('push endpoints', () => {
   });
 
   describe('supports deletion of channels', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.push.removeChannels({ channels: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.push.removeChannels({ channel: ['ch1'] }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('supports removal of multiple channels for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice')
         .query({ remove: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })
@@ -140,6 +188,22 @@ describe('push endpoints', () => {
   });
 
   describe('supports removal of device', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.push.deleteDevice({ device: true }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.push.deleteDevice({ devices: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('supports removal of device for apple', (done) => {
       const scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, type: 'apns', uuid: 'myUUID' })

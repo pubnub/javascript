@@ -22,6 +22,22 @@ describe('fetch messages endpoints', () => {
     pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
   });
 
+  it('fails if an argument has a wrong value', (done) => {
+    pubnub.fetchMessages({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('fails if an argument is invalid', (done) => {
+    pubnub.fetchMessages({ channel: ['ch1'] }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
   it('supports payload', (done) => {
     const scope = utils.createNock().get('/v3/history/sub-key/mySubKey/channel/ch1%2Cch2')
       .query({ max: '10', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })

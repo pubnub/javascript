@@ -23,6 +23,22 @@ describe('publish endpoints', () => {
   });
 
   describe('##validation', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.publish({ channel: ['ch1', 'ch2'], message: 'Hello World!' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.publish({ channels: 'ch1', message: 'Hello World!' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('fails if channel is missing', (done) => {
       const scope = utils.createNock().get('/publish/*')
         .reply(200, '[1,"Sent","14647523059145592"]');
@@ -149,6 +165,22 @@ describe('publish endpoints', () => {
   });
 
   describe('#fire', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.fire({ channel: ['ch1', 'ch2'], message: 'Hello World!' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.publish({ channels: 'ch1', message: 'Hello World!' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('publishes a complex object via GET', (done) => {
       const scope = utils.createNock().get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
         .query({ norep: true, store: 0, pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', auth: 'myAuthKey' })

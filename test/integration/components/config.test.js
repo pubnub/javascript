@@ -10,6 +10,30 @@ import { get, post } from '../../../src/networking/modules/web-node';
 import { keepAlive, proxy } from '../../../src/networking/modules/node';
 
 describe('components/config', () => {
+  describe('new Instance', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      try {
+        let p = new PubNub({ subscribeKey: true });
+
+        p.subscribe({ channels: 'ch1' });
+      } catch (err) {
+        assert.notEqual(err, '');
+        done();
+      }
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      try {
+        let p = new PubNub({ subscribeK: 'mySubKey' });
+
+        p.subscribe({ channels: 'ch1' });
+      } catch (err) {
+        assert.notEqual(err, '');
+        done();
+      }
+    });
+  });
+
   describe('AuthKey Storage', () => {
     let networking = new Networking({ keepAlive, get, post, proxy });
     let storageParams = { authKey: 'authKey1', networking: networking };

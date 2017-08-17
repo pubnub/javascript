@@ -23,6 +23,22 @@ describe('channel group endpoints', () => {
   });
 
   describe('adding channels to channel group', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.channelGroups.addChannels({ channels: 'ch1', channelGroup: 'cg1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.channelGroups.addChannels({ channel: ['ch1'], channelGroup: 'cg1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('supports addition of multiple channels', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1')
         .query({ add: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
@@ -37,6 +53,22 @@ describe('channel group endpoints', () => {
   });
 
   describe('removal of channel group', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.channelGroups.deleteGroup({ channelGroup: true }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.channelGroups.deleteGroup({ channel: 'cg1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('supports deletion of group', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1/remove')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
@@ -51,6 +83,22 @@ describe('channel group endpoints', () => {
   });
 
   describe('listing of channel groups', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.channelGroups.listChannels({ channelGroup: true }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.channelGroups.listChannels({ channelGroups: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('returns a list of all channel groups', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
@@ -81,6 +129,22 @@ describe('channel group endpoints', () => {
   });
 
   describe('deletion of channels from channel group', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.channelGroups.removeChannels({ channels: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.channelGroups.removeChannels({ channel: ['ch1'] }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('works as expected', (done) => {
       const scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1')
         .query({ remove: 'a,b', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })

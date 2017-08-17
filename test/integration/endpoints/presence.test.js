@@ -22,6 +22,22 @@ describe('presence endpoints', () => {
   });
 
   describe('#whereNow', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.whereNow({ uuid: true }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.whereNow({ channel: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('returns the requested data for user UUID', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
@@ -66,6 +82,24 @@ describe('presence endpoints', () => {
   });
 
   describe('#setState', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      try {
+        pubnub.setState({ channels: 'ch1', state: { status: 'typing' } });
+      } catch (err) {
+        assert.notEqual(err, '');
+        done();
+      }
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      try {
+        pubnub.setState({ channels: ['ch1'], status: { status: 'typing' } });
+      } catch (err) {
+        assert.notEqual(err, '');
+        done();
+      }
+    });
+
     it('sets presence data for user UUID', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', state: '{"new":"state"}' })
@@ -110,6 +144,22 @@ describe('presence endpoints', () => {
   });
 
   describe('#getState', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.getState({ channels: 'ch1' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.getState({ channel: ['ch1'] }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('returns the requested data for user UUID', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
@@ -168,6 +218,22 @@ describe('presence endpoints', () => {
   });
 
   describe('#hereNow', () => {
+    it('fails if an argument has a wrong value', (done) => {
+      pubnub.hereNow({ channels: ['ch1'], includeUUIDs: 'Hello World!' }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
+    it('fails if an argument is invalid', (done) => {
+      pubnub.hereNow({ channels: 'ch1', includeUUIDs: true }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.type, 'validationError');
+        done();
+      });
+    });
+
     it('returns response for a single channel', (done) => {
       const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/game1')
         .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })

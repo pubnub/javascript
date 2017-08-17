@@ -22,6 +22,22 @@ describe('history endpoints', () => {
     pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
   });
 
+  it('fails if an argument has a wrong value', (done) => {
+    pubnub.history({ channel: true }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
+  it('fails if an argument is invalid', (done) => {
+    pubnub.history({ channels: 'ch1' }, (status) => {
+      assert.equal(status.error, true);
+      assert.equal(status.type, 'validationError');
+      done();
+    });
+  });
+
   it('supports payload with timetoken', (done) => {
     const scope = utils.createNock().get('/v2/history/sub-key/mySubKey/channel/ch1')
       .query({ count: '100', include_token: 'true', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', string_message_token: true })
