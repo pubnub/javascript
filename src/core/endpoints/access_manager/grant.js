@@ -3,7 +3,17 @@
 import { GrantArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { grant as expectedParams } from '../../parameters';
+
+const expectedParams = {
+  channels: 'array',
+  channelGroups: 'array',
+  authKeys: 'array',
+  ttl: 'number',
+  read: 'boolean',
+  write: 'boolean',
+  manage: 'boolean',
+  callback: 'function'
+};
 
 export function getOperation(): string {
   return operationConstants.PNAccessManagerGrant;

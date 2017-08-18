@@ -2,9 +2,18 @@
 
 import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
 import validate from '../parameters_validator';
-import { history as expectedParams } from '../parameters';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
+
+const expectedParams = {
+  channel: 'string',
+  reverse: 'boolean',
+  count: 'number',
+  stringifiedTimeToken: 'boolean',
+  start: 'string',
+  end: 'string',
+  callback: 'function'
+};
 
 function __processMessage(modules, message: Object): Object | null {
   let { config, crypto } = modules;

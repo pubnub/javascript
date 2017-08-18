@@ -3,8 +3,15 @@
 import { FetchMessagesArguments, FetchMessagesResponse, MessageAnnouncement, HistoryV3Response, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import validate from '../parameters_validator';
-import { fetchMessages as expectedParams } from '../parameters';
 import utils from '../utils';
+
+const expectedParams = {
+  channels: 'array',
+  count: 'number',
+  start: 'string',
+  end: 'string',
+  callback: 'function'
+};
 
 function __processMessage(modules, message: Object): Object | null {
   let { config, crypto } = modules;

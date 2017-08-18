@@ -3,8 +3,15 @@
 import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { hereNow as expectedParams } from '../../parameters';
 import utils from '../../utils';
+
+const expectedParams = {
+  channels: 'array',
+  channelGroups: 'array',
+  includeUUIDs: 'boolean',
+  includeState: 'boolean',
+  callback: 'function'
+};
 
 export function getOperation(): string {
   return operationConstants.PNHereNowOperation;

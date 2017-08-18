@@ -3,8 +3,13 @@
 import { AddChannelParams, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { addChannels as expectedParams } from '../../parameters';
 import utils from '../../utils';
+
+const expectedParams = {
+  channels: 'array',
+  channelGroup: 'string',
+  callback: 'function'
+};
 
 export function getOperation(): string {
   return operationConstants.PNAddChannelsToGroupOperation;

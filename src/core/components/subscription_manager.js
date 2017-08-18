@@ -7,7 +7,6 @@ import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 import validate from '../parameters_validator';
-import { subscribe as subscribeExpected, setState as setStateExpected, unsubscribe as unsubscribeExpected } from '../parameters';
 
 type SubscribeArgs = {
   channels: Array<string>,
@@ -37,6 +36,27 @@ type SubscriptionManagerConsturct = {
     crypto: Crypto,
     listenerManager: ListenerManager
 }
+
+const subscribeExpected = {
+  channels: 'array',
+  channelGroups: 'array',
+  withPresence: 'boolean',
+  timetoken: 'object',
+  filterExpression: '*ignore',
+  region: '*ignore'
+};
+
+const setStateExpected = {
+  channels: 'array',
+  channelGroups: 'array',
+  state: 'object',
+  callback: 'function'
+};
+
+const unsubscribeExpected = {
+  channels: 'array',
+  channelGroups: 'array'
+};
 
 export default class {
 

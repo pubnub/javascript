@@ -3,8 +3,18 @@
 import { PublishResponse, PublishArguments, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import validate from '../parameters_validator';
-import { publish as expectedParams } from '../parameters';
 import utils from '../utils';
+
+const expectedParams = {
+  message: 'object',
+  channel: 'string',
+  storeInHistory: 'boolean',
+  sendByPost: 'boolean',
+  meta: 'object',
+  ttl: 'number',
+  callback: 'function',
+  replicate: '*ignore'
+};
 
 function prepareMessagePayload(modules, messagePayload) {
   const { crypto, config } = modules;

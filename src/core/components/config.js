@@ -4,12 +4,40 @@
 import uuidGenerator from 'uuid';
 import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
 import validate from '../parameters_validator';
-import { setup as expectedParams } from '../parameters';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
   db: DatabaseInterface
-}
+};
+
+const expectedParams = {
+  subscribeKey: 'string',
+  publishKey: 'string',
+  cipherKey: 'string',
+  authKey: 'string',
+  secretKey: 'string',
+  logVerbosity: 'boolean',
+  uuid: 'string',
+  ssl: 'boolean',
+  origin: 'string',
+  presenceTimeout: 'number',
+  heartbeatInterval: 'number',
+  restore: 'boolean',
+  keepAlive: 'boolean',
+  keepAliveSettings: 'object',
+  useInstanceId: 'boolean',
+  sdkFamily: '*ignore',
+  networking: '*ignore',
+  db: '*ignore',
+  customDecrypt: 'function',
+  customEncrypt: 'function',
+  partnerId: '*ignore',
+  autoNetworkDetection: '*ignore',
+  announceSuccessfulHeartbeats: '*ignore',
+  requestMessageCountThreshold: '*ignore',
+  filterExpression: '*ignore',
+  removeAllListeners: '*ignore'
+};
 
 export default class {
 

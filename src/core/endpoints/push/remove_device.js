@@ -3,7 +3,12 @@
 import { RemoveDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { removeDevice as expectedParams } from '../../parameters';
+
+const expectedParams = {
+  device: 'string',
+  pushGateway: 'string',
+  callback: 'function'
+};
 
 export function getOperation(): string {
   return operationConstants.PNRemoveAllPushNotificationsOperation;

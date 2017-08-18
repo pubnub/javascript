@@ -3,7 +3,14 @@
 import { ModifyDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { removePushChannels as expectedParams } from '../../parameters';
+
+const expectedParams = {
+  channels: 'array',
+  device: 'string',
+  pushGateway: 'string',
+  callback: 'function',
+  uuid: '*ignore'
+};
 
 export function getOperation(): string {
   return operationConstants.PNPushNotificationEnabledChannelsOperation;

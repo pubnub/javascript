@@ -3,8 +3,12 @@
 import { DeleteGroupParams, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { deleteGroup as expectedParams } from '../../parameters';
 import utils from '../../utils';
+
+const expectedParams = {
+  channelGroup: 'string',
+  callback: 'function'
+};
 
 export function getOperation(): string {
   return operationConstants.PNRemoveGroupOperation;

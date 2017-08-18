@@ -3,7 +3,11 @@
 import { WhereNowArguments, WhereNowResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import validate from '../../parameters_validator';
-import { whereNow as expectedParams } from '../../parameters';
+
+const expectedParams = {
+  uuid: 'string',
+  callback: 'function'
+};
 
 export function getOperation(): string {
   return operationConstants.PNWhereNowOperation;
