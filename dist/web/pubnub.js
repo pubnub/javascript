@@ -1,4 +1,4 @@
-/*! 4.14.0 / Consumer  */
+/*! 4.15.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -808,7 +808,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.14.0';
+	      return '4.15.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -3254,6 +3254,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function handleResponse(modules, serverResponse) {
+	  if (!serverResponse.payload) {
+	    return { channels: [] };
+	  }
 	  return { channels: serverResponse.payload.channels };
 	}
 
@@ -3625,7 +3628,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      occupancy: serverResponse.occupancy
 	    };
 
-	    if (includeUUIDs) {
+	    if (includeUUIDs && serverResponse.uuids) {
 	      serverResponse.uuids.forEach(function (uuidEntry) {
 	        if (includeState) {
 	          occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
