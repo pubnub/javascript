@@ -3,6 +3,7 @@ import Crypto from '../components/cryptography';
 import Config from '../components/config';
 import ListenerManager from '../components/listener_manager';
 import ReconnectionManager from '../components/reconnection_manager';
+import DedupingManager from '../components/deduping_manager';
 import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
@@ -102,6 +103,7 @@ export default class {
     this._isOnline = true;
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
+    this._dedupingManager = new DedupingManager({ config });
   }
 
   adaptStateChange(args: StateArgs, callback: Function) {
@@ -394,7 +396,7 @@ export default class {
     }
 
     let messages = payload.messages || [];
-    let { requestMessageCountThreshold } = this._config;
+    let { requestMessageCountThreshold, dedupeOnSubscribe } = this._config;
 
     if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
       let countAnnouncement: StatusAnnouncement = {};
@@ -410,6 +412,14 @@ export default class {
 
       if (channel === subscriptionMatch) {
         subscriptionMatch = null;
+      }
+
+      if (dedupeOnSubscribe) {
+        if (this._dedupingManager.isDuplicate(message)) {
+          return;
+        } else {
+          this._dedupingManager.addEntry(message);
+        }
       }
 
       if (utils.endsWith(message.channel, '-pnpres')) {

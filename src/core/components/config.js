@@ -112,6 +112,12 @@ export default class {
 
 
   /*
+    support for client deduping
+  */
+  dedupeOnSubscribe: boolean
+  maximumCacheSize: number
+
+  /*
     support customp encryption and decryption functions.
   */
   customEncrypt: Function // function to support custome encryption of messages
@@ -138,6 +144,9 @@ export default class {
     this.keepAlive = setup.keepAlive;
     this.keepAliveSettings = setup.keepAliveSettings;
     this.autoNetworkDetection = setup.autoNetworkDetection || false;
+
+    this.dedupeOnSubscribe = setup.dedupeOnSubscribe || false;
+    this.maximumCacheSize = setup.maximumCacheSize || 100;
 
     this.customEncrypt = setup.customEncrypt;
     this.customDecrypt = setup.customDecrypt;
