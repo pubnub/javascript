@@ -1,5 +1,5 @@
 name: javascript
-version: 4.13.0
+version: 4.15.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
@@ -13,6 +13,16 @@ changelog:
         text: fix issue with where now and invalid server response
       - type: improvement
         text: fix issue with here now and invalid server response
+  - version: v4.14.0
+    date:
+    changes:
+      - type: improvement
+        text: Allow disable of heartbeats by passing interval = 0
+  - version: v4.13.0
+    date:
+    changes:
+      - type: improvement
+        text: patch up 503 reporting
   - version: v4.12.0
     date:
     changes:

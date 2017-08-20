@@ -1,4 +1,4 @@
-/*! 4.13.0 / Consumer  */
+/*! 4.15.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -808,7 +808,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.13.0';
+	      return '4.15.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1699,6 +1699,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_registerHeartbeatTimer',
 	    value: function _registerHeartbeatTimer() {
 	      this._stopHeartbeatTimer();
+
+	      if (this._config.getHeartbeatInterval() === 0) {
+	        return;
+	      }
+
 	      this._performHeartbeatLoop();
 	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
 	    }
@@ -4560,6 +4565,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    var parsedResponse = JSON.parse(resp.text);
+
+	    if (parsedResponse.error && parsedResponse.error === 1 && parsedResponse.status && parsedResponse.message && parsedResponse.service) {
+	      status.errorData = parsedResponse;
+	      status.statusCode = parsedResponse.status;
+	      status.error = true;
+	      status.category = _this._detectErrorCategory(status);
+	      return callback(status, null);
+	    }
+
 	    return callback(status, parsedResponse);
 	  });
 	}

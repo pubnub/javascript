@@ -1,4 +1,4 @@
-/*! 4.13.0 / Consumer  */
+/*! 4.15.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -786,7 +786,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.13.0';
+	      return '4.15.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1677,6 +1677,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_registerHeartbeatTimer',
 	    value: function _registerHeartbeatTimer() {
 	      this._stopHeartbeatTimer();
+
+	      if (this._config.getHeartbeatInterval() === 0) {
+	        return;
+	      }
+
 	      this._performHeartbeatLoop();
 	      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
 	    }
