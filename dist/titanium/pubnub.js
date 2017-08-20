@@ -348,6 +348,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.setUUID = modules.config.setUUID.bind(modules.config);
 	    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
 	    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
+
+	    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 	  }
 
 	  _createClass(_class, [{
@@ -653,7 +655,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.setFilterExpression(setup.filterExpression);
 
-	    this.origin = setup.origin || 'pubsub.pubnub.com';
+	    this.origin = setup.origin || 'pubsub.pndsn.com';
 	    this.secure = setup.ssl || false;
 	    this.restore = setup.restore || false;
 	    this.proxy = setup.proxy;
@@ -1614,21 +1616,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _args$channelGroups3 = args.channelGroups,
 	          channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
 
+	      var actualChannels = [];
+	      var actualChannelGroups = [];
+
 
 	      channels.forEach(function (channel) {
-	        if (channel in _this3._channels) delete _this3._channels[channel];
-	        if (channel in _this3._presenceChannels) delete _this3._presenceChannels[channel];
+	        if (channel in _this3._channels) {
+	          delete _this3._channels[channel];
+	          actualChannels.push(channel);
+	        }
+	        if (channel in _this3._presenceChannels) {
+	          delete _this3._presenceChannels[channel];
+	          actualChannels.push(channel);
+	        }
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        if (channelGroup in _this3._channelGroups) delete _this3._channelGroups[channelGroup];
-	        if (channelGroup in _this3._presenceChannelGroups) delete _this3._channelGroups[channelGroup];
+	        if (channelGroup in _this3._channelGroups) {
+	          delete _this3._channelGroups[channelGroup];
+	          actualChannelGroups.push(channelGroup);
+	        }
+	        if (channelGroup in _this3._presenceChannelGroups) {
+	          delete _this3._channelGroups[channelGroup];
+	          actualChannelGroups.push(channelGroup);
+	        }
 	      });
 
+	      if (actualChannels.length === 0 && actualChannelGroups.length === 0) {
+	        return;
+	      }
+
 	      if (this._config.suppressLeaveEvents === false && !isOffline) {
-	        this._leaveEndpoint({ channels: channels, channelGroups: channelGroups }, function (status) {
-	          status.affectedChannels = channels;
-	          status.affectedChannelGroups = channelGroups;
+	        this._leaveEndpoint({ channels: actualChannels, channelGroups: actualChannelGroups }, function (status) {
+	          status.affectedChannels = actualChannels;
+	          status.affectedChannelGroups = actualChannelGroups;
 	          status.currentTimetoken = _this3._currentTimetoken;
 	          status.lastTimetoken = _this3._lastTimetoken;
 	          _this3._listenerManager.announceStatus(status);

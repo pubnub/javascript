@@ -157,39 +157,44 @@ export default class {
 
   adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
     const { channels = [], channelGroups = [] } = args;
-    let performUnsubscribe = false;
+
+    // keep track of which channels and channel groups
+    // we are going to unsubscribe from.
+    const actualChannels = [];
+    const actualChannelGroups = [];
+    //
 
     channels.forEach((channel) => {
       if (channel in this._channels) {
         delete this._channels[channel];
-        performUnsubscribe = true;
+        actualChannels.push(channel);
       }
       if (channel in this._presenceChannels) {
         delete this._presenceChannels[channel];
-        performUnsubscribe = true;
+        actualChannels.push(channel);
       }
     });
 
     channelGroups.forEach((channelGroup) => {
       if (channelGroup in this._channelGroups) {
         delete this._channelGroups[channelGroup];
-        performUnsubscribe = true;
+        actualChannelGroups.push(channelGroup);
       }
       if (channelGroup in this._presenceChannelGroups) {
         delete this._channelGroups[channelGroup];
-        performUnsubscribe = true;
+        actualChannelGroups.push(channelGroup);
       }
     });
 
     // no-op if there are no channels and cg's to unsubscribe from.
-    if (!performUnsubscribe) {
+    if (actualChannels.length === 0 && actualChannelGroups.length === 0) {
       return;
     }
 
     if (this._config.suppressLeaveEvents === false && !isOffline) {
-      this._leaveEndpoint({ channels, channelGroups }, (status) => {
-        status.affectedChannels = channels;
-        status.affectedChannelGroups = channelGroups;
+      this._leaveEndpoint({ channels: actualChannels, channelGroups: actualChannelGroups }, (status) => {
+        status.affectedChannels = actualChannels;
+        status.affectedChannelGroups = actualChannelGroups;
         status.currentTimetoken = this._currentTimetoken;
         status.lastTimetoken = this._lastTimetoken;
         this._listenerManager.announceStatus(status);
