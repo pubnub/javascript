@@ -157,16 +157,34 @@ export default class {
 
   adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
     const { channels = [], channelGroups = [] } = args;
+    let performUnsubscribe = false;
 
     channels.forEach((channel) => {
-      if (channel in this._channels) delete this._channels[channel];
-      if (channel in this._presenceChannels) delete this._presenceChannels[channel];
+      if (channel in this._channels) {
+        delete this._channels[channel];
+        performUnsubscribe = true;
+      }
+      if (channel in this._presenceChannels) {
+        delete this._presenceChannels[channel];
+        performUnsubscribe = true;
+      }
     });
 
     channelGroups.forEach((channelGroup) => {
-      if (channelGroup in this._channelGroups) delete this._channelGroups[channelGroup];
-      if (channelGroup in this._presenceChannelGroups) delete this._channelGroups[channelGroup];
+      if (channelGroup in this._channelGroups) {
+        delete this._channelGroups[channelGroup];
+        performUnsubscribe = true;
+      }
+      if (channelGroup in this._presenceChannelGroups) {
+        delete this._channelGroups[channelGroup];
+        performUnsubscribe = true;
+      }
     });
+
+    // no-op if there are no channels and cg's to unsubscribe from.
+    if (!performUnsubscribe) {
+      return;
+    }
 
     if (this._config.suppressLeaveEvents === false && !isOffline) {
       this._leaveEndpoint({ channels, channelGroups }, (status) => {
