@@ -663,6 +663,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.keepAliveSettings = setup.keepAliveSettings;
 	    this.autoNetworkDetection = setup.autoNetworkDetection || false;
 
+	    this.dedupeOnSubscribe = setup.dedupeOnSubscribe || false;
+	    this.maximumCacheSize = setup.maximumCacheSize || 100;
+
 	    this.customEncrypt = setup.customEncrypt;
 	    this.customDecrypt = setup.customDecrypt;
 
@@ -1469,9 +1472,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _cryptography2 = _interopRequireDefault(_cryptography);
 
-	var _config = __webpack_require__(7);
+	var _config2 = __webpack_require__(7);
 
-	var _config2 = _interopRequireDefault(_config);
+	var _config3 = _interopRequireDefault(_config2);
 
 	var _listener_manager = __webpack_require__(12);
 
@@ -1868,7 +1871,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      var messages = payload.messages || [];
-	      var requestMessageCountThreshold = this._config.requestMessageCountThreshold;
+	      var _config = this._config,
+	          requestMessageCountThreshold = _config.requestMessageCountThreshold,
+	          dedupeOnSubscribe = _config.dedupeOnSubscribe;
 
 
 	      if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
@@ -1887,7 +1892,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	          subscriptionMatch = null;
 	        }
 
-	        _this5._dedupingManager.isDuplicate(message);
+	        if (dedupeOnSubscribe) {
+	          if (_this5._dedupingManager.isDuplicate(message)) {
+	            return;
+	          } else {
+	            _this5._dedupingManager.addEntry(message);
+	          }
+	        }
 
 	        if (_utils2.default.endsWith(message.channel, '-pnpres')) {
 	          var announce = {};
@@ -2304,17 +2315,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'getKey',
 	    value: function getKey(message) {
 	      var hashedPayload = hashCode(JSON.stringify(message.payload)).toString();
-	      return message.channel + '-' + hashedPayload;
+	      var timetoken = message.publishMetaData.publishTimetoken;
+	      return timetoken + '-' + hashedPayload;
 	    }
 	  }, {
 	    key: 'isDuplicate',
 	    value: function isDuplicate(message) {
-	      console.log('getKey', this.getKey(message));
 	      return this.hashHistory.includes(this.getKey(message));
 	    }
 	  }, {
 	    key: 'addEntry',
 	    value: function addEntry(message) {
+	      if (this.hashHistory.length >= this._config.maximumCacheSize) {
+	        this.hashHistory.shift();
+	      }
+
 	      this.hashHistory.push(this.getKey(message));
 	    }
 	  }, {
