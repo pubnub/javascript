@@ -1,4 +1,4 @@
-/*! 4.15.0 / Consumer  */
+/*! 4.15.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -813,7 +813,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.15.0';
+	      return '4.15.1';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4660,7 +4660,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if (this._config.keepAlive && this._modules.keepAlive) {
-	    superagentConstruct = this._module.keepAlive(superagentConstruct);
+	    superagentConstruct = this._modules.keepAlive(superagentConstruct);
 	  }
 
 	  return superagentConstruct.timeout(endpoint.timeout).end(function (err, resp) {
