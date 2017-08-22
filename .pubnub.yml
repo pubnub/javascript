@@ -1,11 +1,16 @@
 name: javascript
-version: 4.15.0
+version: 4.15.1
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.15.1
+    date:
+    changes:
+      - type: improvement
+        text: fix typo to enable http keep alive support
   - version: v4.15.0
     date:
     changes:

@@ -19,7 +19,9 @@ describe('time endpoints', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({});
+    pubnub = new PubNub({
+      keepAlive: true
+    });
   });
 
   it('calls the callback function when time is fetched', (done) => {

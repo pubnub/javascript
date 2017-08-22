@@ -39,7 +39,7 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
   }
 
   if (this._config.keepAlive && this._modules.keepAlive) {
-    superagentConstruct = this._module.keepAlive(superagentConstruct);
+    superagentConstruct = this._modules.keepAlive(superagentConstruct);
   }
 
   return superagentConstruct
