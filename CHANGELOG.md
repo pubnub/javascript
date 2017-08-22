@@ -1,4 +1,14 @@
 
+## [v4.15.1](https://github.com/pubnub/javascript/tree/v4.15.1)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.15.0...v4.15.1)
+
+
+- ⭐fix typo to enable http keep alive support
+
+
+
 ## [v4.15.0](https://github.com/pubnub/javascript/tree/v4.15.0)
 
 
