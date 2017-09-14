@@ -22,7 +22,7 @@ changelog:
     date:
     changes:
       - type: improvement
-        text: Allow disable of heartbeats by passing interval = 0
+        text: Allow disable of heartbeats by passing heartbeatInterval = 0
   - version: v4.13.0
     date:
     changes:
