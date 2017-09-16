@@ -7,24 +7,24 @@ files:
   - dist/web/pubnub.min.js
 changelog:
   - version: v4.15.1
-    date:
+    date: 2017-08-21
     changes:
       - type: improvement
         text: fix typo to enable http keep alive support
   - version: v4.15.0
-    date:
+    date: 2017-08-21
     changes:
       - type: improvement
         text: Support optional message deduping via the dedupeOnSubscribe config
       - type: improvement
         text: Do not issue leave events if the channel mix is empty.
   - version: v4.14.0
-    date:
+    date: 2017-08-14
     changes:
       - type: improvement
         text: Allow disable of heartbeats by passing interval = 0
   - version: v4.13.0
-    date:
+    date: 2017-07-27
     changes:
       - type: improvement
         text: patch up 503 reporting
@@ -33,7 +33,7 @@ changelog:
       - type: improvement
         text: fix issue with here now and invalid server response
   - version: v4.12.0
-    date:
+    date: 2017-06-19
     changes:
       - type: improvement
         text: fix issue of net with android for titanium
@@ -42,7 +42,7 @@ changelog:
       - type: feature
         text: add auto network detection
   - version: v4.10.0
-    date:
+    date: 2017-05-23
     changes:
       - type: improvement
         text: fix issue of net with android for react-native
@@ -52,7 +52,7 @@ changelog:
       - type: feature
         text: metadata is now passed on message envelope
   - version: v4.9.1
-    date:
+    date: 2017-05-18
     changes:
       - type: feature
         text: add support custom encryption and decryption
@@ -66,12 +66,12 @@ changelog:
       - type: improvement
         text: stop heartbeats for responses with status PNBadRequestCategory
   - version: v4.8.0
-    date:
+    date: 2017-04-06
     changes:
       - type: feature
         text: allow manual control over network state via listenToBrowserNetworkEvents
   - version: v4.7.0
-    date:
+    date: 2017-03-30
     changes:
       - type: feature
         text: add support for titanium SDK
@@ -80,63 +80,63 @@ changelog:
       - type: improvement
         text: add validation for web distribution
   - version: v4.6.0
-    date:
+    date: 2017-03-27
     changes:
       - type: feature
         text: add support for presence deltas.
       - type: feature
         text: keep track of new and upcoming timetokens on status messages
   - version: v4.5.0
-    date:
+    date: 2017-03-08
     changes:
       - type: feature
         text: add optional support for keepAlive by passing the keepAlive config into the init logic
   - version: v4.4.4
-    date:
+    date: 2017-02-14
     changes:
       - type: improvement
         text: add guard to check for channel or channel group on state setting
       - type: improvement
         text: add guard to check for publish, secret keys when performing a grant
   - version: v4.4.3
-    date:
+    date: 2017-02-07
     changes:
       - type: improvement
         text: downgrade superagent to v2; add new entry point for react native.
   - version: v4.4.2
-    date:
+    date: 2017-01-31
     changes:
       - type: improvement
         text: adjust compilation for webpack based compilations
   - version: v4.4.1
-    date:
+    date: 2017-01-31
     changes:
       - type: improvement
         text: proxy support for node
   - version: v4.4.0
-    date:
+    date: 2017-01-23
     changes:
       - type: improvement
         text: upgrade dependencies; fix up linting.
       - type: improvement
         text: handle network outage cases for correct reporting.
   - version: v4.3.3
-    date:
+    date: 2016-12-16
     changes:
       - type: improvement
         text: bump version after v3 release.
   - version: v4.3.2
-    date:
+    date: 2016-11-28
     changes:
       - type: improvement
         text: removes bundling of package.json into the dist file
   - version: v4.3.1
-    date:
+    date: 2016-11-22
     changes:
       - type: improvement
         text: SDK now supports the restore config to allow message catch-up
   - version: v4.3.0
-    date:
+    date: 2016-11-18
     changes:
       - type: improvement
         text: bulk history exposed via pubnub.fetchMessages
@@ -147,34 +147,34 @@ changelog:
       - type: improvement
         text: fixes for param validation on usage of promises
   - version: v4.2.5
-    date:
+    date: 2016-11-04
     changes:
       - type: improvement
         text: SDK reports on the id of the publisher in the message
   - version: v4.2.4
-    date:
+    date: 2016-11-01
     changes:
       - type: improvement
         text: Detection of support of promises improved.
   - version: v4.2.3
-    date:
+    date: 2016-11-01
     changes:
       - type: improvement
         text: Fixes on encoding of apostraphes.
   - version: v4.2.2
-    date:
+    date: 2016-10-31
     changes:
       - type: improvement
         text: Add promise support on setState operation (@jskrzypek)
       - type: improvement
         text: Add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)
   - version: v4.2.1
-    date:
+    date: 2016-10-30
     changes:
       - type: improvement
         text: Encode signatures to avoid sending restricted characters
   - version: v4.2.0
-    date:
+    date: 2016-10-26
     changes:
       - type: improvement
         text: Add optional support for promises on all endpoints.
@@ -183,69 +183,70 @@ changelog:
       - type: improvement
         text: Optionally, if queue size is set, send status on queue size threshold
   - version: v4.1.1
-    date:
+    date: 2016-10-17
     changes:
       - type: improvement
         text: Fix state setting for channels with reserved tags.
   - version: v4.1.0
-    date:
+    date: 2016-10-13
     changes:
       - type: improvement
         text: Reset timetoken when all unsubscribes happen
       - type: improvement
         text: Sign requests when a a secret key is passed
   - version: v4.0.13
-    date:
+    date: 2016-10-05
     changes:
       - type: improvement
         text: Propogate status events to the status callback on subscribe operations.
   - version: v4.0.12
-    date:
+    date: 2016-10-03
     changes:
       - type: improvement
         text: affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events
   - version: v4.0.11
-    date:
+    date: 2016-09-27
     changes:
       - type: improvement
         text: Dependency upgrades
   - version: v4.0.10
-    date:
+    date: 2016-09-14
     changes:
       - type: improvement
         text: Expose decryption and encryption as a global
   - version: v4.0.9
-    date:
+    date: 2016-09-09
     changes:
       - type: improvement
         text: Channel / subscription items are populated in
       - type: improvement
         text: Constants for operation and category are exposed on global object
   - version: v4.0.8
-    date:
+    date: 2016-08-25
     changes:
       - type: improvement
         text: Re-publish of v4.0.7
   - version: v4.0.7
-    date:
+    date: 2016-08-25
     changes:
       - type: improvement
         text: Dependency upgrades
       - type: improvement
         text: Try..catch wrapped around localStorage for iframe compliance
   - version: v4.0.6
-    date:
+    date: 2016-08-18
     changes:
       - type: improvement
         text: Adjustment of reconnection policies for web distributions.
       - type: improvement
         text: PNSDK support for partner identification
   - version: v4.0.5
-    date:
+    date: 2016-08-10
     changes:
       - type: improvement
         text: Stop exposing .babelrc which causes unpredictable behavior on react native.
   - version: v4.0.4
+    date: 2016-08-09
     changes:
       - type: improvement
         text: Adjust handling of presence payloads for state settings.
@@ -256,14 +257,17 @@ changelog:
       - type: improvement
         text: React Native adjustments to package.json information.
   - version: v4.0.3
+    date: 2016-08-07
     changes:
       - type: improvement
         text: Global Here Now parsing adjustments.
   - version: v4.0.2
+    date: 2016-08-03
     changes:
       - type: improvement
         text: Adjustments to internet disconnects on node.
   - version: v4.0.1
+    date: 2016-08-01
     changes:
       - type: bug
         text: Fixes to avoid double encoding on JSON payloads.
