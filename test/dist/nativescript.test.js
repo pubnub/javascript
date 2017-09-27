@@ -24,14 +24,14 @@ describe('#distribution test (nativescript)', function () {
     listener = {
       message: (m) => {
         expect(m.channel).to.be.equal('mychannel2');
-        expect(m.message.text).to.be.equal('hello React-Native SDK');
+        expect(m.message.text).to.be.equal('hello NativeScript SDK');
         done();
       }
     };
 
     pubnub.addListener(listener);
     pubnub.subscribe({channels: ['mychannel2']});
-    pubnub.publish({ channel: 'mychannel2', message: { text: 'hello React-Native SDK' }});
+    pubnub.publish({ channel: 'mychannel2', message: { text: 'hello NativeScript SDK' }});
   });
 
   it('should have to set state', (done) => {
