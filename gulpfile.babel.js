@@ -51,6 +51,12 @@ gulp.task('compile_titanium', () => {
     .pipe(gulp.dest('dist/titanium'));
 });
 
+gulp.task('compile_nativescript', () => {
+  return gulp.src('src/nativescript/index.js')
+    .pipe(gulpWebpack(webpackConfig))
+    .pipe(gulp.dest('dist/nativescript'));
+});
+
 gulp.task('create_version', () => {
   return gulp.src('dist/web/pubnub.js')
     .pipe(rename(`pubnub.${packageJSON.version}.js`))
@@ -79,6 +85,13 @@ gulp.task('uglify_titanium', () => {
     .pipe(uglify({ mangle: true, compress: true }))
     .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/titanium'));
+});
+
+gulp.task('uglify_nativescript', () => {
+  return gulp.src('dist/nativescript/pubnub.js')
+    .pipe(uglify({ mangle: true, compress: true }))
+    .pipe(rename('pubnub.min.js'))
+    .pipe(gulp.dest('dist/nativescript'));
 });
 
 gulp.task('lint_code', [], () => {
@@ -137,21 +150,27 @@ gulp.task('test_react-native', () => {
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
+gulp.task('test_nativescript', () => {
+  return gulp.src('test/dist/nativescript.test.js', { read: false })
+    .pipe(mocha({ reporter: 'spec' }))
+    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
+});
+
 gulp.task('test_release', () => {
   return gulp.src('test/release/**/*.test.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('test', (done) => {
-  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_react-native', 'test_release', 'validate', () => {
+gulp.task('test', () => {
+  runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_react-native', 'test_nativescript', 'test_release', 'validate', () => {
     process.exit();
   });
 });
 
 gulp.task('webpack', (done) => {
-  runSequence('compile_web', 'compile_titanium', done);
+  runSequence('compile_web', 'compile_titanium', 'compile_nativescript', done);
 });
 
 gulp.task('compile', (done) => {
-  runSequence('clean', 'babel', 'webpack', 'uglify_web', 'uglify_titanium', 'create_version', 'create_version_gzip', done);
+  runSequence('clean', 'babel', 'webpack', 'uglify_web', 'uglify_titanium', 'uglify_nativescript', 'create_version', 'create_version_gzip', done);
 });
