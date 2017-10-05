@@ -444,5 +444,17 @@ describe('presence endpoints', () => {
         done();
       });
     });
+
+    it('recovers from false 200 via status', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', disable_uuids: 1 })
+        .reply(200, '{"status": 503, "message": "Service Unavailable", "error": 1, "service": "Presence"}');
+
+      pubnub.hereNow({ includeUUIDs: false }, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
   });
 });

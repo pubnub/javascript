@@ -20,6 +20,7 @@ describe('unsubscribe', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({ subscribeKey: 'mySubscribeKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
+    pubnub.setHeartbeatInterval(0);
   });
 
   afterEach(() => {
@@ -61,6 +62,7 @@ describe('unsubscribe', () => {
         }
       });
 
+      pubnub.subscribe({ channels: ['ch1'] });
       pubnub.unsubscribe({ channels: ['ch1'] });
     });
 
@@ -79,6 +81,7 @@ describe('unsubscribe', () => {
         }
       });
 
+      pubnub.subscribe({ channels: ['ch1', 'ch2'] });
       pubnub.unsubscribe({ channels: ['ch1', 'ch2'] });
     });
 
@@ -97,6 +100,7 @@ describe('unsubscribe', () => {
         }
       });
 
+      pubnub.subscribe({ channelGroups: ['cg1'] });
       pubnub.unsubscribe({ channelGroups: ['cg1'] });
     });
 
@@ -115,7 +119,48 @@ describe('unsubscribe', () => {
         }
       });
 
+      pubnub.subscribe({ channelGroups: ['cg1', 'cg2'] });
       pubnub.unsubscribe({ channelGroups: ['cg1', 'cg2'] });
+    });
+
+    it('supports partial leaving for channels', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/leave')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
+        .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
+
+      pubnub.addListener({
+        status(status) {
+          if (status.operation !== 'PNUnsubscribeOperation') return;
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, ['ch1']);
+          assert.deepEqual(status.affectedChannelGroups, []);
+          done();
+        }
+      });
+
+      pubnub.subscribe({ channels: ['ch1', 'ch2'] });
+      pubnub.unsubscribe({ channels: ['ch1', 'ch3'] });
+    });
+
+    it('supports partial leaving for channel groups', (done) => {
+      const scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/leave')
+        .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', 'channel-group': 'cg1' })
+        .reply(200, '{ "status": 200, "message": "OK", "service": "Presence"}');
+
+      pubnub.addListener({
+        status(status) {
+          if (status.operation !== 'PNUnsubscribeOperation') return;
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(status.affectedChannels, []);
+          assert.deepEqual(status.affectedChannelGroups, ['cg1']);
+          done();
+        }
+      });
+
+      pubnub.subscribe({ channelGroups: ['cg1', 'cg2'] });
+      pubnub.unsubscribe({ channelGroups: ['cg1', 'cg3'] });
     });
   });
 

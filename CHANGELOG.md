@@ -1,4 +1,53 @@
 
+## [v4.15.1](https://github.com/pubnub/javascript/tree/v4.15.1)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.15.0...v4.15.1)
+
+
+- ⭐fix typo to enable http keep alive support
+
+
+
+## [v4.15.0](https://github.com/pubnub/javascript/tree/v4.15.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.14.0...v4.15.0)
+
+
+- ⭐Support optional message deduping via the dedupeOnSubscribe config
+
+
+- ⭐Do not issue leave events if the channel mix is empty.
+
+
+
+## [v4.14.0](https://github.com/pubnub/javascript/tree/v4.14.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.13.0...v4.14.0)
+
+
+- ⭐Allow disable of heartbeats by passing interval = 0
+
+
+
+## [v4.13.0](https://github.com/pubnub/javascript/tree/v4.13.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.12.0...v4.13.0)
+
+
+- ⭐patch up 503 reporting
+
+
+- ⭐fix issue with where now and invalid server response
+
+
+- ⭐fix issue with here now and invalid server response
+
+
+
 ## [v4.12.0](https://github.com/pubnub/javascript/tree/v4.12.0)
 
 

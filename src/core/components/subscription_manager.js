@@ -3,6 +3,7 @@ import Crypto from '../components/cryptography';
 import Config from '../components/config';
 import ListenerManager from '../components/listener_manager';
 import ReconnectionManager from '../components/reconnection_manager';
+import DedupingManager from '../components/deduping_manager';
 import utils from '../utils';
 import { MessageAnnouncement, SubscribeEnvelope, StatusAnnouncement, PresenceAnnouncement } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
@@ -124,6 +125,7 @@ export default class {
     this._isOnline = true;
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
+    this._dedupingManager = new DedupingManager({ config });
   }
 
   adaptStateChange(args: StateArgs, callback: Function) {
@@ -197,21 +199,43 @@ export default class {
     if (notValid !== undefined) {
       throw new Error(notValid);
     }
+    
+    // keep track of which channels and channel groups
+    // we are going to unsubscribe from.
+    const actualChannels = [];
+    const actualChannelGroups = [];
 
     channels.forEach((channel) => {
-      if (channel in this._channels) delete this._channels[channel];
-      if (channel in this._presenceChannels) delete this._presenceChannels[channel];
+      if (channel in this._channels) {
+        delete this._channels[channel];
+        actualChannels.push(channel);
+      }
+      if (channel in this._presenceChannels) {
+        delete this._presenceChannels[channel];
+        actualChannels.push(channel);
+      }
     });
 
     channelGroups.forEach((channelGroup) => {
-      if (channelGroup in this._channelGroups) delete this._channelGroups[channelGroup];
-      if (channelGroup in this._presenceChannelGroups) delete this._channelGroups[channelGroup];
+      if (channelGroup in this._channelGroups) {
+        delete this._channelGroups[channelGroup];
+        actualChannelGroups.push(channelGroup);
+      }
+      if (channelGroup in this._presenceChannelGroups) {
+        delete this._channelGroups[channelGroup];
+        actualChannelGroups.push(channelGroup);
+      }
     });
 
+    // no-op if there are no channels and cg's to unsubscribe from.
+    if (actualChannels.length === 0 && actualChannelGroups.length === 0) {
+      return;
+    }
+
     if (this._config.suppressLeaveEvents === false && !isOffline) {
-      this._leaveEndpoint({ channels, channelGroups }, (status) => {
-        status.affectedChannels = channels;
-        status.affectedChannelGroups = channelGroups;
+      this._leaveEndpoint({ channels: actualChannels, channelGroups: actualChannelGroups }, (status) => {
+        status.affectedChannels = actualChannels;
+        status.affectedChannelGroups = actualChannelGroups;
         status.currentTimetoken = this._currentTimetoken;
         status.lastTimetoken = this._lastTimetoken;
         this._listenerManager.announceStatus(status);
@@ -258,6 +282,12 @@ export default class {
 
   _registerHeartbeatTimer() {
     this._stopHeartbeatTimer();
+
+    // if the interval is 0, do not queue up heartbeating
+    if (this._config.getHeartbeatInterval() === 0) {
+      return;
+    }
+
     this._performHeartbeatLoop();
     this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
   }
@@ -405,7 +435,7 @@ export default class {
     }
 
     let messages = payload.messages || [];
-    let { requestMessageCountThreshold } = this._config;
+    let { requestMessageCountThreshold, dedupeOnSubscribe } = this._config;
 
     if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
       let countAnnouncement: StatusAnnouncement = {};
@@ -421,6 +451,14 @@ export default class {
 
       if (channel === subscriptionMatch) {
         subscriptionMatch = null;
+      }
+
+      if (dedupeOnSubscribe) {
+        if (this._dedupingManager.isDuplicate(message)) {
+          return;
+        } else {
+          this._dedupingManager.addEntry(message);
+        }
       }
 
       if (utils.endsWith(message.channel, '-pnpres')) {

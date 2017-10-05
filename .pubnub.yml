@@ -1,14 +1,33 @@
 name: javascript
-version: 4.13.0
+version: 4.15.1
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.15.1
+    date:
+    changes:
+      - type: improvement
+        text: fix typo to enable http keep alive support
+  - version: v4.15.0
+    date:
+    changes:
+      - type: improvement
+        text: Support optional message deduping via the dedupeOnSubscribe config
+      - type: improvement
+        text: Do not issue leave events if the channel mix is empty.
+  - version: v4.14.0
+    date:
+    changes:
+      - type: improvement
+        text: Allow disable of heartbeats by passing interval = 0
   - version: v4.13.0
     date:
     changes:
+      - type: improvement
+        text: patch up 503 reporting
       - type: improvement
         text: fix issue with where now and invalid server response
       - type: improvement

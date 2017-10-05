@@ -39,7 +39,7 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
   }
 
   if (this._config.keepAlive && this._modules.keepAlive) {
-    superagentConstruct = this._module.keepAlive(superagentConstruct);
+    superagentConstruct = this._modules.keepAlive(superagentConstruct);
   }
 
   return superagentConstruct
@@ -60,6 +60,15 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
         }
 
         let parsedResponse = JSON.parse(resp.text);
+
+        if (parsedResponse.error && parsedResponse.error === 1 && parsedResponse.status && parsedResponse.message && parsedResponse.service) {
+          status.errorData = parsedResponse;
+          status.statusCode = parsedResponse.status;
+          status.error = true;
+          status.category = this._detectErrorCategory(status);
+          return callback(status, null);
+        }
+
         return callback(status, parsedResponse);
       });
 }

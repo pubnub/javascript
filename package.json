@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.13.0",
+  "version": "4.15.1",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -27,9 +27,9 @@
   ],
   "dependencies": {
     "agentkeepalive": "^3.1.0",
+    "lil-uuid": "^0.1.1",
     "superagent": "^2.3.0",
-    "superagent-proxy": "^1.0.2",
-    "uuid": "^3.0.1"
+    "superagent-proxy": "^1.0.2"
   },
   "noAnalyze": false,
   "devDependencies": {
@@ -45,7 +45,6 @@
     "eslint-plugin-flowtype": "^2.30.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-mocha": "^4.8.0",
-    "eslint-plugin-react": "^6.9.0",
     "flow-bin": "^0.46.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
@@ -84,7 +83,6 @@
     "uglify-js": "^2.8.26",
     "underscore": "^1.8.3",
     "webpack": "^2.4.1",
-    "webpack-dev-server": "^2.4.5",
     "webpack-stream": "^3.2.0"
   },
   "bundleDependencies": [],

@@ -142,6 +142,12 @@ export default class {
 
 
   /*
+    support for client deduping
+  */
+  dedupeOnSubscribe: boolean
+  maximumCacheSize: number
+
+  /*
     support customp encryption and decryption functions.
   */
   customEncrypt: Function // function to support custome encryption of messages
@@ -167,13 +173,16 @@ export default class {
 
     this.setFilterExpression(setup.filterExpression);
 
-    this.origin = setup.origin || 'pubsub.pubnub.com';
+    this.origin = setup.origin || 'pubsub.pndsn.com';
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
     this.keepAlive = setup.keepAlive;
     this.keepAliveSettings = setup.keepAliveSettings;
     this.autoNetworkDetection = setup.autoNetworkDetection || false;
+
+    this.dedupeOnSubscribe = setup.dedupeOnSubscribe || false;
+    this.maximumCacheSize = setup.maximumCacheSize || 100;
 
     this.customEncrypt = setup.customEncrypt;
     this.customDecrypt = setup.customDecrypt;
@@ -245,7 +254,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.13.0';
+    return '4.15.1';
   }
 
   _decideUUID(providedUUID: string): string {
