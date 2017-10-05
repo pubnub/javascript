@@ -1818,7 +1818,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_stopSubscribeLoop',
 	    value: function _stopSubscribeLoop() {
 	      if (this._subscribeCall) {
-	        this._subscribeCall.abort();
+	        if (typeof this._subscribeCall.abort === 'function') {
+	          this._subscribeCall.abort();
+	        }
 	        this._subscribeCall = null;
 	      }
 	    }
