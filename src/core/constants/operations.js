@@ -3,6 +3,7 @@ export default {
   PNTimeOperation: 'PNTimeOperation',
 
   PNHistoryOperation: 'PNHistoryOperation',
+  PNDeleteMessagesOperation: 'PNDeleteMessagesOperation',
   PNFetchMessagesOperation: 'PNFetchMessagesOperation',
 
   // pubsub

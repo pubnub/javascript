@@ -137,6 +137,8 @@ export default function (modules, endpoint, ...args) {
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     let payload = endpoint.postPayload(modules, incomingParams);
     callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
+  } else if (endpoint.useDelete && endpoint.useDelete()) {
+    callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }
