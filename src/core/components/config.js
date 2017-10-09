@@ -1,7 +1,7 @@
 /* @flow */
 /* global location */
 
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
 
 type ConfigConstructArgs = {
@@ -126,7 +126,7 @@ export default class {
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
 
-    this.instanceId = `pn-${uuidGenerator.v4()}`;
+    this.instanceId = `pn-${uuidGenerator()}`;
     this.secretKey = setup.secretKey || setup.secret_key;
     this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
     this.publishKey = setup.publishKey || setup.publish_key;
@@ -233,7 +233,7 @@ export default class {
     }
 
     // randomize the UUID and push to storage
-    return `pn-${uuidGenerator.v4()}`;
+    return `pn-${uuidGenerator()}`;
   }
 
 }

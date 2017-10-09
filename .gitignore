@@ -11,3 +11,4 @@ coverage/
 *.iml
 dist/web/stats.json
 dist/titanium/stats.json
+dist/nativescript/stats.json
