@@ -1,4 +1,16 @@
 
+## [v4.16.0](https://github.com/pubnub/javascript/tree/v4.16.0)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.15.1...v4.16.0)
+
+
+- ⭐support delete messages from history
+
+- ⭐swap uuid generator with support for IE9 and IE10
+
+
+
 ## [v4.15.1](https://github.com/pubnub/javascript/tree/v4.15.1)
 
 
