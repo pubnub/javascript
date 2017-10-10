@@ -15,10 +15,22 @@ export function validateParams(modules: ModulesInject) {
 }
 
 export function getURL(modules: ModulesInject, incomingParams: HeartbeatArguments): string {
-  let { config } = modules;
+  let { config, telemetry } = modules;
   let { channels = [] } = incomingParams;
+
+  let fields = telemetry.get();
+  let querystring = '';
+
+  Object.keys(fields).forEach((key) => {
+    querystring += `${(querystring !== '' ? '&' : '')}${key}=${fields[key]}`;
+  });
+
+  if (querystring !== '') {
+    querystring = `?${querystring}`;
+  }
+
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return `/v2/presence/sub-key/${config.subscribeKey}/channel/${utils.encodeString(stringifiedChannels)}/heartbeat`;
+  return `/v2/presence/sub-key/${config.subscribeKey}/channel/${utils.encodeString(stringifiedChannels)}/heartbeat${querystring}`;
 }
 
 export function isAuthSupported() {

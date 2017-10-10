@@ -59,7 +59,7 @@ function signRequest(modules, url, outgoingParams) {
 }
 
 export default function (modules, endpoint, ...args) {
-  let { networking, config } = modules;
+  let { networking, config, telemetry } = modules;
   let callback = null;
   let promiseComponent = null;
   let incomingParams = {};
@@ -91,7 +91,8 @@ export default function (modules, endpoint, ...args) {
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
   let url = decideURL(endpoint, modules, incomingParams);
   let callInstance;
-  let networkingParams = { url,
+  let networkingParams = {
+    url,
     operation: endpoint.getOperation(),
     timeout: endpoint.getRequestTimeout(modules)
   };
@@ -116,6 +117,8 @@ export default function (modules, endpoint, ...args) {
   }
 
   let onResponse = (status: StatusAnnouncement, payload: Object) => {
+    telemetry.stop(networkingParams);
+
     if (status.error) {
       if (callback) {
         callback(status);
@@ -133,6 +136,8 @@ export default function (modules, endpoint, ...args) {
       promiseComponent.fulfill(parsedPayload);
     }
   };
+
+  telemetry.start(networkingParams);
 
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     let payload = endpoint.postPayload(modules, incomingParams);
