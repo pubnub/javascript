@@ -1,11 +1,18 @@
 name: javascript
-version: 4.15.1
+version: 4.16.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.16.0
+    date: 10-09-2017
+    changes:
+      - type: feature
+        text: support delete messages from history
+      - type: improvement
+        text: swap uuid generator with support for IE9 and IE10
   - version: v4.15.1
     date: 2017-08-21
     changes:

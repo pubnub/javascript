@@ -79,6 +79,10 @@ export default class {
     return this._modules.get(params, endpoint, callback);
   }
 
+  DELETE(params: Object, endpoint: EndpointDefinition, callback: Function) {
+    return this._modules.del(params, endpoint, callback);
+  }
+
   _detectErrorCategory(err: Object): string {
     if (err.code === 'ENOTFOUND') return categoryConstants.PNNetworkIssuesCategory;
     if (err.code === 'ECONNREFUSED') return categoryConstants.PNNetworkIssuesCategory;

@@ -70,3 +70,9 @@ export function post(params: Object, body: string, endpoint: EndpointDefinition,
 
   return xdr.call(this, 'POST', url, params, body, endpoint, callback);
 }
+
+export function del(params: Object, endpoint: EndpointDefinition, callback: Function) {
+  let url = this.getStandardOrigin() + endpoint.url;
+
+  return xdr.call(this, 'DELETE', url, params, '', endpoint, callback);
+}

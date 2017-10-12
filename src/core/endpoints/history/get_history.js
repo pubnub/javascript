@@ -1,8 +1,8 @@
 /* @flow */
 
-import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../flow_interfaces';
-import operationConstants from '../constants/operations';
-import utils from '../utils';
+import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 function __processMessage(modules, message: Object): Object | null {
   let { config, crypto } = modules;
