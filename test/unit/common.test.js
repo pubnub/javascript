@@ -2,7 +2,7 @@
 
 import assert from 'assert';
 import sinon from 'sinon';
-import uuidGenerator from 'lil-uuid';
+import uuidGenerator from 'uuid';
 import PubNub from '../../src/node/index';
 import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 
@@ -12,11 +12,11 @@ describe('#core / mounting point', () => {
   });
 
   afterEach(() => {
-    uuidGenerator();
+    uuidGenerator.v4.restore();
   });
 
   it('supports UUID generation', () => {
-    assert.equal(uuidGenerator.isUUID(PubNub.generateUUID()), true);
+    assert.equal(PubNub.generateUUID(), 'uuidCustom');
   });
 
   it('supports encryption', () => {
