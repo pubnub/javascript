@@ -1,4 +1,4 @@
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 
 import { StatusAnnouncement } from '../flow_interfaces';
 import utils from '../utils';
@@ -104,7 +104,7 @@ export default function (modules, endpoint, ...args) {
   }
 
   if (config.useRequestId) {
-    outgoingParams.requestid = uuidGenerator.v4();
+    outgoingParams.requestid = uuidGenerator();
   }
 
   if (endpoint.isAuthSupported() && config.getAuthKey()) {

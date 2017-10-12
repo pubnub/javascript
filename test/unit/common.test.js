@@ -7,14 +7,6 @@ import PubNub from '../../src/node/index';
 import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 
 describe('#core / mounting point', () => {
-  beforeEach(() => {
-    sinon.stub(uuidGenerator, 'v4').returns('uuidCustom');
-  });
-
-  afterEach(() => {
-    uuidGenerator();
-  });
-
   it('supports UUID generation', () => {
     assert.equal(uuidGenerator.isUUID(PubNub.generateUUID()), true);
   });
