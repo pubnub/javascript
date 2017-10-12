@@ -1,17 +1,31 @@
 
+## [v4.16.1](https://github.com/pubnub/javascript/tree/v4.16.1)
+  October-12-2017
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.16.0...v4.16.1)
+
+
+
+- 🐛fix incorrect packaging of lil-uuid and uuid
+
+
 ## [v4.16.0](https://github.com/pubnub/javascript/tree/v4.16.0)
+  October-10-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.15.1...v4.16.0)
 
+- 🌟support delete messages from history
 
-- ⭐support delete messages from history
+
 
 - ⭐swap uuid generator with support for IE9 and IE10
 
 
 
 ## [v4.15.1](https://github.com/pubnub/javascript/tree/v4.15.1)
+  August-21-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.15.0...v4.15.1)
@@ -22,6 +36,7 @@
 
 
 ## [v4.15.0](https://github.com/pubnub/javascript/tree/v4.15.0)
+  August-21-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.14.0...v4.15.0)
@@ -35,6 +50,7 @@
 
 
 ## [v4.14.0](https://github.com/pubnub/javascript/tree/v4.14.0)
+  August-14-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.13.0...v4.14.0)
@@ -45,6 +61,7 @@
 
 
 ## [v4.13.0](https://github.com/pubnub/javascript/tree/v4.13.0)
+  July-27-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.12.0...v4.13.0)
@@ -61,6 +78,7 @@
 
 
 ## [v4.12.0](https://github.com/pubnub/javascript/tree/v4.12.0)
+  June-19-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.10.0...v4.12.0)
@@ -77,6 +95,7 @@
 
 
 ## [v4.10.0](https://github.com/pubnub/javascript/tree/v4.10.0)
+  May-23-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.9.2...v4.10.0)
@@ -97,6 +116,7 @@
 
 
 ## [v4.9.1](https://github.com/pubnub/javascript/tree/v4.9.1)
+  May-18-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.9.0...v4.9.1)
@@ -123,6 +143,7 @@
 
 
 ## [v4.8.0](https://github.com/pubnub/javascript/tree/v4.8.0)
+  April-06-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.7.0...v4.8.0)
@@ -133,6 +154,7 @@
 
 
 ## [v4.7.0](https://github.com/pubnub/javascript/tree/v4.7.0)
+  March-30-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.6.0...v4.7.0)
@@ -149,6 +171,7 @@
 
 
 ## [v4.6.0](https://github.com/pubnub/javascript/tree/v4.6.0)
+  March-27-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.5.0...v4.6.0)
@@ -162,6 +185,7 @@
 
 
 ## [v4.5.0](https://github.com/pubnub/javascript/tree/v4.5.0)
+  March-08-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.4...v4.5.0)
@@ -172,6 +196,7 @@
 
 
 ## [v4.4.4](https://github.com/pubnub/javascript/tree/v4.4.4)
+  February-14-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.3...v4.4.4)
@@ -185,6 +210,7 @@
 
 
 ## [v4.4.3](https://github.com/pubnub/javascript/tree/v4.4.3)
+  February-07-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.2...v4.4.3)
@@ -195,6 +221,7 @@
 
 
 ## [v4.4.2](https://github.com/pubnub/javascript/tree/v4.4.2)
+  January-31-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.1...v4.4.2)
@@ -205,6 +232,7 @@
 
 
 ## [v4.4.1](https://github.com/pubnub/javascript/tree/v4.4.1)
+  January-31-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.4.0...v4.4.1)
@@ -215,6 +243,7 @@
 
 
 ## [v4.4.0](https://github.com/pubnub/javascript/tree/v4.4.0)
+  January-23-2017
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.3...v4.4.0)
@@ -228,6 +257,7 @@
 
 
 ## [v4.3.3](https://github.com/pubnub/javascript/tree/v4.3.3)
+  December-16-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.2...v4.3.3)
@@ -238,6 +268,7 @@
 
 
 ## [v4.3.2](https://github.com/pubnub/javascript/tree/v4.3.2)
+  November-28-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.1...v4.3.2)
@@ -248,6 +279,7 @@
 
 
 ## [v4.3.1](https://github.com/pubnub/javascript/tree/v4.3.1)
+  November-22-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.3.0...v4.3.1)
@@ -258,6 +290,7 @@
 
 
 ## [v4.3.0](https://github.com/pubnub/javascript/tree/v4.3.0)
+  November-18-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.5...v4.3.0)
@@ -277,6 +310,7 @@
 
 
 ## [v4.2.5](https://github.com/pubnub/javascript/tree/v4.2.5)
+  November-04-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.4...v4.2.5)
@@ -287,6 +321,7 @@
 
 
 ## [v4.2.4](https://github.com/pubnub/javascript/tree/v4.2.4)
+  November-01-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.3...v4.2.4)
@@ -297,6 +332,7 @@
 
 
 ## [v4.2.3](https://github.com/pubnub/javascript/tree/v4.2.3)
+  November-01-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.2...v4.2.3)
@@ -307,6 +343,7 @@
 
 
 ## [v4.2.2](https://github.com/pubnub/javascript/tree/v4.2.2)
+  October-31-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.1...v4.2.2)
@@ -320,6 +357,7 @@
 
 
 ## [v4.2.1](https://github.com/pubnub/javascript/tree/v4.2.1)
+  October-30-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.2.0...v4.2.1)
@@ -330,6 +368,7 @@
 
 
 ## [v4.2.0](https://github.com/pubnub/javascript/tree/v4.2.0)
+  October-26-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.1...v4.2.0)
@@ -346,6 +385,7 @@
 
 
 ## [v4.1.1](https://github.com/pubnub/javascript/tree/v4.1.1)
+  October-17-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.1.0...v4.1.1)
@@ -356,6 +396,7 @@
 
 
 ## [v4.1.0](https://github.com/pubnub/javascript/tree/v4.1.0)
+  October-13-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.13...v4.1.0)
@@ -369,6 +410,7 @@
 
 
 ## [v4.0.13](https://github.com/pubnub/javascript/tree/v4.0.13)
+  October-05-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.12...v4.0.13)
@@ -379,6 +421,7 @@
 
 
 ## [v4.0.12](https://github.com/pubnub/javascript/tree/v4.0.12)
+  October-03-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.11...v4.0.12)
@@ -389,6 +432,7 @@
 
 
 ## [v4.0.11](https://github.com/pubnub/javascript/tree/v4.0.11)
+  September-27-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.10...v4.0.11)
@@ -399,6 +443,7 @@
 
 
 ## [v4.0.10](https://github.com/pubnub/javascript/tree/v4.0.10)
+  September-14-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.9...v4.0.10)
@@ -409,6 +454,7 @@
 
 
 ## [v4.0.9](https://github.com/pubnub/javascript/tree/v4.0.9)
+  September-09-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.8...v4.0.9)
@@ -422,6 +468,7 @@
 
 
 ## [v4.0.8](https://github.com/pubnub/javascript/tree/v4.0.8)
+  August-25-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.7...v4.0.8)
@@ -432,6 +479,7 @@
 
 
 ## [v4.0.7](https://github.com/pubnub/javascript/tree/v4.0.7)
+  August-25-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.6...v4.0.7)
@@ -445,6 +493,7 @@
 
 
 ## [v4.0.6](https://github.com/pubnub/javascript/tree/v4.0.6)
+  August-18-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.5...v4.0.6)
@@ -458,6 +507,7 @@
 
 
 ## [v4.0.5](https://github.com/pubnub/javascript/tree/v4.0.5)
+  August-10-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.4...v4.0.5)
@@ -468,6 +518,7 @@
 
 
 ## [v4.0.4](https://github.com/pubnub/javascript/tree/v4.0.4)
+  August-09-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.3...v4.0.4)
@@ -487,6 +538,7 @@
 
 
 ## [v4.0.3](https://github.com/pubnub/javascript/tree/v4.0.3)
+  August-07-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.2...v4.0.3)
@@ -497,6 +549,7 @@
 
 
 ## [v4.0.2](https://github.com/pubnub/javascript/tree/v4.0.2)
+  August-03-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.1...v4.0.2)
@@ -507,6 +560,7 @@
 
 
 ## [v4.0.1](https://github.com/pubnub/javascript/tree/v4.0.1)
+  August-01-2016
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.0.0...v4.0.1)
