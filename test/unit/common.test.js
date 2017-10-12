@@ -1,7 +1,6 @@
-/* global describe, beforeEach, it , afterEach */
+/* global describe, it */
 
 import assert from 'assert';
-import sinon from 'sinon';
 import uuidGenerator from 'lil-uuid';
 import PubNub from '../../src/node/index';
 import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
