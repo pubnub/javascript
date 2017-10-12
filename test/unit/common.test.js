@@ -1,20 +1,11 @@
-/* global describe, beforeEach, it , afterEach */
+/* global describe, it */
 
 import assert from 'assert';
-import sinon from 'sinon';
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 import PubNub from '../../src/node/index';
 import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 
 describe('#core / mounting point', () => {
-  beforeEach(() => {
-    sinon.stub(uuidGenerator, 'v4').returns('uuidCustom');
-  });
-
-  afterEach(() => {
-    uuidGenerator.v4.restore();
-  });
-
   it('supports UUID generation', () => {
     assert.equal(PubNub.generateUUID(), 'uuidCustom');
   });
