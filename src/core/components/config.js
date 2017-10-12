@@ -1,7 +1,7 @@
 /* @flow */
 /* global location */
 
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
 
 type ConfigConstructArgs = {

@@ -1,4 +1,4 @@
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 
 import { StatusAnnouncement } from '../flow_interfaces';
 import utils from '../utils';
