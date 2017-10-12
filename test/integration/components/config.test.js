@@ -3,7 +3,7 @@
 
 import assert from 'assert';
 import sinon from 'sinon';
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 import PubNub from '../../../src/core/pubnub-common';
 import Networking from '../../../src/networking';
 import { get, post } from '../../../src/networking/modules/web-node';
