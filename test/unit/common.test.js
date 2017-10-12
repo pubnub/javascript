@@ -7,7 +7,7 @@ import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 
 describe('#core / mounting point', () => {
   it('supports UUID generation', () => {
-    assert.equal(uuidGenerator.isUUID(PubNub.generateUUID()), true);
+    assert.equal(PubNub.generateUUID(), 'uuidCustom');
   });
 
   it('supports encryption', () => {
