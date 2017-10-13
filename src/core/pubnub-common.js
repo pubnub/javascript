@@ -1,6 +1,6 @@
 /* @flow */
 
-import uuidGenerator from 'uuid';
+import uuidGenerator from 'lil-uuid';
 
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
@@ -233,7 +233,7 @@ export default class {
 
 
   static generateUUID(): string {
-    return uuidGenerator.v4();
+    return uuidGenerator();
   }
 
   static OPERATIONS = OPERATIONS;
