@@ -1,9 +1,9 @@
-/* global describe, beforeEach, it, afterEach */
+/* global describe, it */
 /* eslint no-console: 0, object-shorthand: 0 */
 
 import assert from 'assert';
 import sinon from 'sinon';
-import uuidGenerator from 'uuid';
+import lilUUID from 'lil-uuid';
 import PubNub from '../../../src/core/pubnub-common';
 import Networking from '../../../src/networking';
 import { get, post } from '../../../src/networking/modules/web-node';
@@ -28,14 +28,6 @@ describe('components/config', () => {
       };
     };
 
-    beforeEach(() => {
-      sinon.stub(uuidGenerator, 'v4').returns('uuidCustom');
-    });
-
-    afterEach(() => {
-      uuidGenerator.v4.restore();
-    });
-
     it('uses the UUID if it is provided in setup', () => {
       let networking = new Networking({ keepAlive, get, post, proxy });
       let storageParams = { uuid: 'customUUID', networking: networking };
@@ -47,7 +39,7 @@ describe('components/config', () => {
       let networking = new Networking({ keepAlive, get, post, proxy });
       let storageParams = { networking: networking };
       const pubnub = new PubNub(storageParams);
-      assert.equal(pubnub.getUUID(), 'pn-uuidCustom');
+      assert.equal(lilUUID.isUUID(pubnub.getUUID().replace('pn-', '')), true);
     });
 
     it('checks UUID from database if db object is provided', () => {
@@ -59,7 +51,7 @@ describe('components/config', () => {
       const pubnub = new PubNub(storageParams);
       assert.equal(dbInstance.get.callCount, 1);
       assert.equal(dbInstance.get.getCall(0).args[0], 'mySubKeyuuid');
-      assert.equal(pubnub.getUUID(), 'pn-uuidCustom');
+      assert.equal(lilUUID.isUUID(pubnub.getUUID().replace('pn-', '')), true);
     });
 
     it('uses UUID from database if db object is provided', () => {

@@ -1,4 +1,15 @@
 
+## [v4.16.2](https://github.com/pubnub/javascript/tree/v4.16.2)
+  October-19-2017
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.16.1...v4.16.2)
+
+
+
+- 🐛fix UUID library to work in browsers.
+
+
 ## [v4.16.1](https://github.com/pubnub/javascript/tree/v4.16.1)
   October-12-2017
 
