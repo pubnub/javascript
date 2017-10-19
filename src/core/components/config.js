@@ -218,7 +218,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.16.1';
+    return '4.16.2';
   }
 
   _decideUUID(providedUUID: string): string {

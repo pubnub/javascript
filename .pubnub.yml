@@ -1,11 +1,16 @@
 name: javascript
-version: 4.16.1
+version: 4.16.2
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.16.2
+    date: 2017-10-19
+    changes:
+      - type: bug
+        text: fix UUID library to work in browsers.
   - version: v4.16.1
     date: 2017-10-12
     changes:
