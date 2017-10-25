@@ -176,7 +176,7 @@ export default class {
     // how long the SDK will report the client to be alive before issuing a timeout
     this.setPresenceTimeout(setup.presenceTimeout || 300);
 
-    if (setup.heartbeatInterval) {
+    if (setup.heartbeatInterval != null) {
       this.setHeartbeatInterval(setup.heartbeatInterval);
     }
 
@@ -218,7 +218,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.16.2';
+    return '4.17.0';
   }
 
   _decideUUID(providedUUID: string): string {

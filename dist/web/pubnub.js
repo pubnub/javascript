@@ -1,4 +1,4 @@
-/*! 4.16.2 / Consumer  */
+/*! 4.17.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -495,7 +495,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.setPresenceTimeout(setup.presenceTimeout || 300);
 
-	    if (setup.heartbeatInterval) {
+	    if (setup.heartbeatInterval != null) {
 	      this.setHeartbeatInterval(setup.heartbeatInterval);
 	    }
 
@@ -594,7 +594,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.16.2';
+	      return '4.17.0';
 	    }
 	  }, {
 	    key: '_decideUUID',

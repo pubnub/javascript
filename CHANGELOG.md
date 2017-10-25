@@ -1,4 +1,15 @@
 
+## [v4.17.0](https://github.com/pubnub/javascript/tree/v4.17.0)
+  October-19-2017
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.16.2...v4.17.0)
+
+
+- ⭐allow disabling of heartbeats by passing 0 during initialization.
+
+
+
 ## [v4.16.2](https://github.com/pubnub/javascript/tree/v4.16.2)
   October-19-2017
 
