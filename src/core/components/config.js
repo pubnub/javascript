@@ -28,6 +28,11 @@ export default class {
   instanceId: string;
 
   /*
+    If the SDK is running as part of another SDK built atop of it, allow a custom pnsdk with name and version.
+   */
+  sdkName: string;
+
+  /*
     keep track of the SDK family for identifier generator
   */
   sdkFamily: string;
@@ -130,6 +135,7 @@ export default class {
     this.secretKey = setup.secretKey || setup.secret_key;
     this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
     this.publishKey = setup.publishKey || setup.publish_key;
+    this.sdkName = setup.sdkName;
     this.sdkFamily = setup.sdkFamily;
     this.partnerId = setup.partnerId;
     this.setAuthKey(setup.authKey);
