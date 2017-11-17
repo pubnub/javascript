@@ -16,7 +16,8 @@ addons:
       - g++-4.8
 cache: yarn
 script:
-  gulp test
+  - gulp test
+  - npm install -g bower
 after_success:
   - npm install codecov codacy-coverage
   - cat ./coverage/lcov.info | node_modules/.bin/codacy-coverage
