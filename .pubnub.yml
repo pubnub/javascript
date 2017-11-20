@@ -10,7 +10,9 @@ changelog:
     date: 2017-11-20
     changes:
       - type: improvement
-        text: keepAlive is now intialized per instance, allowing better connection reuse
+        text: keepAlive is now initialized globally instead of per-call, allowing better connection reuse
+      - type: feature
+        text: added sdkName configuration parameter which allow completely override pnsdk in request query
   - version: v4.17.0
     date: 2017-10-19
     changes:
