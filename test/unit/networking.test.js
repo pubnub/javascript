@@ -1,14 +1,15 @@
-/* global describe, it */
-import Networking from '../../src/networking';
+/* global describe, it, before, after */
+
 import superagent from 'superagent';
 import sinon from 'sinon';
 import nock from 'nock';
 import assert from 'assert';
+
+import Networking from '../../src/networking';
 import { del, get, post } from '../../src/networking/modules/web-node';
 import { keepAlive, proxy } from '../../src/networking/modules/node';
 
 describe('keep-alive agent', () => {
-
   before(() => nock.disableNetConnect());
   after(() => nock.enableNetConnect());
 
@@ -18,7 +19,7 @@ describe('keep-alive agent', () => {
     networking.init(config);
 
     return networking;
-  }
+  };
 
   it('should not create if \'keepAlive\' is \'false\'', () => {
     const networking = setupNetwork(false, false);
@@ -30,7 +31,7 @@ describe('keep-alive agent', () => {
     assert(!superagentGetSpy.returnValues[0]._agent, 'keep-alive agent should not be created');
 
     superagentGetSpy.restore();
-  })
+  });
 
   it('should create agent for insecure connection', () => {
     const networking = setupNetwork(false, true);
@@ -41,7 +42,7 @@ describe('keep-alive agent', () => {
     assert(superagentGetSpy.returnValues[0]._agent.defaultPort !== 443, 'keep-alive agent should access TLS (80) port');
 
     superagentGetSpy.restore();
-  })
+  });
 
   it('should re-use created agent for insecure connection', () => {
     const networking = setupNetwork(false, true);
@@ -52,7 +53,7 @@ describe('keep-alive agent', () => {
     assert(superagentGetSpy.returnValues[0]._agent === superagentGetSpy.returnValues[1]._agent, 'same user-agent should be used');
 
     superagentGetSpy.restore();
-  })
+  });
 
   it('should create agent for secure connection', () => {
     const networking = setupNetwork(true, true);
@@ -63,7 +64,7 @@ describe('keep-alive agent', () => {
     assert(superagentGetSpy.returnValues[0]._agent.defaultPort === 443, 'keep-alive agent should access SSL (443) port');
 
     superagentGetSpy.restore();
-  })
+  });
 
   it('should re-use created agent for secure connection', () => {
     const networking = setupNetwork(true, true);
@@ -74,5 +75,5 @@ describe('keep-alive agent', () => {
     assert(superagentGetSpy.returnValues[0]._agent === superagentGetSpy.returnValues[1]._agent, 'same user-agent should be used');
 
     superagentGetSpy.restore();
-  })
+  });
 });

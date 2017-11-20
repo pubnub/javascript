@@ -1,4 +1,22 @@
 
+## [v4.18.0](https://github.com/pubnub/javascript/tree/v4.18.0)
+  November-20-2017
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.16.2...v4.18.0)
+
+
+- ⭐keepAlive is now intialized per instance, allowing better connection reuse
+
+
+
+## [v4.16.2](https://github.com/pubnub/javascript/tree/v4.16.2)
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.17.0...v4.16.2)
+
+
+
 ## [v4.17.0](https://github.com/pubnub/javascript/tree/v4.17.0)
   October-19-2017
 

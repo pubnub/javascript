@@ -1,11 +1,17 @@
 name: javascript
-version: 4.17.0
+version: 4.18.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.18.0
+    date: 2017-11-20
+    changes:
+      - type: improvement
+        text: keepAlive is now intialized per instance, allowing better connection reuse
+  - version: v4.16.2
   - version: v4.17.0
     date: 2017-10-19
     changes:
