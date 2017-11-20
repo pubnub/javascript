@@ -19,7 +19,7 @@ export function keepAlive(superagentConstruct: superagent) {
     let AgentClass = this._config.secure ? AgentKeepAlive.HttpsAgent : AgentKeepAlive;
     agent = new AgentClass(this._config.keepAliveSettings);
     if (this._config.secure) {
-      keepAliveSecureAgent = agent
+      keepAliveSecureAgent = agent;
     } else {
       keepAliveAgent = agent;
     }
