@@ -4,6 +4,9 @@ import superagent from 'superagent';
 import superagentProxy from 'superagent-proxy';
 import AgentKeepAlive from 'agentkeepalive';
 
+let keepAliveAgent: (AgentKeepAlive | AgentKeepAlive.HttpsAgent) = null;
+let keepAliveSecureAgent: (AgentKeepAlive | AgentKeepAlive.HttpsAgent) = null;
+
 superagentProxy(superagent);
 
 export function proxy(superagentConstruct: superagent) {
@@ -11,19 +14,15 @@ export function proxy(superagentConstruct: superagent) {
 }
 
 export function keepAlive(superagentConstruct: superagent) {
-  let AgentClass = null;
-  let agent = null;
-
-  if (this._config.secure) {
-    AgentClass = AgentKeepAlive.HttpsAgent;
-  } else {
-    AgentClass = AgentKeepAlive;
-  }
-
-  if (this._config.keepAliveSettings) {
+  let agent = this._config.secure ? keepAliveSecureAgent : keepAliveAgent;
+  if (agent === null) {
+    let AgentClass = this._config.secure ? AgentKeepAlive.HttpsAgent : AgentKeepAlive;
     agent = new AgentClass(this._config.keepAliveSettings);
-  } else {
-    agent = new AgentClass();
+    if (this._config.secure) {
+      keepAliveSecureAgent = agent;
+    } else {
+      keepAliveAgent = agent;
+    }
   }
 
   return superagentConstruct.agent(agent);
