@@ -32,6 +32,10 @@ function decideURL(endpoint, modules, incomingParams) {
 }
 
 function generatePNSDK(config: Config): string {
+  if (config.sdkName) {
+    return config.sdkName;
+  }
+
   let base = `PubNub-JS-${config.sdkFamily}`;
 
   if (config.partnerId) {

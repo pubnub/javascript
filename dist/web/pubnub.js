@@ -1,4 +1,4 @@
-/*! 4.17.0 / Consumer  */
+/*! 4.18.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -451,6 +451,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.secretKey = setup.secretKey || setup.secret_key;
 	    this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
 	    this.publishKey = setup.publishKey || setup.publish_key;
+	    this.sdkName = setup.sdkName;
 	    this.sdkFamily = setup.sdkFamily;
 	    this.partnerId = setup.partnerId;
 	    this.setAuthKey(setup.authKey);
@@ -594,7 +595,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.17.0';
+	      return '4.18.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -2439,6 +2440,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function generatePNSDK(config) {
+	  if (config.sdkName) {
+	    return config.sdkName;
+	  }
+
 	  var base = 'PubNub-JS-' + config.sdkFamily;
 
 	  if (config.partnerId) {
