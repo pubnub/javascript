@@ -27,33 +27,33 @@ describe('#components/networking', () => {
     pubnubSDKName = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', sdkName: 'custom-sdk/1.0.0' });
   });
 
-    describe('supports user-agent generation with partner', () => {
-        it('returns a correct user-agent object', (done) => {
-            utils.createNock().get('/time/0')
-                .query({ uuid: 'myUUID', pnsdk: `PubNub-JS-Nodejs-alligator/${packageJSON.version}` })
-                .reply(200, [14570763868573725]);
+  describe('supports user-agent generation with partner', () => {
+    it('returns a correct user-agent object', (done) => {
+      utils.createNock().get('/time/0')
+        .query({ uuid: 'myUUID', pnsdk: `PubNub-JS-Nodejs-alligator/${packageJSON.version}` })
+        .reply(200, [14570763868573725]);
 
-            pubnubPartner.time((status) => {
-                assert.equal(status.error, false);
-                assert.equal(status.statusCode, 200);
-                done();
-            });
-        });
+      pubnubPartner.time((status) => {
+        assert.equal(status.error, false);
+        assert.equal(status.statusCode, 200);
+        done();
+      });
     });
+  });
 
-    describe('supports PNSDK generation with custom SDK name', () => {
-        it('returns a correct response object', (done) => {
-            utils.createNock().get('/time/0')
-                .query({ uuid: 'myUUID', pnsdk: 'custom-sdk/1.0.0' })
-                .reply(200, [14570763868573725]);
+  describe('supports PNSDK generation with custom SDK name', () => {
+    it('returns a correct response object', (done) => {
+      utils.createNock().get('/time/0')
+        .query({ uuid: 'myUUID', pnsdk: 'custom-sdk/1.0.0' })
+        .reply(200, [14570763868573725]);
 
-            pubnubSDKName.time((status) => {
-                assert.equal(status.error, false);
-                assert.equal(status.statusCode, 200);
-                done();
-            });
-        });
+      pubnubSDKName.time((status) => {
+        assert.equal(status.error, false);
+        assert.equal(status.statusCode, 200);
+        done();
+      });
     });
+  });
 
   describe('callback handling', () => {
     it('returns a correct status object', (done) => {
