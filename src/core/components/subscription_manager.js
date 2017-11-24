@@ -74,6 +74,8 @@ export default class {
   _pendingChannelGroupSubscriptions: Array<string>;
   //
 
+  _dedupingManager: DedupingManager;
+
   constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
     this._config = config;
