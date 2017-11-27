@@ -28,7 +28,7 @@
   "dependencies": {
     "agentkeepalive": "^3.1.0",
     "lil-uuid": "^0.1.1",
-    "superagent": "^2.3.0",
+    "superagent": "^3.8.1",
     "superagent-proxy": "^1.0.2"
   },
   "noAnalyze": false,
