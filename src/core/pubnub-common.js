@@ -52,7 +52,7 @@ export default class {
   fire: Function;
 
   history: Function;
-  deleteHistory: Function;
+  deleteMessages: Function;
   fetchMessages: Function;
 
   //
@@ -95,6 +95,8 @@ export default class {
 
   getFilterExpression: Function;
   setFilterExpression: Function;
+
+  setHeartbeatInterval: Function;
 
   encrypt: Function;
   decrypt: Function;
