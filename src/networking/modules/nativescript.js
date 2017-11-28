@@ -30,36 +30,34 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
   let status: StatusAnnouncement = {};
   status.operation = endpoint.operation;
 
+  // $FlowFixMe
   return HttpRequest({
-    method: method,
+    method,
     url: buildUrl(url, params),
     content: body,
     timeout: endpoint.timeout
-  })
-    .then((response) => {
-      status.error = false;
+  }).then((response) => {
+    status.error = false;
 
-      if (response.statusCode) {
-        status.statusCode = response.statusCode;
-      }
+    if (response.statusCode) {
+      status.statusCode = response.statusCode;
+    }
 
-      return response.content.toJSON();
-    })
-    .then((response) => {
-      let resp = response;
+    return response.content.toJSON();
+  }).then((response) => {
+    let resp = response;
 
-      if (this._config.logVerbosity) {
-        log(url, params, resp);
-      }
+    if (this._config.logVerbosity) {
+      log(url, params, resp);
+    }
 
-      callback(status, resp);
-    })
-    .catch((e) => {
-      status.error = true;
-      status.errorData = e;
-      status.category = this._detectErrorCategory(e);
-      callback(status, null);
-    });
+    callback(status, resp);
+  }).catch((e) => {
+    status.error = true;
+    status.errorData = e;
+    status.category = this._detectErrorCategory(e);
+    callback(status, null);
+  });
 }
 
 export function get(params: Object, endpoint: EndpointDefinition, callback: Function) {
