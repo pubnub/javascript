@@ -13,17 +13,17 @@ function log(url, qs, res) {
   let start = new Date().getTime();
   let timestamp = new Date().toISOString();
   let logger = _pickLogger();
-  logger.log('<<<<<');                                               // eslint-disable-line no-console
-  logger.log(`[${timestamp}]`, '\n', url, '\n', qs);    // eslint-disable-line no-console
-  logger.log('-----');                                               // eslint-disable-line no-console
+  logger.log('<<<<<'); // eslint-disable-line no-console
+  logger.log(`[${timestamp}]`, '\n', url, '\n', qs); // eslint-disable-line no-console
+  logger.log('-----'); // eslint-disable-line no-console
 
   let now = new Date().getTime();
   let elapsed = now - start;
   let timestampDone = new Date().toISOString();
 
-  logger.log('>>>>>>');                                                                                  // eslint-disable-line no-console
-  logger.log(`[${timestampDone} / ${elapsed}]`, '\n', url, '\n', qs, '\n', res);  // eslint-disable-line no-console
-  logger.log('-----');
+  logger.log('>>>>>>'); // eslint-disable-line no-console
+  logger.log(`[${timestampDone} / ${elapsed}]`, '\n', url, '\n', qs, '\n', res); // eslint-disable-line no-console
+  logger.log('-----'); // eslint-disable-line no-console
 }
 
 function xdr(method: string, url: string, params: Object, body: string, endpoint: EndpointDefinition, callback: Function): void {
