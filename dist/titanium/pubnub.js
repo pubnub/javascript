@@ -1,4 +1,4 @@
-/*! 4.18.0 / Consumer  */
+/*! 4.19.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -573,7 +573,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.18.0';
+	      return '4.19.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1829,7 +1829,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_stopSubscribeLoop',
 	    value: function _stopSubscribeLoop() {
 	      if (this._subscribeCall) {
-	        this._subscribeCall.abort();
+	        if (typeof this._subscribeCall.abort === 'function') {
+	          this._subscribeCall.abort();
+	        }
 	        this._subscribeCall = null;
 	      }
 	    }
@@ -2143,6 +2145,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _config = __webpack_require__(2);
 
 	var _config2 = _interopRequireDefault(_config);
+
+	var _flow_interfaces = __webpack_require__(5);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 

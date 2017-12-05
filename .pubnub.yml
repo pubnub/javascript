@@ -1,11 +1,20 @@
 name: javascript
-version: 4.18.0
+version: 4.19.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.19.0
+    date: 2017-12-05
+    changes:
+      - type: feature
+        text: add support for Native Script
+      - type: improvement
+        text: add missing flow types
+      - type: improvement
+        text: upgrade superagent to ^3.8.1
   - version: v4.18.0
     date: 2017-11-20
     changes:
