@@ -1,4 +1,21 @@
 
+## [v4.19.0](https://github.com/pubnub/javascript/tree/v4.19.0)
+  December-05-2017
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.18.0...v4.19.0)
+
+
+- ⭐ add support for Native Script
+
+
+- 🌟 add missing flow types
+
+
+- 🌟 upgrade superagent to ^3.8.1
+
+
+
 ## [v4.18.0](https://github.com/pubnub/javascript/tree/v4.18.0)
   November-20-2017
 
@@ -7,6 +24,8 @@
 
 
 - ⭐ keepAlive is now initialized globally instead of per-call, allowing better connection reuse
+
+
 - 🌟 added sdkName configuration parameter which allow completely override pnsdk in request query
 
 

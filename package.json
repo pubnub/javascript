@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.18.0",
+  "version": "4.19.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -9,6 +9,7 @@
   },
   "main": "./lib/node/index.js",
   "react-native": "./lib/react_native/index.js",
+  "nativescript": "./lib/nativescript/index.js",
   "browser": "./dist/web/pubnub.min.js",
   "repository": {
     "type": "git",
@@ -28,7 +29,7 @@
   "dependencies": {
     "agentkeepalive": "^3.1.0",
     "lil-uuid": "^0.1.1",
-    "superagent": "^2.3.0",
+    "superagent": "^3.8.1",
     "superagent-proxy": "^1.0.2"
   },
   "noAnalyze": false,

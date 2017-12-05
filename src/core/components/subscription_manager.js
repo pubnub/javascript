@@ -74,6 +74,8 @@ export default class {
   _pendingChannelGroupSubscriptions: Array<string>;
   //
 
+  _dedupingManager: DedupingManager;
+
   constructor({ subscribeEndpoint, leaveEndpoint, heartbeatEndpoint, setStateEndpoint, timeEndpoint, config, crypto, listenerManager }: SubscriptionManagerConsturct) {
     this._listenerManager = listenerManager;
     this._config = config;
@@ -495,7 +497,9 @@ export default class {
 
   _stopSubscribeLoop() {
     if (this._subscribeCall) {
-      this._subscribeCall.abort();
+      if (typeof this._subscribeCall.abort === 'function') {
+        this._subscribeCall.abort();
+      }
       this._subscribeCall = null;
     }
   }
