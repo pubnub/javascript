@@ -52,6 +52,9 @@ export default class {
   _channels: Object;
   _presenceChannels: Object;
 
+  _heartbeatChannels: Object;
+  _heartbeatChannelGroups: Object;
+
   _channelGroups: Object;
   _presenceChannelGroups: Object;
 
@@ -89,6 +92,9 @@ export default class {
 
     this._channels = {};
     this._presenceChannels = {};
+
+    this._heartbeatChannels = {};
+    this._heartbeatChannelGroups = {};
 
     this._channelGroups = {};
     this._presenceChannelGroups = {};
@@ -145,12 +151,20 @@ export default class {
       this._channels[channel] = { state: {} };
       if (withPresence) this._presenceChannels[channel] = {};
 
+      if (this._config.isHeartbeatOnAllSubscriptions) {
+        this._heartbeatChannels[channel] = {};
+      }
+
       this._pendingChannelSubscriptions.push(channel);
     });
 
     channelGroups.forEach((channelGroup: string) => {
       this._channelGroups[channelGroup] = { state: {} };
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
+
+      if (this._config.isHeartbeatOnAllSubscriptions) {
+        this._heartbeatChannelGroups[channelGroup] = {};
+      }
 
       this._pendingChannelGroupSubscriptions.push(channelGroup);
     });
@@ -177,6 +191,9 @@ export default class {
         delete this._presenceChannels[channel];
         actualChannels.push(channel);
       }
+      if (channel in this._heartbeatChannels) {
+        delete this._heartbeatChannels[channel];
+      }
     });
 
     channelGroups.forEach((channelGroup) => {
@@ -187,6 +204,10 @@ export default class {
       if (channelGroup in this._presenceChannelGroups) {
         delete this._channelGroups[channelGroup];
         actualChannelGroups.push(channelGroup);
+      }
+
+      if (channelGroup in this._heartbeatChannelGroups) {
+        delete this._heartbeatChannelGroups[channelGroup];
       }
     });
 
@@ -228,8 +249,16 @@ export default class {
     return Object.keys(this._channels);
   }
 
+  getHeartbeatChannels(): Array<string> {
+    return Object.keys(this._heartbeatChannels);
+  }
+
   getSubscribedChannelGroups(): Array<string> {
     return Object.keys(this._channelGroups);
+  }
+
+  getHeartbeatChannelGroups(): Array<string> {
+    return Object.keys(this._heartbeatChannelGroups);
   }
 
   reconnect() {
@@ -263,20 +292,20 @@ export default class {
   }
 
   _performHeartbeatLoop() {
-    let presenceChannels = Object.keys(this._channels);
-    let presenceChannelGroups = Object.keys(this._channelGroups);
+    let heartbeatChannels = Object.keys(this._channels);
+    let heartbeatChannelGroups = Object.keys(this._channelGroups);
     let presenceState = {};
 
-    if (presenceChannels.length === 0 && presenceChannelGroups.length === 0) {
+    if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
       return;
     }
 
-    presenceChannels.forEach((channel) => {
+    heartbeatChannels.forEach((channel) => {
       let channelState = this._channels[channel].state;
       if (Object.keys(channelState).length) presenceState[channel] = channelState;
     });
 
-    presenceChannelGroups.forEach((channelGroup) => {
+    heartbeatChannelGroups.forEach((channelGroup) => {
       let channelGroupState = this._channelGroups[channelGroup].state;
       if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
     });
@@ -299,8 +328,8 @@ export default class {
     };
 
     this._heartbeatEndpoint({
-      channels: presenceChannels,
-      channelGroups: presenceChannelGroups,
+      channels: heartbeatChannels,
+      channelGroups: heartbeatChannelGroups,
       state: presenceState }, onHeartbeat.bind(this));
   }
 
