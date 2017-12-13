@@ -27,12 +27,6 @@ export default class {
   */
   instanceId: string;
 
-
-  /*
-    if isHeartbeatOnAllSubscriptions is true, all channels subscribed will be attached to heartbeat loop
-   */
-  isHeartbeatOnAllSubscriptions: boolean;
-
   /*
     If the SDK is running as part of another SDK built atop of it, allow a custom pnsdk with name and version.
    */
@@ -136,8 +130,6 @@ export default class {
 
   constructor({ setup, db } : ConfigConstructArgs) {
     this._db = db;
-
-    this.isHeartbeatOnAllSubscriptions = setup.isHeartbeatOnAllSubscriptions || false;
 
     this.instanceId = `pn-${uuidGenerator.createUUID()}`;
     this.secretKey = setup.secretKey || setup.secret_key;
