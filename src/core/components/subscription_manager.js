@@ -11,13 +11,17 @@ import categoryConstants from '../constants/categories';
 type SubscribeArgs = {
   channels: Array<string>,
   channelGroups: Array<string>,
+  heartbeatChannels: Array<string>,
+  heartbeatChannelGroups: Array<string>,
   withPresence: ?boolean,
   timetoken: ?number
 }
 
 type UnsubscribeArgs = {
   channels: Array<string>,
-  channelGroups: Array<string>
+  channelGroups: Array<string>,
+  heartbeatChannels: Array<string>,
+  heartbeatChannelGroups: Array<string>
 }
 
 type StateArgs = {
@@ -75,6 +79,9 @@ export default class {
   // store pending connection elements
   _pendingChannelSubscriptions: Array<string>;
   _pendingChannelGroupSubscriptions: Array<string>;
+
+  _pendingHeartbeatChannels: Array<string>;
+  _pendingHeartbeatChannelGroups: Array<string>;
   //
 
   _dedupingManager: DedupingManager;
@@ -101,6 +108,9 @@ export default class {
 
     this._pendingChannelSubscriptions = [];
     this._pendingChannelGroupSubscriptions = [];
+
+    this._pendingHeartbeatChannels = [];
+    this._pendingHeartbeatChannelGroups = [];
 
     this._currentTimetoken = 0;
     this._lastTimetoken = 0;
@@ -129,7 +139,7 @@ export default class {
   }
 
   adaptSubscribeChange(args: SubscribeArgs) {
-    const { timetoken, channels = [], channelGroups = [], withPresence = false } = args;
+    const { timetoken, channels = [], channelGroups = [], heartbeatChannels = [], heartbeatChannelGroups = [], withPresence = false } = args;
 
     if (!this._config.subscribeKey || this._config.subscribeKey === '') {
       if (console && console.log) console.log('subscribe key missing; aborting subscribe') //eslint-disable-line
@@ -147,12 +157,22 @@ export default class {
       this._currentTimetoken = 0;
     }
 
+    heartbeatChannels.forEach((channel: string) => {
+      this._heartbeatChannels[channel] = { state: {} };
+      this._pendingHeartbeatChannels.push(channel);
+    });
+
+    heartbeatChannelGroups.forEach((channelGroup: string) => {
+      this._heartbeatChannelGroups[channelGroup] = { state: {} };
+      this._pendingHeartbeatChannelGroups.push(channelGroup);
+    });
+
     channels.forEach((channel: string) => {
       this._channels[channel] = { state: {} };
       if (withPresence) this._presenceChannels[channel] = {};
 
-      if (this._config.isHeartbeatOnAllSubscriptions) {
-        this._heartbeatChannels[channel] = {};
+      if (!(channel in this._heartbeatChannels)) {
+        this._heartbeatChannels[channel] = this._channels[channel];
       }
 
       this._pendingChannelSubscriptions.push(channel);
@@ -162,8 +182,8 @@ export default class {
       this._channelGroups[channelGroup] = { state: {} };
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
 
-      if (this._config.isHeartbeatOnAllSubscriptions) {
-        this._heartbeatChannelGroups[channelGroup] = {};
+      if (!(channelGroup in this._heartbeatChannelGroups)) {
+        this._heartbeatChannelGroups[channelGroup] = this._channelGroups[channelGroup];
       }
 
       this._pendingChannelGroupSubscriptions.push(channelGroup);
@@ -174,13 +194,29 @@ export default class {
   }
 
   adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
-    const { channels = [], channelGroups = [] } = args;
+    const { channels = [], channelGroups = [], heartbeatChannels = [], heartbeatChannelGroups = [] } = args;
 
     // keep track of which channels and channel groups
     // we are going to unsubscribe from.
     const actualChannels = [];
     const actualChannelGroups = [];
+    const actualHeartbeatChannels = [];
+    const actualHeartbeatChannelGroups = [];
     //
+
+    heartbeatChannels.forEach((channel) => {
+      if (channel in this._heartbeatChannels) {
+        delete this._heartbeatChannels[channel];
+        actualHeartbeatChannels.push(channel);
+      }
+    });
+
+    heartbeatChannelGroups.forEach((channelGroup) => {
+      if (channelGroup in this._heartbeatChannelGroups) {
+        delete this._heartbeatChannelGroups[channelGroup];
+        actualHeartbeatChannelGroups.push(channelGroup);
+      }
+    });
 
     channels.forEach((channel) => {
       if (channel in this._channels) {
@@ -212,14 +248,35 @@ export default class {
     });
 
     // no-op if there are no channels and cg's to unsubscribe from.
-    if (actualChannels.length === 0 && actualChannelGroups.length === 0) {
+    if (actualChannels.length === 0 && actualChannelGroups.length === 0 && actualHeartbeatChannels.length === 0 && actualHeartbeatChannelGroups.length === 0) {
       return;
     }
 
     if (this._config.suppressLeaveEvents === false && !isOffline) {
-      this._leaveEndpoint({ channels: actualChannels, channelGroups: actualChannelGroups }, (status) => {
+      let _actualChannels = actualChannels.map(channel => channel);
+      let _actualChannelGroups = actualChannelGroups.map(channelGroup => channelGroup);
+
+      actualHeartbeatChannels.forEach((channel) => {
+        if (!_actualChannels.includes(channel)) {
+          _actualChannels.push(channel);
+        }
+      });
+
+      actualHeartbeatChannelGroups.forEach((channelGroup) => {
+        if (!_actualChannelGroups.includes(channelGroup)) {
+          _actualChannelGroups.push(channelGroup);
+        }
+      });
+
+      this._leaveEndpoint({ channels: _actualChannels, channelGroups: _actualChannelGroups }, (status) => {
         status.affectedChannels = actualChannels;
         status.affectedChannelGroups = actualChannelGroups;
+
+        if (heartbeatChannels.length > 0 || heartbeatChannelGroups.length > 0) {
+          status.affectedHeartbeatChannels = actualHeartbeatChannels;
+          status.affectedHeartbeatChannelGroups = actualHeartbeatChannelGroups;
+        }
+
         status.currentTimetoken = this._currentTimetoken;
         status.lastTimetoken = this._lastTimetoken;
         this._listenerManager.announceStatus(status);
@@ -242,23 +299,28 @@ export default class {
   }
 
   unsubscribeAll(isOffline: boolean) {
-    this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() }, isOffline);
-  }
-
-  getSubscribedChannels(): Array<string> {
-    return Object.keys(this._channels);
+    this.adaptUnsubscribeChange({
+      channels: this.getSubscribedChannels(),
+      channelGroups: this.getSubscribedChannelGroups(),
+      heartbeatChannels: this.getHeartbeatChannels(),
+      heartbeatChannelGroups: this.getHeartbeatChannelGroups()
+    }, isOffline);
   }
 
   getHeartbeatChannels(): Array<string> {
     return Object.keys(this._heartbeatChannels);
   }
 
-  getSubscribedChannelGroups(): Array<string> {
-    return Object.keys(this._channelGroups);
-  }
-
   getHeartbeatChannelGroups(): Array<string> {
     return Object.keys(this._heartbeatChannelGroups);
+  }
+
+  getSubscribedChannels(): Array<string> {
+    return Object.keys(this._channels);
+  }
+
+  getSubscribedChannelGroups(): Array<string> {
+    return Object.keys(this._channelGroups);
   }
 
   reconnect() {
@@ -292,8 +354,8 @@ export default class {
   }
 
   _performHeartbeatLoop() {
-    let heartbeatChannels = Object.keys(this._channels);
-    let heartbeatChannelGroups = Object.keys(this._channelGroups);
+    let heartbeatChannels = Object.keys(this._heartbeatChannels);
+    let heartbeatChannelGroups = Object.keys(this._heartbeatChannelGroups);
     let presenceState = {};
 
     if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
@@ -301,12 +363,12 @@ export default class {
     }
 
     heartbeatChannels.forEach((channel) => {
-      let channelState = this._channels[channel].state;
+      let channelState = this._heartbeatChannels[channel].state;
       if (Object.keys(channelState).length) presenceState[channel] = channelState;
     });
 
     heartbeatChannelGroups.forEach((channelGroup) => {
-      let channelGroupState = this._channelGroups[channelGroup].state;
+      let channelGroupState = this._heartbeatChannelGroups[channelGroup].state;
       if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
     });
 
@@ -337,6 +399,8 @@ export default class {
     this._stopSubscribeLoop();
     let channels = [];
     let channelGroups = [];
+    let heartbeatChannels = [];
+    let heartbeatChannelGroups = [];
 
     Object.keys(this._channels).forEach(channel => channels.push(channel));
     Object.keys(this._presenceChannels).forEach(channel => channels.push(`${channel}-pnpres`));
@@ -344,7 +408,10 @@ export default class {
     Object.keys(this._channelGroups).forEach(channelGroup => channelGroups.push(channelGroup));
     Object.keys(this._presenceChannelGroups).forEach(channelGroup => channelGroups.push(`${channelGroup}-pnpres`));
 
-    if (channels.length === 0 && channelGroups.length === 0) {
+    Object.keys(this._heartbeatChannels).forEach(channel => heartbeatChannels.push(channel));
+    Object.keys(this._heartbeatChannelGroups).forEach(channelGroup => heartbeatChannelGroups.push(channelGroup));
+
+    if (channels.length === 0 && channelGroups.length === 0 && heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
       return;
     }
 
@@ -410,10 +477,21 @@ export default class {
     }
 
     if (!this._subscriptionStatusAnnounced) {
+      const conciliationChannels = this.getHeartbeatChannels().every(channel => this.getSubscribedChannels().includes(channel));
+      const conciliationChannelGroups = this.getHeartbeatChannelGroups().every(channelGroup => this.getSubscribedChannelGroups().includes(channelGroup));
+
       let connectedAnnounce: StatusAnnouncement = {};
       connectedAnnounce.category = categoryConstants.PNConnectedCategory;
       connectedAnnounce.operation = status.operation;
       connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
+
+      if (!conciliationChannels || !conciliationChannelGroups) {
+        connectedAnnounce.affectedHeartbeatChannels = this._pendingHeartbeatChannels;
+        connectedAnnounce.affectedHeartbeatChannelGroups = this._pendingHeartbeatChannelGroups;
+        connectedAnnounce.heartbeatChannels = this.getHeartbeatChannels();
+        connectedAnnounce.heartbeatChannelGroups = this.getHeartbeatChannelGroups();
+      }
+
       connectedAnnounce.subscribedChannels = this.getSubscribedChannels();
       connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
       connectedAnnounce.lastTimetoken = this._lastTimetoken;
@@ -424,6 +502,8 @@ export default class {
       // clear the pending connections list
       this._pendingChannelSubscriptions = [];
       this._pendingChannelGroupSubscriptions = [];
+      this._pendingHeartbeatChannels = [];
+      this._pendingHeartbeatChannelGroups = [];
     }
 
     let messages = payload.messages || [];
