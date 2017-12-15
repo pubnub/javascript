@@ -98,6 +98,8 @@ export default class {
 
   setHeartbeatInterval: Function;
 
+  setProxy: Function;
+
   encrypt: Function;
   decrypt: Function;
 
@@ -209,6 +211,13 @@ export default class {
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
 
     this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
+
+    if (networking.hasModule('proxy')) {
+      this.setProxy = (proxy) => {
+        modules.config.setProxy(proxy);
+        this.reconnect();
+      };
+    }
   }
 
 
