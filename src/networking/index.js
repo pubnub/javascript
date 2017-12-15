@@ -60,6 +60,10 @@ export default class {
     return this._providedFQDN.replace('pubsub', `ps${newSubDomain}`);
   }
 
+  hasModule(name: string) {
+    return name in this._modules;
+  }
+
   // origin operations
   shiftStandardOrigin(failover: boolean = false): string {
     this._standardOrigin = this.nextOrigin(failover);

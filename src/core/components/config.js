@@ -2,7 +2,7 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
+import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -20,7 +20,7 @@ export default class {
   authKey: string;
   UUID: string;
 
-  proxy: string;
+  proxy: ProxyStruct;
 
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
@@ -208,6 +208,10 @@ export default class {
     this._presenceTimeout = val;
     this.setHeartbeatInterval((this._presenceTimeout / 2) - 1);
     return this;
+  }
+
+  setProxy(proxy: ProxyStruct) {
+    this.proxy = proxy;
   }
 
   getHeartbeatInterval(): number { return this._heartbeatInterval; }
