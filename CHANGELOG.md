@@ -5,14 +5,14 @@
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.18.0...v4.19.0)
 
-
-- ⭐ add support for Native Script
-
-
-- 🌟 add missing flow types
+- 🌟add support for Native Script
 
 
-- 🌟 upgrade superagent to ^3.8.1
+
+- ⭐add missing flow types
+
+
+- ⭐upgrade superagent to ^3.8.1
 
 
 
@@ -23,10 +23,10 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.17.0...v4.18.0)
 
 
-- ⭐ keepAlive is now initialized globally instead of per-call, allowing better connection reuse
+- ⭐keepAlive is now initialized globally instead of per-call, allowing better connection reuse
 
+- 🌟added sdkName configuration parameter which allow completely override pnsdk in request query
 
-- 🌟 added sdkName configuration parameter which allow completely override pnsdk in request query
 
 
 
