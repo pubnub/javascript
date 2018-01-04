@@ -241,7 +241,7 @@ describe('#components/subscription_manager', () => {
       }
     });
 
-    pubnubWithPassingHeartbeats.subscribe({ heartbeatChannels: ['ch1', 'ch2'] });
+    pubnubWithPassingHeartbeats.presence({ channels: ['ch1', 'ch2'], connected: true });
   });
 
   it('reports when heartbeats pass with heartbeatChannelGroups', (done) => {
@@ -263,7 +263,7 @@ describe('#components/subscription_manager', () => {
       }
     });
 
-    pubnubWithPassingHeartbeats.subscribe({ heartbeatChannelGroups: ['cg1'] });
+    pubnubWithPassingHeartbeats.presence({ channelGroups: ['cg1'], connected: true });
   });
 
   it('reports when the queue is beyond set threshold', (done) => {

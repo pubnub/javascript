@@ -327,6 +327,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.time = timeEndpoint;
 
 	    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+	    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
 	    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
 	    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
 	    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
@@ -355,6 +356,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
 
 	    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
+
+	    if (networking.hasModule('proxy')) {
+	      this.setProxy = function (proxy) {
+	        modules.config.setProxy(proxy);
+	        _this.reconnect();
+	      };
+	    }
 	  }
 
 	  _createClass(_class, [{
@@ -529,6 +537,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._presenceTimeout = val;
 	      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
 	      return this;
+	    }
+	  }, {
+	    key: 'setProxy',
+	    value: function setProxy(proxy) {
+	      this.proxy = proxy;
 	    }
 	  }, {
 	    key: 'getHeartbeatInterval',
@@ -1385,11 +1398,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._channels = {};
 	    this._presenceChannels = {};
 
+	    this._heartbeatChannels = {};
+	    this._heartbeatChannelGroups = {};
+
 	    this._channelGroups = {};
 	    this._presenceChannelGroups = {};
 
 	    this._pendingChannelSubscriptions = [];
 	    this._pendingChannelGroupSubscriptions = [];
+
+	    this._pendingHeartbeatChannels = [];
+	    this._pendingHeartbeatChannelGroups = [];
 
 	    this._currentTimetoken = 0;
 	    this._lastTimetoken = 0;
@@ -1426,15 +1445,59 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
 	    }
 	  }, {
-	    key: 'adaptSubscribeChange',
-	    value: function adaptSubscribeChange(args) {
+	    key: 'adaptPresenceChange',
+	    value: function adaptPresenceChange(args) {
 	      var _this2 = this;
 
-	      var timetoken = args.timetoken,
+	      var connected = args.connected,
 	          _args$channels2 = args.channels,
 	          channels = _args$channels2 === undefined ? [] : _args$channels2,
 	          _args$channelGroups2 = args.channelGroups,
-	          channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2,
+	          channelGroups = _args$channelGroups2 === undefined ? [] : _args$channelGroups2;
+
+
+	      if (connected) {
+	        channels.forEach(function (channel) {
+	          _this2._heartbeatChannels[channel] = { state: {} };
+	          _this2._pendingHeartbeatChannels.push(channel);
+	        });
+
+	        channelGroups.forEach(function (channelGroup) {
+	          _this2._heartbeatChannelGroups[channelGroup] = { state: {} };
+	          _this2._pendingHeartbeatChannelGroups.push(channelGroup);
+	        });
+	      } else {
+	        channels.forEach(function (channel) {
+	          if (channel in _this2._heartbeatChannels) {
+	            delete _this2._heartbeatChannels[channel];
+	          }
+	        });
+
+	        channelGroups.forEach(function (channelGroup) {
+	          if (channelGroup in _this2._heartbeatChannelGroups) {
+	            delete _this2._heartbeatChannelGroups[channelGroup];
+	          }
+	        });
+
+	        if (this._config.suppressLeaveEvents === false) {
+	          this._leaveEndpoint({ channels: channels, channelGroups: channelGroups }, function (status) {
+	            _this2._listenerManager.announceStatus(status);
+	          });
+	        }
+	      }
+
+	      this.reconnect();
+	    }
+	  }, {
+	    key: 'adaptSubscribeChange',
+	    value: function adaptSubscribeChange(args) {
+	      var _this3 = this;
+
+	      var timetoken = args.timetoken,
+	          _args$channels3 = args.channels,
+	          channels = _args$channels3 === undefined ? [] : _args$channels3,
+	          _args$channelGroups3 = args.channelGroups,
+	          channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3,
 	          _args$withPresence = args.withPresence,
 	          withPresence = _args$withPresence === undefined ? false : _args$withPresence;
 
@@ -1455,17 +1518,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      channels.forEach(function (channel) {
-	        _this2._channels[channel] = { state: {} };
-	        if (withPresence) _this2._presenceChannels[channel] = {};
+	        _this3._channels[channel] = { state: {} };
+	        if (withPresence) _this3._presenceChannels[channel] = {};
 
-	        _this2._pendingChannelSubscriptions.push(channel);
+	        _this3._pendingChannelSubscriptions.push(channel);
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        _this2._channelGroups[channelGroup] = { state: {} };
-	        if (withPresence) _this2._presenceChannelGroups[channelGroup] = {};
+	        _this3._channelGroups[channelGroup] = { state: {} };
+	        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
 
-	        _this2._pendingChannelGroupSubscriptions.push(channelGroup);
+	        _this3._pendingChannelGroupSubscriptions.push(channelGroup);
 	      });
 
 	      this._subscriptionStatusAnnounced = false;
@@ -1474,35 +1537,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'adaptUnsubscribeChange',
 	    value: function adaptUnsubscribeChange(args, isOffline) {
-	      var _this3 = this;
+	      var _this4 = this;
 
-	      var _args$channels3 = args.channels,
-	          channels = _args$channels3 === undefined ? [] : _args$channels3,
-	          _args$channelGroups3 = args.channelGroups,
-	          channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3;
+	      var _args$channels4 = args.channels,
+	          channels = _args$channels4 === undefined ? [] : _args$channels4,
+	          _args$channelGroups4 = args.channelGroups,
+	          channelGroups = _args$channelGroups4 === undefined ? [] : _args$channelGroups4;
 
 	      var actualChannels = [];
 	      var actualChannelGroups = [];
 
 
 	      channels.forEach(function (channel) {
-	        if (channel in _this3._channels) {
-	          delete _this3._channels[channel];
+	        if (channel in _this4._channels) {
+	          delete _this4._channels[channel];
 	          actualChannels.push(channel);
 	        }
-	        if (channel in _this3._presenceChannels) {
-	          delete _this3._presenceChannels[channel];
+	        if (channel in _this4._presenceChannels) {
+	          delete _this4._presenceChannels[channel];
 	          actualChannels.push(channel);
 	        }
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        if (channelGroup in _this3._channelGroups) {
-	          delete _this3._channelGroups[channelGroup];
+	        if (channelGroup in _this4._channelGroups) {
+	          delete _this4._channelGroups[channelGroup];
 	          actualChannelGroups.push(channelGroup);
 	        }
-	        if (channelGroup in _this3._presenceChannelGroups) {
-	          delete _this3._channelGroups[channelGroup];
+	        if (channelGroup in _this4._presenceChannelGroups) {
+	          delete _this4._channelGroups[channelGroup];
 	          actualChannelGroups.push(channelGroup);
 	        }
 	      });
@@ -1515,9 +1578,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._leaveEndpoint({ channels: actualChannels, channelGroups: actualChannelGroups }, function (status) {
 	          status.affectedChannels = actualChannels;
 	          status.affectedChannelGroups = actualChannelGroups;
-	          status.currentTimetoken = _this3._currentTimetoken;
-	          status.lastTimetoken = _this3._lastTimetoken;
-	          _this3._listenerManager.announceStatus(status);
+	          status.currentTimetoken = _this4._currentTimetoken;
+	          status.lastTimetoken = _this4._lastTimetoken;
+	          _this4._listenerManager.announceStatus(status);
 	        });
 	      }
 
@@ -1535,6 +1598,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'unsubscribeAll',
 	    value: function unsubscribeAll(isOffline) {
 	      this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() }, isOffline);
+	    }
+	  }, {
+	    key: 'getHeartbeatChannels',
+	    value: function getHeartbeatChannels() {
+	      return Object.keys(this._heartbeatChannels);
+	    }
+	  }, {
+	    key: 'getHeartbeatChannelGroups',
+	    value: function getHeartbeatChannelGroups() {
+	      return Object.keys(this._heartbeatChannelGroups);
 	    }
 	  }, {
 	    key: 'getSubscribedChannels',
@@ -1582,46 +1655,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_performHeartbeatLoop',
 	    value: function _performHeartbeatLoop() {
-	      var _this4 = this;
+	      var _this5 = this;
 
-	      var presenceChannels = Object.keys(this._channels);
-	      var presenceChannelGroups = Object.keys(this._channelGroups);
+	      var heartbeatChannels = [];
+	      heartbeatChannels = heartbeatChannels.concat(this.getHeartbeatChannels());
+	      heartbeatChannels = heartbeatChannels.concat(this.getSubscribedChannels());
+
+	      var heartbeatChannelGroups = [];
+	      heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getHeartbeatChannelGroups());
+	      heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getSubscribedChannelGroups());
+
 	      var presenceState = {};
 
-	      if (presenceChannels.length === 0 && presenceChannelGroups.length === 0) {
+	      if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
 	        return;
 	      }
 
-	      presenceChannels.forEach(function (channel) {
-	        var channelState = _this4._channels[channel].state;
+	      this.getSubscribedChannels().forEach(function (channel) {
+	        var channelState = _this5._channels[channel].state;
 	        if (Object.keys(channelState).length) presenceState[channel] = channelState;
 	      });
 
-	      presenceChannelGroups.forEach(function (channelGroup) {
-	        var channelGroupState = _this4._channelGroups[channelGroup].state;
+	      this.getSubscribedChannelGroups().forEach(function (channelGroup) {
+	        var channelGroupState = _this5._channelGroups[channelGroup].state;
 	        if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
 	      });
 
 	      var onHeartbeat = function onHeartbeat(status) {
-	        if (status.error && _this4._config.announceFailedHeartbeats) {
-	          _this4._listenerManager.announceStatus(status);
+	        if (status.error && _this5._config.announceFailedHeartbeats) {
+	          _this5._listenerManager.announceStatus(status);
 	        }
 
-	        if (status.error && _this4._config.autoNetworkDetection && _this4._isOnline) {
-	          _this4._isOnline = false;
-	          _this4.disconnect();
-	          _this4._listenerManager.announceNetworkDown();
-	          _this4.reconnect();
+	        if (status.error && _this5._config.autoNetworkDetection && _this5._isOnline) {
+	          _this5._isOnline = false;
+	          _this5.disconnect();
+	          _this5._listenerManager.announceNetworkDown();
+	          _this5.reconnect();
 	        }
 
-	        if (!status.error && _this4._config.announceSuccessfulHeartbeats) {
-	          _this4._listenerManager.announceStatus(status);
+	        if (!status.error && _this5._config.announceSuccessfulHeartbeats) {
+	          _this5._listenerManager.announceStatus(status);
 	        }
 	      };
 
 	      this._heartbeatEndpoint({
-	        channels: presenceChannels,
-	        channelGroups: presenceChannelGroups,
+	        channels: heartbeatChannels,
+	        channelGroups: heartbeatChannelGroups,
 	        state: presenceState }, onHeartbeat.bind(this));
 	    }
 	  }, {
@@ -1662,7 +1741,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_processSubscribeResponse',
 	    value: function _processSubscribeResponse(status, payload) {
-	      var _this5 = this;
+	      var _this6 = this;
 
 	      if (status.error) {
 	        if (status.category === _categories2.default.PNTimeoutCategory) {
@@ -1676,19 +1755,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this._reconnectionManager.onReconnection(function () {
-	            if (_this5._config.autoNetworkDetection && !_this5._isOnline) {
-	              _this5._isOnline = true;
-	              _this5._listenerManager.announceNetworkUp();
+	            if (_this6._config.autoNetworkDetection && !_this6._isOnline) {
+	              _this6._isOnline = true;
+	              _this6._listenerManager.announceNetworkUp();
 	            }
-	            _this5.reconnect();
-	            _this5._subscriptionStatusAnnounced = true;
+	            _this6.reconnect();
+	            _this6._subscriptionStatusAnnounced = true;
 	            var reconnectedAnnounce = {
 	              category: _categories2.default.PNReconnectedCategory,
 	              operation: status.operation,
-	              lastTimetoken: _this5._lastTimetoken,
-	              currentTimetoken: _this5._currentTimetoken
+	              lastTimetoken: _this6._lastTimetoken,
+	              currentTimetoken: _this6._currentTimetoken
 	            };
-	            _this5._listenerManager.announceStatus(reconnectedAnnounce);
+	            _this6._listenerManager.announceStatus(reconnectedAnnounce);
 	          });
 
 	          this._reconnectionManager.startPolling();
@@ -1750,10 +1829,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        if (dedupeOnSubscribe) {
-	          if (_this5._dedupingManager.isDuplicate(message)) {
+	          if (_this6._dedupingManager.isDuplicate(message)) {
 	            return;
 	          } else {
-	            _this5._dedupingManager.addEntry(message);
+	            _this6._dedupingManager.addEntry(message);
 	          }
 	        }
 
@@ -1793,7 +1872,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            announce.timeout = message.payload.timeout;
 	          }
 
-	          _this5._listenerManager.announcePresence(announce);
+	          _this6._listenerManager.announcePresence(announce);
 	        } else {
 	          var _announce = {};
 	          _announce.channel = null;
@@ -1812,13 +1891,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            _announce.userMetadata = message.userMetadata;
 	          }
 
-	          if (_this5._config.cipherKey) {
-	            _announce.message = _this5._crypto.decrypt(message.payload);
+	          if (_this6._config.cipherKey) {
+	            _announce.message = _this6._crypto.decrypt(message.payload);
 	          } else {
 	            _announce.message = message.payload;
 	          }
 
-	          _this5._listenerManager.announceMessage(_announce);
+	          _this6._listenerManager.announceMessage(_announce);
 	        }
 	      });
 
@@ -4464,6 +4543,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      newSubDomain = this._currentSubDomain.toString();
 
 	      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
+	    }
+	  }, {
+	    key: 'hasModule',
+	    value: function hasModule(name) {
+	      return name in this._modules;
 	    }
 	  }, {
 	    key: 'shiftStandardOrigin',

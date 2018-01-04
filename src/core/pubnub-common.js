@@ -69,6 +69,7 @@ export default class {
   audit: Function;
   //
   subscribe: Function;
+  presence: Function;
   unsubscribe: Function;
   unsubscribeAll: Function;
 
@@ -179,6 +180,7 @@ export default class {
 
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
