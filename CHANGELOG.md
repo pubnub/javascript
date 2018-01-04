@@ -5,6 +5,8 @@
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.18.0...v4.19.0)
 
+
+
 - 🌟add support for Native Script
 
 
@@ -23,10 +25,10 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.17.0...v4.18.0)
 
 
+
 - ⭐keepAlive is now initialized globally instead of per-call, allowing better connection reuse
 
 - 🌟added sdkName configuration parameter which allow completely override pnsdk in request query
-
 
 
 

@@ -11,9 +11,6 @@ changelog:
     changes:
       - type: feature
         text: add support for heartbeat sending without subscription via .presence()
-  - version: v4.19.0
-    date: 2017-12-05
-    changes:
       - type: feature
         text: add support for Native Script
       - type: improvement
@@ -355,6 +352,8 @@ features:
     - STORAGE-INCLUDE-TIMETOKEN
     - STORAGE-START-END
     - STORAGE-COUNT
+    - STORAGE-DELETE-MESSAGES
+    - STORAGE-FETCH-MESSAGES
   time:
     - TIME-TIME
   subscribe:
