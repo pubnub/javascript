@@ -1429,9 +1429,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._pendingChannelSubscriptions = [];
 	    this._pendingChannelGroupSubscriptions = [];
 
-	    this._pendingHeartbeatChannels = [];
-	    this._pendingHeartbeatChannelGroups = [];
-
 	    this._currentTimetoken = 0;
 	    this._lastTimetoken = 0;
 	    this._storedTimetoken = null;
@@ -1481,12 +1478,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (connected) {
 	        channels.forEach(function (channel) {
 	          _this2._heartbeatChannels[channel] = { state: {} };
-	          _this2._pendingHeartbeatChannels.push(channel);
 	        });
 
 	        channelGroups.forEach(function (channelGroup) {
 	          _this2._heartbeatChannelGroups[channelGroup] = { state: {} };
-	          _this2._pendingHeartbeatChannelGroups.push(channelGroup);
 	        });
 	      } else {
 	        channels.forEach(function (channel) {

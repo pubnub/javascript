@@ -81,9 +81,6 @@ export default class {
   // store pending connection elements
   _pendingChannelSubscriptions: Array<string>;
   _pendingChannelGroupSubscriptions: Array<string>;
-
-  _pendingHeartbeatChannels: Array<string>;
-  _pendingHeartbeatChannelGroups: Array<string>;
   //
 
   _dedupingManager: DedupingManager;
@@ -110,9 +107,6 @@ export default class {
 
     this._pendingChannelSubscriptions = [];
     this._pendingChannelGroupSubscriptions = [];
-
-    this._pendingHeartbeatChannels = [];
-    this._pendingHeartbeatChannelGroups = [];
 
     this._currentTimetoken = 0;
     this._lastTimetoken = 0;
@@ -146,12 +140,10 @@ export default class {
     if (connected) {
       channels.forEach((channel: string) => {
         this._heartbeatChannels[channel] = { state: {} };
-        this._pendingHeartbeatChannels.push(channel);
       });
 
       channelGroups.forEach((channelGroup: string) => {
         this._heartbeatChannelGroups[channelGroup] = { state: {} };
-        this._pendingHeartbeatChannelGroups.push(channelGroup);
       });
     } else {
       channels.forEach((channel) => {
