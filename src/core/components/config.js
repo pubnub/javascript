@@ -2,7 +2,7 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct } from '../flow_interfaces';
+import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
@@ -20,7 +20,7 @@ export default class {
   authKey: string;
   UUID: string;
 
-  proxy: string;
+  proxy: ProxyStruct;
 
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
@@ -210,6 +210,10 @@ export default class {
     return this;
   }
 
+  setProxy(proxy: ProxyStruct) {
+    this.proxy = proxy;
+  }
+
   getHeartbeatInterval(): number { return this._heartbeatInterval; }
   setHeartbeatInterval(val: number): this { this._heartbeatInterval = val; return this; }
 
@@ -224,7 +228,7 @@ export default class {
   setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
 
   getVersion(): string {
-    return '4.19.0';
+    return '4.20.0';
   }
 
   _decideUUID(providedUUID: string): string {

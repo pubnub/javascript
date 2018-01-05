@@ -69,6 +69,7 @@ export default class {
   audit: Function;
   //
   subscribe: Function;
+  presence: Function;
   unsubscribe: Function;
   unsubscribeAll: Function;
 
@@ -97,6 +98,8 @@ export default class {
   setFilterExpression: Function;
 
   setHeartbeatInterval: Function;
+
+  setProxy: Function;
 
   encrypt: Function;
   decrypt: Function;
@@ -177,6 +180,7 @@ export default class {
 
     // subscription related methods
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
     this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
@@ -209,6 +213,13 @@ export default class {
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
 
     this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
+
+    if (networking.hasModule('proxy')) {
+      this.setProxy = (proxy) => {
+        modules.config.setProxy(proxy);
+        this.reconnect();
+      };
+    }
   }
 
 
