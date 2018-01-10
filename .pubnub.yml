@@ -12,11 +12,18 @@ changelog:
       - type: feature
         text: add support for heartbeat sending without subscription via .presence()
       - type: feature
-        text: add support for Native Script
-      - type: improvement
-        text: add missing flow types
-      - type: improvement
-        text: upgrade superagent to ^3.8.1
+        text: add method setProxy for Nodejs
+      - type: feature
+        text: set ssl to true for nodejs by default
+  - version: v4.19.0
+      date: 2017-12-05
+      changes:
+        - type: feature
+          text: add support for Native Script
+        - type: improvement
+          text: add missing flow types
+        - type: improvement
+          text: upgrade superagent to ^3.8.1
   - version: v4.18.0
     date: 2017-11-20
     changes:
