@@ -1,3 +1,20 @@
+## [v4.20.0](https://github.com/pubnub/javascript/tree/v4.20.0)
+  January-04-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.19.0...v4.20.0)
+
+
+
+- ⭐add support for heartbeat sending without subscription via .presence()
+
+
+- ⭐add method setProxy for Nodejs
+
+
+- ⭐set ssl to true for nodejs by default
+
+
 
 ## [v4.19.0](https://github.com/pubnub/javascript/tree/v4.19.0)
   December-05-2017
@@ -7,8 +24,7 @@
 
 
 
-- 🌟add support for Native Script
-
+- ⭐add support for Native Script
 
 
 - ⭐add missing flow types
@@ -28,7 +44,8 @@
 
 - ⭐keepAlive is now initialized globally instead of per-call, allowing better connection reuse
 
-- 🌟added sdkName configuration parameter which allow completely override pnsdk in request query
+
+- ⭐added sdkName configuration parameter which allow completely override pnsdk in request query
 
 
 
