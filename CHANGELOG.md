@@ -6,7 +6,7 @@
 
 
 
-- 🌟add support for heartbeat sending without subscription via .presence()
+- ⭐add support for heartbeat sending without subscription via .presence()
 
 
 - ⭐add method setProxy for Nodejs
@@ -24,7 +24,7 @@
 
 
 
-- 🌟add support for Native Script
+- ⭐add support for Native Script
 
 
 - ⭐add missing flow types
