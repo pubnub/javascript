@@ -1,11 +1,16 @@
 name: javascript
-version: 4.20.0
+version: 4.20.1
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.20.1
+    date: 2018-01-29
+    changes:
+      - type: improvement
+        text: allow set ssl to false for nodejs
   - version: v4.20.0
     date: 2018-01-04
     changes:
