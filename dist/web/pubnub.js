@@ -4215,22 +4215,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getURL(modules, incomingParams) {
-	  var channel = incomingParams.channel,
-	      start = incomingParams.start,
-	      end = incomingParams.end;
+	  var channel = incomingParams.channel;
 	  var config = modules.config;
 
-	  var querystring = '';
 
-	  if (start) {
-	    querystring = '?start=' + start;
-	  }
-
-	  if (end) {
-	    querystring += (querystring !== '' ? '&' : '?') + 'end=' + end;
-	  }
-
-	  return '/v3/history/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(channel) + querystring;
+	  return '/v3/history/sub-key/' + config.subscribeKey + '/channel/' + _utils2.default.encodeString(channel);
 	}
 
 	function getRequestTimeout(_ref) {
@@ -4253,7 +4242,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
 
-	  return {};
+	  return outgoingParams;
 	}
 
 	function handleResponse(modules, serverResponse) {

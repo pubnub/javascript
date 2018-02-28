@@ -1,3 +1,11 @@
+## [v4.20.2](https://github.com/pubnub/javascript/tree/v4.20.2)
+  February-28-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.20.1...v4.20.2)
+
+
+
 ## [v4.20.1](https://github.com/pubnub/javascript/tree/v4.20.1)
   January-29-2018
 
