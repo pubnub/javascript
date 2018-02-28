@@ -21,19 +21,10 @@ export function useDelete() {
 }
 
 export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
-  let { channel, start, end } = incomingParams;
+  let { channel } = incomingParams;
   let { config } = modules;
-  let querystring = '';
 
-  if (start) {
-    querystring = `?start=${start}`;
-  }
-
-  if (end) {
-    querystring += `${(querystring !== '' ? '&' : '?')}end=${end}`;
-  }
-
-  return `/v3/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(channel)}${querystring}`;
+  return `/v3/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): boolean {
@@ -52,7 +43,7 @@ export function prepareParams(modules: ModulesInject, incomingParams: FetchHisto
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
 
-  return {};
+  return outgoingParams;
 }
 
 export function handleResponse(modules: ModulesInject, serverResponse: Object): HistoryResponse {
