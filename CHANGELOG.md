@@ -6,6 +6,10 @@
 
 
 
+- 🐛fix signature to delete message
+
+
+
 ## [v4.20.1](https://github.com/pubnub/javascript/tree/v4.20.1)
   January-29-2018
 
