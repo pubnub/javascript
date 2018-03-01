@@ -1,11 +1,16 @@
 name: javascript
-version: 4.20.1
+version: 4.20.2
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.20.2
+    date: 2018-02-28
+    changes:
+      - type: bug
+        text: fix signature to delete message
   - version: v4.20.1
     date: 2018-01-29
     changes:
