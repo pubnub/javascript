@@ -96,6 +96,8 @@ export default class {
     if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) return categoryConstants.PNNetworkIssuesCategory;
     if (err.timeout) return categoryConstants.PNTimeoutCategory;
 
+    if (err.code === 'ETIMEDOUT') return categoryConstants.PNNetworkIssuesCategory;
+
     if (err.response) {
       if (err.response.badRequest) return categoryConstants.PNBadRequestCategory;
       if (err.response.forbidden) return categoryConstants.PNAccessDeniedCategory;
