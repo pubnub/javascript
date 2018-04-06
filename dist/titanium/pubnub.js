@@ -1409,7 +1409,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._currentTimetoken = 0;
 	    this._lastTimetoken = 0;
-	    this._storedTimetoken = null;
 
 	    this._subscriptionStatusAnnounced = false;
 
@@ -1507,11 +1506,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._currentTimetoken = timetoken;
 	      }
 
-	      if (this._currentTimetoken !== '0') {
-	        this._storedTimetoken = this._currentTimetoken;
-	        this._currentTimetoken = 0;
-	      }
-
 	      channels.forEach(function (channel) {
 	        _this3._channels[channel] = { state: {} };
 	        if (withPresence) _this3._presenceChannels[channel] = {};
@@ -1582,7 +1576,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (Object.keys(this._channels).length === 0 && Object.keys(this._presenceChannels).length === 0 && Object.keys(this._channelGroups).length === 0 && Object.keys(this._presenceChannelGroups).length === 0) {
 	        this._lastTimetoken = 0;
 	        this._currentTimetoken = 0;
-	        this._storedTimetoken = null;
 	        this._region = null;
 	        this._reconnectionManager.stopPolling();
 	      }
@@ -1777,13 +1770,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	      }
 
-	      if (this._storedTimetoken) {
-	        this._currentTimetoken = this._storedTimetoken;
-	        this._storedTimetoken = null;
-	      } else {
-	        this._lastTimetoken = this._currentTimetoken;
-	        this._currentTimetoken = payload.metadata.timetoken;
-	      }
+	      this._lastTimetoken = this._currentTimetoken;
+	      this._currentTimetoken = payload.metadata.timetoken;
 
 	      if (!this._subscriptionStatusAnnounced) {
 	        var connectedAnnounce = {};
@@ -4572,6 +4560,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
+
+	      if (err.code === 'ETIMEDOUT') return _categories2.default.PNNetworkIssuesCategory;
 
 	      if (err.response) {
 	        if (err.response.badRequest) return _categories2.default.PNBadRequestCategory;
