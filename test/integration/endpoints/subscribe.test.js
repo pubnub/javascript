@@ -50,6 +50,28 @@ describe('subscribe endpoints', () => {
     pubnub.subscribe({ channels: ['coolChannel', 'coolChannel2'] });
   });
 
+  it('supports addition of multiple channels with timetoken argument', (done) => {
+    const tt = 15230455896063530;
+    const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
+      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, tt: tt })
+      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}');
+
+    pubnub.addListener({
+      status(status) {
+        if (status.category === 'PNConnectedCategory') {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(pubnub.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(pubnub.getSubscribedChannelGroups(), []);
+          assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
+          assert.deepEqual(status.affectedChannelGroups, []);
+          done();
+        }
+      }
+    });
+
+    pubnub.subscribe({ channels: ['coolChannel', 'coolChannel2'], timetoken: tt });
+  });
+
   it('supports addition of multiple channels / channel groups', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/coolChannel%2CcoolChannel2/0')
       .query({ 'channel-group': 'cg1,cg2', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })

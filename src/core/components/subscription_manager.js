@@ -66,8 +66,6 @@ export default class {
 
   _currentTimetoken: number;
   _lastTimetoken: number;
-  _storedTimetoken: ?number;
-
   _region: ?number;
 
   _subscribeCall: ?Object;
@@ -110,7 +108,6 @@ export default class {
 
     this._currentTimetoken = 0;
     this._lastTimetoken = 0;
-    this._storedTimetoken = null;
 
     this._subscriptionStatusAnnounced = false;
 
@@ -179,12 +176,6 @@ export default class {
     if (timetoken) {
       this._lastTimetoken = this._currentTimetoken;
       this._currentTimetoken = timetoken;
-    }
-
-    // reset the current timetoken to get a connect event.
-    if (this._currentTimetoken !== '0') {
-      this._storedTimetoken = this._currentTimetoken;
-      this._currentTimetoken = 0;
     }
 
     channels.forEach((channel: string) => {
@@ -258,7 +249,6 @@ export default class {
       Object.keys(this._presenceChannelGroups).length === 0) {
       this._lastTimetoken = 0;
       this._currentTimetoken = 0;
-      this._storedTimetoken = null;
       this._region = null;
       this._reconnectionManager.stopPolling();
     }
@@ -432,13 +422,8 @@ export default class {
       return;
     }
 
-    if (this._storedTimetoken) {
-      this._currentTimetoken = this._storedTimetoken;
-      this._storedTimetoken = null;
-    } else {
-      this._lastTimetoken = this._currentTimetoken;
-      this._currentTimetoken = payload.metadata.timetoken;
-    }
+    this._lastTimetoken = this._currentTimetoken;
+    this._currentTimetoken = payload.metadata.timetoken;
 
     if (!this._subscriptionStatusAnnounced) {
       let connectedAnnounce: StatusAnnouncement = {};
