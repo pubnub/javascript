@@ -4573,6 +4573,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
 
+	      if (err.code === 'ETIMEDOUT') return _categories2.default.PNNetworkIssuesCategory;
+
 	      if (err.response) {
 	        if (err.response.badRequest) return _categories2.default.PNBadRequestCategory;
 	        if (err.response.forbidden) return _categories2.default.PNAccessDeniedCategory;
