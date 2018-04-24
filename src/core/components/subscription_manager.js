@@ -181,10 +181,6 @@ export default class {
       this._currentTimetoken = timetoken;
     }
 
-    console.log('\n ---------');
-    console.log({ channels, current: this._currentTimetoken, stored: this._storedTimetoken });
-
-
     // reset the current timetoken to get a connect event.
     if (this._currentTimetoken !== '0' && this._currentTimetoken !== 0) {
       this._storedTimetoken = this._currentTimetoken;
@@ -383,8 +379,6 @@ export default class {
       return;
     }
 
-    console.log('sending request w/ ' + this._currentTimetoken);
-
     const subscribeArgs = {
       channels,
       channelGroups,
@@ -437,9 +431,6 @@ export default class {
 
       return;
     }
-
-    console.log(' got response from server ...');
-    console.log({ servertimeToken: payload.metadata.timetoken, stored: this._storedTimetoken, current: this._currentTimetoken  })
 
     if (this._storedTimetoken) {
       this._currentTimetoken = this._storedTimetoken;
