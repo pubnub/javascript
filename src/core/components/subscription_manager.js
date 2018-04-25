@@ -182,7 +182,7 @@ export default class {
     }
 
     // reset the current timetoken to get a connect event.
-    if (this._currentTimetoken !== '0') {
+    if (this._currentTimetoken !== '0' && this._currentTimetoken !== 0) {
       this._storedTimetoken = this._currentTimetoken;
       this._currentTimetoken = 0;
     }
