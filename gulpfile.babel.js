@@ -51,6 +51,12 @@ gulp.task('compile_titanium', () => {
     .pipe(gulp.dest('dist/titanium'));
 });
 
+gulp.task('compile_react_native', () => {
+  return gulp.src('src/react_native/index.js')
+    .pipe(gulpWebpack(webpackConfig))
+    .pipe(gulp.dest('dist/react_native'));
+});
+
 gulp.task('create_version', () => {
   return gulp.src('dist/web/pubnub.js')
     .pipe(rename(`pubnub.${packageJSON.version}.js`))
@@ -79,6 +85,13 @@ gulp.task('uglify_titanium', () => {
     .pipe(uglify({ mangle: true, compress: true }))
     .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/titanium'));
+});
+
+gulp.task('uglify_react_native', () => {
+  return gulp.src('dist/react_native/pubnub.js')
+    .pipe(uglify({ mangle: true, compress: true }))
+    .pipe(rename('pubnub.min.js'))
+    .pipe(gulp.dest('dist/react_native'));
 });
 
 gulp.task('lint_code', [], () => {
