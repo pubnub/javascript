@@ -1,11 +1,18 @@
 name: javascript
-version: 4.20.2
+version: 4.20.3
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.20.3
+    date: 2018-04-24
+    changes:
+      - type: bug
+        text: fix timetoken announces
+      - type: improvement
+        text: categorize ETIMEDOUT errors as PNNetworkIssuesCategory
   - version: v4.20.2
     date: 2018-02-28
     changes:

@@ -1,3 +1,18 @@
+## [v4.20.3](https://github.com/pubnub/javascript/tree/v4.20.3)
+  Abril-24-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.20.2...v4.20.3)
+
+
+
+- 🐛fix timetoken announces
+
+
+- ⭐categorize ETIMEDOUT errors as PNNetworkIssuesCategory
+
+
+
 ## [v4.20.2](https://github.com/pubnub/javascript/tree/v4.20.2)
   February-28-2018
 

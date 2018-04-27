@@ -1,4 +1,4 @@
-/*! 4.20.2 / Consumer  */
+/*! 4.20.3 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -608,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.20.2';
+	      return '4.20.3';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1529,7 +1529,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._currentTimetoken = timetoken;
 	      }
 
-	      if (this._currentTimetoken !== '0') {
+	      if (this._currentTimetoken !== '0' && this._currentTimetoken !== 0) {
 	        this._storedTimetoken = this._currentTimetoken;
 	        this._currentTimetoken = 0;
 	      }
@@ -4594,6 +4594,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
+
+	      if (err.code === 'ETIMEDOUT') return _categories2.default.PNNetworkIssuesCategory;
 
 	      if (err.response) {
 	        if (err.response.badRequest) return _categories2.default.PNBadRequestCategory;
