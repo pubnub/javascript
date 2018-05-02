@@ -15,6 +15,12 @@ type SubscribeArgs = {
   timetoken: ?number
 }
 
+type PresenceArgs = {
+  channels: Array<string>,
+  channelGroups: Array<string>,
+  connected: boolean
+}
+
 type UnsubscribeArgs = {
   channels: Array<string>,
   channelGroups: Array<string>
@@ -51,6 +57,9 @@ export default class {
 
   _channels: Object;
   _presenceChannels: Object;
+
+  _heartbeatChannels: Object;
+  _heartbeatChannelGroups: Object;
 
   _channelGroups: Object;
   _presenceChannelGroups: Object;
@@ -90,6 +99,9 @@ export default class {
     this._channels = {};
     this._presenceChannels = {};
 
+    this._heartbeatChannels = {};
+    this._heartbeatChannelGroups = {};
+
     this._channelGroups = {};
     this._presenceChannelGroups = {};
 
@@ -122,6 +134,40 @@ export default class {
     return this._setStateEndpoint({ state, channels, channelGroups }, callback);
   }
 
+  adaptPresenceChange(args: PresenceArgs) {
+    const { connected, channels = [], channelGroups = [] } = args;
+
+    if (connected) {
+      channels.forEach((channel: string) => {
+        this._heartbeatChannels[channel] = { state: {} };
+      });
+
+      channelGroups.forEach((channelGroup: string) => {
+        this._heartbeatChannelGroups[channelGroup] = { state: {} };
+      });
+    } else {
+      channels.forEach((channel) => {
+        if (channel in this._heartbeatChannels) {
+          delete this._heartbeatChannels[channel];
+        }
+      });
+
+      channelGroups.forEach((channelGroup) => {
+        if (channelGroup in this._heartbeatChannelGroups) {
+          delete this._heartbeatChannelGroups[channelGroup];
+        }
+      });
+
+      if (this._config.suppressLeaveEvents === false) {
+        this._leaveEndpoint({ channels, channelGroups }, (status) => {
+          this._listenerManager.announceStatus(status);
+        });
+      }
+    }
+
+    this.reconnect();
+  }
+
   adaptSubscribeChange(args: SubscribeArgs) {
     const { timetoken, channels = [], channelGroups = [], withPresence = false } = args;
 
@@ -136,7 +182,7 @@ export default class {
     }
 
     // reset the current timetoken to get a connect event.
-    if (this._currentTimetoken !== '0') {
+    if (this._currentTimetoken !== '0' && this._currentTimetoken !== 0) {
       this._storedTimetoken = this._currentTimetoken;
       this._currentTimetoken = 0;
     }
@@ -224,6 +270,14 @@ export default class {
     this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() }, isOffline);
   }
 
+  getHeartbeatChannels(): Array<string> {
+    return Object.keys(this._heartbeatChannels);
+  }
+
+  getHeartbeatChannelGroups(): Array<string> {
+    return Object.keys(this._heartbeatChannelGroups);
+  }
+
   getSubscribedChannels(): Array<string> {
     return Object.keys(this._channels);
   }
@@ -263,20 +317,26 @@ export default class {
   }
 
   _performHeartbeatLoop() {
-    let presenceChannels = Object.keys(this._channels);
-    let presenceChannelGroups = Object.keys(this._channelGroups);
+    let heartbeatChannels = [];
+    heartbeatChannels = heartbeatChannels.concat(this.getHeartbeatChannels());
+    heartbeatChannels = heartbeatChannels.concat(this.getSubscribedChannels());
+
+    let heartbeatChannelGroups = [];
+    heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getHeartbeatChannelGroups());
+    heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getSubscribedChannelGroups());
+
     let presenceState = {};
 
-    if (presenceChannels.length === 0 && presenceChannelGroups.length === 0) {
+    if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
       return;
     }
 
-    presenceChannels.forEach((channel) => {
+    this.getSubscribedChannels().forEach((channel) => {
       let channelState = this._channels[channel].state;
       if (Object.keys(channelState).length) presenceState[channel] = channelState;
     });
 
-    presenceChannelGroups.forEach((channelGroup) => {
+    this.getSubscribedChannelGroups().forEach((channelGroup) => {
       let channelGroupState = this._channelGroups[channelGroup].state;
       if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
     });
@@ -299,8 +359,8 @@ export default class {
     };
 
     this._heartbeatEndpoint({
-      channels: presenceChannels,
-      channelGroups: presenceChannelGroups,
+      channels: heartbeatChannels,
+      channelGroups: heartbeatChannelGroups,
       state: presenceState }, onHeartbeat.bind(this));
   }
 

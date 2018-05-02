@@ -222,6 +222,50 @@ describe('#components/subscription_manager', () => {
     pubnubWithPassingHeartbeats.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
+  it('reports when heartbeats pass with heartbeatChannels', (done) => {
+    const scope = utils.createNock().get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
+      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, state: '{}' })
+      .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
+
+    pubnubWithPassingHeartbeats.addListener({
+      status(statusPayload) {
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+
+        assert.equal(scope.isDone(), true);
+        assert.deepEqual({
+          error: false,
+          operation: 'PNHeartbeatOperation',
+          statusCode: 200
+        }, statusPayload);
+        done();
+      }
+    });
+
+    pubnubWithPassingHeartbeats.presence({ channels: ['ch1', 'ch2'], connected: true });
+  });
+
+  it('reports when heartbeats pass with heartbeatChannelGroups', (done) => {
+    const scope = utils.createNock().get('/v2/presence/sub-key/mySubKey/channel/%2C/heartbeat')
+      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, state: '{}', 'channel-group': 'cg1' })
+      .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
+
+    pubnubWithPassingHeartbeats.addListener({
+      status(statusPayload) {
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+
+        assert.equal(scope.isDone(), true);
+        assert.deepEqual({
+          error: false,
+          operation: 'PNHeartbeatOperation',
+          statusCode: 200
+        }, statusPayload);
+        done();
+      }
+    });
+
+    pubnubWithPassingHeartbeats.presence({ channelGroups: ['cg1'], connected: true });
+  });
+
   it('reports when the queue is beyond set threshold', (done) => {
     const scope = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
       .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })

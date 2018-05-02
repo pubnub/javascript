@@ -13,6 +13,10 @@ export default class extends PubNubCore {
     setup.networking = new Networking({ keepAlive, del, get, post, proxy });
     setup.sdkFamily = 'Nodejs';
 
+    if (!('ssl' in setup)) {
+      setup.ssl = true;
+    }
+
     super(setup);
   }
 }

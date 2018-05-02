@@ -60,6 +60,10 @@ export default class {
     return this._providedFQDN.replace('pubsub', `ps${newSubDomain}`);
   }
 
+  hasModule(name: string) {
+    return name in this._modules;
+  }
+
   // origin operations
   shiftStandardOrigin(failover: boolean = false): string {
     this._standardOrigin = this.nextOrigin(failover);
@@ -91,6 +95,8 @@ export default class {
 
     if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) return categoryConstants.PNNetworkIssuesCategory;
     if (err.timeout) return categoryConstants.PNTimeoutCategory;
+
+    if (err.code === 'ETIMEDOUT') return categoryConstants.PNNetworkIssuesCategory;
 
     if (err.response) {
       if (err.response.badRequest) return categoryConstants.PNBadRequestCategory;

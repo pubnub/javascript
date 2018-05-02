@@ -1,3 +1,59 @@
+## [v4.20.3](https://github.com/pubnub/javascript/tree/v4.20.3)
+  Abril-24-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.20.2...v4.20.3)
+
+
+
+- 🐛fix timetoken announces
+
+
+- ⭐categorize ETIMEDOUT errors as PNNetworkIssuesCategory
+
+
+
+## [v4.20.2](https://github.com/pubnub/javascript/tree/v4.20.2)
+  February-28-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.20.1...v4.20.2)
+
+
+
+- 🐛fix signature to delete message
+
+
+
+## [v4.20.1](https://github.com/pubnub/javascript/tree/v4.20.1)
+  January-29-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.20.0...v4.20.1)
+
+
+
+- ⭐allow set ssl to false for nodejs
+
+
+
+## [v4.20.0](https://github.com/pubnub/javascript/tree/v4.20.0)
+  January-04-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.19.0...v4.20.0)
+
+
+
+- ⭐add support for heartbeat sending without subscription via .presence()
+
+
+- ⭐add method setProxy for Nodejs
+
+
+- ⭐set ssl to true for nodejs by default
+
+
 
 ## [v4.19.0](https://github.com/pubnub/javascript/tree/v4.19.0)
   December-05-2017
@@ -6,13 +62,14 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.18.0...v4.19.0)
 
 
-- ⭐ add support for Native Script
+
+- ⭐add support for Native Script
 
 
-- 🌟 add missing flow types
+- ⭐add missing flow types
 
 
-- 🌟 upgrade superagent to ^3.8.1
+- ⭐upgrade superagent to ^3.8.1
 
 
 
@@ -23,10 +80,11 @@
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.17.0...v4.18.0)
 
 
-- ⭐ keepAlive is now initialized globally instead of per-call, allowing better connection reuse
+
+- ⭐keepAlive is now initialized globally instead of per-call, allowing better connection reuse
 
 
-- 🌟 added sdkName configuration parameter which allow completely override pnsdk in request query
+- ⭐added sdkName configuration parameter which allow completely override pnsdk in request query
 
 
 
