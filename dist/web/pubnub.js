@@ -1516,7 +1516,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _args$channelGroups3 = args.channelGroups,
 	          channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3,
 	          _args$withPresence = args.withPresence,
-	          withPresence = _args$withPresence === undefined ? false : _args$withPresence;
+	          withPresence = _args$withPresence === undefined ? false : _args$withPresence,
+	          _args$noHeartbeats = args.noHeartbeats,
+	          noHeartbeats = _args$noHeartbeats === undefined ? false : _args$noHeartbeats;
 
 
 	      if (!this._config.subscribeKey || this._config.subscribeKey === '') {
@@ -1537,6 +1539,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels.forEach(function (channel) {
 	        _this3._channels[channel] = { state: {} };
 	        if (withPresence) _this3._presenceChannels[channel] = {};
+	        if (!noHeartbeats) _this3._heartbeatChannels[channel] = {};
 
 	        _this3._pendingChannelSubscriptions.push(channel);
 	      });
@@ -1544,6 +1547,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channelGroups.forEach(function (channelGroup) {
 	        _this3._channelGroups[channelGroup] = { state: {} };
 	        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
+	        if (!noHeartbeats) _this3._heartbeatChannelGroups[channelGroup] = {};
 
 	        _this3._pendingChannelGroupSubscriptions.push(channelGroup);
 	      });
@@ -1574,6 +1578,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          delete _this4._presenceChannels[channel];
 	          actualChannels.push(channel);
 	        }
+	        if (channel in _this4._heartbeatChannels) {
+	          delete _this4._heartbeatChannels[channel];
+	          actualChannels.push(channel);
+	        }
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
@@ -1583,6 +1591,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	        if (channelGroup in _this4._presenceChannelGroups) {
 	          delete _this4._channelGroups[channelGroup];
+	          actualChannelGroups.push(channelGroup);
+	        }
+	        if (channelGroup in _this4._heartbeatChannelGroups) {
+	          delete _this4._heartbeatChannelGroups[channelGroup];
 	          actualChannelGroups.push(channelGroup);
 	        }
 	      });
@@ -1674,13 +1686,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function _performHeartbeatLoop() {
 	      var _this5 = this;
 
-	      var heartbeatChannels = [];
-	      heartbeatChannels = heartbeatChannels.concat(this.getHeartbeatChannels());
-	      heartbeatChannels = heartbeatChannels.concat(this.getSubscribedChannels());
+	      var heartbeatChannels = this.getHeartbeatChannels();
 
-	      var heartbeatChannelGroups = [];
-	      heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getHeartbeatChannelGroups());
-	      heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getSubscribedChannelGroups());
+	      var heartbeatChannelGroups = this.getHeartbeatChannelGroups();
 
 	      var presenceState = {};
 
