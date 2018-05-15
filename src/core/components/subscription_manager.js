@@ -13,7 +13,7 @@ type SubscribeArgs = {
   channelGroups: Array<string>,
   withPresence: ?boolean,
   timetoken: ?number,
-  noHeartbeats: ?boolean
+  withHeartbeats: ?boolean
 }
 
 type PresenceArgs = {
@@ -170,7 +170,7 @@ export default class {
   }
 
   adaptSubscribeChange(args: SubscribeArgs) {
-    const { timetoken, channels = [], channelGroups = [], withPresence = false, noHeartbeats = false } = args;
+    const { timetoken, channels = [], channelGroups = [], withPresence = false, withHeartbeats = true } = args;
 
     if (!this._config.subscribeKey || this._config.subscribeKey === '') {
       if (console && console.log) console.log('subscribe key missing; aborting subscribe') //eslint-disable-line
@@ -191,7 +191,7 @@ export default class {
     channels.forEach((channel: string) => {
       this._channels[channel] = { state: {} };
       if (withPresence) this._presenceChannels[channel] = {};
-      if (!noHeartbeats) this._heartbeatChannels[channel] = {};
+      if (withHeartbeats) this._heartbeatChannels[channel] = {};
 
       this._pendingChannelSubscriptions.push(channel);
     });
@@ -199,7 +199,7 @@ export default class {
     channelGroups.forEach((channelGroup: string) => {
       this._channelGroups[channelGroup] = { state: {} };
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
-      if (!noHeartbeats) this._heartbeatChannelGroups[channelGroup] = {};
+      if (withHeartbeats) this._heartbeatChannelGroups[channelGroup] = {};
 
       this._pendingChannelGroupSubscriptions.push(channelGroup);
     });
@@ -221,13 +221,13 @@ export default class {
       if (channel in this._channels) {
         delete this._channels[channel];
         actualChannels.push(channel);
+
+        if (channel in this._heartbeatChannels) {
+          delete this._heartbeatChannels[channel];
+        }
       }
       if (channel in this._presenceChannels) {
         delete this._presenceChannels[channel];
-        actualChannels.push(channel);
-      }
-      if (channel in this._heartbeatChannels) {
-        delete this._heartbeatChannels[channel];
         actualChannels.push(channel);
       }
     });
@@ -236,13 +236,13 @@ export default class {
       if (channelGroup in this._channelGroups) {
         delete this._channelGroups[channelGroup];
         actualChannelGroups.push(channelGroup);
+
+        if (channelGroup in this._heartbeatChannelGroups) {
+          delete this._heartbeatChannelGroups[channelGroup];
+        }
       }
       if (channelGroup in this._presenceChannelGroups) {
         delete this._channelGroups[channelGroup];
-        actualChannelGroups.push(channelGroup);
-      }
-      if (channelGroup in this._heartbeatChannelGroups) {
-        delete this._heartbeatChannelGroups[channelGroup];
         actualChannelGroups.push(channelGroup);
       }
     });
