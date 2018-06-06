@@ -1,3 +1,15 @@
+## [v4.21.0](https://github.com/pubnub/javascript/tree/v4.21.0)
+  June-0-2018
+
+
+  [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.20.3...v4.21.0)
+
+
+
+- ⭐subscribe without using the heartbeat loop with flag withHeartbeats = false
+
+
+
 ## [v4.20.3](https://github.com/pubnub/javascript/tree/v4.20.3)
   Abril-24-2018
 
