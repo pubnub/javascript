@@ -1,11 +1,16 @@
 name: javascript
-version: 4.21.0
+version: 4.21.1
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.21.1
+    date: 2018-06-08
+    changes:
+      - type: bug
+        text: avoid security vulnerability in growl < 1.10.0
   - version: v4.21.0
     date: 2018-06-06
     changes:

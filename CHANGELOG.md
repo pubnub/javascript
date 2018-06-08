@@ -1,5 +1,17 @@
+## [v4.21.1](https://github.com/pubnub/javascript/tree/v4.21.1)
+  June-08-2018
+
+
+  [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.21.0...v4.21.1)
+
+
+
+- 🐛avoid security vulnerability in growl < 1.10.0
+
+
+
 ## [v4.21.0](https://github.com/pubnub/javascript/tree/v4.21.0)
-  June-0-2018
+  June-06-2018
 
 
   [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.20.3...v4.21.0)
