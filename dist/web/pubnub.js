@@ -1,4 +1,4 @@
-/*! 4.20.3 / Consumer  */
+/*! 4.21.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -608,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.20.3';
+	      return '4.21.1';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4944,7 +4944,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	request.serialize = {
 	  'application/x-www-form-urlencoded': serialize,
-	  'application/json': JSON.stringify,
+	  'application/json': JSON.stringify
 	};
 
 	/**
@@ -4958,7 +4958,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	request.parse = {
 	  'application/x-www-form-urlencoded': parseString,
-	  'application/json': JSON.parse,
+	  'application/json': JSON.parse
 	};
 
 	/**
@@ -6097,7 +6097,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this._fullfilledPromise.then(resolve, reject);
 	};
 
-	RequestBase.prototype.catch = function(cb) {
+	RequestBase.prototype['catch'] = function(cb) {
 	  return this.then(undefined, cb);
 	};
 
@@ -6698,6 +6698,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        : false;
 
 	    // sugar
+	    this.created = 201 == status;
 	    this.accepted = 202 == status;
 	    this.noContent = 204 == status;
 	    this.badRequest = 400 == status;
@@ -6705,6 +6706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.notAcceptable = 406 == status;
 	    this.forbidden = 403 == status;
 	    this.notFound = 404 == status;
+	    this.unprocessableEntity = 422 == status;
 	};
 
 
