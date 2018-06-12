@@ -1,4 +1,4 @@
-/*! 4.21.1 / Consumer  */
+/*! 4.21.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -608,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.21.1';
+	      return '4.21.2';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4335,13 +4335,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	function prepareParams(modules, incomingParams) {
 	  var start = incomingParams.start,
 	      end = incomingParams.end,
-	      count = incomingParams.count;
+	      count = incomingParams.count,
+	      _incomingParams$strin = incomingParams.stringifiedTimeToken,
+	      stringifiedTimeToken = _incomingParams$strin === undefined ? false : _incomingParams$strin;
 
 	  var outgoingParams = {};
 
 	  if (count) outgoingParams.max = count;
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
+	  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
 
 	  return outgoingParams;
 	}

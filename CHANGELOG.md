@@ -1,3 +1,15 @@
+## [v4.21.2](https://github.com/pubnub/javascript/tree/v4.21.2)
+  June-12-2018
+
+
+  [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.21.1...v4.21.2)
+
+
+
+- ⭐add stringifiedTimeToken into the fetch endpoint
+
+
+
 ## [v4.21.1](https://github.com/pubnub/javascript/tree/v4.21.1)
   June-08-2018
 
