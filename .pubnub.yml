@@ -1,11 +1,16 @@
 name: javascript
-version: 4.21.1
+version: 4.21.2
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.21.2
+    date: 2018-06-12
+    changes:
+      - type: improvement
+        text: add stringifiedTimeToken into the fetch endpoint
   - version: v4.21.1
     date: 2018-06-08
     changes:

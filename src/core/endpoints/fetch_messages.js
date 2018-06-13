@@ -44,12 +44,13 @@ export function isAuthSupported(): boolean {
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: FetchMessagesArguments): Object {
-  const { start, end, count } = incomingParams;
+  const { start, end, count, stringifiedTimeToken = false } = incomingParams;
   let outgoingParams: Object = {};
 
   if (count) outgoingParams.max = count;
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
+  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
 
   return outgoingParams;
 }
