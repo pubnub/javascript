@@ -1,4 +1,4 @@
-/*! 4.20.3 / Consumer  */
+/*! 4.21.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -608,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.20.3';
+	      return '4.21.2';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1516,7 +1516,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _args$channelGroups3 = args.channelGroups,
 	          channelGroups = _args$channelGroups3 === undefined ? [] : _args$channelGroups3,
 	          _args$withPresence = args.withPresence,
-	          withPresence = _args$withPresence === undefined ? false : _args$withPresence;
+	          withPresence = _args$withPresence === undefined ? false : _args$withPresence,
+	          _args$withHeartbeats = args.withHeartbeats,
+	          withHeartbeats = _args$withHeartbeats === undefined ? true : _args$withHeartbeats;
 
 
 	      if (!this._config.subscribeKey || this._config.subscribeKey === '') {
@@ -1537,6 +1539,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels.forEach(function (channel) {
 	        _this3._channels[channel] = { state: {} };
 	        if (withPresence) _this3._presenceChannels[channel] = {};
+	        if (withHeartbeats) _this3._heartbeatChannels[channel] = {};
 
 	        _this3._pendingChannelSubscriptions.push(channel);
 	      });
@@ -1544,6 +1547,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channelGroups.forEach(function (channelGroup) {
 	        _this3._channelGroups[channelGroup] = { state: {} };
 	        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
+	        if (withHeartbeats) _this3._heartbeatChannelGroups[channelGroup] = {};
 
 	        _this3._pendingChannelGroupSubscriptions.push(channelGroup);
 	      });
@@ -1569,6 +1573,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (channel in _this4._channels) {
 	          delete _this4._channels[channel];
 	          actualChannels.push(channel);
+
+	          if (channel in _this4._heartbeatChannels) {
+	            delete _this4._heartbeatChannels[channel];
+	          }
 	        }
 	        if (channel in _this4._presenceChannels) {
 	          delete _this4._presenceChannels[channel];
@@ -1580,6 +1588,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (channelGroup in _this4._channelGroups) {
 	          delete _this4._channelGroups[channelGroup];
 	          actualChannelGroups.push(channelGroup);
+
+	          if (channelGroup in _this4._heartbeatChannelGroups) {
+	            delete _this4._heartbeatChannelGroups[channelGroup];
+	          }
 	        }
 	        if (channelGroup in _this4._presenceChannelGroups) {
 	          delete _this4._channelGroups[channelGroup];
@@ -1674,13 +1686,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function _performHeartbeatLoop() {
 	      var _this5 = this;
 
-	      var heartbeatChannels = [];
-	      heartbeatChannels = heartbeatChannels.concat(this.getHeartbeatChannels());
-	      heartbeatChannels = heartbeatChannels.concat(this.getSubscribedChannels());
+	      var heartbeatChannels = this.getHeartbeatChannels();
 
-	      var heartbeatChannelGroups = [];
-	      heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getHeartbeatChannelGroups());
-	      heartbeatChannelGroups = heartbeatChannelGroups.concat(this.getSubscribedChannelGroups());
+	      var heartbeatChannelGroups = this.getHeartbeatChannelGroups();
 
 	      var presenceState = {};
 
@@ -4327,13 +4335,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	function prepareParams(modules, incomingParams) {
 	  var start = incomingParams.start,
 	      end = incomingParams.end,
-	      count = incomingParams.count;
+	      count = incomingParams.count,
+	      _incomingParams$strin = incomingParams.stringifiedTimeToken,
+	      stringifiedTimeToken = _incomingParams$strin === undefined ? false : _incomingParams$strin;
 
 	  var outgoingParams = {};
 
 	  if (count) outgoingParams.max = count;
 	  if (start) outgoingParams.start = start;
 	  if (end) outgoingParams.end = end;
+	  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
 
 	  return outgoingParams;
 	}
@@ -4936,7 +4947,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	request.serialize = {
 	  'application/x-www-form-urlencoded': serialize,
-	  'application/json': JSON.stringify,
+	  'application/json': JSON.stringify
 	};
 
 	/**
@@ -4950,7 +4961,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	request.parse = {
 	  'application/x-www-form-urlencoded': parseString,
-	  'application/json': JSON.parse,
+	  'application/json': JSON.parse
 	};
 
 	/**
@@ -6089,7 +6100,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this._fullfilledPromise.then(resolve, reject);
 	};
 
-	RequestBase.prototype.catch = function(cb) {
+	RequestBase.prototype['catch'] = function(cb) {
 	  return this.then(undefined, cb);
 	};
 
@@ -6690,6 +6701,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        : false;
 
 	    // sugar
+	    this.created = 201 == status;
 	    this.accepted = 202 == status;
 	    this.noContent = 204 == status;
 	    this.badRequest = 400 == status;
@@ -6697,6 +6709,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.notAcceptable = 406 == status;
 	    this.forbidden = 403 == status;
 	    this.notFound = 404 == status;
+	    this.unprocessableEntity = 422 == status;
 	};
 
 
