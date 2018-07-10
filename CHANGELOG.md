@@ -1,8 +1,20 @@
+## [v4.21.3](https://github.com/pubnub/javascript/tree/v4.21.3)
+  July-10-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.2...v4.21.3)
+
+
+
+- ⭐update dependencies
+
+
+
 ## [v4.21.2](https://github.com/pubnub/javascript/tree/v4.21.2)
   June-12-2018
 
 
-  [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.21.1...v4.21.2)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.1...v4.21.2)
 
 
 
@@ -14,7 +26,7 @@
   June-08-2018
 
 
-  [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.21.0...v4.21.1)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.0...v4.21.1)
 
 
 
@@ -26,7 +38,7 @@
   June-06-2018
 
 
-  [Full Chan6gelog](https://github.com/pubnub/javascript/compare/v4.20.3...v4.21.0)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.20.3...v4.21.0)
 
 
 

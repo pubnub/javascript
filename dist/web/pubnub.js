@@ -1,4 +1,4 @@
-/*! 4.21.2 / Consumer  */
+/*! 4.21.3 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -608,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.21.2';
+	      return '4.21.3';
 	    }
 	  }, {
 	    key: '_decideUUID',
