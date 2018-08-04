@@ -1,4 +1,4 @@
-/*! 4.21.3 / Consumer  */
+/*! 4.21.4 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -608,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.21.3';
+	      return '4.21.4';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4721,7 +4721,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    if (err) {
-	      status.errorData = err;
+	      if (err.response && err.response.text && !_this._config.logVerbosity) {
+	        try {
+	          status.errorData = JSON.parse(err.response.text);
+	        } catch (e) {
+	          status.errorData = err;
+	        }
+	      } else {
+	        status.errorData = err;
+	      }
 	      status.category = _this._detectErrorCategory(err);
 	      return callback(status, null);
 	    }
