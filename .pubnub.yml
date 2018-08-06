@@ -1,11 +1,16 @@
 name: javascript
-version: 4.21.4
+version: 4.21.5
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.21.5
+    date: 2018-08-06
+    changes:
+      - type: improvement
+        text: update dependencies
   - version: v4.21.4
     date: 2018-08-04
     changes:

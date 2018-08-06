@@ -1,3 +1,27 @@
+## [v4.21.5](https://github.com/pubnub/javascript/tree/v4.21.5)
+  August-06-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.4...v4.21.5)
+
+
+
+- ⭐update dependencies
+
+
+
+## [v4.21.4](https://github.com/pubnub/javascript/tree/v4.21.4)
+  August-04-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.3...v4.21.4)
+
+
+
+- ⭐return error parameter into errorData when logVerbosity = true
+
+
+
 ## [v4.21.3](https://github.com/pubnub/javascript/tree/v4.21.3)
   July-10-2018
 
