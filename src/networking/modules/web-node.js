@@ -54,7 +54,15 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
         }
 
         if (err) {
-          status.errorData = err;
+          if (err.response && err.response.text && !this._config.logVerbosity) {
+            try {
+              status.errorData = JSON.parse(err.response.text);
+            } catch (e) {
+              status.errorData = err;
+            }
+          } else {
+            status.errorData = err;
+          }
           status.category = this._detectErrorCategory(err);
           return callback(status, null);
         }
