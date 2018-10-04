@@ -1,11 +1,16 @@
 name: javascript
-version: 4.21.5
+version: 4.21.6
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.21.6
+    date: 2018-10-04
+    changes:
+      - type: bug
+        text: fix POST for nativescript adapter over android
   - version: v4.21.5
     date: 2018-08-06
     changes:

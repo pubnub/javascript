@@ -1,3 +1,15 @@
+## [v4.21.6](https://github.com/pubnub/javascript/tree/v4.21.6)
+  October-04-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.5...v4.21.6)
+
+
+
+- 🐛fix POST for nativescript adapter over android
+
+
+
 ## [v4.21.5](https://github.com/pubnub/javascript/tree/v4.21.5)
   August-06-2018
 
