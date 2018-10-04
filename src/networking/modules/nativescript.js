@@ -30,13 +30,18 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
   let status: StatusAnnouncement = {};
   status.operation = endpoint.operation;
 
-  // $FlowFixMe
-  return HttpRequest({
+  const httpConfig = {
     method,
     url: buildUrl(url, params),
-    content: body,
     timeout: endpoint.timeout
-  }).then((response) => {
+  };
+
+  if (method === 'GET') {
+    httpConfig.content = body;
+  }
+
+  // $FlowFixMe
+  return HttpRequest(httpConfig).then((response) => {
     status.error = false;
 
     if (response.statusCode) {
