@@ -25,12 +25,14 @@ export default class {
 
   stopPolling() {
     clearInterval(this._timeTimer);
+    delete this._timeTimer;
   }
 
   _performTimeLoop() {
     this._timeEndpoint((status: StatusAnnouncement) => {
-      if (!status.error) {
+      if (!status.error && this._timeTimer) {
         clearInterval(this._timeTimer);
+        delete this._timeTimer;
         this._reconnectionCallback();
       }
     });
