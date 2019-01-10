@@ -1,4 +1,5 @@
 /* @flow */
+/* global console */
 
 import { request as HttpRequest } from 'http';
 import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
@@ -37,6 +38,7 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
   };
 
   if (method === 'GET') {
+    // $FlowFixMe
     httpConfig.content = body;
   }
 
