@@ -1,3 +1,17 @@
+## [v4.21.7](https://github.com/pubnub/javascript/tree/v4.21.7)
+  December-20-2018
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.6...v4.21.7)
+
+
+
+- ⭐update dependencies
+
+- ⭐fix flow process on nativescript
+
+
+
 ## [v4.21.6](https://github.com/pubnub/javascript/tree/v4.21.6)
   October-04-2018
 

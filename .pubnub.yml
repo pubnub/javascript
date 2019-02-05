@@ -1,11 +1,18 @@
 name: javascript
-version: 4.21.6
+version: 4.21.7
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.21.7
+    date: 2018-12-20
+    changes:
+      - type: improvement
+        text: update dependencies
+      - type: improvement
+        text: fix flow process on nativescript
   - version: v4.21.6
     date: 2018-10-04
     changes:
