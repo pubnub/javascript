@@ -31,6 +31,7 @@ import * as grantEndpointConfig from './endpoints/access_manager/grant';
 import * as publishEndpointConfig from './endpoints/publish';
 import * as historyEndpointConfig from './endpoints/history/get_history';
 import * as deleteMessagesEndpointConfig from './endpoints/history/delete_messages';
+import * as messagesCountsEndpointConfig from './endpoints/history/message_counts';
 import * as fetchMessagesEndpointConfig from './endpoints/fetch_messages';
 import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
@@ -53,6 +54,7 @@ export default class {
 
   history: Function;
   deleteMessages: Function;
+  messagesCounts: Function;
   fetchMessages: Function;
 
   //
@@ -174,6 +176,7 @@ export default class {
 
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
     this.deleteMessages = endpointCreator.bind(this, modules, deleteMessagesEndpointConfig);
+    this.messagesCounts = endpointCreator.bind(this, modules, messagesCountsEndpointConfig);
     this.fetchMessages = endpointCreator.bind(this, modules, fetchMessagesEndpointConfig);
 
     this.time = timeEndpoint;
