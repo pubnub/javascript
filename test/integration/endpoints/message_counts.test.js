@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-describe('history with messages endpoints', () => {
+describe('message counts', () => {
   let pubnub;
 
   before(() => {
