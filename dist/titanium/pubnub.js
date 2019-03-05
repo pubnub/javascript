@@ -1,4 +1,4 @@
-/*! 4.21.7 / Consumer  */
+/*! 4.22.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -66,15 +66,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _networking = __webpack_require__(39);
+	var _networking = __webpack_require__(40);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _common = __webpack_require__(40);
+	var _common = __webpack_require__(41);
 
 	var _common2 = _interopRequireDefault(_common);
 
-	var _titanium = __webpack_require__(41);
+	var _titanium = __webpack_require__(42);
 
 	var _flow_interfaces = __webpack_require__(5);
 
@@ -217,7 +217,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var deleteMessagesEndpointConfig = _interopRequireWildcard(_delete_messages);
 
-	var _fetch_messages = __webpack_require__(37);
+	var _message_counts = __webpack_require__(37);
+
+	var messageCountsEndpointConfig = _interopRequireWildcard(_message_counts);
+
+	var _fetch_messages = __webpack_require__(38);
 
 	var fetchMessagesEndpointConfig = _interopRequireWildcard(_fetch_messages);
 
@@ -225,7 +229,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var timeEndpointConfig = _interopRequireWildcard(_time);
 
-	var _subscribe = __webpack_require__(38);
+	var _subscribe = __webpack_require__(39);
 
 	var subscribeEndpointConfig = _interopRequireWildcard(_subscribe);
 
@@ -322,6 +326,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
 	    this.deleteMessages = _endpoint2.default.bind(this, modules, deleteMessagesEndpointConfig);
+	    this.messageCounts = _endpoint2.default.bind(this, modules, messageCountsEndpointConfig);
 	    this.fetchMessages = _endpoint2.default.bind(this, modules, fetchMessagesEndpointConfig);
 
 	    this.time = timeEndpoint;
@@ -586,7 +591,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.21.7';
+	      return '4.22.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -2187,6 +2192,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  PNHistoryOperation: 'PNHistoryOperation',
 	  PNDeleteMessagesOperation: 'PNDeleteMessagesOperation',
 	  PNFetchMessagesOperation: 'PNFetchMessagesOperation',
+	  PNMessageCounts: 'PNMessageCountsOperation',
 
 	  PNSubscribeOperation: 'PNSubscribeOperation',
 	  PNUnsubscribeOperation: 'PNUnsubscribeOperation',
@@ -4252,6 +4258,86 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.prepareParams = prepareParams;
 	exports.handleResponse = handleResponse;
 
+	var _operations = __webpack_require__(13);
+
+	var _operations2 = _interopRequireDefault(_operations);
+
+	var _utils = __webpack_require__(15);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function getOperation() {
+	  return _operations2.default.PNMessageCounts;
+	}
+
+	function validateParams(modules, incomingParams) {
+	  var channels = incomingParams.channels,
+	      timetoken = incomingParams.timetoken,
+	      channelTimetokens = incomingParams.channelTimetokens;
+	  var config = modules.config;
+
+
+	  if (!channels) return 'Missing channel';
+	  if (timetoken && channelTimetokens) return 'timetoken and channelTimetokens are incompatible together';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function getURL(modules, incomingParams) {
+	  var channels = incomingParams.channels;
+	  var config = modules.config;
+
+
+	  var stringifiedChannels = channels.join(',');
+
+	  return '/v3/history/sub-key/' + config.subscribeKey + '/message-counts/' + _utils2.default.encodeString(stringifiedChannels);
+	}
+
+	function getRequestTimeout(_ref) {
+	  var config = _ref.config;
+
+	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var timetoken = incomingParams.timetoken,
+	      channelTimetokens = incomingParams.channelTimetokens;
+
+	  var outgoingParams = {};
+
+	  if (timetoken) outgoingParams.timetoken = timetoken;
+	  if (channelTimetokens) outgoingParams.channelTimetokens = _utils2.default.encodeString(channelTimetokens.join(','));
+
+	  return outgoingParams;
+	}
+
+	function handleResponse(modules, serverResponse) {
+
+	  return { channels: serverResponse.channels };
+	}
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
 	var _flow_interfaces = __webpack_require__(5);
 
 	var _operations = __webpack_require__(13);
@@ -4349,7 +4435,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4470,7 +4556,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4602,7 +4688,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -4641,7 +4727,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4655,7 +4741,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _flow_interfaces = __webpack_require__(5);
 
-	var _utils = __webpack_require__(42);
+	var _utils = __webpack_require__(43);
 
 	function log(url, qs, res) {
 	  var _pickLogger = function _pickLogger() {
@@ -4757,7 +4843,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports) {
 
 	'use strict';
