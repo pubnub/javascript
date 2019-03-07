@@ -1,11 +1,18 @@
 name: javascript
-version: 4.21.7
+version: 4.22.0
 schema: 1
 scm: github.com/pubnub/javascript
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
 changelog:
+  - version: v4.22.0
+    date: 2019-03-04
+    changes:
+      - type: feature
+        text: message counts
+      - type: improvement
+        text: use null instead of '' for NativeScript networking module
   - version: v4.21.7
     date: 2018-12-20
     changes:
@@ -420,6 +427,7 @@ features:
     - STORAGE-COUNT
     - STORAGE-DELETE-MESSAGES
     - STORAGE-FETCH-MESSAGES
+    - STORAGE-MESSAGE-COUNT
   time:
     - TIME-TIME
   subscribe:

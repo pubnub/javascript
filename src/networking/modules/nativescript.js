@@ -34,13 +34,9 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
   const httpConfig = {
     method,
     url: buildUrl(url, params),
-    timeout: endpoint.timeout
+    timeout: endpoint.timeout,
+    content: body
   };
-
-  if (method === 'GET') {
-    // $FlowFixMe
-    httpConfig.content = body;
-  }
 
   // $FlowFixMe
   return HttpRequest(httpConfig).then((response) => {
@@ -69,7 +65,7 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
 
 export function get(params: Object, endpoint: EndpointDefinition, callback: Function) {
   let url = this.getStandardOrigin() + endpoint.url;
-  return xdr.call(this, 'GET', url, params, '', endpoint, callback);
+  return xdr.call(this, 'GET', url, params, null, endpoint, callback);
 }
 
 export function post(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
@@ -79,5 +75,5 @@ export function post(params: Object, body: string, endpoint: EndpointDefinition,
 
 export function del(params: Object, endpoint: EndpointDefinition, callback: Function) {
   let url = this.getStandardOrigin() + endpoint.url;
-  return xdr.call(this, 'DELETE', url, params, '', endpoint, callback);
+  return xdr.call(this, 'DELETE', url, params, null, endpoint, callback);
 }

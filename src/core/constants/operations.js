@@ -5,6 +5,7 @@ export default {
   PNHistoryOperation: 'PNHistoryOperation',
   PNDeleteMessagesOperation: 'PNDeleteMessagesOperation',
   PNFetchMessagesOperation: 'PNFetchMessagesOperation',
+  PNMessageCounts: 'PNMessageCountsOperation',
 
   // pubsub
   PNSubscribeOperation: 'PNSubscribeOperation',
