@@ -4303,6 +4303,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (!channels) return 'Missing channel';
 	  if (timetoken && channelTimetokens) return 'timetoken and channelTimetokens are incompatible together';
+	  if (timetoken && channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) return 'Length of channelTimetokens and channels do not match';
 	  if (!config.subscribeKey) return 'Missing Subscribe Key';
 	}
 
@@ -4332,14 +4333,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var outgoingParams = {};
 
-	  if (timetoken) outgoingParams.timetoken = timetoken;
-	  if (channelTimetokens) outgoingParams.channelTimetokens = _utils2.default.encodeString(channelTimetokens.join(','));
+	  if (channelTimetokens && channelTimetokens.length === 1) {
+	    outgoingParams.timetoken = channelTimetokens[0];
+	  } else if (channelTimetokens) {
+	    outgoingParams.channelTimetokens = _utils2.default.encodeString(channelTimetokens.join(','));
+	  } else if (timetoken) {
+	    outgoingParams.timetoken = timetoken;
+	  }
 
 	  return outgoingParams;
 	}
 
 	function handleResponse(modules, serverResponse) {
-
 	  return { channels: serverResponse.channels };
 	}
 

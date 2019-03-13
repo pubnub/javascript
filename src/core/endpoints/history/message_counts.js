@@ -19,6 +19,7 @@ export function validateParams(modules: ModulesInject, incomingParams: MessageCo
 
   if (!channels) return 'Missing channel';
   if (timetoken && channelTimetokens) return 'timetoken and channelTimetokens are incompatible together';
+  if ((timetoken && channelTimetokens) && (channelTimetokens.length > 1) && (channels.length !== channelTimetokens.length)) return 'Length of channelTimetokens and channels do not match';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
@@ -43,14 +44,17 @@ export function prepareParams(modules: ModulesInject, incomingParams: MessageCou
   const { timetoken, channelTimetokens } = incomingParams;
   let outgoingParams: Object = {};
 
-  if (timetoken) outgoingParams.timetoken = timetoken;
-  if (channelTimetokens) outgoingParams.channelTimetokens = utils.encodeString(channelTimetokens.join(','));
+  if ((channelTimetokens) && (channelTimetokens.length === 1)) {
+    outgoingParams.timetoken = channelTimetokens[0];
+  } else if (channelTimetokens) {
+    outgoingParams.channelTimetokens = utils.encodeString(channelTimetokens.join(','));
+  } else if (timetoken) {
+    outgoingParams.timetoken = timetoken;
+  }
 
   return outgoingParams;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: MessageCounterArguments)
-  : MessageCountersResponse {
-
+export function handleResponse(modules: ModulesInject, serverResponse: MessageCounterArguments): MessageCountersResponse {
   return { channels: serverResponse.channels };
 }
