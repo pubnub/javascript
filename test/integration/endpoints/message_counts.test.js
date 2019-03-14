@@ -76,7 +76,7 @@ describe('message counts', () => {
 
   it('get history with messages for multiple channels using multiple channelTimetokens', (done) => {
     const scope = utils.createNock().get('/v3/history/sub-key/mySubKey/message-counts/ch1%2Cch2%2Cch3')
-      .query({ channelTimetokens: '15495750401727535%2C15495750401727536%2C15495750401727537', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
+      .query({ channelsTimetoken: '15495750401727535,15495750401727536,15495750401727537', pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID' })
       .reply(200, '{"status": 200, "error": false, "error_message": "", "channels": {"ch1":0,"ch2":0,"ch3":4}}');
 
     pubnub.messageCounts({ channels: ['ch1', 'ch2', 'ch3'], channelTimetokens: ['15495750401727535', '15495750401727536', '15495750401727537'] }, (status, response) => {

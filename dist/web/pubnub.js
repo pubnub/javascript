@@ -1,4 +1,4 @@
-/*! 4.22.0 / Consumer  */
+/*! 4.23.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -613,7 +613,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.22.0';
+	      return '4.23.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4336,7 +4336,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (channelTimetokens && channelTimetokens.length === 1) {
 	    outgoingParams.timetoken = channelTimetokens[0];
 	  } else if (channelTimetokens) {
-	    outgoingParams.channelTimetokens = _utils2.default.encodeString(channelTimetokens.join(','));
+	    outgoingParams.channelsTimetoken = channelTimetokens.join(',');
 	  } else if (timetoken) {
 	    outgoingParams.timetoken = timetoken;
 	  }
