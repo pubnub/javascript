@@ -45,7 +45,8 @@ export function prepareParams(modules: ModulesInject, incomingParams: MessageCou
   let outgoingParams: Object = {};
 
   if ((channelTimetokens) && (channelTimetokens.length === 1)) {
-    outgoingParams.timetoken = channelTimetokens[0];
+    let [tt] = channelTimetokens;
+    outgoingParams.timetoken = tt;
   } else if (channelTimetokens) {
     outgoingParams.channelsTimetoken = channelTimetokens.join(',');
   } else if (timetoken) {
