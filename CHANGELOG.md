@@ -1,3 +1,17 @@
+## [v4.22.0](https://github.com/pubnub/javascript/tree/v4.22.0)
+  March-04-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.21.7...v4.22.0)
+
+
+
+- ⭐message counts
+
+- ⭐use null instead of '' for NativeScript networking module
+
+
+
 ## [v4.21.7](https://github.com/pubnub/javascript/tree/v4.21.7)
   December-20-2018
 

@@ -1,4 +1,4 @@
-/*! 4.21.7 / Consumer  */
+/*! 4.22.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -241,7 +241,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _message_counts = __webpack_require__(37);
 
-	var messagesCountsEndpointConfig = _interopRequireWildcard(_message_counts);
+	var messageCountsEndpointConfig = _interopRequireWildcard(_message_counts);
 
 	var _fetch_messages = __webpack_require__(38);
 
@@ -348,7 +348,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
 	    this.deleteMessages = _endpoint2.default.bind(this, modules, deleteMessagesEndpointConfig);
-	    this.messagesCounts = _endpoint2.default.bind(this, modules, messagesCountsEndpointConfig);
+	    this.messageCounts = _endpoint2.default.bind(this, modules, messageCountsEndpointConfig);
 	    this.fetchMessages = _endpoint2.default.bind(this, modules, fetchMessagesEndpointConfig);
 
 	    this.time = timeEndpoint;
@@ -613,7 +613,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.21.7';
+	      return '4.22.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
