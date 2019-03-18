@@ -1,3 +1,15 @@
+## [v4.23.0](https://github.com/pubnub/javascript/tree/v4.23.0)
+  March-14-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.22.0...v4.23.0)
+
+
+
+- ⭐ `timetoken` is deprecated in message-counts API. Use `channelTimetokens` instead, pass one value in `channelTimetokens` to achieve the same results
+
+
+
 ## [v4.22.0](https://github.com/pubnub/javascript/tree/v4.22.0)
   March-04-2019
 
