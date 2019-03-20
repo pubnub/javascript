@@ -6,7 +6,7 @@
 
 
 
-- ⭐ `timetoken` is deprecated in message-counts API. Use `channelTimetokens` instead, pass one value in `channelTimetokens` to achieve the same results
+- ⭐ The `timetoken` parameter is deprecated in the `message-counts` function. Use `channelTimetokens` instead, pass one value in `channelTimetokens` to achieve the same results
 
 
 
