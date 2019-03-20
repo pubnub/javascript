@@ -3,7 +3,7 @@ changelog:
   - 
     changes: 
       - 
-        text: "'timetoken' is deprecated in message-counts API. Use 'channelTimetokens' instead, pass one value in 'channelTimetokens' to achieve the same results."
+        text: "The `timetoken` parameter is deprecated in the `message-counts` function. Use 'channelTimetokens' instead, pass one value in 'channelTimetokens' to achieve the same results."
         type: improvement
     date: 2019-03-14
     version: v4.23.0
