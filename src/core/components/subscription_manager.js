@@ -190,7 +190,7 @@ export default class {
       channels = [],
       channelGroups = [],
       withPresence = false,
-      withHeartbeats = true,
+      withHeartbeats = false,
     } = args;
 
     if (!this._config.subscribeKey || this._config.subscribeKey === '') {
