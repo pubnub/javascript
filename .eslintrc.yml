@@ -22,3 +22,4 @@ rules:
   no-await-in-loop: 0
   no-multi-assign: 0
   arrow-parens: [2, "as-needed"]
+  operator-linebreak: ["error", "after"]
