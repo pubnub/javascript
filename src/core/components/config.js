@@ -123,12 +123,14 @@ export default class {
     support for client deduping
   */
   dedupeOnSubscribe: boolean;
+
   maximumCacheSize: number;
 
   /*
     support customp encryption and decryption functions.
   */
   customEncrypt: Function; // function to support custome encryption of messages
+
   customDecrypt: Function; // function used to decrypt old version messages
 
   constructor({ setup, db }: ConfigConstructArgs) {
@@ -197,17 +199,21 @@ export default class {
   getAuthKey(): string {
     return this.authKey;
   }
+
   setAuthKey(val: string): this {
     this.authKey = val;
     return this;
   }
+
   setCipherKey(val: string): this {
     this.cipherKey = val;
     return this;
   }
+
   getUUID(): string {
     return this.UUID;
   }
+
   setUUID(val: string): this {
     if (this._db && this._db.set) this._db.set(`${this.subscribeKey}uuid`, val);
     this.UUID = val;
@@ -217,6 +223,7 @@ export default class {
   getFilterExpression(): string {
     return this.filterExpression;
   }
+
   setFilterExpression(val: string): this {
     this.filterExpression = val;
     return this;
@@ -225,6 +232,7 @@ export default class {
   getPresenceTimeout(): number {
     return this._presenceTimeout;
   }
+
   setPresenceTimeout(val: number): this {
     this._presenceTimeout = val;
     this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
@@ -238,6 +246,7 @@ export default class {
   getHeartbeatInterval(): number {
     return this._heartbeatInterval;
   }
+
   setHeartbeatInterval(val: number): this {
     this._heartbeatInterval = val;
     return this;
@@ -247,6 +256,7 @@ export default class {
   getSubscribeTimeout(): number {
     return this._subscribeRequestTimeout;
   }
+
   setSubscribeTimeout(val: number): this {
     this._subscribeRequestTimeout = val;
     return this;
@@ -255,6 +265,7 @@ export default class {
   getTransactionTimeout(): number {
     return this._transactionalRequestTimeout;
   }
+
   setTransactionTimeout(val: number): this {
     this._transactionalRequestTimeout = val;
     return this;
@@ -263,6 +274,7 @@ export default class {
   isSendBeaconEnabled(): boolean {
     return this._useSendBeacon;
   }
+
   setSendBeaconConfig(val: boolean): this {
     this._useSendBeacon = val;
     return this;
