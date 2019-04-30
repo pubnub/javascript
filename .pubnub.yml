@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Disables the presence heartbeat by default when a subscribe is called. Presence heartbeat can still be enabled explicitly."
+        type: improvement
+    date: 2019-04-30
+    version: v4.24.0
+  - 
+    changes: 
+      - 
         text: "The `timetoken` parameter is deprecated in the `message-counts` function. Use 'channelTimetokens' instead, pass one value in 'channelTimetokens' to achieve the same results."
         type: improvement
     date: 2019-03-14

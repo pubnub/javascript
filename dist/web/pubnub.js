@@ -1,4 +1,4 @@
-/*! 4.23.0 / Consumer  */
+/*! 4.24.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -524,12 +524,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setAuthKey',
 	    value: function setAuthKey(val) {
-	      this.authKey = val;return this;
+	      this.authKey = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'setCipherKey',
 	    value: function setCipherKey(val) {
-	      this.cipherKey = val;return this;
+	      this.cipherKey = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'getUUID',
@@ -551,7 +553,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setFilterExpression',
 	    value: function setFilterExpression(val) {
-	      this.filterExpression = val;return this;
+	      this.filterExpression = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'getPresenceTimeout',
@@ -578,7 +581,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setHeartbeatInterval',
 	    value: function setHeartbeatInterval(val) {
-	      this._heartbeatInterval = val;return this;
+	      this._heartbeatInterval = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'getSubscribeTimeout',
@@ -588,7 +592,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setSubscribeTimeout',
 	    value: function setSubscribeTimeout(val) {
-	      this._subscribeRequestTimeout = val;return this;
+	      this._subscribeRequestTimeout = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'getTransactionTimeout',
@@ -598,7 +603,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setTransactionTimeout',
 	    value: function setTransactionTimeout(val) {
-	      this._transactionalRequestTimeout = val;return this;
+	      this._transactionalRequestTimeout = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'isSendBeaconEnabled',
@@ -608,12 +614,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setSendBeaconConfig',
 	    value: function setSendBeaconConfig(val) {
-	      this._useSendBeacon = val;return this;
+	      this._useSendBeacon = val;
+	      return this;
 	    }
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.23.0';
+	      return '4.24.0';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1463,7 +1470,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      channelGroups.forEach(function (channelGroup) {
-	        if (channelGroup in _this._channelGroups) _this._channelGroups[channelGroup].state = state;
+	        if (channelGroup in _this._channelGroups) {
+	          _this._channelGroups[channelGroup].state = state;
+	        }
 	      });
 
 	      return this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
@@ -1523,11 +1532,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _args$withPresence = args.withPresence,
 	          withPresence = _args$withPresence === undefined ? false : _args$withPresence,
 	          _args$withHeartbeats = args.withHeartbeats,
-	          withHeartbeats = _args$withHeartbeats === undefined ? true : _args$withHeartbeats;
+	          withHeartbeats = _args$withHeartbeats === undefined ? false : _args$withHeartbeats;
 
 
 	      if (!this._config.subscribeKey || this._config.subscribeKey === '') {
-	        if (console && console.log) console.log('subscribe key missing; aborting subscribe');
+	        if (console && console.log) {
+	          console.log('subscribe key missing; aborting subscribe');
+	        }
 	        return;
 	      }
 
@@ -1631,7 +1642,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'unsubscribeAll',
 	    value: function unsubscribeAll(isOffline) {
-	      this.adaptUnsubscribeChange({ channels: this.getSubscribedChannels(), channelGroups: this.getSubscribedChannelGroups() }, isOffline);
+	      this.adaptUnsubscribeChange({
+	        channels: this.getSubscribedChannels(),
+	        channelGroups: this.getSubscribedChannelGroups()
+	      }, isOffline);
 	    }
 	  }, {
 	    key: 'getHeartbeatChannels',
@@ -1703,12 +1717,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.getSubscribedChannels().forEach(function (channel) {
 	        var channelState = _this5._channels[channel].state;
-	        if (Object.keys(channelState).length) presenceState[channel] = channelState;
+	        if (Object.keys(channelState).length) {
+	          presenceState[channel] = channelState;
+	        }
 	      });
 
 	      this.getSubscribedChannelGroups().forEach(function (channelGroup) {
 	        var channelGroupState = _this5._channelGroups[channelGroup].state;
-	        if (Object.keys(channelGroupState).length) presenceState[channelGroup] = channelGroupState;
+	        if (Object.keys(channelGroupState).length) {
+	          presenceState[channelGroup] = channelGroupState;
+	        }
 	      });
 
 	      var onHeartbeat = function onHeartbeat(status) {
@@ -1731,7 +1749,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._heartbeatEndpoint({
 	        channels: heartbeatChannels,
 	        channelGroups: heartbeatChannelGroups,
-	        state: presenceState }, onHeartbeat.bind(this));
+	        state: presenceState
+	      }, onHeartbeat.bind(this));
 	    }
 	  }, {
 	    key: '_startSubscribeLoop',
@@ -1744,14 +1763,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return channels.push(channel);
 	      });
 	      Object.keys(this._presenceChannels).forEach(function (channel) {
-	        return channels.push(channel + '-pnpres');
+	        channels.push(channel + '-pnpres');
 	      });
 
 	      Object.keys(this._channelGroups).forEach(function (channelGroup) {
-	        return channelGroups.push(channelGroup);
+	        channelGroups.push(channelGroup);
 	      });
 	      Object.keys(this._presenceChannelGroups).forEach(function (channelGroup) {
-	        return channelGroups.push(channelGroup + '-pnpres');
+	        channelGroups.push(channelGroup + '-pnpres');
 	      });
 
 	      if (channels.length === 0 && channelGroups.length === 0) {
