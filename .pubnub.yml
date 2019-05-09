@@ -5,7 +5,7 @@ changelog:
       - 
         text: "Disables the presence heartbeat by default when a subscribe is called. Presence heartbeat can still be enabled explicitly."
         type: improvement
-    date: 2019-04-30
+    date: 2019-05-09
     version: v4.24.0
   - 
     changes: 

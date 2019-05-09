@@ -1,5 +1,5 @@
 ## [v4.24.0](https://github.com/pubnub/javascript/tree/v4.24.0)
-  April-30-2019
+  May-09-2019
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.23.0...v4.24.0)
