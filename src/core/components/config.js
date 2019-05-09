@@ -2,15 +2,19 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
+import {
+  InternalSetupStruct,
+  DatabaseInterface,
+  KeepAliveStruct,
+  ProxyStruct,
+} from '../flow_interfaces';
 
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
-  db: DatabaseInterface
-}
+  db: DatabaseInterface,
+};
 
 export default class {
-
   _db: DatabaseInterface;
 
   subscribeKey: string;
@@ -115,20 +119,21 @@ export default class {
    */
   restore: boolean;
 
-
   /*
     support for client deduping
   */
-  dedupeOnSubscribe: boolean
-  maximumCacheSize: number
+  dedupeOnSubscribe: boolean;
+
+  maximumCacheSize: number;
 
   /*
     support customp encryption and decryption functions.
   */
-  customEncrypt: Function // function to support custome encryption of messages
-  customDecrypt: Function // function used to decrypt old version messages
+  customEncrypt: Function; // function to support custome encryption of messages
 
-  constructor({ setup, db } : ConfigConstructArgs) {
+  customDecrypt: Function; // function used to decrypt old version messages
+
+  constructor({ setup, db }: ConfigConstructArgs) {
     this._db = db;
 
     this.instanceId = `pn-${uuidGenerator.createUUID()}`;
@@ -166,7 +171,8 @@ export default class {
     this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
     this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
-    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
+    this.announceSuccessfulHeartbeats =
+      setup.announceSuccessfulHeartbeats || false;
 
     this.useInstanceId = setup.useInstanceId || false;
     this.useRequestId = setup.useRequestId || false;
@@ -190,23 +196,46 @@ export default class {
   }
 
   // exposed setters
-  getAuthKey(): string { return this.authKey; }
-  setAuthKey(val: string): this { this.authKey = val; return this; }
-  setCipherKey(val: string): this { this.cipherKey = val; return this; }
-  getUUID(): string { return this.UUID; }
+  getAuthKey(): string {
+    return this.authKey;
+  }
+
+  setAuthKey(val: string): this {
+    this.authKey = val;
+    return this;
+  }
+
+  setCipherKey(val: string): this {
+    this.cipherKey = val;
+    return this;
+  }
+
+  getUUID(): string {
+    return this.UUID;
+  }
+
   setUUID(val: string): this {
     if (this._db && this._db.set) this._db.set(`${this.subscribeKey}uuid`, val);
     this.UUID = val;
     return this;
   }
 
-  getFilterExpression(): string { return this.filterExpression; }
-  setFilterExpression(val: string): this { this.filterExpression = val; return this; }
+  getFilterExpression(): string {
+    return this.filterExpression;
+  }
 
-  getPresenceTimeout(): number { return this._presenceTimeout; }
+  setFilterExpression(val: string): this {
+    this.filterExpression = val;
+    return this;
+  }
+
+  getPresenceTimeout(): number {
+    return this._presenceTimeout;
+  }
+
   setPresenceTimeout(val: number): this {
     this._presenceTimeout = val;
-    this.setHeartbeatInterval((this._presenceTimeout / 2) - 1);
+    this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
     return this;
   }
 
@@ -214,21 +243,45 @@ export default class {
     this.proxy = proxy;
   }
 
-  getHeartbeatInterval(): number { return this._heartbeatInterval; }
-  setHeartbeatInterval(val: number): this { this._heartbeatInterval = val; return this; }
+  getHeartbeatInterval(): number {
+    return this._heartbeatInterval;
+  }
+
+  setHeartbeatInterval(val: number): this {
+    this._heartbeatInterval = val;
+    return this;
+  }
 
   // deprecated setters.
-  getSubscribeTimeout(): number { return this._subscribeRequestTimeout; }
-  setSubscribeTimeout(val: number): this { this._subscribeRequestTimeout = val; return this; }
+  getSubscribeTimeout(): number {
+    return this._subscribeRequestTimeout;
+  }
 
-  getTransactionTimeout(): number { return this._transactionalRequestTimeout; }
-  setTransactionTimeout(val: number): this { this._transactionalRequestTimeout = val; return this; }
+  setSubscribeTimeout(val: number): this {
+    this._subscribeRequestTimeout = val;
+    return this;
+  }
 
-  isSendBeaconEnabled(): boolean { return this._useSendBeacon; }
-  setSendBeaconConfig(val: boolean): this { this._useSendBeacon = val; return this; }
+  getTransactionTimeout(): number {
+    return this._transactionalRequestTimeout;
+  }
+
+  setTransactionTimeout(val: number): this {
+    this._transactionalRequestTimeout = val;
+    return this;
+  }
+
+  isSendBeaconEnabled(): boolean {
+    return this._useSendBeacon;
+  }
+
+  setSendBeaconConfig(val: boolean): this {
+    this._useSendBeacon = val;
+    return this;
+  }
 
   getVersion(): string {
-    return '4.23.0';
+    return '4.24.0';
   }
 
   _decideUUID(providedUUID: string): string {

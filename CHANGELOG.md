@@ -1,3 +1,15 @@
+## [v4.24.0](https://github.com/pubnub/javascript/tree/v4.24.0)
+  May-09-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.23.0...v4.24.0)
+
+
+
+- ⭐ Disables the presence heartbeat by default when a subscribe is called. Presence heartbeat can still be enabled explicitly.
+
+
+
 ## [v4.23.0](https://github.com/pubnub/javascript/tree/v4.23.0)
   March-14-2019
 
