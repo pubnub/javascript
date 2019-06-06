@@ -419,15 +419,30 @@ export default class {
 
   _startSubscribeLoop() {
     this._stopSubscribeLoop();
+    let presenceState = {};
     let channels = [];
     let channelGroups = [];
 
-    Object.keys(this._channels).forEach(channel => channels.push(channel));
+    Object.keys(this._channels).forEach(channel => {
+      let channelState = this._channels[channel].state;
+
+      if (Object.keys(channelState).length) {
+        presenceState[channel] = channelState;
+      }
+
+      channels.push(channel);
+    });
     Object.keys(this._presenceChannels).forEach(channel => {
       channels.push(`${channel}-pnpres`);
     });
 
     Object.keys(this._channelGroups).forEach(channelGroup => {
+      let channelGroupState = this._channelGroups[channelGroup].state;
+
+      if (Object.keys(channelGroupState).length) {
+        presenceState[channelGroup] = channelGroupState;
+      }
+      
       channelGroups.push(channelGroup);
     });
     Object.keys(this._presenceChannelGroups).forEach(channelGroup => {
@@ -441,6 +456,7 @@ export default class {
     const subscribeArgs = {
       channels,
       channelGroups,
+      state: presenceState,
       timetoken: this._currentTimetoken,
       filterExpression: this._config.filterExpression,
       region: this._region,

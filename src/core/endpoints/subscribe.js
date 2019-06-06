@@ -30,7 +30,7 @@ export function isAuthSupported() {
 }
 
 export function prepareParams({ config }: ModulesInject, incomingParams: SubscribeArguments): Object {
-  let { channelGroups = [], timetoken, filterExpression, region } = incomingParams;
+  let { state, channelGroups = [], timetoken, filterExpression, region } = incomingParams;
   const params: Object = {
     heartbeat: config.getPresenceTimeout()
   };
@@ -41,6 +41,10 @@ export function prepareParams({ config }: ModulesInject, incomingParams: Subscri
 
   if (filterExpression && filterExpression.length > 0) {
     params['filter-expr'] = filterExpression;
+  }
+
+  if (Object.keys(state).length) {
+    params.state = JSON.stringify(state);
   }
 
   if (timetoken) {
