@@ -442,7 +442,7 @@ export default class {
       if (Object.keys(channelGroupState).length) {
         presenceState[channelGroup] = channelGroupState;
       }
-
+      
       channelGroups.push(channelGroup);
     });
     Object.keys(this._presenceChannelGroups).forEach(channelGroup => {
