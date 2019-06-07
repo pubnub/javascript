@@ -281,7 +281,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.24.0';
+    return '4.24.1';
   }
 
   _decideUUID(providedUUID: string): string {

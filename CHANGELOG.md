@@ -1,3 +1,15 @@
+## [v4.24.1](https://github.com/pubnub/javascript/tree/v4.24.1)
+  June-06-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.0...v4.24.1)
+
+
+
+- ⭐ Maintains the state when presence heartbeat is explicitly disabled
+
+
+
 ## [v4.24.0](https://github.com/pubnub/javascript/tree/v4.24.0)
   May-09-2019
 
