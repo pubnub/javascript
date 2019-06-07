@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Maintains the state when the presence heartbeat is explicitly disabled"
+        type: improvement
+    date: 2019-06-06
+    version: v4.24.1
+  - 
+    changes: 
+      - 
         text: "Disables the presence heartbeat by default when a subscribe is called. Presence heartbeat can still be enabled explicitly."
         type: improvement
     date: 2019-05-09
@@ -639,4 +646,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.23.0"
+version: "4.24.1"

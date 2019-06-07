@@ -1,4 +1,4 @@
-/*! 4.24.0 / Consumer  */
+/*! 4.24.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -598,7 +598,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.24.0';
+	      return '4.24.1';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -1733,18 +1733,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_startSubscribeLoop',
 	    value: function _startSubscribeLoop() {
+	      var _this6 = this;
+
 	      this._stopSubscribeLoop();
+	      var presenceState = {};
 	      var channels = [];
 	      var channelGroups = [];
 
 	      Object.keys(this._channels).forEach(function (channel) {
-	        return channels.push(channel);
+	        var channelState = _this6._channels[channel].state;
+
+	        if (Object.keys(channelState).length) {
+	          presenceState[channel] = channelState;
+	        }
+
+	        channels.push(channel);
 	      });
 	      Object.keys(this._presenceChannels).forEach(function (channel) {
 	        channels.push(channel + '-pnpres');
 	      });
 
 	      Object.keys(this._channelGroups).forEach(function (channelGroup) {
+	        var channelGroupState = _this6._channelGroups[channelGroup].state;
+
+	        if (Object.keys(channelGroupState).length) {
+	          presenceState[channelGroup] = channelGroupState;
+	        }
+
 	        channelGroups.push(channelGroup);
 	      });
 	      Object.keys(this._presenceChannelGroups).forEach(function (channelGroup) {
@@ -1758,6 +1773,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var subscribeArgs = {
 	        channels: channels,
 	        channelGroups: channelGroups,
+	        state: presenceState,
 	        timetoken: this._currentTimetoken,
 	        filterExpression: this._config.filterExpression,
 	        region: this._region
@@ -1768,7 +1784,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_processSubscribeResponse',
 	    value: function _processSubscribeResponse(status, payload) {
-	      var _this6 = this;
+	      var _this7 = this;
 
 	      if (status.error) {
 	        if (status.category === _categories2.default.PNTimeoutCategory) {
@@ -1782,19 +1798,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this._reconnectionManager.onReconnection(function () {
-	            if (_this6._config.autoNetworkDetection && !_this6._isOnline) {
-	              _this6._isOnline = true;
-	              _this6._listenerManager.announceNetworkUp();
+	            if (_this7._config.autoNetworkDetection && !_this7._isOnline) {
+	              _this7._isOnline = true;
+	              _this7._listenerManager.announceNetworkUp();
 	            }
-	            _this6.reconnect();
-	            _this6._subscriptionStatusAnnounced = true;
+	            _this7.reconnect();
+	            _this7._subscriptionStatusAnnounced = true;
 	            var reconnectedAnnounce = {
 	              category: _categories2.default.PNReconnectedCategory,
 	              operation: status.operation,
-	              lastTimetoken: _this6._lastTimetoken,
-	              currentTimetoken: _this6._currentTimetoken
+	              lastTimetoken: _this7._lastTimetoken,
+	              currentTimetoken: _this7._currentTimetoken
 	            };
-	            _this6._listenerManager.announceStatus(reconnectedAnnounce);
+	            _this7._listenerManager.announceStatus(reconnectedAnnounce);
 	          });
 
 	          this._reconnectionManager.startPolling();
@@ -1856,10 +1872,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        if (dedupeOnSubscribe) {
-	          if (_this6._dedupingManager.isDuplicate(message)) {
+	          if (_this7._dedupingManager.isDuplicate(message)) {
 	            return;
 	          } else {
-	            _this6._dedupingManager.addEntry(message);
+	            _this7._dedupingManager.addEntry(message);
 	          }
 	        }
 
@@ -1899,7 +1915,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            announce.timeout = message.payload.timeout;
 	          }
 
-	          _this6._listenerManager.announcePresence(announce);
+	          _this7._listenerManager.announcePresence(announce);
 	        } else {
 	          var _announce = {};
 	          _announce.channel = null;
@@ -1918,13 +1934,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            _announce.userMetadata = message.userMetadata;
 	          }
 
-	          if (_this6._config.cipherKey) {
-	            _announce.message = _this6._crypto.decrypt(message.payload);
+	          if (_this7._config.cipherKey) {
+	            _announce.message = _this7._crypto.decrypt(message.payload);
 	          } else {
 	            _announce.message = message.payload;
 	          }
 
-	          _this6._listenerManager.announceMessage(_announce);
+	          _this7._listenerManager.announceMessage(_announce);
 	        }
 	      });
 
@@ -4525,7 +4541,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function prepareParams(_ref2, incomingParams) {
 	  var config = _ref2.config;
-	  var _incomingParams$chann2 = incomingParams.channelGroups,
+	  var state = incomingParams.state,
+	      _incomingParams$chann2 = incomingParams.channelGroups,
 	      channelGroups = _incomingParams$chann2 === undefined ? [] : _incomingParams$chann2,
 	      timetoken = incomingParams.timetoken,
 	      filterExpression = incomingParams.filterExpression,
@@ -4541,6 +4558,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (filterExpression && filterExpression.length > 0) {
 	    params['filter-expr'] = filterExpression;
+	  }
+
+	  if (Object.keys(state).length) {
+	    params.state = JSON.stringify(state);
 	  }
 
 	  if (timetoken) {
