@@ -4735,19 +4735,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_detectErrorCategory',
 	    value: function _detectErrorCategory(err) {
-	      if (err.code === 'ENOTFOUND') return _categories2.default.PNNetworkIssuesCategory;
-	      if (err.code === 'ECONNREFUSED') return _categories2.default.PNNetworkIssuesCategory;
-	      if (err.code === 'ECONNRESET') return _categories2.default.PNNetworkIssuesCategory;
-	      if (err.code === 'EAI_AGAIN') return _categories2.default.PNNetworkIssuesCategory;
+	      if (err.code === 'ENOTFOUND') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
+	      if (err.code === 'ECONNREFUSED') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
+	      if (err.code === 'ECONNRESET') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
+	      if (err.code === 'EAI_AGAIN') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
 
-	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
+	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
 
-	      if (err.code === 'ETIMEDOUT') return _categories2.default.PNNetworkIssuesCategory;
+	      if (err.code === 'ETIMEDOUT') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
 
 	      if (err.response) {
-	        if (err.response.badRequest) return _categories2.default.PNBadRequestCategory;
-	        if (err.response.forbidden) return _categories2.default.PNAccessDeniedCategory;
+	        if (err.response.badRequest) {
+	          return _categories2.default.PNBadRequestCategory;
+	        }
+	        if (err.response.forbidden) {
+	          return _categories2.default.PNAccessDeniedCategory;
+	        }
 	      }
 
 	      return _categories2.default.PNUnknownCategory;

@@ -656,4 +656,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.24.1"
+version: "4.24.2"
