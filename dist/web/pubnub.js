@@ -4849,6 +4849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return superagentConstruct.timeout(endpoint.timeout).end(function (err, resp) {
+	    var parsedResponse;
 	    var status = {};
 	    status.error = err !== null;
 	    status.operation = endpoint.operation;
@@ -4871,7 +4872,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return callback(status, null);
 	    }
 
-	    var parsedResponse;
 	    try {
 	      parsedResponse = JSON.parse(resp.text);
 	    } catch (e) {
