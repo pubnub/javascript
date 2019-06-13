@@ -43,7 +43,7 @@ export default class {
 
   nextOrigin(): string {
     // if a custom origin is supplied, use do not bother with shuffling subdomains
-    if (this._providedFQDN.indexOf('pubsub.') === -1) {
+    if (this._providedFQDN.indexOf('ps.') === -1) {
       return this._providedFQDN;
     }
 
@@ -57,7 +57,7 @@ export default class {
 
     newSubDomain = this._currentSubDomain.toString();
 
-    return this._providedFQDN.replace('pubsub', `ps${newSubDomain}`);
+    return this._providedFQDN.replace('ps', `ps${newSubDomain}`);
   }
 
   hasModule(name: string) {

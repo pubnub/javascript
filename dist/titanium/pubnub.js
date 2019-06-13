@@ -450,7 +450,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.setFilterExpression(setup.filterExpression);
 
-	    this.origin = setup.origin || 'pubsub.pndsn.com';
+	    this.origin = setup.origin || 'ps.pndsn.com';
 	    this.secure = setup.ssl || false;
 	    this.restore = setup.restore || false;
 	    this.proxy = setup.proxy;
@@ -4660,7 +4660,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'nextOrigin',
 	    value: function nextOrigin() {
-	      if (this._providedFQDN.indexOf('pubsub.') === -1) {
+	      if (this._providedFQDN.indexOf('ps.') === -1) {
 	        return this._providedFQDN;
 	      }
 
@@ -4674,7 +4674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      newSubDomain = this._currentSubDomain.toString();
 
-	      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
+	      return this._providedFQDN.replace('ps', 'ps' + newSubDomain);
 	    }
 	  }, {
 	    key: 'hasModule',

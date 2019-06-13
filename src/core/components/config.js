@@ -148,7 +148,7 @@ export default class {
 
     this.setFilterExpression(setup.filterExpression);
 
-    this.origin = setup.origin || 'pubsub.pndsn.com';
+    this.origin = setup.origin || 'ps.pndsn.com';
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;

@@ -5,6 +5,9 @@ changelog:
       - 
         text: "Added try catch block to handle exception for JSON.parse function"
         type: improvement
+      - 
+        text: "Updated default origin to ps.pndsn.com"
+        type: improvement
     date: 2019-06-13
     version: v4.24.2
   - 
