@@ -4849,7 +4849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return superagentConstruct.timeout(endpoint.timeout).end(function (err, resp) {
-	    var parsedResponse;
+	    var parsedResponse = void 0;
 	    var status = {};
 	    status.error = err !== null;
 	    status.operation = endpoint.operation;
