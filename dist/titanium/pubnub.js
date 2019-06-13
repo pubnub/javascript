@@ -1,4 +1,4 @@
-/*! 4.24.1 / Consumer  */
+/*! 4.24.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -450,7 +450,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.setFilterExpression(setup.filterExpression);
 
-	    this.origin = setup.origin || 'pubsub.pndsn.com';
+	    this.origin = setup.origin || 'ps.pndsn.com';
 	    this.secure = setup.ssl || false;
 	    this.restore = setup.restore || false;
 	    this.proxy = setup.proxy;
@@ -598,7 +598,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.24.1';
+	      return '4.24.2';
 	    }
 	  }, {
 	    key: '_decideUUID',
@@ -4660,7 +4660,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'nextOrigin',
 	    value: function nextOrigin() {
-	      if (this._providedFQDN.indexOf('pubsub.') === -1) {
+	      if (this._providedFQDN.indexOf('ps.') === -1) {
 	        return this._providedFQDN;
 	      }
 
@@ -4674,7 +4674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      newSubDomain = this._currentSubDomain.toString();
 
-	      return this._providedFQDN.replace('pubsub', 'ps' + newSubDomain);
+	      return this._providedFQDN.replace('ps.', 'ps' + newSubDomain + '.');
 	    }
 	  }, {
 	    key: 'hasModule',
@@ -4713,19 +4713,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_detectErrorCategory',
 	    value: function _detectErrorCategory(err) {
-	      if (err.code === 'ENOTFOUND') return _categories2.default.PNNetworkIssuesCategory;
-	      if (err.code === 'ECONNREFUSED') return _categories2.default.PNNetworkIssuesCategory;
-	      if (err.code === 'ECONNRESET') return _categories2.default.PNNetworkIssuesCategory;
-	      if (err.code === 'EAI_AGAIN') return _categories2.default.PNNetworkIssuesCategory;
+	      if (err.code === 'ENOTFOUND') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
+	      if (err.code === 'ECONNREFUSED') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
+	      if (err.code === 'ECONNRESET') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
+	      if (err.code === 'EAI_AGAIN') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
 
-	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') return _categories2.default.PNNetworkIssuesCategory;
+	      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
 	      if (err.timeout) return _categories2.default.PNTimeoutCategory;
 
-	      if (err.code === 'ETIMEDOUT') return _categories2.default.PNNetworkIssuesCategory;
+	      if (err.code === 'ETIMEDOUT') {
+	        return _categories2.default.PNNetworkIssuesCategory;
+	      }
 
 	      if (err.response) {
-	        if (err.response.badRequest) return _categories2.default.PNBadRequestCategory;
-	        if (err.response.forbidden) return _categories2.default.PNAccessDeniedCategory;
+	        if (err.response.badRequest) {
+	          return _categories2.default.PNBadRequestCategory;
+	        }
+	        if (err.response.forbidden) {
+	          return _categories2.default.PNAccessDeniedCategory;
+	        }
 	      }
 
 	      return _categories2.default.PNUnknownCategory;

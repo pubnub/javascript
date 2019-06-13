@@ -148,7 +148,7 @@ export default class {
 
     this.setFilterExpression(setup.filterExpression);
 
-    this.origin = setup.origin || 'pubsub.pndsn.com';
+    this.origin = setup.origin || 'ps.pndsn.com';
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
@@ -281,7 +281,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.24.1';
+    return '4.24.2';
   }
 
   _decideUUID(providedUUID: string): string {
