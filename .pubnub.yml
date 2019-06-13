@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Added try catch block to handle exception for JSON.parse function"
+        type: improvement
+    date: 2019-06-13
+    version: v4.24.2
+  - 
+    changes: 
+      - 
         text: "Maintains the state when the presence heartbeat is explicitly disabled"
         type: improvement
     date: 2019-06-06

@@ -1,3 +1,15 @@
+﻿## [v4.24.2](https://github.com/pubnub/javascript/tree/v4.24.2)
+  June-13-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.0...v4.24.2)
+
+
+
+- ⭐ Added try catch block to handle exception for JSON.parse function
+
+
+
 ## [v4.24.1](https://github.com/pubnub/javascript/tree/v4.24.1)
   June-06-2019
 
