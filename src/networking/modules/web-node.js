@@ -45,7 +45,7 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
   return superagentConstruct
       .timeout(endpoint.timeout)
       .end((err, resp) => {
-        var parsedResponse;
+      let parsedResponse;
         let status: StatusAnnouncement = {};
         status.error = err !== null;
         status.operation = endpoint.operation;
