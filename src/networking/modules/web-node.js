@@ -67,7 +67,16 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
           return callback(status, null);
         }
 
-        let parsedResponse = JSON.parse(resp.text);
+        var parsedResponse;
+        try {
+            parsedResponse = JSON.parse(resp.text);
+        }
+        catch (e) {
+            status.errorData = resp;
+            status.error = true;
+            status.category = this._detectErrorCategory(null);
+            return callback(status, null);
+        }
 
         if (parsedResponse.error && parsedResponse.error === 1 && parsedResponse.status && parsedResponse.message && parsedResponse.service) {
           status.errorData = parsedResponse;
