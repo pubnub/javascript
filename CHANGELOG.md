@@ -1,4 +1,4 @@
-﻿## [v4.24.2](https://github.com/pubnub/javascript/tree/v4.24.2)
+## [v4.24.2](https://github.com/pubnub/javascript/tree/v4.24.2)
   June-13-2019
 
 
