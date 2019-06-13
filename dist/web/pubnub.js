@@ -4877,7 +4877,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } catch (e) {
 	      status.errorData = resp;
 	      status.error = true;
-	      status.category = _this._detectErrorCategory(null);
 	      return callback(status, null);
 	    }
 

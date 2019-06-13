@@ -74,7 +74,6 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
         catch (e) {
             status.errorData = resp;
             status.error = true;
-            status.category = this._detectErrorCategory(null);
             return callback(status, null);
         }
 
