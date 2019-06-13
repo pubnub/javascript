@@ -45,6 +45,7 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
   return superagentConstruct
       .timeout(endpoint.timeout)
       .end((err, resp) => {
+        var parsedResponse;
         let status: StatusAnnouncement = {};
         status.error = err !== null;
         status.operation = endpoint.operation;
@@ -67,14 +68,12 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
           return callback(status, null);
         }
 
-        var parsedResponse;
         try {
-            parsedResponse = JSON.parse(resp.text);
-        }
-        catch (e) {
-            status.errorData = resp;
-            status.error = true;
-            return callback(status, null);
+        parsedResponse = JSON.parse(resp.text);
+        } catch (e) {
+        status.errorData = resp;
+        status.error = true;
+        return callback(status, null);
         }
 
         if (parsedResponse.error && parsedResponse.error === 1 && parsedResponse.status && parsedResponse.message && parsedResponse.service) {
