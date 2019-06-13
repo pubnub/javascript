@@ -4696,7 +4696,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      newSubDomain = this._currentSubDomain.toString();
 
-	      return this._providedFQDN.replace('ps', 'ps' + newSubDomain);
+	      return this._providedFQDN.replace('ps.', 'ps' + newSubDomain + '.');
 	    }
 	  }, {
 	    key: 'hasModule',
