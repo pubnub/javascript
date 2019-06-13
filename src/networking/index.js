@@ -57,7 +57,7 @@ export default class {
 
     newSubDomain = this._currentSubDomain.toString();
 
-    return this._providedFQDN.replace('ps', `ps${newSubDomain}`);
+    return this._providedFQDN.replace('ps.', `ps${newSubDomain}.`); /* ensure ps. is used to replace, else https text will change */
   }
 
   hasModule(name: string) {
