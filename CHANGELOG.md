@@ -1,3 +1,15 @@
+﻿## [v4.24.3](https://github.com/pubnub/javascript/tree/v4.24.3)
+  June-19-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.0...v4.24.3)
+
+
+
+- ⭐ Added support to enable heartbeat requests while subscribe when heartbeat interval is provided
+
+
+
 ## [v4.24.2](https://github.com/pubnub/javascript/tree/v4.24.2)
   June-13-2019
 

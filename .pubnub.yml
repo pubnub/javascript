@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Added support to enable heartbeat requests while subscribe when heartbeat interval is provided"
+        type: improvement
+    date: 2019-06-19
+    version: v4.24.3
+  - 
+    changes: 
+      - 
         text: "Added try catch block to handle exception for JSON.parse function"
         type: improvement
       - 
@@ -656,4 +663,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.24.2"
+version: "4.24.3"
