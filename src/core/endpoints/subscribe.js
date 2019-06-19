@@ -1,6 +1,13 @@
 /* @flow */
 
-import { SubscribeArguments, PublishMetaData, SubscribeMetadata, SubscribeMessage, SubscribeEnvelope, ModulesInject } from '../flow_interfaces';
+import {
+  SubscribeArguments,
+  PublishMetaData,
+  SubscribeMetadata,
+  SubscribeMessage,
+  SubscribeEnvelope,
+  ModulesInject,
+} from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
@@ -14,11 +21,16 @@ export function validateParams(modules: ModulesInject) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: SubscribeArguments): string {
+export function getURL(
+  modules: ModulesInject,
+  incomingParams: SubscribeArguments
+): string {
   let { config } = modules;
   let { channels = [] } = incomingParams;
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(stringifiedChannels)}/0`;
+  return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(
+    stringifiedChannels
+  )}/0`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {
@@ -29,10 +41,19 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams({ config }: ModulesInject, incomingParams: SubscribeArguments): Object {
-  let { channelGroups = [], timetoken, filterExpression, region } = incomingParams;
+export function prepareParams(
+  { config }: ModulesInject,
+  incomingParams: SubscribeArguments
+): Object {
+  let {
+    state,
+    channelGroups = [],
+    timetoken,
+    filterExpression,
+    region,
+  } = incomingParams;
   const params: Object = {
-    heartbeat: config.getPresenceTimeout()
+    heartbeat: config.getPresenceTimeout(),
   };
 
   if (channelGroups.length > 0) {
@@ -41,6 +62,10 @@ export function prepareParams({ config }: ModulesInject, incomingParams: Subscri
 
   if (filterExpression && filterExpression.length > 0) {
     params['filter-expr'] = filterExpression;
+  }
+
+  if (Object.keys(state).length) {
+    params.state = JSON.stringify(state);
   }
 
   if (timetoken) {
@@ -54,13 +79,16 @@ export function prepareParams({ config }: ModulesInject, incomingParams: Subscri
   return params;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object): SubscribeEnvelope {
+export function handleResponse(
+  modules: ModulesInject,
+  serverResponse: Object
+): SubscribeEnvelope {
   const messages: Array<SubscribeMessage> = [];
 
-  serverResponse.m.forEach((rawMessage) => {
+  serverResponse.m.forEach(rawMessage => {
     let publishMetaData: PublishMetaData = {
       publishTimetoken: rawMessage.p.t,
-      region: rawMessage.p.r
+      region: rawMessage.p.r,
     };
     let parsedMessage: SubscribeMessage = {
       shard: parseInt(rawMessage.a, 10),
@@ -72,14 +100,14 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object): 
       subscribeKey: rawMessage.k,
       originationTimetoken: rawMessage.o,
       userMetadata: rawMessage.u,
-      publishMetaData
+      publishMetaData,
     };
     messages.push(parsedMessage);
   });
 
   const metadata: SubscribeMetadata = {
     timetoken: serverResponse.t.t,
-    region: serverResponse.t.r
+    region: serverResponse.t.r,
   };
 
   return { messages, metadata };

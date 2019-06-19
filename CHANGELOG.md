@@ -1,3 +1,52 @@
+## [v4.24.2](https://github.com/pubnub/javascript/tree/v4.24.2)
+  June-13-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.0...v4.24.2)
+
+
+
+- ⭐ Added try catch block to handle exception for JSON.parse function
+- ⭐ Changed default origin to ps.pndsn.com
+
+
+
+## [v4.24.1](https://github.com/pubnub/javascript/tree/v4.24.1)
+  June-06-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.0...v4.24.1)
+
+
+
+- ⭐ Maintains the state when presence heartbeat is explicitly disabled
+
+
+
+## [v4.24.0](https://github.com/pubnub/javascript/tree/v4.24.0)
+  May-09-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.23.0...v4.24.0)
+
+
+
+- ⭐ Disables the presence heartbeat by default when a subscribe is called. Presence heartbeat can still be enabled explicitly.
+
+
+
+## [v4.23.0](https://github.com/pubnub/javascript/tree/v4.23.0)
+  March-14-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.22.0...v4.23.0)
+
+
+
+- ⭐ The `timetoken` parameter is deprecated in the `message-counts` function. Use `channelTimetokens` instead, pass one value in `channelTimetokens` to achieve the same results
+
+
+
 ## [v4.22.0](https://github.com/pubnub/javascript/tree/v4.22.0)
   March-04-2019
 

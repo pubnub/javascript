@@ -346,6 +346,7 @@ type SubscribeArguments = {
   timetoken: number,
   filterExpression: ?string,
   region: ?string,
+  state: Object
 }
 
 //

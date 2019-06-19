@@ -21,3 +21,6 @@ rules:
   class-methods-use-this: 0
   no-await-in-loop: 0
   no-multi-assign: 0
+  arrow-parens: [2, "as-needed"]
+  operator-linebreak: ["error", "after"]
+  no-mixed-operators: 0

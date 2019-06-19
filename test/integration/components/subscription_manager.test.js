@@ -23,9 +23,26 @@ describe('#components/subscription_manager', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', autoNetworkDetection: false });
-    pubnubWithPassingHeartbeats = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', announceSuccessfulHeartbeats: true, autoNetworkDetection: false });
-    pubnubWithLimitedQueue = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', requestMessageCountThreshold: 1, autoNetworkDetection: false });
+    pubnub = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+      autoNetworkDetection: false,
+    });
+    pubnubWithPassingHeartbeats = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+      announceSuccessfulHeartbeats: true,
+      autoNetworkDetection: false,
+    });
+    pubnubWithLimitedQueue = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+      requestMessageCountThreshold: 1,
+      autoNetworkDetection: false,
+    });
   });
 
   afterEach(() => {
@@ -34,18 +51,49 @@ describe('#components/subscription_manager', () => {
     pubnubWithLimitedQueue.stop();
   });
 
-  it('passes the correct message information', (done) => {
-    const scope1 = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}');
+  it('passes the correct message information', done => {
+    const scope1 = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}'
+      );
 
-    const scope2 = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, tt: 3, tr: 1 })
-      .reply(200, '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}');
+    const scope2 = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        tt: 3,
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}'
+      );
 
-    const scope3 = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, tt: 10, tr: 1 })
-      .reply(200, '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel", "u": {"cool": "meta"}}]}');
+    const scope3 = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        tt: 10,
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel", "u": {"cool": "meta"}}]}'
+      );
 
     let incomingPayloads = [];
 
@@ -61,13 +109,13 @@ describe('#components/subscription_manager', () => {
             {
               actualChannel: 'coolChannel',
               message: {
-                text: 'Message'
+                text: 'Message',
               },
               subscribedChannel: 'coolChan-bnel',
               channel: 'coolChannel',
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
-              publisher: 'client1'
+              publisher: 'client1',
             },
             {
               actualChannel: 'coolChannel',
@@ -78,7 +126,7 @@ describe('#components/subscription_manager', () => {
               channel: 'coolChannel',
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
-              publisher: 'client2'
+              publisher: 'client2',
             },
             {
               actualChannel: 'coolChannel',
@@ -86,222 +134,369 @@ describe('#components/subscription_manager', () => {
                 text: 'Message10',
               },
               userMetadata: {
-                cool: 'meta'
+                cool: 'meta',
               },
               subscribedChannel: 'coolChan-bnel',
               channel: 'coolChannel',
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
-              publisher: 'client3'
-            }
+              publisher: 'client3',
+            },
           ]);
           done();
         }
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('passes the correct presence information', (done) => {
-    const scope = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}');
+  it('passes the correct presence information', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}'
+      );
 
     pubnub.addListener({
       presence(presencePayload) {
         assert.equal(scope.isDone(), true);
-        assert.deepEqual({
-          channel: 'coolChannel',
-          subscription: null,
-          actualChannel: null,
-          occupancy: 1,
-          subscribedChannel: 'coolChannel-pnpres',
-          timestamp: 1461451222,
-          timetoken: '14614512228418349',
-          uuid: '4a6d5df7-e301-4e73-a7b7-6af9ab484eb0',
-          action: 'join',
-          state: undefined
-        }, presencePayload);
+        assert.deepEqual(
+          {
+            channel: 'coolChannel',
+            subscription: null,
+            actualChannel: null,
+            occupancy: 1,
+            subscribedChannel: 'coolChannel-pnpres',
+            timestamp: 1461451222,
+            timetoken: '14614512228418349',
+            uuid: '4a6d5df7-e301-4e73-a7b7-6af9ab484eb0',
+            action: 'join',
+            state: undefined,
+          },
+          presencePayload
+        );
         done();
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('passes the correct presence information when state is changed', (done) => {
-    const scope = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"14637536741734954","r":1},"m":[{"a":"4","f":512,"p":{"t":"14637536740940378","r":1},"k":"demo-36","c":"ch10-pnpres","d":{"action": "join", "timestamp": 1463753674, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch10-pnpres"},{"a":"4","f":512,"p":{"t":"14637536741726901","r":1},"k":"demo-36","c":"ch10-pnpres","d":{"action": "state-change", "timestamp": 1463753674, "data": {"state": "cool"}, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch10-pnpres"}]}');
+  it('passes the correct presence information when state is changed', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14637536741734954","r":1},"m":[{"a":"4","f":512,"p":{"t":"14637536740940378","r":1},"k":"demo-36","c":"ch10-pnpres","d":{"action": "join", "timestamp": 1463753674, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch10-pnpres"},{"a":"4","f":512,"p":{"t":"14637536741726901","r":1},"k":"demo-36","c":"ch10-pnpres","d":{"action": "state-change", "timestamp": 1463753674, "data": {"state": "cool"}, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch10-pnpres"}]}'
+      );
 
     pubnub.addListener({
       presence(presencePayload) {
         if (presencePayload.action !== 'state-change') return;
 
         assert.equal(scope.isDone(), true);
-        assert.deepEqual({
-          channel: 'ch10',
-          subscription: null,
-          actualChannel: null,
-          occupancy: 3,
-          subscribedChannel: 'ch10-pnpres',
-          timestamp: 1463753674,
-          timetoken: '14637536741726901',
-          uuid: '24c9bb19-1fcd-4c40-a6f1-522a8a1329ef',
-          action: 'state-change',
-          state: { state: 'cool' }
-        }, presencePayload);
+        assert.deepEqual(
+          {
+            channel: 'ch10',
+            subscription: null,
+            actualChannel: null,
+            occupancy: 3,
+            subscribedChannel: 'ch10-pnpres',
+            timestamp: 1463753674,
+            timetoken: '14637536741726901',
+            uuid: '24c9bb19-1fcd-4c40-a6f1-522a8a1329ef',
+            action: 'state-change',
+            state: { state: 'cool' },
+          },
+          presencePayload
+        );
         done();
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('reports when heartbeats failed', (done) => {
+  it('reports when heartbeats failed', done => {
     pubnub.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        if (
+          statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation
+        ) {
+          return;
+        }
         let statusWithoutError = _.omit(statusPayload, 'errorData');
-        assert.deepEqual({
-          category: 'PNUnknownCategory',
-          error: true,
-          operation: 'PNHeartbeatOperation',
-        }, statusWithoutError);
+        assert.deepEqual(
+          {
+            category: 'PNUnknownCategory',
+            error: true,
+            operation: 'PNHeartbeatOperation',
+          },
+          statusWithoutError
+        );
         done();
-      }
+      },
     });
 
-    pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
+    pubnub.subscribe({
+      channels: ['ch1', 'ch2'],
+      withPresence: true,
+      withHeartbeats: true,
+    });
   });
 
-  it('reports when heartbeats fail with error code', (done) => {
-    const scope = utils.createNock().get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, state: '{}' })
+  it('reports when heartbeats fail with error code', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+      })
       .reply(400, '{"status": 400, "message": "OK", "service": "Presence"}');
 
     pubnub.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        if (
+          statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation
+        ) {
+          return;
+        }
         let statusWithoutError = _.omit(statusPayload, 'errorData');
         assert.equal(scope.isDone(), true);
-        assert.deepEqual({
-          category: 'PNBadRequestCategory',
-          error: true,
-          operation: 'PNHeartbeatOperation',
-          statusCode: 400
-        }, statusWithoutError);
+        assert.deepEqual(
+          {
+            category: 'PNBadRequestCategory',
+            error: true,
+            operation: 'PNHeartbeatOperation',
+            statusCode: 400,
+          },
+          statusWithoutError
+        );
         done();
-      }
+      },
     });
 
-    pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
+    pubnub.subscribe({
+      channels: ['ch1', 'ch2'],
+      withPresence: true,
+      withHeartbeats: true,
+    });
   });
 
-
-  it('reports when heartbeats pass', (done) => {
-    const scope = utils.createNock().get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, state: '{}' })
+  it('reports when heartbeats pass', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+      })
       .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
 
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        if (
+          statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation
+        ) {
+          return;
+        }
 
         assert.equal(scope.isDone(), true);
-        assert.deepEqual({
-          error: false,
-          operation: 'PNHeartbeatOperation',
-          statusCode: 200
-        }, statusPayload);
+        assert.deepEqual(
+          {
+            error: false,
+            operation: 'PNHeartbeatOperation',
+            statusCode: 200,
+          },
+          statusPayload
+        );
         done();
-      }
+      },
     });
 
-    pubnubWithPassingHeartbeats.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
+    pubnubWithPassingHeartbeats.subscribe({
+      channels: ['ch1', 'ch2'],
+      withPresence: true,
+      withHeartbeats: true,
+    });
   });
 
-  it('reports when heartbeats pass with heartbeatChannels', (done) => {
-    const scope = utils.createNock().get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, state: '{}' })
+  it('reports when heartbeats pass with heartbeatChannels', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+      })
       .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
 
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        if (
+          statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation
+        ) {
+          return;
+        }
 
         assert.equal(scope.isDone(), true);
-        assert.deepEqual({
-          error: false,
-          operation: 'PNHeartbeatOperation',
-          statusCode: 200
-        }, statusPayload);
+        assert.deepEqual(
+          {
+            error: false,
+            operation: 'PNHeartbeatOperation',
+            statusCode: 200,
+          },
+          statusPayload
+        );
         done();
-      }
+      },
     });
 
-    pubnubWithPassingHeartbeats.presence({ channels: ['ch1', 'ch2'], connected: true });
+    pubnubWithPassingHeartbeats.presence({
+      channels: ['ch1', 'ch2'],
+      connected: true,
+    });
   });
 
-  it('reports when heartbeats pass with heartbeatChannelGroups', (done) => {
-    const scope = utils.createNock().get('/v2/presence/sub-key/mySubKey/channel/%2C/heartbeat')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, state: '{}', 'channel-group': 'cg1' })
+  it('reports when heartbeats pass with heartbeatChannelGroups', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/%2C/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+        'channel-group': 'cg1',
+      })
       .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
 
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
-        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        if (
+          statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation
+        ) {
+          return;
+        }
 
         assert.equal(scope.isDone(), true);
-        assert.deepEqual({
-          error: false,
-          operation: 'PNHeartbeatOperation',
-          statusCode: 200
-        }, statusPayload);
+        assert.deepEqual(
+          {
+            error: false,
+            operation: 'PNHeartbeatOperation',
+            statusCode: 200,
+          },
+          statusPayload
+        );
         done();
-      }
+      },
     });
 
-    pubnubWithPassingHeartbeats.presence({ channelGroups: ['cg1'], connected: true });
+    pubnubWithPassingHeartbeats.presence({
+      channelGroups: ['cg1'],
+      connected: true,
+    });
   });
 
-  it('reports when the queue is beyond set threshold', (done) => {
-    const scope = utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}');
-
+  it('reports when the queue is beyond set threshold', done => {
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}'
+      );
 
     pubnubWithLimitedQueue.addListener({
       status(statusPayload) {
-        if (statusPayload.category !== PubNub.CATEGORIES.PNRequestMessageCountExceededCategory) return;
+        if (
+          statusPayload.category !==
+          PubNub.CATEGORIES.PNRequestMessageCountExceededCategory
+        ) {
+          return;
+        }
 
         assert.equal(scope.isDone(), true);
-        assert.equal(statusPayload.category, PubNub.CATEGORIES.PNRequestMessageCountExceededCategory);
-        assert.equal(statusPayload.operation, PubNub.OPERATIONS.PNSubscribeOperation);
+        assert.equal(
+          statusPayload.category,
+          PubNub.CATEGORIES.PNRequestMessageCountExceededCategory
+        );
+        assert.equal(
+          statusPayload.operation,
+          PubNub.OPERATIONS.PNSubscribeOperation
+        );
         done();
-      }
+      },
     });
 
-    pubnubWithLimitedQueue.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
+    pubnubWithLimitedQueue.subscribe({
+      channels: ['ch1', 'ch2'],
+      withPresence: true,
+    });
   });
 
-  it('supports deduping on duplicates', (done) => {
+  it('supports deduping on duplicates', done => {
     pubnub._config.dedupeOnSubscribe = true;
     let messageCount = 0;
 
-    utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}'
+      );
 
-    utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, tt: 3, tr: 1 })
-      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        tt: 3,
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}'
+      );
 
     pubnub.addListener({
       message() {
         messageCount += 1;
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
@@ -313,21 +508,41 @@ describe('#components/subscription_manager', () => {
     }, 250);
   });
 
-  it('no deduping on duplicates ', (done) => {
+  it('no deduping on duplicates ', done => {
     let messageCount = 0;
 
-    utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}'
+      );
 
-    utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, tt: 3, tr: 1 })
-      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        tt: 3,
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}'
+      );
 
     pubnub.addListener({
       message() {
         messageCount += 1;
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
@@ -340,23 +555,43 @@ describe('#components/subscription_manager', () => {
     }, 250);
   });
 
-  it('supports deduping on shawllow queue', (done) => {
+  it('supports deduping on shawllow queue', done => {
     pubnub._config.dedupeOnSubscribe = true;
     pubnub._config.maximumCacheSize = 1;
     let messageCount = 0;
 
-    utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300 })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}'
+      );
 
-    utils.createNock().get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
-      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', heartbeat: 300, tt: 3, tr: 1 })
-      .reply(200, '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message2"},"b":"coolChannel"}, {"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"}]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        tt: 3,
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message2"},"b":"coolChannel"}, {"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"}]}'
+      );
 
     pubnub.addListener({
       message() {
         messageCount += 1;
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
