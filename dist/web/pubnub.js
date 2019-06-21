@@ -1555,7 +1555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channels.forEach(function (channel) {
 	        _this3._channels[channel] = { state: {} };
 	        if (withPresence) _this3._presenceChannels[channel] = {};
-	        if (withHeartbeats || _this3._config.heartbeatInterval) _this3._heartbeatChannels[channel] = {};
+	        if (withHeartbeats || _this3._config.getHeartbeatInterval()) _this3._heartbeatChannels[channel] = {};
 
 	        _this3._pendingChannelSubscriptions.push(channel);
 	      });
@@ -1563,7 +1563,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      channelGroups.forEach(function (channelGroup) {
 	        _this3._channelGroups[channelGroup] = { state: {} };
 	        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
-	        if (withHeartbeats || _this3._config.heartbeatInterval) _this3._heartbeatChannelGroups[channelGroup] = {};
+	        if (withHeartbeats || _this3._config.getHeartbeatInterval()) _this3._heartbeatChannelGroups[channelGroup] = {};
 
 	        _this3._pendingChannelGroupSubscriptions.push(channelGroup);
 	      });
