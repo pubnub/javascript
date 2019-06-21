@@ -215,7 +215,7 @@ export default class {
     channels.forEach((channel: string) => {
       this._channels[channel] = { state: {} };
       if (withPresence) this._presenceChannels[channel] = {};
-      if (withHeartbeats) this._heartbeatChannels[channel] = {};
+      if (withHeartbeats || this._config.getHeartbeatInterval()) this._heartbeatChannels[channel] = {};
 
       this._pendingChannelSubscriptions.push(channel);
     });
@@ -223,7 +223,7 @@ export default class {
     channelGroups.forEach((channelGroup: string) => {
       this._channelGroups[channelGroup] = { state: {} };
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
-      if (withHeartbeats) this._heartbeatChannelGroups[channelGroup] = {};
+      if (withHeartbeats || this._config.getHeartbeatInterval()) this._heartbeatChannelGroups[channelGroup] = {};
 
       this._pendingChannelGroupSubscriptions.push(channelGroup);
     });
