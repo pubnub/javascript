@@ -110,7 +110,6 @@ describe('#components/reconnection_manger', () => {
 
           // Advance the clock so that _performTimeLoop() executes
           clock.tick(3500);
-          //done();
         } else if (statusPayload.category === 'PNReconnectedCategory') {
           assert.deepEqual(
             {
