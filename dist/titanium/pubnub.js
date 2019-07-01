@@ -66,15 +66,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pubnubCommon2 = _interopRequireDefault(_pubnubCommon);
 
-	var _networking = __webpack_require__(40);
+	var _networking = __webpack_require__(41);
 
 	var _networking2 = _interopRequireDefault(_networking);
 
-	var _common = __webpack_require__(41);
+	var _common = __webpack_require__(42);
 
 	var _common2 = _interopRequireDefault(_common);
 
-	var _titanium = __webpack_require__(42);
+	var _titanium = __webpack_require__(43);
 
 	var _flow_interfaces = __webpack_require__(5);
 
@@ -209,19 +209,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var publishEndpointConfig = _interopRequireWildcard(_publish);
 
-	var _get_history = __webpack_require__(35);
+	var _signal = __webpack_require__(35);
+
+	var signalEndpointConfig = _interopRequireWildcard(_signal);
+
+	var _get_history = __webpack_require__(36);
 
 	var historyEndpointConfig = _interopRequireWildcard(_get_history);
 
-	var _delete_messages = __webpack_require__(36);
+	var _delete_messages = __webpack_require__(37);
 
 	var deleteMessagesEndpointConfig = _interopRequireWildcard(_delete_messages);
 
-	var _message_counts = __webpack_require__(37);
+	var _message_counts = __webpack_require__(38);
 
 	var messageCountsEndpointConfig = _interopRequireWildcard(_message_counts);
 
-	var _fetch_messages = __webpack_require__(38);
+	var _fetch_messages = __webpack_require__(39);
 
 	var fetchMessagesEndpointConfig = _interopRequireWildcard(_fetch_messages);
 
@@ -229,7 +233,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var timeEndpointConfig = _interopRequireWildcard(_time);
 
-	var _subscribe = __webpack_require__(39);
+	var _subscribe = __webpack_require__(40);
 
 	var subscribeEndpointConfig = _interopRequireWildcard(_subscribe);
 
@@ -323,6 +327,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      args.storeInHistory = false;
 	      return _this.publish(args, callback);
 	    };
+
+	    this.signal = _endpoint2.default.bind(this, modules, signalEndpointConfig);
 
 	    this.history = _endpoint2.default.bind(this, modules, historyEndpointConfig);
 	    this.deleteMessages = _endpoint2.default.bind(this, modules, deleteMessagesEndpointConfig);
@@ -2232,6 +2238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  PNSubscribeOperation: 'PNSubscribeOperation',
 	  PNUnsubscribeOperation: 'PNUnsubscribeOperation',
 	  PNPublishOperation: 'PNPublishOperation',
+	  PNSignalOperation: 'PNSignalOperation',
 
 	  PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
 	  PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
@@ -2420,9 +2427,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  var outgoingParams = endpoint.prepareParams(modules, incomingParams);
+	  console.log('Incoming params: ' + JSON.stringify(incomingParams));
 	  var url = decideURL(endpoint, modules, incomingParams);
 	  var callInstance = void 0;
-	  var networkingParams = { url: url,
+	  var networkingParams = {
+	    url: url,
 	    operation: endpoint.getOperation(),
 	    timeout: endpoint.getRequestTimeout(modules)
 	  };
@@ -4090,6 +4099,117 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	exports.getOperation = getOperation;
+	exports.validateParams = validateParams;
+	exports.usePost = usePost;
+	exports.postURL = postURL;
+	exports.getURL = getURL;
+	exports.getRequestTimeout = getRequestTimeout;
+	exports.isAuthSupported = isAuthSupported;
+	exports.postPayload = postPayload;
+	exports.prepareParams = prepareParams;
+	exports.handleResponse = handleResponse;
+
+	var _flow_interfaces = __webpack_require__(5);
+
+	var _operations = __webpack_require__(13);
+
+	var _operations2 = _interopRequireDefault(_operations);
+
+	var _utils = __webpack_require__(15);
+
+	var _utils2 = _interopRequireDefault(_utils);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function prepareMessagePayload(modules, messagePayload) {
+	  var crypto = modules.crypto,
+	      config = modules.config;
+
+	  var stringifiedPayload = JSON.stringify(messagePayload);
+
+	  if (config.cipherKey) {
+	    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+	    stringifiedPayload = JSON.stringify(stringifiedPayload);
+	  }
+
+	  return stringifiedPayload;
+	}
+
+	function getOperation() {
+	  return _operations2.default.PNSignalOperation;
+	}
+
+	function validateParams(_ref, incomingParams) {
+	  var config = _ref.config;
+	  var message = incomingParams.message,
+	      channel = incomingParams.channel;
+
+
+	  if (!channel) return 'Missing Channel';
+	  if (!message) return 'Missing Message';
+	  if (!config.subscribeKey) return 'Missing Subscribe Key';
+	}
+
+	function usePost() {
+	  return true;
+	}
+
+	function postURL(modules, incomingParams) {
+	  var config = modules.config;
+	  var channel = incomingParams.channel;
+
+	  return '/v1/signal/' + config.publishKey + '/' + config.subscribeKey + '/' + _utils2.default.encodeString(channel);
+	}
+
+	function getURL(modules, incomingParams) {
+	  return postURL(modules, incomingParams);
+	}
+
+	function getRequestTimeout(_ref2) {
+	  var config = _ref2.config;
+
+	  return config.getTransactionTimeout();
+	}
+
+	function isAuthSupported() {
+	  return true;
+	}
+
+	function postPayload(modules, incomingParams) {
+	  var message = incomingParams.message;
+
+	  return prepareMessagePayload(modules, message);
+	}
+
+	function prepareParams(modules, incomingParams) {
+	  var meta = incomingParams.meta;
+
+	  var params = {};
+
+	  if (meta && (typeof meta === 'undefined' ? 'undefined' : _typeof(meta)) === 'object') {
+	    params.meta = JSON.stringify(meta);
+	  }
+
+	  return params;
+	}
+
+	function handleResponse(modules, serverResponse) {
+	  return { timetoken: serverResponse[2] };
+	}
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.getURL = getURL;
@@ -4195,7 +4315,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4277,7 +4397,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4368,7 +4488,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4481,7 +4601,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4607,7 +4727,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4755,7 +4875,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -4794,7 +4914,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4808,7 +4928,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _flow_interfaces = __webpack_require__(5);
 
-	var _utils = __webpack_require__(43);
+	var _utils = __webpack_require__(44);
 
 	function log(url, qs, res) {
 	  var _pickLogger = function _pickLogger() {
@@ -4910,7 +5030,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports) {
 
 	'use strict';

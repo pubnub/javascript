@@ -61,13 +61,16 @@ function signRequest(modules, url, outgoingParams) {
   outgoingParams.signature = signature;
 }
 
-export default function (modules, endpoint, ...args) {
+export default function(modules, endpoint, ...args) {
   let { networking, config } = modules;
   let callback = null;
   let promiseComponent = null;
   let incomingParams = {};
 
-  if (endpoint.getOperation() === operationConstants.PNTimeOperation || endpoint.getOperation() === operationConstants.PNChannelGroupsOperation) {
+  if (
+    endpoint.getOperation() === operationConstants.PNTimeOperation ||
+    endpoint.getOperation() === operationConstants.PNChannelGroupsOperation
+  ) {
     callback = args[0];
   } else {
     incomingParams = args[0];
@@ -85,18 +88,25 @@ export default function (modules, endpoint, ...args) {
     if (callback) {
       return callback(createValidationError(validationResult));
     } else if (promiseComponent) {
-      promiseComponent.reject(new PubNubError('Validation failed, check status for details', createValidationError(validationResult)));
+      promiseComponent.reject(
+        new PubNubError(
+          'Validation failed, check status for details',
+          createValidationError(validationResult)
+        )
+      );
       return promiseComponent.promise;
     }
     return;
   }
 
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
+  console.log('Incoming params: ' + JSON.stringify(incomingParams));
   let url = decideURL(endpoint, modules, incomingParams);
   let callInstance;
-  let networkingParams = { url,
+  let networkingParams = {
+    url,
     operation: endpoint.getOperation(),
-    timeout: endpoint.getRequestTimeout(modules)
+    timeout: endpoint.getRequestTimeout(modules),
   };
 
   outgoingParams.uuid = config.UUID;
@@ -123,12 +133,21 @@ export default function (modules, endpoint, ...args) {
       if (callback) {
         callback(status);
       } else if (promiseComponent) {
-        promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', status));
+        promiseComponent.reject(
+          new PubNubError(
+            'PubNub call failed, check status for details',
+            status
+          )
+        );
       }
       return;
     }
 
-    let parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
+    let parsedPayload = endpoint.handleResponse(
+      modules,
+      payload,
+      incomingParams
+    );
 
     if (callback) {
       callback(status, parsedPayload);
@@ -139,9 +158,18 @@ export default function (modules, endpoint, ...args) {
 
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     let payload = endpoint.postPayload(modules, incomingParams);
-    callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
+    callInstance = networking.POST(
+      outgoingParams,
+      payload,
+      networkingParams,
+      onResponse
+    );
   } else if (endpoint.useDelete && endpoint.useDelete()) {
-    callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
+    callInstance = networking.DELETE(
+      outgoingParams,
+      networkingParams,
+      onResponse
+    );
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }

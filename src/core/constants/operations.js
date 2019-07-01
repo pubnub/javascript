@@ -11,10 +11,13 @@ export default {
   PNSubscribeOperation: 'PNSubscribeOperation',
   PNUnsubscribeOperation: 'PNUnsubscribeOperation',
   PNPublishOperation: 'PNPublishOperation',
+  PNSignalOperation: 'PNSignalOperation',
 
   // push
-  PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
-  PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
+  PNPushNotificationEnabledChannelsOperation:
+    'PNPushNotificationEnabledChannelsOperation',
+  PNRemoveAllPushNotificationsOperation:
+    'PNRemoveAllPushNotificationsOperation',
   //
 
   // presence
@@ -37,5 +40,4 @@ export default {
   PNAccessManagerGrant: 'PNAccessManagerGrant',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
   //
-
 };
