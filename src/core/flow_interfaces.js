@@ -33,6 +33,7 @@ export type NetworkingModules = {
   sendBeacon: ?Function,
   get: Function,
   post: Function,
+  patch: Function,
 };
 
 export type InternalSetupStruct = {

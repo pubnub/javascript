@@ -24,3 +24,4 @@ rules:
   arrow-parens: [2, "as-needed"]
   operator-linebreak: ["error", "after"]
   no-mixed-operators: 0
+  space-before-function-paren: ["error", "never"]
