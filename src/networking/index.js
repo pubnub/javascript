@@ -88,6 +88,15 @@ export default class {
     return this._modules.post(params, body, endpoint, callback);
   }
 
+  PATCH(
+    params: Object,
+    body: string,
+    endpoint: EndpointDefinition,
+    callback: Function
+  ) {
+    return this._modules.patch(params, body, endpoint, callback);
+  }
+
   GET(params: Object, endpoint: EndpointDefinition, callback: Function) {
     return this._modules.get(params, endpoint, callback);
   }

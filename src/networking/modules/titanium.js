@@ -1,7 +1,10 @@
 /* @flow */
 /* global XMLHttpRequest, window, console */
 
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
+import {
+  EndpointDefinition,
+  StatusAnnouncement,
+} from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
 declare var Ti: any;
@@ -16,16 +19,16 @@ function log(url, qs, res) {
   let start = new Date().getTime();
   let timestamp = new Date().toISOString();
   let logger = _pickLogger();
-  logger.log('<<<<<');                                               // eslint-disable-line no-console
-  logger.log(`[${timestamp}]`, '\n', url, '\n', qs);    // eslint-disable-line no-console
-  logger.log('-----');                                               // eslint-disable-line no-console
+  logger.log('<<<<<'); // eslint-disable-line no-console
+  logger.log(`[${timestamp}]`, '\n', url, '\n', qs); // eslint-disable-line no-console
+  logger.log('-----'); // eslint-disable-line no-console
 
   let now = new Date().getTime();
   let elapsed = now - start;
   let timestampDone = new Date().toISOString();
 
-  logger.log('>>>>>>');                                                                                  // eslint-disable-line no-console
-  logger.log(`[${timestampDone} / ${elapsed}]`, '\n', url, '\n', qs, '\n', res);  // eslint-disable-line no-console
+  logger.log('>>>>>>'); // eslint-disable-line no-console
+  logger.log(`[${timestampDone} / ${elapsed}]`, '\n', url, '\n', qs, '\n', res); // eslint-disable-line no-console
   logger.log('-----');
 }
 
@@ -43,7 +46,15 @@ function keepAlive(xhr: any): void {
   }
 }
 
-function xdr(xhr: any, method: string, url: string, params: Object, body: Object, endpoint: EndpointDefinition, callback: Function): void {
+function xdr(
+  xhr: any,
+  method: string,
+  url: string,
+  params: Object,
+  body: Object,
+  endpoint: EndpointDefinition,
+  callback: Function
+): void {
   let status: StatusAnnouncement = {};
   status.operation = endpoint.operation;
 
@@ -67,7 +78,7 @@ function xdr(xhr: any, method: string, url: string, params: Object, body: Object
     return callback(status, resp);
   };
 
-  xhr.onerror = (e) => {
+  xhr.onerror = e => {
     status.error = true;
     status.errorData = e.error;
     status.category = this._detectErrorCategory(e.error);
@@ -79,7 +90,11 @@ function xdr(xhr: any, method: string, url: string, params: Object, body: Object
   xhr.send(body);
 }
 
-export function get(params: Object, endpoint: EndpointDefinition, callback: Function) {
+export function get(
+  params: Object,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;
@@ -87,15 +102,55 @@ export function get(params: Object, endpoint: EndpointDefinition, callback: Func
   return xdr.call(this, xhr, 'GET', url, params, {}, endpoint, callback);
 }
 
-export function post(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
+export function post(
+  params: Object,
+  body: string,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;
 
-  return xdr.call(this, xhr, 'POST', url, params, JSON.parse(body), endpoint, callback);
+  return xdr.call(
+    this,
+    xhr,
+    'POST',
+    url,
+    params,
+    JSON.parse(body),
+    endpoint,
+    callback
+  );
 }
 
-export function del(params: Object, endpoint: EndpointDefinition, callback: Function) {
+export function patch(
+  params: Object,
+  body: string,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
+  let xhr = getHttpClient();
+
+  let url = this.getStandardOrigin() + endpoint.url;
+
+  return xdr.call(
+    this,
+    xhr,
+    'PATCH',
+    url,
+    params,
+    JSON.parse(body),
+    endpoint,
+    callback
+  );
+}
+
+export function del(
+  params: Object,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;
