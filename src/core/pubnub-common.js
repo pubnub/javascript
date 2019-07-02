@@ -28,6 +28,7 @@ import * as presenceHereNowConfig from './endpoints/presence/here_now';
 // Objects API
 import * as createUserEndpointConfig from './endpoints/users/create_user';
 import * as updateUserEndpointConfig from './endpoints/users/update_user';
+import * as deleteUserEndpointConfig from './endpoints/users/delete_user';
 
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
@@ -81,6 +82,7 @@ export default class {
   // Objects API
   createUser: Function;
   updateUser: Function;
+  deleteUser: Function;
 
   disconnect: Function;
   reconnect: Function;
@@ -251,11 +253,15 @@ export default class {
       modules,
       createUserEndpointConfig
     );
-
     this.updateUser = endpointCreator.bind(
       this,
       modules,
       updateUserEndpointConfig
+    );
+    this.deleteUser = endpointCreator.bind(
+      this,
+      modules,
+      deleteUserEndpointConfig
     );
 
     this.time = timeEndpoint;
