@@ -25,6 +25,9 @@ import * as presenceGetStateConfig from './endpoints/presence/get_state';
 import * as presenceSetStateConfig from './endpoints/presence/set_state';
 import * as presenceHereNowConfig from './endpoints/presence/here_now';
 
+// Objects API
+import * as createUserEndpointConfig from './endpoints/users/create_user';
+
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
 
@@ -43,7 +46,6 @@ import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
 
 export default class {
-
   _config: Config;
   _listenerManager: ListenerManager;
 
@@ -75,9 +77,11 @@ export default class {
   unsubscribe: Function;
   unsubscribeAll: Function;
 
+  // Objects API
+  createUser: Function;
+
   disconnect: Function;
   reconnect: Function;
-
 
   destroy: Function;
   stop: Function;
@@ -111,21 +115,41 @@ export default class {
   constructor(setup: InternalSetupStruct) {
     let { db, networking } = setup;
 
-    const config = this._config = new Config({ setup, db });
+    const config = (this._config = new Config({ setup, db }));
     const crypto = new Crypto({ config });
 
     networking.init(config);
 
     let modules = { config, networking, crypto };
 
-    const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
-    const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
-    const heartbeatEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
-    const setStateEndpoint = endpointCreator.bind(this, modules, presenceSetStateConfig);
-    const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
+    const timeEndpoint = endpointCreator.bind(
+      this,
+      modules,
+      timeEndpointConfig
+    );
+    const leaveEndpoint = endpointCreator.bind(
+      this,
+      modules,
+      presenceLeaveEndpointConfig
+    );
+    const heartbeatEndpoint = endpointCreator.bind(
+      this,
+      modules,
+      presenceHeartbeatEndpointConfig
+    );
+    const setStateEndpoint = endpointCreator.bind(
+      this,
+      modules,
+      presenceSetStateConfig
+    );
+    const subscribeEndpoint = endpointCreator.bind(
+      this,
+      modules,
+      subscribeEndpointConfig
+    );
 
     // managers
-    const listenerManager = this._listenerManager = new ListenerManager();
+    const listenerManager = (this._listenerManager = new ListenerManager());
 
     const subscriptionManager = new SubscriptionManager({
       timeEndpoint,
@@ -135,33 +159,61 @@ export default class {
       subscribeEndpoint,
       crypto: modules.crypto,
       config: modules.config,
-      listenerManager
+      listenerManager,
     });
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
-    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+    this.removeAllListeners = listenerManager.removeAllListeners.bind(
+      listenerManager
+    );
 
     /* channel groups */
     this.channelGroups = {
       listGroups: endpointCreator.bind(this, modules, listChannelGroupsConfig),
-      listChannels: endpointCreator.bind(this, modules, listChannelsInChannelGroupConfig),
-      addChannels: endpointCreator.bind(this, modules, addChannelsChannelGroupConfig),
-      removeChannels: endpointCreator.bind(this, modules, removeChannelsChannelGroupConfig),
-      deleteGroup: endpointCreator.bind(this, modules, deleteChannelGroupConfig)
+      listChannels: endpointCreator.bind(
+        this,
+        modules,
+        listChannelsInChannelGroupConfig
+      ),
+      addChannels: endpointCreator.bind(
+        this,
+        modules,
+        addChannelsChannelGroupConfig
+      ),
+      removeChannels: endpointCreator.bind(
+        this,
+        modules,
+        removeChannelsChannelGroupConfig
+      ),
+      deleteGroup: endpointCreator.bind(
+        this,
+        modules,
+        deleteChannelGroupConfig
+      ),
     };
     /* push */
     this.push = {
       addChannels: endpointCreator.bind(this, modules, addPushChannelsConfig),
-      removeChannels: endpointCreator.bind(this, modules, removePushChannelsConfig),
+      removeChannels: endpointCreator.bind(
+        this,
+        modules,
+        removePushChannelsConfig
+      ),
       deleteDevice: endpointCreator.bind(this, modules, removeDevicePushConfig),
-      listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig)
+      listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig),
     };
     /* presence */
     this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
-    this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
+    this.whereNow = endpointCreator.bind(
+      this,
+      modules,
+      presenceWhereNowEndpointConfig
+    );
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
-    this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+    this.setState = subscriptionManager.adaptStateChange.bind(
+      subscriptionManager
+    );
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
@@ -175,16 +227,41 @@ export default class {
     };
 
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
-    this.deleteMessages = endpointCreator.bind(this, modules, deleteMessagesEndpointConfig);
-    this.messageCounts = endpointCreator.bind(this, modules, messageCountsEndpointConfig);
-    this.fetchMessages = endpointCreator.bind(this, modules, fetchMessagesEndpointConfig);
+    this.deleteMessages = endpointCreator.bind(
+      this,
+      modules,
+      deleteMessagesEndpointConfig
+    );
+    this.messageCounts = endpointCreator.bind(
+      this,
+      modules,
+      messageCountsEndpointConfig
+    );
+    this.fetchMessages = endpointCreator.bind(
+      this,
+      modules,
+      fetchMessagesEndpointConfig
+    );
+
+    // Objects API
+    this.createUser = endpointCreator.bind(
+      this,
+      modules,
+      createUserEndpointConfig
+    );
 
     this.time = timeEndpoint;
 
     // subscription related methods
-    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
-    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
-    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(
+      subscriptionManager
+    );
+    this.presence = subscriptionManager.adaptPresenceChange.bind(
+      subscriptionManager
+    );
+    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(
+      subscriptionManager
+    );
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
@@ -197,10 +274,16 @@ export default class {
     this.stop = this.destroy; // --------
     // --- deprecated  ------------------
 
-    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(
+      subscriptionManager
+    );
 
-    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
-    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(
+      subscriptionManager
+    );
+    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(
+      subscriptionManager
+    );
 
     // mount crypto
     this.encrypt = crypto.encrypt.bind(crypto);
@@ -212,19 +295,24 @@ export default class {
     this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
     this.getUUID = modules.config.getUUID.bind(modules.config);
     this.setUUID = modules.config.setUUID.bind(modules.config);
-    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
-    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
+    this.getFilterExpression = modules.config.getFilterExpression.bind(
+      modules.config
+    );
+    this.setFilterExpression = modules.config.setFilterExpression.bind(
+      modules.config
+    );
 
-    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
+    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(
+      modules.config
+    );
 
     if (networking.hasModule('proxy')) {
-      this.setProxy = (proxy) => {
+      this.setProxy = proxy => {
         modules.config.setProxy(proxy);
         this.reconnect();
       };
     }
   }
-
 
   getVersion(): string {
     return this._config.getVersion();
@@ -246,12 +334,10 @@ export default class {
     this.reconnect();
   }
 
-
   static generateUUID(): string {
     return uuidGenerator.createUUID();
   }
 
   static OPERATIONS = OPERATIONS;
   static CATEGORIES = CATEGORIES;
-
 }

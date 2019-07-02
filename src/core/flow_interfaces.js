@@ -10,14 +10,14 @@ declare module 'superagent' {
 export type CallbackStruct = {
   status: Function,
   presence: Function,
-  message: Function
-}
+  message: Function,
+};
 
 export type ProxyStruct = {
   port: number,
   hostname: string,
-  headers: Object
-}
+  headers: Object,
+};
 
 export type KeepAliveStruct = {
   keepAlive: number,
@@ -25,15 +25,15 @@ export type KeepAliveStruct = {
   freeSocketKeepAliveTimeout: number,
   timeout: number,
   maxSockets: number,
-  maxFreeSockets: number
-}
+  maxFreeSockets: number,
+};
 
 export type NetworkingModules = {
   keepAlive: ?Function,
   sendBeacon: ?Function,
   get: Function,
-  post: Function
-}
+  post: Function,
+};
 
 export type InternalSetupStruct = {
   useSendBeacon: ?boolean, // configuration on beacon usage
@@ -59,46 +59,46 @@ export type InternalSetupStruct = {
   suppressLev: ?boolean,
 
   db: Function, // get / set implementation to store data
-  networking: Function // component of networking to use
-}
+  networking: Function, // component of networking to use
+};
 
 type DatabaseInterface = {
   get: Function,
-  set: Function
-}
+  set: Function,
+};
 
 type EndpointKeyDefinition = {
-  required: boolean
-}
+  required: boolean,
+};
 
 type SupportedParams = {
   subscribeKey: EndpointKeyDefinition,
   uuid: EndpointKeyDefinition,
-}
+};
 
 export type endpointDefinition = {
   params: SupportedParams,
   timeout: number,
-  url: string
-}
+  url: string,
+};
 
 export type StateChangeAnnouncement = {
   state: Object,
   channels: Array<string>,
-  channelGroups: Array<string>
-}
+  channelGroups: Array<string>,
+};
 
 // ****************** SUBSCRIPTIONS ********************************************
 
 type SubscribeMetadata = {
   timetoken: number,
-  region: number
-}
+  region: number,
+};
 
 type PublishMetaData = {
   publishTimetoken: number,
-  region: number
-}
+  region: number,
+};
 
 type SubscribeMessage = {
   shard: string,
@@ -109,18 +109,16 @@ type SubscribeMessage = {
   issuingClientId: string,
   subscribeKey: string,
   originationTimetoken: string,
-  publishMetaData: PublishMetaData
-
-}
+  publishMetaData: PublishMetaData,
+};
 
 // subscribe responses
 type SubscribeEnvelope = {
   messages: Array<SubscribeMessage>,
-  metadata: SubscribeMetadata;
-}
+  metadata: SubscribeMetadata,
+};
 
 // *****************************************************************************
-
 
 // ****************** Announcements ********************************************
 
@@ -133,29 +131,28 @@ type PresenceAnnouncement = {
   state: Object,
 
   subscribedChannel: string, // deprecated
-  actualChannel: string,     // deprecated
+  actualChannel: string, // deprecated
 
   channel: string,
   subscription: string,
 
   timetoken: number,
-  userMetadata: Object
-}
+  userMetadata: Object,
+};
 
 type MessageAnnouncement = {
-
   message: Object,
 
   subscribedChannel: string, // deprecated
-  actualChannel: string,     // deprecated
+  actualChannel: string, // deprecated
 
   channel: string,
   subscription: string,
 
   timetoken: number | string,
   userMetadata: Object,
-  publisher: string
-}
+  publisher: string,
+};
 
 export type StatusAnnouncement = {
   error: boolean,
@@ -168,14 +165,14 @@ export type StatusAnnouncement = {
   // send back channel, channel groups that were affected by this operation
   affectedChannels: Array<String>,
   affectedChannelGroups: Array<String>,
-}
+};
 
 // *****************************************************************************
 
 // Time endpoints
 
 type TimeResponse = {
-  timetoken: number
+  timetoken: number,
 };
 
 // history
@@ -185,70 +182,69 @@ type FetchHistoryArguments = {
   end: number | string, // end timetoken for history fetching
   includeTimetoken: boolean, // include time token for each history call
   reverse: boolean,
-  count: number
-}
+  count: number,
+};
 
 // history
 export type MessageCounterArguments = {
   channels: Array<string>, // fetch history from a channel
   timetoken: number | null,
-  channelTimetokens: Array<string> | null
-}
+  channelTimetokens: Array<string> | null,
+};
 
 type FetchMessagesArguments = {
   channels: string, // fetch history from a channel
   start: number | string, // start timetoken for history fetching
   end: number | string, // end timetoken for history fetching
-  count: number
-}
+  count: number,
+};
 
 type HistoryItem = {
   timetoken: number | string | null,
   entry: any,
-}
+};
 
 type HistoryResponse = {
   messages: Array<HistoryItem>,
   startTimeToken: number | string,
   endTimeToken: number | string,
-}
-
+};
 
 export type MessageCountersResponse = {
-  channels: Object
-}
+  channels: Object,
+};
 
 type HistoryV3Response = {
-  channels: Object
-}
+  channels: Object,
+};
 
 // CG endpoints
 
 type AddChannelParams = {
   channels: Array<string>,
   channelGroup: string,
-}
+};
 
 type RemoveChannelParams = {
   channels: Array<string>,
   channelGroup: string,
-}
+};
 
 type DeleteGroupParams = {
   channelGroup: string,
-}
+};
 
 type ListAllGroupsResponse = {
-  groups: Array<string>
-}
+  groups: Array<string>,
+};
 
 type ListChannelsParams = {
   channelGroup: string,
-}
+};
 
 type ListChannelsResponse = {
-  channels: Array<string>
-}
+  channels: Array<string>,
+};
 
 //
 
@@ -258,13 +254,13 @@ type ProvisionDeviceArgs = {
   operation: 'add' | 'remove',
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
-  channels: Array<string>
+  channels: Array<string>,
 };
 
 type ModifyDeviceArgs = {
   pushGateway: 'gcm' | 'apns' | 'mpns',
   device: string,
-  channels: Array<string>
+  channels: Array<string>,
 };
 
 type ListChannelsArgs = {
@@ -278,8 +274,8 @@ type RemoveDeviceArgs = {
 };
 
 type ListPushChannelsResponse = {
-  channels: Array<string>
-}
+  channels: Array<string>,
+};
 
 //
 
@@ -288,53 +284,52 @@ type ListPushChannelsResponse = {
 type LeaveArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-}
+};
 
 type HereNowArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
   includeUUIDs: boolean,
-  includeState: boolean
-}
+  includeState: boolean,
+};
 
 type WhereNowArguments = {
   uuid: string,
-}
+};
 
 type WhereNowResponse = {
   channels: Array<string>,
-}
+};
 
 //
 
 type GetStateArguments = {
   uuid: string,
   channels: Array<string>,
-  channelGroups: Array<string>
-}
+  channelGroups: Array<string>,
+};
 
 type GetStateResponse = {
-  channels: Object
-}
+  channels: Object,
+};
 
 //
 
 type SetStateArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-  state: Object
-}
+  state: Object,
+};
 
 type SetStateResponse = {
-  state: Object
-}
-
+  state: Object,
+};
 
 type HeartbeatArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
-  state: Object
-}
+  state: Object,
+};
 
 //
 
@@ -346,8 +341,8 @@ type SubscribeArguments = {
   timetoken: number,
   filterExpression: ?string,
   region: ?string,
-  state: Object
-}
+  state: Object,
+};
 
 //
 
@@ -357,7 +352,7 @@ type AuditArguments = {
   channel: string,
   channelGroup: string,
   authKeys: Array<string>,
-}
+};
 
 type GrantArguments = {
   channels: Array<string>,
@@ -366,13 +361,13 @@ type GrantArguments = {
   read: boolean,
   write: boolean,
   manage: boolean,
-  authKeys: Array<string>
-}
+  authKeys: Array<string>,
+};
 
 // publish
 
 type PublishResponse = {
-  timetoken: number
+  timetoken: number,
 };
 
 type PublishArguments = {
@@ -381,13 +376,33 @@ type PublishArguments = {
   sendByPost: boolean | null, // use POST when dispatching the message
   storeInHistory: boolean | null, // store the published message in remote history
   meta: Object, // psv2 supports filtering by metadata
-  replicate: boolean | null // indicates to server on replication status to other data centers.
-}
+  replicate: boolean | null, // indicates to server on replication status to other data centers.
+};
+
+// Users Object
+type UsersObjectInput = {
+  id: string,
+  name: string,
+  externalId?: string,
+  profileUrl?: string,
+  email?: string,
+  custom?: Object,
+};
+
+type UsersResponse = {
+  status: string,
+  data: {
+    ...UsersObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
 
 //
 
 type ModulesInject = {
-  config: Object;
-}
+  config: Object,
+};
 
 module.exports = {};
