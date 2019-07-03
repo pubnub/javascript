@@ -4,7 +4,7 @@ import { UsersResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
 export function getOperation(): string {
-  return operationConstants.PNUsersOperation;
+  return operationConstants.PNDeleteUserOperation;
 }
 
 export function validateParams({ config }: ModulesInject, userId: string) {

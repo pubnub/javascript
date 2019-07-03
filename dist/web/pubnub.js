@@ -2273,6 +2273,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  PNCreateUserOperation: 'PNCreateUserOperation',
 	  PNUpdateUserOperation: 'PNUpdateUserOperation',
+	  PNDeleteUserOperation: 'PNDeleteUserOperation',
 
 	  PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
 	  PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
@@ -4070,7 +4071,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getOperation() {
-	  return _operations2.default.PNUsersOperation;
+	  return _operations2.default.PNDeleteUserOperation;
 	}
 
 	function validateParams(_ref, userId) {
