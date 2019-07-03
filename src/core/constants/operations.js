@@ -14,6 +14,7 @@ export default {
 
   // Objects API
   PNUsersOperation: 'PNUsersOperation',
+  PNDeleteUserOperation: 'PNDeleteUserOperation',
 
   // push
   PNPushNotificationEnabledChannelsOperation:
