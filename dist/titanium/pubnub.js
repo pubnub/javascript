@@ -2239,7 +2239,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  PNUnsubscribeOperation: 'PNUnsubscribeOperation',
 	  PNPublishOperation: 'PNPublishOperation',
 
-	  PNUsersOperation: 'PNUsersOperation',
+	  PNCreateUserOperation: 'PNCreateUserOperation',
 
 	  PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
 	  PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
@@ -3816,7 +3816,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getOperation() {
-	  return _operations2.default.PNUsersOperation;
+	  return _operations2.default.PNCreateUserOperation;
 	}
 
 	function validateParams(_ref, incomingParams) {

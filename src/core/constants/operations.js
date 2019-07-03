@@ -13,7 +13,7 @@ export default {
   PNPublishOperation: 'PNPublishOperation',
 
   // Objects API
-  PNUsersOperation: 'PNUsersOperation',
+  PNCreateUserOperation: 'PNCreateUserOperation',
 
   // push
   PNPushNotificationEnabledChannelsOperation:
