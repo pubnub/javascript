@@ -50,10 +50,13 @@ describe('users endpoints', () => {
           .createNock()
           .post('/v1/objects/mySubKey/users')
           .reply(200, {
-            ...user,
-            created,
-            updated,
-            eTag,
+            status: 'ok',
+            data: {
+              ...user,
+              created,
+              updated,
+              eTag,
+            },
           });
         const { id, ...noIdUser } = user;
 
@@ -73,10 +76,13 @@ describe('users endpoints', () => {
           .createNock()
           .patch('/v1/objects/mySubKey/users')
           .reply(200, {
-            ...user,
-            created,
-            updated,
-            eTag,
+            status: 'ok',
+            data: {
+              ...user,
+              created,
+              updated,
+              eTag,
+            },
           });
         const { id, ...noIdUser } = user;
 
@@ -92,11 +98,14 @@ describe('users endpoints', () => {
           .createNock()
           .patch('/v1/objects/mySubKey/users')
           .reply(200, {
-            ...user,
-            id: 'user-test-name',
-            created,
-            updated,
-            eTag,
+            status: 'ok',
+            data: {
+              ...user,
+              id: 'user-test-name',
+              created,
+              updated,
+              eTag,
+            },
           });
         const { name, ...noNameUser } = user;
 
@@ -123,11 +132,14 @@ describe('users endpoints', () => {
           auth: 'myAuthKey',
         })
         .reply(200, {
-          ...user,
-          name: 'Simple User',
-          created,
-          updated,
-          eTag,
+          status: 'ok',
+          data: {
+            ...user,
+            name: 'Simple User',
+            created,
+            updated,
+            eTag,
+          },
         });
 
       pubnub.updateUser(
@@ -143,6 +155,44 @@ describe('users endpoints', () => {
           done();
         }
       );
+    });
+  });
+
+  describe('deleteUser', () => {
+    describe('##validation', () => {
+      it('fails if id is missing', done => {
+        const scope = utils
+          .createNock()
+          .delete('/v1/objects/mySubKey/users/myUserId')
+          .reply(200, {
+            status: 'ok',
+            data: {},
+          });
+
+        pubnub.deleteUser().catch(err => {
+          assert.equal(scope.isDone(), false);
+          assert.equal(err.status.message, 'Missing UserId');
+          done();
+        });
+      });
+    });
+
+    it('deletes a user object', done => {
+      const scope = utils
+        .createNock()
+        .delete('/v1/objects/mySubKey/users/myUserId')
+        .reply(200, {
+          status: 'ok',
+          data: {},
+        });
+
+      pubnub.deleteUser('delete-user-1', (status, response) => {
+        assert.equal(status.error, false);
+        assert.equal(response.status, 'ok');
+        assert.equal(Object.keys(response.data).length, 0);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
   });
 });
