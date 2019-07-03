@@ -20,7 +20,7 @@ function prepareMessagePayload(modules, messagePayload) {
 }
 
 export function getOperation(): string {
-  return operationConstants.PNUsersOperation;
+  return operationConstants.PNUpdateUserOperation;
 }
 
 export function validateParams(
