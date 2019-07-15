@@ -3782,6 +3782,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	exports.getOperation = getOperation;
 	exports.validateParams = validateParams;
 	exports.usePost = usePost;
@@ -3869,14 +3872,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function prepareParams(modules, incomingParams) {
-	  var _incomingParams$chann = incomingParams.channelGroups,
-	      channelGroups = _incomingParams$chann === undefined ? [] : _incomingParams$chann;
-
-	  var params = {};
-
-	  if (channelGroups.length > 0) {
-	    params['channel-group'] = channelGroups.join(',');
-	  }
+	  var params = _extends({}, incomingParams);
 
 	  return params;
 	}
