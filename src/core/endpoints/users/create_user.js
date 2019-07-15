@@ -77,12 +77,9 @@ export function prepareParams(
   modules: ModulesInject,
   incomingParams: UsersObjectInput
 ): Object {
-  let { channelGroups = [] } = incomingParams;
-  let params = {};
+  const params = { ...incomingParams };
 
-  if (channelGroups.length > 0) {
-    params['channel-group'] = channelGroups.join(',');
-  }
+  // Just applying the incoming params for now, this space will be used for possible future additions
 
   return params;
 }
