@@ -61,7 +61,7 @@ function signRequest(modules, url, outgoingParams) {
   outgoingParams.signature = signature;
 }
 
-export default function (modules, endpoint, ...args) {
+export default function(modules, endpoint, ...args) {
   let { networking, config } = modules;
   let callback = null;
   let promiseComponent = null;

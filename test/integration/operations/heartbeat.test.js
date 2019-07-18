@@ -33,7 +33,7 @@ describe('heartbeat', () => {
   });
 
   describe('#heartbeat', () => {
-    it('supports heartbeating for one channel', done => {
+    it('supports heartbeating for one channel', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/heartbeat')
@@ -58,7 +58,7 @@ describe('heartbeat', () => {
       pubnub.subscribe({ channels: ['ch1'], withHeartbeats: true });
     });
 
-    it('supports heartbeating for multiple channels', done => {
+    it('supports heartbeating for multiple channels', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/heartbeat')
@@ -83,7 +83,7 @@ describe('heartbeat', () => {
       pubnub.subscribe({ channels: ['ch1', 'ch2'], withHeartbeats: true });
     });
 
-    it('supports heartbeating for one channel group', done => {
+    it('supports heartbeating for one channel group', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/heartbeat')
@@ -109,7 +109,7 @@ describe('heartbeat', () => {
       pubnub.subscribe({ channelGroups: ['cg1'], withHeartbeats: true });
     });
 
-    it('supports heartbeating for multiple channel group', done => {
+    it('supports heartbeating for multiple channel group', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/%2C/heartbeat')

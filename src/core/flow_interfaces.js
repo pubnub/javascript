@@ -104,6 +104,7 @@ type SubscribeMessage = {
   shard: string,
   subscriptionMatch: string,
   channel: string,
+  messageType: number,
   payload: Object,
   flags: string,
   issuingClientId: string,
@@ -148,6 +149,18 @@ type MessageAnnouncement = {
 
   subscribedChannel: string, // deprecated
   actualChannel: string,     // deprecated
+
+  channel: string,
+  subscription: string,
+
+  timetoken: number | string,
+  userMetadata: Object,
+  publisher: string
+}
+
+type SignalAnnouncement = {
+
+  message: Object,
 
   channel: string,
   subscription: string,
@@ -383,6 +396,16 @@ type PublishArguments = {
   meta: Object, // psv2 supports filtering by metadata
   replicate: boolean | null // indicates to server on replication status to other data centers.
 }
+
+// signal
+type SignalResponse = {
+  timetoken: number
+};
+
+type SignalArguments = {
+  message: Object | string | number | boolean,
+  channel: string
+};
 
 //
 

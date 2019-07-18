@@ -85,7 +85,7 @@ export function handleResponse(
 ): SubscribeEnvelope {
   const messages: Array<SubscribeMessage> = [];
 
-  serverResponse.m.forEach(rawMessage => {
+  serverResponse.m.forEach((rawMessage) => {
     let publishMetaData: PublishMetaData = {
       publishTimetoken: rawMessage.p.t,
       region: rawMessage.p.r,
@@ -94,6 +94,7 @@ export function handleResponse(
       shard: parseInt(rawMessage.a, 10),
       subscriptionMatch: rawMessage.b,
       channel: rawMessage.c,
+      messageType: rawMessage.e,
       payload: rawMessage.d,
       flags: rawMessage.f,
       issuingClientId: rawMessage.i,

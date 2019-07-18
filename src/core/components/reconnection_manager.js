@@ -6,7 +6,6 @@ type ReconnectionManagerArgs = {
 }
 
 export default class {
-
   _reconnectionCallback: Function;
   _timeEndpoint: TimeEndpoint;
   _timeTimer: number;
@@ -35,5 +34,4 @@ export default class {
       }
     });
   }
-
 }

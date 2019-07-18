@@ -1,8 +1,10 @@
 /* @flow */
-/* global console */
 
 import { request as HttpRequest } from 'http';
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
+import {
+  EndpointDefinition,
+  StatusAnnouncement,
+} from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
 function log(url, qs, res) {
@@ -27,7 +29,14 @@ function log(url, qs, res) {
   logger.log('-----'); // eslint-disable-line no-console
 }
 
-function xdr(method: string, url: string, params: Object, body: string, endpoint: EndpointDefinition, callback: Function): void {
+function xdr(
+  method: string,
+  url: string,
+  params: Object,
+  body: string,
+  endpoint: EndpointDefinition,
+  callback: Function
+): void {
   let status: StatusAnnouncement = {};
   status.operation = endpoint.operation;
 
@@ -35,45 +44,61 @@ function xdr(method: string, url: string, params: Object, body: string, endpoint
     method,
     url: buildUrl(url, params),
     timeout: endpoint.timeout,
-    content: body
+    content: body,
   };
 
   // $FlowFixMe
-  return HttpRequest(httpConfig).then((response) => {
-    status.error = false;
+  return HttpRequest(httpConfig)
+    .then((response) => {
+      status.error = false;
 
-    if (response.statusCode) {
-      status.statusCode = response.statusCode;
-    }
+      if (response.statusCode) {
+        status.statusCode = response.statusCode;
+      }
 
-    return response.content.toJSON();
-  }).then((response) => {
-    let resp = response;
+      return response.content.toJSON();
+    })
+    .then((response) => {
+      let resp = response;
 
-    if (this._config.logVerbosity) {
-      log(url, params, resp);
-    }
+      if (this._config.logVerbosity) {
+        log(url, params, resp);
+      }
 
-    callback(status, resp);
-  }).catch((e) => {
-    status.error = true;
-    status.errorData = e;
-    status.category = this._detectErrorCategory(e);
-    callback(status, null);
-  });
+      callback(status, resp);
+    })
+    .catch((e) => {
+      status.error = true;
+      status.errorData = e;
+      status.category = this._detectErrorCategory(e);
+      callback(status, null);
+    });
 }
 
-export function get(params: Object, endpoint: EndpointDefinition, callback: Function) {
+export function get(
+  params: Object,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'GET', url, params, '', endpoint, callback);
 }
 
-export function post(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
+export function post(
+  params: Object,
+  body: string,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'POST', url, params, body, endpoint, callback);
 }
 
-export function del(params: Object, endpoint: EndpointDefinition, callback: Function) {
+export function del(
+  params: Object,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'DELETE', url, params, '', endpoint, callback);
 }

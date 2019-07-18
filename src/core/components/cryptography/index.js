@@ -8,7 +8,6 @@ type CryptoConstruct = {
 }
 
 export default class {
-
   _config: Config;
   _iv: string;
   _allowedKeyEncodings: Array<string>;
@@ -139,5 +138,4 @@ export default class {
       return null;
     }
   }
-
 }

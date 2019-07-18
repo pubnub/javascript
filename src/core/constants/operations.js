@@ -11,6 +11,7 @@ export default {
   PNSubscribeOperation: 'PNSubscribeOperation',
   PNUnsubscribeOperation: 'PNUnsubscribeOperation',
   PNPublishOperation: 'PNPublishOperation',
+  PNSignalOperation: 'PNSignalOperation',
 
   // push
   PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
