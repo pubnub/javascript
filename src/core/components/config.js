@@ -243,7 +243,10 @@ export default class {
       this._presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
 
       // eslint-disable-next-line no-console
-      console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
+      console.log(
+        'WARNING: Presence timeout is less than the minimum. Using minimum value: ',
+        this._presenceTimeout
+      );
     }
 
     this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
@@ -293,7 +296,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.24.3';
+    return '4.24.4';
   }
 
   _decideUUID(providedUUID: string): string {

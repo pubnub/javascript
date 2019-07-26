@@ -1,4 +1,16 @@
-﻿## [v4.24.3](https://github.com/pubnub/javascript/tree/v4.24.3)
+﻿## [v4.24.4](https://github.com/pubnub/javascript/tree/v4.24.4)
+  July-26-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.0...v4.24.4)
+
+
+
+- ⭐ Add minimum presence timeout
+
+
+
+## [v4.24.3](https://github.com/pubnub/javascript/tree/v4.24.3)
   June-19-2019
 
 
