@@ -1,4 +1,4 @@
-/*! 4.24.3 / Consumer  */
+/*! 4.24.4 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -429,6 +429,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+	var PRESENCE_TIMEOUT_MINIMUM = 20;
+	var PRESENCE_TIMEOUT_DEFAULT = 300;
+
 	var _class = function () {
 	  function _class(_ref) {
 	    var setup = _ref.setup,
@@ -485,7 +488,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.setSendBeaconConfig(setup.useSendBeacon || true);
 
-	    this.setPresenceTimeout(setup.presenceTimeout || 300);
+	    this.setPresenceTimeout(setup.presenceTimeout || PRESENCE_TIMEOUT_DEFAULT);
 
 	    if (setup.heartbeatInterval != null) {
 	      this.setHeartbeatInterval(setup.heartbeatInterval);
@@ -542,8 +545,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'setPresenceTimeout',
 	    value: function setPresenceTimeout(val) {
-	      this._presenceTimeout = val;
+	      if (val >= PRESENCE_TIMEOUT_MINIMUM) {
+	        this._presenceTimeout = val;
+	      } else {
+	        this._presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
+
+	        console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
+	      }
+
 	      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
+
 	      return this;
 	    }
 	  }, {
@@ -598,7 +609,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getVersion',
 	    value: function getVersion() {
-	      return '4.24.3';
+	      return '4.24.4';
 	    }
 	  }, {
 	    key: '_decideUUID',
