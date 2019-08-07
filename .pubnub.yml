@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Add Signals support"
+        type: improvement
+    date: 2019-08-07
+    version: v4.24.5
+  - 
+    changes: 
+      - 
         text: "Add minimum presence timeout"
         type: improvement
     date: 2019-07-26
@@ -670,4 +677,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.24.4"
+version: "4.24.5"
