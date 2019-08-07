@@ -24,7 +24,7 @@ export default class {
   constructor(modules: NetworkingModules) {
     this._modules = {};
 
-    Object.keys(modules).forEach(key => {
+    Object.keys(modules).forEach((key) => {
       this._modules[key] = modules[key].bind(this);
     });
   }
@@ -69,8 +69,8 @@ export default class {
   }
 
   // origin operations
-  shiftStandardOrigin(failover: boolean = false): string {
-    this._standardOrigin = this.nextOrigin(failover);
+  shiftStandardOrigin(): string {
+    this._standardOrigin = this.nextOrigin();
 
     return this._standardOrigin;
   }

@@ -21,7 +21,7 @@ function log(req: Object) {
   logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs); // eslint-disable-line no-console
   logger.log('-----'); // eslint-disable-line no-console
 
-  req.on('response', res => {
+  req.on('response', (res) => {
     let now = new Date().getTime();
     let elapsed = now - start;
     let timestampDone = new Date().toISOString();

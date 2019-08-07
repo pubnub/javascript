@@ -1,6 +1,10 @@
 /* @flow */
 
-export function encodedKeyValuePair(pairs: Array<string>, key: string, value: Object): void {
+export function encodedKeyValuePair(
+  pairs: Array<string>,
+  key: string,
+  value: Object
+): void {
   if (value != null) {
     if (Array.isArray(value)) {
       value.forEach((item) => {

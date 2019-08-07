@@ -22,15 +22,34 @@ describe('#components/networking', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    pubnub = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID' });
-    pubnubPartner = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', partnerId: 'alligator' });
-    pubnubSDKName = new PubNub({ subscribeKey: 'mySubKey', publishKey: 'myPublishKey', uuid: 'myUUID', sdkName: 'custom-sdk/1.0.0' });
+    pubnub = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+    });
+    pubnubPartner = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+      partnerId: 'alligator',
+    });
+    pubnubSDKName = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+      sdkName: 'custom-sdk/1.0.0',
+    });
   });
 
   describe('supports user-agent generation with partner', () => {
     it('returns a correct user-agent object', (done) => {
-      utils.createNock().get('/time/0')
-        .query({ uuid: 'myUUID', pnsdk: `PubNub-JS-Nodejs-alligator/${packageJSON.version}` })
+      utils
+        .createNock()
+        .get('/time/0')
+        .query({
+          uuid: 'myUUID',
+          pnsdk: `PubNub-JS-Nodejs-alligator/${packageJSON.version}`,
+        })
         .reply(200, [14570763868573725]);
 
       pubnubPartner.time((status) => {
@@ -43,7 +62,9 @@ describe('#components/networking', () => {
 
   describe('supports PNSDK generation with custom SDK name', () => {
     it('returns a correct response object', (done) => {
-      utils.createNock().get('/time/0')
+      utils
+        .createNock()
+        .get('/time/0')
         .query({ uuid: 'myUUID', pnsdk: 'custom-sdk/1.0.0' })
         .reply(200, [14570763868573725]);
 
@@ -57,7 +78,9 @@ describe('#components/networking', () => {
 
   describe('callback handling', () => {
     it('returns a correct status object', (done) => {
-      utils.createNock().get('/time/0')
+      utils
+        .createNock()
+        .get('/time/0')
         .query(true)
         .reply(200, [14570763868573725]);
 
@@ -69,7 +92,9 @@ describe('#components/networking', () => {
     });
 
     it('returns a correct status object on 403', (done) => {
-      utils.createNock().get('/time/0')
+      utils
+        .createNock()
+        .get('/time/0')
         .query(true)
         .reply(403, [14570763868573725]);
 
@@ -82,7 +107,9 @@ describe('#components/networking', () => {
     });
 
     it('returns a correct status object on 400', (done) => {
-      utils.createNock().get('/time/0')
+      utils
+        .createNock()
+        .get('/time/0')
         .query(true)
         .reply(400, [14570763868573725]);
 

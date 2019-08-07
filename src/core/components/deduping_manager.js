@@ -5,21 +5,20 @@ import { SubscribeMessage } from '../flow_interfaces';
 
 type DedupingManagerConsturct = {
   config: Config,
-}
+};
 
 const hashCode = (payload) => {
   let hash = 0;
   if (payload.length === 0) return hash;
   for (let i = 0; i < payload.length; i += 1) {
     let character = payload.charCodeAt(i);
-    hash = ((hash << 5) - hash) + character; // eslint-disable-line
+    hash = (hash << 5) - hash + character; // eslint-disable-line
     hash = hash & hash; // eslint-disable-line
   }
   return hash;
 };
 
 export default class {
-
   _config: Config;
   hashHistory: Array<string>;
 
@@ -49,5 +48,4 @@ export default class {
   clearHistory() {
     this.hashHistory = [];
   }
-
 }

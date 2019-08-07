@@ -14,7 +14,10 @@ export function validateParams(modules: ModulesInject) {
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: HereNowArguments): string {
+export function getURL(
+  modules: ModulesInject,
+  incomingParams: HereNowArguments
+): string {
   let { config } = modules;
   let { channels = [], channelGroups = [] } = incomingParams;
   let baseURL = `/v2/presence/sub-key/${config.subscribeKey}`;
@@ -35,8 +38,15 @@ export function isAuthSupported(): boolean {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: HereNowArguments): Object {
-  let { channelGroups = [], includeUUIDs = true, includeState = false } = incomingParams;
+export function prepareParams(
+  modules: ModulesInject,
+  incomingParams: HereNowArguments
+): Object {
+  let {
+    channelGroups = [],
+    includeUUIDs = true,
+    includeState = false,
+  } = incomingParams;
   const params = {};
 
   if (!includeUUIDs) params.disable_uuids = 1;
@@ -49,8 +59,17 @@ export function prepareParams(modules: ModulesInject, incomingParams: HereNowArg
   return params;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object, incomingParams: HereNowArguments): Object {
-  let { channels = [], channelGroups = [], includeUUIDs = true, includeState = false } = incomingParams;
+export function handleResponse(
+  modules: ModulesInject,
+  serverResponse: Object,
+  incomingParams: HereNowArguments
+): Object {
+  let {
+    channels = [],
+    channelGroups = [],
+    includeUUIDs = true,
+    includeState = false,
+  } = incomingParams;
 
   let prepareSingularChannel = () => {
     let response = {};
@@ -61,7 +80,7 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object, i
     response.channels[channels[0]] = {
       occupants: occupantsList,
       name: channels[0],
-      occupancy: serverResponse.occupancy
+      occupancy: serverResponse.occupancy,
     };
 
     // We have had issues in the past with server returning responses
@@ -91,13 +110,16 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object, i
       response.channels[channelName] = {
         occupants: occupantsList,
         name: channelName,
-        occupancy: channelEntry.occupancy
+        occupancy: channelEntry.occupancy,
       };
 
       if (includeUUIDs) {
         channelEntry.uuids.forEach((uuidEntry) => {
           if (includeState) {
-            occupantsList.push({ state: uuidEntry.state, uuid: uuidEntry.uuid });
+            occupantsList.push({
+              state: uuidEntry.state,
+              uuid: uuidEntry.uuid,
+            });
           } else {
             occupantsList.push({ state: null, uuid: uuidEntry });
           }
@@ -111,7 +133,11 @@ export function handleResponse(modules: ModulesInject, serverResponse: Object, i
   };
 
   let response;
-  if (channels.length > 1 || channelGroups.length > 0 || (channelGroups.length === 0 && channels.length === 0)) {
+  if (
+    channels.length > 1 ||
+    channelGroups.length > 0 ||
+    (channelGroups.length === 0 && channels.length === 0)
+  ) {
     response = prepareMultipleChannel();
   } else {
     response = prepareSingularChannel();

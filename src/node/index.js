@@ -1,4 +1,4 @@
- /* @flow */
+/* @flow */
 
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';

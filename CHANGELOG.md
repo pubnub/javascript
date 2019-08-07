@@ -1,4 +1,16 @@
-﻿## [v4.24.4](https://github.com/pubnub/javascript/tree/v4.24.4)
+﻿## [v4.24.5](https://github.com/pubnub/javascript/tree/v4.24.5)
+  August-07-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.4...v4.24.5)
+
+
+
+- ⭐ Add Signals support
+
+
+
+## [v4.24.4](https://github.com/pubnub/javascript/tree/v4.24.4)
   July-26-2019
 
 

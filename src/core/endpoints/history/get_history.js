@@ -1,6 +1,11 @@
 /* @flow */
 
-import { FetchHistoryArguments, HistoryResponse, HistoryItem, ModulesInject } from '../../flow_interfaces';
+import {
+  FetchHistoryArguments,
+  HistoryResponse,
+  HistoryItem,
+  ModulesInject,
+} from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
@@ -19,7 +24,10 @@ export function getOperation(): string {
   return operationConstants.PNHistoryOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: FetchHistoryArguments) {
+export function validateParams(
+  modules: ModulesInject,
+  incomingParams: FetchHistoryArguments
+) {
   let { channel } = incomingParams;
   let { config } = modules;
 
@@ -27,10 +35,15 @@ export function validateParams(modules: ModulesInject, incomingParams: FetchHist
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
+export function getURL(
+  modules: ModulesInject,
+  incomingParams: FetchHistoryArguments
+): string {
   let { channel } = incomingParams;
   let { config } = modules;
-  return `/v2/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
+  return `/v2/history/sub-key/${
+    config.subscribeKey
+  }/channel/${utils.encodeString(channel)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): boolean {
@@ -41,10 +54,19 @@ export function isAuthSupported(): boolean {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
-  const { start, end, reverse, count = 100, stringifiedTimeToken = false } = incomingParams;
+export function prepareParams(
+  modules: ModulesInject,
+  incomingParams: FetchHistoryArguments
+): Object {
+  const {
+    start,
+    end,
+    reverse,
+    count = 100,
+    stringifiedTimeToken = false,
+  } = incomingParams;
   let outgoingParams: Object = {
-    include_token: 'true'
+    include_token: 'true',
   };
 
   outgoingParams.count = count;
@@ -56,7 +78,10 @@ export function prepareParams(modules: ModulesInject, incomingParams: FetchHisto
   return outgoingParams;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: FetchHistoryArguments): HistoryResponse {
+export function handleResponse(
+  modules: ModulesInject,
+  serverResponse: FetchHistoryArguments
+): HistoryResponse {
   const response: HistoryResponse = {
     messages: [],
     startTimeToken: serverResponse[1],
@@ -66,7 +91,7 @@ export function handleResponse(modules: ModulesInject, serverResponse: FetchHist
   serverResponse[0].forEach((serverHistoryItem) => {
     const item: HistoryItem = {
       timetoken: serverHistoryItem.timetoken,
-      entry: __processMessage(modules, serverHistoryItem.message)
+      entry: __processMessage(modules, serverHistoryItem.message),
     };
 
     response.messages.push(item);

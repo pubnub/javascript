@@ -1,6 +1,12 @@
 /* @flow */
 
-import { FetchMessagesArguments, FetchMessagesResponse, MessageAnnouncement, HistoryV3Response, ModulesInject } from '../flow_interfaces';
+import {
+  FetchMessagesArguments,
+  FetchMessagesResponse,
+  MessageAnnouncement,
+  HistoryV3Response,
+  ModulesInject,
+} from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
@@ -19,7 +25,10 @@ export function getOperation(): string {
   return operationConstants.PNFetchMessagesOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: FetchMessagesArguments) {
+export function validateParams(
+  modules: ModulesInject,
+  incomingParams: FetchMessagesArguments
+) {
   let { channels } = incomingParams;
   let { config } = modules;
 
@@ -27,12 +36,17 @@ export function validateParams(modules: ModulesInject, incomingParams: FetchMess
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: FetchMessagesArguments): string {
+export function getURL(
+  modules: ModulesInject,
+  incomingParams: FetchMessagesArguments
+): string {
   let { channels = [] } = incomingParams;
   let { config } = modules;
 
   let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return `/v3/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(stringifiedChannels)}`;
+  return `/v3/history/sub-key/${
+    config.subscribeKey
+  }/channel/${utils.encodeString(stringifiedChannels)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject): boolean {
@@ -43,7 +57,10 @@ export function isAuthSupported(): boolean {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: FetchMessagesArguments): Object {
+export function prepareParams(
+  modules: ModulesInject,
+  incomingParams: FetchMessagesArguments
+): Object {
   const { start, end, count, stringifiedTimeToken = false } = incomingParams;
   let outgoingParams: Object = {};
 
@@ -55,9 +72,12 @@ export function prepareParams(modules: ModulesInject, incomingParams: FetchMessa
   return outgoingParams;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: HistoryV3Response): FetchMessagesResponse {
+export function handleResponse(
+  modules: ModulesInject,
+  serverResponse: HistoryV3Response
+): FetchMessagesResponse {
   const response: FetchMessagesResponse = {
-    channels: {}
+    channels: {},
   };
 
   Object.keys(serverResponse.channels || {}).forEach((channelName) => {

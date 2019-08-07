@@ -51,7 +51,7 @@ describe('#components/subscription_manager', () => {
     pubnubWithLimitedQueue.stop();
   });
 
-  it('passes the correct message information', done => {
+  it('passes the correct message information', (done) => {
     const scope1 = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
@@ -151,7 +151,7 @@ describe('#components/subscription_manager', () => {
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('passes the correct presence information', done => {
+  it('passes the correct presence information', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
@@ -190,7 +190,7 @@ describe('#components/subscription_manager', () => {
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('passes the correct presence information when state is changed', done => {
+  it('passes the correct presence information when state is changed', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
@@ -231,7 +231,7 @@ describe('#components/subscription_manager', () => {
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('reports when heartbeats failed', done => {
+  it('reports when heartbeats failed', (done) => {
     pubnub.addListener({
       status(statusPayload) {
         if (
@@ -259,7 +259,7 @@ describe('#components/subscription_manager', () => {
     });
   });
 
-  it('reports when heartbeats fail with error code', done => {
+  it('reports when heartbeats fail with error code', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
@@ -300,7 +300,7 @@ describe('#components/subscription_manager', () => {
     });
   });
 
-  it('reports when heartbeats pass', done => {
+  it('reports when heartbeats pass', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
@@ -340,7 +340,7 @@ describe('#components/subscription_manager', () => {
     });
   });
 
-  it('reports when heartbeats pass with heartbeatChannels', done => {
+  it('reports when heartbeats pass with heartbeatChannels', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/presence/sub-key/mySubKey/channel/ch1%2Cch2/heartbeat')
@@ -379,7 +379,7 @@ describe('#components/subscription_manager', () => {
     });
   });
 
-  it('reports when heartbeats pass with heartbeatChannelGroups', done => {
+  it('reports when heartbeats pass with heartbeatChannelGroups', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/presence/sub-key/mySubKey/channel/%2C/heartbeat')
@@ -419,7 +419,7 @@ describe('#components/subscription_manager', () => {
     });
   });
 
-  it('reports when the queue is beyond set threshold', done => {
+  it('reports when the queue is beyond set threshold', (done) => {
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
@@ -461,7 +461,7 @@ describe('#components/subscription_manager', () => {
     });
   });
 
-  it('supports deduping on duplicates', done => {
+  it('supports deduping on duplicates', (done) => {
     pubnub._config.dedupeOnSubscribe = true;
     let messageCount = 0;
 
@@ -508,7 +508,7 @@ describe('#components/subscription_manager', () => {
     }, 250);
   });
 
-  it('no deduping on duplicates ', done => {
+  it('no deduping on duplicates ', (done) => {
     let messageCount = 0;
 
     utils
@@ -555,7 +555,7 @@ describe('#components/subscription_manager', () => {
     }, 250);
   });
 
-  it('supports deduping on shawllow queue', done => {
+  it('supports deduping on shawllow queue', (done) => {
     pubnub._config.dedupeOnSubscribe = true;
     pubnub._config.maximumCacheSize = 1;
     let messageCount = 0;

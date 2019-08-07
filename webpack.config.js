@@ -4,10 +4,23 @@ let StatsPlugin = require('stats-webpack-plugin');
 const packageJSON = require('./package.json');
 
 let config = {
+  mode: 'production',
   module: {
-    loaders: [
-      { test: /\.json/, loader: 'json' },
-      { test: /\.js$/, exclude: /(node_modules|bower_components)/, loader: 'babel' }
+    rules: [
+      {
+        test: /\.json/,
+        use: 'json-loader'
+      },
+      {
+        test: /\.js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      }
     ],
   },
   node: {
@@ -16,10 +29,12 @@ let config = {
     tls: 'empty',
     formidable: 'empty',
   },
+  target: 'web',
   output: {
     filename: 'pubnub.js',
     library: 'PubNub',
     libraryTarget: 'umd',
+    libraryExport: 'default'
   },
   plugins: [
     new webpack.BannerPlugin({ banner: `${packageJSON.version} / Consumer `, raw: false }),
