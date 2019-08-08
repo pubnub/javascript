@@ -25,6 +25,27 @@ import * as presenceGetStateConfig from './endpoints/presence/get_state';
 import * as presenceSetStateConfig from './endpoints/presence/set_state';
 import * as presenceHereNowConfig from './endpoints/presence/here_now';
 
+// Objects API
+
+import * as createUserEndpointConfig from './endpoints/users/create_user';
+import * as updateUserEndpointConfig from './endpoints/users/update_user';
+import * as deleteUserEndpointConfig from './endpoints/users/delete_user';
+import * as getUserEndpointConfig from './endpoints/users/get_user';
+import * as getUsersEndpointConfig from './endpoints/users/get_users';
+import * as createSpaceEndpointConfig from './endpoints/spaces/create_space';
+import * as updateSpaceEndpointConfig from './endpoints/spaces/update_space';
+import * as deleteSpaceEndpointConfig from './endpoints/spaces/delete_space';
+import * as getSpacesEndpointConfig from './endpoints/spaces/get_spaces';
+import * as getSpaceEndpointConfig from './endpoints/spaces/get_space';
+import * as getMembersEndpointConfig from './endpoints/memberships/get_members';
+import * as addMembersEndpointConfig from './endpoints/memberships/add_members';
+import * as updateMembersEndpointConfig from './endpoints/memberships/update_members';
+import * as removeMembersEndpointConfig from './endpoints/memberships/remove_members';
+import * as getMembershipsEndpointConfig from './endpoints/memberships/get_memberships';
+import * as updateMembershipsEndpointConfig from './endpoints/memberships/update_memberships';
+import * as joinSpacesEndpointConfig from './endpoints/memberships/join_spaces';
+import * as leaveSpacesEndpointConfig from './endpoints/memberships/leave_spaces';
+
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
 
@@ -75,6 +96,27 @@ export default class {
   presence: Function;
   unsubscribe: Function;
   unsubscribeAll: Function;
+
+  // Objects API
+
+  createUser: Function;
+  updateUser: Function;
+  deleteUser: Function;
+  getUser: Function;
+  getUsers: Function;
+  createSpace: Function;
+  updateSpace: Function;
+  deleteSpace: Function;
+  getSpaces: Function;
+  getSpace: Function;
+  getMembers: Function;
+  addMembers: Function;
+  updateMembers: Function;
+  removeMembers: Function;
+  getMemberships: Function;
+  joinSpaces: Function;
+  updateMemberships: Function;
+  leaveSpaces: Function;
 
   disconnect: Function;
   reconnect: Function;
@@ -239,6 +281,116 @@ export default class {
       this,
       modules,
       fetchMessagesEndpointConfig
+    );
+
+    // Objects API
+
+    this.createUser = endpointCreator.bind(
+      this,
+      modules,
+      createUserEndpointConfig
+    );
+
+    this.updateUser = endpointCreator.bind(
+      this,
+      modules,
+      updateUserEndpointConfig
+    );
+
+    this.deleteUser = endpointCreator.bind(
+      this,
+      modules,
+      deleteUserEndpointConfig
+    );
+
+    this.getUser = endpointCreator.bind(
+      this,
+      modules,
+      getUserEndpointConfig
+    );
+
+    this.getUsers = endpointCreator.bind(
+      this,
+      modules,
+      getUsersEndpointConfig
+    );
+
+    this.createSpace = endpointCreator.bind(
+      this,
+      modules,
+      createSpaceEndpointConfig
+    );
+
+    this.updateSpace = endpointCreator.bind(
+      this,
+      modules,
+      updateSpaceEndpointConfig
+    );
+
+    this.deleteSpace = endpointCreator.bind(
+      this,
+      modules,
+      deleteSpaceEndpointConfig
+    );
+
+    this.getSpaces = endpointCreator.bind(
+      this,
+      modules,
+      getSpacesEndpointConfig
+    );
+
+    this.getSpace = endpointCreator.bind(
+      this,
+      modules,
+      getSpaceEndpointConfig
+    );
+
+    this.addMembers = endpointCreator.bind(
+      this,
+      modules,
+      addMembersEndpointConfig
+    );
+
+    this.updateMembers = endpointCreator.bind(
+      this,
+      modules,
+      updateMembersEndpointConfig
+    );
+
+    this.removeMembers = endpointCreator.bind(
+      this,
+      modules,
+      removeMembersEndpointConfig
+    );
+
+    this.getMembers = endpointCreator.bind(
+      this,
+      modules,
+      getMembersEndpointConfig
+    );
+
+    this.getMemberships = endpointCreator.bind(
+      this,
+      modules,
+      getMembershipsEndpointConfig
+    );
+
+    this.joinSpaces = endpointCreator.bind(
+      this,
+      modules,
+      joinSpacesEndpointConfig
+    );
+
+    this.updateMemberships = endpointCreator.bind(
+      this,
+      modules,
+      updateMembershipsEndpointConfig
+    );
+
+    this.leaveSpaces = endpointCreator.bind(
+      this,
+      modules,
+      leaveSpacesEndpointConfig
     );
 
     this.time = timeEndpoint;

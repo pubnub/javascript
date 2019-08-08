@@ -13,6 +13,23 @@ export default {
   PNPublishOperation: 'PNPublishOperation',
   PNSignalOperation: 'PNSignalOperation',
 
+  // Objects API
+
+  PNCreateUserOperation: 'PNCreateUserOperation',
+  PNUpdateUserOperation: 'PNUpdateUserOperation',
+  PNDeleteUserOperation: 'PNDeleteUserOperation',
+  PNGetUserOperation: 'PNGetUsersOperation',
+  PNGetUsersOperation: 'PNGetUsersOperation',
+  PNCreateSpaceOperation: 'PNCreateSpaceOperation',
+  PNUpdateSpaceOperation: 'PNUpdateSpaceOperation',
+  PNDeleteSpaceOperation: 'PNDeleteSpaceOperation',
+  PNGetSpaceOperation: 'PNGetSpacesOperation',
+  PNGetSpacesOperation: 'PNGetSpacesOperation',
+  PNGetMembersOperation: 'PNGetMembersOperation',
+  PNUpdateMembersOperation: 'PNUpdateMembersOperation',
+  PNGetMembershipsOperation: 'PNGetMembershipsOperation',
+  PNUpdateMembershipsOperation: 'PNUpdateMembershipsOperation',
+
   // push
   PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
   PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',

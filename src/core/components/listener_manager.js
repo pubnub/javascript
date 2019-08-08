@@ -3,6 +3,7 @@ import {
   MessageAnnouncement,
   StatusAnnouncement,
   SignalAnnouncement,
+  ObjectAnnouncement,
   CallbackStruct,
   PresenceAnnouncement,
 } from '../flow_interfaces';
@@ -54,6 +55,24 @@ export default class {
   announceSignal(announce: SignalAnnouncement) {
     this._listeners.forEach((listener) => {
       if (listener.signal) listener.signal(announce);
+    });
+  }
+
+  announceUser(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.user) listener.user(announce);
+    });
+  }
+
+  announceSpace(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.space) listener.space(announce);
+    });
+  }
+
+  announceMembership(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.membership) listener.membership(announce);
     });
   }
 
