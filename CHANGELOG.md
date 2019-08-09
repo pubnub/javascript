@@ -1,4 +1,16 @@
-﻿## [v4.24.5](https://github.com/pubnub/javascript/tree/v4.24.5)
+﻿## [v4.24.6](https://github.com/pubnub/javascript/tree/v4.24.6)
+  August-09-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.5...v4.24.6)
+
+
+
+- ⭐ Fix regression: 'PubNub is not a constructor' in Node.js"
+
+
+
+## [v4.24.5](https://github.com/pubnub/javascript/tree/v4.24.5)
   August-07-2019
 
 

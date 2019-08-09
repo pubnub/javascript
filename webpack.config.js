@@ -33,8 +33,7 @@ let config = {
   output: {
     filename: 'pubnub.js',
     library: 'PubNub',
-    libraryTarget: 'umd',
-    libraryExport: 'default'
+    libraryTarget: 'umd'
   },
   plugins: [
     new webpack.BannerPlugin({ banner: `${packageJSON.version} / Consumer `, raw: false }),
