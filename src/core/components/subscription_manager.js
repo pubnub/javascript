@@ -8,6 +8,7 @@ import utils from '../utils';
 import {
   MessageAnnouncement,
   SignalAnnouncement,
+  ObjectAnnouncement,
   SubscribeEnvelope,
   StatusAnnouncement,
   PresenceAnnouncement,
@@ -642,6 +643,36 @@ export default class {
         announce.message = message.payload;
 
         this._listenerManager.announceSignal(announce);
+      } else if (message.messageType === 2) {
+        // this is an object message
+
+        let announce: ObjectAnnouncement = {};
+
+        announce.channel = null;
+        announce.subscription = null;
+
+        announce.channel = channel;
+        announce.subscription = subscriptionMatch;
+        announce.timetoken = publishMetaData.publishTimetoken;
+        announce.publisher = message.issuingClientId;
+
+        if (message.userMetadata) {
+          announce.userMetadata = message.userMetadata;
+        }
+
+        announce.message = {
+          event: message.payload.event,
+          type: message.payload.type,
+          data: message.payload.data,
+        };
+
+        if (message.payload.type === 'user') {
+          this._listenerManager.announceUser(announce);
+        } else if (message.payload.type === 'space') {
+          this._listenerManager.announceSpace(announce);
+        } else if (message.payload.type === 'membership') {
+          this._listenerManager.announceMembership(announce);
+        }
       } else {
         let announce: MessageAnnouncement = {};
         announce.channel = null;

@@ -26,6 +26,8 @@ function createValidationError(message: string): Object {
 function decideURL(endpoint, modules, incomingParams) {
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     return endpoint.postURL(modules, incomingParams);
+  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    return endpoint.patchURL(modules, incomingParams);
   } else {
     return endpoint.getURL(modules, incomingParams);
   }
@@ -140,6 +142,9 @@ export default function(modules, endpoint, ...args) {
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     let payload = endpoint.postPayload(modules, incomingParams);
     callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
+  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    let payload = endpoint.patchPayload(modules, incomingParams);
+    callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
   } else if (endpoint.useDelete && endpoint.useDelete()) {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
   } else {

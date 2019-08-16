@@ -89,6 +89,17 @@ export function post(
   return xdr.call(this, 'POST', url, params, body, endpoint, callback);
 }
 
+export function patch(
+  params: Object,
+  body: string,
+  endpoint: EndpointDefinition,
+  callback: Function
+) {
+  let url = this.getStandardOrigin() + endpoint.url;
+
+  return xdr.call(this, 'PATCH', url, params, body, endpoint, callback);
+}
+
 export function del(
   params: Object,
   endpoint: EndpointDefinition,

@@ -32,7 +32,8 @@ export type NetworkingModules = {
   keepAlive: ?Function,
   sendBeacon: ?Function,
   get: Function,
-  post: Function
+  post: Function,
+  patch: Function
 }
 
 export type InternalSetupStruct = {
@@ -161,6 +162,24 @@ type MessageAnnouncement = {
 type SignalAnnouncement = {
 
   message: Object,
+
+  channel: string,
+  subscription: string,
+
+  timetoken: number | string,
+  userMetadata: Object,
+  publisher: string
+}
+
+type ObjectMessage = {
+  event: string,
+  type: string,
+  data: Object
+}
+
+type ObjectAnnouncement = {
+
+  message: ObjectMessage,
 
   channel: string,
   subscription: string,
@@ -405,7 +424,188 @@ type SignalResponse = {
 type SignalArguments = {
   message: Object | string | number | boolean,
   channel: string
+}
+
+// Users Object
+
+type UserListInput = {
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+  }
+}
+
+type SingleUserInput = {
+  userId: string,
+  include?: {
+    customFields?: boolean,
+  }
+}
+
+type UserObjectInput = {
+  id: string,
+  name: string,
+  externalId?: string,
+  profileUrl?: string,
+  email?: string,
+  custom?: Object,
 };
+
+type UserResponse = {
+  status: number,
+  data: {
+    ...UserObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+
+type UsersListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<UserResponse>,
+};
+
+// Spaces Object
+
+type SpacesObjectInput = {
+  id: string,
+  name: string,
+  description?: String,
+  custom?: Object,
+  include?: {
+    customFields?: boolean,
+  }
+};
+
+type SpacesResponse = {
+  status: number,
+  data: {
+    ...SpacesObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+// Memberships Object
+
+type MembershipsInput = {
+  userId: string,
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+    spaceFields?: boolean,
+    customSpaceFields?: boolean,
+  }
+}
+
+type MembershipsObjectInput = {
+  id: string,
+  custom?: Object,
+  space?: SpacesResponse,
+};
+
+type MembershipsResponse = {
+  status: number,
+  data: {
+    ...MembershipsObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type MembershipsListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<MembershipsResponse>,
+};
+
+interface AddMemberships extends MembershipsInput {
+  addMemberships: Array<MembershipsObjectInput>,
+}
+
+interface UpdateMemberships extends MembershipsInput {
+  updateMemberships: Array<MembershipsObjectInput>,
+}
+
+interface RemoveMemberships extends MembershipsInput {
+  removeMemberships: Array<string>,
+}
+
+interface AddUpdateRemoveMemberships extends AddMemberships, UpdateMemberships, RemoveMemberships {}
+
+// Members Object
+
+type MembersInput = {
+  userId: string,
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+    userFields?: boolean,
+    customUserFields?: boolean,
+  }
+}
+
+type MembersObjectInput = {
+  id: string,
+  custom?: Object,
+  user?: UserResponse,
+};
+
+type MembersResponse = {
+  status: number,
+  data: {
+    ...MembersObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type MembersListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<MembersResponse>,
+};
+
+interface AddMembers extends MembersInput {
+  addMembers: Array<MembersObjectInput>,
+}
+
+interface UpdateMembers extends MembersInput {
+  updateMembers: Array<MembersObjectInput>,
+}
+
+interface RemoveMembers extends MembersInput {
+  removeMembers: Array<string>,
+}
+
+interface AddUpdateRemoveMembers extends AddMembers, UpdateMembers, RemoveMembers {}
 
 //
 

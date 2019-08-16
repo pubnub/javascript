@@ -4,7 +4,7 @@
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import db from '../db/web';
-import { del, get, post } from '../networking/modules/web-node';
+import { del, get, post, patch } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 function sendBeacon(url: string) {
@@ -22,7 +22,7 @@ export default class extends PubNubCore {
 
     setup.db = db;
     setup.sdkFamily = 'Web';
-    setup.networking = new Networking({ del, get, post, sendBeacon });
+    setup.networking = new Networking({ del, get, post, patch, sendBeacon });
 
     super(setup);
 
