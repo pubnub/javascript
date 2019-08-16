@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Add Objects support for Users, Spaces and Memberships"
+        type: improvement
+    date: 2019-08-16
+    version: v4.25.0
+  - 
+    changes: 
+      - 
         text: "Fix regression: 'PubNub is not a constructor' in Node.js"
         type: bug
     date: 2019-08-07
@@ -651,8 +658,30 @@ features:
     - SUBSCRIBE-FILTER-EXPRESSION
     - SUBSCRIBE-PUBLISHER-UUID
     - SUBSCRIBE-SIGNAL-LISTENER
+    - SUBSCRIBE-USER-LISTENER
+    - SUBSCRIBE-SPACE-LISTENER
+    - SUBSCRIBE-MEMBERSHIP-LISTENER
   signal:
     - SIGNAL-SEND
+  objects:
+    - OBJECS-GET-USER
+    - OBJECS-GET-USERS
+    - OBJECS-CREATE-USER
+    - OBJECS-UPDATE-USER
+    - OBJECS-DELETE-USER
+    - OBJECS-GET-SPACE
+    - OBJECS-GET-SPACES
+    - OBJECS-CREATE-SPACE
+    - OBJECS-UPDATE-SPACE
+    - OBJECS-DELETE-SPACE
+    - OBJECTS-GET-MEMBERSHIPS
+    - OBJECTS-JOIN-SPACES
+    - OBJECTS-UPDATE-MEMBERSHIPS
+    - OBJECTS-LEAVE-SPACES
+    - OBJECTS-GET-MEMBERS
+    - OBJECTS-ADD-MEMBERS
+    - OBJECTS-UPDATE-MEMBERS
+    - OBJECTS-REMOVE-MEMBERS
   time: 
     - TIME-TIME
 files: 
@@ -687,4 +716,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.24.6"
+version: "4.25.0"

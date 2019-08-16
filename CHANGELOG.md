@@ -1,4 +1,16 @@
-﻿## [v4.24.6](https://github.com/pubnub/javascript/tree/v4.24.6)
+﻿## [v4.25.0](https://github.com/pubnub/javascript/tree/v4.25.0)
+  August-16-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.6...v4.25.0)
+
+
+
+- ⭐ Fix regression: 'Add Objects support for Users, Spaces and Memberships"
+
+
+
+## [v4.24.6](https://github.com/pubnub/javascript/tree/v4.24.6)
   August-09-2019
 
 
