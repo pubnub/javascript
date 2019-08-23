@@ -1,4 +1,16 @@
-﻿## [v4.25.0](https://github.com/pubnub/javascript/tree/v4.25.0)
+﻿## [v4.25.1](https://github.com/pubnub/javascript/tree/v4.25.1)
+  August-23-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.0...v4.25.1)
+
+
+
+- ⭐ Fix regression: Fix titanium build to support recent version"
+
+
+
+## [v4.25.0](https://github.com/pubnub/javascript/tree/v4.25.0)
   August-16-2019
 
 
@@ -6,7 +18,7 @@
 
 
 
-- ⭐ Fix regression: 'Add Objects support for Users, Spaces and Memberships"
+- ⭐ Fix regression: Add Objects support for Users, Spaces and Memberships"
 
 
 
