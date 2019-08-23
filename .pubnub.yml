@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Fix titanium build to support recent version"
+        type: bug
+    date: 2019-08-16
+    version: v4.25.1
+  - 
+    changes: 
+      - 
         text: "Add Objects support for Users, Spaces and Memberships"
         type: improvement
     date: 2019-08-16
@@ -716,4 +723,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.25.0"
+version: "4.25.1"

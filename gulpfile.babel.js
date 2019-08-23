@@ -6,6 +6,7 @@ const babel = require('gulp-babel');
 const clean = require('gulp-clean');
 const gulpWebpack = require('webpack-stream');
 const webpackConfig = require('./webpack.config');
+const webpackConfigTitanium = require('./webpack.config.titanium');
 const eslint = require('gulp-eslint');
 const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
@@ -54,7 +55,7 @@ gulp.task('compile_web', () => {
 gulp.task('compile_titanium', () => {
   return gulp
     .src('src/titanium/index.js')
-    .pipe(gulpWebpack(webpackConfig))
+    .pipe(gulpWebpack(webpackConfigTitanium))
     .pipe(gulp.dest('dist/titanium'));
 });
 

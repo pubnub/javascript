@@ -1,5 +1,5 @@
 /* @flow */
-/* global XMLHttpRequest, window */
+/* global XMLHttpRequest */
 
 import {
   EndpointDefinition,
@@ -11,8 +11,7 @@ declare var Ti: any;
 
 function log(url, qs, res) {
   let _pickLogger = () => {
-    if (Ti && Ti.API && Ti.API.log) return Ti.API; // eslint-disable-line no-console
-    if (window && window.console && window.console.log) return window.console;
+    if (Ti && Ti.API && Ti.API.log) return Ti.API;
     return console;
   };
 
