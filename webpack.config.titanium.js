@@ -1,6 +1,6 @@
 let webpack = require('webpack');
 let StatsPlugin = require('stats-webpack-plugin');
-let WrapperPlugin = require('wrapper-webpack-plugin')
+let WrapperPlugin = require('wrapper-webpack-plugin');
 let config = Object.assign({}, require('./webpack.config.common'));
 
 const packageJSON = require('./package.json');
