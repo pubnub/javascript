@@ -34,6 +34,14 @@ export function isAuthSupported() {
   return true;
 }
 
+export function getAuthToken(modules: ModulesInject, incomingParams: SingleUserInput): string {
+  let token =
+    modules.tokenManager.getToken('user', incomingParams.userId) ||
+    modules.tokenManager.getToken('user');
+
+  return token;
+}
+
 export function prepareParams(
   modules: ModulesInject,
   incomingParams: SingleUserInput

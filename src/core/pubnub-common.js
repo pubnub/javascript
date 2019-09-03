@@ -4,6 +4,7 @@ import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
 import ListenerManager from './components/listener_manager';
+import TokenManager from './components/token_manager';
 
 import endpointCreator from './components/endpoint';
 
@@ -48,6 +49,7 @@ import * as leaveSpacesEndpointConfig from './endpoints/memberships/leave_spaces
 
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
+import * as grantTokenEndpointConfig from './endpoints/access_manager/grant_token';
 
 import * as publishEndpointConfig from './endpoints/publish';
 import * as signalEndpointConfig from './endpoints/signal';
@@ -67,6 +69,7 @@ import uuidGenerator from './components/uuid';
 export default class {
   _config: Config;
   _listenerManager: ListenerManager;
+  _tokenManager: TokenManager;
 
   // tell flow about the mounted endpoint
   time: Function;
@@ -89,6 +92,7 @@ export default class {
   setState: Function;
   //
   grant: Function;
+  grantToken: Function;
   audit: Function;
   //
   subscribe: Function;
@@ -131,6 +135,13 @@ export default class {
   removeListener: Function;
   removeAllListeners: Function;
 
+  parseToken: Function;
+  setToken: Function;
+  setTokens: Function;
+  getToken: Function;
+  getTokens: Function;
+  clearTokens: Function;
+
   getAuthKey: Function;
   setAuthKey: Function;
 
@@ -151,14 +162,16 @@ export default class {
   //
 
   constructor(setup: InternalSetupStruct) {
-    let { db, networking } = setup;
+    let { db, networking, cbor } = setup;
 
     const config = (this._config = new Config({ setup, db }));
     const crypto = new Crypto({ config });
 
     networking.init(config);
 
-    let modules = { config, networking, crypto };
+    const tokenManager = (this._tokenManager = new TokenManager(config, cbor));
+
+    let modules = { config, networking, crypto, tokenManager };
 
     const timeEndpoint = endpointCreator.bind(
       this,
@@ -205,6 +218,13 @@ export default class {
     this.removeAllListeners = listenerManager.removeAllListeners.bind(
       listenerManager
     );
+
+    this.parseToken = tokenManager.parseToken.bind(tokenManager);
+    this.setToken = tokenManager.setToken.bind(tokenManager);
+    this.setTokens = tokenManager.setTokens.bind(tokenManager);
+    this.getToken = tokenManager.getToken.bind(tokenManager);
+    this.getTokens = tokenManager.getTokens.bind(tokenManager);
+    this.clearTokens = tokenManager.clearTokens.bind(tokenManager);
 
     /* channel groups */
     this.channelGroups = {
@@ -254,6 +274,7 @@ export default class {
     );
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
+    this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
     //
     this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);

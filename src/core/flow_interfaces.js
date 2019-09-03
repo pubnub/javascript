@@ -401,6 +401,74 @@ type GrantArguments = {
   authKeys: Array<string>
 }
 
+// Base permissions object
+interface GrantTokenObject {
+  create: boolean,
+  read: boolean,
+  write: boolean,
+  manage: boolean,
+  delete: boolean,
+}
+
+interface GrantTokenInput {
+  ttl: number,
+  resources?: {
+    channels?: {
+      [key: String]: GrantTokenObject,
+    },
+    groups?: {
+      [key: String]: GrantTokenObject,
+    },
+    users?: {
+      [key: String]: GrantTokenObject,
+    },
+    spaces?: {
+      [key: String]: GrantTokenObject,
+    },
+  },
+  patterns?: {
+    channels?: {
+      [key: String]: GrantTokenObject,
+    },
+    groups?: {
+      [key: String]: GrantTokenObject,
+    },
+    users?: {
+      [key: String]: GrantTokenObject,
+    },
+    spaces?: {
+      [key: String]: GrantTokenObject,
+    },
+  },
+  meta?: Object
+}
+
+interface GrantTokenOutput extends GrantTokenInput {
+  version: number,
+  timestamp: number,
+  signature: Buffer
+}
+
+// token manager
+
+type TokensDefinition = {
+  user?: string,
+  space?: string,
+  users?: {
+    [key: String]: String
+  },
+  spaces?: {
+    [key: String]: String
+  }
+};
+
+type GetTokensInput= {
+  user?: boolean,
+  space?: boolean,
+  users?:  Array<string>,
+  spaces?:  Array<string>
+};
+
 // publish
 
 type PublishResponse = {
@@ -447,7 +515,7 @@ type SingleUserInput = {
   }
 }
 
-type UserObjectInput = {
+type UsersObjectInput = {
   id: string,
   name: string,
   externalId?: string,
@@ -459,13 +527,12 @@ type UserObjectInput = {
 type UserResponse = {
   status: number,
   data: {
-    ...UserObjectInput,
+    ...UsersObjectInput,
     created: string,
     updated: string,
     eTag: string,
   },
 };
-
 
 type UsersListResponse = {
   status: number,
@@ -476,6 +543,25 @@ type UsersListResponse = {
 };
 
 // Spaces Object
+
+type SpaceListInput = {
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+  }
+}
+
+type SingleSpaceInput = {
+  spaceId: string,
+  include?: {
+    customFields?: boolean,
+  }
+}
 
 type SpacesObjectInput = {
   id: string,
@@ -495,6 +581,24 @@ type SpacesResponse = {
     updated: string,
     eTag: string,
   },
+};
+
+type SpaceResponse = {
+  status: number,
+  data: {
+    ...SpacesObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type SpacesListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<SpaceResponse>,
 };
 
 // Memberships Object
@@ -555,7 +659,7 @@ interface AddUpdateRemoveMemberships extends AddMemberships, UpdateMemberships, 
 // Members Object
 
 type MembersInput = {
-  userId: string,
+  spaceId: string,
   limit?: number,
   page?: {
     next?: string,

@@ -7,10 +7,8 @@ import {
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-function prepareMessagePayload(modules, messagePayload) {
-  let stringifiedPayload = JSON.stringify(messagePayload);
-
-  return stringifiedPayload;
+function prepareMessagePayload(modules, incomingParams) {
+  return incomingParams;
 }
 
 export function getOperation(): string {
@@ -64,6 +62,14 @@ export function isAuthSupported() {
   return true;
 }
 
+export function getAuthToken(modules: ModulesInject, incomingParams: UsersObjectInput): string {
+  let token =
+    modules.tokenManager.getToken('user', incomingParams.id) ||
+    modules.tokenManager.getToken('user');
+
+  return token;
+}
+
 export function prepareParams(
   modules: ModulesInject,
   incomingParams: UsersObjectInput
@@ -100,7 +106,7 @@ export function prepareParams(
 export function patchPayload(
   modules: ModulesInject,
   incomingParams: UsersObjectInput
-): string {
+): Object {
   return prepareMessagePayload(modules, incomingParams);
 }
 

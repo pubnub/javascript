@@ -53,6 +53,7 @@ export default {
 
   // PAM
   PNAccessManagerGrant: 'PNAccessManagerGrant',
+  PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
   //
 
