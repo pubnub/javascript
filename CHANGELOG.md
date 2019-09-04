@@ -1,4 +1,16 @@
-﻿## [v4.25.1](https://github.com/pubnub/javascript/tree/v4.25.1)
+﻿## [v4.25.2](https://github.com/pubnub/javascript/tree/v4.25.2)
+  August-23-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.1...v4.25.2)
+
+
+
+- ⭐ Fix issue with subdomains ending in 'ps'
+
+
+
+## [v4.25.1](https://github.com/pubnub/javascript/tree/v4.25.1)
   August-23-2019
 
 
@@ -6,7 +18,7 @@
 
 
 
-- ⭐ Fix regression: Fix titanium build to support recent version"
+- ⭐ Fix regression: Fix titanium build to support recent version
 
 
 
@@ -18,7 +30,7 @@
 
 
 
-- ⭐ Fix regression: Add Objects support for Users, Spaces and Memberships"
+- ⭐ Fix regression: Add Objects support for Users, Spaces and Memberships
 
 
 
@@ -30,7 +42,7 @@
 
 
 
-- ⭐ Fix regression: 'PubNub is not a constructor' in Node.js"
+- ⭐ Fix regression: 'PubNub is not a constructor' in Node.js
 
 
 

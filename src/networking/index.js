@@ -44,7 +44,7 @@ export default class {
 
   nextOrigin(): string {
     // if a custom origin is supplied, use do not bother with shuffling subdomains
-    if (this._providedFQDN.indexOf('ps.') === -1) {
+    if (!this._providedFQDN.match(/ps\.pndsn\.com$/i)) {
       return this._providedFQDN;
     }
 
@@ -59,9 +59,9 @@ export default class {
     newSubDomain = this._currentSubDomain.toString();
 
     return this._providedFQDN.replace(
-      'ps.',
-      `ps${newSubDomain}.`
-    ); /* ensure ps. is used to replace, else https text will change */
+      'ps.pndsn.com',
+      `ps${newSubDomain}.pndsn.com`
+    );
   }
 
   hasModule(name: string) {
