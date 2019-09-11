@@ -1,8 +1,8 @@
 let config = {
   mode: 'production',
   optimization: {
-		minimize: false
-	},
+    minimize: false
+  },
   module: {
     rules: [
       {
