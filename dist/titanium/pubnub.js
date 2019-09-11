@@ -1,2 +1,7823 @@
 /*! 4.25.2 / Consumer  */
-exports.PubNub=function(e){var t={};function n(i){if(t[i])return t[i].exports;var r=t[i]={i:i,l:!1,exports:{}};return e[i].call(r.exports,r,r.exports,n),r.l=!0,r.exports}return n.m=e,n.c=t,n.d=function(e,t,i){n.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:i})},n.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},n.t=function(e,t){if(1&t&&(e=n(e)),8&t)return e;if(4&t&&"object"==typeof e&&e&&e.__esModule)return e;var i=Object.create(null);if(n.r(i),Object.defineProperty(i,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var r in e)n.d(i,r,function(t){return e[t]}.bind(null,r));return i},n.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return n.d(t,"a",t),t},n.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},n.p="",n(n.s=9)}([function(e,t,n){"use strict";e.exports={}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;t.default={PNTimeOperation:"PNTimeOperation",PNHistoryOperation:"PNHistoryOperation",PNDeleteMessagesOperation:"PNDeleteMessagesOperation",PNFetchMessagesOperation:"PNFetchMessagesOperation",PNMessageCounts:"PNMessageCountsOperation",PNSubscribeOperation:"PNSubscribeOperation",PNUnsubscribeOperation:"PNUnsubscribeOperation",PNPublishOperation:"PNPublishOperation",PNSignalOperation:"PNSignalOperation",PNCreateUserOperation:"PNCreateUserOperation",PNUpdateUserOperation:"PNUpdateUserOperation",PNDeleteUserOperation:"PNDeleteUserOperation",PNGetUserOperation:"PNGetUsersOperation",PNGetUsersOperation:"PNGetUsersOperation",PNCreateSpaceOperation:"PNCreateSpaceOperation",PNUpdateSpaceOperation:"PNUpdateSpaceOperation",PNDeleteSpaceOperation:"PNDeleteSpaceOperation",PNGetSpaceOperation:"PNGetSpacesOperation",PNGetSpacesOperation:"PNGetSpacesOperation",PNGetMembersOperation:"PNGetMembersOperation",PNUpdateMembersOperation:"PNUpdateMembersOperation",PNGetMembershipsOperation:"PNGetMembershipsOperation",PNUpdateMembershipsOperation:"PNUpdateMembershipsOperation",PNPushNotificationEnabledChannelsOperation:"PNPushNotificationEnabledChannelsOperation",PNRemoveAllPushNotificationsOperation:"PNRemoveAllPushNotificationsOperation",PNWhereNowOperation:"PNWhereNowOperation",PNSetStateOperation:"PNSetStateOperation",PNHereNowOperation:"PNHereNowOperation",PNGetStateOperation:"PNGetStateOperation",PNHeartbeatOperation:"PNHeartbeatOperation",PNChannelGroupsOperation:"PNChannelGroupsOperation",PNRemoveGroupOperation:"PNRemoveGroupOperation",PNChannelsForGroupOperation:"PNChannelsForGroupOperation",PNAddChannelsToGroupOperation:"PNAddChannelsToGroupOperation",PNRemoveChannelsFromGroupOperation:"PNRemoveChannelsFromGroupOperation",PNAccessManagerGrant:"PNAccessManagerGrant",PNAccessManagerAudit:"PNAccessManagerAudit"},e.exports=t.default},function(e,t,n){"use strict";function i(e){return encodeURIComponent(e).replace(/[!~*'()]/g,function(e){return"%".concat(e.charCodeAt(0).toString(16).toUpperCase())})}function r(e){return function(e){var t=[];return Object.keys(e).forEach(function(e){return t.push(e)}),t}(e).sort()}e.exports={signPamFromParams:function(e){return r(e).map(function(t){return"".concat(t,"=").concat(i(e[t]))}).join("&")},endsWith:function(e,t){return-1!==e.indexOf(t,this.length-t.length)},createPromise:function(){var e,t;return{promise:new Promise(function(n,i){e=n,t=i}),reject:t,fulfill:e}},encodeString:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var i,r=(i=n(5))&&i.__esModule?i:{default:i};n(0);function s(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function o(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var a=300,u=function(){function e(t){var n=t.setup,i=t.db;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),o(this,"_db",void 0),o(this,"subscribeKey",void 0),o(this,"publishKey",void 0),o(this,"secretKey",void 0),o(this,"cipherKey",void 0),o(this,"authKey",void 0),o(this,"UUID",void 0),o(this,"proxy",void 0),o(this,"instanceId",void 0),o(this,"sdkName",void 0),o(this,"sdkFamily",void 0),o(this,"partnerId",void 0),o(this,"filterExpression",void 0),o(this,"suppressLeaveEvents",void 0),o(this,"secure",void 0),o(this,"origin",void 0),o(this,"logVerbosity",void 0),o(this,"useInstanceId",void 0),o(this,"useRequestId",void 0),o(this,"keepAlive",void 0),o(this,"keepAliveSettings",void 0),o(this,"autoNetworkDetection",void 0),o(this,"announceSuccessfulHeartbeats",void 0),o(this,"announceFailedHeartbeats",void 0),o(this,"_presenceTimeout",void 0),o(this,"_heartbeatInterval",void 0),o(this,"_subscribeRequestTimeout",void 0),o(this,"_transactionalRequestTimeout",void 0),o(this,"_useSendBeacon",void 0),o(this,"requestMessageCountThreshold",void 0),o(this,"restore",void 0),o(this,"dedupeOnSubscribe",void 0),o(this,"maximumCacheSize",void 0),o(this,"customEncrypt",void 0),o(this,"customDecrypt",void 0),this._db=i,this.instanceId="pn-".concat(r.default.createUUID()),this.secretKey=n.secretKey||n.secret_key,this.subscribeKey=n.subscribeKey||n.subscribe_key,this.publishKey=n.publishKey||n.publish_key,this.sdkName=n.sdkName,this.sdkFamily=n.sdkFamily,this.partnerId=n.partnerId,this.setAuthKey(n.authKey),this.setCipherKey(n.cipherKey),this.setFilterExpression(n.filterExpression),this.origin=n.origin||"ps.pndsn.com",this.secure=n.ssl||!1,this.restore=n.restore||!1,this.proxy=n.proxy,this.keepAlive=n.keepAlive,this.keepAliveSettings=n.keepAliveSettings,this.autoNetworkDetection=n.autoNetworkDetection||!1,this.dedupeOnSubscribe=n.dedupeOnSubscribe||!1,this.maximumCacheSize=n.maximumCacheSize||100,this.customEncrypt=n.customEncrypt,this.customDecrypt=n.customDecrypt,"undefined"!=typeof location&&"https:"===location.protocol&&(this.secure=!0),this.logVerbosity=n.logVerbosity||!1,this.suppressLeaveEvents=n.suppressLeaveEvents||!1,this.announceFailedHeartbeats=n.announceFailedHeartbeats||!0,this.announceSuccessfulHeartbeats=n.announceSuccessfulHeartbeats||!1,this.useInstanceId=n.useInstanceId||!1,this.useRequestId=n.useRequestId||!1,this.requestMessageCountThreshold=n.requestMessageCountThreshold,this.setTransactionTimeout(n.transactionalRequestTimeout||15e3),this.setSubscribeTimeout(n.subscribeRequestTimeout||31e4),this.setSendBeaconConfig(n.useSendBeacon||!0),this.setPresenceTimeout(n.presenceTimeout||a),null!=n.heartbeatInterval&&this.setHeartbeatInterval(n.heartbeatInterval),this.setUUID(this._decideUUID(n.uuid))}var t,n,i;return t=e,(n=[{key:"getAuthKey",value:function(){return this.authKey}},{key:"setAuthKey",value:function(e){return this.authKey=e,this}},{key:"setCipherKey",value:function(e){return this.cipherKey=e,this}},{key:"getUUID",value:function(){return this.UUID}},{key:"setUUID",value:function(e){return this._db&&this._db.set&&this._db.set("".concat(this.subscribeKey,"uuid"),e),this.UUID=e,this}},{key:"getFilterExpression",value:function(){return this.filterExpression}},{key:"setFilterExpression",value:function(e){return this.filterExpression=e,this}},{key:"getPresenceTimeout",value:function(){return this._presenceTimeout}},{key:"setPresenceTimeout",value:function(e){return e>=20?this._presenceTimeout=e:(this._presenceTimeout=20,console.log("WARNING: Presence timeout is less than the minimum. Using minimum value: ",this._presenceTimeout)),this.setHeartbeatInterval(this._presenceTimeout/2-1),this}},{key:"setProxy",value:function(e){this.proxy=e}},{key:"getHeartbeatInterval",value:function(){return this._heartbeatInterval}},{key:"setHeartbeatInterval",value:function(e){return this._heartbeatInterval=e,this}},{key:"getSubscribeTimeout",value:function(){return this._subscribeRequestTimeout}},{key:"setSubscribeTimeout",value:function(e){return this._subscribeRequestTimeout=e,this}},{key:"getTransactionTimeout",value:function(){return this._transactionalRequestTimeout}},{key:"setTransactionTimeout",value:function(e){return this._transactionalRequestTimeout=e,this}},{key:"isSendBeaconEnabled",value:function(){return this._useSendBeacon}},{key:"setSendBeaconConfig",value:function(e){return this._useSendBeacon=e,this}},{key:"getVersion",value:function(){return"4.25.2"}},{key:"_decideUUID",value:function(e){return e||(this._db&&this._db.get&&this._db.get("".concat(this.subscribeKey,"uuid"))?this._db.get("".concat(this.subscribeKey,"uuid")):"pn-".concat(r.default.createUUID()))}}])&&s(t.prototype,n),i&&s(t,i),e}();t.default=u,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;t.default={PNNetworkUpCategory:"PNNetworkUpCategory",PNNetworkDownCategory:"PNNetworkDownCategory",PNNetworkIssuesCategory:"PNNetworkIssuesCategory",PNTimeoutCategory:"PNTimeoutCategory",PNBadRequestCategory:"PNBadRequestCategory",PNAccessDeniedCategory:"PNAccessDeniedCategory",PNUnknownCategory:"PNUnknownCategory",PNReconnectedCategory:"PNReconnectedCategory",PNConnectedCategory:"PNConnectedCategory",PNRequestMessageCountExceededCategory:"PNRequestMessageCountExceededCategory"},e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var i,r=(i=n(11))&&i.__esModule?i:{default:i};var s={createUUID:function(){return r.default.uuid?r.default.uuid():(0,r.default)()}};t.default=s,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;r(n(3));var i=r(n(12));function r(e){return e&&e.__esModule?e:{default:e}}function s(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function o(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var a=function(){function e(t){var n=t.config;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),o(this,"_config",void 0),o(this,"_iv",void 0),o(this,"_allowedKeyEncodings",void 0),o(this,"_allowedKeyLengths",void 0),o(this,"_allowedModes",void 0),o(this,"_defaultOptions",void 0),this._config=n,this._iv="0123456789012345",this._allowedKeyEncodings=["hex","utf8","base64","binary"],this._allowedKeyLengths=[128,256],this._allowedModes=["ecb","cbc"],this._defaultOptions={encryptKey:!0,keyEncoding:"utf8",keyLength:256,mode:"cbc"}}var t,n,r;return t=e,(n=[{key:"HMACSHA256",value:function(e){return i.default.HmacSHA256(e,this._config.secretKey).toString(i.default.enc.Base64)}},{key:"SHA256",value:function(e){return i.default.SHA256(e).toString(i.default.enc.Hex)}},{key:"_parseOptions",value:function(e){var t=e||{};return t.hasOwnProperty("encryptKey")||(t.encryptKey=this._defaultOptions.encryptKey),t.hasOwnProperty("keyEncoding")||(t.keyEncoding=this._defaultOptions.keyEncoding),t.hasOwnProperty("keyLength")||(t.keyLength=this._defaultOptions.keyLength),t.hasOwnProperty("mode")||(t.mode=this._defaultOptions.mode),-1===this._allowedKeyEncodings.indexOf(t.keyEncoding.toLowerCase())&&(t.keyEncoding=this._defaultOptions.keyEncoding),-1===this._allowedKeyLengths.indexOf(parseInt(t.keyLength,10))&&(t.keyLength=this._defaultOptions.keyLength),-1===this._allowedModes.indexOf(t.mode.toLowerCase())&&(t.mode=this._defaultOptions.mode),t}},{key:"_decodeKey",value:function(e,t){return"base64"===t.keyEncoding?i.default.enc.Base64.parse(e):"hex"===t.keyEncoding?i.default.enc.Hex.parse(e):e}},{key:"_getPaddedKey",value:function(e,t){return e=this._decodeKey(e,t),t.encryptKey?i.default.enc.Utf8.parse(this.SHA256(e).slice(0,32)):e}},{key:"_getMode",value:function(e){return"ecb"===e.mode?i.default.mode.ECB:i.default.mode.CBC}},{key:"_getIV",value:function(e){return"cbc"===e.mode?i.default.enc.Utf8.parse(this._iv):null}},{key:"encrypt",value:function(e,t,n){return this._config.customEncrypt?this._config.customEncrypt(e):this.pnEncrypt(e,t,n)}},{key:"decrypt",value:function(e,t,n){return this._config.customDecrypt?this._config.customDecrypt(e):this.pnDecrypt(e,t,n)}},{key:"pnEncrypt",value:function(e,t,n){if(!t&&!this._config.cipherKey)return e;n=this._parseOptions(n);var r=this._getIV(n),s=this._getMode(n),o=this._getPaddedKey(t||this._config.cipherKey,n);return i.default.AES.encrypt(e,o,{iv:r,mode:s}).ciphertext.toString(i.default.enc.Base64)||e}},{key:"pnDecrypt",value:function(e,t,n){if(!t&&!this._config.cipherKey)return e;n=this._parseOptions(n);var r=this._getIV(n),s=this._getMode(n),o=this._getPaddedKey(t||this._config.cipherKey,n);try{var a=i.default.enc.Base64.parse(e),u=i.default.AES.decrypt({ciphertext:a},o,{iv:r,mode:s}).toString(i.default.enc.Utf8);return JSON.parse(u)}catch(e){return null}}}])&&s(t.prototype,n),r&&s(t,r),e}();t.default=a,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;n(0);var i,r=(i=n(4))&&i.__esModule?i:{default:i};function s(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}var o=function(){function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),function(e,t,n){t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n}(this,"_listeners",void 0),this._listeners=[]}var t,n,i;return t=e,(n=[{key:"addListener",value:function(e){this._listeners.push(e)}},{key:"removeListener",value:function(e){var t=[];this._listeners.forEach(function(n){n!==e&&t.push(n)}),this._listeners=t}},{key:"removeAllListeners",value:function(){this._listeners=[]}},{key:"announcePresence",value:function(e){this._listeners.forEach(function(t){t.presence&&t.presence(e)})}},{key:"announceStatus",value:function(e){this._listeners.forEach(function(t){t.status&&t.status(e)})}},{key:"announceMessage",value:function(e){this._listeners.forEach(function(t){t.message&&t.message(e)})}},{key:"announceSignal",value:function(e){this._listeners.forEach(function(t){t.signal&&t.signal(e)})}},{key:"announceUser",value:function(e){this._listeners.forEach(function(t){t.user&&t.user(e)})}},{key:"announceSpace",value:function(e){this._listeners.forEach(function(t){t.space&&t.space(e)})}},{key:"announceMembership",value:function(e){this._listeners.forEach(function(t){t.membership&&t.membership(e)})}},{key:"announceNetworkUp",value:function(){var e={};e.category=r.default.PNNetworkUpCategory,this.announceStatus(e)}},{key:"announceNetworkDown",value:function(){var e={};e.category=r.default.PNNetworkDownCategory,this.announceStatus(e)}}])&&s(t.prototype,n),i&&s(t,i),e}();t.default=o,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNTimeOperation},t.getURL=function(){return"/time/0"},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.prepareParams=function(){return{}},t.isAuthSupported=function(){return!1},t.handleResponse=function(e,t){return{timetoken:t[0]}},t.validateParams=function(){};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var i=a(n(10)),r=a(n(59)),s=a(n(60)),o=n(61);n(0);function a(e){return e&&e.__esModule?e:{default:e}}function u(e){return(u="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function c(e,t){return!t||"object"!==u(t)&&"function"!=typeof t?function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e):t}function l(e){return(l=Object.setPrototypeOf?Object.getPrototypeOf:function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function f(e,t){return(f=Object.setPrototypeOf||function(e,t){return e.__proto__=t,e})(e,t)}var d=function(e){function t(e){return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),e.db=new s.default,e.sdkFamily="TitaniumSDK",e.networking=new r.default({del:o.del,get:o.get,post:o.post,patch:o.patch}),c(this,l(t).call(this,e))}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),t&&f(e,t)}(t,i["default"]),t}();t.default=d,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var i=te(n(3)),r=te(n(6)),s=te(n(13)),o=te(n(7)),a=te(n(16)),u=ee(n(17)),c=ee(n(18)),l=ee(n(19)),f=ee(n(20)),d=ee(n(21)),h=ee(n(22)),p=ee(n(23)),g=ee(n(24)),v=ee(n(25)),b=ee(n(26)),y=ee(n(27)),m=ee(n(28)),_=ee(n(29)),P=ee(n(30)),O=ee(n(31)),S=ee(n(32)),M=ee(n(33)),k=ee(n(34)),T=ee(n(35)),C=ee(n(36)),N=ee(n(37)),w=ee(n(38)),R=ee(n(39)),j=ee(n(40)),E=ee(n(41)),K=ee(n(42)),U=ee(n(43)),A=ee(n(44)),x=ee(n(45)),I=ee(n(46)),G=ee(n(47)),D=ee(n(48)),F=ee(n(49)),L=ee(n(50)),B=ee(n(51)),H=ee(n(52)),q=ee(n(53)),z=ee(n(54)),J=ee(n(55)),W=ee(n(56)),V=ee(n(57)),X=ee(n(8)),$=ee(n(58)),Q=te(n(1)),Y=te(n(4)),Z=(n(0),te(n(5)));function ee(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)if(Object.prototype.hasOwnProperty.call(e,n)){var i=Object.defineProperty&&Object.getOwnPropertyDescriptor?Object.getOwnPropertyDescriptor(e,n):{};i.get||i.set?Object.defineProperty(t,n,i):t[n]=e[n]}return t.default=e,t}function te(e){return e&&e.__esModule?e:{default:e}}function ne(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function ie(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var re=function(){function e(t){var n=this;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),ie(this,"_config",void 0),ie(this,"_listenerManager",void 0),ie(this,"time",void 0),ie(this,"publish",void 0),ie(this,"fire",void 0),ie(this,"history",void 0),ie(this,"deleteMessages",void 0),ie(this,"messageCounts",void 0),ie(this,"fetchMessages",void 0),ie(this,"channelGroups",void 0),ie(this,"push",void 0),ie(this,"hereNow",void 0),ie(this,"whereNow",void 0),ie(this,"getState",void 0),ie(this,"setState",void 0),ie(this,"grant",void 0),ie(this,"audit",void 0),ie(this,"subscribe",void 0),ie(this,"signal",void 0),ie(this,"presence",void 0),ie(this,"unsubscribe",void 0),ie(this,"unsubscribeAll",void 0),ie(this,"createUser",void 0),ie(this,"updateUser",void 0),ie(this,"deleteUser",void 0),ie(this,"getUser",void 0),ie(this,"getUsers",void 0),ie(this,"createSpace",void 0),ie(this,"updateSpace",void 0),ie(this,"deleteSpace",void 0),ie(this,"getSpaces",void 0),ie(this,"getSpace",void 0),ie(this,"getMembers",void 0),ie(this,"addMembers",void 0),ie(this,"updateMembers",void 0),ie(this,"removeMembers",void 0),ie(this,"getMemberships",void 0),ie(this,"joinSpaces",void 0),ie(this,"updateMemberships",void 0),ie(this,"leaveSpaces",void 0),ie(this,"disconnect",void 0),ie(this,"reconnect",void 0),ie(this,"destroy",void 0),ie(this,"stop",void 0),ie(this,"getSubscribedChannels",void 0),ie(this,"getSubscribedChannelGroups",void 0),ie(this,"addListener",void 0),ie(this,"removeListener",void 0),ie(this,"removeAllListeners",void 0),ie(this,"getAuthKey",void 0),ie(this,"setAuthKey",void 0),ie(this,"setCipherKey",void 0),ie(this,"setUUID",void 0),ie(this,"getUUID",void 0),ie(this,"getFilterExpression",void 0),ie(this,"setFilterExpression",void 0),ie(this,"setHeartbeatInterval",void 0),ie(this,"setProxy",void 0),ie(this,"encrypt",void 0),ie(this,"decrypt",void 0);var Q=t.db,Y=t.networking,Z=this._config=new i.default({setup:t,db:Q}),ee=new r.default({config:Z});Y.init(Z);var te={config:Z,networking:Y,crypto:ee},ne=a.default.bind(this,te,X),re=a.default.bind(this,te,b),se=a.default.bind(this,te,m),oe=a.default.bind(this,te,P),ae=a.default.bind(this,te,$),ue=this._listenerManager=new o.default,ce=new s.default({timeEndpoint:ne,leaveEndpoint:re,heartbeatEndpoint:se,setStateEndpoint:oe,subscribeEndpoint:ae,crypto:te.crypto,config:te.config,listenerManager:ue});this.addListener=ue.addListener.bind(ue),this.removeListener=ue.removeListener.bind(ue),this.removeAllListeners=ue.removeAllListeners.bind(ue),this.channelGroups={listGroups:a.default.bind(this,te,f),listChannels:a.default.bind(this,te,d),addChannels:a.default.bind(this,te,u),removeChannels:a.default.bind(this,te,c),deleteGroup:a.default.bind(this,te,l)},this.push={addChannels:a.default.bind(this,te,h),removeChannels:a.default.bind(this,te,p),deleteDevice:a.default.bind(this,te,v),listChannels:a.default.bind(this,te,g)},this.hereNow=a.default.bind(this,te,O),this.whereNow=a.default.bind(this,te,y),this.getState=a.default.bind(this,te,_),this.setState=ce.adaptStateChange.bind(ce),this.grant=a.default.bind(this,te,B),this.audit=a.default.bind(this,te,L),this.publish=a.default.bind(this,te,H),this.fire=function(e,t){return e.replicate=!1,e.storeInHistory=!1,n.publish(e,t)},this.signal=a.default.bind(this,te,q),this.history=a.default.bind(this,te,z),this.deleteMessages=a.default.bind(this,te,J),this.messageCounts=a.default.bind(this,te,W),this.fetchMessages=a.default.bind(this,te,V),this.createUser=a.default.bind(this,te,S),this.updateUser=a.default.bind(this,te,M),this.deleteUser=a.default.bind(this,te,k),this.getUser=a.default.bind(this,te,T),this.getUsers=a.default.bind(this,te,C),this.createSpace=a.default.bind(this,te,N),this.updateSpace=a.default.bind(this,te,w),this.deleteSpace=a.default.bind(this,te,R),this.getSpaces=a.default.bind(this,te,j),this.getSpace=a.default.bind(this,te,E),this.addMembers=a.default.bind(this,te,U),this.updateMembers=a.default.bind(this,te,A),this.removeMembers=a.default.bind(this,te,x),this.getMembers=a.default.bind(this,te,K),this.getMemberships=a.default.bind(this,te,I),this.joinSpaces=a.default.bind(this,te,D),this.updateMemberships=a.default.bind(this,te,G),this.leaveSpaces=a.default.bind(this,te,F),this.time=ne,this.subscribe=ce.adaptSubscribeChange.bind(ce),this.presence=ce.adaptPresenceChange.bind(ce),this.unsubscribe=ce.adaptUnsubscribeChange.bind(ce),this.disconnect=ce.disconnect.bind(ce),this.reconnect=ce.reconnect.bind(ce),this.destroy=function(e){ce.unsubscribeAll(e),ce.disconnect()},this.stop=this.destroy,this.unsubscribeAll=ce.unsubscribeAll.bind(ce),this.getSubscribedChannels=ce.getSubscribedChannels.bind(ce),this.getSubscribedChannelGroups=ce.getSubscribedChannelGroups.bind(ce),this.encrypt=ee.encrypt.bind(ee),this.decrypt=ee.decrypt.bind(ee),this.getAuthKey=te.config.getAuthKey.bind(te.config),this.setAuthKey=te.config.setAuthKey.bind(te.config),this.setCipherKey=te.config.setCipherKey.bind(te.config),this.getUUID=te.config.getUUID.bind(te.config),this.setUUID=te.config.setUUID.bind(te.config),this.getFilterExpression=te.config.getFilterExpression.bind(te.config),this.setFilterExpression=te.config.setFilterExpression.bind(te.config),this.setHeartbeatInterval=te.config.setHeartbeatInterval.bind(te.config),Y.hasModule("proxy")&&(this.setProxy=function(e){te.config.setProxy(e),n.reconnect()})}var t,n,Q;return t=e,Q=[{key:"generateUUID",value:function(){return Z.default.createUUID()}}],(n=[{key:"getVersion",value:function(){return this._config.getVersion()}},{key:"networkDownDetected",value:function(){this._listenerManager.announceNetworkDown(),this._config.restore?this.disconnect():this.destroy(!0)}},{key:"networkUpDetected",value:function(){this._listenerManager.announceNetworkUp(),this.reconnect()}}])&&ne(t.prototype,n),Q&&ne(t,Q),e}();t.default=re,ie(re,"OPERATIONS",Q.default),ie(re,"CATEGORIES",Y.default),e.exports=t.default},function(e,t,n){var i,r,s;/*! lil-uuid - v0.1 - MIT License - https://github.com/lil-js/uuid */r=[t],void 0===(s="function"==typeof(i=function(e){var t={3:/^[0-9A-F]{8}-[0-9A-F]{4}-3[0-9A-F]{3}-[0-9A-F]{4}-[0-9A-F]{12}$/i,4:/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,5:/^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,all:/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i};function n(){var e,t,n="";for(e=0;e<32;e++)t=16*Math.random()|0,8!==e&&12!==e&&16!==e&&20!==e||(n+="-"),n+=(12===e?4:16===e?3&t|8:t).toString(16);return n}function i(e,n){var i=t[n||"all"];return i&&i.test(e)||!1}n.isUUID=i,n.VERSION="0.1.0",e.uuid=n,e.isUUID=i})?i.apply(t,r):i)||(e.exports=s)},function(e,t,n){"use strict";var i,r,s,o,a,u=u||function(e,t){var n={},i=n.lib={},r=function(){},s=i.Base={extend:function(e){r.prototype=this;var t=new r;return e&&t.mixIn(e),t.hasOwnProperty("init")||(t.init=function(){t.$super.init.apply(this,arguments)}),t.init.prototype=t,t.$super=this,t},create:function(){var e=this.extend();return e.init.apply(e,arguments),e},init:function(){},mixIn:function(e){for(var t in e)e.hasOwnProperty(t)&&(this[t]=e[t]);e.hasOwnProperty("toString")&&(this.toString=e.toString)},clone:function(){return this.init.prototype.extend(this)}},o=i.WordArray=s.extend({init:function(e,t){e=this.words=e||[],this.sigBytes=null!=t?t:4*e.length},toString:function(e){return(e||u).stringify(this)},concat:function(e){var t=this.words,n=e.words,i=this.sigBytes;if(e=e.sigBytes,this.clamp(),i%4)for(var r=0;r<e;r++)t[i+r>>>2]|=(n[r>>>2]>>>24-r%4*8&255)<<24-(i+r)%4*8;else if(65535<n.length)for(r=0;r<e;r+=4)t[i+r>>>2]=n[r>>>2];else t.push.apply(t,n);return this.sigBytes+=e,this},clamp:function(){var t=this.words,n=this.sigBytes;t[n>>>2]&=4294967295<<32-n%4*8,t.length=e.ceil(n/4)},clone:function(){var e=s.clone.call(this);return e.words=this.words.slice(0),e},random:function(t){for(var n=[],i=0;i<t;i+=4)n.push(4294967296*e.random()|0);return new o.init(n,t)}}),a=n.enc={},u=a.Hex={stringify:function(e){var t=e.words;e=e.sigBytes;for(var n=[],i=0;i<e;i++){var r=t[i>>>2]>>>24-i%4*8&255;n.push((r>>>4).toString(16)),n.push((15&r).toString(16))}return n.join("")},parse:function(e){for(var t=e.length,n=[],i=0;i<t;i+=2)n[i>>>3]|=parseInt(e.substr(i,2),16)<<24-i%8*4;return new o.init(n,t/2)}},c=a.Latin1={stringify:function(e){var t=e.words;e=e.sigBytes;for(var n=[],i=0;i<e;i++)n.push(String.fromCharCode(t[i>>>2]>>>24-i%4*8&255));return n.join("")},parse:function(e){for(var t=e.length,n=[],i=0;i<t;i++)n[i>>>2]|=(255&e.charCodeAt(i))<<24-i%4*8;return new o.init(n,t)}},l=a.Utf8={stringify:function(e){try{return decodeURIComponent(escape(c.stringify(e)))}catch(e){throw Error("Malformed UTF-8 data")}},parse:function(e){return c.parse(unescape(encodeURIComponent(e)))}},f=i.BufferedBlockAlgorithm=s.extend({reset:function(){this._data=new o.init,this._nDataBytes=0},_append:function(e){"string"==typeof e&&(e=l.parse(e)),this._data.concat(e),this._nDataBytes+=e.sigBytes},_process:function(t){var n=this._data,i=n.words,r=n.sigBytes,s=this.blockSize,a=r/(4*s);if(t=(a=t?e.ceil(a):e.max((0|a)-this._minBufferSize,0))*s,r=e.min(4*t,r),t){for(var u=0;u<t;u+=s)this._doProcessBlock(i,u);u=i.splice(0,t),n.sigBytes-=r}return new o.init(u,r)},clone:function(){var e=s.clone.call(this);return e._data=this._data.clone(),e},_minBufferSize:0});i.Hasher=f.extend({cfg:s.extend(),init:function(e){this.cfg=this.cfg.extend(e),this.reset()},reset:function(){f.reset.call(this),this._doReset()},update:function(e){return this._append(e),this._process(),this},finalize:function(e){return e&&this._append(e),this._doFinalize()},blockSize:16,_createHelper:function(e){return function(t,n){return new e.init(n).finalize(t)}},_createHmacHelper:function(e){return function(t,n){return new d.HMAC.init(e,n).finalize(t)}}});var d=n.algo={};return n}(Math);!function(e){for(var t=u,n=(r=t.lib).WordArray,i=r.Hasher,r=t.algo,s=[],o=[],a=function(e){return 4294967296*(e-(0|e))|0},c=2,l=0;64>l;){var f;e:{f=c;for(var d=e.sqrt(f),h=2;h<=d;h++)if(!(f%h)){f=!1;break e}f=!0}f&&(8>l&&(s[l]=a(e.pow(c,.5))),o[l]=a(e.pow(c,1/3)),l++),c++}var p=[];r=r.SHA256=i.extend({_doReset:function(){this._hash=new n.init(s.slice(0))},_doProcessBlock:function(e,t){for(var n=this._hash.words,i=n[0],r=n[1],s=n[2],a=n[3],u=n[4],c=n[5],l=n[6],f=n[7],d=0;64>d;d++){if(16>d)p[d]=0|e[t+d];else{var h=p[d-15],g=p[d-2];p[d]=((h<<25|h>>>7)^(h<<14|h>>>18)^h>>>3)+p[d-7]+((g<<15|g>>>17)^(g<<13|g>>>19)^g>>>10)+p[d-16]}h=f+((u<<26|u>>>6)^(u<<21|u>>>11)^(u<<7|u>>>25))+(u&c^~u&l)+o[d]+p[d],g=((i<<30|i>>>2)^(i<<19|i>>>13)^(i<<10|i>>>22))+(i&r^i&s^r&s),f=l,l=c,c=u,u=a+h|0,a=s,s=r,r=i,i=h+g|0}n[0]=n[0]+i|0,n[1]=n[1]+r|0,n[2]=n[2]+s|0,n[3]=n[3]+a|0,n[4]=n[4]+u|0,n[5]=n[5]+c|0,n[6]=n[6]+l|0,n[7]=n[7]+f|0},_doFinalize:function(){var t=this._data,n=t.words,i=8*this._nDataBytes,r=8*t.sigBytes;return n[r>>>5]|=128<<24-r%32,n[14+(r+64>>>9<<4)]=e.floor(i/4294967296),n[15+(r+64>>>9<<4)]=i,t.sigBytes=4*n.length,this._process(),this._hash},clone:function(){var e=i.clone.call(this);return e._hash=this._hash.clone(),e}});t.SHA256=i._createHelper(r),t.HmacSHA256=i._createHmacHelper(r)}(Math),r=(i=u).enc.Utf8,i.algo.HMAC=i.lib.Base.extend({init:function(e,t){e=this._hasher=new e.init,"string"==typeof t&&(t=r.parse(t));var n=e.blockSize,i=4*n;t.sigBytes>i&&(t=e.finalize(t)),t.clamp();for(var s=this._oKey=t.clone(),o=this._iKey=t.clone(),a=s.words,u=o.words,c=0;c<n;c++)a[c]^=1549556828,u[c]^=909522486;s.sigBytes=o.sigBytes=i,this.reset()},reset:function(){var e=this._hasher;e.reset(),e.update(this._iKey)},update:function(e){return this._hasher.update(e),this},finalize:function(e){var t=this._hasher;return e=t.finalize(e),t.reset(),t.finalize(this._oKey.clone().concat(e))}}),o=(s=u).lib.WordArray,s.enc.Base64={stringify:function(e){var t=e.words,n=e.sigBytes,i=this._map;e.clamp(),e=[];for(var r=0;r<n;r+=3)for(var s=(t[r>>>2]>>>24-r%4*8&255)<<16|(t[r+1>>>2]>>>24-(r+1)%4*8&255)<<8|t[r+2>>>2]>>>24-(r+2)%4*8&255,o=0;4>o&&r+.75*o<n;o++)e.push(i.charAt(s>>>6*(3-o)&63));if(t=i.charAt(64))for(;e.length%4;)e.push(t);return e.join("")},parse:function(e){var t=e.length,n=this._map;(i=n.charAt(64))&&-1!=(i=e.indexOf(i))&&(t=i);for(var i=[],r=0,s=0;s<t;s++)if(s%4){var a=n.indexOf(e.charAt(s-1))<<s%4*2,u=n.indexOf(e.charAt(s))>>>6-s%4*2;i[r>>>2]|=(a|u)<<24-r%4*8,r++}return o.create(i,r)},_map:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="},function(e){function t(e,t,n,i,r,s,o){return((e=e+(t&n|~t&i)+r+o)<<s|e>>>32-s)+t}function n(e,t,n,i,r,s,o){return((e=e+(t&i|n&~i)+r+o)<<s|e>>>32-s)+t}function i(e,t,n,i,r,s,o){return((e=e+(t^n^i)+r+o)<<s|e>>>32-s)+t}function r(e,t,n,i,r,s,o){return((e=e+(n^(t|~i))+r+o)<<s|e>>>32-s)+t}for(var s=u,o=(c=s.lib).WordArray,a=c.Hasher,c=s.algo,l=[],f=0;64>f;f++)l[f]=4294967296*e.abs(e.sin(f+1))|0;c=c.MD5=a.extend({_doReset:function(){this._hash=new o.init([1732584193,4023233417,2562383102,271733878])},_doProcessBlock:function(e,s){for(var o=0;16>o;o++){var a=e[u=s+o];e[u]=16711935&(a<<8|a>>>24)|4278255360&(a<<24|a>>>8)}o=this._hash.words;var u=e[s+0],c=(a=e[s+1],e[s+2]),f=e[s+3],d=e[s+4],h=e[s+5],p=e[s+6],g=e[s+7],v=e[s+8],b=e[s+9],y=e[s+10],m=e[s+11],_=e[s+12],P=e[s+13],O=e[s+14],S=e[s+15],M=t(M=o[0],C=o[1],T=o[2],k=o[3],u,7,l[0]),k=t(k,M,C,T,a,12,l[1]),T=t(T,k,M,C,c,17,l[2]),C=t(C,T,k,M,f,22,l[3]);M=t(M,C,T,k,d,7,l[4]),k=t(k,M,C,T,h,12,l[5]),T=t(T,k,M,C,p,17,l[6]),C=t(C,T,k,M,g,22,l[7]),M=t(M,C,T,k,v,7,l[8]),k=t(k,M,C,T,b,12,l[9]),T=t(T,k,M,C,y,17,l[10]),C=t(C,T,k,M,m,22,l[11]),M=t(M,C,T,k,_,7,l[12]),k=t(k,M,C,T,P,12,l[13]),T=t(T,k,M,C,O,17,l[14]),M=n(M,C=t(C,T,k,M,S,22,l[15]),T,k,a,5,l[16]),k=n(k,M,C,T,p,9,l[17]),T=n(T,k,M,C,m,14,l[18]),C=n(C,T,k,M,u,20,l[19]),M=n(M,C,T,k,h,5,l[20]),k=n(k,M,C,T,y,9,l[21]),T=n(T,k,M,C,S,14,l[22]),C=n(C,T,k,M,d,20,l[23]),M=n(M,C,T,k,b,5,l[24]),k=n(k,M,C,T,O,9,l[25]),T=n(T,k,M,C,f,14,l[26]),C=n(C,T,k,M,v,20,l[27]),M=n(M,C,T,k,P,5,l[28]),k=n(k,M,C,T,c,9,l[29]),T=n(T,k,M,C,g,14,l[30]),M=i(M,C=n(C,T,k,M,_,20,l[31]),T,k,h,4,l[32]),k=i(k,M,C,T,v,11,l[33]),T=i(T,k,M,C,m,16,l[34]),C=i(C,T,k,M,O,23,l[35]),M=i(M,C,T,k,a,4,l[36]),k=i(k,M,C,T,d,11,l[37]),T=i(T,k,M,C,g,16,l[38]),C=i(C,T,k,M,y,23,l[39]),M=i(M,C,T,k,P,4,l[40]),k=i(k,M,C,T,u,11,l[41]),T=i(T,k,M,C,f,16,l[42]),C=i(C,T,k,M,p,23,l[43]),M=i(M,C,T,k,b,4,l[44]),k=i(k,M,C,T,_,11,l[45]),T=i(T,k,M,C,S,16,l[46]),M=r(M,C=i(C,T,k,M,c,23,l[47]),T,k,u,6,l[48]),k=r(k,M,C,T,g,10,l[49]),T=r(T,k,M,C,O,15,l[50]),C=r(C,T,k,M,h,21,l[51]),M=r(M,C,T,k,_,6,l[52]),k=r(k,M,C,T,f,10,l[53]),T=r(T,k,M,C,y,15,l[54]),C=r(C,T,k,M,a,21,l[55]),M=r(M,C,T,k,v,6,l[56]),k=r(k,M,C,T,S,10,l[57]),T=r(T,k,M,C,p,15,l[58]),C=r(C,T,k,M,P,21,l[59]),M=r(M,C,T,k,d,6,l[60]),k=r(k,M,C,T,m,10,l[61]),T=r(T,k,M,C,c,15,l[62]),C=r(C,T,k,M,b,21,l[63]);o[0]=o[0]+M|0,o[1]=o[1]+C|0,o[2]=o[2]+T|0,o[3]=o[3]+k|0},_doFinalize:function(){var t=this._data,n=t.words,i=8*this._nDataBytes,r=8*t.sigBytes;n[r>>>5]|=128<<24-r%32;var s=e.floor(i/4294967296);for(n[15+(r+64>>>9<<4)]=16711935&(s<<8|s>>>24)|4278255360&(s<<24|s>>>8),n[14+(r+64>>>9<<4)]=16711935&(i<<8|i>>>24)|4278255360&(i<<24|i>>>8),t.sigBytes=4*(n.length+1),this._process(),n=(t=this._hash).words,i=0;4>i;i++)r=n[i],n[i]=16711935&(r<<8|r>>>24)|4278255360&(r<<24|r>>>8);return t},clone:function(){var e=a.clone.call(this);return e._hash=this._hash.clone(),e}}),s.MD5=a._createHelper(c),s.HmacMD5=a._createHmacHelper(c)}(Math),function(){var e,t=u,n=(e=t.lib).Base,i=e.WordArray,r=(e=t.algo).EvpKDF=n.extend({cfg:n.extend({keySize:4,hasher:e.MD5,iterations:1}),init:function(e){this.cfg=this.cfg.extend(e)},compute:function(e,t){for(var n=(a=this.cfg).hasher.create(),r=i.create(),s=r.words,o=a.keySize,a=a.iterations;s.length<o;){u&&n.update(u);var u=n.update(e).finalize(t);n.reset();for(var c=1;c<a;c++)u=n.finalize(u),n.reset();r.concat(u)}return r.sigBytes=4*o,r}});t.EvpKDF=function(e,t,n){return r.create(n).compute(e,t)}}(),u.lib.Cipher||function(e){var t=(p=u).lib,n=t.Base,i=t.WordArray,r=t.BufferedBlockAlgorithm,s=p.enc.Base64,o=p.algo.EvpKDF,a=t.Cipher=r.extend({cfg:n.extend(),createEncryptor:function(e,t){return this.create(this._ENC_XFORM_MODE,e,t)},createDecryptor:function(e,t){return this.create(this._DEC_XFORM_MODE,e,t)},init:function(e,t,n){this.cfg=this.cfg.extend(n),this._xformMode=e,this._key=t,this.reset()},reset:function(){r.reset.call(this),this._doReset()},process:function(e){return this._append(e),this._process()},finalize:function(e){return e&&this._append(e),this._doFinalize()},keySize:4,ivSize:4,_ENC_XFORM_MODE:1,_DEC_XFORM_MODE:2,_createHelper:function(e){return{encrypt:function(t,n,i){return("string"==typeof n?g:h).encrypt(e,t,n,i)},decrypt:function(t,n,i){return("string"==typeof n?g:h).decrypt(e,t,n,i)}}}});t.StreamCipher=a.extend({_doFinalize:function(){return this._process(!0)},blockSize:1});var c=p.mode={},l=function(e,t,n){var i=this._iv;i?this._iv=void 0:i=this._prevBlock;for(var r=0;r<n;r++)e[t+r]^=i[r]},f=(t.BlockCipherMode=n.extend({createEncryptor:function(e,t){return this.Encryptor.create(e,t)},createDecryptor:function(e,t){return this.Decryptor.create(e,t)},init:function(e,t){this._cipher=e,this._iv=t}})).extend();f.Encryptor=f.extend({processBlock:function(e,t){var n=this._cipher,i=n.blockSize;l.call(this,e,t,i),n.encryptBlock(e,t),this._prevBlock=e.slice(t,t+i)}}),f.Decryptor=f.extend({processBlock:function(e,t){var n=this._cipher,i=n.blockSize,r=e.slice(t,t+i);n.decryptBlock(e,t),l.call(this,e,t,i),this._prevBlock=r}}),c=c.CBC=f,f=(p.pad={}).Pkcs7={pad:function(e,t){for(var n,r=(n=(n=4*t)-e.sigBytes%n)<<24|n<<16|n<<8|n,s=[],o=0;o<n;o+=4)s.push(r);n=i.create(s,n),e.concat(n)},unpad:function(e){e.sigBytes-=255&e.words[e.sigBytes-1>>>2]}},t.BlockCipher=a.extend({cfg:a.cfg.extend({mode:c,padding:f}),reset:function(){a.reset.call(this);var e=(t=this.cfg).iv,t=t.mode;if(this._xformMode==this._ENC_XFORM_MODE)var n=t.createEncryptor;else n=t.createDecryptor,this._minBufferSize=1;this._mode=n.call(t,this,e&&e.words)},_doProcessBlock:function(e,t){this._mode.processBlock(e,t)},_doFinalize:function(){var e=this.cfg.padding;if(this._xformMode==this._ENC_XFORM_MODE){e.pad(this._data,this.blockSize);var t=this._process(!0)}else t=this._process(!0),e.unpad(t);return t},blockSize:4});var d=t.CipherParams=n.extend({init:function(e){this.mixIn(e)},toString:function(e){return(e||this.formatter).stringify(this)}}),h=(c=(p.format={}).OpenSSL={stringify:function(e){var t=e.ciphertext;return((e=e.salt)?i.create([1398893684,1701076831]).concat(e).concat(t):t).toString(s)},parse:function(e){var t=(e=s.parse(e)).words;if(1398893684==t[0]&&1701076831==t[1]){var n=i.create(t.slice(2,4));t.splice(0,4),e.sigBytes-=16}return d.create({ciphertext:e,salt:n})}},t.SerializableCipher=n.extend({cfg:n.extend({format:c}),encrypt:function(e,t,n,i){i=this.cfg.extend(i);var r=e.createEncryptor(n,i);return t=r.finalize(t),r=r.cfg,d.create({ciphertext:t,key:n,iv:r.iv,algorithm:e,mode:r.mode,padding:r.padding,blockSize:e.blockSize,formatter:i.format})},decrypt:function(e,t,n,i){return i=this.cfg.extend(i),t=this._parse(t,i.format),e.createDecryptor(n,i).finalize(t.ciphertext)},_parse:function(e,t){return"string"==typeof e?t.parse(e,this):e}})),p=(p.kdf={}).OpenSSL={execute:function(e,t,n,r){return r||(r=i.random(8)),e=o.create({keySize:t+n}).compute(e,r),n=i.create(e.words.slice(t),4*n),e.sigBytes=4*t,d.create({key:e,iv:n,salt:r})}},g=t.PasswordBasedCipher=h.extend({cfg:h.cfg.extend({kdf:p}),encrypt:function(e,t,n,i){return n=(i=this.cfg.extend(i)).kdf.execute(n,e.keySize,e.ivSize),i.iv=n.iv,(e=h.encrypt.call(this,e,t,n.key,i)).mixIn(n),e},decrypt:function(e,t,n,i){return i=this.cfg.extend(i),t=this._parse(t,i.format),n=i.kdf.execute(n,e.keySize,e.ivSize,t.salt),i.iv=n.iv,h.decrypt.call(this,e,t,n.key,i)}})}(),function(){for(var e=u,t=e.lib.BlockCipher,n=e.algo,i=[],r=[],s=[],o=[],a=[],c=[],l=[],f=[],d=[],h=[],p=[],g=0;256>g;g++)p[g]=128>g?g<<1:g<<1^283;var v=0,b=0;for(g=0;256>g;g++){var y=(y=b^b<<1^b<<2^b<<3^b<<4)>>>8^255&y^99;i[v]=y,r[y]=v;var m=p[v],_=p[m],P=p[_],O=257*p[y]^16843008*y;s[v]=O<<24|O>>>8,o[v]=O<<16|O>>>16,a[v]=O<<8|O>>>24,c[v]=O,O=16843009*P^65537*_^257*m^16843008*v,l[y]=O<<24|O>>>8,f[y]=O<<16|O>>>16,d[y]=O<<8|O>>>24,h[y]=O,v?(v=m^p[p[p[P^m]]],b^=p[p[b]]):v=b=1}var S=[0,1,2,4,8,16,32,64,128,27,54];n=n.AES=t.extend({_doReset:function(){for(var e=(n=this._key).words,t=n.sigBytes/4,n=4*((this._nRounds=t+6)+1),r=this._keySchedule=[],s=0;s<n;s++)if(s<t)r[s]=e[s];else{var o=r[s-1];s%t?6<t&&4==s%t&&(o=i[o>>>24]<<24|i[o>>>16&255]<<16|i[o>>>8&255]<<8|i[255&o]):(o=i[(o=o<<8|o>>>24)>>>24]<<24|i[o>>>16&255]<<16|i[o>>>8&255]<<8|i[255&o],o^=S[s/t|0]<<24),r[s]=r[s-t]^o}for(e=this._invKeySchedule=[],t=0;t<n;t++)s=n-t,o=t%4?r[s]:r[s-4],e[t]=4>t||4>=s?o:l[i[o>>>24]]^f[i[o>>>16&255]]^d[i[o>>>8&255]]^h[i[255&o]]},encryptBlock:function(e,t){this._doCryptBlock(e,t,this._keySchedule,s,o,a,c,i)},decryptBlock:function(e,t){var n=e[t+1];e[t+1]=e[t+3],e[t+3]=n,this._doCryptBlock(e,t,this._invKeySchedule,l,f,d,h,r),n=e[t+1],e[t+1]=e[t+3],e[t+3]=n},_doCryptBlock:function(e,t,n,i,r,s,o,a){for(var u=this._nRounds,c=e[t]^n[0],l=e[t+1]^n[1],f=e[t+2]^n[2],d=e[t+3]^n[3],h=4,p=1;p<u;p++){var g=i[c>>>24]^r[l>>>16&255]^s[f>>>8&255]^o[255&d]^n[h++],v=i[l>>>24]^r[f>>>16&255]^s[d>>>8&255]^o[255&c]^n[h++],b=i[f>>>24]^r[d>>>16&255]^s[c>>>8&255]^o[255&l]^n[h++];d=i[d>>>24]^r[c>>>16&255]^s[l>>>8&255]^o[255&f]^n[h++],c=g,l=v,f=b}g=(a[c>>>24]<<24|a[l>>>16&255]<<16|a[f>>>8&255]<<8|a[255&d])^n[h++],v=(a[l>>>24]<<24|a[f>>>16&255]<<16|a[d>>>8&255]<<8|a[255&c])^n[h++],b=(a[f>>>24]<<24|a[d>>>16&255]<<16|a[c>>>8&255]<<8|a[255&l])^n[h++],d=(a[d>>>24]<<24|a[c>>>16&255]<<16|a[l>>>8&255]<<8|a[255&f])^n[h++],e[t]=g,e[t+1]=v,e[t+2]=b,e[t+3]=d},keySize:8});e.AES=t._createHelper(n)}(),u.mode.ECB=((a=u.lib.BlockCipherMode.extend()).Encryptor=a.extend({processBlock:function(e,t){this._cipher.encryptBlock(e,t)}}),a.Decryptor=a.extend({processBlock:function(e,t){this._cipher.decryptBlock(e,t)}}),a),e.exports=u},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;a(n(6)),a(n(3)),a(n(7));var i=a(n(14)),r=a(n(15)),s=a(n(2)),o=(n(0),a(n(4)));function a(e){return e&&e.__esModule?e:{default:e}}function u(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function c(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var l=function(){function e(t){var n=t.subscribeEndpoint,s=t.leaveEndpoint,o=t.heartbeatEndpoint,a=t.setStateEndpoint,u=t.timeEndpoint,l=t.config,f=t.crypto,d=t.listenerManager;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),c(this,"_crypto",void 0),c(this,"_config",void 0),c(this,"_listenerManager",void 0),c(this,"_reconnectionManager",void 0),c(this,"_leaveEndpoint",void 0),c(this,"_heartbeatEndpoint",void 0),c(this,"_setStateEndpoint",void 0),c(this,"_subscribeEndpoint",void 0),c(this,"_channels",void 0),c(this,"_presenceChannels",void 0),c(this,"_heartbeatChannels",void 0),c(this,"_heartbeatChannelGroups",void 0),c(this,"_channelGroups",void 0),c(this,"_presenceChannelGroups",void 0),c(this,"_currentTimetoken",void 0),c(this,"_lastTimetoken",void 0),c(this,"_storedTimetoken",void 0),c(this,"_region",void 0),c(this,"_subscribeCall",void 0),c(this,"_heartbeatTimer",void 0),c(this,"_subscriptionStatusAnnounced",void 0),c(this,"_autoNetworkDetection",void 0),c(this,"_isOnline",void 0),c(this,"_pendingChannelSubscriptions",void 0),c(this,"_pendingChannelGroupSubscriptions",void 0),c(this,"_dedupingManager",void 0),this._listenerManager=d,this._config=l,this._leaveEndpoint=s,this._heartbeatEndpoint=o,this._setStateEndpoint=a,this._subscribeEndpoint=n,this._crypto=f,this._channels={},this._presenceChannels={},this._heartbeatChannels={},this._heartbeatChannelGroups={},this._channelGroups={},this._presenceChannelGroups={},this._pendingChannelSubscriptions=[],this._pendingChannelGroupSubscriptions=[],this._currentTimetoken=0,this._lastTimetoken=0,this._storedTimetoken=null,this._subscriptionStatusAnnounced=!1,this._isOnline=!0,this._reconnectionManager=new i.default({timeEndpoint:u}),this._dedupingManager=new r.default({config:l})}var t,n,a;return t=e,(n=[{key:"adaptStateChange",value:function(e,t){var n=this,i=e.state,r=e.channels,s=void 0===r?[]:r,o=e.channelGroups,a=void 0===o?[]:o;return s.forEach(function(e){e in n._channels&&(n._channels[e].state=i)}),a.forEach(function(e){e in n._channelGroups&&(n._channelGroups[e].state=i)}),this._setStateEndpoint({state:i,channels:s,channelGroups:a},t)}},{key:"adaptPresenceChange",value:function(e){var t=this,n=e.connected,i=e.channels,r=void 0===i?[]:i,s=e.channelGroups,o=void 0===s?[]:s;n?(r.forEach(function(e){t._heartbeatChannels[e]={state:{}}}),o.forEach(function(e){t._heartbeatChannelGroups[e]={state:{}}})):(r.forEach(function(e){e in t._heartbeatChannels&&delete t._heartbeatChannels[e]}),o.forEach(function(e){e in t._heartbeatChannelGroups&&delete t._heartbeatChannelGroups[e]}),!1===this._config.suppressLeaveEvents&&this._leaveEndpoint({channels:r,channelGroups:o},function(e){t._listenerManager.announceStatus(e)})),this.reconnect()}},{key:"adaptSubscribeChange",value:function(e){var t=this,n=e.timetoken,i=e.channels,r=void 0===i?[]:i,s=e.channelGroups,o=void 0===s?[]:s,a=e.withPresence,u=void 0!==a&&a,c=e.withHeartbeats,l=void 0!==c&&c;this._config.subscribeKey&&""!==this._config.subscribeKey?(n&&(this._lastTimetoken=this._currentTimetoken,this._currentTimetoken=n),"0"!==this._currentTimetoken&&0!==this._currentTimetoken&&(this._storedTimetoken=this._currentTimetoken,this._currentTimetoken=0),r.forEach(function(e){t._channels[e]={state:{}},u&&(t._presenceChannels[e]={}),(l||t._config.getHeartbeatInterval())&&(t._heartbeatChannels[e]={}),t._pendingChannelSubscriptions.push(e)}),o.forEach(function(e){t._channelGroups[e]={state:{}},u&&(t._presenceChannelGroups[e]={}),(l||t._config.getHeartbeatInterval())&&(t._heartbeatChannelGroups[e]={}),t._pendingChannelGroupSubscriptions.push(e)}),this._subscriptionStatusAnnounced=!1,this.reconnect()):console&&console.log&&console.log("subscribe key missing; aborting subscribe")}},{key:"adaptUnsubscribeChange",value:function(e,t){var n=this,i=e.channels,r=void 0===i?[]:i,s=e.channelGroups,o=void 0===s?[]:s,a=[],u=[];r.forEach(function(e){e in n._channels&&(delete n._channels[e],a.push(e),e in n._heartbeatChannels&&delete n._heartbeatChannels[e]),e in n._presenceChannels&&(delete n._presenceChannels[e],a.push(e))}),o.forEach(function(e){e in n._channelGroups&&(delete n._channelGroups[e],u.push(e),e in n._heartbeatChannelGroups&&delete n._heartbeatChannelGroups[e]),e in n._presenceChannelGroups&&(delete n._channelGroups[e],u.push(e))}),0===a.length&&0===u.length||(!1!==this._config.suppressLeaveEvents||t||this._leaveEndpoint({channels:a,channelGroups:u},function(e){e.affectedChannels=a,e.affectedChannelGroups=u,e.currentTimetoken=n._currentTimetoken,e.lastTimetoken=n._lastTimetoken,n._listenerManager.announceStatus(e)}),0===Object.keys(this._channels).length&&0===Object.keys(this._presenceChannels).length&&0===Object.keys(this._channelGroups).length&&0===Object.keys(this._presenceChannelGroups).length&&(this._lastTimetoken=0,this._currentTimetoken=0,this._storedTimetoken=null,this._region=null,this._reconnectionManager.stopPolling()),this.reconnect())}},{key:"unsubscribeAll",value:function(e){this.adaptUnsubscribeChange({channels:this.getSubscribedChannels(),channelGroups:this.getSubscribedChannelGroups()},e)}},{key:"getHeartbeatChannels",value:function(){return Object.keys(this._heartbeatChannels)}},{key:"getHeartbeatChannelGroups",value:function(){return Object.keys(this._heartbeatChannelGroups)}},{key:"getSubscribedChannels",value:function(){return Object.keys(this._channels)}},{key:"getSubscribedChannelGroups",value:function(){return Object.keys(this._channelGroups)}},{key:"reconnect",value:function(){this._startSubscribeLoop(),this._registerHeartbeatTimer()}},{key:"disconnect",value:function(){this._stopSubscribeLoop(),this._stopHeartbeatTimer(),this._reconnectionManager.stopPolling()}},{key:"_registerHeartbeatTimer",value:function(){this._stopHeartbeatTimer(),0!==this._config.getHeartbeatInterval()&&(this._performHeartbeatLoop(),this._heartbeatTimer=setInterval(this._performHeartbeatLoop.bind(this),1e3*this._config.getHeartbeatInterval()))}},{key:"_stopHeartbeatTimer",value:function(){this._heartbeatTimer&&(clearInterval(this._heartbeatTimer),this._heartbeatTimer=null)}},{key:"_performHeartbeatLoop",value:function(){var e=this,t=this.getHeartbeatChannels(),n=this.getHeartbeatChannelGroups(),i={};if(0!==t.length||0!==n.length){this.getSubscribedChannels().forEach(function(t){var n=e._channels[t].state;Object.keys(n).length&&(i[t]=n)}),this.getSubscribedChannelGroups().forEach(function(t){var n=e._channelGroups[t].state;Object.keys(n).length&&(i[t]=n)});this._heartbeatEndpoint({channels:t,channelGroups:n,state:i},function(t){t.error&&e._config.announceFailedHeartbeats&&e._listenerManager.announceStatus(t),t.error&&e._config.autoNetworkDetection&&e._isOnline&&(e._isOnline=!1,e.disconnect(),e._listenerManager.announceNetworkDown(),e.reconnect()),!t.error&&e._config.announceSuccessfulHeartbeats&&e._listenerManager.announceStatus(t)}.bind(this))}}},{key:"_startSubscribeLoop",value:function(){var e=this;this._stopSubscribeLoop();var t={},n=[],i=[];if(Object.keys(this._channels).forEach(function(i){var r=e._channels[i].state;Object.keys(r).length&&(t[i]=r),n.push(i)}),Object.keys(this._presenceChannels).forEach(function(e){n.push("".concat(e,"-pnpres"))}),Object.keys(this._channelGroups).forEach(function(n){var r=e._channelGroups[n].state;Object.keys(r).length&&(t[n]=r),i.push(n)}),Object.keys(this._presenceChannelGroups).forEach(function(e){i.push("".concat(e,"-pnpres"))}),0!==n.length||0!==i.length){var r={channels:n,channelGroups:i,state:t,timetoken:this._currentTimetoken,filterExpression:this._config.filterExpression,region:this._region};this._subscribeCall=this._subscribeEndpoint(r,this._processSubscribeResponse.bind(this))}}},{key:"_processSubscribeResponse",value:function(e,t){var n=this;if(e.error)e.category===o.default.PNTimeoutCategory?this._startSubscribeLoop():e.category===o.default.PNNetworkIssuesCategory?(this.disconnect(),e.error&&this._config.autoNetworkDetection&&this._isOnline&&(this._isOnline=!1,this._listenerManager.announceNetworkDown()),this._reconnectionManager.onReconnection(function(){n._config.autoNetworkDetection&&!n._isOnline&&(n._isOnline=!0,n._listenerManager.announceNetworkUp()),n.reconnect(),n._subscriptionStatusAnnounced=!0;var t={category:o.default.PNReconnectedCategory,operation:e.operation,lastTimetoken:n._lastTimetoken,currentTimetoken:n._currentTimetoken};n._listenerManager.announceStatus(t)}),this._reconnectionManager.startPolling(),this._listenerManager.announceStatus(e)):e.category===o.default.PNBadRequestCategory?(this._stopHeartbeatTimer(),this._listenerManager.announceStatus(e)):this._listenerManager.announceStatus(e);else{if(this._storedTimetoken?(this._currentTimetoken=this._storedTimetoken,this._storedTimetoken=null):(this._lastTimetoken=this._currentTimetoken,this._currentTimetoken=t.metadata.timetoken),!this._subscriptionStatusAnnounced){var i={};i.category=o.default.PNConnectedCategory,i.operation=e.operation,i.affectedChannels=this._pendingChannelSubscriptions,i.subscribedChannels=this.getSubscribedChannels(),i.affectedChannelGroups=this._pendingChannelGroupSubscriptions,i.lastTimetoken=this._lastTimetoken,i.currentTimetoken=this._currentTimetoken,this._subscriptionStatusAnnounced=!0,this._listenerManager.announceStatus(i),this._pendingChannelSubscriptions=[],this._pendingChannelGroupSubscriptions=[]}var r=t.messages||[],a=this._config,u=a.requestMessageCountThreshold,c=a.dedupeOnSubscribe;if(u&&r.length>=u){var l={};l.category=o.default.PNRequestMessageCountExceededCategory,l.operation=e.operation,this._listenerManager.announceStatus(l)}r.forEach(function(e){var t=e.channel,i=e.subscriptionMatch,r=e.publishMetaData;if(t===i&&(i=null),c){if(n._dedupingManager.isDuplicate(e))return;n._dedupingManager.addEntry(e)}if(s.default.endsWith(e.channel,"-pnpres")){var o={channel:null,subscription:null};o.actualChannel=null!=i?t:null,o.subscribedChannel=null!=i?i:t,t&&(o.channel=t.substring(0,t.lastIndexOf("-pnpres"))),i&&(o.subscription=i.substring(0,i.lastIndexOf("-pnpres"))),o.action=e.payload.action,o.state=e.payload.data,o.timetoken=r.publishTimetoken,o.occupancy=e.payload.occupancy,o.uuid=e.payload.uuid,o.timestamp=e.payload.timestamp,e.payload.join&&(o.join=e.payload.join),e.payload.leave&&(o.leave=e.payload.leave),e.payload.timeout&&(o.timeout=e.payload.timeout),n._listenerManager.announcePresence(o)}else if(1===e.messageType){var a={channel:null,subscription:null};a.channel=t,a.subscription=i,a.timetoken=r.publishTimetoken,a.publisher=e.issuingClientId,e.userMetadata&&(a.userMetadata=e.userMetadata),a.message=e.payload,n._listenerManager.announceSignal(a)}else if(2===e.messageType){var u={channel:null,subscription:null};u.channel=t,u.subscription=i,u.timetoken=r.publishTimetoken,u.publisher=e.issuingClientId,e.userMetadata&&(u.userMetadata=e.userMetadata),u.message={event:e.payload.event,type:e.payload.type,data:e.payload.data},"user"===e.payload.type?n._listenerManager.announceUser(u):"space"===e.payload.type?n._listenerManager.announceSpace(u):"membership"===e.payload.type&&n._listenerManager.announceMembership(u)}else{var l={channel:null,subscription:null};l.actualChannel=null!=i?t:null,l.subscribedChannel=null!=i?i:t,l.channel=t,l.subscription=i,l.timetoken=r.publishTimetoken,l.publisher=e.issuingClientId,e.userMetadata&&(l.userMetadata=e.userMetadata),n._config.cipherKey?l.message=n._crypto.decrypt(e.payload):l.message=e.payload,n._listenerManager.announceMessage(l)}}),this._region=t.metadata.region,this._startSubscribeLoop()}}},{key:"_stopSubscribeLoop",value:function(){this._subscribeCall&&("function"==typeof this._subscribeCall.abort&&this._subscribeCall.abort(),this._subscribeCall=null)}}])&&u(t.prototype,n),a&&u(t,a),e}();t.default=l,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var i;(i=n(8))&&i.__esModule,n(0);function r(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function s(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var o=function(){function e(t){var n=t.timeEndpoint;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),s(this,"_reconnectionCallback",void 0),s(this,"_timeEndpoint",void 0),s(this,"_timeTimer",void 0),this._timeEndpoint=n}var t,n,i;return t=e,(n=[{key:"onReconnection",value:function(e){this._reconnectionCallback=e}},{key:"startPolling",value:function(){this._timeTimer=setInterval(this._performTimeLoop.bind(this),3e3)}},{key:"stopPolling",value:function(){clearInterval(this._timeTimer)}},{key:"_performTimeLoop",value:function(){var e=this;this._timeEndpoint(function(t){t.error||(clearInterval(e._timeTimer),e._reconnectionCallback())})}}])&&r(t.prototype,n),i&&r(t,i),e}();t.default=o,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var i;(i=n(3))&&i.__esModule,n(0);function r(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function s(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var o=function(){function e(t){var n=t.config;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),s(this,"_config",void 0),s(this,"hashHistory",void 0),this.hashHistory=[],this._config=n}var t,n,i;return t=e,(n=[{key:"getKey",value:function(e){var t=function(e){var t=0;if(0===e.length)return t;for(var n=0;n<e.length;n+=1){t=(t<<5)-t+e.charCodeAt(n),t&=t}return t}(JSON.stringify(e.payload)).toString(),n=e.publishMetaData.publishTimetoken;return"".concat(n,"-").concat(t)}},{key:"isDuplicate",value:function(e){return this.hashHistory.includes(this.getKey(e))}},{key:"addEntry",value:function(e){this.hashHistory.length>=this._config.maximumCacheSize&&this.hashHistory.shift(),this.hashHistory.push(this.getKey(e))}},{key:"clearHistory",value:function(){this.hashHistory=[]}}])&&r(t.prototype,n),i&&r(t,i),e}();t.default=o,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=function(e,t){var n=e.networking,o=e.config,a=null,u=null,c={};t.getOperation()===s.default.PNTimeOperation||t.getOperation()===s.default.PNChannelGroupsOperation?a=arguments.length<=2?void 0:arguments[2]:(c=arguments.length<=2?void 0:arguments[2],a=arguments.length<=3?void 0:arguments[3]);"undefined"==typeof Promise||a||(u=r.default.createPromise());var l=t.validateParams(e,c);if(l)return a?a(p(l)):u?(u.reject(new h("Validation failed, check status for details",p(l))),u.promise):void 0;var f,d=t.prepareParams(e,c),g=function(e,t,n){return e.usePost&&e.usePost(t,n)?e.postURL(t,n):e.usePatch&&e.usePatch(t,n)?e.patchURL(t,n):e.getURL(t,n)}(t,e,c),v={url:g,operation:t.getOperation(),timeout:t.getRequestTimeout(e)};d.uuid=o.UUID,d.pnsdk=function(e){if(e.sdkName)return e.sdkName;var t="PubNub-JS-".concat(e.sdkFamily);e.partnerId&&(t+="-".concat(e.partnerId));return t+="/".concat(e.getVersion())}(o),o.useInstanceId&&(d.instanceid=o.instanceId);o.useRequestId&&(d.requestid=i.default.createUUID());t.isAuthSupported()&&o.getAuthKey()&&(d.auth=o.getAuthKey());o.secretKey&&function(e,t,n){var i=e.config,s=e.crypto;n.timestamp=Math.floor((new Date).getTime()/1e3);var o="".concat(i.subscribeKey,"\n").concat(i.publishKey,"\n").concat(t,"\n");o+=r.default.signPamFromParams(n);var a=s.HMACSHA256(o);a=(a=a.replace(/\+/g,"-")).replace(/\//g,"_"),n.signature=a}(e,g,d);var b=function(n,i){if(n.error)a?a(n):u&&u.reject(new h("PubNub call failed, check status for details",n));else{var r=t.handleResponse(e,i,c);a?a(n,r):u&&u.fulfill(r)}};if(t.usePost&&t.usePost(e,c)){var y=t.postPayload(e,c);f=n.POST(d,y,v,b)}else if(t.usePatch&&t.usePatch(e,c)){var m=t.patchPayload(e,c);f=n.PATCH(d,m,v,b)}else f=t.useDelete&&t.useDelete()?n.DELETE(d,v,b):n.GET(d,v,b);if(t.getOperation()===s.default.PNSubscribeOperation)return f;if(u)return u.promise};var i=o(n(5)),r=(n(0),o(n(2))),s=(o(n(3)),o(n(1)));function o(e){return e&&e.__esModule?e:{default:e}}function a(e){return(a="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function u(e,t){return!t||"object"!==a(t)&&"function"!=typeof t?function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e):t}function c(e){var t="function"==typeof Map?new Map:void 0;return(c=function(e){if(null===e||(n=e,-1===Function.toString.call(n).indexOf("[native code]")))return e;var n;if("function"!=typeof e)throw new TypeError("Super expression must either be null or a function");if(void 0!==t){if(t.has(e))return t.get(e);t.set(e,i)}function i(){return l(e,arguments,d(this).constructor)}return i.prototype=Object.create(e.prototype,{constructor:{value:i,enumerable:!1,writable:!0,configurable:!0}}),f(i,e)})(e)}function l(e,t,n){return(l=function(){if("undefined"==typeof Reflect||!Reflect.construct)return!1;if(Reflect.construct.sham)return!1;if("function"==typeof Proxy)return!0;try{return Date.prototype.toString.call(Reflect.construct(Date,[],function(){})),!0}catch(e){return!1}}()?Reflect.construct:function(e,t,n){var i=[null];i.push.apply(i,t);var r=new(Function.bind.apply(e,i));return n&&f(r,n.prototype),r}).apply(null,arguments)}function f(e,t){return(f=Object.setPrototypeOf||function(e,t){return e.__proto__=t,e})(e,t)}function d(e){return(d=Object.setPrototypeOf?Object.getPrototypeOf:function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}var h=function(e){function t(e,n){var i;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),(i=u(this,d(t).call(this,e))).name=i.constructor.name,i.status=n,i.message=e,i}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),t&&f(e,t)}(t,c(Error)),t}();function p(e){return(t={message:e}).type="validationError",t.error=!0,t;var t}e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNAddChannelsToGroupOperation},t.validateParams=function(e,t){var n=t.channels,i=t.channelGroup,r=e.config;if(!i)return"Missing Channel Group";if(!n||0===n.length)return"Missing Channels";if(!r.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channelGroup,i=e.config;return"/v1/channel-registration/sub-key/".concat(i.subscribeKey,"/channel-group/").concat(r.default.encodeString(n))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.channels;return{add:(void 0===n?[]:n).join(",")}},t.handleResponse=function(){return{}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNRemoveChannelsFromGroupOperation},t.validateParams=function(e,t){var n=t.channels,i=t.channelGroup,r=e.config;if(!i)return"Missing Channel Group";if(!n||0===n.length)return"Missing Channels";if(!r.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channelGroup,i=e.config;return"/v1/channel-registration/sub-key/".concat(i.subscribeKey,"/channel-group/").concat(r.default.encodeString(n))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.channels;return{remove:(void 0===n?[]:n).join(",")}},t.handleResponse=function(){return{}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNRemoveGroupOperation},t.validateParams=function(e,t){var n=t.channelGroup,i=e.config;if(!n)return"Missing Channel Group";if(!i.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channelGroup,i=e.config;return"/v1/channel-registration/sub-key/".concat(i.subscribeKey,"/channel-group/").concat(r.default.encodeString(n),"/remove")},t.isAuthSupported=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.prepareParams=function(){return{}},t.handleResponse=function(){return{}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNChannelGroupsOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e){var t=e.config;return"/v1/channel-registration/sub-key/".concat(t.subscribeKey,"/channel-group")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(){return{}},t.handleResponse=function(e,t){return{groups:t.payload.groups}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNChannelsForGroupOperation},t.validateParams=function(e,t){var n=t.channelGroup,i=e.config;if(!n)return"Missing Channel Group";if(!i.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channelGroup,i=e.config;return"/v1/channel-registration/sub-key/".concat(i.subscribeKey,"/channel-group/").concat(r.default.encodeString(n))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(){return{}},t.handleResponse=function(e,t){return{channels:t.payload.channels}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNPushNotificationEnabledChannelsOperation},t.validateParams=function(e,t){var n=t.device,i=t.pushGateway,r=t.channels,s=e.config;if(!n)return"Missing Device ID (device)";if(!i)return"Missing GW Type (pushGateway: gcm or apns)";if(!r||0===r.length)return"Missing Channels";if(!s.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.device,i=e.config;return"/v1/push/sub-key/".concat(i.subscribeKey,"/devices/").concat(n)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.pushGateway,i=t.channels;return{type:n,add:(void 0===i?[]:i).join(",")}},t.handleResponse=function(){return{}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNPushNotificationEnabledChannelsOperation},t.validateParams=function(e,t){var n=t.device,i=t.pushGateway,r=t.channels,s=e.config;if(!n)return"Missing Device ID (device)";if(!i)return"Missing GW Type (pushGateway: gcm or apns)";if(!r||0===r.length)return"Missing Channels";if(!s.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.device,i=e.config;return"/v1/push/sub-key/".concat(i.subscribeKey,"/devices/").concat(n)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.pushGateway,i=t.channels;return{type:n,remove:(void 0===i?[]:i).join(",")}},t.handleResponse=function(){return{}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNPushNotificationEnabledChannelsOperation},t.validateParams=function(e,t){var n=t.device,i=t.pushGateway,r=e.config;if(!n)return"Missing Device ID (device)";if(!i)return"Missing GW Type (pushGateway: gcm or apns)";if(!r.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.device,i=e.config;return"/v1/push/sub-key/".concat(i.subscribeKey,"/devices/").concat(n)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){return{type:t.pushGateway}},t.handleResponse=function(e,t){return{channels:t}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNRemoveAllPushNotificationsOperation},t.validateParams=function(e,t){var n=t.device,i=t.pushGateway,r=e.config;if(!n)return"Missing Device ID (device)";if(!i)return"Missing GW Type (pushGateway: gcm or apns)";if(!r.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.device,i=e.config;return"/v1/push/sub-key/".concat(i.subscribeKey,"/devices/").concat(n,"/remove")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){return{type:t.pushGateway}},t.handleResponse=function(){return{}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNUnsubscribeOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.channels,s=void 0===i?[]:i,o=s.length>0?s.join(","):",";return"/v2/presence/sub-key/".concat(n.subscribeKey,"/channel/").concat(r.default.encodeString(o),"/leave")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.channelGroups,i=void 0===n?[]:n,r={};i.length>0&&(r["channel-group"]=i.join(","));return r},t.handleResponse=function(){return{}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNWhereNowOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.uuid,r=void 0===i?n.UUID:i;return"/v2/presence/sub-key/".concat(n.subscribeKey,"/uuid/").concat(r)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(){return{}},t.handleResponse=function(e,t){if(!t.payload)return{channels:[]};return{channels:t.payload.channels}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNHeartbeatOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.channels,s=void 0===i?[]:i,o=s.length>0?s.join(","):",";return"/v2/presence/sub-key/".concat(n.subscribeKey,"/channel/").concat(r.default.encodeString(o),"/heartbeat")},t.isAuthSupported=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.prepareParams=function(e,t){var n=t.channelGroups,i=void 0===n?[]:n,r=t.state,s=void 0===r?{}:r,o=e.config,a={};i.length>0&&(a["channel-group"]=i.join(","));return a.state=JSON.stringify(s),a.heartbeat=o.getPresenceTimeout(),a},t.handleResponse=function(){return{}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNGetStateOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.uuid,s=void 0===i?n.UUID:i,o=t.channels,a=void 0===o?[]:o,u=a.length>0?a.join(","):",";return"/v2/presence/sub-key/".concat(n.subscribeKey,"/channel/").concat(r.default.encodeString(u),"/uuid/").concat(s)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.channelGroups,i=void 0===n?[]:n,r={};i.length>0&&(r["channel-group"]=i.join(","));return r},t.handleResponse=function(e,t,n){var i=n.channels,r=void 0===i?[]:i,s=n.channelGroups,o=void 0===s?[]:s,a={};1===r.length&&0===o.length?a[r[0]]=t.payload:a=t.payload;return{channels:a}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNSetStateOperation},t.validateParams=function(e,t){var n=e.config,i=t.state,r=t.channels,s=void 0===r?[]:r,o=t.channelGroups,a=void 0===o?[]:o;if(!i)return"Missing State";if(!n.subscribeKey)return"Missing Subscribe Key";if(0===s.length&&0===a.length)return"Please provide a list of channels and/or channel-groups"},t.getURL=function(e,t){var n=e.config,i=t.channels,s=void 0===i?[]:i,o=s.length>0?s.join(","):",";return"/v2/presence/sub-key/".concat(n.subscribeKey,"/channel/").concat(r.default.encodeString(o),"/uuid/").concat(n.UUID,"/data")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.state,i=t.channelGroups,r=void 0===i?[]:i,s={};s.state=JSON.stringify(n),r.length>0&&(s["channel-group"]=r.join(","));return s},t.handleResponse=function(e,t){return{state:t.payload}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNHereNowOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.channels,s=void 0===i?[]:i,o=t.channelGroups,a=void 0===o?[]:o,u="/v2/presence/sub-key/".concat(n.subscribeKey);if(s.length>0||a.length>0){var c=s.length>0?s.join(","):",";u+="/channel/".concat(r.default.encodeString(c))}return u},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.channelGroups,i=void 0===n?[]:n,r=t.includeUUIDs,s=void 0===r||r,o=t.includeState,a=void 0!==o&&o,u={};s||(u.disable_uuids=1);a&&(u.state=1);i.length>0&&(u["channel-group"]=i.join(","));return u},t.handleResponse=function(e,t,n){var i,r=n.channels,s=void 0===r?[]:r,o=n.channelGroups,a=void 0===o?[]:o,u=n.includeUUIDs,c=void 0===u||u,l=n.includeState,f=void 0!==l&&l;i=s.length>1||a.length>0||0===a.length&&0===s.length?function(){var e={};return e.totalChannels=t.payload.total_channels,e.totalOccupancy=t.payload.total_occupancy,e.channels={},Object.keys(t.payload.channels).forEach(function(n){var i=t.payload.channels[n],r=[];return e.channels[n]={occupants:r,name:n,occupancy:i.occupancy},c&&i.uuids.forEach(function(e){f?r.push({state:e.state,uuid:e.uuid}):r.push({state:null,uuid:e})}),e}),e}():function(){var e={},n=[];return e.totalChannels=1,e.totalOccupancy=t.occupancy,e.channels={},e.channels[s[0]]={occupants:n,name:s[0],occupancy:t.occupancy},c&&t.uuids&&t.uuids.forEach(function(e){f?n.push({state:e.state,uuid:e.uuid}):n.push({state:null,uuid:e})}),e}();return i};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNCreateUserOperation},t.validateParams=function(e,t){var n=e.config,i=t.id,r=t.name,s=t.custom;if(!i)return"Missing User.id";if(!r)return"Missing User.name";if(!n.subscribeKey)return"Missing Subscribe Key";if(s&&!Object.values(s).every(function(e){return"string"==typeof e||"number"==typeof e||"boolean"==typeof e}))return"Invalid custom type, only string, number and boolean values are allowed."},t.usePost=function(){return!0},t.getURL=function(e){var t=e.config;return"/v1/objects/".concat(t.subscribeKey,"/users")},t.postURL=function(e){var t=e.config;return"/v1/objects/".concat(t.subscribeKey,"/users")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i={};n?void 0===n.customFields&&(n.customFields=!0):n={customFields:!0};if(n){var r=[];n.customFields&&r.push("custom");var s=r.join(",");s.length>0&&(i.include=s)}return i},t.postPayload=function(e,t){return n=t,JSON.stringify(n);var n},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateUserOperation},t.validateParams=function(e,t){var n=e.config,i=t.id,r=t.name,s=t.custom;if(!i)return"Missing User.id";if(!r)return"Missing User.name";if(!n.subscribeKey)return"Missing Subscribe Key";if(s&&!Object.values(s).every(function(e){return"string"==typeof e||"number"==typeof e||"boolean"==typeof e}))return"Invalid custom type, only string, number and boolean values are allowed."},t.usePatch=function(){return!0},t.getURL=function(e,t){var n=e.config,i=t.id;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(i)},t.patchURL=function(e,t){var n=e.config,i=t.id;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(i)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i={};n?void 0===n.customFields&&(n.customFields=!0):n={customFields:!0};if(n){var r=[];n.customFields&&r.push("custom");var s=r.join(",");s.length>0&&(i.include=s)}return i},t.patchPayload=function(e,t){return n=t,JSON.stringify(n);var n},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNDeleteUserOperation},t.validateParams=function(e,t){var n=e.config;if(!t)return"Missing UserId";if(!n.subscribeKey)return"Missing Subscribe Key"},t.useDelete=function(){return!0},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(){return{}},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNGetUserOperation},t.validateParams=function(e,t){if(!t.userId)return"Missing userId"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i={};n?void 0===n.customFields&&(n.customFields=!0):n={customFields:!0};if(n){var r=[];n.customFields&&r.push("custom");var s=r.join(",");s.length>0&&(i.include=s)}return i},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNGetUsersOperation},t.validateParams=function(){},t.getURL=function(e){var t=e.config;return"/v1/objects/".concat(t.subscribeKey,"/users")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNCreateSpaceOperation},t.validateParams=function(e,t){var n=e.config,i=t.id,r=t.name,s=t.custom;if(!i)return"Missing Space.id";if(!r)return"Missing Space.name";if(!n.subscribeKey)return"Missing Subscribe Key";if(s&&!Object.values(s).every(function(e){return"string"==typeof e||"number"==typeof e||"boolean"==typeof e}))return"Invalid custom type, only string, number and boolean values are allowed."},t.usePost=function(){return!0},t.getURL=function(e){var t=e.config;return"/v1/objects/".concat(t.subscribeKey,"/spaces")},t.postURL=function(e){var t=e.config;return"/v1/objects/".concat(t.subscribeKey,"/spaces")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i={};n?void 0===n.customFields&&(n.customFields=!0):n={customFields:!0};if(n){var r=[];n.customFields&&r.push("custom");var s=r.join(",");s.length>0&&(i.include=s)}return i},t.postPayload=function(e,t){return n=t,JSON.stringify(n);var n},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateSpaceOperation},t.validateParams=function(e,t){var n=e.config,i=t.id,r=t.name,s=t.custom;if(!i)return"Missing Space.id";if(!r)return"Missing Space.name";if(!n.subscribeKey)return"Missing Subscribe Key";if(s&&!Object.values(s).every(function(e){return"string"==typeof e||"number"==typeof e||"boolean"==typeof e}))return"Invalid custom type, only string, number and boolean values are allowed."},t.usePatch=function(){return!0},t.getURL=function(e,t){var n=e.config,i=t.id;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(i)},t.patchURL=function(e,t){var n=e.config,i=t.id;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(i)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i={};n?void 0===n.customFields&&(n.customFields=!0):n={customFields:!0};if(n){var r=[];n.customFields&&r.push("custom");var s=r.join(",");s.length>0&&(i.include=s)}return i},t.patchPayload=function(e,t){return n=t,JSON.stringify(n);var n},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNDeleteSpaceOperation},t.validateParams=function(e,t){var n=e.config;if(!t)return"Missing SpaceId";if(!n.subscribeKey)return"Missing Subscribe Key"},t.useDelete=function(){return!0},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(){return{}},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNGetSpacesOperation},t.validateParams=function(){},t.getURL=function(e){var t=e.config;return"/v1/objects/".concat(t.subscribeKey,"/spaces")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNGetSpaceOperation},t.validateParams=function(e,t){if(!t.spaceId)return"Missing spaceId"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i={};n?void 0===n.customFields&&(n.customFields=!0):n={customFields:!0};if(n){var r=[];n.customFields&&r.push("custom");var s=r.join(",");s.length>0&&(i.include=s)}return i},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNGetMembersOperation},t.validateParams=function(e,t){if(!t.spaceId)return"Missing spaceId"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.userFields&&o.push("user"),n.customUserFields&&o.push("user.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateMembersOperation},t.validateParams=function(e,t){var n=t.spaceId,i=t.users;if(!n)return"Missing spaceId";if(!i)return"Missing users"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.patchURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.usePatch=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.patchPayload=function(e,t){var n=t.users,i={};n&&n.length>0&&(i.add=[],n.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),i.add.push(t)}));return r=i,JSON.stringify(r);var r},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateMembersOperation},t.validateParams=function(e,t){var n=t.spaceId,i=t.users;if(!n)return"Missing spaceId";if(!i)return"Missing users"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.patchURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.usePatch=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.patchPayload=function(e,t){var n=t.addMembers,i=t.updateMembers,r=t.removeMembers,s=t.users,o={};n&&n.length>0&&(o.add=[],n.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),o.add.push(t)}));i&&i.length>0&&(o.update=[],i.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),o.update.push(t)}));s&&s.length>0&&(o.update=o.update||[],s.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),o.update.push(t)}));r&&r.length>0&&(o.remove=[],r.forEach(function(e){o.remove.push({id:e})}));return a=o,JSON.stringify(a);var a},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateMembersOperation},t.validateParams=function(e,t){var n=t.spaceId,i=t.users;if(!n)return"Missing spaceId";if(!i)return"Missing users"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.patchURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/spaces/").concat(t.spaceId,"/users")},t.usePatch=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.patchPayload=function(e,t){var n=t.users,i={};n&&n.length>0&&(i.remove=[],n.forEach(function(e){i.remove.push({id:e})}));return r=i,JSON.stringify(r);var r},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNGetMembershipsOperation},t.validateParams=function(e,t){if(!t.userId)return"Missing userId"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateMembershipsOperation},t.validateParams=function(e,t){var n=t.userId,i=t.spaces;if(!n)return"Missing userId";if(!i)return"Missing spaces"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.patchURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.usePatch=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.patchPayload=function(e,t){var n=t.addMemberships,i=t.updateMemberships,r=t.removeMemberships,s=t.spaces,o={};n&&n.length>0&&(o.add=[],n.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),o.add.push(t)}));i&&i.length>0&&(o.update=[],i.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),o.update.push(t)}));s&&s.length>0&&(o.update=o.update||[],s.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),o.update.push(t)}));r&&r.length>0&&(o.remove=[],r.forEach(function(e){o.remove.push({id:e})}));return a=o,JSON.stringify(a);var a},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateMembershipsOperation},t.validateParams=function(e,t){var n=t.userId,i=t.spaces;if(!n)return"Missing userId";if(!i)return"Missing spaces"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.patchURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.usePatch=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.patchPayload=function(e,t){var n=t.spaces,i={};n&&n.length>0&&(i.add=[],n.forEach(function(e){var t={id:e.id};e.custom&&(t.custom=e.custom),i.add.push(t)}));return r=i,JSON.stringify(r);var r},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNUpdateMembershipsOperation},t.validateParams=function(e,t){var n=t.userId,i=t.spaces;if(!n)return"Missing userId";if(!i)return"Missing spaces"},t.getURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.patchURL=function(e,t){var n=e.config;return"/v1/objects/".concat(n.subscribeKey,"/users/").concat(t.userId,"/spaces")},t.usePatch=function(){return!0},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.include,i=t.limit,r=t.page,s={};i&&(s.limit=i);if(n){var o=[];n.totalCount&&(s.count=!0),n.customFields&&o.push("custom"),n.spaceFields&&o.push("space"),n.customSpaceFields&&o.push("space.custom");var a=o.join(",");a.length>0&&(s.include=a)}r&&(r.next&&(s.start=r.next),r.prev&&(s.end=r.prev));return s},t.patchPayload=function(e,t){var n=t.spaces,i={};n&&n.length>0&&(i.remove=[],n.forEach(function(e){i.remove.push({id:e})}));return r=i,JSON.stringify(r);var r},t.handleResponse=function(e,t){return t};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNAccessManagerAudit},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e){var t=e.config;return"/v2/auth/audit/sub-key/".concat(t.subscribeKey)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!1},t.prepareParams=function(e,t){var n=t.channel,i=t.channelGroup,r=t.authKeys,s=void 0===r?[]:r,o={};n&&(o.channel=n);i&&(o["channel-group"]=i);s.length>0&&(o.auth=s.join(","));return o},t.handleResponse=function(e,t){return t.payload};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return r.default.PNAccessManagerGrant},t.validateParams=function(e){var t=e.config;if(!t.subscribeKey)return"Missing Subscribe Key";if(!t.publishKey)return"Missing Publish Key";if(!t.secretKey)return"Missing Secret Key"},t.getURL=function(e){var t=e.config;return"/v2/auth/grant/sub-key/".concat(t.subscribeKey)},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!1},t.prepareParams=function(e,t){var n=t.channels,i=void 0===n?[]:n,r=t.channelGroups,s=void 0===r?[]:r,o=t.ttl,a=t.read,u=void 0!==a&&a,c=t.write,l=void 0!==c&&c,f=t.manage,d=void 0!==f&&f,h=t.authKeys,p=void 0===h?[]:h,g={};g.r=u?"1":"0",g.w=l?"1":"0",g.m=d?"1":"0",i.length>0&&(g.channel=i.join(","));s.length>0&&(g["channel-group"]=s.join(","));p.length>0&&(g.auth=p.join(","));(o||0===o)&&(g.ttl=o);return g},t.handleResponse=function(){return{}};n(0);var i,r=(i=n(1))&&i.__esModule?i:{default:i}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNPublishOperation},t.validateParams=function(e,t){var n=e.config,i=t.message;if(!t.channel)return"Missing Channel";if(!i)return"Missing Message";if(!n.subscribeKey)return"Missing Subscribe Key"},t.usePost=function(e,t){var n=t.sendByPost;return void 0!==n&&n},t.getURL=function(e,t){var n=e.config,i=t.channel,s=t.message,o=a(e,s);return"/publish/".concat(n.publishKey,"/").concat(n.subscribeKey,"/0/").concat(r.default.encodeString(i),"/0/").concat(r.default.encodeString(o))},t.postURL=function(e,t){var n=e.config,i=t.channel;return"/publish/".concat(n.publishKey,"/").concat(n.subscribeKey,"/0/").concat(r.default.encodeString(i),"/0")},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.postPayload=function(e,t){var n=t.message;return a(e,n)},t.prepareParams=function(e,t){var n=t.meta,i=t.replicate,r=void 0===i||i,s=t.storeInHistory,a=t.ttl,u={};null!=s&&(u.store=s?"1":"0");a&&(u.ttl=a);!1===r&&(u.norep="true");n&&"object"===o(n)&&(u.meta=JSON.stringify(n));return u},t.handleResponse=function(e,t){return{timetoken:t[2]}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}function o(e){return(o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function a(e,t){var n=e.crypto,i=e.config,r=JSON.stringify(t);return i.cipherKey&&(r=n.encrypt(r),r=JSON.stringify(r)),r}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNSignalOperation},t.validateParams=function(e,t){var n=e.config,i=t.message;if(!t.channel)return"Missing Channel";if(!i)return"Missing Message";if(!n.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.channel,s=t.message,o=(a=s,JSON.stringify(a));var a;return"/signal/".concat(n.publishKey,"/").concat(n.subscribeKey,"/0/").concat(r.default.encodeString(i),"/0/").concat(r.default.encodeString(o))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(){return{}},t.handleResponse=function(e,t){return{timetoken:t[2]}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNHistoryOperation},t.validateParams=function(e,t){var n=t.channel,i=e.config;if(!n)return"Missing channel";if(!i.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channel,i=e.config;return"/v2/history/sub-key/".concat(i.subscribeKey,"/channel/").concat(r.default.encodeString(n))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.start,i=t.end,r=t.reverse,s=t.count,o=void 0===s?100:s,a=t.stringifiedTimeToken,u=void 0!==a&&a,c={include_token:"true"};c.count=o,n&&(c.start=n);i&&(c.end=i);u&&(c.string_message_token="true");null!=r&&(c.reverse=r.toString());return c},t.handleResponse=function(e,t){var n={messages:[],startTimeToken:t[1],endTimeToken:t[2]};return t[0].forEach(function(t){var i={timetoken:t.timetoken,entry:o(e,t.message)};n.messages.push(i)}),n};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}function o(e,t){var n=e.config,i=e.crypto;if(!n.cipherKey)return t;try{return i.decrypt(t)}catch(e){return t}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNDeleteMessagesOperation},t.validateParams=function(e,t){var n=t.channel,i=e.config;if(!n)return"Missing channel";if(!i.subscribeKey)return"Missing Subscribe Key"},t.useDelete=function(){return!0},t.getURL=function(e,t){var n=t.channel,i=e.config;return"/v3/history/sub-key/".concat(i.subscribeKey,"/channel/").concat(r.default.encodeString(n))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.start,i=t.end,r={};n&&(r.start=n);i&&(r.end=i);return r},t.handleResponse=function(e,t){return t.payload};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNMessageCounts},t.validateParams=function(e,t){var n=t.channels,i=t.timetoken,r=t.channelTimetokens,s=e.config;if(!n)return"Missing channel";if(i&&r)return"timetoken and channelTimetokens are incompatible together";if(i&&r&&r.length>1&&n.length!==r.length)return"Length of channelTimetokens and channels do not match";if(!s.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channels,i=e.config,s=n.join(",");return"/v3/history/sub-key/".concat(i.subscribeKey,"/message-counts/").concat(r.default.encodeString(s))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.timetoken,i=t.channelTimetokens,r={};if(i&&1===i.length){var s=(a=1,function(e){if(Array.isArray(e))return e}(o=i)||function(e,t){var n=[],i=!0,r=!1,s=void 0;try{for(var o,a=e[Symbol.iterator]();!(i=(o=a.next()).done)&&(n.push(o.value),!t||n.length!==t);i=!0);}catch(e){r=!0,s=e}finally{try{i||null==a.return||a.return()}finally{if(r)throw s}}return n}(o,a)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance")}())[0];r.timetoken=s}else i?r.channelsTimetoken=i.join(","):n&&(r.timetoken=n);var o,a;return r},t.handleResponse=function(e,t){return{channels:t.channels}};var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNFetchMessagesOperation},t.validateParams=function(e,t){var n=t.channels,i=e.config;if(!n||0===n.length)return"Missing channels";if(!i.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=t.channels,i=void 0===n?[]:n,s=e.config,o=i.length>0?i.join(","):",";return"/v3/history/sub-key/".concat(s.subscribeKey,"/channel/").concat(r.default.encodeString(o))},t.getRequestTimeout=function(e){return e.config.getTransactionTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=t.start,i=t.end,r=t.count,s=t.stringifiedTimeToken,o=void 0!==s&&s,a={};r&&(a.max=r);n&&(a.start=n);i&&(a.end=i);o&&(a.string_message_token="true");return a},t.handleResponse=function(e,t){var n={channels:{}};return Object.keys(t.channels||{}).forEach(function(i){n.channels[i]=[],(t.channels[i]||[]).forEach(function(t){var r={};r.channel=i,r.subscription=null,r.timetoken=t.timetoken,r.message=function(e,t){var n=e.config,i=e.crypto;if(!n.cipherKey)return t;try{return i.decrypt(t)}catch(e){return t}}(e,t.message),n.channels[i].push(r)})}),n};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.getOperation=function(){return i.default.PNSubscribeOperation},t.validateParams=function(e){if(!e.config.subscribeKey)return"Missing Subscribe Key"},t.getURL=function(e,t){var n=e.config,i=t.channels,s=void 0===i?[]:i,o=s.length>0?s.join(","):",";return"/v2/subscribe/".concat(n.subscribeKey,"/").concat(r.default.encodeString(o),"/0")},t.getRequestTimeout=function(e){return e.config.getSubscribeTimeout()},t.isAuthSupported=function(){return!0},t.prepareParams=function(e,t){var n=e.config,i=t.state,r=t.channelGroups,s=void 0===r?[]:r,o=t.timetoken,a=t.filterExpression,u=t.region,c={heartbeat:n.getPresenceTimeout()};s.length>0&&(c["channel-group"]=s.join(","));a&&a.length>0&&(c["filter-expr"]=a);Object.keys(i).length&&(c.state=JSON.stringify(i));o&&(c.tt=o);u&&(c.tr=u);return c},t.handleResponse=function(e,t){var n=[];t.m.forEach(function(e){var t={publishTimetoken:e.p.t,region:e.p.r},i={shard:parseInt(e.a,10),subscriptionMatch:e.b,channel:e.c,messageType:e.e,payload:e.d,flags:e.f,issuingClientId:e.i,subscribeKey:e.k,originationTimetoken:e.o,userMetadata:e.u,publishMetaData:t};n.push(i)});var i={timetoken:t.t.t,region:t.t.r};return{messages:n,metadata:i}};n(0);var i=s(n(1)),r=s(n(2));function s(e){return e&&e.__esModule?e:{default:e}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;r(n(3));var i=r(n(4));n(0);function r(e){return e&&e.__esModule?e:{default:e}}function s(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function o(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}var a=function(){function e(t){var n=this;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),o(this,"_modules",void 0),o(this,"_config",void 0),o(this,"_maxSubDomain",void 0),o(this,"_currentSubDomain",void 0),o(this,"_standardOrigin",void 0),o(this,"_subscribeOrigin",void 0),o(this,"_providedFQDN",void 0),o(this,"_requestTimeout",void 0),o(this,"_coreParams",void 0),this._modules={},Object.keys(t).forEach(function(e){n._modules[e]=t[e].bind(n)})}var t,n,r;return t=e,(n=[{key:"init",value:function(e){this._config=e,this._maxSubDomain=20,this._currentSubDomain=Math.floor(Math.random()*this._maxSubDomain),this._providedFQDN=(this._config.secure?"https://":"http://")+this._config.origin,this._coreParams={},this.shiftStandardOrigin()}},{key:"nextOrigin",value:function(){return this._providedFQDN.match(/ps\.pndsn\.com$/i)?(this._currentSubDomain=this._currentSubDomain+1,this._currentSubDomain>=this._maxSubDomain&&(this._currentSubDomain=1),e=this._currentSubDomain.toString(),this._providedFQDN.replace("ps.pndsn.com","ps".concat(e,".pndsn.com"))):this._providedFQDN;var e}},{key:"hasModule",value:function(e){return e in this._modules}},{key:"shiftStandardOrigin",value:function(){return this._standardOrigin=this.nextOrigin(),this._standardOrigin}},{key:"getStandardOrigin",value:function(){return this._standardOrigin}},{key:"POST",value:function(e,t,n,i){return this._modules.post(e,t,n,i)}},{key:"PATCH",value:function(e,t,n,i){return this._modules.patch(e,t,n,i)}},{key:"GET",value:function(e,t,n){return this._modules.get(e,t,n)}},{key:"DELETE",value:function(e,t,n){return this._modules.del(e,t,n)}},{key:"_detectErrorCategory",value:function(e){if("ENOTFOUND"===e.code)return i.default.PNNetworkIssuesCategory;if("ECONNREFUSED"===e.code)return i.default.PNNetworkIssuesCategory;if("ECONNRESET"===e.code)return i.default.PNNetworkIssuesCategory;if("EAI_AGAIN"===e.code)return i.default.PNNetworkIssuesCategory;if(0===e.status||e.hasOwnProperty("status")&&void 0===e.status)return i.default.PNNetworkIssuesCategory;if(e.timeout)return i.default.PNTimeoutCategory;if("ETIMEDOUT"===e.code)return i.default.PNNetworkIssuesCategory;if(e.response){if(e.response.badRequest)return i.default.PNBadRequestCategory;if(e.response.forbidden)return i.default.PNAccessDeniedCategory}return i.default.PNUnknownCategory}}])&&s(t.prototype,n),r&&s(t,r),e}();t.default=a,e.exports=t.default},function(e,t,n){"use strict";function i(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var r=function(){function e(){var t,n,i;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),i=void 0,(n="storage")in(t=this)?Object.defineProperty(t,n,{value:i,enumerable:!0,configurable:!0,writable:!0}):t[n]=i,this.storage={}}var t,n,r;return t=e,(n=[{key:"get",value:function(e){return this.storage[e]}},{key:"set",value:function(e,t){this.storage[e]=t}}])&&i(t.prototype,n),r&&i(t,r),e}();t.default=r,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.get=function(e,t,n){var i=r(),o=this.getStandardOrigin()+t.url;return s.call(this,i,"GET",o,e,{},t,n)},t.post=function(e,t,n,i){var o=r(),a=this.getStandardOrigin()+n.url;return s.call(this,o,"POST",a,e,JSON.parse(t),n,i)},t.patch=function(e,t,n,i){var o=r(),a=this.getStandardOrigin()+n.url;return s.call(this,o,"PATCH",a,e,JSON.parse(t),n,i)},t.del=function(e,t,n){var i=r(),o=this.getStandardOrigin()+t.url;return s.call(this,i,"DELETE",o,e,{},t,n)};n(0);var i=n(62);function r(){return"mobileweb"===Ti.Platform.osname?new XMLHttpRequest:Ti.Network.createHTTPClient()}function s(e,t,n,r,s,o,a){var u=this,c={};c.operation=o.operation,e.open(t,(0,i.buildUrl)(n,r),!0),function(e){"mobileweb"!==Ti.Platform.osname&&this._config.keepAlive&&(e.enableKeepAlive=!0)}.call(this,e),e.onload=function(){c.error=!1,e.status&&(c.statusCode=e.status);var t=JSON.parse(e.responseText);return u._config.logVerbosity&&function(e,t,n){var i=(new Date).getTime(),r=(new Date).toISOString(),s=Ti&&Ti.API&&Ti.API.log?Ti.API:console;s.log("<<<<<"),s.log("[".concat(r,"]"),"\n",e,"\n",t),s.log("-----");var o=(new Date).getTime()-i,a=(new Date).toISOString();s.log(">>>>>>"),s.log("[".concat(a," / ").concat(o,"]"),"\n",e,"\n",t,"\n",n),s.log("-----")}(n,r,e.responseText),a(c,t)},e.onerror=function(e){return c.error=!0,c.errorData=e.error,c.category=u._detectErrorCategory(e.error),a(c,null)},e.timeout="android"===Ti.Platform.osname?2147483647:1/0,e.send(s)}},function(e,t,n){"use strict";function i(e){return(i="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function r(e,t,n){null!=n?Array.isArray(n)?n.forEach(function(n){r(e,t,n)}):"object"===i(n)?Object.keys(n).forEach(function(i){r(e,"".concat(t,"[").concat(i,"]"),n[i])}):e.push("".concat(encodeURIComponent(t),"=").concat(encodeURIComponent(n))):null===n&&e.push(encodeURIComponent("".concat(encodeURIComponent(t))))}Object.defineProperty(t,"__esModule",{value:!0}),t.encodedKeyValuePair=r,t.buildUrl=function(e,t){var n=[];return Object.keys(t).forEach(function(e){r(n,e,t[e])}),"".concat(e,"?").concat(n.join("&"))}}]),module.exports=exports.PubNub;
+exports["PubNub"] =
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 9);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {};
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+var _default = {
+  PNTimeOperation: 'PNTimeOperation',
+  PNHistoryOperation: 'PNHistoryOperation',
+  PNDeleteMessagesOperation: 'PNDeleteMessagesOperation',
+  PNFetchMessagesOperation: 'PNFetchMessagesOperation',
+  PNMessageCounts: 'PNMessageCountsOperation',
+  PNSubscribeOperation: 'PNSubscribeOperation',
+  PNUnsubscribeOperation: 'PNUnsubscribeOperation',
+  PNPublishOperation: 'PNPublishOperation',
+  PNSignalOperation: 'PNSignalOperation',
+  PNCreateUserOperation: 'PNCreateUserOperation',
+  PNUpdateUserOperation: 'PNUpdateUserOperation',
+  PNDeleteUserOperation: 'PNDeleteUserOperation',
+  PNGetUserOperation: 'PNGetUsersOperation',
+  PNGetUsersOperation: 'PNGetUsersOperation',
+  PNCreateSpaceOperation: 'PNCreateSpaceOperation',
+  PNUpdateSpaceOperation: 'PNUpdateSpaceOperation',
+  PNDeleteSpaceOperation: 'PNDeleteSpaceOperation',
+  PNGetSpaceOperation: 'PNGetSpacesOperation',
+  PNGetSpacesOperation: 'PNGetSpacesOperation',
+  PNGetMembersOperation: 'PNGetMembersOperation',
+  PNUpdateMembersOperation: 'PNUpdateMembersOperation',
+  PNGetMembershipsOperation: 'PNGetMembershipsOperation',
+  PNUpdateMembershipsOperation: 'PNUpdateMembershipsOperation',
+  PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
+  PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
+  PNWhereNowOperation: 'PNWhereNowOperation',
+  PNSetStateOperation: 'PNSetStateOperation',
+  PNHereNowOperation: 'PNHereNowOperation',
+  PNGetStateOperation: 'PNGetStateOperation',
+  PNHeartbeatOperation: 'PNHeartbeatOperation',
+  PNChannelGroupsOperation: 'PNChannelGroupsOperation',
+  PNRemoveGroupOperation: 'PNRemoveGroupOperation',
+  PNChannelsForGroupOperation: 'PNChannelsForGroupOperation',
+  PNAddChannelsToGroupOperation: 'PNAddChannelsToGroupOperation',
+  PNRemoveChannelsFromGroupOperation: 'PNRemoveChannelsFromGroupOperation',
+  PNAccessManagerGrant: 'PNAccessManagerGrant',
+  PNAccessManagerAudit: 'PNAccessManagerAudit'
+};
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function objectToList(o) {
+  var l = [];
+  Object.keys(o).forEach(function (key) {
+    return l.push(key);
+  });
+  return l;
+}
+
+function encodeString(input) {
+  return encodeURIComponent(input).replace(/[!~*'()]/g, function (x) {
+    return "%".concat(x.charCodeAt(0).toString(16).toUpperCase());
+  });
+}
+
+function objectToListSorted(o) {
+  return objectToList(o).sort();
+}
+
+function signPamFromParams(params) {
+  var l = objectToListSorted(params);
+  return l.map(function (paramKey) {
+    return "".concat(paramKey, "=").concat(encodeString(params[paramKey]));
+  }).join('&');
+}
+
+function endsWith(searchString, suffix) {
+  return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+}
+
+function createPromise() {
+  var successResolve;
+  var failureResolve;
+  var promise = new Promise(function (fulfill, reject) {
+    successResolve = fulfill;
+    failureResolve = reject;
+  });
+  return {
+    promise: promise,
+    reject: failureResolve,
+    fulfill: successResolve
+  };
+}
+
+module.exports = {
+  signPamFromParams: signPamFromParams,
+  endsWith: endsWith,
+  createPromise: createPromise,
+  encodeString: encodeString
+};
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _uuid = _interopRequireDefault(__webpack_require__(5));
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var PRESENCE_TIMEOUT_MINIMUM = 20;
+var PRESENCE_TIMEOUT_DEFAULT = 300;
+
+var _default = function () {
+  function _default(_ref) {
+    var setup = _ref.setup,
+        db = _ref.db;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_db", void 0);
+
+    _defineProperty(this, "subscribeKey", void 0);
+
+    _defineProperty(this, "publishKey", void 0);
+
+    _defineProperty(this, "secretKey", void 0);
+
+    _defineProperty(this, "cipherKey", void 0);
+
+    _defineProperty(this, "authKey", void 0);
+
+    _defineProperty(this, "UUID", void 0);
+
+    _defineProperty(this, "proxy", void 0);
+
+    _defineProperty(this, "instanceId", void 0);
+
+    _defineProperty(this, "sdkName", void 0);
+
+    _defineProperty(this, "sdkFamily", void 0);
+
+    _defineProperty(this, "partnerId", void 0);
+
+    _defineProperty(this, "filterExpression", void 0);
+
+    _defineProperty(this, "suppressLeaveEvents", void 0);
+
+    _defineProperty(this, "secure", void 0);
+
+    _defineProperty(this, "origin", void 0);
+
+    _defineProperty(this, "logVerbosity", void 0);
+
+    _defineProperty(this, "useInstanceId", void 0);
+
+    _defineProperty(this, "useRequestId", void 0);
+
+    _defineProperty(this, "keepAlive", void 0);
+
+    _defineProperty(this, "keepAliveSettings", void 0);
+
+    _defineProperty(this, "autoNetworkDetection", void 0);
+
+    _defineProperty(this, "announceSuccessfulHeartbeats", void 0);
+
+    _defineProperty(this, "announceFailedHeartbeats", void 0);
+
+    _defineProperty(this, "_presenceTimeout", void 0);
+
+    _defineProperty(this, "_heartbeatInterval", void 0);
+
+    _defineProperty(this, "_subscribeRequestTimeout", void 0);
+
+    _defineProperty(this, "_transactionalRequestTimeout", void 0);
+
+    _defineProperty(this, "_useSendBeacon", void 0);
+
+    _defineProperty(this, "requestMessageCountThreshold", void 0);
+
+    _defineProperty(this, "restore", void 0);
+
+    _defineProperty(this, "dedupeOnSubscribe", void 0);
+
+    _defineProperty(this, "maximumCacheSize", void 0);
+
+    _defineProperty(this, "customEncrypt", void 0);
+
+    _defineProperty(this, "customDecrypt", void 0);
+
+    this._db = db;
+    this.instanceId = "pn-".concat(_uuid["default"].createUUID());
+    this.secretKey = setup.secretKey || setup.secret_key;
+    this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
+    this.publishKey = setup.publishKey || setup.publish_key;
+    this.sdkName = setup.sdkName;
+    this.sdkFamily = setup.sdkFamily;
+    this.partnerId = setup.partnerId;
+    this.setAuthKey(setup.authKey);
+    this.setCipherKey(setup.cipherKey);
+    this.setFilterExpression(setup.filterExpression);
+    this.origin = setup.origin || 'ps.pndsn.com';
+    this.secure = setup.ssl || false;
+    this.restore = setup.restore || false;
+    this.proxy = setup.proxy;
+    this.keepAlive = setup.keepAlive;
+    this.keepAliveSettings = setup.keepAliveSettings;
+    this.autoNetworkDetection = setup.autoNetworkDetection || false;
+    this.dedupeOnSubscribe = setup.dedupeOnSubscribe || false;
+    this.maximumCacheSize = setup.maximumCacheSize || 100;
+    this.customEncrypt = setup.customEncrypt;
+    this.customDecrypt = setup.customDecrypt;
+
+    if (typeof location !== 'undefined' && location.protocol === 'https:') {
+      this.secure = true;
+    }
+
+    this.logVerbosity = setup.logVerbosity || false;
+    this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
+    this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
+    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
+    this.useInstanceId = setup.useInstanceId || false;
+    this.useRequestId = setup.useRequestId || false;
+    this.requestMessageCountThreshold = setup.requestMessageCountThreshold;
+    this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
+    this.setSubscribeTimeout(setup.subscribeRequestTimeout || 310 * 1000);
+    this.setSendBeaconConfig(setup.useSendBeacon || true);
+    this.setPresenceTimeout(setup.presenceTimeout || PRESENCE_TIMEOUT_DEFAULT);
+
+    if (setup.heartbeatInterval != null) {
+      this.setHeartbeatInterval(setup.heartbeatInterval);
+    }
+
+    this.setUUID(this._decideUUID(setup.uuid));
+  }
+
+  _createClass(_default, [{
+    key: "getAuthKey",
+    value: function getAuthKey() {
+      return this.authKey;
+    }
+  }, {
+    key: "setAuthKey",
+    value: function setAuthKey(val) {
+      this.authKey = val;
+      return this;
+    }
+  }, {
+    key: "setCipherKey",
+    value: function setCipherKey(val) {
+      this.cipherKey = val;
+      return this;
+    }
+  }, {
+    key: "getUUID",
+    value: function getUUID() {
+      return this.UUID;
+    }
+  }, {
+    key: "setUUID",
+    value: function setUUID(val) {
+      if (this._db && this._db.set) this._db.set("".concat(this.subscribeKey, "uuid"), val);
+      this.UUID = val;
+      return this;
+    }
+  }, {
+    key: "getFilterExpression",
+    value: function getFilterExpression() {
+      return this.filterExpression;
+    }
+  }, {
+    key: "setFilterExpression",
+    value: function setFilterExpression(val) {
+      this.filterExpression = val;
+      return this;
+    }
+  }, {
+    key: "getPresenceTimeout",
+    value: function getPresenceTimeout() {
+      return this._presenceTimeout;
+    }
+  }, {
+    key: "setPresenceTimeout",
+    value: function setPresenceTimeout(val) {
+      if (val >= PRESENCE_TIMEOUT_MINIMUM) {
+        this._presenceTimeout = val;
+      } else {
+        this._presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
+        console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
+      }
+
+      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
+      return this;
+    }
+  }, {
+    key: "setProxy",
+    value: function setProxy(proxy) {
+      this.proxy = proxy;
+    }
+  }, {
+    key: "getHeartbeatInterval",
+    value: function getHeartbeatInterval() {
+      return this._heartbeatInterval;
+    }
+  }, {
+    key: "setHeartbeatInterval",
+    value: function setHeartbeatInterval(val) {
+      this._heartbeatInterval = val;
+      return this;
+    }
+  }, {
+    key: "getSubscribeTimeout",
+    value: function getSubscribeTimeout() {
+      return this._subscribeRequestTimeout;
+    }
+  }, {
+    key: "setSubscribeTimeout",
+    value: function setSubscribeTimeout(val) {
+      this._subscribeRequestTimeout = val;
+      return this;
+    }
+  }, {
+    key: "getTransactionTimeout",
+    value: function getTransactionTimeout() {
+      return this._transactionalRequestTimeout;
+    }
+  }, {
+    key: "setTransactionTimeout",
+    value: function setTransactionTimeout(val) {
+      this._transactionalRequestTimeout = val;
+      return this;
+    }
+  }, {
+    key: "isSendBeaconEnabled",
+    value: function isSendBeaconEnabled() {
+      return this._useSendBeacon;
+    }
+  }, {
+    key: "setSendBeaconConfig",
+    value: function setSendBeaconConfig(val) {
+      this._useSendBeacon = val;
+      return this;
+    }
+  }, {
+    key: "getVersion",
+    value: function getVersion() {
+      return '4.25.2';
+    }
+  }, {
+    key: "_decideUUID",
+    value: function _decideUUID(providedUUID) {
+      if (providedUUID) {
+        return providedUUID;
+      }
+
+      if (this._db && this._db.get && this._db.get("".concat(this.subscribeKey, "uuid"))) {
+        return this._db.get("".concat(this.subscribeKey, "uuid"));
+      }
+
+      return "pn-".concat(_uuid["default"].createUUID());
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+var _default = {
+  PNNetworkUpCategory: 'PNNetworkUpCategory',
+  PNNetworkDownCategory: 'PNNetworkDownCategory',
+  PNNetworkIssuesCategory: 'PNNetworkIssuesCategory',
+  PNTimeoutCategory: 'PNTimeoutCategory',
+  PNBadRequestCategory: 'PNBadRequestCategory',
+  PNAccessDeniedCategory: 'PNAccessDeniedCategory',
+  PNUnknownCategory: 'PNUnknownCategory',
+  PNReconnectedCategory: 'PNReconnectedCategory',
+  PNConnectedCategory: 'PNConnectedCategory',
+  PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory'
+};
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _lilUuid = _interopRequireDefault(__webpack_require__(11));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var _default = {
+  createUUID: function createUUID() {
+    if (_lilUuid["default"].uuid) {
+      return _lilUuid["default"].uuid();
+    } else {
+      return (0, _lilUuid["default"])();
+    }
+  }
+};
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _hmacSha = _interopRequireDefault(__webpack_require__(12));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(_ref) {
+    var config = _ref.config;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_iv", void 0);
+
+    _defineProperty(this, "_allowedKeyEncodings", void 0);
+
+    _defineProperty(this, "_allowedKeyLengths", void 0);
+
+    _defineProperty(this, "_allowedModes", void 0);
+
+    _defineProperty(this, "_defaultOptions", void 0);
+
+    this._config = config;
+    this._iv = '0123456789012345';
+    this._allowedKeyEncodings = ['hex', 'utf8', 'base64', 'binary'];
+    this._allowedKeyLengths = [128, 256];
+    this._allowedModes = ['ecb', 'cbc'];
+    this._defaultOptions = {
+      encryptKey: true,
+      keyEncoding: 'utf8',
+      keyLength: 256,
+      mode: 'cbc'
+    };
+  }
+
+  _createClass(_default, [{
+    key: "HMACSHA256",
+    value: function HMACSHA256(data) {
+      var hash = _hmacSha["default"].HmacSHA256(data, this._config.secretKey);
+
+      return hash.toString(_hmacSha["default"].enc.Base64);
+    }
+  }, {
+    key: "SHA256",
+    value: function SHA256(s) {
+      return _hmacSha["default"].SHA256(s).toString(_hmacSha["default"].enc.Hex);
+    }
+  }, {
+    key: "_parseOptions",
+    value: function _parseOptions(incomingOptions) {
+      var options = incomingOptions || {};
+      if (!options.hasOwnProperty('encryptKey')) options.encryptKey = this._defaultOptions.encryptKey;
+      if (!options.hasOwnProperty('keyEncoding')) options.keyEncoding = this._defaultOptions.keyEncoding;
+      if (!options.hasOwnProperty('keyLength')) options.keyLength = this._defaultOptions.keyLength;
+      if (!options.hasOwnProperty('mode')) options.mode = this._defaultOptions.mode;
+
+      if (this._allowedKeyEncodings.indexOf(options.keyEncoding.toLowerCase()) === -1) {
+        options.keyEncoding = this._defaultOptions.keyEncoding;
+      }
+
+      if (this._allowedKeyLengths.indexOf(parseInt(options.keyLength, 10)) === -1) {
+        options.keyLength = this._defaultOptions.keyLength;
+      }
+
+      if (this._allowedModes.indexOf(options.mode.toLowerCase()) === -1) {
+        options.mode = this._defaultOptions.mode;
+      }
+
+      return options;
+    }
+  }, {
+    key: "_decodeKey",
+    value: function _decodeKey(key, options) {
+      if (options.keyEncoding === 'base64') {
+        return _hmacSha["default"].enc.Base64.parse(key);
+      } else if (options.keyEncoding === 'hex') {
+        return _hmacSha["default"].enc.Hex.parse(key);
+      } else {
+        return key;
+      }
+    }
+  }, {
+    key: "_getPaddedKey",
+    value: function _getPaddedKey(key, options) {
+      key = this._decodeKey(key, options);
+
+      if (options.encryptKey) {
+        return _hmacSha["default"].enc.Utf8.parse(this.SHA256(key).slice(0, 32));
+      } else {
+        return key;
+      }
+    }
+  }, {
+    key: "_getMode",
+    value: function _getMode(options) {
+      if (options.mode === 'ecb') {
+        return _hmacSha["default"].mode.ECB;
+      } else {
+        return _hmacSha["default"].mode.CBC;
+      }
+    }
+  }, {
+    key: "_getIV",
+    value: function _getIV(options) {
+      return options.mode === 'cbc' ? _hmacSha["default"].enc.Utf8.parse(this._iv) : null;
+    }
+  }, {
+    key: "encrypt",
+    value: function encrypt(data, customCipherKey, options) {
+      if (this._config.customEncrypt) {
+        return this._config.customEncrypt(data);
+      } else {
+        return this.pnEncrypt(data, customCipherKey, options);
+      }
+    }
+  }, {
+    key: "decrypt",
+    value: function decrypt(data, customCipherKey, options) {
+      if (this._config.customDecrypt) {
+        return this._config.customDecrypt(data);
+      } else {
+        return this.pnDecrypt(data, customCipherKey, options);
+      }
+    }
+  }, {
+    key: "pnEncrypt",
+    value: function pnEncrypt(data, customCipherKey, options) {
+      if (!customCipherKey && !this._config.cipherKey) return data;
+      options = this._parseOptions(options);
+
+      var iv = this._getIV(options);
+
+      var mode = this._getMode(options);
+
+      var cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
+
+      var encryptedHexArray = _hmacSha["default"].AES.encrypt(data, cipherKey, {
+        iv: iv,
+        mode: mode
+      }).ciphertext;
+
+      var base64Encrypted = encryptedHexArray.toString(_hmacSha["default"].enc.Base64);
+      return base64Encrypted || data;
+    }
+  }, {
+    key: "pnDecrypt",
+    value: function pnDecrypt(data, customCipherKey, options) {
+      if (!customCipherKey && !this._config.cipherKey) return data;
+      options = this._parseOptions(options);
+
+      var iv = this._getIV(options);
+
+      var mode = this._getMode(options);
+
+      var cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
+
+      try {
+        var ciphertext = _hmacSha["default"].enc.Base64.parse(data);
+
+        var plainJSON = _hmacSha["default"].AES.decrypt({
+          ciphertext: ciphertext
+        }, cipherKey, {
+          iv: iv,
+          mode: mode
+        }).toString(_hmacSha["default"].enc.Utf8);
+
+        var plaintext = JSON.parse(plainJSON);
+        return plaintext;
+      } catch (e) {
+        return null;
+      }
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _categories = _interopRequireDefault(__webpack_require__(4));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default() {
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_listeners", void 0);
+
+    this._listeners = [];
+  }
+
+  _createClass(_default, [{
+    key: "addListener",
+    value: function addListener(newListeners) {
+      this._listeners.push(newListeners);
+    }
+  }, {
+    key: "removeListener",
+    value: function removeListener(deprecatedListener) {
+      var newListeners = [];
+
+      this._listeners.forEach(function (listener) {
+        if (listener !== deprecatedListener) newListeners.push(listener);
+      });
+
+      this._listeners = newListeners;
+    }
+  }, {
+    key: "removeAllListeners",
+    value: function removeAllListeners() {
+      this._listeners = [];
+    }
+  }, {
+    key: "announcePresence",
+    value: function announcePresence(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.presence) listener.presence(announce);
+      });
+    }
+  }, {
+    key: "announceStatus",
+    value: function announceStatus(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.status) listener.status(announce);
+      });
+    }
+  }, {
+    key: "announceMessage",
+    value: function announceMessage(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.message) listener.message(announce);
+      });
+    }
+  }, {
+    key: "announceSignal",
+    value: function announceSignal(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.signal) listener.signal(announce);
+      });
+    }
+  }, {
+    key: "announceUser",
+    value: function announceUser(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.user) listener.user(announce);
+      });
+    }
+  }, {
+    key: "announceSpace",
+    value: function announceSpace(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.space) listener.space(announce);
+      });
+    }
+  }, {
+    key: "announceMembership",
+    value: function announceMembership(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.membership) listener.membership(announce);
+      });
+    }
+  }, {
+    key: "announceNetworkUp",
+    value: function announceNetworkUp() {
+      var networkStatus = {};
+      networkStatus.category = _categories["default"].PNNetworkUpCategory;
+      this.announceStatus(networkStatus);
+    }
+  }, {
+    key: "announceNetworkDown",
+    value: function announceNetworkDown() {
+      var networkStatus = {};
+      networkStatus.category = _categories["default"].PNNetworkDownCategory;
+      this.announceStatus(networkStatus);
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.prepareParams = prepareParams;
+exports.isAuthSupported = isAuthSupported;
+exports.handleResponse = handleResponse;
+exports.validateParams = validateParams;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNTimeOperation;
+}
+
+function getURL() {
+  return '/time/0';
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function prepareParams() {
+  return {};
+}
+
+function isAuthSupported() {
+  return false;
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    timetoken: serverResponse[0]
+  };
+}
+
+function validateParams() {}
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _pubnubCommon = _interopRequireDefault(__webpack_require__(10));
+
+var _networking = _interopRequireDefault(__webpack_require__(59));
+
+var _common = _interopRequireDefault(__webpack_require__(60));
+
+var _titanium = __webpack_require__(61);
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+var PubNub = function (_PubNubCore) {
+  _inherits(PubNub, _PubNubCore);
+
+  function PubNub(setup) {
+    _classCallCheck(this, PubNub);
+
+    setup.db = new _common["default"]();
+    setup.sdkFamily = 'TitaniumSDK';
+    setup.networking = new _networking["default"]({
+      del: _titanium.del,
+      get: _titanium.get,
+      post: _titanium.post,
+      patch: _titanium.patch
+    });
+    return _possibleConstructorReturn(this, _getPrototypeOf(PubNub).call(this, setup));
+  }
+
+  return PubNub;
+}(_pubnubCommon["default"]);
+
+exports["default"] = PubNub;
+module.exports = exports.default;
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _index = _interopRequireDefault(__webpack_require__(6));
+
+var _subscription_manager = _interopRequireDefault(__webpack_require__(13));
+
+var _listener_manager = _interopRequireDefault(__webpack_require__(7));
+
+var _endpoint = _interopRequireDefault(__webpack_require__(16));
+
+var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(17));
+
+var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(18));
+
+var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(19));
+
+var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(20));
+
+var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(21));
+
+var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(22));
+
+var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(23));
+
+var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(24));
+
+var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(25));
+
+var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(26));
+
+var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(27));
+
+var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(28));
+
+var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(29));
+
+var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(30));
+
+var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(31));
+
+var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(32));
+
+var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(33));
+
+var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
+
+var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(35));
+
+var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
+
+var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
+
+var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
+
+var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
+
+var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
+
+var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
+
+var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
+
+var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
+
+var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
+
+var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
+
+var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
+
+var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
+
+var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
+
+var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
+
+var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
+
+var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
+
+var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
+
+var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
+
+var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
+
+var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
+
+var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
+
+var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
+
+var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(8));
+
+var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _categories = _interopRequireDefault(__webpack_require__(4));
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _uuid = _interopRequireDefault(__webpack_require__(5));
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj["default"] = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(setup) {
+    var _this = this;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_listenerManager", void 0);
+
+    _defineProperty(this, "time", void 0);
+
+    _defineProperty(this, "publish", void 0);
+
+    _defineProperty(this, "fire", void 0);
+
+    _defineProperty(this, "history", void 0);
+
+    _defineProperty(this, "deleteMessages", void 0);
+
+    _defineProperty(this, "messageCounts", void 0);
+
+    _defineProperty(this, "fetchMessages", void 0);
+
+    _defineProperty(this, "channelGroups", void 0);
+
+    _defineProperty(this, "push", void 0);
+
+    _defineProperty(this, "hereNow", void 0);
+
+    _defineProperty(this, "whereNow", void 0);
+
+    _defineProperty(this, "getState", void 0);
+
+    _defineProperty(this, "setState", void 0);
+
+    _defineProperty(this, "grant", void 0);
+
+    _defineProperty(this, "audit", void 0);
+
+    _defineProperty(this, "subscribe", void 0);
+
+    _defineProperty(this, "signal", void 0);
+
+    _defineProperty(this, "presence", void 0);
+
+    _defineProperty(this, "unsubscribe", void 0);
+
+    _defineProperty(this, "unsubscribeAll", void 0);
+
+    _defineProperty(this, "createUser", void 0);
+
+    _defineProperty(this, "updateUser", void 0);
+
+    _defineProperty(this, "deleteUser", void 0);
+
+    _defineProperty(this, "getUser", void 0);
+
+    _defineProperty(this, "getUsers", void 0);
+
+    _defineProperty(this, "createSpace", void 0);
+
+    _defineProperty(this, "updateSpace", void 0);
+
+    _defineProperty(this, "deleteSpace", void 0);
+
+    _defineProperty(this, "getSpaces", void 0);
+
+    _defineProperty(this, "getSpace", void 0);
+
+    _defineProperty(this, "getMembers", void 0);
+
+    _defineProperty(this, "addMembers", void 0);
+
+    _defineProperty(this, "updateMembers", void 0);
+
+    _defineProperty(this, "removeMembers", void 0);
+
+    _defineProperty(this, "getMemberships", void 0);
+
+    _defineProperty(this, "joinSpaces", void 0);
+
+    _defineProperty(this, "updateMemberships", void 0);
+
+    _defineProperty(this, "leaveSpaces", void 0);
+
+    _defineProperty(this, "disconnect", void 0);
+
+    _defineProperty(this, "reconnect", void 0);
+
+    _defineProperty(this, "destroy", void 0);
+
+    _defineProperty(this, "stop", void 0);
+
+    _defineProperty(this, "getSubscribedChannels", void 0);
+
+    _defineProperty(this, "getSubscribedChannelGroups", void 0);
+
+    _defineProperty(this, "addListener", void 0);
+
+    _defineProperty(this, "removeListener", void 0);
+
+    _defineProperty(this, "removeAllListeners", void 0);
+
+    _defineProperty(this, "getAuthKey", void 0);
+
+    _defineProperty(this, "setAuthKey", void 0);
+
+    _defineProperty(this, "setCipherKey", void 0);
+
+    _defineProperty(this, "setUUID", void 0);
+
+    _defineProperty(this, "getUUID", void 0);
+
+    _defineProperty(this, "getFilterExpression", void 0);
+
+    _defineProperty(this, "setFilterExpression", void 0);
+
+    _defineProperty(this, "setHeartbeatInterval", void 0);
+
+    _defineProperty(this, "setProxy", void 0);
+
+    _defineProperty(this, "encrypt", void 0);
+
+    _defineProperty(this, "decrypt", void 0);
+
+    var db = setup.db,
+        networking = setup.networking;
+    var config = this._config = new _config["default"]({
+      setup: setup,
+      db: db
+    });
+    var crypto = new _index["default"]({
+      config: config
+    });
+    networking.init(config);
+    var modules = {
+      config: config,
+      networking: networking,
+      crypto: crypto
+    };
+
+    var timeEndpoint = _endpoint["default"].bind(this, modules, timeEndpointConfig);
+
+    var leaveEndpoint = _endpoint["default"].bind(this, modules, presenceLeaveEndpointConfig);
+
+    var heartbeatEndpoint = _endpoint["default"].bind(this, modules, presenceHeartbeatEndpointConfig);
+
+    var setStateEndpoint = _endpoint["default"].bind(this, modules, presenceSetStateConfig);
+
+    var subscribeEndpoint = _endpoint["default"].bind(this, modules, subscribeEndpointConfig);
+
+    var listenerManager = this._listenerManager = new _listener_manager["default"]();
+    var subscriptionManager = new _subscription_manager["default"]({
+      timeEndpoint: timeEndpoint,
+      leaveEndpoint: leaveEndpoint,
+      heartbeatEndpoint: heartbeatEndpoint,
+      setStateEndpoint: setStateEndpoint,
+      subscribeEndpoint: subscribeEndpoint,
+      crypto: modules.crypto,
+      config: modules.config,
+      listenerManager: listenerManager
+    });
+    this.addListener = listenerManager.addListener.bind(listenerManager);
+    this.removeListener = listenerManager.removeListener.bind(listenerManager);
+    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+    this.channelGroups = {
+      listGroups: _endpoint["default"].bind(this, modules, listChannelGroupsConfig),
+      listChannels: _endpoint["default"].bind(this, modules, listChannelsInChannelGroupConfig),
+      addChannels: _endpoint["default"].bind(this, modules, addChannelsChannelGroupConfig),
+      removeChannels: _endpoint["default"].bind(this, modules, removeChannelsChannelGroupConfig),
+      deleteGroup: _endpoint["default"].bind(this, modules, deleteChannelGroupConfig)
+    };
+    this.push = {
+      addChannels: _endpoint["default"].bind(this, modules, addPushChannelsConfig),
+      removeChannels: _endpoint["default"].bind(this, modules, removePushChannelsConfig),
+      deleteDevice: _endpoint["default"].bind(this, modules, removeDevicePushConfig),
+      listChannels: _endpoint["default"].bind(this, modules, listPushChannelsConfig)
+    };
+    this.hereNow = _endpoint["default"].bind(this, modules, presenceHereNowConfig);
+    this.whereNow = _endpoint["default"].bind(this, modules, presenceWhereNowEndpointConfig);
+    this.getState = _endpoint["default"].bind(this, modules, presenceGetStateConfig);
+    this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+    this.grant = _endpoint["default"].bind(this, modules, grantEndpointConfig);
+    this.audit = _endpoint["default"].bind(this, modules, auditEndpointConfig);
+    this.publish = _endpoint["default"].bind(this, modules, publishEndpointConfig);
+
+    this.fire = function (args, callback) {
+      args.replicate = false;
+      args.storeInHistory = false;
+      return _this.publish(args, callback);
+    };
+
+    this.signal = _endpoint["default"].bind(this, modules, signalEndpointConfig);
+    this.history = _endpoint["default"].bind(this, modules, historyEndpointConfig);
+    this.deleteMessages = _endpoint["default"].bind(this, modules, deleteMessagesEndpointConfig);
+    this.messageCounts = _endpoint["default"].bind(this, modules, messageCountsEndpointConfig);
+    this.fetchMessages = _endpoint["default"].bind(this, modules, fetchMessagesEndpointConfig);
+    this.createUser = _endpoint["default"].bind(this, modules, createUserEndpointConfig);
+    this.updateUser = _endpoint["default"].bind(this, modules, updateUserEndpointConfig);
+    this.deleteUser = _endpoint["default"].bind(this, modules, deleteUserEndpointConfig);
+    this.getUser = _endpoint["default"].bind(this, modules, getUserEndpointConfig);
+    this.getUsers = _endpoint["default"].bind(this, modules, getUsersEndpointConfig);
+    this.createSpace = _endpoint["default"].bind(this, modules, createSpaceEndpointConfig);
+    this.updateSpace = _endpoint["default"].bind(this, modules, updateSpaceEndpointConfig);
+    this.deleteSpace = _endpoint["default"].bind(this, modules, deleteSpaceEndpointConfig);
+    this.getSpaces = _endpoint["default"].bind(this, modules, getSpacesEndpointConfig);
+    this.getSpace = _endpoint["default"].bind(this, modules, getSpaceEndpointConfig);
+    this.addMembers = _endpoint["default"].bind(this, modules, addMembersEndpointConfig);
+    this.updateMembers = _endpoint["default"].bind(this, modules, updateMembersEndpointConfig);
+    this.removeMembers = _endpoint["default"].bind(this, modules, removeMembersEndpointConfig);
+    this.getMembers = _endpoint["default"].bind(this, modules, getMembersEndpointConfig);
+    this.getMemberships = _endpoint["default"].bind(this, modules, getMembershipsEndpointConfig);
+    this.joinSpaces = _endpoint["default"].bind(this, modules, joinSpacesEndpointConfig);
+    this.updateMemberships = _endpoint["default"].bind(this, modules, updateMembershipsEndpointConfig);
+    this.leaveSpaces = _endpoint["default"].bind(this, modules, leaveSpacesEndpointConfig);
+    this.time = timeEndpoint;
+    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
+    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
+    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
+
+    this.destroy = function (isOffline) {
+      subscriptionManager.unsubscribeAll(isOffline);
+      subscriptionManager.disconnect();
+    };
+
+    this.stop = this.destroy;
+    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
+    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+    this.encrypt = crypto.encrypt.bind(crypto);
+    this.decrypt = crypto.decrypt.bind(crypto);
+    this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
+    this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
+    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
+    this.getUUID = modules.config.getUUID.bind(modules.config);
+    this.setUUID = modules.config.setUUID.bind(modules.config);
+    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
+    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
+    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
+
+    if (networking.hasModule('proxy')) {
+      this.setProxy = function (proxy) {
+        modules.config.setProxy(proxy);
+
+        _this.reconnect();
+      };
+    }
+  }
+
+  _createClass(_default, [{
+    key: "getVersion",
+    value: function getVersion() {
+      return this._config.getVersion();
+    }
+  }, {
+    key: "networkDownDetected",
+    value: function networkDownDetected() {
+      this._listenerManager.announceNetworkDown();
+
+      if (this._config.restore) {
+        this.disconnect();
+      } else {
+        this.destroy(true);
+      }
+    }
+  }, {
+    key: "networkUpDetected",
+    value: function networkUpDetected() {
+      this._listenerManager.announceNetworkUp();
+
+      this.reconnect();
+    }
+  }], [{
+    key: "generateUUID",
+    value: function generateUUID() {
+      return _uuid["default"].createUUID();
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+
+_defineProperty(_default, "OPERATIONS", _operations["default"]);
+
+_defineProperty(_default, "CATEGORIES", _categories["default"]);
+
+module.exports = exports.default;
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*! lil-uuid - v0.1 - MIT License - https://github.com/lil-js/uuid */
+(function (root, factory) {
+  if (true) {
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__))
+  } else {}
+}(this, function (exports) {
+  var VERSION = '0.1.0'
+  var uuidRegex = {
+    '3': /^[0-9A-F]{8}-[0-9A-F]{4}-3[0-9A-F]{3}-[0-9A-F]{4}-[0-9A-F]{12}$/i,
+    '4': /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+    '5': /^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+    all: /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i
+  }
+
+  function uuid() {
+    var uuid = '', i, random
+    for (i = 0; i < 32; i++) {
+      random = Math.random() * 16 | 0;
+      if (i === 8 || i === 12 || i === 16 || i === 20) uuid += '-'
+      uuid += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random)).toString(16)
+    }
+    return uuid
+  }
+
+  function isUUID(str, version) {
+    var pattern = uuidRegex[version || 'all']
+    return pattern && pattern.test(str) || false
+  }
+
+  uuid.isUUID = isUUID
+  uuid.VERSION = VERSION
+
+  exports.uuid = uuid
+  exports.isUUID = isUUID
+}));
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var CryptoJS = CryptoJS || function (h, s) {
+  var f = {},
+      g = f.lib = {},
+      q = function q() {},
+      m = g.Base = {
+    extend: function extend(a) {
+      q.prototype = this;
+      var c = new q();
+      a && c.mixIn(a);
+      c.hasOwnProperty("init") || (c.init = function () {
+        c.$super.init.apply(this, arguments);
+      });
+      c.init.prototype = c;
+      c.$super = this;
+      return c;
+    },
+    create: function create() {
+      var a = this.extend();
+      a.init.apply(a, arguments);
+      return a;
+    },
+    init: function init() {},
+    mixIn: function mixIn(a) {
+      for (var c in a) {
+        a.hasOwnProperty(c) && (this[c] = a[c]);
+      }
+
+      a.hasOwnProperty("toString") && (this.toString = a.toString);
+    },
+    clone: function clone() {
+      return this.init.prototype.extend(this);
+    }
+  },
+      r = g.WordArray = m.extend({
+    init: function init(a, c) {
+      a = this.words = a || [];
+      this.sigBytes = c != s ? c : 4 * a.length;
+    },
+    toString: function toString(a) {
+      return (a || k).stringify(this);
+    },
+    concat: function concat(a) {
+      var c = this.words,
+          d = a.words,
+          b = this.sigBytes;
+      a = a.sigBytes;
+      this.clamp();
+      if (b % 4) for (var e = 0; e < a; e++) {
+        c[b + e >>> 2] |= (d[e >>> 2] >>> 24 - 8 * (e % 4) & 255) << 24 - 8 * ((b + e) % 4);
+      } else if (65535 < d.length) for (e = 0; e < a; e += 4) {
+        c[b + e >>> 2] = d[e >>> 2];
+      } else c.push.apply(c, d);
+      this.sigBytes += a;
+      return this;
+    },
+    clamp: function clamp() {
+      var a = this.words,
+          c = this.sigBytes;
+      a[c >>> 2] &= 4294967295 << 32 - 8 * (c % 4);
+      a.length = h.ceil(c / 4);
+    },
+    clone: function clone() {
+      var a = m.clone.call(this);
+      a.words = this.words.slice(0);
+      return a;
+    },
+    random: function random(a) {
+      for (var c = [], d = 0; d < a; d += 4) {
+        c.push(4294967296 * h.random() | 0);
+      }
+
+      return new r.init(c, a);
+    }
+  }),
+      l = f.enc = {},
+      k = l.Hex = {
+    stringify: function stringify(a) {
+      var c = a.words;
+      a = a.sigBytes;
+
+      for (var d = [], b = 0; b < a; b++) {
+        var e = c[b >>> 2] >>> 24 - 8 * (b % 4) & 255;
+        d.push((e >>> 4).toString(16));
+        d.push((e & 15).toString(16));
+      }
+
+      return d.join("");
+    },
+    parse: function parse(a) {
+      for (var c = a.length, d = [], b = 0; b < c; b += 2) {
+        d[b >>> 3] |= parseInt(a.substr(b, 2), 16) << 24 - 4 * (b % 8);
+      }
+
+      return new r.init(d, c / 2);
+    }
+  },
+      n = l.Latin1 = {
+    stringify: function stringify(a) {
+      var c = a.words;
+      a = a.sigBytes;
+
+      for (var d = [], b = 0; b < a; b++) {
+        d.push(String.fromCharCode(c[b >>> 2] >>> 24 - 8 * (b % 4) & 255));
+      }
+
+      return d.join("");
+    },
+    parse: function parse(a) {
+      for (var c = a.length, d = [], b = 0; b < c; b++) {
+        d[b >>> 2] |= (a.charCodeAt(b) & 255) << 24 - 8 * (b % 4);
+      }
+
+      return new r.init(d, c);
+    }
+  },
+      j = l.Utf8 = {
+    stringify: function stringify(a) {
+      try {
+        return decodeURIComponent(escape(n.stringify(a)));
+      } catch (c) {
+        throw Error("Malformed UTF-8 data");
+      }
+    },
+    parse: function parse(a) {
+      return n.parse(unescape(encodeURIComponent(a)));
+    }
+  },
+      u = g.BufferedBlockAlgorithm = m.extend({
+    reset: function reset() {
+      this._data = new r.init();
+      this._nDataBytes = 0;
+    },
+    _append: function _append(a) {
+      "string" == typeof a && (a = j.parse(a));
+
+      this._data.concat(a);
+
+      this._nDataBytes += a.sigBytes;
+    },
+    _process: function _process(a) {
+      var c = this._data,
+          d = c.words,
+          b = c.sigBytes,
+          e = this.blockSize,
+          f = b / (4 * e),
+          f = a ? h.ceil(f) : h.max((f | 0) - this._minBufferSize, 0);
+      a = f * e;
+      b = h.min(4 * a, b);
+
+      if (a) {
+        for (var g = 0; g < a; g += e) {
+          this._doProcessBlock(d, g);
+        }
+
+        g = d.splice(0, a);
+        c.sigBytes -= b;
+      }
+
+      return new r.init(g, b);
+    },
+    clone: function clone() {
+      var a = m.clone.call(this);
+      a._data = this._data.clone();
+      return a;
+    },
+    _minBufferSize: 0
+  });
+
+  g.Hasher = u.extend({
+    cfg: m.extend(),
+    init: function init(a) {
+      this.cfg = this.cfg.extend(a);
+      this.reset();
+    },
+    reset: function reset() {
+      u.reset.call(this);
+
+      this._doReset();
+    },
+    update: function update(a) {
+      this._append(a);
+
+      this._process();
+
+      return this;
+    },
+    finalize: function finalize(a) {
+      a && this._append(a);
+      return this._doFinalize();
+    },
+    blockSize: 16,
+    _createHelper: function _createHelper(a) {
+      return function (c, d) {
+        return new a.init(d).finalize(c);
+      };
+    },
+    _createHmacHelper: function _createHmacHelper(a) {
+      return function (c, d) {
+        return new t.HMAC.init(a, d).finalize(c);
+      };
+    }
+  });
+  var t = f.algo = {};
+  return f;
+}(Math);
+
+(function (h) {
+  for (var s = CryptoJS, f = s.lib, g = f.WordArray, q = f.Hasher, f = s.algo, m = [], r = [], l = function l(a) {
+    return 4294967296 * (a - (a | 0)) | 0;
+  }, k = 2, n = 0; 64 > n;) {
+    var j;
+
+    a: {
+      j = k;
+
+      for (var u = h.sqrt(j), t = 2; t <= u; t++) {
+        if (!(j % t)) {
+          j = !1;
+          break a;
+        }
+      }
+
+      j = !0;
+    }
+
+    j && (8 > n && (m[n] = l(h.pow(k, 0.5))), r[n] = l(h.pow(k, 1 / 3)), n++);
+    k++;
+  }
+
+  var a = [],
+      f = f.SHA256 = q.extend({
+    _doReset: function _doReset() {
+      this._hash = new g.init(m.slice(0));
+    },
+    _doProcessBlock: function _doProcessBlock(c, d) {
+      for (var b = this._hash.words, e = b[0], f = b[1], g = b[2], j = b[3], h = b[4], m = b[5], n = b[6], q = b[7], p = 0; 64 > p; p++) {
+        if (16 > p) a[p] = c[d + p] | 0;else {
+          var k = a[p - 15],
+              l = a[p - 2];
+          a[p] = ((k << 25 | k >>> 7) ^ (k << 14 | k >>> 18) ^ k >>> 3) + a[p - 7] + ((l << 15 | l >>> 17) ^ (l << 13 | l >>> 19) ^ l >>> 10) + a[p - 16];
+        }
+        k = q + ((h << 26 | h >>> 6) ^ (h << 21 | h >>> 11) ^ (h << 7 | h >>> 25)) + (h & m ^ ~h & n) + r[p] + a[p];
+        l = ((e << 30 | e >>> 2) ^ (e << 19 | e >>> 13) ^ (e << 10 | e >>> 22)) + (e & f ^ e & g ^ f & g);
+        q = n;
+        n = m;
+        m = h;
+        h = j + k | 0;
+        j = g;
+        g = f;
+        f = e;
+        e = k + l | 0;
+      }
+
+      b[0] = b[0] + e | 0;
+      b[1] = b[1] + f | 0;
+      b[2] = b[2] + g | 0;
+      b[3] = b[3] + j | 0;
+      b[4] = b[4] + h | 0;
+      b[5] = b[5] + m | 0;
+      b[6] = b[6] + n | 0;
+      b[7] = b[7] + q | 0;
+    },
+    _doFinalize: function _doFinalize() {
+      var a = this._data,
+          d = a.words,
+          b = 8 * this._nDataBytes,
+          e = 8 * a.sigBytes;
+      d[e >>> 5] |= 128 << 24 - e % 32;
+      d[(e + 64 >>> 9 << 4) + 14] = h.floor(b / 4294967296);
+      d[(e + 64 >>> 9 << 4) + 15] = b;
+      a.sigBytes = 4 * d.length;
+
+      this._process();
+
+      return this._hash;
+    },
+    clone: function clone() {
+      var a = q.clone.call(this);
+      a._hash = this._hash.clone();
+      return a;
+    }
+  });
+  s.SHA256 = q._createHelper(f);
+  s.HmacSHA256 = q._createHmacHelper(f);
+})(Math);
+
+(function () {
+  var h = CryptoJS,
+      s = h.enc.Utf8;
+  h.algo.HMAC = h.lib.Base.extend({
+    init: function init(f, g) {
+      f = this._hasher = new f.init();
+      "string" == typeof g && (g = s.parse(g));
+      var h = f.blockSize,
+          m = 4 * h;
+      g.sigBytes > m && (g = f.finalize(g));
+      g.clamp();
+
+      for (var r = this._oKey = g.clone(), l = this._iKey = g.clone(), k = r.words, n = l.words, j = 0; j < h; j++) {
+        k[j] ^= 1549556828, n[j] ^= 909522486;
+      }
+
+      r.sigBytes = l.sigBytes = m;
+      this.reset();
+    },
+    reset: function reset() {
+      var f = this._hasher;
+      f.reset();
+      f.update(this._iKey);
+    },
+    update: function update(f) {
+      this._hasher.update(f);
+
+      return this;
+    },
+    finalize: function finalize(f) {
+      var g = this._hasher;
+      f = g.finalize(f);
+      g.reset();
+      return g.finalize(this._oKey.clone().concat(f));
+    }
+  });
+})();
+
+(function () {
+  var u = CryptoJS,
+      p = u.lib.WordArray;
+  u.enc.Base64 = {
+    stringify: function stringify(d) {
+      var l = d.words,
+          p = d.sigBytes,
+          t = this._map;
+      d.clamp();
+      d = [];
+
+      for (var r = 0; r < p; r += 3) {
+        for (var w = (l[r >>> 2] >>> 24 - 8 * (r % 4) & 255) << 16 | (l[r + 1 >>> 2] >>> 24 - 8 * ((r + 1) % 4) & 255) << 8 | l[r + 2 >>> 2] >>> 24 - 8 * ((r + 2) % 4) & 255, v = 0; 4 > v && r + 0.75 * v < p; v++) {
+          d.push(t.charAt(w >>> 6 * (3 - v) & 63));
+        }
+      }
+
+      if (l = t.charAt(64)) for (; d.length % 4;) {
+        d.push(l);
+      }
+      return d.join("");
+    },
+    parse: function parse(d) {
+      var l = d.length,
+          s = this._map,
+          t = s.charAt(64);
+      t && (t = d.indexOf(t), -1 != t && (l = t));
+
+      for (var t = [], r = 0, w = 0; w < l; w++) {
+        if (w % 4) {
+          var v = s.indexOf(d.charAt(w - 1)) << 2 * (w % 4),
+              b = s.indexOf(d.charAt(w)) >>> 6 - 2 * (w % 4);
+          t[r >>> 2] |= (v | b) << 24 - 8 * (r % 4);
+          r++;
+        }
+      }
+
+      return p.create(t, r);
+    },
+    _map: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+  };
+})();
+
+(function (u) {
+  function p(b, n, a, c, e, j, k) {
+    b = b + (n & a | ~n & c) + e + k;
+    return (b << j | b >>> 32 - j) + n;
+  }
+
+  function d(b, n, a, c, e, j, k) {
+    b = b + (n & c | a & ~c) + e + k;
+    return (b << j | b >>> 32 - j) + n;
+  }
+
+  function l(b, n, a, c, e, j, k) {
+    b = b + (n ^ a ^ c) + e + k;
+    return (b << j | b >>> 32 - j) + n;
+  }
+
+  function s(b, n, a, c, e, j, k) {
+    b = b + (a ^ (n | ~c)) + e + k;
+    return (b << j | b >>> 32 - j) + n;
+  }
+
+  for (var t = CryptoJS, r = t.lib, w = r.WordArray, v = r.Hasher, r = t.algo, b = [], x = 0; 64 > x; x++) {
+    b[x] = 4294967296 * u.abs(u.sin(x + 1)) | 0;
+  }
+
+  r = r.MD5 = v.extend({
+    _doReset: function _doReset() {
+      this._hash = new w.init([1732584193, 4023233417, 2562383102, 271733878]);
+    },
+    _doProcessBlock: function _doProcessBlock(q, n) {
+      for (var a = 0; 16 > a; a++) {
+        var c = n + a,
+            e = q[c];
+        q[c] = (e << 8 | e >>> 24) & 16711935 | (e << 24 | e >>> 8) & 4278255360;
+      }
+
+      var a = this._hash.words,
+          c = q[n + 0],
+          e = q[n + 1],
+          j = q[n + 2],
+          k = q[n + 3],
+          z = q[n + 4],
+          r = q[n + 5],
+          t = q[n + 6],
+          w = q[n + 7],
+          v = q[n + 8],
+          A = q[n + 9],
+          B = q[n + 10],
+          C = q[n + 11],
+          u = q[n + 12],
+          D = q[n + 13],
+          E = q[n + 14],
+          x = q[n + 15],
+          f = a[0],
+          m = a[1],
+          g = a[2],
+          h = a[3],
+          f = p(f, m, g, h, c, 7, b[0]),
+          h = p(h, f, m, g, e, 12, b[1]),
+          g = p(g, h, f, m, j, 17, b[2]),
+          m = p(m, g, h, f, k, 22, b[3]),
+          f = p(f, m, g, h, z, 7, b[4]),
+          h = p(h, f, m, g, r, 12, b[5]),
+          g = p(g, h, f, m, t, 17, b[6]),
+          m = p(m, g, h, f, w, 22, b[7]),
+          f = p(f, m, g, h, v, 7, b[8]),
+          h = p(h, f, m, g, A, 12, b[9]),
+          g = p(g, h, f, m, B, 17, b[10]),
+          m = p(m, g, h, f, C, 22, b[11]),
+          f = p(f, m, g, h, u, 7, b[12]),
+          h = p(h, f, m, g, D, 12, b[13]),
+          g = p(g, h, f, m, E, 17, b[14]),
+          m = p(m, g, h, f, x, 22, b[15]),
+          f = d(f, m, g, h, e, 5, b[16]),
+          h = d(h, f, m, g, t, 9, b[17]),
+          g = d(g, h, f, m, C, 14, b[18]),
+          m = d(m, g, h, f, c, 20, b[19]),
+          f = d(f, m, g, h, r, 5, b[20]),
+          h = d(h, f, m, g, B, 9, b[21]),
+          g = d(g, h, f, m, x, 14, b[22]),
+          m = d(m, g, h, f, z, 20, b[23]),
+          f = d(f, m, g, h, A, 5, b[24]),
+          h = d(h, f, m, g, E, 9, b[25]),
+          g = d(g, h, f, m, k, 14, b[26]),
+          m = d(m, g, h, f, v, 20, b[27]),
+          f = d(f, m, g, h, D, 5, b[28]),
+          h = d(h, f, m, g, j, 9, b[29]),
+          g = d(g, h, f, m, w, 14, b[30]),
+          m = d(m, g, h, f, u, 20, b[31]),
+          f = l(f, m, g, h, r, 4, b[32]),
+          h = l(h, f, m, g, v, 11, b[33]),
+          g = l(g, h, f, m, C, 16, b[34]),
+          m = l(m, g, h, f, E, 23, b[35]),
+          f = l(f, m, g, h, e, 4, b[36]),
+          h = l(h, f, m, g, z, 11, b[37]),
+          g = l(g, h, f, m, w, 16, b[38]),
+          m = l(m, g, h, f, B, 23, b[39]),
+          f = l(f, m, g, h, D, 4, b[40]),
+          h = l(h, f, m, g, c, 11, b[41]),
+          g = l(g, h, f, m, k, 16, b[42]),
+          m = l(m, g, h, f, t, 23, b[43]),
+          f = l(f, m, g, h, A, 4, b[44]),
+          h = l(h, f, m, g, u, 11, b[45]),
+          g = l(g, h, f, m, x, 16, b[46]),
+          m = l(m, g, h, f, j, 23, b[47]),
+          f = s(f, m, g, h, c, 6, b[48]),
+          h = s(h, f, m, g, w, 10, b[49]),
+          g = s(g, h, f, m, E, 15, b[50]),
+          m = s(m, g, h, f, r, 21, b[51]),
+          f = s(f, m, g, h, u, 6, b[52]),
+          h = s(h, f, m, g, k, 10, b[53]),
+          g = s(g, h, f, m, B, 15, b[54]),
+          m = s(m, g, h, f, e, 21, b[55]),
+          f = s(f, m, g, h, v, 6, b[56]),
+          h = s(h, f, m, g, x, 10, b[57]),
+          g = s(g, h, f, m, t, 15, b[58]),
+          m = s(m, g, h, f, D, 21, b[59]),
+          f = s(f, m, g, h, z, 6, b[60]),
+          h = s(h, f, m, g, C, 10, b[61]),
+          g = s(g, h, f, m, j, 15, b[62]),
+          m = s(m, g, h, f, A, 21, b[63]);
+      a[0] = a[0] + f | 0;
+      a[1] = a[1] + m | 0;
+      a[2] = a[2] + g | 0;
+      a[3] = a[3] + h | 0;
+    },
+    _doFinalize: function _doFinalize() {
+      var b = this._data,
+          n = b.words,
+          a = 8 * this._nDataBytes,
+          c = 8 * b.sigBytes;
+      n[c >>> 5] |= 128 << 24 - c % 32;
+      var e = u.floor(a / 4294967296);
+      n[(c + 64 >>> 9 << 4) + 15] = (e << 8 | e >>> 24) & 16711935 | (e << 24 | e >>> 8) & 4278255360;
+      n[(c + 64 >>> 9 << 4) + 14] = (a << 8 | a >>> 24) & 16711935 | (a << 24 | a >>> 8) & 4278255360;
+      b.sigBytes = 4 * (n.length + 1);
+
+      this._process();
+
+      b = this._hash;
+      n = b.words;
+
+      for (a = 0; 4 > a; a++) {
+        c = n[a], n[a] = (c << 8 | c >>> 24) & 16711935 | (c << 24 | c >>> 8) & 4278255360;
+      }
+
+      return b;
+    },
+    clone: function clone() {
+      var b = v.clone.call(this);
+      b._hash = this._hash.clone();
+      return b;
+    }
+  });
+  t.MD5 = v._createHelper(r);
+  t.HmacMD5 = v._createHmacHelper(r);
+})(Math);
+
+(function () {
+  var u = CryptoJS,
+      p = u.lib,
+      d = p.Base,
+      l = p.WordArray,
+      p = u.algo,
+      s = p.EvpKDF = d.extend({
+    cfg: d.extend({
+      keySize: 4,
+      hasher: p.MD5,
+      iterations: 1
+    }),
+    init: function init(d) {
+      this.cfg = this.cfg.extend(d);
+    },
+    compute: function compute(d, r) {
+      for (var p = this.cfg, s = p.hasher.create(), b = l.create(), u = b.words, q = p.keySize, p = p.iterations; u.length < q;) {
+        n && s.update(n);
+        var n = s.update(d).finalize(r);
+        s.reset();
+
+        for (var a = 1; a < p; a++) {
+          n = s.finalize(n), s.reset();
+        }
+
+        b.concat(n);
+      }
+
+      b.sigBytes = 4 * q;
+      return b;
+    }
+  });
+
+  u.EvpKDF = function (d, l, p) {
+    return s.create(p).compute(d, l);
+  };
+})();
+
+CryptoJS.lib.Cipher || function (u) {
+  var p = CryptoJS,
+      d = p.lib,
+      l = d.Base,
+      s = d.WordArray,
+      t = d.BufferedBlockAlgorithm,
+      r = p.enc.Base64,
+      w = p.algo.EvpKDF,
+      v = d.Cipher = t.extend({
+    cfg: l.extend(),
+    createEncryptor: function createEncryptor(e, a) {
+      return this.create(this._ENC_XFORM_MODE, e, a);
+    },
+    createDecryptor: function createDecryptor(e, a) {
+      return this.create(this._DEC_XFORM_MODE, e, a);
+    },
+    init: function init(e, a, b) {
+      this.cfg = this.cfg.extend(b);
+      this._xformMode = e;
+      this._key = a;
+      this.reset();
+    },
+    reset: function reset() {
+      t.reset.call(this);
+
+      this._doReset();
+    },
+    process: function process(e) {
+      this._append(e);
+
+      return this._process();
+    },
+    finalize: function finalize(e) {
+      e && this._append(e);
+      return this._doFinalize();
+    },
+    keySize: 4,
+    ivSize: 4,
+    _ENC_XFORM_MODE: 1,
+    _DEC_XFORM_MODE: 2,
+    _createHelper: function _createHelper(e) {
+      return {
+        encrypt: function encrypt(b, k, d) {
+          return ("string" == typeof k ? c : a).encrypt(e, b, k, d);
+        },
+        decrypt: function decrypt(b, k, d) {
+          return ("string" == typeof k ? c : a).decrypt(e, b, k, d);
+        }
+      };
+    }
+  });
+  d.StreamCipher = v.extend({
+    _doFinalize: function _doFinalize() {
+      return this._process(!0);
+    },
+    blockSize: 1
+  });
+
+  var b = p.mode = {},
+      x = function x(e, a, b) {
+    var c = this._iv;
+    c ? this._iv = u : c = this._prevBlock;
+
+    for (var d = 0; d < b; d++) {
+      e[a + d] ^= c[d];
+    }
+  },
+      q = (d.BlockCipherMode = l.extend({
+    createEncryptor: function createEncryptor(e, a) {
+      return this.Encryptor.create(e, a);
+    },
+    createDecryptor: function createDecryptor(e, a) {
+      return this.Decryptor.create(e, a);
+    },
+    init: function init(e, a) {
+      this._cipher = e;
+      this._iv = a;
+    }
+  })).extend();
+
+  q.Encryptor = q.extend({
+    processBlock: function processBlock(e, a) {
+      var b = this._cipher,
+          c = b.blockSize;
+      x.call(this, e, a, c);
+      b.encryptBlock(e, a);
+      this._prevBlock = e.slice(a, a + c);
+    }
+  });
+  q.Decryptor = q.extend({
+    processBlock: function processBlock(e, a) {
+      var b = this._cipher,
+          c = b.blockSize,
+          d = e.slice(a, a + c);
+      b.decryptBlock(e, a);
+      x.call(this, e, a, c);
+      this._prevBlock = d;
+    }
+  });
+  b = b.CBC = q;
+  q = (p.pad = {}).Pkcs7 = {
+    pad: function pad(a, b) {
+      for (var c = 4 * b, c = c - a.sigBytes % c, d = c << 24 | c << 16 | c << 8 | c, l = [], n = 0; n < c; n += 4) {
+        l.push(d);
+      }
+
+      c = s.create(l, c);
+      a.concat(c);
+    },
+    unpad: function unpad(a) {
+      a.sigBytes -= a.words[a.sigBytes - 1 >>> 2] & 255;
+    }
+  };
+  d.BlockCipher = v.extend({
+    cfg: v.cfg.extend({
+      mode: b,
+      padding: q
+    }),
+    reset: function reset() {
+      v.reset.call(this);
+      var a = this.cfg,
+          b = a.iv,
+          a = a.mode;
+      if (this._xformMode == this._ENC_XFORM_MODE) var c = a.createEncryptor;else c = a.createDecryptor, this._minBufferSize = 1;
+      this._mode = c.call(a, this, b && b.words);
+    },
+    _doProcessBlock: function _doProcessBlock(a, b) {
+      this._mode.processBlock(a, b);
+    },
+    _doFinalize: function _doFinalize() {
+      var a = this.cfg.padding;
+
+      if (this._xformMode == this._ENC_XFORM_MODE) {
+        a.pad(this._data, this.blockSize);
+
+        var b = this._process(!0);
+      } else b = this._process(!0), a.unpad(b);
+
+      return b;
+    },
+    blockSize: 4
+  });
+  var n = d.CipherParams = l.extend({
+    init: function init(a) {
+      this.mixIn(a);
+    },
+    toString: function toString(a) {
+      return (a || this.formatter).stringify(this);
+    }
+  }),
+      b = (p.format = {}).OpenSSL = {
+    stringify: function stringify(a) {
+      var b = a.ciphertext;
+      a = a.salt;
+      return (a ? s.create([1398893684, 1701076831]).concat(a).concat(b) : b).toString(r);
+    },
+    parse: function parse(a) {
+      a = r.parse(a);
+      var b = a.words;
+
+      if (1398893684 == b[0] && 1701076831 == b[1]) {
+        var c = s.create(b.slice(2, 4));
+        b.splice(0, 4);
+        a.sigBytes -= 16;
+      }
+
+      return n.create({
+        ciphertext: a,
+        salt: c
+      });
+    }
+  },
+      a = d.SerializableCipher = l.extend({
+    cfg: l.extend({
+      format: b
+    }),
+    encrypt: function encrypt(a, b, c, d) {
+      d = this.cfg.extend(d);
+      var l = a.createEncryptor(c, d);
+      b = l.finalize(b);
+      l = l.cfg;
+      return n.create({
+        ciphertext: b,
+        key: c,
+        iv: l.iv,
+        algorithm: a,
+        mode: l.mode,
+        padding: l.padding,
+        blockSize: a.blockSize,
+        formatter: d.format
+      });
+    },
+    decrypt: function decrypt(a, b, c, d) {
+      d = this.cfg.extend(d);
+      b = this._parse(b, d.format);
+      return a.createDecryptor(c, d).finalize(b.ciphertext);
+    },
+    _parse: function _parse(a, b) {
+      return "string" == typeof a ? b.parse(a, this) : a;
+    }
+  }),
+      p = (p.kdf = {}).OpenSSL = {
+    execute: function execute(a, b, c, d) {
+      d || (d = s.random(8));
+      a = w.create({
+        keySize: b + c
+      }).compute(a, d);
+      c = s.create(a.words.slice(b), 4 * c);
+      a.sigBytes = 4 * b;
+      return n.create({
+        key: a,
+        iv: c,
+        salt: d
+      });
+    }
+  },
+      c = d.PasswordBasedCipher = a.extend({
+    cfg: a.cfg.extend({
+      kdf: p
+    }),
+    encrypt: function encrypt(b, c, d, l) {
+      l = this.cfg.extend(l);
+      d = l.kdf.execute(d, b.keySize, b.ivSize);
+      l.iv = d.iv;
+      b = a.encrypt.call(this, b, c, d.key, l);
+      b.mixIn(d);
+      return b;
+    },
+    decrypt: function decrypt(b, c, d, l) {
+      l = this.cfg.extend(l);
+      c = this._parse(c, l.format);
+      d = l.kdf.execute(d, b.keySize, b.ivSize, c.salt);
+      l.iv = d.iv;
+      return a.decrypt.call(this, b, c, d.key, l);
+    }
+  });
+}();
+
+(function () {
+  for (var u = CryptoJS, p = u.lib.BlockCipher, d = u.algo, l = [], s = [], t = [], r = [], w = [], v = [], b = [], x = [], q = [], n = [], a = [], c = 0; 256 > c; c++) {
+    a[c] = 128 > c ? c << 1 : c << 1 ^ 283;
+  }
+
+  for (var e = 0, j = 0, c = 0; 256 > c; c++) {
+    var k = j ^ j << 1 ^ j << 2 ^ j << 3 ^ j << 4,
+        k = k >>> 8 ^ k & 255 ^ 99;
+    l[e] = k;
+    s[k] = e;
+    var z = a[e],
+        F = a[z],
+        G = a[F],
+        y = 257 * a[k] ^ 16843008 * k;
+    t[e] = y << 24 | y >>> 8;
+    r[e] = y << 16 | y >>> 16;
+    w[e] = y << 8 | y >>> 24;
+    v[e] = y;
+    y = 16843009 * G ^ 65537 * F ^ 257 * z ^ 16843008 * e;
+    b[k] = y << 24 | y >>> 8;
+    x[k] = y << 16 | y >>> 16;
+    q[k] = y << 8 | y >>> 24;
+    n[k] = y;
+    e ? (e = z ^ a[a[a[G ^ z]]], j ^= a[a[j]]) : e = j = 1;
+  }
+
+  var H = [0, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54],
+      d = d.AES = p.extend({
+    _doReset: function _doReset() {
+      for (var a = this._key, c = a.words, d = a.sigBytes / 4, a = 4 * ((this._nRounds = d + 6) + 1), e = this._keySchedule = [], j = 0; j < a; j++) {
+        if (j < d) e[j] = c[j];else {
+          var k = e[j - 1];
+          j % d ? 6 < d && 4 == j % d && (k = l[k >>> 24] << 24 | l[k >>> 16 & 255] << 16 | l[k >>> 8 & 255] << 8 | l[k & 255]) : (k = k << 8 | k >>> 24, k = l[k >>> 24] << 24 | l[k >>> 16 & 255] << 16 | l[k >>> 8 & 255] << 8 | l[k & 255], k ^= H[j / d | 0] << 24);
+          e[j] = e[j - d] ^ k;
+        }
+      }
+
+      c = this._invKeySchedule = [];
+
+      for (d = 0; d < a; d++) {
+        j = a - d, k = d % 4 ? e[j] : e[j - 4], c[d] = 4 > d || 4 >= j ? k : b[l[k >>> 24]] ^ x[l[k >>> 16 & 255]] ^ q[l[k >>> 8 & 255]] ^ n[l[k & 255]];
+      }
+    },
+    encryptBlock: function encryptBlock(a, b) {
+      this._doCryptBlock(a, b, this._keySchedule, t, r, w, v, l);
+    },
+    decryptBlock: function decryptBlock(a, c) {
+      var d = a[c + 1];
+      a[c + 1] = a[c + 3];
+      a[c + 3] = d;
+
+      this._doCryptBlock(a, c, this._invKeySchedule, b, x, q, n, s);
+
+      d = a[c + 1];
+      a[c + 1] = a[c + 3];
+      a[c + 3] = d;
+    },
+    _doCryptBlock: function _doCryptBlock(a, b, c, d, e, j, l, f) {
+      for (var m = this._nRounds, g = a[b] ^ c[0], h = a[b + 1] ^ c[1], k = a[b + 2] ^ c[2], n = a[b + 3] ^ c[3], p = 4, r = 1; r < m; r++) {
+        var q = d[g >>> 24] ^ e[h >>> 16 & 255] ^ j[k >>> 8 & 255] ^ l[n & 255] ^ c[p++],
+            s = d[h >>> 24] ^ e[k >>> 16 & 255] ^ j[n >>> 8 & 255] ^ l[g & 255] ^ c[p++],
+            t = d[k >>> 24] ^ e[n >>> 16 & 255] ^ j[g >>> 8 & 255] ^ l[h & 255] ^ c[p++],
+            n = d[n >>> 24] ^ e[g >>> 16 & 255] ^ j[h >>> 8 & 255] ^ l[k & 255] ^ c[p++],
+            g = q,
+            h = s,
+            k = t;
+      }
+
+      q = (f[g >>> 24] << 24 | f[h >>> 16 & 255] << 16 | f[k >>> 8 & 255] << 8 | f[n & 255]) ^ c[p++];
+      s = (f[h >>> 24] << 24 | f[k >>> 16 & 255] << 16 | f[n >>> 8 & 255] << 8 | f[g & 255]) ^ c[p++];
+      t = (f[k >>> 24] << 24 | f[n >>> 16 & 255] << 16 | f[g >>> 8 & 255] << 8 | f[h & 255]) ^ c[p++];
+      n = (f[n >>> 24] << 24 | f[g >>> 16 & 255] << 16 | f[h >>> 8 & 255] << 8 | f[k & 255]) ^ c[p++];
+      a[b] = q;
+      a[b + 1] = s;
+      a[b + 2] = t;
+      a[b + 3] = n;
+    },
+    keySize: 8
+  });
+  u.AES = p._createHelper(d);
+})();
+
+CryptoJS.mode.ECB = function () {
+  var ECB = CryptoJS.lib.BlockCipherMode.extend();
+  ECB.Encryptor = ECB.extend({
+    processBlock: function processBlock(words, offset) {
+      this._cipher.encryptBlock(words, offset);
+    }
+  });
+  ECB.Decryptor = ECB.extend({
+    processBlock: function processBlock(words, offset) {
+      this._cipher.decryptBlock(words, offset);
+    }
+  });
+  return ECB;
+}();
+
+module.exports = CryptoJS;
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _cryptography = _interopRequireDefault(__webpack_require__(6));
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _listener_manager = _interopRequireDefault(__webpack_require__(7));
+
+var _reconnection_manager = _interopRequireDefault(__webpack_require__(14));
+
+var _deduping_manager = _interopRequireDefault(__webpack_require__(15));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _categories = _interopRequireDefault(__webpack_require__(4));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(_ref) {
+    var subscribeEndpoint = _ref.subscribeEndpoint,
+        leaveEndpoint = _ref.leaveEndpoint,
+        heartbeatEndpoint = _ref.heartbeatEndpoint,
+        setStateEndpoint = _ref.setStateEndpoint,
+        timeEndpoint = _ref.timeEndpoint,
+        config = _ref.config,
+        crypto = _ref.crypto,
+        listenerManager = _ref.listenerManager;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_crypto", void 0);
+
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_listenerManager", void 0);
+
+    _defineProperty(this, "_reconnectionManager", void 0);
+
+    _defineProperty(this, "_leaveEndpoint", void 0);
+
+    _defineProperty(this, "_heartbeatEndpoint", void 0);
+
+    _defineProperty(this, "_setStateEndpoint", void 0);
+
+    _defineProperty(this, "_subscribeEndpoint", void 0);
+
+    _defineProperty(this, "_channels", void 0);
+
+    _defineProperty(this, "_presenceChannels", void 0);
+
+    _defineProperty(this, "_heartbeatChannels", void 0);
+
+    _defineProperty(this, "_heartbeatChannelGroups", void 0);
+
+    _defineProperty(this, "_channelGroups", void 0);
+
+    _defineProperty(this, "_presenceChannelGroups", void 0);
+
+    _defineProperty(this, "_currentTimetoken", void 0);
+
+    _defineProperty(this, "_lastTimetoken", void 0);
+
+    _defineProperty(this, "_storedTimetoken", void 0);
+
+    _defineProperty(this, "_region", void 0);
+
+    _defineProperty(this, "_subscribeCall", void 0);
+
+    _defineProperty(this, "_heartbeatTimer", void 0);
+
+    _defineProperty(this, "_subscriptionStatusAnnounced", void 0);
+
+    _defineProperty(this, "_autoNetworkDetection", void 0);
+
+    _defineProperty(this, "_isOnline", void 0);
+
+    _defineProperty(this, "_pendingChannelSubscriptions", void 0);
+
+    _defineProperty(this, "_pendingChannelGroupSubscriptions", void 0);
+
+    _defineProperty(this, "_dedupingManager", void 0);
+
+    this._listenerManager = listenerManager;
+    this._config = config;
+    this._leaveEndpoint = leaveEndpoint;
+    this._heartbeatEndpoint = heartbeatEndpoint;
+    this._setStateEndpoint = setStateEndpoint;
+    this._subscribeEndpoint = subscribeEndpoint;
+    this._crypto = crypto;
+    this._channels = {};
+    this._presenceChannels = {};
+    this._heartbeatChannels = {};
+    this._heartbeatChannelGroups = {};
+    this._channelGroups = {};
+    this._presenceChannelGroups = {};
+    this._pendingChannelSubscriptions = [];
+    this._pendingChannelGroupSubscriptions = [];
+    this._currentTimetoken = 0;
+    this._lastTimetoken = 0;
+    this._storedTimetoken = null;
+    this._subscriptionStatusAnnounced = false;
+    this._isOnline = true;
+    this._reconnectionManager = new _reconnection_manager["default"]({
+      timeEndpoint: timeEndpoint
+    });
+    this._dedupingManager = new _deduping_manager["default"]({
+      config: config
+    });
+  }
+
+  _createClass(_default, [{
+    key: "adaptStateChange",
+    value: function adaptStateChange(args, callback) {
+      var _this = this;
+
+      var state = args.state,
+          _args$channels = args.channels,
+          channels = _args$channels === void 0 ? [] : _args$channels,
+          _args$channelGroups = args.channelGroups,
+          channelGroups = _args$channelGroups === void 0 ? [] : _args$channelGroups;
+      channels.forEach(function (channel) {
+        if (channel in _this._channels) _this._channels[channel].state = state;
+      });
+      channelGroups.forEach(function (channelGroup) {
+        if (channelGroup in _this._channelGroups) {
+          _this._channelGroups[channelGroup].state = state;
+        }
+      });
+      return this._setStateEndpoint({
+        state: state,
+        channels: channels,
+        channelGroups: channelGroups
+      }, callback);
+    }
+  }, {
+    key: "adaptPresenceChange",
+    value: function adaptPresenceChange(args) {
+      var _this2 = this;
+
+      var connected = args.connected,
+          _args$channels2 = args.channels,
+          channels = _args$channels2 === void 0 ? [] : _args$channels2,
+          _args$channelGroups2 = args.channelGroups,
+          channelGroups = _args$channelGroups2 === void 0 ? [] : _args$channelGroups2;
+
+      if (connected) {
+        channels.forEach(function (channel) {
+          _this2._heartbeatChannels[channel] = {
+            state: {}
+          };
+        });
+        channelGroups.forEach(function (channelGroup) {
+          _this2._heartbeatChannelGroups[channelGroup] = {
+            state: {}
+          };
+        });
+      } else {
+        channels.forEach(function (channel) {
+          if (channel in _this2._heartbeatChannels) {
+            delete _this2._heartbeatChannels[channel];
+          }
+        });
+        channelGroups.forEach(function (channelGroup) {
+          if (channelGroup in _this2._heartbeatChannelGroups) {
+            delete _this2._heartbeatChannelGroups[channelGroup];
+          }
+        });
+
+        if (this._config.suppressLeaveEvents === false) {
+          this._leaveEndpoint({
+            channels: channels,
+            channelGroups: channelGroups
+          }, function (status) {
+            _this2._listenerManager.announceStatus(status);
+          });
+        }
+      }
+
+      this.reconnect();
+    }
+  }, {
+    key: "adaptSubscribeChange",
+    value: function adaptSubscribeChange(args) {
+      var _this3 = this;
+
+      var timetoken = args.timetoken,
+          _args$channels3 = args.channels,
+          channels = _args$channels3 === void 0 ? [] : _args$channels3,
+          _args$channelGroups3 = args.channelGroups,
+          channelGroups = _args$channelGroups3 === void 0 ? [] : _args$channelGroups3,
+          _args$withPresence = args.withPresence,
+          withPresence = _args$withPresence === void 0 ? false : _args$withPresence,
+          _args$withHeartbeats = args.withHeartbeats,
+          withHeartbeats = _args$withHeartbeats === void 0 ? false : _args$withHeartbeats;
+
+      if (!this._config.subscribeKey || this._config.subscribeKey === '') {
+        if (console && console.log) {
+          console.log('subscribe key missing; aborting subscribe');
+        }
+
+        return;
+      }
+
+      if (timetoken) {
+        this._lastTimetoken = this._currentTimetoken;
+        this._currentTimetoken = timetoken;
+      }
+
+      if (this._currentTimetoken !== '0' && this._currentTimetoken !== 0) {
+        this._storedTimetoken = this._currentTimetoken;
+        this._currentTimetoken = 0;
+      }
+
+      channels.forEach(function (channel) {
+        _this3._channels[channel] = {
+          state: {}
+        };
+        if (withPresence) _this3._presenceChannels[channel] = {};
+        if (withHeartbeats || _this3._config.getHeartbeatInterval()) _this3._heartbeatChannels[channel] = {};
+
+        _this3._pendingChannelSubscriptions.push(channel);
+      });
+      channelGroups.forEach(function (channelGroup) {
+        _this3._channelGroups[channelGroup] = {
+          state: {}
+        };
+        if (withPresence) _this3._presenceChannelGroups[channelGroup] = {};
+        if (withHeartbeats || _this3._config.getHeartbeatInterval()) _this3._heartbeatChannelGroups[channelGroup] = {};
+
+        _this3._pendingChannelGroupSubscriptions.push(channelGroup);
+      });
+      this._subscriptionStatusAnnounced = false;
+      this.reconnect();
+    }
+  }, {
+    key: "adaptUnsubscribeChange",
+    value: function adaptUnsubscribeChange(args, isOffline) {
+      var _this4 = this;
+
+      var _args$channels4 = args.channels,
+          channels = _args$channels4 === void 0 ? [] : _args$channels4,
+          _args$channelGroups4 = args.channelGroups,
+          channelGroups = _args$channelGroups4 === void 0 ? [] : _args$channelGroups4;
+      var actualChannels = [];
+      var actualChannelGroups = [];
+      channels.forEach(function (channel) {
+        if (channel in _this4._channels) {
+          delete _this4._channels[channel];
+          actualChannels.push(channel);
+
+          if (channel in _this4._heartbeatChannels) {
+            delete _this4._heartbeatChannels[channel];
+          }
+        }
+
+        if (channel in _this4._presenceChannels) {
+          delete _this4._presenceChannels[channel];
+          actualChannels.push(channel);
+        }
+      });
+      channelGroups.forEach(function (channelGroup) {
+        if (channelGroup in _this4._channelGroups) {
+          delete _this4._channelGroups[channelGroup];
+          actualChannelGroups.push(channelGroup);
+
+          if (channelGroup in _this4._heartbeatChannelGroups) {
+            delete _this4._heartbeatChannelGroups[channelGroup];
+          }
+        }
+
+        if (channelGroup in _this4._presenceChannelGroups) {
+          delete _this4._channelGroups[channelGroup];
+          actualChannelGroups.push(channelGroup);
+        }
+      });
+
+      if (actualChannels.length === 0 && actualChannelGroups.length === 0) {
+        return;
+      }
+
+      if (this._config.suppressLeaveEvents === false && !isOffline) {
+        this._leaveEndpoint({
+          channels: actualChannels,
+          channelGroups: actualChannelGroups
+        }, function (status) {
+          status.affectedChannels = actualChannels;
+          status.affectedChannelGroups = actualChannelGroups;
+          status.currentTimetoken = _this4._currentTimetoken;
+          status.lastTimetoken = _this4._lastTimetoken;
+
+          _this4._listenerManager.announceStatus(status);
+        });
+      }
+
+      if (Object.keys(this._channels).length === 0 && Object.keys(this._presenceChannels).length === 0 && Object.keys(this._channelGroups).length === 0 && Object.keys(this._presenceChannelGroups).length === 0) {
+        this._lastTimetoken = 0;
+        this._currentTimetoken = 0;
+        this._storedTimetoken = null;
+        this._region = null;
+
+        this._reconnectionManager.stopPolling();
+      }
+
+      this.reconnect();
+    }
+  }, {
+    key: "unsubscribeAll",
+    value: function unsubscribeAll(isOffline) {
+      this.adaptUnsubscribeChange({
+        channels: this.getSubscribedChannels(),
+        channelGroups: this.getSubscribedChannelGroups()
+      }, isOffline);
+    }
+  }, {
+    key: "getHeartbeatChannels",
+    value: function getHeartbeatChannels() {
+      return Object.keys(this._heartbeatChannels);
+    }
+  }, {
+    key: "getHeartbeatChannelGroups",
+    value: function getHeartbeatChannelGroups() {
+      return Object.keys(this._heartbeatChannelGroups);
+    }
+  }, {
+    key: "getSubscribedChannels",
+    value: function getSubscribedChannels() {
+      return Object.keys(this._channels);
+    }
+  }, {
+    key: "getSubscribedChannelGroups",
+    value: function getSubscribedChannelGroups() {
+      return Object.keys(this._channelGroups);
+    }
+  }, {
+    key: "reconnect",
+    value: function reconnect() {
+      this._startSubscribeLoop();
+
+      this._registerHeartbeatTimer();
+    }
+  }, {
+    key: "disconnect",
+    value: function disconnect() {
+      this._stopSubscribeLoop();
+
+      this._stopHeartbeatTimer();
+
+      this._reconnectionManager.stopPolling();
+    }
+  }, {
+    key: "_registerHeartbeatTimer",
+    value: function _registerHeartbeatTimer() {
+      this._stopHeartbeatTimer();
+
+      if (this._config.getHeartbeatInterval() === 0) {
+        return;
+      }
+
+      this._performHeartbeatLoop();
+
+      this._heartbeatTimer = setInterval(this._performHeartbeatLoop.bind(this), this._config.getHeartbeatInterval() * 1000);
+    }
+  }, {
+    key: "_stopHeartbeatTimer",
+    value: function _stopHeartbeatTimer() {
+      if (this._heartbeatTimer) {
+        clearInterval(this._heartbeatTimer);
+        this._heartbeatTimer = null;
+      }
+    }
+  }, {
+    key: "_performHeartbeatLoop",
+    value: function _performHeartbeatLoop() {
+      var _this5 = this;
+
+      var heartbeatChannels = this.getHeartbeatChannels();
+      var heartbeatChannelGroups = this.getHeartbeatChannelGroups();
+      var presenceState = {};
+
+      if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
+        return;
+      }
+
+      this.getSubscribedChannels().forEach(function (channel) {
+        var channelState = _this5._channels[channel].state;
+
+        if (Object.keys(channelState).length) {
+          presenceState[channel] = channelState;
+        }
+      });
+      this.getSubscribedChannelGroups().forEach(function (channelGroup) {
+        var channelGroupState = _this5._channelGroups[channelGroup].state;
+
+        if (Object.keys(channelGroupState).length) {
+          presenceState[channelGroup] = channelGroupState;
+        }
+      });
+
+      var onHeartbeat = function onHeartbeat(status) {
+        if (status.error && _this5._config.announceFailedHeartbeats) {
+          _this5._listenerManager.announceStatus(status);
+        }
+
+        if (status.error && _this5._config.autoNetworkDetection && _this5._isOnline) {
+          _this5._isOnline = false;
+
+          _this5.disconnect();
+
+          _this5._listenerManager.announceNetworkDown();
+
+          _this5.reconnect();
+        }
+
+        if (!status.error && _this5._config.announceSuccessfulHeartbeats) {
+          _this5._listenerManager.announceStatus(status);
+        }
+      };
+
+      this._heartbeatEndpoint({
+        channels: heartbeatChannels,
+        channelGroups: heartbeatChannelGroups,
+        state: presenceState
+      }, onHeartbeat.bind(this));
+    }
+  }, {
+    key: "_startSubscribeLoop",
+    value: function _startSubscribeLoop() {
+      var _this6 = this;
+
+      this._stopSubscribeLoop();
+
+      var presenceState = {};
+      var channels = [];
+      var channelGroups = [];
+      Object.keys(this._channels).forEach(function (channel) {
+        var channelState = _this6._channels[channel].state;
+
+        if (Object.keys(channelState).length) {
+          presenceState[channel] = channelState;
+        }
+
+        channels.push(channel);
+      });
+      Object.keys(this._presenceChannels).forEach(function (channel) {
+        channels.push("".concat(channel, "-pnpres"));
+      });
+      Object.keys(this._channelGroups).forEach(function (channelGroup) {
+        var channelGroupState = _this6._channelGroups[channelGroup].state;
+
+        if (Object.keys(channelGroupState).length) {
+          presenceState[channelGroup] = channelGroupState;
+        }
+
+        channelGroups.push(channelGroup);
+      });
+      Object.keys(this._presenceChannelGroups).forEach(function (channelGroup) {
+        channelGroups.push("".concat(channelGroup, "-pnpres"));
+      });
+
+      if (channels.length === 0 && channelGroups.length === 0) {
+        return;
+      }
+
+      var subscribeArgs = {
+        channels: channels,
+        channelGroups: channelGroups,
+        state: presenceState,
+        timetoken: this._currentTimetoken,
+        filterExpression: this._config.filterExpression,
+        region: this._region
+      };
+      this._subscribeCall = this._subscribeEndpoint(subscribeArgs, this._processSubscribeResponse.bind(this));
+    }
+  }, {
+    key: "_processSubscribeResponse",
+    value: function _processSubscribeResponse(status, payload) {
+      var _this7 = this;
+
+      if (status.error) {
+        if (status.category === _categories["default"].PNTimeoutCategory) {
+          this._startSubscribeLoop();
+        } else if (status.category === _categories["default"].PNNetworkIssuesCategory) {
+          this.disconnect();
+
+          if (status.error && this._config.autoNetworkDetection && this._isOnline) {
+            this._isOnline = false;
+
+            this._listenerManager.announceNetworkDown();
+          }
+
+          this._reconnectionManager.onReconnection(function () {
+            if (_this7._config.autoNetworkDetection && !_this7._isOnline) {
+              _this7._isOnline = true;
+
+              _this7._listenerManager.announceNetworkUp();
+            }
+
+            _this7.reconnect();
+
+            _this7._subscriptionStatusAnnounced = true;
+            var reconnectedAnnounce = {
+              category: _categories["default"].PNReconnectedCategory,
+              operation: status.operation,
+              lastTimetoken: _this7._lastTimetoken,
+              currentTimetoken: _this7._currentTimetoken
+            };
+
+            _this7._listenerManager.announceStatus(reconnectedAnnounce);
+          });
+
+          this._reconnectionManager.startPolling();
+
+          this._listenerManager.announceStatus(status);
+        } else if (status.category === _categories["default"].PNBadRequestCategory) {
+          this._stopHeartbeatTimer();
+
+          this._listenerManager.announceStatus(status);
+        } else {
+          this._listenerManager.announceStatus(status);
+        }
+
+        return;
+      }
+
+      if (this._storedTimetoken) {
+        this._currentTimetoken = this._storedTimetoken;
+        this._storedTimetoken = null;
+      } else {
+        this._lastTimetoken = this._currentTimetoken;
+        this._currentTimetoken = payload.metadata.timetoken;
+      }
+
+      if (!this._subscriptionStatusAnnounced) {
+        var connectedAnnounce = {};
+        connectedAnnounce.category = _categories["default"].PNConnectedCategory;
+        connectedAnnounce.operation = status.operation;
+        connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
+        connectedAnnounce.subscribedChannels = this.getSubscribedChannels();
+        connectedAnnounce.affectedChannelGroups = this._pendingChannelGroupSubscriptions;
+        connectedAnnounce.lastTimetoken = this._lastTimetoken;
+        connectedAnnounce.currentTimetoken = this._currentTimetoken;
+        this._subscriptionStatusAnnounced = true;
+
+        this._listenerManager.announceStatus(connectedAnnounce);
+
+        this._pendingChannelSubscriptions = [];
+        this._pendingChannelGroupSubscriptions = [];
+      }
+
+      var messages = payload.messages || [];
+      var _this$_config = this._config,
+          requestMessageCountThreshold = _this$_config.requestMessageCountThreshold,
+          dedupeOnSubscribe = _this$_config.dedupeOnSubscribe;
+
+      if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
+        var countAnnouncement = {};
+        countAnnouncement.category = _categories["default"].PNRequestMessageCountExceededCategory;
+        countAnnouncement.operation = status.operation;
+
+        this._listenerManager.announceStatus(countAnnouncement);
+      }
+
+      messages.forEach(function (message) {
+        var channel = message.channel;
+        var subscriptionMatch = message.subscriptionMatch;
+        var publishMetaData = message.publishMetaData;
+
+        if (channel === subscriptionMatch) {
+          subscriptionMatch = null;
+        }
+
+        if (dedupeOnSubscribe) {
+          if (_this7._dedupingManager.isDuplicate(message)) {
+            return;
+          } else {
+            _this7._dedupingManager.addEntry(message);
+          }
+        }
+
+        if (_utils["default"].endsWith(message.channel, '-pnpres')) {
+          var announce = {};
+          announce.channel = null;
+          announce.subscription = null;
+          announce.actualChannel = subscriptionMatch != null ? channel : null;
+          announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+
+          if (channel) {
+            announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
+          }
+
+          if (subscriptionMatch) {
+            announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
+          }
+
+          announce.action = message.payload.action;
+          announce.state = message.payload.data;
+          announce.timetoken = publishMetaData.publishTimetoken;
+          announce.occupancy = message.payload.occupancy;
+          announce.uuid = message.payload.uuid;
+          announce.timestamp = message.payload.timestamp;
+
+          if (message.payload.join) {
+            announce.join = message.payload.join;
+          }
+
+          if (message.payload.leave) {
+            announce.leave = message.payload.leave;
+          }
+
+          if (message.payload.timeout) {
+            announce.timeout = message.payload.timeout;
+          }
+
+          _this7._listenerManager.announcePresence(announce);
+        } else if (message.messageType === 1) {
+          var _announce = {};
+          _announce.channel = null;
+          _announce.subscription = null;
+          _announce.channel = channel;
+          _announce.subscription = subscriptionMatch;
+          _announce.timetoken = publishMetaData.publishTimetoken;
+          _announce.publisher = message.issuingClientId;
+
+          if (message.userMetadata) {
+            _announce.userMetadata = message.userMetadata;
+          }
+
+          _announce.message = message.payload;
+
+          _this7._listenerManager.announceSignal(_announce);
+        } else if (message.messageType === 2) {
+          var _announce2 = {};
+          _announce2.channel = null;
+          _announce2.subscription = null;
+          _announce2.channel = channel;
+          _announce2.subscription = subscriptionMatch;
+          _announce2.timetoken = publishMetaData.publishTimetoken;
+          _announce2.publisher = message.issuingClientId;
+
+          if (message.userMetadata) {
+            _announce2.userMetadata = message.userMetadata;
+          }
+
+          _announce2.message = {
+            event: message.payload.event,
+            type: message.payload.type,
+            data: message.payload.data
+          };
+
+          if (message.payload.type === 'user') {
+            _this7._listenerManager.announceUser(_announce2);
+          } else if (message.payload.type === 'space') {
+            _this7._listenerManager.announceSpace(_announce2);
+          } else if (message.payload.type === 'membership') {
+            _this7._listenerManager.announceMembership(_announce2);
+          }
+        } else {
+          var _announce3 = {};
+          _announce3.channel = null;
+          _announce3.subscription = null;
+          _announce3.actualChannel = subscriptionMatch != null ? channel : null;
+          _announce3.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+          _announce3.channel = channel;
+          _announce3.subscription = subscriptionMatch;
+          _announce3.timetoken = publishMetaData.publishTimetoken;
+          _announce3.publisher = message.issuingClientId;
+
+          if (message.userMetadata) {
+            _announce3.userMetadata = message.userMetadata;
+          }
+
+          if (_this7._config.cipherKey) {
+            _announce3.message = _this7._crypto.decrypt(message.payload);
+          } else {
+            _announce3.message = message.payload;
+          }
+
+          _this7._listenerManager.announceMessage(_announce3);
+        }
+      });
+      this._region = payload.metadata.region;
+
+      this._startSubscribeLoop();
+    }
+  }, {
+    key: "_stopSubscribeLoop",
+    value: function _stopSubscribeLoop() {
+      if (this._subscribeCall) {
+        if (typeof this._subscribeCall.abort === 'function') {
+          this._subscribeCall.abort();
+        }
+
+        this._subscribeCall = null;
+      }
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _time = _interopRequireDefault(__webpack_require__(8));
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(_ref) {
+    var timeEndpoint = _ref.timeEndpoint;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_reconnectionCallback", void 0);
+
+    _defineProperty(this, "_timeEndpoint", void 0);
+
+    _defineProperty(this, "_timeTimer", void 0);
+
+    this._timeEndpoint = timeEndpoint;
+  }
+
+  _createClass(_default, [{
+    key: "onReconnection",
+    value: function onReconnection(reconnectionCallback) {
+      this._reconnectionCallback = reconnectionCallback;
+    }
+  }, {
+    key: "startPolling",
+    value: function startPolling() {
+      this._timeTimer = setInterval(this._performTimeLoop.bind(this), 3000);
+    }
+  }, {
+    key: "stopPolling",
+    value: function stopPolling() {
+      clearInterval(this._timeTimer);
+    }
+  }, {
+    key: "_performTimeLoop",
+    value: function _performTimeLoop() {
+      var _this = this;
+
+      this._timeEndpoint(function (status) {
+        if (!status.error) {
+          clearInterval(_this._timeTimer);
+
+          _this._reconnectionCallback();
+        }
+      });
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var hashCode = function hashCode(payload) {
+  var hash = 0;
+  if (payload.length === 0) return hash;
+
+  for (var i = 0; i < payload.length; i += 1) {
+    var character = payload.charCodeAt(i);
+    hash = (hash << 5) - hash + character;
+    hash = hash & hash;
+  }
+
+  return hash;
+};
+
+var _default = function () {
+  function _default(_ref) {
+    var config = _ref.config;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "hashHistory", void 0);
+
+    this.hashHistory = [];
+    this._config = config;
+  }
+
+  _createClass(_default, [{
+    key: "getKey",
+    value: function getKey(message) {
+      var hashedPayload = hashCode(JSON.stringify(message.payload)).toString();
+      var timetoken = message.publishMetaData.publishTimetoken;
+      return "".concat(timetoken, "-").concat(hashedPayload);
+    }
+  }, {
+    key: "isDuplicate",
+    value: function isDuplicate(message) {
+      return this.hashHistory.includes(this.getKey(message));
+    }
+  }, {
+    key: "addEntry",
+    value: function addEntry(message) {
+      if (this.hashHistory.length >= this._config.maximumCacheSize) {
+        this.hashHistory.shift();
+      }
+
+      this.hashHistory.push(this.getKey(message));
+    }
+  }, {
+    key: "clearHistory",
+    value: function clearHistory() {
+      this.hashHistory = [];
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = _default;
+
+var _uuid = _interopRequireDefault(__webpack_require__(5));
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
+
+function isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _construct(Parent, args, Class) { if (isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
+
+function _isNativeFunction(fn) { return Function.toString.call(fn).indexOf("[native code]") !== -1; }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+var PubNubError = function (_Error) {
+  _inherits(PubNubError, _Error);
+
+  function PubNubError(message, status) {
+    var _this;
+
+    _classCallCheck(this, PubNubError);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(PubNubError).call(this, message));
+    _this.name = _this.constructor.name;
+    _this.status = status;
+    _this.message = message;
+    return _this;
+  }
+
+  return PubNubError;
+}(_wrapNativeSuper(Error));
+
+function createError(errorPayload, type) {
+  errorPayload.type = type;
+  errorPayload.error = true;
+  return errorPayload;
+}
+
+function createValidationError(message) {
+  return createError({
+    message: message
+  }, 'validationError');
+}
+
+function decideURL(endpoint, modules, incomingParams) {
+  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    return endpoint.postURL(modules, incomingParams);
+  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    return endpoint.patchURL(modules, incomingParams);
+  } else {
+    return endpoint.getURL(modules, incomingParams);
+  }
+}
+
+function generatePNSDK(config) {
+  if (config.sdkName) {
+    return config.sdkName;
+  }
+
+  var base = "PubNub-JS-".concat(config.sdkFamily);
+
+  if (config.partnerId) {
+    base += "-".concat(config.partnerId);
+  }
+
+  base += "/".concat(config.getVersion());
+  return base;
+}
+
+function signRequest(modules, url, outgoingParams) {
+  var config = modules.config,
+      crypto = modules.crypto;
+  outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+  var signInput = "".concat(config.subscribeKey, "\n").concat(config.publishKey, "\n").concat(url, "\n");
+  signInput += _utils["default"].signPamFromParams(outgoingParams);
+  var signature = crypto.HMACSHA256(signInput);
+  signature = signature.replace(/\+/g, '-');
+  signature = signature.replace(/\//g, '_');
+  outgoingParams.signature = signature;
+}
+
+function _default(modules, endpoint) {
+  var networking = modules.networking,
+      config = modules.config;
+  var callback = null;
+  var promiseComponent = null;
+  var incomingParams = {};
+
+  if (endpoint.getOperation() === _operations["default"].PNTimeOperation || endpoint.getOperation() === _operations["default"].PNChannelGroupsOperation) {
+    callback = arguments.length <= 2 ? undefined : arguments[2];
+  } else {
+    incomingParams = arguments.length <= 2 ? undefined : arguments[2];
+    callback = arguments.length <= 3 ? undefined : arguments[3];
+  }
+
+  if (typeof Promise !== 'undefined' && !callback) {
+    promiseComponent = _utils["default"].createPromise();
+  }
+
+  var validationResult = endpoint.validateParams(modules, incomingParams);
+
+  if (validationResult) {
+    if (callback) {
+      return callback(createValidationError(validationResult));
+    } else if (promiseComponent) {
+      promiseComponent.reject(new PubNubError('Validation failed, check status for details', createValidationError(validationResult)));
+      return promiseComponent.promise;
+    }
+
+    return;
+  }
+
+  var outgoingParams = endpoint.prepareParams(modules, incomingParams);
+  var url = decideURL(endpoint, modules, incomingParams);
+  var callInstance;
+  var networkingParams = {
+    url: url,
+    operation: endpoint.getOperation(),
+    timeout: endpoint.getRequestTimeout(modules)
+  };
+  outgoingParams.uuid = config.UUID;
+  outgoingParams.pnsdk = generatePNSDK(config);
+
+  if (config.useInstanceId) {
+    outgoingParams.instanceid = config.instanceId;
+  }
+
+  if (config.useRequestId) {
+    outgoingParams.requestid = _uuid["default"].createUUID();
+  }
+
+  if (endpoint.isAuthSupported() && config.getAuthKey()) {
+    outgoingParams.auth = config.getAuthKey();
+  }
+
+  if (config.secretKey) {
+    signRequest(modules, url, outgoingParams);
+  }
+
+  var onResponse = function onResponse(status, payload) {
+    if (status.error) {
+      if (callback) {
+        callback(status);
+      } else if (promiseComponent) {
+        promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', status));
+      }
+
+      return;
+    }
+
+    var parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
+
+    if (callback) {
+      callback(status, parsedPayload);
+    } else if (promiseComponent) {
+      promiseComponent.fulfill(parsedPayload);
+    }
+  };
+
+  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    var payload = endpoint.postPayload(modules, incomingParams);
+    callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
+  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    var _payload = endpoint.patchPayload(modules, incomingParams);
+
+    callInstance = networking.PATCH(outgoingParams, _payload, networkingParams, onResponse);
+  } else if (endpoint.useDelete && endpoint.useDelete()) {
+    callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
+  } else {
+    callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
+  }
+
+  if (endpoint.getOperation() === _operations["default"].PNSubscribeOperation) {
+    return callInstance;
+  }
+
+  if (promiseComponent) {
+    return promiseComponent.promise;
+  }
+}
+
+module.exports = exports.default;
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNAddChannelsToGroupOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channels = incomingParams.channels,
+      channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  if (!channelGroup) return 'Missing Channel Group';
+  if (!channels || channels.length === 0) return 'Missing Channels';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(_utils["default"].encodeString(channelGroup));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  return {
+    add: channels.join(',')
+  };
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNRemoveChannelsFromGroupOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channels = incomingParams.channels,
+      channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  if (!channelGroup) return 'Missing Channel Group';
+  if (!channels || channels.length === 0) return 'Missing Channels';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(_utils["default"].encodeString(channelGroup));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  return {
+    remove: channels.join(',')
+  };
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.isAuthSupported = isAuthSupported;
+exports.getRequestTimeout = getRequestTimeout;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNRemoveGroupOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  if (!channelGroup) return 'Missing Channel Group';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(_utils["default"].encodeString(channelGroup), "/remove");
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function prepareParams() {
+  return {};
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNChannelGroupsOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams() {
+  return {};
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    groups: serverResponse.payload.groups
+  };
+}
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNChannelsForGroupOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  if (!channelGroup) return 'Missing Channel Group';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var channelGroup = incomingParams.channelGroup;
+  var config = modules.config;
+  return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(_utils["default"].encodeString(channelGroup));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams() {
+  return {};
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    channels: serverResponse.payload.channels
+  };
+}
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNPushNotificationEnabledChannelsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway,
+      channels = incomingParams.channels;
+  var config = modules.config;
+  if (!device) return 'Missing Device ID (device)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!channels || channels.length === 0) return 'Missing Channels';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var device = incomingParams.device;
+  var config = modules.config;
+  return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var pushGateway = incomingParams.pushGateway,
+      _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  return {
+    type: pushGateway,
+    add: channels.join(',')
+  };
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNPushNotificationEnabledChannelsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway,
+      channels = incomingParams.channels;
+  var config = modules.config;
+  if (!device) return 'Missing Device ID (device)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!channels || channels.length === 0) return 'Missing Channels';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var device = incomingParams.device;
+  var config = modules.config;
+  return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var pushGateway = incomingParams.pushGateway,
+      _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  return {
+    type: pushGateway,
+    remove: channels.join(',')
+  };
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNPushNotificationEnabledChannelsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway;
+  var config = modules.config;
+  if (!device) return 'Missing Device ID (device)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var device = incomingParams.device;
+  var config = modules.config;
+  return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var pushGateway = incomingParams.pushGateway;
+  return {
+    type: pushGateway
+  };
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    channels: serverResponse
+  };
+}
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNRemoveAllPushNotificationsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway;
+  var config = modules.config;
+  if (!device) return 'Missing Device ID (device)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var device = incomingParams.device;
+  var config = modules.config;
+  return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device, "/remove");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var pushGateway = incomingParams.pushGateway;
+  return {
+    type: pushGateway
+  };
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNUnsubscribeOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels), "/leave");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2;
+  var params = {};
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  return params;
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNWhereNowOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$uuid = incomingParams.uuid,
+      uuid = _incomingParams$uuid === void 0 ? config.UUID : _incomingParams$uuid;
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/uuid/").concat(uuid);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams() {
+  return {};
+}
+
+function handleResponse(modules, serverResponse) {
+  if (!serverResponse.payload) {
+    return {
+      channels: []
+    };
+  }
+
+  return {
+    channels: serverResponse.payload.channels
+  };
+}
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.isAuthSupported = isAuthSupported;
+exports.getRequestTimeout = getRequestTimeout;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNHeartbeatOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels), "/heartbeat");
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2,
+      _incomingParams$state = incomingParams.state,
+      state = _incomingParams$state === void 0 ? {} : _incomingParams$state;
+  var config = modules.config;
+  var params = {};
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  params.state = JSON.stringify(state);
+  params.heartbeat = config.getPresenceTimeout();
+  return params;
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetStateOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$uuid = incomingParams.uuid,
+      uuid = _incomingParams$uuid === void 0 ? config.UUID : _incomingParams$uuid,
+      _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels), "/uuid/").concat(uuid);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2;
+  var params = {};
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  return params;
+}
+
+function handleResponse(modules, serverResponse, incomingParams) {
+  var _incomingParams$chann3 = incomingParams.channels,
+      channels = _incomingParams$chann3 === void 0 ? [] : _incomingParams$chann3,
+      _incomingParams$chann4 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann4 === void 0 ? [] : _incomingParams$chann4;
+  var channelsResponse = {};
+
+  if (channels.length === 1 && channelGroups.length === 0) {
+    channelsResponse[channels[0]] = serverResponse.payload;
+  } else {
+    channelsResponse = serverResponse.payload;
+  }
+
+  return {
+    channels: channelsResponse
+  };
+}
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNSetStateOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var config = modules.config;
+  var state = incomingParams.state,
+      _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann,
+      _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2;
+  if (!state) return 'Missing State';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+  if (channels.length === 0 && channelGroups.length === 0) return 'Please provide a list of channels and/or channel-groups';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$chann3 = incomingParams.channels,
+      channels = _incomingParams$chann3 === void 0 ? [] : _incomingParams$chann3;
+  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels), "/uuid/").concat(config.UUID, "/data");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var state = incomingParams.state,
+      _incomingParams$chann4 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann4 === void 0 ? [] : _incomingParams$chann4;
+  var params = {};
+  params.state = JSON.stringify(state);
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  return params;
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    state: serverResponse.payload
+  };
+}
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNHereNowOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann,
+      _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2;
+  var baseURL = "/v2/presence/sub-key/".concat(config.subscribeKey);
+
+  if (channels.length > 0 || channelGroups.length > 0) {
+    var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    baseURL += "/channel/".concat(_utils["default"].encodeString(stringifiedChannels));
+  }
+
+  return baseURL;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann3 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann3 === void 0 ? [] : _incomingParams$chann3,
+      _incomingParams$inclu = incomingParams.includeUUIDs,
+      includeUUIDs = _incomingParams$inclu === void 0 ? true : _incomingParams$inclu,
+      _incomingParams$inclu2 = incomingParams.includeState,
+      includeState = _incomingParams$inclu2 === void 0 ? false : _incomingParams$inclu2;
+  var params = {};
+  if (!includeUUIDs) params.disable_uuids = 1;
+  if (includeState) params.state = 1;
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  return params;
+}
+
+function handleResponse(modules, serverResponse, incomingParams) {
+  var _incomingParams$chann4 = incomingParams.channels,
+      channels = _incomingParams$chann4 === void 0 ? [] : _incomingParams$chann4,
+      _incomingParams$chann5 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann5 === void 0 ? [] : _incomingParams$chann5,
+      _incomingParams$inclu3 = incomingParams.includeUUIDs,
+      includeUUIDs = _incomingParams$inclu3 === void 0 ? true : _incomingParams$inclu3,
+      _incomingParams$inclu4 = incomingParams.includeState,
+      includeState = _incomingParams$inclu4 === void 0 ? false : _incomingParams$inclu4;
+
+  var prepareSingularChannel = function prepareSingularChannel() {
+    var response = {};
+    var occupantsList = [];
+    response.totalChannels = 1;
+    response.totalOccupancy = serverResponse.occupancy;
+    response.channels = {};
+    response.channels[channels[0]] = {
+      occupants: occupantsList,
+      name: channels[0],
+      occupancy: serverResponse.occupancy
+    };
+
+    if (includeUUIDs && serverResponse.uuids) {
+      serverResponse.uuids.forEach(function (uuidEntry) {
+        if (includeState) {
+          occupantsList.push({
+            state: uuidEntry.state,
+            uuid: uuidEntry.uuid
+          });
+        } else {
+          occupantsList.push({
+            state: null,
+            uuid: uuidEntry
+          });
+        }
+      });
+    }
+
+    return response;
+  };
+
+  var prepareMultipleChannel = function prepareMultipleChannel() {
+    var response = {};
+    response.totalChannels = serverResponse.payload.total_channels;
+    response.totalOccupancy = serverResponse.payload.total_occupancy;
+    response.channels = {};
+    Object.keys(serverResponse.payload.channels).forEach(function (channelName) {
+      var channelEntry = serverResponse.payload.channels[channelName];
+      var occupantsList = [];
+      response.channels[channelName] = {
+        occupants: occupantsList,
+        name: channelName,
+        occupancy: channelEntry.occupancy
+      };
+
+      if (includeUUIDs) {
+        channelEntry.uuids.forEach(function (uuidEntry) {
+          if (includeState) {
+            occupantsList.push({
+              state: uuidEntry.state,
+              uuid: uuidEntry.uuid
+            });
+          } else {
+            occupantsList.push({
+              state: null,
+              uuid: uuidEntry
+            });
+          }
+        });
+      }
+
+      return response;
+    });
+    return response;
+  };
+
+  var response;
+
+  if (channels.length > 1 || channelGroups.length > 0 || channelGroups.length === 0 && channels.length === 0) {
+    response = prepareMultipleChannel();
+  } else {
+    response = prepareSingularChannel();
+  }
+
+  return response;
+}
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.usePost = usePost;
+exports.getURL = getURL;
+exports.postURL = postURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.postPayload = postPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNCreateUserOperation;
+}
+
+function validateParams(_ref, incomingParams) {
+  var config = _ref.config;
+  var id = incomingParams.id,
+      name = incomingParams.name,
+      custom = incomingParams.custom;
+  if (!id) return 'Missing User.id';
+  if (!name) return 'Missing User.name';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  if (custom) {
+    if (!Object.values(custom).every(function (value) {
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+    })) {
+      return 'Invalid custom type, only string, number and boolean values are allowed.';
+    }
+  }
+}
+
+function usePost() {
+  return true;
+}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users");
+}
+
+function postURL(modules) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users");
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include;
+  var params = {};
+
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+function postPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, usersResponse) {
+  return usersResponse;
+}
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.usePatch = usePatch;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateUserOperation;
+}
+
+function validateParams(_ref, incomingParams) {
+  var config = _ref.config;
+  var id = incomingParams.id,
+      name = incomingParams.name,
+      custom = incomingParams.custom;
+  if (!id) return 'Missing User.id';
+  if (!name) return 'Missing User.name';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  if (custom) {
+    if (!Object.values(custom).every(function (value) {
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+    })) {
+      return 'Invalid custom type, only string, number and boolean values are allowed.';
+    }
+  }
+}
+
+function usePatch() {
+  return true;
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var id = incomingParams.id;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(id);
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  var id = incomingParams.id;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(id);
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include;
+  var params = {};
+
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, usersResponse) {
+  return usersResponse;
+}
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.useDelete = useDelete;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNDeleteUserOperation;
+}
+
+function validateParams(_ref, userId) {
+  var config = _ref.config;
+  if (!userId) return 'Missing UserId';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function useDelete() {
+  return true;
+}
+
+function getURL(modules, userId) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(userId);
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams() {
+  return {};
+}
+
+function handleResponse(modules, usersResponse) {
+  return usersResponse;
+}
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetUserOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var userId = incomingParams.userId;
+  if (!userId) return 'Missing userId';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include;
+  var params = {};
+
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+function handleResponse(modules, usersResponse) {
+  return usersResponse;
+}
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetUsersOperation;
+}
+
+function validateParams() {}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function handleResponse(modules, usersResponse) {
+  return usersResponse;
+}
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.usePost = usePost;
+exports.getURL = getURL;
+exports.postURL = postURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.postPayload = postPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNCreateSpaceOperation;
+}
+
+function validateParams(_ref, incomingParams) {
+  var config = _ref.config;
+  var id = incomingParams.id,
+      name = incomingParams.name,
+      custom = incomingParams.custom;
+  if (!id) return 'Missing Space.id';
+  if (!name) return 'Missing Space.name';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  if (custom) {
+    if (!Object.values(custom).every(function (value) {
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+    })) {
+      return 'Invalid custom type, only string, number and boolean values are allowed.';
+    }
+  }
+}
+
+function usePost() {
+  return true;
+}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces");
+}
+
+function postURL(modules) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces");
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include;
+  var params = {};
+
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+function postPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, spacesResponse) {
+  return spacesResponse;
+}
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.usePatch = usePatch;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateSpaceOperation;
+}
+
+function validateParams(_ref, incomingParams) {
+  var config = _ref.config;
+  var id = incomingParams.id,
+      name = incomingParams.name,
+      custom = incomingParams.custom;
+  if (!id) return 'Missing Space.id';
+  if (!name) return 'Missing Space.name';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  if (custom) {
+    if (!Object.values(custom).every(function (value) {
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+    })) {
+      return 'Invalid custom type, only string, number and boolean values are allowed.';
+    }
+  }
+}
+
+function usePatch() {
+  return true;
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var id = incomingParams.id;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(id);
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  var id = incomingParams.id;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(id);
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include;
+  var params = {};
+
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, spacesResponse) {
+  return spacesResponse;
+}
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.useDelete = useDelete;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNDeleteSpaceOperation;
+}
+
+function validateParams(_ref, spaceId) {
+  var config = _ref.config;
+  if (!spaceId) return 'Missing SpaceId';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function useDelete() {
+  return true;
+}
+
+function getURL(modules, spaceId) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(spaceId);
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams() {
+  return {};
+}
+
+function handleResponse(modules, spacesResponse) {
+  return spacesResponse;
+}
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetSpacesOperation;
+}
+
+function validateParams() {}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function handleResponse(modules, spacesResponse) {
+  return spacesResponse;
+}
+
+/***/ }),
+/* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetSpaceOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var spaceId = incomingParams.spaceId;
+  if (!spaceId) return 'Missing spaceId';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include;
+  var params = {};
+
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+function handleResponse(modules, spacesResponse) {
+  return spacesResponse;
+}
+
+/***/ }),
+/* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetMembersOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var spaceId = incomingParams.spaceId;
+  if (!spaceId) return 'Missing spaceId';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.userFields) {
+      includes.push('user');
+    }
+
+    if (include.customUserFields) {
+      includes.push('user.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function handleResponse(modules, membersResponse) {
+  return membersResponse;
+}
+
+/***/ }),
+/* 43 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembersOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var spaceId = incomingParams.spaceId,
+      users = incomingParams.users;
+  if (!spaceId) return 'Missing spaceId';
+  if (!users) return 'Missing users';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  var users = incomingParams.users;
+  var payload = {};
+
+  if (users && users.length > 0) {
+    payload.add = [];
+    users.forEach(function (addMember) {
+      var currentAdd = {
+        id: addMember.id
+      };
+
+      if (addMember.custom) {
+        currentAdd.custom = addMember.custom;
+      }
+
+      payload.add.push(currentAdd);
+    });
+  }
+
+  return prepareMessagePayload(modules, payload);
+}
+
+function handleResponse(modules, membersResponse) {
+  return membersResponse;
+}
+
+/***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembersOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var spaceId = incomingParams.spaceId,
+      users = incomingParams.users;
+  if (!spaceId) return 'Missing spaceId';
+  if (!users) return 'Missing users';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  var addMembers = incomingParams.addMembers,
+      updateMembers = incomingParams.updateMembers,
+      removeMembers = incomingParams.removeMembers,
+      users = incomingParams.users;
+  var payload = {};
+
+  if (addMembers && addMembers.length > 0) {
+    payload.add = [];
+    addMembers.forEach(function (addMember) {
+      var currentAdd = {
+        id: addMember.id
+      };
+
+      if (addMember.custom) {
+        currentAdd.custom = addMember.custom;
+      }
+
+      payload.add.push(currentAdd);
+    });
+  }
+
+  if (updateMembers && updateMembers.length > 0) {
+    payload.update = [];
+    updateMembers.forEach(function (updateMember) {
+      var currentUpdate = {
+        id: updateMember.id
+      };
+
+      if (updateMember.custom) {
+        currentUpdate.custom = updateMember.custom;
+      }
+
+      payload.update.push(currentUpdate);
+    });
+  }
+
+  if (users && users.length > 0) {
+    payload.update = payload.update || [];
+    users.forEach(function (updateMember) {
+      var currentUpdate = {
+        id: updateMember.id
+      };
+
+      if (updateMember.custom) {
+        currentUpdate.custom = updateMember.custom;
+      }
+
+      payload.update.push(currentUpdate);
+    });
+  }
+
+  if (removeMembers && removeMembers.length > 0) {
+    payload.remove = [];
+    removeMembers.forEach(function (removeMemberId) {
+      payload.remove.push({
+        id: removeMemberId
+      });
+    });
+  }
+
+  return prepareMessagePayload(modules, payload);
+}
+
+function handleResponse(modules, membersResponse) {
+  return membersResponse;
+}
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembersOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var spaceId = incomingParams.spaceId,
+      users = incomingParams.users;
+  if (!spaceId) return 'Missing spaceId';
+  if (!users) return 'Missing users';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  var users = incomingParams.users;
+  var payload = {};
+
+  if (users && users.length > 0) {
+    payload.remove = [];
+    users.forEach(function (removeMemberId) {
+      payload.remove.push({
+        id: removeMemberId
+      });
+    });
+  }
+
+  return prepareMessagePayload(modules, payload);
+}
+
+function handleResponse(modules, membersResponse) {
+  return membersResponse;
+}
+
+/***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNGetMembershipsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var userId = incomingParams.userId;
+  if (!userId) return 'Missing userId';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function handleResponse(modules, membershipsResponse) {
+  return membershipsResponse;
+}
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembershipsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var userId = incomingParams.userId,
+      spaces = incomingParams.spaces;
+  if (!userId) return 'Missing userId';
+  if (!spaces) return 'Missing spaces';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  var addMemberships = incomingParams.addMemberships,
+      updateMemberships = incomingParams.updateMemberships,
+      removeMemberships = incomingParams.removeMemberships,
+      spaces = incomingParams.spaces;
+  var payload = {};
+
+  if (addMemberships && addMemberships.length > 0) {
+    payload.add = [];
+    addMemberships.forEach(function (addMembership) {
+      var currentAdd = {
+        id: addMembership.id
+      };
+
+      if (addMembership.custom) {
+        currentAdd.custom = addMembership.custom;
+      }
+
+      payload.add.push(currentAdd);
+    });
+  }
+
+  if (updateMemberships && updateMemberships.length > 0) {
+    payload.update = [];
+    updateMemberships.forEach(function (updateMembership) {
+      var currentUpdate = {
+        id: updateMembership.id
+      };
+
+      if (updateMembership.custom) {
+        currentUpdate.custom = updateMembership.custom;
+      }
+
+      payload.update.push(currentUpdate);
+    });
+  }
+
+  if (spaces && spaces.length > 0) {
+    payload.update = payload.update || [];
+    spaces.forEach(function (updateMembership) {
+      var currentUpdate = {
+        id: updateMembership.id
+      };
+
+      if (updateMembership.custom) {
+        currentUpdate.custom = updateMembership.custom;
+      }
+
+      payload.update.push(currentUpdate);
+    });
+  }
+
+  if (removeMemberships && removeMemberships.length > 0) {
+    payload.remove = [];
+    removeMemberships.forEach(function (removeMembershipId) {
+      payload.remove.push({
+        id: removeMembershipId
+      });
+    });
+  }
+
+  return prepareMessagePayload(modules, payload);
+}
+
+function handleResponse(modules, membershipsResponse) {
+  return membershipsResponse;
+}
+
+/***/ }),
+/* 48 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembershipsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var userId = incomingParams.userId,
+      spaces = incomingParams.spaces;
+  if (!userId) return 'Missing userId';
+  if (!spaces) return 'Missing spaces';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  var spaces = incomingParams.spaces;
+  var payload = {};
+
+  if (spaces && spaces.length > 0) {
+    payload.add = [];
+    spaces.forEach(function (addMembership) {
+      var currentAdd = {
+        id: addMembership.id
+      };
+
+      if (addMembership.custom) {
+        currentAdd.custom = addMembership.custom;
+      }
+
+      payload.add.push(currentAdd);
+    });
+  }
+
+  return prepareMessagePayload(modules, payload);
+}
+
+function handleResponse(modules, membershipsResponse) {
+  return membershipsResponse;
+}
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembershipsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var userId = incomingParams.userId,
+      spaces = incomingParams.spaces;
+  if (!userId) return 'Missing userId';
+  if (!spaces) return 'Missing spaces';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  var spaces = incomingParams.spaces;
+  var payload = {};
+
+  if (spaces && spaces.length > 0) {
+    payload.remove = [];
+    spaces.forEach(function (removeMembershipId) {
+      payload.remove.push({
+        id: removeMembershipId
+      });
+    });
+  }
+
+  return prepareMessagePayload(modules, payload);
+}
+
+function handleResponse(modules, membershipsResponse) {
+  return membershipsResponse;
+}
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNAccessManagerAudit;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v2/auth/audit/sub-key/".concat(config.subscribeKey);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return false;
+}
+
+function prepareParams(modules, incomingParams) {
+  var channel = incomingParams.channel,
+      channelGroup = incomingParams.channelGroup,
+      _incomingParams$authK = incomingParams.authKeys,
+      authKeys = _incomingParams$authK === void 0 ? [] : _incomingParams$authK;
+  var params = {};
+
+  if (channel) {
+    params.channel = channel;
+  }
+
+  if (channelGroup) {
+    params['channel-group'] = channelGroup;
+  }
+
+  if (authKeys.length > 0) {
+    params.auth = authKeys.join(',');
+  }
+
+  return params;
+}
+
+function handleResponse(modules, serverResponse) {
+  return serverResponse.payload;
+}
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNAccessManagerGrant;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+  if (!config.publishKey) return 'Missing Publish Key';
+  if (!config.secretKey) return 'Missing Secret Key';
+}
+
+function getURL(modules) {
+  var config = modules.config;
+  return "/v2/auth/grant/sub-key/".concat(config.subscribeKey);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return false;
+}
+
+function prepareParams(modules, incomingParams) {
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann,
+      _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2,
+      ttl = incomingParams.ttl,
+      _incomingParams$read = incomingParams.read,
+      read = _incomingParams$read === void 0 ? false : _incomingParams$read,
+      _incomingParams$write = incomingParams.write,
+      write = _incomingParams$write === void 0 ? false : _incomingParams$write,
+      _incomingParams$manag = incomingParams.manage,
+      manage = _incomingParams$manag === void 0 ? false : _incomingParams$manag,
+      _incomingParams$authK = incomingParams.authKeys,
+      authKeys = _incomingParams$authK === void 0 ? [] : _incomingParams$authK;
+  var params = {};
+  params.r = read ? '1' : '0';
+  params.w = write ? '1' : '0';
+  params.m = manage ? '1' : '0';
+
+  if (channels.length > 0) {
+    params.channel = channels.join(',');
+  }
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  if (authKeys.length > 0) {
+    params.auth = authKeys.join(',');
+  }
+
+  if (ttl || ttl === 0) {
+    params.ttl = ttl;
+  }
+
+  return params;
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.usePost = usePost;
+exports.getURL = getURL;
+exports.postURL = postURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.postPayload = postPayload;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var crypto = modules.crypto,
+      config = modules.config;
+  var stringifiedPayload = JSON.stringify(messagePayload);
+
+  if (config.cipherKey) {
+    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+    stringifiedPayload = JSON.stringify(stringifiedPayload);
+  }
+
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNPublishOperation;
+}
+
+function validateParams(_ref, incomingParams) {
+  var config = _ref.config;
+  var message = incomingParams.message,
+      channel = incomingParams.channel;
+  if (!channel) return 'Missing Channel';
+  if (!message) return 'Missing Message';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function usePost(modules, incomingParams) {
+  var _incomingParams$sendB = incomingParams.sendByPost,
+      sendByPost = _incomingParams$sendB === void 0 ? false : _incomingParams$sendB;
+  return sendByPost;
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var channel = incomingParams.channel,
+      message = incomingParams.message;
+  var stringifiedPayload = prepareMessagePayload(modules, message);
+  return "/publish/".concat(config.publishKey, "/").concat(config.subscribeKey, "/0/").concat(_utils["default"].encodeString(channel), "/0/").concat(_utils["default"].encodeString(stringifiedPayload));
+}
+
+function postURL(modules, incomingParams) {
+  var config = modules.config;
+  var channel = incomingParams.channel;
+  return "/publish/".concat(config.publishKey, "/").concat(config.subscribeKey, "/0/").concat(_utils["default"].encodeString(channel), "/0");
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function postPayload(modules, incomingParams) {
+  var message = incomingParams.message;
+  return prepareMessagePayload(modules, message);
+}
+
+function prepareParams(modules, incomingParams) {
+  var meta = incomingParams.meta,
+      _incomingParams$repli = incomingParams.replicate,
+      replicate = _incomingParams$repli === void 0 ? true : _incomingParams$repli,
+      storeInHistory = incomingParams.storeInHistory,
+      ttl = incomingParams.ttl;
+  var params = {};
+
+  if (storeInHistory != null) {
+    if (storeInHistory) {
+      params.store = '1';
+    } else {
+      params.store = '0';
+    }
+  }
+
+  if (ttl) {
+    params.ttl = ttl;
+  }
+
+  if (replicate === false) {
+    params.norep = 'true';
+  }
+
+  if (meta && _typeof(meta) === 'object') {
+    params.meta = JSON.stringify(meta);
+  }
+
+  return params;
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    timetoken: serverResponse[2]
+  };
+}
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, messagePayload) {
+  var stringifiedPayload = JSON.stringify(messagePayload);
+  return stringifiedPayload;
+}
+
+function getOperation() {
+  return _operations["default"].PNSignalOperation;
+}
+
+function validateParams(_ref, incomingParams) {
+  var config = _ref.config;
+  var message = incomingParams.message,
+      channel = incomingParams.channel;
+  if (!channel) return 'Missing Channel';
+  if (!message) return 'Missing Message';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var channel = incomingParams.channel,
+      message = incomingParams.message;
+  var stringifiedPayload = prepareMessagePayload(modules, message);
+  return "/signal/".concat(config.publishKey, "/").concat(config.subscribeKey, "/0/").concat(_utils["default"].encodeString(channel), "/0/").concat(_utils["default"].encodeString(stringifiedPayload));
+}
+
+function getRequestTimeout(_ref2) {
+  var config = _ref2.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams() {
+  var params = {};
+  return params;
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    timetoken: serverResponse[2]
+  };
+}
+
+/***/ }),
+/* 54 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function __processMessage(modules, message) {
+  var config = modules.config,
+      crypto = modules.crypto;
+  if (!config.cipherKey) return message;
+
+  try {
+    return crypto.decrypt(message);
+  } catch (e) {
+    return message;
+  }
+}
+
+function getOperation() {
+  return _operations["default"].PNHistoryOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channel = incomingParams.channel;
+  var config = modules.config;
+  if (!channel) return 'Missing channel';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var channel = incomingParams.channel;
+  var config = modules.config;
+  return "/v2/history/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(channel));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var start = incomingParams.start,
+      end = incomingParams.end,
+      reverse = incomingParams.reverse,
+      _incomingParams$count = incomingParams.count,
+      count = _incomingParams$count === void 0 ? 100 : _incomingParams$count,
+      _incomingParams$strin = incomingParams.stringifiedTimeToken,
+      stringifiedTimeToken = _incomingParams$strin === void 0 ? false : _incomingParams$strin;
+  var outgoingParams = {
+    include_token: 'true'
+  };
+  outgoingParams.count = count;
+  if (start) outgoingParams.start = start;
+  if (end) outgoingParams.end = end;
+  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
+  if (reverse != null) outgoingParams.reverse = reverse.toString();
+  return outgoingParams;
+}
+
+function handleResponse(modules, serverResponse) {
+  var response = {
+    messages: [],
+    startTimeToken: serverResponse[1],
+    endTimeToken: serverResponse[2]
+  };
+  serverResponse[0].forEach(function (serverHistoryItem) {
+    var item = {
+      timetoken: serverHistoryItem.timetoken,
+      entry: __processMessage(modules, serverHistoryItem.message)
+    };
+    response.messages.push(item);
+  });
+  return response;
+}
+
+/***/ }),
+/* 55 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.useDelete = useDelete;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNDeleteMessagesOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channel = incomingParams.channel;
+  var config = modules.config;
+  if (!channel) return 'Missing channel';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function useDelete() {
+  return true;
+}
+
+function getURL(modules, incomingParams) {
+  var channel = incomingParams.channel;
+  var config = modules.config;
+  return "/v3/history/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(channel));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var start = incomingParams.start,
+      end = incomingParams.end;
+  var outgoingParams = {};
+  if (start) outgoingParams.start = start;
+  if (end) outgoingParams.end = end;
+  return outgoingParams;
+}
+
+function handleResponse(modules, serverResponse) {
+  return serverResponse.payload;
+}
+
+/***/ }),
+/* 56 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function getOperation() {
+  return _operations["default"].PNMessageCounts;
+}
+
+function validateParams(modules, incomingParams) {
+  var channels = incomingParams.channels,
+      timetoken = incomingParams.timetoken,
+      channelTimetokens = incomingParams.channelTimetokens;
+  var config = modules.config;
+  if (!channels) return 'Missing channel';
+  if (timetoken && channelTimetokens) return 'timetoken and channelTimetokens are incompatible together';
+  if (timetoken && channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) return 'Length of channelTimetokens and channels do not match';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var channels = incomingParams.channels;
+  var config = modules.config;
+  var stringifiedChannels = channels.join(',');
+  return "/v3/history/sub-key/".concat(config.subscribeKey, "/message-counts/").concat(_utils["default"].encodeString(stringifiedChannels));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var timetoken = incomingParams.timetoken,
+      channelTimetokens = incomingParams.channelTimetokens;
+  var outgoingParams = {};
+
+  if (channelTimetokens && channelTimetokens.length === 1) {
+    var _channelTimetokens = _slicedToArray(channelTimetokens, 1),
+        tt = _channelTimetokens[0];
+
+    outgoingParams.timetoken = tt;
+  } else if (channelTimetokens) {
+    outgoingParams.channelsTimetoken = channelTimetokens.join(',');
+  } else if (timetoken) {
+    outgoingParams.timetoken = timetoken;
+  }
+
+  return outgoingParams;
+}
+
+function handleResponse(modules, serverResponse) {
+  return {
+    channels: serverResponse.channels
+  };
+}
+
+/***/ }),
+/* 57 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function __processMessage(modules, message) {
+  var config = modules.config,
+      crypto = modules.crypto;
+  if (!config.cipherKey) return message;
+
+  try {
+    return crypto.decrypt(message);
+  } catch (e) {
+    return message;
+  }
+}
+
+function getOperation() {
+  return _operations["default"].PNFetchMessagesOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var channels = incomingParams.channels;
+  var config = modules.config;
+  if (!channels || channels.length === 0) return 'Missing channels';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  var config = modules.config;
+  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return "/v3/history/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels));
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var start = incomingParams.start,
+      end = incomingParams.end,
+      count = incomingParams.count,
+      _incomingParams$strin = incomingParams.stringifiedTimeToken,
+      stringifiedTimeToken = _incomingParams$strin === void 0 ? false : _incomingParams$strin;
+  var outgoingParams = {};
+  if (count) outgoingParams.max = count;
+  if (start) outgoingParams.start = start;
+  if (end) outgoingParams.end = end;
+  if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
+  return outgoingParams;
+}
+
+function handleResponse(modules, serverResponse) {
+  var response = {
+    channels: {}
+  };
+  Object.keys(serverResponse.channels || {}).forEach(function (channelName) {
+    response.channels[channelName] = [];
+    (serverResponse.channels[channelName] || []).forEach(function (messageEnvelope) {
+      var announce = {};
+      announce.channel = channelName;
+      announce.subscription = null;
+      announce.timetoken = messageEnvelope.timetoken;
+      announce.message = __processMessage(modules, messageEnvelope.message);
+      response.channels[channelName].push(announce);
+    });
+  });
+  return response;
+}
+
+/***/ }),
+/* 58 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(2));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNSubscribeOperation;
+}
+
+function validateParams(modules) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  var _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
+  var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(_utils["default"].encodeString(stringifiedChannels), "/0");
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getSubscribeTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(_ref2, incomingParams) {
+  var config = _ref2.config;
+  var state = incomingParams.state,
+      _incomingParams$chann2 = incomingParams.channelGroups,
+      channelGroups = _incomingParams$chann2 === void 0 ? [] : _incomingParams$chann2,
+      timetoken = incomingParams.timetoken,
+      filterExpression = incomingParams.filterExpression,
+      region = incomingParams.region;
+  var params = {
+    heartbeat: config.getPresenceTimeout()
+  };
+
+  if (channelGroups.length > 0) {
+    params['channel-group'] = channelGroups.join(',');
+  }
+
+  if (filterExpression && filterExpression.length > 0) {
+    params['filter-expr'] = filterExpression;
+  }
+
+  if (Object.keys(state).length) {
+    params.state = JSON.stringify(state);
+  }
+
+  if (timetoken) {
+    params.tt = timetoken;
+  }
+
+  if (region) {
+    params.tr = region;
+  }
+
+  return params;
+}
+
+function handleResponse(modules, serverResponse) {
+  var messages = [];
+  serverResponse.m.forEach(function (rawMessage) {
+    var publishMetaData = {
+      publishTimetoken: rawMessage.p.t,
+      region: rawMessage.p.r
+    };
+    var parsedMessage = {
+      shard: parseInt(rawMessage.a, 10),
+      subscriptionMatch: rawMessage.b,
+      channel: rawMessage.c,
+      messageType: rawMessage.e,
+      payload: rawMessage.d,
+      flags: rawMessage.f,
+      issuingClientId: rawMessage.i,
+      subscribeKey: rawMessage.k,
+      originationTimetoken: rawMessage.o,
+      userMetadata: rawMessage.u,
+      publishMetaData: publishMetaData
+    };
+    messages.push(parsedMessage);
+  });
+  var metadata = {
+    timetoken: serverResponse.t.t,
+    region: serverResponse.t.r
+  };
+  return {
+    messages: messages,
+    metadata: metadata
+  };
+}
+
+/***/ }),
+/* 59 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _categories = _interopRequireDefault(__webpack_require__(4));
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(modules) {
+    var _this = this;
+
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_modules", void 0);
+
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_maxSubDomain", void 0);
+
+    _defineProperty(this, "_currentSubDomain", void 0);
+
+    _defineProperty(this, "_standardOrigin", void 0);
+
+    _defineProperty(this, "_subscribeOrigin", void 0);
+
+    _defineProperty(this, "_providedFQDN", void 0);
+
+    _defineProperty(this, "_requestTimeout", void 0);
+
+    _defineProperty(this, "_coreParams", void 0);
+
+    this._modules = {};
+    Object.keys(modules).forEach(function (key) {
+      _this._modules[key] = modules[key].bind(_this);
+    });
+  }
+
+  _createClass(_default, [{
+    key: "init",
+    value: function init(config) {
+      this._config = config;
+      this._maxSubDomain = 20;
+      this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
+      this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
+      this._coreParams = {};
+      this.shiftStandardOrigin();
+    }
+  }, {
+    key: "nextOrigin",
+    value: function nextOrigin() {
+      if (!this._providedFQDN.match(/ps\.pndsn\.com$/i)) {
+        return this._providedFQDN;
+      }
+
+      var newSubDomain;
+      this._currentSubDomain = this._currentSubDomain + 1;
+
+      if (this._currentSubDomain >= this._maxSubDomain) {
+        this._currentSubDomain = 1;
+      }
+
+      newSubDomain = this._currentSubDomain.toString();
+      return this._providedFQDN.replace('ps.pndsn.com', "ps".concat(newSubDomain, ".pndsn.com"));
+    }
+  }, {
+    key: "hasModule",
+    value: function hasModule(name) {
+      return name in this._modules;
+    }
+  }, {
+    key: "shiftStandardOrigin",
+    value: function shiftStandardOrigin() {
+      this._standardOrigin = this.nextOrigin();
+      return this._standardOrigin;
+    }
+  }, {
+    key: "getStandardOrigin",
+    value: function getStandardOrigin() {
+      return this._standardOrigin;
+    }
+  }, {
+    key: "POST",
+    value: function POST(params, body, endpoint, callback) {
+      return this._modules.post(params, body, endpoint, callback);
+    }
+  }, {
+    key: "PATCH",
+    value: function PATCH(params, body, endpoint, callback) {
+      return this._modules.patch(params, body, endpoint, callback);
+    }
+  }, {
+    key: "GET",
+    value: function GET(params, endpoint, callback) {
+      return this._modules.get(params, endpoint, callback);
+    }
+  }, {
+    key: "DELETE",
+    value: function DELETE(params, endpoint, callback) {
+      return this._modules.del(params, endpoint, callback);
+    }
+  }, {
+    key: "_detectErrorCategory",
+    value: function _detectErrorCategory(err) {
+      if (err.code === 'ENOTFOUND') {
+        return _categories["default"].PNNetworkIssuesCategory;
+      }
+
+      if (err.code === 'ECONNREFUSED') {
+        return _categories["default"].PNNetworkIssuesCategory;
+      }
+
+      if (err.code === 'ECONNRESET') {
+        return _categories["default"].PNNetworkIssuesCategory;
+      }
+
+      if (err.code === 'EAI_AGAIN') {
+        return _categories["default"].PNNetworkIssuesCategory;
+      }
+
+      if (err.status === 0 || err.hasOwnProperty('status') && typeof err.status === 'undefined') {
+        return _categories["default"].PNNetworkIssuesCategory;
+      }
+
+      if (err.timeout) return _categories["default"].PNTimeoutCategory;
+
+      if (err.code === 'ETIMEDOUT') {
+        return _categories["default"].PNNetworkIssuesCategory;
+      }
+
+      if (err.response) {
+        if (err.response.badRequest) {
+          return _categories["default"].PNBadRequestCategory;
+        }
+
+        if (err.response.forbidden) {
+          return _categories["default"].PNAccessDeniedCategory;
+        }
+      }
+
+      return _categories["default"].PNUnknownCategory;
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 60 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default() {
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "storage", void 0);
+
+    this.storage = {};
+  }
+
+  _createClass(_default, [{
+    key: "get",
+    value: function get(key) {
+      return this.storage[key];
+    }
+  }, {
+    key: "set",
+    value: function set(key, value) {
+      this.storage[key] = value;
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 61 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.get = get;
+exports.post = post;
+exports.patch = patch;
+exports.del = del;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _utils = __webpack_require__(62);
+
+function log(url, qs, res) {
+  var _pickLogger = function _pickLogger() {
+    if (Ti && Ti.API && Ti.API.log) return Ti.API;
+    return console;
+  };
+
+  var start = new Date().getTime();
+  var timestamp = new Date().toISOString();
+
+  var logger = _pickLogger();
+
+  logger.log('<<<<<');
+  logger.log("[".concat(timestamp, "]"), '\n', url, '\n', qs);
+  logger.log('-----');
+  var now = new Date().getTime();
+  var elapsed = now - start;
+  var timestampDone = new Date().toISOString();
+  logger.log('>>>>>>');
+  logger.log("[".concat(timestampDone, " / ").concat(elapsed, "]"), '\n', url, '\n', qs, '\n', res);
+  logger.log('-----');
+}
+
+function getHttpClient() {
+  if (Ti.Platform.osname === 'mobileweb') {
+    return new XMLHttpRequest();
+  } else {
+    return Ti.Network.createHTTPClient();
+  }
+}
+
+function keepAlive(xhr) {
+  if (Ti.Platform.osname !== 'mobileweb' && this._config.keepAlive) {
+    xhr.enableKeepAlive = true;
+  }
+}
+
+function xdr(xhr, method, url, params, body, endpoint, callback) {
+  var _this = this;
+
+  var status = {};
+  status.operation = endpoint.operation;
+  xhr.open(method, (0, _utils.buildUrl)(url, params), true);
+  keepAlive.call(this, xhr);
+
+  xhr.onload = function () {
+    status.error = false;
+
+    if (xhr.status) {
+      status.statusCode = xhr.status;
+    }
+
+    var resp = JSON.parse(xhr.responseText);
+
+    if (_this._config.logVerbosity) {
+      log(url, params, xhr.responseText);
+    }
+
+    return callback(status, resp);
+  };
+
+  xhr.onerror = function (e) {
+    status.error = true;
+    status.errorData = e.error;
+    status.category = _this._detectErrorCategory(e.error);
+    return callback(status, null);
+  };
+
+  xhr.timeout = Ti.Platform.osname === 'android' ? 2147483647 : Infinity;
+  xhr.send(body);
+}
+
+function get(params, endpoint, callback) {
+  var xhr = getHttpClient();
+  var url = this.getStandardOrigin() + endpoint.url;
+  return xdr.call(this, xhr, 'GET', url, params, {}, endpoint, callback);
+}
+
+function post(params, body, endpoint, callback) {
+  var xhr = getHttpClient();
+  var url = this.getStandardOrigin() + endpoint.url;
+  return xdr.call(this, xhr, 'POST', url, params, JSON.parse(body), endpoint, callback);
+}
+
+function patch(params, body, endpoint, callback) {
+  var xhr = getHttpClient();
+  var url = this.getStandardOrigin() + endpoint.url;
+  return xdr.call(this, xhr, 'PATCH', url, params, JSON.parse(body), endpoint, callback);
+}
+
+function del(params, endpoint, callback) {
+  var xhr = getHttpClient();
+  var url = this.getStandardOrigin() + endpoint.url;
+  return xdr.call(this, xhr, 'DELETE', url, params, {}, endpoint, callback);
+}
+
+/***/ }),
+/* 62 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.encodedKeyValuePair = encodedKeyValuePair;
+exports.buildUrl = buildUrl;
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function encodedKeyValuePair(pairs, key, value) {
+  if (value != null) {
+    if (Array.isArray(value)) {
+      value.forEach(function (item) {
+        encodedKeyValuePair(pairs, key, item);
+      });
+    } else if (_typeof(value) === 'object') {
+      Object.keys(value).forEach(function (subkey) {
+        encodedKeyValuePair(pairs, "".concat(key, "[").concat(subkey, "]"), value[subkey]);
+      });
+    } else {
+      pairs.push("".concat(encodeURIComponent(key), "=").concat(encodeURIComponent(value)));
+    }
+  } else if (value === null) {
+    pairs.push(encodeURIComponent("".concat(encodeURIComponent(key))));
+  }
+}
+
+function buildUrl(url, params) {
+  var pairs = [];
+  Object.keys(params).forEach(function (key) {
+    encodedKeyValuePair(pairs, key, params[key]);
+  });
+  return "".concat(url, "?").concat(pairs.join('&'));
+}
+
+/***/ })
+/******/ ]);module.exports = exports.PubNub;
