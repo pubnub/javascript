@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Add support for auth tokens with Objects for Users, Spaces and Memberships"
+        type: bug
+    date: 2019-09-20
+    version: v4.26.0
+  - 
+    changes: 
+      - 
         text: "Fix issue with subdomains ending in 'ps'"
         type: bug
     date: 2019-09-03
@@ -12,7 +19,7 @@ changelog:
       - 
         text: "Fix titanium build to support recent version"
         type: bug
-    date: 2019-08-16
+    date: 2019-08-23
     version: v4.25.1
   - 
     changes: 
@@ -26,7 +33,7 @@ changelog:
       - 
         text: "Fix regression: 'PubNub is not a constructor' in Node.js"
         type: bug
-    date: 2019-08-07
+    date: 2019-08-09
     version: v4.24.6
   - 
     changes: 
@@ -626,6 +633,7 @@ features:
   access: 
     - ACCESS-GRANT
     - ACCESS-SECRET-KEY-ALL-ACCESS
+    - ACCESS-GRANT-TOKEN
   channel-groups: 
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -698,6 +706,13 @@ features:
     - OBJECTS-REMOVE-MEMBERS
   time: 
     - TIME-TIME
+  token-management:
+    - TOKEN-PARSE-TOKEN
+    - TOKEN-SET-TOKEN
+    - TOKEN-SET-TOKENS
+    - TOKEN-GET-TOKEN
+    - TOKEN-GET-TOKENS
+    - TOKEN-CLEAR-TOKENS
 files: 
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
@@ -730,4 +745,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.25.2"
+version: "v4.26.0"
