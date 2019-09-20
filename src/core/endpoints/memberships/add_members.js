@@ -8,10 +8,25 @@ import {
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-function prepareMessagePayload(modules, messagePayload) {
-  let stringifiedPayload = JSON.stringify(messagePayload);
+function prepareMessagePayload(modules, incomingParams) {
+  const { users } = incomingParams;
+  let payload = {};
 
-  return stringifiedPayload;
+  if (users && users.length > 0) {
+    payload.add = [];
+
+    users.forEach((addMember) => {
+      let currentAdd: AddMembers = { id: addMember.id };
+
+      if (addMember.custom) {
+        currentAdd.custom = addMember.custom;
+      }
+
+      payload.add.push(currentAdd);
+    });
+  }
+
+  return payload;
 }
 
 export function getOperation(): string {
@@ -56,6 +71,14 @@ export function getRequestTimeout({ config }: ModulesInject) {
 
 export function isAuthSupported() {
   return true;
+}
+
+export function getAuthToken(modules: ModulesInject, incomingParams: MembersInput): string {
+  let token =
+    modules.tokenManager.getToken('space', incomingParams.spaceId) ||
+    modules.tokenManager.getToken('space');
+
+  return token;
 }
 
 export function prepareParams(
@@ -110,25 +133,8 @@ export function prepareParams(
 export function patchPayload(
   modules: ModulesInject,
   incomingParams: MembersInput
-): string {
-  const { users } = incomingParams;
-  let payload = {};
-
-  if (users && users.length > 0) {
-    payload.add = [];
-
-    users.forEach((addMember) => {
-      let currentAdd: AddMembers = { id: addMember.id };
-
-      if (addMember.custom) {
-        currentAdd.custom = addMember.custom;
-      }
-
-      payload.add.push(currentAdd);
-    });
-  }
-
-  return prepareMessagePayload(modules, payload);
+): Object {
+  return prepareMessagePayload(modules, incomingParams);
 }
 
 export function handleResponse(

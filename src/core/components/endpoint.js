@@ -33,6 +33,16 @@ function decideURL(endpoint, modules, incomingParams) {
   }
 }
 
+function getAuthToken(endpoint, modules, incomingParams) {
+  let token;
+
+  if (endpoint.getAuthToken) {
+    token = endpoint.getAuthToken(modules, incomingParams);
+  }
+
+  return token;
+}
+
 function generatePNSDK(config: Config): string {
   if (config.sdkName) {
     return config.sdkName;
@@ -49,16 +59,46 @@ function generatePNSDK(config: Config): string {
   return base;
 }
 
-function signRequest(modules, url, outgoingParams) {
+function getHttpMethod(modules, endpoint, incomingParams) {
+  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    return 'POST';
+  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    return 'PATCH';
+  } else if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
+    return 'DELETE';
+  } else {
+    return 'GET';
+  }
+}
+
+function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   let { config, crypto } = modules;
 
-  outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
-  let signInput = `${config.subscribeKey}\n${config.publishKey}\n${url}\n`;
-  signInput += utils.signPamFromParams(outgoingParams);
+  let httpMethod = getHttpMethod(modules, endpoint, incomingParams);
 
-  let signature = crypto.HMACSHA256(signInput);
+  outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+  let signInput = `${httpMethod}\n${config.publishKey}\n${url}\n${utils.signPamFromParams(outgoingParams)}\n`;
+
+  if (httpMethod === 'POST') {
+    let payload = endpoint.postPayload(modules, incomingParams);
+    if (typeof payload === 'string') {
+      signInput += payload;
+    } else {
+      signInput += JSON.stringify(payload);
+    }
+  } else if (httpMethod === 'PATCH') {
+    let payload = endpoint.patchPayload(modules, incomingParams);
+    if (typeof payload === 'string') {
+      signInput += payload;
+    } else {
+      signInput += JSON.stringify(payload);
+    }
+  }
+
+  let signature = `v2.${crypto.HMACSHA256(signInput)}`;
   signature = signature.replace(/\+/g, '-');
   signature = signature.replace(/\//g, '_');
+  signature = signature.replace(/=+$/, '');
 
   outgoingParams.signature = signature;
 }
@@ -112,12 +152,17 @@ export default function(modules, endpoint, ...args) {
     outgoingParams.requestid = uuidGenerator.createUUID();
   }
 
-  if (endpoint.isAuthSupported() && config.getAuthKey()) {
-    outgoingParams.auth = config.getAuthKey();
+  if (endpoint.isAuthSupported()) {
+    let token = getAuthToken(endpoint, modules, incomingParams);
+    let tokenOrKey = token || config.getAuthKey();
+
+    if (tokenOrKey) {
+      outgoingParams.auth = tokenOrKey;
+    }
   }
 
   if (config.secretKey) {
-    signRequest(modules, url, outgoingParams);
+    signRequest(modules, url, outgoingParams, incomingParams, endpoint);
   }
 
   let onResponse = (status: StatusAnnouncement, payload: Object) => {
@@ -139,13 +184,13 @@ export default function(modules, endpoint, ...args) {
     }
   };
 
-  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+  if (getHttpMethod(modules, endpoint, incomingParams) === 'POST') {
     let payload = endpoint.postPayload(modules, incomingParams);
     callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
-  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'PATCH') {
     let payload = endpoint.patchPayload(modules, incomingParams);
     callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
-  } else if (endpoint.useDelete && endpoint.useDelete()) {
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);

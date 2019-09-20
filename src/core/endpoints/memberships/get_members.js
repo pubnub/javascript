@@ -34,6 +34,14 @@ export function isAuthSupported() {
   return true;
 }
 
+export function getAuthToken(modules: ModulesInject, incomingParams: MembersInput): string {
+  let token =
+    modules.tokenManager.getToken('space', incomingParams.spaceId) ||
+    modules.tokenManager.getToken('space');
+
+  return token;
+}
+
 export function prepareParams(
   modules: ModulesInject,
   incomingParams: MembersInput

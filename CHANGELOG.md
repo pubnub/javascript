@@ -1,5 +1,17 @@
-﻿## [v4.25.2](https://github.com/pubnub/javascript/tree/v4.25.2)
-  August-23-2019
+﻿## [v4.26.0](https://github.com/pubnub/javascript/tree/v4.26.0)
+  September-20-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.2...v4.26.0)
+
+
+
+- ⭐ Add support for auth tokens with Objects for Users, Spaces and Memberships
+
+
+
+## [v4.25.2](https://github.com/pubnub/javascript/tree/v4.25.2)
+  September-03-2019
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.1...v4.25.2)

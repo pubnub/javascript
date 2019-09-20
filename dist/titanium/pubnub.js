@@ -1,4 +1,4 @@
-/*! 4.25.2 / Consumer  */
+/*! 4.26.0 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -143,6 +143,7 @@ var _default = {
   PNAddChannelsToGroupOperation: 'PNAddChannelsToGroupOperation',
   PNRemoveChannelsFromGroupOperation: 'PNRemoveChannelsFromGroupOperation',
   PNAccessManagerGrant: 'PNAccessManagerGrant',
+  PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit'
 };
 exports["default"] = _default;
@@ -467,7 +468,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.25.2';
+      return '4.26.0';
     }
   }, {
     key: "_decideUUID",
@@ -940,11 +941,13 @@ exports["default"] = void 0;
 
 var _pubnubCommon = _interopRequireDefault(__webpack_require__(10));
 
-var _networking = _interopRequireDefault(__webpack_require__(59));
+var _networking = _interopRequireDefault(__webpack_require__(61));
 
-var _common = _interopRequireDefault(__webpack_require__(60));
+var _common = _interopRequireDefault(__webpack_require__(62));
 
-var _titanium = __webpack_require__(61);
+var _common2 = _interopRequireDefault(__webpack_require__(63));
+
+var _titanium = __webpack_require__(65);
 
 var _flow_interfaces = __webpack_require__(0);
 
@@ -971,6 +974,7 @@ var PubNub = function (_PubNubCore) {
     _classCallCheck(this, PubNub);
 
     setup.db = new _common["default"]();
+    setup.cbor = new _common2["default"]();
     setup.sdkFamily = 'TitaniumSDK';
     setup.networking = new _networking["default"]({
       del: _titanium.del,
@@ -1007,93 +1011,97 @@ var _subscription_manager = _interopRequireDefault(__webpack_require__(13));
 
 var _listener_manager = _interopRequireDefault(__webpack_require__(7));
 
-var _endpoint = _interopRequireDefault(__webpack_require__(16));
+var _token_manager = _interopRequireDefault(__webpack_require__(16));
 
-var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(17));
+var _endpoint = _interopRequireDefault(__webpack_require__(17));
 
-var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(18));
+var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(18));
 
-var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(19));
+var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(19));
 
-var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(20));
+var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(20));
 
-var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(21));
+var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(21));
 
-var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(22));
+var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(22));
 
-var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(23));
+var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(23));
 
-var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(24));
+var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(24));
 
-var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(25));
+var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(25));
 
-var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(26));
+var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(26));
 
-var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(27));
+var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(27));
 
-var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(28));
+var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(28));
 
-var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(29));
+var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(29));
 
-var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(30));
+var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(30));
 
-var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(31));
+var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(31));
 
-var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(32));
+var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(32));
 
-var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(33));
+var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(33));
 
-var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
+var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
 
-var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(35));
+var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(35));
 
-var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
+var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
 
-var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
+var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
 
-var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
+var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
 
-var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
+var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
 
-var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
+var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
 
-var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
+var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
 
-var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
+var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
 
-var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
+var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
 
-var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
+var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
 
-var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
+var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
 
-var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
+var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
 
-var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
+var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
 
-var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
+var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
 
-var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
+var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
 
-var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
+var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
 
-var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
+var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
 
-var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
+var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
 
-var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
+var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
 
-var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
+var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
 
-var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
+var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
 
-var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
+var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
 
-var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
+var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
+
+var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
+
+var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
 
 var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(8));
 
-var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
+var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -1125,6 +1133,8 @@ var _default = function () {
 
     _defineProperty(this, "_listenerManager", void 0);
 
+    _defineProperty(this, "_tokenManager", void 0);
+
     _defineProperty(this, "time", void 0);
 
     _defineProperty(this, "publish", void 0);
@@ -1152,6 +1162,8 @@ var _default = function () {
     _defineProperty(this, "setState", void 0);
 
     _defineProperty(this, "grant", void 0);
+
+    _defineProperty(this, "grantToken", void 0);
 
     _defineProperty(this, "audit", void 0);
 
@@ -1219,6 +1231,18 @@ var _default = function () {
 
     _defineProperty(this, "removeAllListeners", void 0);
 
+    _defineProperty(this, "parseToken", void 0);
+
+    _defineProperty(this, "setToken", void 0);
+
+    _defineProperty(this, "setTokens", void 0);
+
+    _defineProperty(this, "getToken", void 0);
+
+    _defineProperty(this, "getTokens", void 0);
+
+    _defineProperty(this, "clearTokens", void 0);
+
     _defineProperty(this, "getAuthKey", void 0);
 
     _defineProperty(this, "setAuthKey", void 0);
@@ -1242,7 +1266,8 @@ var _default = function () {
     _defineProperty(this, "decrypt", void 0);
 
     var db = setup.db,
-        networking = setup.networking;
+        networking = setup.networking,
+        cbor = setup.cbor;
     var config = this._config = new _config["default"]({
       setup: setup,
       db: db
@@ -1251,10 +1276,12 @@ var _default = function () {
       config: config
     });
     networking.init(config);
+    var tokenManager = this._tokenManager = new _token_manager["default"](config, cbor);
     var modules = {
       config: config,
       networking: networking,
-      crypto: crypto
+      crypto: crypto,
+      tokenManager: tokenManager
     };
 
     var timeEndpoint = _endpoint["default"].bind(this, modules, timeEndpointConfig);
@@ -1281,6 +1308,12 @@ var _default = function () {
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
     this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+    this.parseToken = tokenManager.parseToken.bind(tokenManager);
+    this.setToken = tokenManager.setToken.bind(tokenManager);
+    this.setTokens = tokenManager.setTokens.bind(tokenManager);
+    this.getToken = tokenManager.getToken.bind(tokenManager);
+    this.getTokens = tokenManager.getTokens.bind(tokenManager);
+    this.clearTokens = tokenManager.clearTokens.bind(tokenManager);
     this.channelGroups = {
       listGroups: _endpoint["default"].bind(this, modules, listChannelGroupsConfig),
       listChannels: _endpoint["default"].bind(this, modules, listChannelsInChannelGroupConfig),
@@ -1299,6 +1332,7 @@ var _default = function () {
     this.getState = _endpoint["default"].bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
     this.grant = _endpoint["default"].bind(this, modules, grantEndpointConfig);
+    this.grantToken = _endpoint["default"].bind(this, modules, grantTokenEndpointConfig);
     this.audit = _endpoint["default"].bind(this, modules, auditEndpointConfig);
     this.publish = _endpoint["default"].bind(this, modules, publishEndpointConfig);
 
@@ -3257,6 +3291,296 @@ module.exports = exports.default;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
+
+var _config = _interopRequireDefault(__webpack_require__(3));
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(config, cbor) {
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_cbor", void 0);
+
+    _defineProperty(this, "_userTokens", void 0);
+
+    _defineProperty(this, "_spaceTokens", void 0);
+
+    _defineProperty(this, "_userToken", void 0);
+
+    _defineProperty(this, "_spaceToken", void 0);
+
+    this._config = config;
+    this._cbor = cbor;
+
+    this._initializeTokens();
+  }
+
+  _createClass(_default, [{
+    key: "_initializeTokens",
+    value: function _initializeTokens() {
+      this._userTokens = {};
+      this._spaceTokens = {};
+      this._userToken = undefined;
+      this._spaceToken = undefined;
+    }
+  }, {
+    key: "_setToken",
+    value: function _setToken(token) {
+      var _this = this;
+
+      var tokenObject = this.parseToken(token);
+
+      if (tokenObject && tokenObject.resources) {
+        if (tokenObject.resources.users) {
+          Object.keys(tokenObject.resources.users).forEach(function (id) {
+            _this._userTokens[id] = token;
+          });
+        }
+
+        if (tokenObject.resources.spaces) {
+          Object.keys(tokenObject.resources.spaces).forEach(function (id) {
+            _this._spaceTokens[id] = token;
+          });
+        }
+      }
+
+      if (tokenObject && tokenObject.patterns) {
+        if (tokenObject.patterns.users && Object.keys(tokenObject.patterns.users).length > 0) {
+          this._userToken = token;
+        }
+
+        if (tokenObject.patterns.spaces && Object.keys(tokenObject.patterns.spaces).length > 0) {
+          this._spaceToken = token;
+        }
+      }
+    }
+  }, {
+    key: "setToken",
+    value: function setToken(token) {
+      if (token && token.length > 0) {
+        this._setToken(token);
+      }
+    }
+  }, {
+    key: "setTokens",
+    value: function setTokens(tokens) {
+      var _this2 = this;
+
+      if (tokens && tokens.length && _typeof(tokens) === 'object') {
+        tokens.forEach(function (token) {
+          _this2.setToken(token);
+        });
+      }
+    }
+  }, {
+    key: "getTokens",
+    value: function getTokens(tokenDef) {
+      var _this3 = this;
+
+      var result = {
+        users: {},
+        spaces: {}
+      };
+
+      if (tokenDef) {
+        if (tokenDef.user) {
+          result.user = this._userToken;
+        }
+
+        if (tokenDef.space) {
+          result.space = this._spaceToken;
+        }
+
+        if (tokenDef.users) {
+          tokenDef.users.forEach(function (user) {
+            result.users[user] = _this3._userTokens[user];
+          });
+        }
+
+        if (tokenDef.space) {
+          tokenDef.spaces.forEach(function (space) {
+            result.spaces[space] = _this3._spaceTokens[space];
+          });
+        }
+      } else {
+        if (this._userToken) {
+          result.user = this._userToken;
+        }
+
+        if (this._spaceToken) {
+          result.space = this._spaceToken;
+        }
+
+        Object.keys(this._userTokens).forEach(function (user) {
+          result.users[user] = _this3._userTokens[user];
+        });
+        Object.keys(this._spaceTokens).forEach(function (space) {
+          result.spaces[space] = _this3._spaceTokens[space];
+        });
+      }
+
+      return result;
+    }
+  }, {
+    key: "getToken",
+    value: function getToken(type, id) {
+      var result;
+
+      if (id) {
+        if (type === 'user') {
+          result = this._userTokens[id];
+        } else if (type === 'space') {
+          result = this._spaceTokens[id];
+        }
+      } else if (type === 'user') {
+        result = this._userToken;
+      } else if (type === 'space') {
+        result = this._spaceToken;
+      }
+
+      return result;
+    }
+  }, {
+    key: "extractPermissions",
+    value: function extractPermissions(permissions) {
+      var permissionsResult = {
+        create: false,
+        read: false,
+        write: false,
+        manage: false,
+        "delete": false
+      };
+
+      if ((permissions & 16) === 16) {
+        permissionsResult.create = true;
+      }
+
+      if ((permissions & 8) === 8) {
+        permissionsResult["delete"] = true;
+      }
+
+      if ((permissions & 4) === 4) {
+        permissionsResult.manage = true;
+      }
+
+      if ((permissions & 2) === 2) {
+        permissionsResult.write = true;
+      }
+
+      if ((permissions & 1) === 1) {
+        permissionsResult.read = true;
+      }
+
+      return permissionsResult;
+    }
+  }, {
+    key: "parseToken",
+    value: function parseToken(tokenString) {
+      var _this4 = this;
+
+      var parsed = this._cbor.decodeToken(tokenString);
+
+      if (parsed !== undefined) {
+        var userResourcePermissions = Object.keys(parsed.res.usr);
+        var spaceResourcePermissions = Object.keys(parsed.res.spc);
+        var userPatternPermissions = Object.keys(parsed.pat.usr);
+        var spacePatternPermissions = Object.keys(parsed.pat.spc);
+        var result = {
+          version: parsed.v,
+          timestamp: parsed.t,
+          ttl: parsed.ttl
+        };
+        var userResources = userResourcePermissions.length > 0;
+        var spaceResources = spaceResourcePermissions.length > 0;
+
+        if (userResources || spaceResources) {
+          result.resources = {};
+
+          if (userResources) {
+            result.resources.users = {};
+            userResourcePermissions.forEach(function (id) {
+              result.resources.users[id] = _this4.extractPermissions(parsed.res.usr[id]);
+            });
+          }
+
+          if (spaceResources) {
+            result.resources.spaces = {};
+            spaceResourcePermissions.forEach(function (id) {
+              result.resources.spaces[id] = _this4.extractPermissions(parsed.res.spc[id]);
+            });
+          }
+        }
+
+        var userPatterns = userPatternPermissions.length > 0;
+        var spacePatterns = spacePatternPermissions.length > 0;
+
+        if (userPatterns || spacePatterns) {
+          result.patterns = {};
+
+          if (userPatterns) {
+            result.patterns.users = {};
+            userPatternPermissions.forEach(function (id) {
+              result.patterns.users[id] = _this4.extractPermissions(parsed.pat.usr[id]);
+            });
+          }
+
+          if (spacePatterns) {
+            result.patterns.spaces = {};
+            spacePatternPermissions.forEach(function (id) {
+              result.patterns.spaces[id] = _this4.extractPermissions(parsed.pat.spc[id]);
+            });
+          }
+        }
+
+        if (Object.keys(parsed.meta).length > 0) {
+          result.meta = parsed.meta;
+        }
+
+        result.signature = parsed.sig;
+        return result;
+      } else {
+        return undefined;
+      }
+    }
+  }, {
+    key: "clearTokens",
+    value: function clearTokens() {
+      this._initializeTokens();
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports["default"] = _default;
 
 var _uuid = _interopRequireDefault(__webpack_require__(5));
@@ -3333,6 +3657,16 @@ function decideURL(endpoint, modules, incomingParams) {
   }
 }
 
+function getAuthToken(endpoint, modules, incomingParams) {
+  var token;
+
+  if (endpoint.getAuthToken) {
+    token = endpoint.getAuthToken(modules, incomingParams);
+  }
+
+  return token;
+}
+
 function generatePNSDK(config) {
   if (config.sdkName) {
     return config.sdkName;
@@ -3348,15 +3682,47 @@ function generatePNSDK(config) {
   return base;
 }
 
-function signRequest(modules, url, outgoingParams) {
+function getHttpMethod(modules, endpoint, incomingParams) {
+  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    return 'POST';
+  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    return 'PATCH';
+  } else if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
+    return 'DELETE';
+  } else {
+    return 'GET';
+  }
+}
+
+function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   var config = modules.config,
       crypto = modules.crypto;
+  var httpMethod = getHttpMethod(modules, endpoint, incomingParams);
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
-  var signInput = "".concat(config.subscribeKey, "\n").concat(config.publishKey, "\n").concat(url, "\n");
-  signInput += _utils["default"].signPamFromParams(outgoingParams);
-  var signature = crypto.HMACSHA256(signInput);
+  var signInput = "".concat(httpMethod, "\n").concat(config.publishKey, "\n").concat(url, "\n").concat(_utils["default"].signPamFromParams(outgoingParams), "\n");
+
+  if (httpMethod === 'POST') {
+    var payload = endpoint.postPayload(modules, incomingParams);
+
+    if (typeof payload === 'string') {
+      signInput += payload;
+    } else {
+      signInput += JSON.stringify(payload);
+    }
+  } else if (httpMethod === 'PATCH') {
+    var _payload = endpoint.patchPayload(modules, incomingParams);
+
+    if (typeof _payload === 'string') {
+      signInput += _payload;
+    } else {
+      signInput += JSON.stringify(_payload);
+    }
+  }
+
+  var signature = "v2.".concat(crypto.HMACSHA256(signInput));
   signature = signature.replace(/\+/g, '-');
   signature = signature.replace(/\//g, '_');
+  signature = signature.replace(/=+$/, '');
   outgoingParams.signature = signature;
 }
 
@@ -3410,12 +3776,17 @@ function _default(modules, endpoint) {
     outgoingParams.requestid = _uuid["default"].createUUID();
   }
 
-  if (endpoint.isAuthSupported() && config.getAuthKey()) {
-    outgoingParams.auth = config.getAuthKey();
+  if (endpoint.isAuthSupported()) {
+    var token = getAuthToken(endpoint, modules, incomingParams);
+    var tokenOrKey = token || config.getAuthKey();
+
+    if (tokenOrKey) {
+      outgoingParams.auth = tokenOrKey;
+    }
   }
 
   if (config.secretKey) {
-    signRequest(modules, url, outgoingParams);
+    signRequest(modules, url, outgoingParams, incomingParams, endpoint);
   }
 
   var onResponse = function onResponse(status, payload) {
@@ -3438,14 +3809,14 @@ function _default(modules, endpoint) {
     }
   };
 
-  if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+  if (getHttpMethod(modules, endpoint, incomingParams) === 'POST') {
     var payload = endpoint.postPayload(modules, incomingParams);
     callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
-  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
-    var _payload = endpoint.patchPayload(modules, incomingParams);
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'PATCH') {
+    var _payload2 = endpoint.patchPayload(modules, incomingParams);
 
-    callInstance = networking.PATCH(outgoingParams, _payload, networkingParams, onResponse);
-  } else if (endpoint.useDelete && endpoint.useDelete()) {
+    callInstance = networking.PATCH(outgoingParams, _payload2, networkingParams, onResponse);
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
@@ -3463,7 +3834,7 @@ function _default(modules, endpoint) {
 module.exports = exports.default;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3529,7 +3900,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3595,7 +3966,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3655,7 +4026,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3712,7 +4083,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3774,7 +4145,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3842,7 +4213,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3910,7 +4281,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3975,7 +4346,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4038,7 +4409,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4106,7 +4477,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4171,7 +4542,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4244,7 +4615,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4328,7 +4699,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4407,7 +4778,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4572,7 +4943,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4588,6 +4959,7 @@ exports.getURL = getURL;
 exports.postURL = postURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
@@ -4598,9 +4970,8 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+function prepareMessagePayload(modules, incomingParams) {
+  return incomingParams;
 }
 
 function getOperation() {
@@ -4648,6 +5019,11 @@ function isAuthSupported() {
   return true;
 }
 
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.id) || modules.tokenManager.getToken('user');
+  return token;
+}
+
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include;
   var params = {};
@@ -4686,7 +5062,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4702,6 +5078,7 @@ exports.getURL = getURL;
 exports.patchURL = patchURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -4712,9 +5089,8 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+function prepareMessagePayload(modules, incomingParams) {
+  return incomingParams;
 }
 
 function getOperation() {
@@ -4764,6 +5140,11 @@ function isAuthSupported() {
   return true;
 }
 
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.id) || modules.tokenManager.getToken('user');
+  return token;
+}
+
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include;
   var params = {};
@@ -4802,7 +5183,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4817,6 +5198,7 @@ exports.useDelete = useDelete;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -4854,6 +5236,11 @@ function isAuthSupported() {
   return true;
 }
 
+function getAuthToken(modules, userId) {
+  var token = modules.tokenManager.getToken('user', userId) || modules.tokenManager.getToken('user');
+  return token;
+}
+
 function prepareParams() {
   return {};
 }
@@ -4863,7 +5250,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4877,6 +5264,7 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -4907,6 +5295,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -4943,7 +5336,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4957,6 +5350,7 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -4984,6 +5378,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules) {
+  var token = modules.tokenManager.getToken('user');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -5032,7 +5431,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5048,6 +5447,7 @@ exports.getURL = getURL;
 exports.postURL = postURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
@@ -5058,9 +5458,8 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+function prepareMessagePayload(modules, incomingParams) {
+  return incomingParams;
 }
 
 function getOperation() {
@@ -5108,6 +5507,11 @@ function isAuthSupported() {
   return true;
 }
 
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.id) || modules.tokenManager.getToken('space');
+  return token;
+}
+
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include;
   var params = {};
@@ -5146,7 +5550,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5162,6 +5566,7 @@ exports.getURL = getURL;
 exports.patchURL = patchURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -5172,9 +5577,8 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+function prepareMessagePayload(modules, incomingParams) {
+  return incomingParams;
 }
 
 function getOperation() {
@@ -5224,6 +5628,11 @@ function isAuthSupported() {
   return true;
 }
 
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.id) || modules.tokenManager.getToken('space');
+  return token;
+}
+
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include;
   var params = {};
@@ -5262,7 +5671,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5277,6 +5686,7 @@ exports.useDelete = useDelete;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -5314,6 +5724,11 @@ function isAuthSupported() {
   return true;
 }
 
+function getAuthToken(modules, spaceId) {
+  var token = modules.tokenManager.getToken('space', spaceId) || modules.tokenManager.getToken('space');
+  return token;
+}
+
 function prepareParams() {
   return {};
 }
@@ -5323,7 +5738,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5337,6 +5752,7 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -5364,6 +5780,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules) {
+  var token = modules.tokenManager.getToken('space');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -5412,7 +5833,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5426,6 +5847,7 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -5456,6 +5878,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -5492,7 +5919,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5506,6 +5933,7 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -5536,6 +5964,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -5592,7 +6025,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5608,6 +6041,7 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -5618,95 +6052,7 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
-}
-
-function getOperation() {
-  return _operations["default"].PNUpdateMembersOperation;
-}
-
-function validateParams(modules, incomingParams) {
-  var spaceId = incomingParams.spaceId,
-      users = incomingParams.users;
-  if (!spaceId) return 'Missing spaceId';
-  if (!users) return 'Missing users';
-}
-
-function getURL(modules, incomingParams) {
-  var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
-}
-
-function patchURL(modules, incomingParams) {
-  var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
-}
-
-function usePatch() {
-  return true;
-}
-
-function getRequestTimeout(_ref) {
-  var config = _ref.config;
-  return config.getTransactionTimeout();
-}
-
-function isAuthSupported() {
-  return true;
-}
-
-function prepareParams(modules, incomingParams) {
-  var include = incomingParams.include,
-      limit = incomingParams.limit,
-      page = incomingParams.page;
-  var params = {};
-
-  if (limit) {
-    params.limit = limit;
-  }
-
-  if (include) {
-    var includes = [];
-
-    if (include.totalCount) {
-      params.count = true;
-    }
-
-    if (include.customFields) {
-      includes.push('custom');
-    }
-
-    if (include.spaceFields) {
-      includes.push('space');
-    }
-
-    if (include.customSpaceFields) {
-      includes.push('space.custom');
-    }
-
-    var includesString = includes.join(',');
-
-    if (includesString.length > 0) {
-      params.include = includesString;
-    }
-  }
-
-  if (page) {
-    if (page.next) {
-      params.start = page.next;
-    }
-
-    if (page.prev) {
-      params.end = page.prev;
-    }
-  }
-
-  return params;
-}
-
-function patchPayload(modules, incomingParams) {
+function prepareMessagePayload(modules, incomingParams) {
   var users = incomingParams.users;
   var payload = {};
 
@@ -5725,43 +6071,7 @@ function patchPayload(modules, incomingParams) {
     });
   }
 
-  return prepareMessagePayload(modules, payload);
-}
-
-function handleResponse(modules, membersResponse) {
-  return membersResponse;
-}
-
-/***/ }),
-/* 44 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getOperation = getOperation;
-exports.validateParams = validateParams;
-exports.getURL = getURL;
-exports.patchURL = patchURL;
-exports.usePatch = usePatch;
-exports.getRequestTimeout = getRequestTimeout;
-exports.isAuthSupported = isAuthSupported;
-exports.prepareParams = prepareParams;
-exports.patchPayload = patchPayload;
-exports.handleResponse = handleResponse;
-
-var _flow_interfaces = __webpack_require__(0);
-
-var _operations = _interopRequireDefault(__webpack_require__(1));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+  return payload;
 }
 
 function getOperation() {
@@ -5796,6 +6106,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -5848,6 +6163,42 @@ function prepareParams(modules, incomingParams) {
 }
 
 function patchPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, membersResponse) {
+  return membersResponse;
+}
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, incomingParams) {
   var addMembers = incomingParams.addMembers,
       updateMembers = incomingParams.updateMembers,
       removeMembers = incomingParams.removeMembers,
@@ -5908,43 +6259,7 @@ function patchPayload(modules, incomingParams) {
     });
   }
 
-  return prepareMessagePayload(modules, payload);
-}
-
-function handleResponse(modules, membersResponse) {
-  return membersResponse;
-}
-
-/***/ }),
-/* 45 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getOperation = getOperation;
-exports.validateParams = validateParams;
-exports.getURL = getURL;
-exports.patchURL = patchURL;
-exports.usePatch = usePatch;
-exports.getRequestTimeout = getRequestTimeout;
-exports.isAuthSupported = isAuthSupported;
-exports.prepareParams = prepareParams;
-exports.patchPayload = patchPayload;
-exports.handleResponse = handleResponse;
-
-var _flow_interfaces = __webpack_require__(0);
-
-var _operations = _interopRequireDefault(__webpack_require__(1));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+  return payload;
 }
 
 function getOperation() {
@@ -5979,6 +6294,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -6031,19 +6351,7 @@ function prepareParams(modules, incomingParams) {
 }
 
 function patchPayload(modules, incomingParams) {
-  var users = incomingParams.users;
-  var payload = {};
-
-  if (users && users.length > 0) {
-    payload.remove = [];
-    users.forEach(function (removeMemberId) {
-      payload.remove.push({
-        id: removeMemberId
-      });
-    });
-  }
-
-  return prepareMessagePayload(modules, payload);
+  return prepareMessagePayload(modules, incomingParams);
 }
 
 function handleResponse(modules, membersResponse) {
@@ -6063,8 +6371,149 @@ Object.defineProperty(exports, "__esModule", {
 exports.getOperation = getOperation;
 exports.validateParams = validateParams;
 exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, incomingParams) {
+  var users = incomingParams.users;
+  var payload = {};
+
+  if (users && users.length > 0) {
+    payload.remove = [];
+    users.forEach(function (removeMemberId) {
+      payload.remove.push({
+        id: removeMemberId
+      });
+    });
+  }
+
+  return payload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembersOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var spaceId = incomingParams.spaceId,
+      users = incomingParams.users;
+  if (!spaceId) return 'Missing spaceId';
+  if (!users) return 'Missing users';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
+  return token;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, membersResponse) {
+  return membersResponse;
+}
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -6095,6 +6544,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -6151,7 +6605,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6167,6 +6621,7 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -6177,95 +6632,7 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
-}
-
-function getOperation() {
-  return _operations["default"].PNUpdateMembershipsOperation;
-}
-
-function validateParams(modules, incomingParams) {
-  var userId = incomingParams.userId,
-      spaces = incomingParams.spaces;
-  if (!userId) return 'Missing userId';
-  if (!spaces) return 'Missing spaces';
-}
-
-function getURL(modules, incomingParams) {
-  var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
-}
-
-function patchURL(modules, incomingParams) {
-  var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
-}
-
-function usePatch() {
-  return true;
-}
-
-function getRequestTimeout(_ref) {
-  var config = _ref.config;
-  return config.getTransactionTimeout();
-}
-
-function isAuthSupported() {
-  return true;
-}
-
-function prepareParams(modules, incomingParams) {
-  var include = incomingParams.include,
-      limit = incomingParams.limit,
-      page = incomingParams.page;
-  var params = {};
-
-  if (limit) {
-    params.limit = limit;
-  }
-
-  if (include) {
-    var includes = [];
-
-    if (include.totalCount) {
-      params.count = true;
-    }
-
-    if (include.customFields) {
-      includes.push('custom');
-    }
-
-    if (include.spaceFields) {
-      includes.push('space');
-    }
-
-    if (include.customSpaceFields) {
-      includes.push('space.custom');
-    }
-
-    var includesString = includes.join(',');
-
-    if (includesString.length > 0) {
-      params.include = includesString;
-    }
-  }
-
-  if (page) {
-    if (page.next) {
-      params.start = page.next;
-    }
-
-    if (page.prev) {
-      params.end = page.prev;
-    }
-  }
-
-  return params;
-}
-
-function patchPayload(modules, incomingParams) {
+function prepareMessagePayload(modules, incomingParams) {
   var addMemberships = incomingParams.addMemberships,
       updateMemberships = incomingParams.updateMemberships,
       removeMemberships = incomingParams.removeMemberships,
@@ -6326,43 +6693,7 @@ function patchPayload(modules, incomingParams) {
     });
   }
 
-  return prepareMessagePayload(modules, payload);
-}
-
-function handleResponse(modules, membershipsResponse) {
-  return membershipsResponse;
-}
-
-/***/ }),
-/* 48 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getOperation = getOperation;
-exports.validateParams = validateParams;
-exports.getURL = getURL;
-exports.patchURL = patchURL;
-exports.usePatch = usePatch;
-exports.getRequestTimeout = getRequestTimeout;
-exports.isAuthSupported = isAuthSupported;
-exports.prepareParams = prepareParams;
-exports.patchPayload = patchPayload;
-exports.handleResponse = handleResponse;
-
-var _flow_interfaces = __webpack_require__(0);
-
-var _operations = _interopRequireDefault(__webpack_require__(1));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+  return payload;
 }
 
 function getOperation() {
@@ -6397,6 +6728,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -6449,25 +6785,7 @@ function prepareParams(modules, incomingParams) {
 }
 
 function patchPayload(modules, incomingParams) {
-  var spaces = incomingParams.spaces;
-  var payload = {};
-
-  if (spaces && spaces.length > 0) {
-    payload.add = [];
-    spaces.forEach(function (addMembership) {
-      var currentAdd = {
-        id: addMembership.id
-      };
-
-      if (addMembership.custom) {
-        currentAdd.custom = addMembership.custom;
-      }
-
-      payload.add.push(currentAdd);
-    });
-  }
-
-  return prepareMessagePayload(modules, payload);
+  return prepareMessagePayload(modules, incomingParams);
 }
 
 function handleResponse(modules, membershipsResponse) {
@@ -6491,6 +6809,7 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -6501,9 +6820,26 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function prepareMessagePayload(modules, messagePayload) {
-  var stringifiedPayload = JSON.stringify(messagePayload);
-  return stringifiedPayload;
+function prepareMessagePayload(modules, incomingParams) {
+  var spaces = incomingParams.spaces;
+  var payload = {};
+
+  if (spaces && spaces.length > 0) {
+    payload.add = [];
+    spaces.forEach(function (addMembership) {
+      var currentAdd = {
+        id: addMembership.id
+      };
+
+      if (addMembership.custom) {
+        currentAdd.custom = addMembership.custom;
+      }
+
+      payload.add.push(currentAdd);
+    });
+  }
+
+  return payload;
 }
 
 function getOperation() {
@@ -6538,6 +6874,11 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
+  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -6590,6 +6931,42 @@ function prepareParams(modules, incomingParams) {
 }
 
 function patchPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, membershipsResponse) {
+  return membershipsResponse;
+}
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.patchURL = patchURL;
+exports.usePatch = usePatch;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.getAuthToken = getAuthToken;
+exports.prepareParams = prepareParams;
+exports.patchPayload = patchPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function prepareMessagePayload(modules, incomingParams) {
   var spaces = incomingParams.spaces;
   var payload = {};
 
@@ -6602,7 +6979,99 @@ function patchPayload(modules, incomingParams) {
     });
   }
 
-  return prepareMessagePayload(modules, payload);
+  return payload;
+}
+
+function getOperation() {
+  return _operations["default"].PNUpdateMembershipsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var userId = incomingParams.userId,
+      spaces = incomingParams.spaces;
+  if (!userId) return 'Missing userId';
+  if (!spaces) return 'Missing spaces';
+}
+
+function getURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function patchURL(modules, incomingParams) {
+  var config = modules.config;
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+}
+
+function usePatch() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function getAuthToken(modules, incomingParams) {
+  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
+  return token;
+}
+
+function prepareParams(modules, incomingParams) {
+  var include = incomingParams.include,
+      limit = incomingParams.limit,
+      page = incomingParams.page;
+  var params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    var includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    if (include.spaceFields) {
+      includes.push('space');
+    }
+
+    if (include.customSpaceFields) {
+      includes.push('space.custom');
+    }
+
+    var includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+function patchPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
 }
 
 function handleResponse(modules, membershipsResponse) {
@@ -6610,7 +7079,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6683,7 +7152,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6774,7 +7243,176 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 52 */
+/* 53 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.extractPermissions = extractPermissions;
+exports.validateParams = validateParams;
+exports.postURL = postURL;
+exports.usePost = usePost;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.postPayload = postPayload;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNAccessManagerGrantToken;
+}
+
+function extractPermissions(permissions) {
+  var permissionsResult = 0;
+
+  if (permissions.create) {
+    permissionsResult |= 16;
+  }
+
+  if (permissions["delete"]) {
+    permissionsResult |= 8;
+  }
+
+  if (permissions.manage) {
+    permissionsResult |= 4;
+  }
+
+  if (permissions.write) {
+    permissionsResult |= 2;
+  }
+
+  if (permissions.read) {
+    permissionsResult |= 1;
+  }
+
+  return permissionsResult;
+}
+
+function prepareMessagePayload(modules, incomingParams) {
+  var ttl = incomingParams.ttl,
+      resources = incomingParams.resources,
+      patterns = incomingParams.patterns,
+      meta = incomingParams.meta;
+  var params = {
+    ttl: 0,
+    permissions: {
+      resources: {
+        channels: {},
+        groups: {},
+        users: {},
+        spaces: {}
+      },
+      patterns: {
+        channels: {},
+        groups: {},
+        users: {},
+        spaces: {}
+      },
+      meta: {}
+    }
+  };
+
+  if (resources) {
+    var users = resources.users,
+        spaces = resources.spaces;
+
+    if (users) {
+      Object.keys(users).forEach(function (user) {
+        params.permissions.resources.users[user] = extractPermissions(users[user]);
+      });
+    }
+
+    if (spaces) {
+      Object.keys(spaces).forEach(function (space) {
+        params.permissions.resources.spaces[space] = extractPermissions(spaces[space]);
+      });
+    }
+  }
+
+  if (patterns) {
+    var _users = patterns.users,
+        _spaces = patterns.spaces;
+
+    if (_users) {
+      Object.keys(_users).forEach(function (user) {
+        params.permissions.patterns.users[user] = extractPermissions(_users[user]);
+      });
+    }
+
+    if (_spaces) {
+      Object.keys(_spaces).forEach(function (space) {
+        params.permissions.patterns.spaces[space] = extractPermissions(_spaces[space]);
+      });
+    }
+  }
+
+  if (ttl || ttl === 0) {
+    params.ttl = ttl;
+  }
+
+  if (meta) {
+    params.permissions.meta = meta;
+  }
+
+  return params;
+}
+
+function validateParams(modules, incomingParams) {
+  var config = modules.config;
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+  if (!config.publishKey) return 'Missing Publish Key';
+  if (!config.secretKey) return 'Missing Secret Key';
+  if (!incomingParams.resources && !incomingParams.patterns) return 'Missing either Resources or Patterns.';
+
+  if (incomingParams.resources && (!incomingParams.resources.users || Object.keys(incomingParams.resources.users).length === 0) && (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0) || incomingParams.patterns && (!incomingParams.patterns.users || Object.keys(incomingParams.patterns.users).length === 0) && (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0)) {
+    return 'Missing values for either Resources or Patterns.';
+  }
+}
+
+function postURL(modules) {
+  var config = modules.config;
+  return "/v3/pam/".concat(config.subscribeKey, "/grant");
+}
+
+function usePost() {
+  return true;
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return false;
+}
+
+function prepareParams() {
+  return {};
+}
+
+function postPayload(modules, incomingParams) {
+  return prepareMessagePayload(modules, incomingParams);
+}
+
+function handleResponse(modules, response) {
+  var token = response.data.token;
+  return token;
+}
+
+/***/ }),
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6902,7 +7540,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 53 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6974,7 +7612,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 54 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7073,7 +7711,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 55 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7143,7 +7781,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 56 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7231,7 +7869,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 57 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7329,7 +7967,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 58 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7448,7 +8086,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 59 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7618,7 +8256,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 60 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7665,7 +8303,699 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 61 */
+/* 63 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _cborSync = _interopRequireDefault(__webpack_require__(64));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var _default = function () {
+  function _default() {
+    _classCallCheck(this, _default);
+  }
+
+  _createClass(_default, [{
+    key: "decodeToken",
+    value: function decodeToken(tokenString) {
+      var padding = '';
+
+      if (tokenString.length % 4 === 3) {
+        padding = '=';
+      } else if (tokenString.length % 4 === 2) {
+        padding = '==';
+      }
+
+      var cleaned = tokenString.replace('-', '+').replace('_', '/') + padding;
+
+      var result = _cborSync["default"].decode(new Buffer.from(cleaned, 'base64'));
+
+      if (_typeof(result) === 'object') {
+        return result;
+      }
+
+      return undefined;
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 64 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
+	if (true) {
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else {}
+})(this, function () {
+	var CBOR = (function () {
+		function BinaryHex(hex) {
+			this.$hex = hex;
+		}
+		BinaryHex.prototype = {
+			length: function () {
+				return this.$hex.length/2;
+			},
+			toString: function (format) {
+				if (!format || format === 'hex' || format === 16) return this.$hex;
+				if (format === 'utf-8') {
+					var encoded = '';
+					for (var i = 0; i < this.$hex.length; i += 2) {
+						encoded += '%' + this.$hex.substring(i, i + 2);
+					}
+					return decodeURIComponent(encoded);
+				}
+				if (format === 'latin') {
+					var encoded = [];
+					for (var i = 0; i < this.$hex.length; i += 2) {
+						encoded.push(parseInt(this.$hex.substring(i, i + 2), 16));
+					}
+					return String.fromCharCode.apply(String, encoded);
+				}
+				throw new Error('Unrecognised format: ' + format);
+			}
+		};
+		BinaryHex.fromLatinString = function (latinString) {
+			var hex = '';
+			for (var i = 0; i < latinString.length; i++) {
+				var pair = latinString.charCodeAt(i).toString(16);
+				if (pair.length === 1) pair = "0" + pair;
+				hex += pair;
+			}
+			return new BinaryHex(hex);
+		};
+		BinaryHex.fromUtf8String = function (utf8String) {
+			var encoded = encodeURIComponent(utf8String);
+			var hex = '';
+			for (var i = 0; i < encoded.length; i++) {
+				if (encoded.charAt(i) === '%') {
+					hex += encoded.substring(i + 1, i + 3);
+					i += 2;
+				} else {
+					var hexPair = encoded.charCodeAt(i).toString(16);
+					if (hexPair.length < 2) hexPair = "0" + hexPair;
+					hex += hexPair;
+				}
+			}
+			return new BinaryHex(hex);
+		};
+
+		var semanticEncoders = [];
+		var semanticDecoders = {};
+	
+		var notImplemented = function (label) {
+			return function () {
+				throw new Error(label + ' not implemented');
+			};
+		};
+	
+		function Reader() {
+		}
+		Reader.prototype = {
+			peekByte: notImplemented('peekByte'),
+			readByte: notImplemented('readByte'),
+			readChunk: notImplemented('readChunk'),
+			readFloat16: function () {
+				var half = this.readUint16();
+				var exponent = (half&0x7fff) >> 10;
+				var mantissa = half&0x3ff;
+				var negative = half&0x8000;
+				if (exponent === 0x1f) {
+					if (mantissa === 0) {
+						return negative ? -Infinity : Infinity;
+					}
+					return NaN;
+				}
+				var magnitude = exponent ? Math.pow(2, exponent - 25)*(1024 + mantissa) : Math.pow(2, -24)*mantissa;
+				return negative ? -magnitude : magnitude;
+			},
+			readFloat32: function () {
+				var intValue = this.readUint32();
+				var exponent = (intValue&0x7fffffff) >> 23;
+				var mantissa = intValue&0x7fffff;
+				var negative = intValue&0x80000000;
+				if (exponent === 0xff) {
+					if (mantissa === 0) {
+						return negative ? -Infinity : Infinity;
+					}
+					return NaN;
+				}
+				var magnitude = exponent ? Math.pow(2, exponent - 23 - 127)*(8388608 + mantissa) : Math.pow(2, -23 - 126)*mantissa;
+				return negative ? -magnitude : magnitude;
+			},
+			readFloat64: function () {
+				var int1 = this.readUint32(), int2 = this.readUint32();
+				var exponent = (int1 >> 20)&0x7ff;
+				var mantissa = (int1&0xfffff)*4294967296 + int2;
+				var negative = int1&0x80000000;
+				if (exponent === 0x7ff) {
+					if (mantissa === 0) {
+						return negative ? -Infinity : Infinity;
+					}
+					return NaN;
+				}
+				var magnitude = exponent ? Math.pow(2, exponent - 52 - 1023)*(4503599627370496 + mantissa) : Math.pow(2, -52 - 1022)*mantissa;
+				return negative ? -magnitude : magnitude;
+			},
+			readUint16: function () {
+				return this.readByte()*256 + this.readByte();
+			},
+			readUint32: function () {
+				return this.readUint16()*65536 + this.readUint16();
+			},
+			readUint64: function () {
+				return this.readUint32()*4294967296 + this.readUint32();
+			}
+		};
+		function Writer() {
+		}
+		Writer.prototype = {
+			writeByte: notImplemented('writeByte'),
+			result: notImplemented('result'),
+			writeFloat16: notImplemented('writeFloat16'),
+			writeFloat32: notImplemented('writeFloat32'),
+			writeFloat64: notImplemented('writeFloat64'),
+			writeUint16: function (value) {
+				this.writeByte((value >> 8)&0xff);
+				this.writeByte(value&0xff);
+			},
+			writeUint32: function (value) {
+				this.writeUint16((value>>16)&0xffff);
+				this.writeUint16(value&0xffff);
+			},
+			writeUint64: function (value) {
+				if (value >= 9007199254740992 || value <= -9007199254740992) {
+					throw new Error('Cannot encode Uint64 of: ' + value + ' magnitude to big (floating point errors)');
+				}
+				this.writeUint32(Math.floor(value/4294967296));
+				this.writeUint32(value%4294967296);
+			},
+			writeString: notImplemented('writeString'),
+			canWriteBinary: function (chunk) {
+				return false;
+			},
+			writeBinary: notImplemented('writeChunk')
+		};
+
+		function readHeaderRaw(reader) {
+			var firstByte = reader.readByte();
+			var majorType = firstByte >> 5, value = firstByte&0x1f;
+			return {type: majorType, value: value};
+		}
+	
+		function valueFromHeader(header, reader) {
+			var value = header.value;
+			if (value < 24) {
+				return value;
+			} else if (value == 24) {
+				return reader.readByte();
+			} else if (value == 25) {
+				return reader.readUint16();
+			} else if (value == 26) {
+				return reader.readUint32();
+			} else if (value == 27) {
+				return reader.readUint64();
+			} else if (value == 31) {
+				// special value for non-terminating arrays/objects
+				return null;
+			}
+			notImplemented('Additional info: ' + value)();
+		}
+	
+		function writeHeaderRaw(type, value, writer) {
+			writer.writeByte((type<<5)|value);
+		}
+	
+		function writeHeader(type, value, writer) {
+			var firstByte = type<<5;
+			if (value < 24) {
+				writer.writeByte(firstByte|value);
+			} else if (value < 256) {
+				writer.writeByte(firstByte|24);
+				writer.writeByte(value);
+			} else if (value < 65536) {
+				writer.writeByte(firstByte|25);
+				writer.writeUint16(value);
+			} else if (value < 4294967296) {
+				writer.writeByte(firstByte|26);
+				writer.writeUint32(value);
+			} else {
+				writer.writeByte(firstByte|27);
+				writer.writeUint64(value);
+			}
+		}
+	
+		var stopCode = new Error(); // Just a unique object, that won't compare strictly equal to anything else
+	
+		function decodeReader(reader) {
+			var header = readHeaderRaw(reader);
+			switch (header.type) {
+				case 0:
+					return valueFromHeader(header, reader);
+				case 1:
+					return -1 -valueFromHeader(header, reader);
+				case 2:
+					return reader.readChunk(valueFromHeader(header, reader));
+				case 3:
+					var buffer = reader.readChunk(valueFromHeader(header, reader));
+					return buffer.toString('utf-8');
+				case 4:
+				case 5:
+					var arrayLength = valueFromHeader(header, reader);
+					var result = [];
+					if (arrayLength !== null) {
+						if (header.type === 5) {
+							arrayLength *= 2;
+						} 
+						for (var i = 0; i < arrayLength; i++) {
+							result[i] = decodeReader(reader);
+						}
+					} else {
+						var item;
+						while ((item = decodeReader(reader)) !== stopCode) {
+							result.push(item);
+						}
+					}
+					if (header.type === 5) {
+						var objResult = {};
+						for (var i = 0; i < result.length; i += 2) {
+							objResult[result[i]] = result[i + 1];
+						}
+						return objResult;
+					} else {
+						return result;
+					}
+				case 6:
+					var tag = valueFromHeader(header, reader);
+					var decoder = semanticDecoders[tag];
+					var result = decodeReader(reader);
+					return decoder ? decoder(result) : result;
+				case 7:
+					if (header.value === 25) {
+						return reader.readFloat16();
+					} else if (header.value === 26) {
+						return reader.readFloat32();
+					} else if (header.value === 27) {
+						return reader.readFloat64();
+					}
+					switch (valueFromHeader(header, reader)) {
+						case 20:
+							return false;
+						case 21:
+							return true;
+						case 22:
+							return null;
+						case 23:
+							return undefined;
+						case null:
+							return stopCode;
+						default:
+							throw new Error('Unknown fixed value: ' + header.value);
+					}
+				default:
+					throw new Error('Unsupported header: ' + JSON.stringify(header));
+			}
+			throw new Error('not implemented yet');
+		}
+	
+		function encodeWriter(data, writer) {
+			for (var i = 0; i < semanticEncoders.length; i++) {
+				var replacement = semanticEncoders[i].fn(data);
+				if (replacement !== undefined) {
+					writeHeader(6, semanticEncoders[i].tag, writer);
+					return encodeWriter(replacement, writer);
+				}
+			}
+		
+			if (data && typeof data.toCBOR === 'function') {
+				data = data.toCBOR();
+			}
+		
+			if (data === false) {
+				writeHeader(7, 20, writer);
+			} else if (data === true) {
+				writeHeader(7, 21, writer);
+			} else if (data === null) {
+				writeHeader(7, 22, writer);
+			} else if (data === undefined) {
+				writeHeader(7, 23, writer);
+			} else if (typeof data === 'number') {
+				if (Math.floor(data) === data && data < 9007199254740992 && data > -9007199254740992) {
+					// Integer
+					if (data < 0) {
+						writeHeader(1, -1 - data, writer);
+					} else {
+						writeHeader(0, data, writer);
+					}
+				} else {
+					writeHeaderRaw(7, 27, writer);
+					writer.writeFloat64(data);
+				}
+			} else if (typeof data === 'string') {
+				writer.writeString(data, function (length) {
+					writeHeader(3, length, writer);
+				});
+			} else if (writer.canWriteBinary(data)) {
+				writer.writeBinary(data, function (length) {
+					writeHeader(2, length, writer);
+				});
+			} else if (typeof data === 'object') {
+				if (api.config.useToJSON && typeof data.toJSON === 'function') {
+			   		data = data.toJSON();
+			   	}
+				if (Array.isArray(data)) {
+					writeHeader(4, data.length, writer);
+					for (var i = 0; i < data.length; i++) {
+						encodeWriter(data[i], writer);
+					}
+				} else {
+					var keys = Object.keys(data);
+					writeHeader(5, keys.length, writer);
+					for (var i = 0; i < keys.length; i++) {
+						encodeWriter(keys[i], writer);
+						encodeWriter(data[keys[i]], writer);
+					}
+				}
+			} else {
+				throw new Error('CBOR encoding not supported: ' + data);
+			}
+		}
+		
+		var readerFunctions = [];
+		var writerFunctions = [];
+	
+		var api = {
+			config: {
+				useToJSON: true
+			},
+			addWriter: function (format, writerFunction) {
+				if (typeof format === 'string') {
+					writerFunctions.push(function (f) {
+						if (format === f) return writerFunction(f);
+					});
+				} else {
+					writerFunctions.push(format);
+				}
+			},
+			addReader: function (format, readerFunction) {
+				if (typeof format === 'string') {
+					readerFunctions.push(function (data, f) {
+						if (format === f) return readerFunction(data, f);
+					});
+				} else {
+					readerFunctions.push(format);
+				}
+			},
+			encode: function (data, format) {
+				for (var i = 0; i < writerFunctions.length; i++) {
+					var func = writerFunctions[i];
+					var writer = func(format);
+					if (writer) {
+						encodeWriter(data, writer);
+						return writer.result();
+					}
+				}
+				throw new Error('Unsupported output format: ' + format);
+			},
+			decode: function (data, format) {
+				for (var i = 0; i < readerFunctions.length; i++) {
+					var func = readerFunctions[i];
+					var reader = func(data, format);
+					if (reader) {
+						return decodeReader(reader);
+					}
+				}
+				throw new Error('Unsupported input format: ' + format);
+			},
+			addSemanticEncode: function (tag, fn) {
+				if (typeof tag !== 'number' || tag%1 !== 0 || tag < 0) {
+					throw new Error('Tag must be a positive integer');
+				}
+				semanticEncoders.push({tag: tag, fn: fn});
+				return this;
+			},
+			addSemanticDecode: function (tag, fn) {
+				if (typeof tag !== 'number' || tag%1 !== 0 || tag < 0) {
+					throw new Error('Tag must be a positive integer');
+				}
+				semanticDecoders[tag] = fn;
+				return this;
+			},
+			Reader: Reader,
+			Writer: Writer
+		};
+		
+		/** Node.js Buffers **/
+		function BufferReader(buffer) {
+			this.buffer = buffer;
+			this.pos = 0;
+		}
+		BufferReader.prototype = Object.create(Reader.prototype);
+		BufferReader.prototype.peekByte = function () {
+			return this.buffer[this.pos];
+		};
+		BufferReader.prototype.readByte = function () {
+			return this.buffer[this.pos++];
+		};
+		BufferReader.prototype.readUint16 = function () {
+			var result = this.buffer.readUInt16BE(this.pos);
+			this.pos += 2;
+			return result;
+		};
+		BufferReader.prototype.readUint32 = function () {
+			var result = this.buffer.readUInt32BE(this.pos);
+			this.pos += 4;
+			return result;
+		};
+		BufferReader.prototype.readFloat32 = function () {
+			var result = this.buffer.readFloatBE(this.pos);
+			this.pos += 4;
+			return result;
+		};
+		BufferReader.prototype.readFloat64 = function () {
+			var result = this.buffer.readDoubleBE(this.pos);
+			this.pos += 8;
+			return result;
+		};
+		BufferReader.prototype.readChunk = function (length) {
+			var result = Buffer.alloc(length);
+			this.buffer.copy(result, 0, this.pos, this.pos += length);
+			return result;
+		};
+	
+		function BufferWriter(stringFormat) {
+			this.byteLength = 0;
+			this.defaultBufferLength = 16384; // 16k
+			this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+			this.latestBufferOffset = 0;
+			this.completeBuffers = [];
+			this.stringFormat = stringFormat;
+		}
+		BufferWriter.prototype = Object.create(Writer.prototype);
+		BufferWriter.prototype.writeByte = function (value) {
+			this.latestBuffer[this.latestBufferOffset++] = value;
+			if (this.latestBufferOffset >= this.latestBuffer.length) {
+				this.completeBuffers.push(this.latestBuffer);
+				this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+				this.latestBufferOffset = 0;
+			}
+			this.byteLength++;
+		}
+		BufferWriter.prototype.writeFloat32 = function (value) {
+			var buffer = Buffer.alloc(4);
+			buffer.writeFloatBE(value, 0);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.writeFloat64 = function (value) {
+			var buffer = Buffer.alloc(8);
+			buffer.writeDoubleBE(value, 0);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.writeString = function (string, lengthFunc) {
+			var buffer = Buffer.from(string, 'utf-8');
+			lengthFunc(buffer.length);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.canWriteBinary = function (data) {
+			return data instanceof Buffer;
+		};
+		BufferWriter.prototype.writeBinary = function (buffer, lengthFunc) {
+			lengthFunc(buffer.length);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.writeBuffer = function (chunk) {
+			if (!(chunk instanceof Buffer)) throw new TypeError('BufferWriter only accepts Buffers');
+			if (!this.latestBufferOffset) {
+				this.completeBuffers.push(chunk);
+			} else if (this.latestBuffer.length - this.latestBufferOffset >= chunk.length) {
+				chunk.copy(this.latestBuffer, this.latestBufferOffset);
+				this.latestBufferOffset += chunk.length;
+				if (this.latestBufferOffset >= this.latestBuffer.length) {
+					this.completeBuffers.push(this.latestBuffer);
+					this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+					this.latestBufferOffset = 0;
+				}
+			} else {
+				this.completeBuffers.push(this.latestBuffer.slice(0, this.latestBufferOffset));
+				this.completeBuffers.push(chunk);
+				this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+				this.latestBufferOffset = 0;
+			}
+			this.byteLength += chunk.length;
+		}
+		BufferWriter.prototype.result = function () {
+			// Copies them all into a single Buffer
+			var result = Buffer.alloc(this.byteLength);
+			var offset = 0;
+			for (var i = 0; i < this.completeBuffers.length; i++) {
+				var buffer = this.completeBuffers[i];
+				buffer.copy(result, offset, 0, buffer.length);
+				offset += buffer.length;
+			}
+			if (this.latestBufferOffset) {
+				this.latestBuffer.copy(result, offset, 0, this.latestBufferOffset);
+			}
+			
+			if (this.stringFormat) return result.toString(this.stringFormat);
+			return result;
+		}
+		
+		if (typeof Buffer === 'function') {
+			api.addReader(function (data, format) {
+				if (data instanceof Buffer) {
+					return new BufferReader(data);
+				}
+				if (format === 'hex' || format === 'base64') {
+					var buffer = Buffer.from(data, format);
+					return new BufferReader(buffer);
+				}
+			});
+			api.addWriter(function (format) {
+				if (!format || format === 'buffer') {
+					return new BufferWriter();
+				} else if (format === 'hex' || format === 'base64') {
+					return new BufferWriter(format);
+				}
+			});
+		}
+		
+		/** Hex-encoding (and Latin1) for browser **/
+		function HexReader(hex) {
+			this.hex = hex;
+			this.pos = 0;
+		}
+		HexReader.prototype = Object.create(Reader.prototype);
+		HexReader.prototype.peekByte = function () {
+			var pair = this.hex.substring(this.pos, 2);
+			return parseInt(pair, 16);
+		};
+		HexReader.prototype.readByte = function () {
+			var pair = this.hex.substring(this.pos, this.pos + 2);
+			this.pos += 2;
+			return parseInt(pair, 16);
+		};
+		HexReader.prototype.readChunk = function (length) {
+			var hex = this.hex.substring(this.pos, this.pos + length*2);
+			this.pos += length*2;
+			if (typeof Buffer === 'function') return Buffer.from(hex, 'hex');
+			return new BinaryHex(hex);
+		};
+	
+		function HexWriter(finalFormat) {
+			this.$hex = '';
+			this.finalFormat = finalFormat || 'hex'
+		}
+		HexWriter.prototype = Object.create(Writer.prototype);
+		HexWriter.prototype.writeByte = function (value) {
+			if (value < 0 || value > 255) throw new Error('Byte value out of range: ' + value);
+			var hex = value.toString(16);
+			if (hex.length == 1) {
+				hex = '0' + hex;
+			}
+			this.$hex += hex;
+		}
+		HexWriter.prototype.canWriteBinary = function (chunk) {
+			return chunk instanceof BinaryHex || (typeof Buffer === 'function' && chunk instanceof Buffer);
+		}
+		HexWriter.prototype.writeBinary = function (chunk, lengthFunction) {
+			if (chunk instanceof BinaryHex) {
+				lengthFunction(chunk.length());
+				this.$hex += chunk.$hex;
+			} else if (typeof Buffer === 'function' && chunk instanceof Buffer) {
+				lengthFunction(chunk.length);
+				this.$hex += chunk.toString('hex');
+			} else {
+				throw new TypeError('HexWriter only accepts BinaryHex or Buffers');
+			}
+		}
+		HexWriter.prototype.result = function () {
+			if (this.finalFormat === 'buffer' && typeof Buffer === 'function') {
+				return Buffer.from(this.$hex, 'hex');
+			}
+			return new BinaryHex(this.$hex).toString(this.finalFormat);
+		}
+		HexWriter.prototype.writeString = function (string, lengthFunction) {
+			var buffer = BinaryHex.fromUtf8String(string);
+			lengthFunction(buffer.length());
+			this.$hex += buffer.$hex;
+		}
+
+		api.addReader(function (data, format) {
+			if (data instanceof BinaryHex || data.$hex) {
+				return new HexReader(data.$hex);
+			}
+			if (format === 'hex') {
+				return new HexReader(data)
+			}
+		});
+		api.addWriter(function (format) {
+			if (format === 'hex') {
+				return new HexWriter();
+			}
+		});
+
+		return api;
+	})();
+
+	CBOR.addSemanticEncode(0, function (data) {
+		if (data instanceof Date) {
+			return data.toISOString();
+		}
+	}).addSemanticDecode(0, function (isoString) {
+		return new Date(isoString);
+	}).addSemanticDecode(1, function (isoString) {
+		return new Date(isoString);
+	});
+
+	return CBOR;
+});
+
+/***/ }),
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7681,7 +9011,7 @@ exports.del = del;
 
 var _flow_interfaces = __webpack_require__(0);
 
-var _utils = __webpack_require__(62);
+var _utils = __webpack_require__(66);
 
 function log(url, qs, res) {
   var _pickLogger = function _pickLogger() {
@@ -7779,7 +9109,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 62 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

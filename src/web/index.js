@@ -4,6 +4,7 @@
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import db from '../db/web';
+import Cbor from '../cbor/common';
 import { del, get, post, patch } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
@@ -21,6 +22,7 @@ export default class extends PubNubCore {
     const { listenToBrowserNetworkEvents = true } = setup;
 
     setup.db = db;
+    setup.cbor = new Cbor();
     setup.sdkFamily = 'Web';
     setup.networking = new Networking({ del, get, post, patch, sendBeacon });
 

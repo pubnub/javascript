@@ -45,7 +45,7 @@ describe('access endpoints', () => {
           channel: 'ch1',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'T7d76LD7SJJdhaljs8yku5cY04TvynsCVBs2D8FMF8Y=',
+          signature: 'v2.I7AFqanrAAtwVfvLHyKECTWw7UcZmwbRnwENpXdGB9E',
         })
         .reply(
           200,
@@ -80,7 +80,7 @@ describe('access endpoints', () => {
           'channel-group': 'cg1',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'P3xBKue_zoj23Kc0JcTDmeLO751R_bYtr74LFEyfwZM=',
+          signature: 'v2.2hdDeYpF_Hoo4XLK2CMlZApcLin5lJxh6vsKMQnTet8',
         })
         .reply(
           200,
@@ -115,7 +115,7 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'OlwW-JbL2_pnp9qLaCnQwc2oWAoybQYi4wqLOegc1Kg=',
+          signature: 'v2.lVKZELiJFleDoPqMkSgojCUsX39AZqop7bKVyHv-T_s',
         })
         .reply(
           200,
@@ -153,7 +153,7 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'eHfy2MycQdZySF95iavsSftLDD0oG5umBKgTxHbMFwg=',
+          signature: 'v2.D1gsJZ7zAo5CJAYNJW4gvegRoaF0QBkMZcCQonXJLKo',
           r: 0,
           w: 0,
           m: 0,
@@ -183,7 +183,7 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'B4QZ4K5nd_eI0AT6JAw4Ubk57x87-Ze7jsihw-vV--A=',
+          signature: 'v2.zq2yORr4O0AjHIgGtI4rjmZ866o_iurekk9hVMpfsvY',
           r: 1,
           w: 1,
           m: 0,
@@ -218,7 +218,7 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'CAPs9l4jliNPnle-Tx7PjZCLTYQYg9CU9YKaiAYTuRQ=',
+          signature: 'v2.J7G4Z6DYnnSsLaeCfyRG4-2EMCvRyu_P3SFLl3E5A8g',
           r: 1,
           w: 1,
           m: 0,

@@ -548,7 +548,6 @@ describe('#components/subscription_manager', () => {
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
 
     setTimeout(() => {
-      console.log(messageCount);
       if (messageCount === 3) {
         done();
       }
