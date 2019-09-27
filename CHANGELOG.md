@@ -1,4 +1,16 @@
-﻿## [v4.26.0](https://github.com/pubnub/javascript/tree/v4.26.0)
+﻿## [v4.26.1](https://github.com/pubnub/javascript/tree/v4.26.1)
+  September-27-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.26.0...v4.26.1)
+
+
+
+- ⭐ Ensures history response is an array before iterating it
+
+
+
+## [v4.26.0](https://github.com/pubnub/javascript/tree/v4.26.0)
   September-20-2019
 
 

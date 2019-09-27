@@ -1,4 +1,4 @@
-/*! 4.26.0 / Consumer  */
+/*! 4.26.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -477,7 +477,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.26.0';
+      return '4.26.1';
     }
   }, {
     key: "_decideUUID",
@@ -9552,13 +9552,17 @@ function handleResponse(modules, serverResponse) {
     startTimeToken: serverResponse[1],
     endTimeToken: serverResponse[2]
   };
-  serverResponse[0].forEach(function (serverHistoryItem) {
-    var item = {
-      timetoken: serverHistoryItem.timetoken,
-      entry: __processMessage(modules, serverHistoryItem.message)
-    };
-    response.messages.push(item);
-  });
+
+  if (Array.isArray(serverResponse[0])) {
+    serverResponse[0].forEach(function (serverHistoryItem) {
+      var item = {
+        timetoken: serverHistoryItem.timetoken,
+        entry: __processMessage(modules, serverHistoryItem.message)
+      };
+      response.messages.push(item);
+    });
+  }
+
   return response;
 }
 

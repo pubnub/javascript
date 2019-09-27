@@ -88,14 +88,16 @@ export function handleResponse(
     endTimeToken: serverResponse[2],
   };
 
-  serverResponse[0].forEach((serverHistoryItem) => {
-    const item: HistoryItem = {
-      timetoken: serverHistoryItem.timetoken,
-      entry: __processMessage(modules, serverHistoryItem.message),
-    };
+  if (Array.isArray(serverResponse[0])) {
+    serverResponse[0].forEach((serverHistoryItem) => {
+      const item: HistoryItem = {
+        timetoken: serverHistoryItem.timetoken,
+        entry: __processMessage(modules, serverHistoryItem.message),
+      };
 
-    response.messages.push(item);
-  });
+      response.messages.push(item);
+    });
+  }
 
   return response;
 }
