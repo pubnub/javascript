@@ -3,6 +3,13 @@ changelog:
   - 
     changes: 
       - 
+        text: "Ensures history response is an array before iterating it"
+        type: bug
+    date: 2019-09-27
+    version: v4.26.1
+  - 
+    changes: 
+      - 
         text: "Add support for auth tokens with Objects for Users, Spaces and Memberships"
         type: bug
     date: 2019-09-20
@@ -745,4 +752,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.26.0"
+version: "4.26.1"
