@@ -2,7 +2,7 @@
   September-27-2019
 
 
-  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.2...v4.26.1)
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.26.0...v4.26.1)
 
 
 
