@@ -4,7 +4,8 @@
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import db from '../db/web';
-import { del, get, post } from '../networking/modules/web-node';
+import Cbor from '../cbor/common';
+import { del, get, post, patch } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 function sendBeacon(url: string) {
@@ -21,8 +22,9 @@ export default class extends PubNubCore {
     const { listenToBrowserNetworkEvents = true } = setup;
 
     setup.db = db;
+    setup.cbor = new Cbor();
     setup.sdkFamily = 'Web';
-    setup.networking = new Networking({ del, get, post, sendBeacon });
+    setup.networking = new Networking({ del, get, post, patch, sendBeacon });
 
     super(setup);
 
@@ -37,5 +39,4 @@ export default class extends PubNubCore {
       });
     }
   }
-
 }

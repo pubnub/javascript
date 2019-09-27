@@ -1,4 +1,76 @@
-﻿## [v4.24.4](https://github.com/pubnub/javascript/tree/v4.24.4)
+﻿## [v4.26.0](https://github.com/pubnub/javascript/tree/v4.26.0)
+  September-20-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.2...v4.26.0)
+
+
+
+- ⭐ Add support for auth tokens with Objects for Users, Spaces and Memberships
+
+
+
+## [v4.25.2](https://github.com/pubnub/javascript/tree/v4.25.2)
+  September-03-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.1...v4.25.2)
+
+
+
+- ⭐ Fix issue with subdomains ending in 'ps'
+
+
+
+## [v4.25.1](https://github.com/pubnub/javascript/tree/v4.25.1)
+  August-23-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.25.0...v4.25.1)
+
+
+
+- ⭐ Fix regression: Fix titanium build to support recent version
+
+
+
+## [v4.25.0](https://github.com/pubnub/javascript/tree/v4.25.0)
+  August-16-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.6...v4.25.0)
+
+
+
+- ⭐ Fix regression: Add Objects support for Users, Spaces and Memberships
+
+
+
+## [v4.24.6](https://github.com/pubnub/javascript/tree/v4.24.6)
+  August-09-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.5...v4.24.6)
+
+
+
+- ⭐ Fix regression: 'PubNub is not a constructor' in Node.js
+
+
+
+## [v4.24.5](https://github.com/pubnub/javascript/tree/v4.24.5)
+  August-07-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.24.4...v4.24.5)
+
+
+
+- ⭐ Add Signals support
+
+
+
+## [v4.24.4](https://github.com/pubnub/javascript/tree/v4.24.4)
   July-26-2019
 
 

@@ -1,0 +1,83 @@
+/* @flow */
+
+import {
+  SingleUserInput,
+  UsersResponse,
+  ModulesInject,
+} from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
+
+export function getOperation(): string {
+  return operationConstants.PNGetUserOperation;
+}
+
+export function validateParams(modules: ModulesInject, incomingParams: SingleUserInput) {
+  let { userId } = incomingParams;
+
+  if (!userId) return 'Missing userId';
+}
+
+export function getURL(
+  modules: ModulesInject,
+  incomingParams: SingleUserInput
+): string {
+  let { config } = modules;
+
+  return `/v1/objects/${config.subscribeKey}/users/${incomingParams.userId}`;
+}
+
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function isAuthSupported() {
+  return true;
+}
+
+export function getAuthToken(modules: ModulesInject, incomingParams: SingleUserInput): string {
+  let token =
+    modules.tokenManager.getToken('user', incomingParams.userId) ||
+    modules.tokenManager.getToken('user');
+
+  return token;
+}
+
+export function prepareParams(
+  modules: ModulesInject,
+  incomingParams: SingleUserInput
+): Object {
+  let { include } = incomingParams;
+  const params = {};
+
+  // default to include custom fields in response
+  if (!include) {
+    include = {
+      customFields: true
+    };
+  } else if (include.customFields === undefined) {
+    include.customFields = true;
+  }
+
+  if (include) {
+    let includes = [];
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    let includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  return params;
+}
+
+export function handleResponse(
+  modules: ModulesInject,
+  usersResponse: Object
+): UsersResponse {
+  return usersResponse;
+}

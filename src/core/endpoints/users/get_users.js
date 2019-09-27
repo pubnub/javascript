@@ -1,0 +1,85 @@
+/* @flow */
+
+import {
+  UserListInput,
+  UsersListResponse,
+  ModulesInject,
+} from '../../flow_interfaces';
+import operationConstants from '../../constants/operations';
+
+export function getOperation(): string {
+  return operationConstants.PNGetUsersOperation;
+}
+
+export function validateParams() {
+  // no required parameters
+}
+
+export function getURL(
+  modules: ModulesInject,
+): string {
+  let { config } = modules;
+  return `/v1/objects/${config.subscribeKey}/users`;
+}
+
+export function getRequestTimeout({ config }: ModulesInject) {
+  return config.getTransactionTimeout();
+}
+
+export function isAuthSupported() {
+  return true;
+}
+
+export function getAuthToken(modules: ModulesInject): string {
+  let token = modules.tokenManager.getToken('user');
+
+  return token;
+}
+
+export function prepareParams(
+  modules: ModulesInject,
+  incomingParams: UserListInput
+): Object {
+  const { include, limit, page } = incomingParams;
+  const params = {};
+
+  if (limit) {
+    params.limit = limit;
+  }
+
+  if (include) {
+    let includes = [];
+
+    if (include.totalCount) {
+      params.count = true;
+    }
+
+    if (include.customFields) {
+      includes.push('custom');
+    }
+
+    let includesString = includes.join(',');
+
+    if (includesString.length > 0) {
+      params.include = includesString;
+    }
+  }
+
+  if (page) {
+    if (page.next) {
+      params.start = page.next;
+    }
+    if (page.prev) {
+      params.end = page.prev;
+    }
+  }
+
+  return params;
+}
+
+export function handleResponse(
+  modules: ModulesInject,
+  usersResponse: Object
+): UsersListResponse {
+  return usersResponse;
+}

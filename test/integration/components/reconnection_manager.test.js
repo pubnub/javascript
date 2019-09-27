@@ -36,7 +36,7 @@ describe('#components/reconnection_manger', () => {
     clock.restore();
   });
 
-  it('reports when the network is unreachable', done => {
+  it('reports when the network is unreachable', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')
@@ -68,7 +68,7 @@ describe('#components/reconnection_manger', () => {
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
-  it('begins polling and reports reconnects when subscribe is again successful', done => {
+  it('begins polling and reports reconnects when subscribe is again successful', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch1-pnpres%2Cch2-pnpres/0')

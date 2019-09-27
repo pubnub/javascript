@@ -11,6 +11,24 @@ export default {
   PNSubscribeOperation: 'PNSubscribeOperation',
   PNUnsubscribeOperation: 'PNUnsubscribeOperation',
   PNPublishOperation: 'PNPublishOperation',
+  PNSignalOperation: 'PNSignalOperation',
+
+  // Objects API
+
+  PNCreateUserOperation: 'PNCreateUserOperation',
+  PNUpdateUserOperation: 'PNUpdateUserOperation',
+  PNDeleteUserOperation: 'PNDeleteUserOperation',
+  PNGetUserOperation: 'PNGetUsersOperation',
+  PNGetUsersOperation: 'PNGetUsersOperation',
+  PNCreateSpaceOperation: 'PNCreateSpaceOperation',
+  PNUpdateSpaceOperation: 'PNUpdateSpaceOperation',
+  PNDeleteSpaceOperation: 'PNDeleteSpaceOperation',
+  PNGetSpaceOperation: 'PNGetSpacesOperation',
+  PNGetSpacesOperation: 'PNGetSpacesOperation',
+  PNGetMembersOperation: 'PNGetMembersOperation',
+  PNUpdateMembersOperation: 'PNUpdateMembersOperation',
+  PNGetMembershipsOperation: 'PNGetMembershipsOperation',
+  PNUpdateMembershipsOperation: 'PNUpdateMembershipsOperation',
 
   // push
   PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
@@ -35,6 +53,7 @@ export default {
 
   // PAM
   PNAccessManagerGrant: 'PNAccessManagerGrant',
+  PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
   //
 

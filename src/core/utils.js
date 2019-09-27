@@ -2,12 +2,12 @@
 
 function objectToList(o: Object): Array<any> {
   let l = [];
-  Object.keys(o).forEach(key => l.push(key));
+  Object.keys(o).forEach((key) => l.push(key));
   return l;
 }
 
 function encodeString(input: string): string {
-  return encodeURIComponent(input).replace(/[!~*'()]/g, x => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
+  return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
 }
 
 function objectToListSorted(o: Object): Array<any> {
@@ -16,7 +16,7 @@ function objectToListSorted(o: Object): Array<any> {
 
 function signPamFromParams(params: Object): string {
   let l = objectToListSorted(params);
-  return l.map(paramKey => `${paramKey}=${encodeString(params[paramKey])}`).join('&');
+  return l.map((paramKey) => `${paramKey}=${encodeString(params[paramKey])}`).join('&');
 }
 
 function endsWith(searchString: string, suffix: string): boolean {
@@ -26,7 +26,7 @@ function endsWith(searchString: string, suffix: string): boolean {
 function createPromise() {
   let successResolve;
   let failureResolve;
-  let promise = new Promise((fulfill, reject) => {
+  let promise: Promise<any> = new Promise((fulfill, reject) => {
     successResolve = fulfill;
     failureResolve = reject;
   });

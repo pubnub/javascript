@@ -1,4 +1,4 @@
-/* global describe, it, __dirname */
+/* global describe, it */
 
 import PubNub from '../../src/node/index';
 

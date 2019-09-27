@@ -1,9 +1,10 @@
 {
-    "presets": ["es2015"],
+    "presets": ["@babel/preset-env"],
     "comments": false,
     "plugins": [
-        "transform-class-properties",
-        "transform-flow-strip-types",
+        "@babel/plugin-proposal-class-properties",
+        "@babel/plugin-transform-flow-strip-types",
+        "@babel/plugin-transform-modules-commonjs",
         "add-module-exports"
     ],
     "sourceMaps": true

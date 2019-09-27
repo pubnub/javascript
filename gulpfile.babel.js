@@ -6,27 +6,32 @@ const babel = require('gulp-babel');
 const clean = require('gulp-clean');
 const gulpWebpack = require('webpack-stream');
 const webpackConfig = require('./webpack.config');
+const webpackConfigTitanium = require('./webpack.config.titanium');
 const eslint = require('gulp-eslint');
 const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
 const exec = require('child_process').exec;
 const Karma = require('karma').Server;
 const mocha = require('gulp-mocha');
-const runSequence = require('run-sequence');
+const runSequence = require('gulp4-run-sequence');
 const gulpIstanbul = require('gulp-istanbul');
-const isparta = require('isparta');
 const sourcemaps = require('gulp-sourcemaps');
 const packageJSON = require('./package.json');
 const gzip = require('gulp-gzip');
 const unzip = require('gulp-unzip');
 
+// increase mocha timeout from default of 2000 to allow long running async tests to complete
+const mochaTimeout = 5000;
+
 gulp.task('clean', () => {
-  return gulp.src(['lib', 'dist', 'coverage', 'upload'], { read: false })
+  return gulp
+    .src(['lib', 'dist', 'coverage', 'upload'], { read: false, allowEmpty: true })
     .pipe(clean());
 });
 
 gulp.task('babel', () => {
-  return gulp.src('src/**/*.js')
+  return gulp
+    .src('src/**/*.js')
     .pipe(sourcemaps.init())
     .pipe(babel())
     .pipe(sourcemaps.write('.'))
@@ -34,37 +39,43 @@ gulp.task('babel', () => {
 });
 
 gulp.task('unzip_titanium_sdk', () => {
-  return gulp.src('resources/titanium.zip')
+  return gulp
+    .src('resources/titanium.zip')
     .pipe(unzip())
     .pipe(gulp.dest('resources/'));
 });
 
 gulp.task('compile_web', () => {
-  return gulp.src('src/web/index.js')
+  return gulp
+    .src('src/web/index.js')
     .pipe(gulpWebpack(webpackConfig))
     .pipe(gulp.dest('dist/web'));
 });
 
 gulp.task('compile_titanium', () => {
-  return gulp.src('src/titanium/index.js')
-    .pipe(gulpWebpack(webpackConfig))
+  return gulp
+    .src('src/titanium/index.js')
+    .pipe(gulpWebpack(webpackConfigTitanium))
     .pipe(gulp.dest('dist/titanium'));
 });
 
 gulp.task('create_version', () => {
-  return gulp.src('dist/web/pubnub.js')
+  return gulp
+    .src('dist/web/pubnub.js')
     .pipe(rename(`pubnub.${packageJSON.version}.js`))
     .pipe(gulp.dest('upload/normal'));
 });
 
 gulp.task('create_version_gzip', () => {
-  return gulp.src('upload/normal/*.js')
+  return gulp
+    .src('upload/normal/*.js')
     .pipe(gzip({ append: false }))
     .pipe(gulp.dest('upload/gzip'));
 });
 
 gulp.task('uglify_web', () => {
-  return gulp.src('dist/web/pubnub.js')
+  return gulp
+    .src('dist/web/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
 
     .pipe(rename('pubnub.min.js'))
@@ -75,76 +86,99 @@ gulp.task('uglify_web', () => {
 });
 
 gulp.task('uglify_titanium', () => {
-  return gulp.src('dist/titanium/pubnub.js')
+  return gulp
+    .src('dist/titanium/pubnub.js')
     .pipe(uglify({ mangle: true, compress: true }))
     .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/titanium'));
 });
 
-gulp.task('lint_code', [], () => {
-  return gulp.src(['src/**/*.js'])
-      .pipe(eslint())
-      .pipe(eslint.format())
-      .pipe(eslint.failAfterError());
+gulp.task('lint_code', () => {
+  return gulp
+    .src(['src/**/*.js'])
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
 });
 
-gulp.task('lint_tests', [], () => {
-  return gulp.src(['test/**/*.js', '!test/dist/*.js'])
-      .pipe(eslint())
-      .pipe(eslint.format())
-      .pipe(eslint.failAfterError());
+gulp.task('lint_tests', () => {
+  return gulp
+    .src(['test/**/*.js', '!test/dist/*.js'])
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
 });
 
-gulp.task('lint', ['lint_code', 'lint_tests']);
+gulp.task('lint', gulp.series('lint_code', 'lint_tests'));
 
 gulp.task('flow', (cb) => {
-  return exec('./node_modules/.bin/flow --show-all-errors', (err, stdout, stderr) => {
-    console.log(stdout);
-    console.log(stderr);
-    cb(err);
-  });
+  return exec(
+    './node_modules/.bin/flow --show-all-errors',
+    (err, stdout, stderr) => {
+      console.log(stdout);
+      console.log(stderr);
+      cb(err);
+    }
+  );
 });
 
-gulp.task('validate', ['lint', 'flow']);
+gulp.task('validate', gulp.series('lint', 'flow'));
 
 gulp.task('pre-test', () => {
-  return gulp.src(['src/**/*.js'])
-    .pipe(gulpIstanbul({ instrumenter: isparta.Instrumenter, includeAllSources: true }))
+  return gulp
+    .src(['lib/**/*.js'])
+    .pipe(
+      gulpIstanbul({
+        includeAllSources: true,
+      })
+    )
     .pipe(gulpIstanbul.hookRequire());
 });
 
-gulp.task('test_web', (done) => {
-  new Karma({
-    configFile: path.join(__dirname, '/karma/web.config.js'),
-  }, done).start();
+gulp.task('test_web', done => {
+  new Karma(
+    {
+      configFile: path.join(__dirname, '/karma/web.config.js'),
+      client: {
+        mocha: {
+          timeout: mochaTimeout
+        }
+      }
+    }, done).start();
 });
 
 gulp.task('test_node', () => {
   return gulp.src(['test/**/*.test.js', '!test/dist/*.js'], { read: false })
-    .pipe(mocha({ reporter: 'spec' }))
+    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
-gulp.task('test_titanium', ['unzip_titanium_sdk'], (done) => {
-  new Karma({
-    configFile: path.join(__dirname, '/karma/titanium.config.js'),
+gulp.task('test_titanium', gulp.series('unzip_titanium_sdk'), done => {
+  new Karma(
+    {
+      configFile: path.join(__dirname, '/karma/titanium.config.js'),
+      client: {
+        mocha: {
+          timeout: mochaTimeout
+        }
+      },
   }, done).start();
 });
 
 gulp.task('test_react-native', () => {
   return gulp.src('test/dist/react-native.test.js', { read: false })
-    .pipe(mocha({ reporter: 'spec' }))
+    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
 gulp.task('test_release', () => {
   return gulp.src('test/release/**/*.test.js', { read: false })
-    .pipe(mocha({ reporter: 'spec' }));
+    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout }));
 });
 
 gulp.task('test', (done) => {
   runSequence('pre-test', 'test_node', 'test_web', 'test_titanium', 'test_react-native', 'test_release', 'validate', () => {
-    process.exit();
+    done();
   });
 });
 

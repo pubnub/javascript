@@ -24,7 +24,7 @@ export default class {
   constructor(modules: NetworkingModules) {
     this._modules = {};
 
-    Object.keys(modules).forEach(key => {
+    Object.keys(modules).forEach((key) => {
       this._modules[key] = modules[key].bind(this);
     });
   }
@@ -44,7 +44,7 @@ export default class {
 
   nextOrigin(): string {
     // if a custom origin is supplied, use do not bother with shuffling subdomains
-    if (this._providedFQDN.indexOf('ps.') === -1) {
+    if (!this._providedFQDN.match(/ps\.pndsn\.com$/i)) {
       return this._providedFQDN;
     }
 
@@ -59,9 +59,9 @@ export default class {
     newSubDomain = this._currentSubDomain.toString();
 
     return this._providedFQDN.replace(
-      'ps.',
-      `ps${newSubDomain}.`
-    ); /* ensure ps. is used to replace, else https text will change */
+      'ps.pndsn.com',
+      `ps${newSubDomain}.pndsn.com`
+    );
   }
 
   hasModule(name: string) {
@@ -69,8 +69,8 @@ export default class {
   }
 
   // origin operations
-  shiftStandardOrigin(failover: boolean = false): string {
-    this._standardOrigin = this.nextOrigin(failover);
+  shiftStandardOrigin(): string {
+    this._standardOrigin = this.nextOrigin();
 
     return this._standardOrigin;
   }
@@ -86,6 +86,15 @@ export default class {
     callback: Function
   ) {
     return this._modules.post(params, body, endpoint, callback);
+  }
+
+  PATCH(
+    params: Object,
+    body: string,
+    endpoint: EndpointDefinition,
+    callback: Function
+  ) {
+    return this._modules.patch(params, body, endpoint, callback);
   }
 
   GET(params: Object, endpoint: EndpointDefinition, callback: Function) {

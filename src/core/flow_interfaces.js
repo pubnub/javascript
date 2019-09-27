@@ -32,7 +32,8 @@ export type NetworkingModules = {
   keepAlive: ?Function,
   sendBeacon: ?Function,
   get: Function,
-  post: Function
+  post: Function,
+  patch: Function
 }
 
 export type InternalSetupStruct = {
@@ -104,6 +105,7 @@ type SubscribeMessage = {
   shard: string,
   subscriptionMatch: string,
   channel: string,
+  messageType: number,
   payload: Object,
   flags: string,
   issuingClientId: string,
@@ -148,6 +150,36 @@ type MessageAnnouncement = {
 
   subscribedChannel: string, // deprecated
   actualChannel: string,     // deprecated
+
+  channel: string,
+  subscription: string,
+
+  timetoken: number | string,
+  userMetadata: Object,
+  publisher: string
+}
+
+type SignalAnnouncement = {
+
+  message: Object,
+
+  channel: string,
+  subscription: string,
+
+  timetoken: number | string,
+  userMetadata: Object,
+  publisher: string
+}
+
+type ObjectMessage = {
+  event: string,
+  type: string,
+  data: Object
+}
+
+type ObjectAnnouncement = {
+
+  message: ObjectMessage,
 
   channel: string,
   subscription: string,
@@ -369,6 +401,74 @@ type GrantArguments = {
   authKeys: Array<string>
 }
 
+// Base permissions object
+interface GrantTokenObject {
+  create: boolean,
+  read: boolean,
+  write: boolean,
+  manage: boolean,
+  delete: boolean,
+}
+
+interface GrantTokenInput {
+  ttl: number,
+  resources?: {
+    channels?: {
+      [key: String]: GrantTokenObject,
+    },
+    groups?: {
+      [key: String]: GrantTokenObject,
+    },
+    users?: {
+      [key: String]: GrantTokenObject,
+    },
+    spaces?: {
+      [key: String]: GrantTokenObject,
+    },
+  },
+  patterns?: {
+    channels?: {
+      [key: String]: GrantTokenObject,
+    },
+    groups?: {
+      [key: String]: GrantTokenObject,
+    },
+    users?: {
+      [key: String]: GrantTokenObject,
+    },
+    spaces?: {
+      [key: String]: GrantTokenObject,
+    },
+  },
+  meta?: Object
+}
+
+interface GrantTokenOutput extends GrantTokenInput {
+  version: number,
+  timestamp: number,
+  signature: Buffer
+}
+
+// token manager
+
+type TokensDefinition = {
+  user?: string,
+  space?: string,
+  users?: {
+    [key: String]: String
+  },
+  spaces?: {
+    [key: String]: String
+  }
+};
+
+type GetTokensInput= {
+  user?: boolean,
+  space?: boolean,
+  users?:  Array<string>,
+  spaces?:  Array<string>
+};
+
 // publish
 
 type PublishResponse = {
@@ -383,6 +483,233 @@ type PublishArguments = {
   meta: Object, // psv2 supports filtering by metadata
   replicate: boolean | null // indicates to server on replication status to other data centers.
 }
+
+// signal
+type SignalResponse = {
+  timetoken: number
+};
+
+type SignalArguments = {
+  message: Object | string | number | boolean,
+  channel: string
+}
+
+// Users Object
+
+type UserListInput = {
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+  }
+}
+
+type SingleUserInput = {
+  userId: string,
+  include?: {
+    customFields?: boolean,
+  }
+}
+
+type UsersObjectInput = {
+  id: string,
+  name: string,
+  externalId?: string,
+  profileUrl?: string,
+  email?: string,
+  custom?: Object,
+};
+
+type UserResponse = {
+  status: number,
+  data: {
+    ...UsersObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type UsersListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<UserResponse>,
+};
+
+// Spaces Object
+
+type SpaceListInput = {
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+  }
+}
+
+type SingleSpaceInput = {
+  spaceId: string,
+  include?: {
+    customFields?: boolean,
+  }
+}
+
+type SpacesObjectInput = {
+  id: string,
+  name: string,
+  description?: String,
+  custom?: Object,
+  include?: {
+    customFields?: boolean,
+  }
+};
+
+type SpacesResponse = {
+  status: number,
+  data: {
+    ...SpacesObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type SpaceResponse = {
+  status: number,
+  data: {
+    ...SpacesObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type SpacesListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<SpaceResponse>,
+};
+
+// Memberships Object
+
+type MembershipsInput = {
+  userId: string,
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+    spaceFields?: boolean,
+    customSpaceFields?: boolean,
+  }
+}
+
+type MembershipsObjectInput = {
+  id: string,
+  custom?: Object,
+  space?: SpacesResponse,
+};
+
+type MembershipsResponse = {
+  status: number,
+  data: {
+    ...MembershipsObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type MembershipsListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<MembershipsResponse>,
+};
+
+interface AddMemberships extends MembershipsInput {
+  addMemberships: Array<MembershipsObjectInput>,
+}
+
+interface UpdateMemberships extends MembershipsInput {
+  updateMemberships: Array<MembershipsObjectInput>,
+}
+
+interface RemoveMemberships extends MembershipsInput {
+  removeMemberships: Array<string>,
+}
+
+interface AddUpdateRemoveMemberships extends AddMemberships, UpdateMemberships, RemoveMemberships {}
+
+// Members Object
+
+type MembersInput = {
+  spaceId: string,
+  limit?: number,
+  page?: {
+    next?: string,
+    prev?: string,
+  },
+  include?: {
+    totalCount?: boolean,
+    customFields?: boolean,
+    userFields?: boolean,
+    customUserFields?: boolean,
+  }
+}
+
+type MembersObjectInput = {
+  id: string,
+  custom?: Object,
+  user?: UserResponse,
+};
+
+type MembersResponse = {
+  status: number,
+  data: {
+    ...MembersObjectInput,
+    created: string,
+    updated: string,
+    eTag: string,
+  },
+};
+
+type MembersListResponse = {
+  status: number,
+  totalCount: number,
+  next: String,
+  prev: String,
+  data: Array<MembersResponse>,
+};
+
+interface AddMembers extends MembersInput {
+  addMembers: Array<MembersObjectInput>,
+}
+
+interface UpdateMembers extends MembersInput {
+  updateMembers: Array<MembersObjectInput>,
+}
+
+interface RemoveMembers extends MembersInput {
+  removeMembers: Array<string>,
+}
+
+interface AddUpdateRemoveMembers extends AddMembers, UpdateMembers, RemoveMembers {}
 
 //
 

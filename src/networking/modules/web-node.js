@@ -21,7 +21,7 @@ function log(req: Object) {
   logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs); // eslint-disable-line no-console
   logger.log('-----'); // eslint-disable-line no-console
 
-  req.on('response', res => {
+  req.on('response', (res) => {
     let now = new Date().getTime();
     let elapsed = now - start;
     let timestampDone = new Date().toISOString();
@@ -126,6 +126,19 @@ export function post(
 ): superagent {
   let superagentConstruct = superagent
     .post(this.getStandardOrigin() + endpoint.url)
+    .query(params)
+    .send(body);
+  return xdr.call(this, superagentConstruct, endpoint, callback);
+}
+
+export function patch(
+  params: Object,
+  body: string,
+  endpoint: EndpointDefinition,
+  callback: Function
+): superagent {
+  let superagentConstruct = superagent
+    .patch(this.getStandardOrigin() + endpoint.url)
     .query(params)
     .send(body);
   return xdr.call(this, superagentConstruct, endpoint, callback);

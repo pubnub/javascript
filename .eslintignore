@@ -1,0 +1,9 @@
+coverage
+dist
+karma
+lib
+node_modules
+test/dist
+upload
+gulpfile.babel.js
+webpack.config.js

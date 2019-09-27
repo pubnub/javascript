@@ -3,6 +3,48 @@ changelog:
   - 
     changes: 
       - 
+        text: "Add support for auth tokens with Objects for Users, Spaces and Memberships"
+        type: bug
+    date: 2019-09-20
+    version: v4.26.0
+  - 
+    changes: 
+      - 
+        text: "Fix issue with subdomains ending in 'ps'"
+        type: bug
+    date: 2019-09-03
+    version: v4.25.2
+  - 
+    changes: 
+      - 
+        text: "Fix titanium build to support recent version"
+        type: bug
+    date: 2019-08-23
+    version: v4.25.1
+  - 
+    changes: 
+      - 
+        text: "Add Objects support for Users, Spaces and Memberships"
+        type: improvement
+    date: 2019-08-16
+    version: v4.25.0
+  - 
+    changes: 
+      - 
+        text: "Fix regression: 'PubNub is not a constructor' in Node.js"
+        type: bug
+    date: 2019-08-09
+    version: v4.24.6
+  - 
+    changes: 
+      - 
+        text: "Add Signals support"
+        type: improvement
+    date: 2019-08-07
+    version: v4.24.5
+  - 
+    changes: 
+      - 
         text: "Add minimum presence timeout"
         type: improvement
     date: 2019-07-26
@@ -591,6 +633,7 @@ features:
   access: 
     - ACCESS-GRANT
     - ACCESS-SECRET-KEY-ALL-ACCESS
+    - ACCESS-GRANT-TOKEN
   channel-groups: 
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -636,8 +679,40 @@ features:
     - SUBSCRIBE-WILDCARD
     - SUBSCRIBE-FILTER-EXPRESSION
     - SUBSCRIBE-PUBLISHER-UUID
+    - SUBSCRIBE-SIGNAL-LISTENER
+    - SUBSCRIBE-USER-LISTENER
+    - SUBSCRIBE-SPACE-LISTENER
+    - SUBSCRIBE-MEMBERSHIP-LISTENER
+  signal:
+    - SIGNAL-SEND
+  objects:
+    - OBJECS-GET-USER
+    - OBJECS-GET-USERS
+    - OBJECS-CREATE-USER
+    - OBJECS-UPDATE-USER
+    - OBJECS-DELETE-USER
+    - OBJECS-GET-SPACE
+    - OBJECS-GET-SPACES
+    - OBJECS-CREATE-SPACE
+    - OBJECS-UPDATE-SPACE
+    - OBJECS-DELETE-SPACE
+    - OBJECTS-GET-MEMBERSHIPS
+    - OBJECTS-JOIN-SPACES
+    - OBJECTS-UPDATE-MEMBERSHIPS
+    - OBJECTS-LEAVE-SPACES
+    - OBJECTS-GET-MEMBERS
+    - OBJECTS-ADD-MEMBERS
+    - OBJECTS-UPDATE-MEMBERS
+    - OBJECTS-REMOVE-MEMBERS
   time: 
     - TIME-TIME
+  token-management:
+    - TOKEN-PARSE-TOKEN
+    - TOKEN-SET-TOKEN
+    - TOKEN-SET-TOKENS
+    - TOKEN-GET-TOKEN
+    - TOKEN-GET-TOKENS
+    - TOKEN-CLEAR-TOKENS
 files: 
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
@@ -670,4 +745,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.24.4"
+version: "4.26.0"

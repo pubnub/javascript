@@ -10,4 +10,3 @@
 
 [options]
 esproposal.class_static_fields=enable
-unsafe.enable_getters_and_setters=true

@@ -13,4 +13,3 @@ export default class {
     this.storage[key] = value;
   }
 }
-

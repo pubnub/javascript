@@ -18,9 +18,17 @@ rules:
   no-underscore-dangle: 0
   no-prototype-builtins: 0
   import/no-extraneous-dependencies: 0
+  import/no-useless-path-segments: 0
+  import/named: 0
   class-methods-use-this: 0
   no-await-in-loop: 0
   no-multi-assign: 0
-  arrow-parens: [2, "as-needed"]
+  arrow-parens: [2, "always"]
   operator-linebreak: ["error", "after"]
   no-mixed-operators: 0
+  lines-between-class-members: 0
+  no-multi-spaces: 0
+  object-curly-newline: 0
+  prefer-destructuring: 0
+  no-restricted-globals: 0
+  space-before-function-paren: ["error", "never"]

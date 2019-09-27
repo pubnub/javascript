@@ -1,9 +1,15 @@
 /* @flow */
-import { MessageAnnouncement, StatusAnnouncement, CallbackStruct, PresenceAnnouncement } from '../flow_interfaces';
+import {
+  MessageAnnouncement,
+  StatusAnnouncement,
+  SignalAnnouncement,
+  ObjectAnnouncement,
+  CallbackStruct,
+  PresenceAnnouncement,
+} from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 
 export default class {
-
   _listeners: Array<CallbackStruct>;
 
   constructor() {
@@ -46,6 +52,30 @@ export default class {
     });
   }
 
+  announceSignal(announce: SignalAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.signal) listener.signal(announce);
+    });
+  }
+
+  announceUser(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.user) listener.user(announce);
+    });
+  }
+
+  announceSpace(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.space) listener.space(announce);
+    });
+  }
+
+  announceMembership(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.membership) listener.membership(announce);
+    });
+  }
+
   announceNetworkUp() {
     let networkStatus: StatusAnnouncement = {};
     networkStatus.category = categoryConstants.PNNetworkUpCategory;
@@ -57,5 +87,4 @@ export default class {
     networkStatus.category = categoryConstants.PNNetworkDownCategory;
     this.announceStatus(networkStatus);
   }
-
 }
