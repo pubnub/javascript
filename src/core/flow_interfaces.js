@@ -10,7 +10,12 @@ declare module 'superagent' {
 export type CallbackStruct = {
   status: Function,
   presence: Function,
-  message: Function
+  message: Function,
+  signal: Function,
+  messageAction: Function,
+  user: Function,
+  space: Function,
+  membership: Function
 }
 
 export type ProxyStruct = {
@@ -77,8 +82,9 @@ type SupportedParams = {
   uuid: EndpointKeyDefinition,
 }
 
-export type endpointDefinition = {
+export type EndpointDefinition = {
   params: SupportedParams,
+  headers?: Object,
   timeout: number,
   url: string
 }
@@ -171,6 +177,18 @@ type SignalAnnouncement = {
   publisher: string
 }
 
+type MessageActionAnnouncement = {
+  data: PublishedMessageAction,
+  event: string,
+
+  channel: string,
+  subscription: string,
+
+  timetoken: number | string,
+  userMetadata: Object,
+  publisher: string
+}
+
 type ObjectMessage = {
   event: string,
   type: string,
@@ -216,6 +234,7 @@ type FetchHistoryArguments = {
   start: number | string, // start timetoken for history fetching
   end: number | string, // end timetoken for history fetching
   includeTimetoken: boolean, // include time token for each history call
+  includeMeta: boolean, // include message meta for each history entry
   reverse: boolean,
   count: number
 }
@@ -231,11 +250,14 @@ type FetchMessagesArguments = {
   channels: string, // fetch history from a channel
   start: number | string, // start timetoken for history fetching
   end: number | string, // end timetoken for history fetching
+  includeMeta: boolean, // include message meta for each history entry
+  includeMessageActions: boolean, // include message actions for each history entry
   count: number
 }
 
 type HistoryItem = {
   timetoken: number | string | null,
+  meta: Object | null,
   entry: any,
 }
 
@@ -492,6 +514,52 @@ type SignalResponse = {
 type SignalArguments = {
   message: Object | string | number | boolean,
   channel: string
+}
+
+// Actions
+
+interface MessageAction {
+  type: string,
+  value: string,
+}
+
+interface PublishedMessageAction extends MessageAction {
+  messageTimetoken: string,
+  actionTimetoken: string,
+  uuid: string,
+}
+
+interface AddMessageActionInput {
+  messageTimetoken: string,
+  channel: string,
+  action: MessageAction,
+}
+
+interface AddMessageActionResponse {
+  data: PublishedMessageAction,
+}
+
+interface RemoveMessageActionInput {
+  messageTimetoken: string,
+  actionTimetoken: string,
+  channel: string,
+}
+
+interface RemoveMessageActionResponse {
+  data: {},
+}
+
+interface GetMessageActionsInput {
+  channel: string,
+  start?: number | string,
+  end?: number | string,
+  limit?: number,
+}
+
+interface GetMessageActionsResponse {
+  data: Array<PublishedMessageAction>,
+  start?: string,
+  end?: string,
 }
 
 // Users Object

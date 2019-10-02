@@ -101,6 +101,8 @@ function xdr(
       status.error = true;
       status.category = this._detectErrorCategory(status);
       return callback(status, null);
+    } else if (parsedResponse.error && parsedResponse.error.message) {
+      status.errorData = parsedResponse.error;
     }
 
     return callback(status, parsedResponse);
@@ -114,6 +116,7 @@ export function get(
 ): superagent {
   let superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
+    .set(endpoint.headers)
     .query(params);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
@@ -127,6 +130,7 @@ export function post(
   let superagentConstruct = superagent
     .post(this.getStandardOrigin() + endpoint.url)
     .query(params)
+    .set(endpoint.headers)
     .send(body);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
@@ -140,6 +144,7 @@ export function patch(
   let superagentConstruct = superagent
     .patch(this.getStandardOrigin() + endpoint.url)
     .query(params)
+    .set(endpoint.headers)
     .send(body);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
@@ -151,6 +156,7 @@ export function del(
 ): superagent {
   let superagentConstruct = superagent
     .delete(this.getStandardOrigin() + endpoint.url)
+    .set(endpoint.headers)
     .query(params);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }

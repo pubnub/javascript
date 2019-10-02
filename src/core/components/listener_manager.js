@@ -3,6 +3,7 @@ import {
   MessageAnnouncement,
   StatusAnnouncement,
   SignalAnnouncement,
+  MessageActionAnnouncement,
   ObjectAnnouncement,
   CallbackStruct,
   PresenceAnnouncement,
@@ -55,6 +56,12 @@ export default class {
   announceSignal(announce: SignalAnnouncement) {
     this._listeners.forEach((listener) => {
       if (listener.signal) listener.signal(announce);
+    });
+  }
+
+  announceMessageAction(announce: MessageActionAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.messageAction) listener.messageAction(announce);
     });
   }
 

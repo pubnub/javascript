@@ -261,8 +261,8 @@ describe('grant token endpoint', () => {
           }
         },
         (status) => {
-          assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
+          assert.equal(status.error, false);
           done();
         }
       );
