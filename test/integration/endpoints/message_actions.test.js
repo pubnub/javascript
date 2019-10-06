@@ -108,9 +108,6 @@ describe('message actions endpoints', () => {
       publishKey: publishKey,
       uuid: 'myUUID',
       authKey: 'myAuthKey',
-      // ssl: false,
-      // origin: 'ingress.bronze.aws-pdx-1.ps.pn',
-      // logVerbosity: true,
     });
   });
 
