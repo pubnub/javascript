@@ -6,7 +6,6 @@ import {
   ModulesInject,
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
-import type {FetchHistoryArguments} from "../../flow_interfaces";
 
 
 export function getOperation(): string {

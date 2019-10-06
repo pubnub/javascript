@@ -46,7 +46,7 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(): Object {
-  return {}
+  return {};
 }
 
 export function handleResponse(

@@ -53,16 +53,14 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(): Object {
-  return {}
+  return {};
 }
 
 export function postPayload(
   modules: ModulesInject,
   incomingParams: AddMessageActionInput
 ): string {
-  let { type, value } = incomingParams.action;
-
-  return { type: type, value: value };
+  return incomingParams.action;
 }
 
 export function handleResponse(

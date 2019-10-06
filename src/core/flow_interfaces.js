@@ -177,18 +177,6 @@ type SignalAnnouncement = {
   publisher: string
 }
 
-type MessageActionAnnouncement = {
-  data: PublishedMessageAction,
-  event: string,
-
-  channel: string,
-  subscription: string,
-
-  timetoken: number | string,
-  userMetadata: Object,
-  publisher: string
-}
-
 type ObjectMessage = {
   event: string,
   type: string,
@@ -527,6 +515,18 @@ interface PublishedMessageAction extends MessageAction {
   messageTimetoken: string,
   actionTimetoken: string,
   uuid: string,
+}
+
+type MessageActionAnnouncement = {
+  data: PublishedMessageAction,
+  event: string,
+
+  channel: string,
+  subscription: string,
+
+  timetoken: number | string,
+  userMetadata: Object,
+  publisher: string
 }
 
 interface AddMessageActionInput {
