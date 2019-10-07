@@ -26,6 +26,12 @@ import * as presenceGetStateConfig from './endpoints/presence/get_state';
 import * as presenceSetStateConfig from './endpoints/presence/set_state';
 import * as presenceHereNowConfig from './endpoints/presence/here_now';
 
+// Actions API
+
+import * as addMessageActionEndpointConfig from './endpoints/actions/add_message_action';
+import * as removeMessageActionEndpointConfig from './endpoints/actions/remove_message_action';
+import * as getMessageActionEndpointConfig from './endpoints/actions/get_message_actions';
+
 // Objects API
 
 import * as createUserEndpointConfig from './endpoints/users/create_user';
@@ -100,6 +106,11 @@ export default class {
   presence: Function;
   unsubscribe: Function;
   unsubscribeAll: Function;
+
+  // Actions API
+  addMessageAction: Function;
+  removeMessageAction: Function;
+  getMessageActions: Function;
 
   // Objects API
 
@@ -302,6 +313,26 @@ export default class {
       this,
       modules,
       fetchMessagesEndpointConfig
+    );
+
+    // Actions API
+
+    this.addMessageAction = endpointCreator.bind(
+      this,
+      modules,
+      addMessageActionEndpointConfig
+    );
+
+    this.removeMessageAction = endpointCreator.bind(
+      this,
+      modules,
+      removeMessageActionEndpointConfig
+    );
+
+    this.getMessageActions = endpointCreator.bind(
+      this,
+      modules,
+      getMessageActionEndpointConfig
     );
 
     // Objects API

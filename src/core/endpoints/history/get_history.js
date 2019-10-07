@@ -64,6 +64,7 @@ export function prepareParams(
     reverse,
     count = 100,
     stringifiedTimeToken = false,
+    includeMeta = false,
   } = incomingParams;
   let outgoingParams: Object = {
     include_token: 'true',
@@ -74,6 +75,7 @@ export function prepareParams(
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (reverse != null) outgoingParams.reverse = reverse.toString();
+  if (includeMeta) outgoingParams.include_meta = 'true';
 
   return outgoingParams;
 }
@@ -94,6 +96,10 @@ export function handleResponse(
         timetoken: serverHistoryItem.timetoken,
         entry: __processMessage(modules, serverHistoryItem.message),
       };
+
+      if (serverHistoryItem.meta) {
+        item.meta = serverHistoryItem.meta;
+      }
 
       response.messages.push(item);
     });

@@ -6,6 +6,7 @@ import ReconnectionManager from '../components/reconnection_manager';
 import DedupingManager from '../components/deduping_manager';
 import utils from '../utils';
 import {
+  MessageActionAnnouncement,
   MessageAnnouncement,
   SignalAnnouncement,
   ObjectAnnouncement,
@@ -673,6 +674,25 @@ export default class {
         } else if (message.payload.type === 'membership') {
           this._listenerManager.announceMembership(announce);
         }
+      } else if (message.messageType === 3) {
+        // this is a message action
+        let announce: MessageActionAnnouncement = {};
+        announce.channel = channel;
+        announce.subscription = subscriptionMatch;
+        announce.timetoken = publishMetaData.publishTimetoken;
+        announce.publisher = message.issuingClientId;
+
+        announce.data = {
+          messageTimetoken: message.payload.data.messageTimetoken,
+          actionTimetoken: message.payload.data.actionTimetoken,
+          type: message.payload.data.type,
+          uuid: message.issuingClientId,
+          value: message.payload.data.value,
+        };
+
+        announce.event = message.payload.event;
+
+        this._listenerManager.announceMessageAction(announce);
       } else {
         let announce: MessageAnnouncement = {};
         announce.channel = null;

@@ -138,7 +138,8 @@ export default function(modules, endpoint, ...args) {
   let callInstance;
   let networkingParams = { url,
     operation: endpoint.getOperation(),
-    timeout: endpoint.getRequestTimeout(modules)
+    timeout: endpoint.getRequestTimeout(modules),
+    headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {}
   };
 
   outgoingParams.uuid = config.UUID;

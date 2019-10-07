@@ -25,7 +25,7 @@ describe('keep-alive agent', () => {
     const networking = setupNetwork(false, false);
     const superagentGetSpy = sinon.spy(superagent, 'get');
 
-    networking.GET({}, { url: '/time/0' }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
     assert(superagentGetSpy.called, 'superagent not called with get');
     assert(superagentGetSpy.returnValues[0], 'request instance not created');
     assert(!superagentGetSpy.returnValues[0]._agent, 'keep-alive agent should not be created');
@@ -37,7 +37,7 @@ describe('keep-alive agent', () => {
     const networking = setupNetwork(false, true);
     const superagentGetSpy = sinon.spy(superagent, 'get');
 
-    networking.GET({}, { url: '/time/0' }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
     assert(superagentGetSpy.returnValues[0]._agent, 'keep-alive agent not created');
     assert(superagentGetSpy.returnValues[0]._agent.defaultPort !== 443, 'keep-alive agent should access TLS (80) port');
 
@@ -48,8 +48,8 @@ describe('keep-alive agent', () => {
     const networking = setupNetwork(false, true);
     const superagentGetSpy = sinon.spy(superagent, 'get');
 
-    networking.GET({}, { url: '/time/0' }, () => {});
-    networking.GET({}, { url: '/time/0' }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
     assert(superagentGetSpy.returnValues[0]._agent === superagentGetSpy.returnValues[1]._agent, 'same user-agent should be used');
 
     superagentGetSpy.restore();
@@ -59,7 +59,7 @@ describe('keep-alive agent', () => {
     const networking = setupNetwork(true, true);
     const superagentGetSpy = sinon.spy(superagent, 'get');
 
-    networking.GET({}, { url: '/time/0' }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
     assert(superagentGetSpy.returnValues[0]._agent, 'keep-alive agent not created');
     assert(superagentGetSpy.returnValues[0]._agent.defaultPort === 443, 'keep-alive agent should access SSL (443) port');
 
@@ -70,8 +70,8 @@ describe('keep-alive agent', () => {
     const networking = setupNetwork(true, true);
     const superagentGetSpy = sinon.spy(superagent, 'get');
 
-    networking.GET({}, { url: '/time/0' }, () => {});
-    networking.GET({}, { url: '/time/0' }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
+    networking.GET({}, { url: '/time/0', headers: {} }, () => {});
     assert(superagentGetSpy.returnValues[0]._agent === superagentGetSpy.returnValues[1]._agent, 'same user-agent should be used');
 
     superagentGetSpy.restore();
