@@ -1,4 +1,17 @@
-﻿## [v4.26.1](https://github.com/pubnub/javascript/tree/v4.26.1)
+﻿## [v4.27.0](https://github.com/pubnub/javascript/tree/v4.27.0)
+  September-27-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.26.1...v4.27.0)
+
+
+
+- ⭐ Add Message Actions API support which allow to: add, remove and fetch previously added action  
+- ⭐ Add new arguments to fetch messages function which allow to fetch previously added actions and message metadata  
+- ⭐ Add new handler which can be used to track message actions addition / removal events
+
+
+## [v4.26.1](https://github.com/pubnub/javascript/tree/v4.26.1)
   September-27-2019
 
 
