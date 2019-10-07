@@ -13,6 +13,11 @@ export default {
   PNPublishOperation: 'PNPublishOperation',
   PNSignalOperation: 'PNSignalOperation',
 
+  // Actions API
+  PNAddMessageActionOperation: 'PNAddActionOperation',
+  PNRemoveMessageActionOperation: 'PNRemoveMessageActionOperation',
+  PNGetMessageActionsOperation: 'PNGetMessageActionsOperation',
+
   // Objects API
 
   PNCreateUserOperation: 'PNCreateUserOperation',
