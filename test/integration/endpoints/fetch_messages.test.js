@@ -1,4 +1,4 @@
-/* global describe, beforeEach, afterEach, it, before, after */
+/* global describe, beforeEach, afterEach, it, after */
 /* eslint no-console: 0 */
 
 import assert from 'assert';
@@ -18,7 +18,7 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
     }
 
     client.publish(payload, (status, response) => {
-      publishCompleted++;
+      publishCompleted += 1;
 
       if (!status.error) {
         messages.push({ message: payload.message, timetoken: response.timetoken });
@@ -27,13 +27,12 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
         console.error('Publish did fail:', status);
       }
 
-        if (publishCompleted < count) {
-          publish(publishCompleted);
-        } else if (publishCompleted === count) {
-          completion(messages);
-        }
+      if (publishCompleted < count) {
+        publish(publishCompleted);
+      } else if (publishCompleted === count) {
+        completion(messages);
       }
-    );
+    });
   };
 
   publish(publishCompleted);
@@ -49,12 +48,12 @@ function addActionsInChannel(client: PubNub, count: Number, messageTimetokens: A
   let actionsAdded = 0;
   let actions = [];
 
-  for (let messageIdx = 0; messageIdx < messageTimetokens.length; messageIdx++) {
+  for (let messageIdx = 0; messageIdx < messageTimetokens.length; messageIdx += 1) {
     const messageTimetoken = messageTimetokens[messageIdx];
 
-    for (let messageActionIdx = 0; messageActionIdx < count; messageActionIdx++) {
+    for (let messageActionIdx = 0; messageActionIdx < count; messageActionIdx += 1) {
       /** @type MessageAction */
-      const action = { type: types[(messageActionIdx + 1)%3], value: values[(messageActionIdx + 1)%10] };
+      const action = { type: types[(messageActionIdx + 1) % 3], value: values[(messageActionIdx + 1) % 10] };
 
       actionsToAdd.push({ messageTimetoken, action });
     }
@@ -66,7 +65,7 @@ function addActionsInChannel(client: PubNub, count: Number, messageTimetokens: A
     client.addMessageAction(
       { channel, messageTimetoken, action },
       (status, response) => {
-        actionsAdded++;
+        actionsAdded += 1;
 
         if (!status.error) {
           actions.push(response.data);
@@ -107,8 +106,8 @@ describe('fetch messages endpoints', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
-      subscribeKey: subscribeKey,
-      publishKey: publishKey,
+      subscribeKey,
+      publishKey,
       uuid: 'myUUID',
     });
   });
@@ -140,7 +139,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text: 'hey1',
                 },
-                subscription: null,
                 timetoken: '11',
               },
               {
@@ -148,7 +146,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text: 'hey2',
                 },
-                subscription: null,
                 timetoken: '12',
               },
             ],
@@ -158,7 +155,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text: 'hey3',
                 },
-                subscription: null,
                 timetoken: '21',
               },
               {
@@ -166,7 +162,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text: 'hey2',
                 },
-                subscription: null,
                 timetoken: '22',
               },
             ],
@@ -206,7 +201,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text: 'hey',
                 },
-                subscription: null,
                 timetoken: '11',
               },
               {
@@ -214,7 +208,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text: 'hey',
                 },
-                subscription: null,
                 timetoken: '12',
               },
             ],
@@ -224,7 +217,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text2: 'hey2',
                 },
-                subscription: null,
                 timetoken: '21',
               },
               {
@@ -232,7 +224,6 @@ describe('fetch messages endpoints', () => {
                 message: {
                   text2: 'hey2',
                 },
-                subscription: null,
                 timetoken: '22',
               },
             ],
@@ -265,7 +256,7 @@ describe('fetch messages endpoints', () => {
     try {
       pubnub.fetchMessages(
         { channels: ['channelA', 'channelB'], includeMessageActions: true },
-        (status, response) => {}
+        () => {}
       );
     } catch (error) {
       assert.equal(error.message, 'History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.');
@@ -275,13 +266,13 @@ describe('fetch messages endpoints', () => {
     assert(errorCatched);
   });
 
-  it('supports actions', (done) => {
+  it('supports actions (stored as \'data\' field)', (done) => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 2;
     const expectedActionsCount = 4;
 
     publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
-      const messageTimetokens = messages.map((message) => message.timetoken );
+      const messageTimetokens = messages.map((message) => message.timetoken);
 
       addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel, (actions) => {
         setTimeout(() => {
@@ -294,7 +285,7 @@ describe('fetch messages endpoints', () => {
             Object.keys(actionsByType).forEach((actionType) => {
               Object.keys(actionsByType[actionType]).forEach((actionValue) => {
                 let actionFound = false;
-                historyActionsCount++;
+                historyActionsCount += 1;
 
                 actions.forEach((action) => {
                   if (action.value === actionValue) {
@@ -308,8 +299,49 @@ describe('fetch messages endpoints', () => {
 
             assert.equal(historyActionsCount, expectedActionsCount);
             assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
-            assert.equal(fetchedMessages[fetchedMessages.length - 1].timetoken,
-                         messageTimetokens[messageTimetokens.length - 1]);
+            assert.equal(fetchedMessages[fetchedMessages.length - 1].timetoken, messageTimetokens[messageTimetokens.length - 1]);
+
+            done();
+          });
+        }, 2000);
+      });
+    });
+  }).timeout(60000);
+
+  it('supports actions (stored as \'actions\' field)', (done) => {
+    const channel = PubNub.generateUUID();
+    const expectedMessagesCount = 2;
+    const expectedActionsCount = 4;
+
+    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
+      const messageTimetokens = messages.map((message) => message.timetoken);
+
+      addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel, (actions) => {
+        setTimeout(() => {
+          pubnub.fetchMessages({ channels: [channel], includeMessageActions: true }, (status, response) => {
+            assert.equal(status.error, false);
+            const fetchedMessages = response.channels[channel];
+            const actionsByType = fetchedMessages[0].actions;
+            let historyActionsCount = 0;
+
+            Object.keys(actionsByType).forEach((actionType) => {
+              Object.keys(actionsByType[actionType]).forEach((actionValue) => {
+                let actionFound = false;
+                historyActionsCount += 1;
+
+                actions.forEach((action) => {
+                  if (action.value === actionValue) {
+                    actionFound = true;
+                  }
+                });
+
+                assert.equal(actionFound, true);
+              });
+            });
+
+            assert.equal(historyActionsCount, expectedActionsCount);
+            assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
+            assert.equal(fetchedMessages[fetchedMessages.length - 1].timetoken, messageTimetokens[messageTimetokens.length - 1]);
 
             done();
           });

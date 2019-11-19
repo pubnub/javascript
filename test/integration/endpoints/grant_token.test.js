@@ -8,6 +8,7 @@ import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
 describe('grant token endpoint', () => {
+  let originalVersionFunction = null;
   let pubnub;
   let clock;
 
@@ -21,6 +22,7 @@ describe('grant token endpoint', () => {
   after(() => {
     clock.restore();
     nock.enableNetConnect();
+    pubnub._config.getVersion = originalVersionFunction;
   });
 
   beforeEach(() => {
@@ -32,6 +34,11 @@ describe('grant token endpoint', () => {
       uuid: 'myUUID',
       autoNetworkDetection: false,
     });
+
+    if (originalVersionFunction === null) {
+      originalVersionFunction = pubnub._config.getVersion;
+      pubnub._config.getVersion = () => 'testVersion';
+    }
   });
 
   describe('#grantToken', () => {
@@ -44,7 +51,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.CLurDTyT2OL1mMlQEUHEwfXqXvjSJ_NHTgJvgkG_5ek',
+            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
           .reply(
             200,
@@ -75,7 +82,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.CLurDTyT2OL1mMlQEUHEwfXqXvjSJ_NHTgJvgkG_5ek',
+            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
           .reply(
             200,
@@ -111,7 +118,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.CLurDTyT2OL1mMlQEUHEwfXqXvjSJ_NHTgJvgkG_5ek',
+            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
           .reply(
             200,
@@ -147,7 +154,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.CLurDTyT2OL1mMlQEUHEwfXqXvjSJ_NHTgJvgkG_5ek',
+            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
           .reply(
             200,
@@ -183,7 +190,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.CLurDTyT2OL1mMlQEUHEwfXqXvjSJ_NHTgJvgkG_5ek',
+            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
           .reply(
             200,
@@ -220,7 +227,7 @@ describe('grant token endpoint', () => {
           uuid: 'myUUID',
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           timestamp: 1571360790,
-          signature: 'v2.CLurDTyT2OL1mMlQEUHEwfXqXvjSJ_NHTgJvgkG_5ek',
+          signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
         })
         .reply(
           200,

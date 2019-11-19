@@ -98,11 +98,13 @@ export function handleResponse(
     (serverResponse.channels[channelName] || []).forEach((messageEnvelope) => {
       let announce: MessageAnnouncement = {};
       announce.channel = channelName;
-      announce.subscription = null;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);
 
       if (messageEnvelope.actions) {
+        announce.actions = messageEnvelope.actions;
+
+        // This should be kept for few updates for existing clients consistency.
         announce.data = messageEnvelope.actions;
       }
       if (messageEnvelope.meta) {

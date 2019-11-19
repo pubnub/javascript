@@ -59,7 +59,7 @@ export function handleResponse(
   getMessageActionsResponse: Object
 ): GetMessageActionsResponse {
   /** @type GetMessageActionsResponse */
-  let response = { data: getMessageActionsResponse.data };
+  let response = { data: getMessageActionsResponse.data, start: null, end: null };
 
   if (response.data.length) {
     response.end = response.data[response.data.length - 1].actionTimetoken;
