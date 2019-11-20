@@ -1,10 +1,10 @@
-/* global describe, beforeEach, afterEach, it, before, after, jasmine */
+/* global describe, beforeEach, afterEach, it, after */
 /* eslint no-console: 0 */
 
-import PubNub from '../../../src/node/index';
-import utils from "../../utils";
 import assert from 'assert';
 import nock from 'nock';
+import PubNub from '../../../src/node/index';
+import utils from '../../utils';
 
 
 function publishMessages(client: PubNub, count: Number, channel: String, completion: Function) {
@@ -17,7 +17,7 @@ function publishMessages(client: PubNub, count: Number, channel: String, complet
     client.publish(
       { message, channel },
       (status, response) => {
-        publishCompleted++;
+        publishCompleted += 1;
 
         if (!status.error) {
           timetokens.push(response.timetoken);
@@ -47,10 +47,10 @@ function addActions(client: PubNub, count: Number, messageTimetokens: Array<Numb
   let actionsAdded = 0;
   let timetokens = [];
 
-  for (let messageIdx = 0; messageIdx < messageTimetokens.length; messageIdx++) {
+  for (let messageIdx = 0; messageIdx < messageTimetokens.length; messageIdx += 1) {
     const messageTimetoken = messageTimetokens[messageIdx];
 
-    for (let messageActionIdx = 0; messageActionIdx < count; messageActionIdx++) {
+    for (let messageActionIdx = 0; messageActionIdx < count; messageActionIdx += 1) {
       /** @type MessageAction */
       const action = { type: types[(messageActionIdx + 1) % 3], value: values[(messageActionIdx + 1) % 10] };
 
@@ -64,7 +64,7 @@ function addActions(client: PubNub, count: Number, messageTimetokens: Array<Numb
     client.addMessageAction(
       { channel, messageTimetoken, action },
       (status, response) => {
-        actionsAdded++;
+        actionsAdded += 1;
 
         if (!status.error) {
           timetokens.push(response.data.actionTimetoken);
@@ -104,8 +104,8 @@ describe('message actions endpoints', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
-      subscribeKey: subscribeKey,
-      publishKey: publishKey,
+      subscribeKey,
+      publishKey,
       uuid: 'myUUID',
       authKey: 'myAuthKey',
     });
@@ -117,13 +117,13 @@ describe('message actions endpoints', () => {
         nock.disableNetConnect();
         const scope = utils
           .createNock()
-            .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
-            .reply(200, {});
+          .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
+          .reply(200, {});
 
         pubnub.addMessageAction({
-            channel: 'test-channel',
-            messageTimetoken: '1234567890',
-          })
+          channel: 'test-channel',
+          messageTimetoken: '1234567890',
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing Action');
@@ -135,15 +135,15 @@ describe('message actions endpoints', () => {
         nock.disableNetConnect();
         const scope = utils
           .createNock()
-            .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
-            .reply(200, {});
+          .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
+          .reply(200, {});
         const action = { value: 'test value' };
 
         pubnub.addMessageAction({
-            channel: 'test-channel',
-            messageTimetoken: '1234567890',
-            action,
-          })
+          channel: 'test-channel',
+          messageTimetoken: '1234567890',
+          action,
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing Action.type');
@@ -155,15 +155,15 @@ describe('message actions endpoints', () => {
         nock.disableNetConnect();
         const scope = utils
           .createNock()
-            .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
-            .reply(200, {});
+          .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
+          .reply(200, {});
         const action = { type: PubNub.generateUUID(), value: 'test value' };
 
         pubnub.addMessageAction({
-            channel: 'test-channel',
-            messageTimetoken: '1234567890',
-            action,
-          })
+          channel: 'test-channel',
+          messageTimetoken: '1234567890',
+          action,
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Action.type value exceed maximum length of 15');
@@ -175,15 +175,15 @@ describe('message actions endpoints', () => {
         nock.disableNetConnect();
         const scope = utils
           .createNock()
-            .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
-            .reply(200, {});
+          .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
+          .reply(200, {});
         const action = { type: 'custom' };
 
         pubnub.addMessageAction({
-            channel: 'test-channel',
-            messageTimetoken: '1234567890',
-            action,
-          })
+          channel: 'test-channel',
+          messageTimetoken: '1234567890',
+          action,
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing Action.value');
@@ -195,14 +195,14 @@ describe('message actions endpoints', () => {
         nock.disableNetConnect();
         const scope = utils
           .createNock()
-            .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/`)
-            .reply(200, {});
+          .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/`)
+          .reply(200, {});
         const action = { type: 'custom', value: 'test value' };
 
         pubnub.addMessageAction({
-            channel: 'test-channel',
-            action,
-          })
+          channel: 'test-channel',
+          action,
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing message timetoken');
@@ -214,14 +214,14 @@ describe('message actions endpoints', () => {
         nock.disableNetConnect();
         const scope = utils
           .createNock()
-            .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
-            .reply(200, {});
+          .post(`/v1/message-actions/${subscribeKey}/channel/test-channel/message/1234567890`)
+          .reply(200, {});
         const action = { type: 'custom', value: 'test value' };
 
         pubnub.addMessageAction({
-            messageTimetoken: '1234567890',
-            action,
-          })
+          messageTimetoken: '1234567890',
+          action,
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing message channel');
@@ -235,9 +235,9 @@ describe('message actions endpoints', () => {
       const messageAction = { type: 'custom', value: PubNub.generateUUID() };
       const channel = PubNub.generateUUID();
 
-      publishMessages(pubnub,1, channel, (timetokens) => {
+      publishMessages(pubnub, 1, channel, (timetokens) => {
         pubnub.addMessageAction(
-          { channel: channel, messageTimetoken: timetokens[0], action: messageAction },
+          { channel, messageTimetoken: timetokens[0], action: messageAction },
           (status, response) => {
             assert.equal(status.error, false);
             assert.equal(response.data.type, messageAction.type);
@@ -263,23 +263,23 @@ describe('message actions endpoints', () => {
           auth: 'myAuthKey'
         })
         .reply(207, {
-          "status": 207,
-          "data": {
-            "type": "reaction",
-            "value": "smiley_face",
-            "uuid": "user-456",
-            "actionTimetoken": '15610547826970050',
-            "messageTimetoken": '15610547826969050'
+          status: 207,
+          data: {
+            type: 'reaction',
+            value: 'smiley_face',
+            uuid: 'user-456',
+            actionTimetoken: '15610547826970050',
+            messageTimetoken: '15610547826969050'
           },
-          "error": {
-            "message": "Stored but failed to publish message action.",
-            "source": "actions"
+          error: {
+            message: 'Stored but failed to publish message action.',
+            source: 'actions'
           }
         });
 
       pubnub.addMessageAction(
         { channel: 'test-channel', messageTimetoken: '1234567890', action: { type: 'custom', value: 'test' } },
-         (status, response) => {
+        (status) => {
           assert.equal(scope.isDone(), true);
           assert.equal(status.statusCode, 207);
           assert(status.errorData.message);
@@ -300,7 +300,7 @@ describe('message actions endpoints', () => {
           if (status.category === 'PNConnectedCategory') {
             pubnub.publish(
               { channel, message: { hello: 'test' }, sendByPost: true },
-              (status, response) => {
+              (publishStatus, response) => {
                 messageTimetoken = response.timetoken;
 
                 pubnub.addMessageAction(
@@ -337,9 +337,9 @@ describe('message actions endpoints', () => {
           .reply(200, {});
 
         pubnub.removeMessageAction({
-            channel: 'test-channel',
-            actionTimetoken: '1234567890',
-          })
+          channel: 'test-channel',
+          actionTimetoken: '1234567890',
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing message timetoken');
@@ -356,9 +356,9 @@ describe('message actions endpoints', () => {
           .reply(200, {});
 
         pubnub.removeMessageAction({
-            channel: 'test-channel',
-            messageTimetoken: '1234567890',
-          })
+          channel: 'test-channel',
+          messageTimetoken: '1234567890',
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing action timetoken');
@@ -375,9 +375,9 @@ describe('message actions endpoints', () => {
           .reply(200, {});
 
         pubnub.removeMessageAction({
-            messageTimetoken: '1234567890',
-            actionTimetoken: '12345678901',
-          })
+          messageTimetoken: '1234567890',
+          actionTimetoken: '12345678901',
+        })
           .catch((err) => {
             assert.equal(scope.isDone(), false);
             assert.equal(err.status.message, 'Missing message channel');
@@ -398,13 +398,13 @@ describe('message actions endpoints', () => {
 
             pubnub.removeMessageAction(
               { channel, actionTimetoken: actionTimetokens[0], messageTimetoken: messageTimetokens[0] },
-              (status) => {
-                assert.equal(status.error, false);
+              (removeMessageStatus) => {
+                assert.equal(removeMessageStatus.error, false);
 
                 setTimeout(() => {
-                  pubnub.getMessageActions({ channel }, (status, response) => {
-                    assert.equal(status.error, false);
-                    assert.equal(response.data.length, 0);
+                  pubnub.getMessageActions({ channel }, (getMessagesStatus, getMessagesResponse) => {
+                    assert.equal(getMessagesStatus.error, false);
+                    assert.equal(getMessagesResponse.data.length, 0);
 
                     done();
                   });
@@ -425,9 +425,9 @@ describe('message actions endpoints', () => {
             status: (status) => {
               if (status.category === 'PNConnectedCategory') {
                 pubnub.removeMessageAction(
-                  {channel, actionTimetoken: actionTimetokens[0], messageTimetoken: messageTimetokens[0]},
-                  (status) => {
-                    assert.equal(status.error, false);
+                  { channel, actionTimetoken: actionTimetokens[0], messageTimetoken: messageTimetokens[0] },
+                  (removeMessagesStatus) => {
+                    assert.equal(removeMessagesStatus.error, false);
                   }
                 );
               }
@@ -504,8 +504,8 @@ describe('message actions endpoints', () => {
 
           pubnub.getMessageActions({ channel, limit: halfSize }, (status, response) => {
             assert.equal(status.error, false);
-            const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
-            const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
+            let firstFetchedActionTimetoken = response.data[0].actionTimetoken;
+            let lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
             assert.equal(firstFetchedActionTimetoken, middlePublishedActionTimetoken);
             assert.equal(lastFetchedActionTimetoken, lastPublishedActionTimetoken);
             assert.equal(response.data.length, halfSize);
@@ -514,18 +514,19 @@ describe('message actions endpoints', () => {
 
             pubnub.getMessageActions(
               { channel, start: middlePublishedActionTimetoken, limit: halfSize },
-              (status, response) => {
-                assert.equal(status.error, false);
-                const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
-                const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
+              (getMessageActionsStatus, getMessageActionsResponse) => {
+                assert.equal(getMessageActionsStatus.error, false);
+                firstFetchedActionTimetoken = getMessageActionsResponse.data[0].actionTimetoken;
+                lastFetchedActionTimetoken = getMessageActionsResponse.data[getMessageActionsResponse.data.length - 1].actionTimetoken;
                 assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
                 assert.equal(lastFetchedActionTimetoken, middleMinusOnePublishedActionTimetoken);
-                assert.equal(response.data.length, halfSize);
-                assert.equal(response.start, firstPublishedActionTimetoken);
-                assert.equal(response.end, middleMinusOnePublishedActionTimetoken);
+                assert.equal(getMessageActionsResponse.data.length, halfSize);
+                assert.equal(getMessageActionsResponse.start, firstPublishedActionTimetoken);
+                assert.equal(getMessageActionsResponse.end, middleMinusOnePublishedActionTimetoken);
 
                 done();
-              });
+              }
+            );
           });
         });
       });
