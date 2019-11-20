@@ -3,6 +3,22 @@ changelog:
   -
     changes:
       -
+        text: "Make changes in fetch_messages endpoint to move message actions (if any) for message from 'data' to 'actions' property (old 'data' will be in place for few updates to not break existing clients)."
+        type: bug
+      -
+        text: "fix PAMv3 tests mocked signature"
+        type: improvement
+      -
+        text: "fix lint warnings for tests and code"
+        type: improvement
+      -
+        text: "fix gulp build so that failures in test and lint will trigger failure in travis"
+        type: improvement
+    date: 2019-11-20
+    version: v4.27.1
+  -
+    changes:
+      -
         text: "Add Message Actions API support which allow to: add, remove and fetch previously added actions"
         type: feature
       -
@@ -773,4 +789,4 @@ supported-platforms:
       - "Ubuntu 14.04 and above"
       - "Windows 7, 8, 10"
     version: "Pubnub Javascript for Node"
-version: "4.27.0"
+version: "4.27.1"

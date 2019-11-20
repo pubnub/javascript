@@ -1,4 +1,4 @@
-/* global describe, beforeEach, afterEach, it, before, after */
+/* global describe, beforeEach, afterEach, it, after */
 /* eslint no-console: 0 */
 
 import assert from 'assert';
@@ -18,22 +18,21 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
     }
 
     client.publish(payload, (status, response) => {
-        publishCompleted++;
+      publishCompleted += 1;
 
-        if (!status.error) {
-          messages.push({ message: payload.message, timetoken: response.timetoken });
-          messages = messages.sort((left, right) => left.timetoken - right.timetoken);
-        } else {
-          console.error('Publish did fail:', status);
-        }
-
-        if (publishCompleted < count) {
-          publish(publishCompleted);
-        } else if (publishCompleted === count) {
-          completion(messages);
-        }
+      if (!status.error) {
+        messages.push({ message: payload.message, timetoken: response.timetoken });
+        messages = messages.sort((left, right) => left.timetoken - right.timetoken);
+      } else {
+        console.error('Publish did fail:', status);
       }
-    );
+
+      if (publishCompleted < count) {
+        publish(publishCompleted);
+      } else if (publishCompleted === count) {
+        completion(messages);
+      }
+    });
   };
 
   publish(publishCompleted);
@@ -59,8 +58,8 @@ describe('history endpoints', () => {
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
-      subscribeKey: subscribeKey,
-      publishKey: publishKey,
+      subscribeKey,
+      publishKey,
       uuid: 'myUUID',
     });
   });

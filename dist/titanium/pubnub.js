@@ -1,4 +1,4 @@
-/*! 4.27.0 / Consumer  */
+/*! 4.27.1 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -471,7 +471,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.0';
+      return '4.27.1';
     }
   }, {
     key: "_decideUUID",

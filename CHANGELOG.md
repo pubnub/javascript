@@ -1,5 +1,19 @@
-﻿## [v4.27.0](https://github.com/pubnub/javascript/tree/v4.27.0)
-  September-27-2019
+﻿## [v4.27.1](https://github.com/pubnub/javascript/tree/v4.27.1)
+  November-20-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.0...v4.27.1)
+
+
+
+- ⭐ Make changes in fetch_messages endpoint to move message actions (if any) for message from 'data' to 'actions' property (old 'data' will be in place for few updates to not break existing clients).
+- ⭐ fix PAMv3 tests mocked signature
+- ⭐ fix lint warnings for tests and code
+- ⭐ fix gulp build so that failures in test and lint will trigger failure in travis
+
+
+## [v4.27.0](https://github.com/pubnub/javascript/tree/v4.27.0)
+  October-08-2019
 
 
   [Full Changelog](https://github.com/pubnub/javascript/compare/v4.26.1...v4.27.0)

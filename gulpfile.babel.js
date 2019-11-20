@@ -23,6 +23,7 @@ const unzip = require('gulp-unzip');
 // increase mocha timeout from default of 2000 to allow long running async tests to complete
 const mochaTimeout = 5000;
 
+gulp.on('error', process.exit.bind(process, 1));
 gulp.task('clean', () => {
   return gulp
     .src(['lib', 'dist', 'coverage', 'upload'], { read: false, allowEmpty: true })
