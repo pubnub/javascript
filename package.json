@@ -75,7 +75,7 @@
     "karma-phantomjs-launcher": "^1.0.4",
     "karma-sinon-chai": "^2.0.2",
     "karma-spec-reporter": "0.0.32",
-    "mocha": "^3.5.3",
+    "mocha": "^6.2.2",
     "nock": "^9.6.1",
     "node-fetch": "^1.7.3",
     "phantomjs-prebuilt": "^2.1.16",
