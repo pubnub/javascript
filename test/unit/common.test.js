@@ -6,6 +6,11 @@ import PubNub from '../../src/node/index';
 import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 
 describe('#core / mounting point', () => {
+  it('should have default heartbeat interval undefined', () => {
+    let pn = new PubNub({});
+    assert(pn._config.getHeartbeatInterval() === undefined);
+  });
+
   it('supports UUID generation', () => {
     assert.equal(lilUUID.isUUID(PubNub.generateUUID()), true);
   });

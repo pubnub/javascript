@@ -249,8 +249,6 @@ export default class {
       );
     }
 
-    this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
-
     return this;
   }
 
