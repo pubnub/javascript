@@ -27,6 +27,7 @@ describe('#components/reconnection_manger', () => {
       subscribeKey: 'mySubKey',
       publishKey: 'myPublishKey',
       uuid: 'myUUID',
+      heartbeatInterval: 149,
     });
     clock = sinon.useFakeTimers();
   });

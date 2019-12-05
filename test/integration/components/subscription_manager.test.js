@@ -28,6 +28,7 @@ describe('#components/subscription_manager', () => {
       publishKey: 'myPublishKey',
       uuid: 'myUUID',
       autoNetworkDetection: false,
+      heartbeatInterval: 149,
     });
     pubnubWithPassingHeartbeats = new PubNub({
       subscribeKey: 'mySubKey',
@@ -35,6 +36,7 @@ describe('#components/subscription_manager', () => {
       uuid: 'myUUID',
       announceSuccessfulHeartbeats: true,
       autoNetworkDetection: false,
+      heartbeatInterval: 149,
     });
     pubnubWithLimitedQueue = new PubNub({
       subscribeKey: 'mySubKey',
@@ -42,6 +44,7 @@ describe('#components/subscription_manager', () => {
       uuid: 'myUUID',
       requestMessageCountThreshold: 1,
       autoNetworkDetection: false,
+      heartbeatInterval: 149,
     });
   });
 
@@ -554,7 +557,7 @@ describe('#components/subscription_manager', () => {
     }, 250);
   });
 
-  it('supports deduping on shawllow queue', (done) => {
+  it('supports deduping on shallow queue', (done) => {
     pubnub._config.dedupeOnSubscribe = true;
     pubnub._config.maximumCacheSize = 1;
     let messageCount = 0;
