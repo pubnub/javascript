@@ -1,4 +1,15 @@
-﻿## [v4.27.1](https://github.com/pubnub/javascript/tree/v4.27.1)
+﻿## [v4.27.2](https://github.com/pubnub/javascript/tree/v4.27.2)
+  December-05-2019
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.1...v4.27.2)
+
+
+
+- ⭐ disable presence heartbeats by default
+
+
+## [v4.27.1](https://github.com/pubnub/javascript/tree/v4.27.1)
   November-20-2019
 
 

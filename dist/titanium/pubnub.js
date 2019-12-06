@@ -1,4 +1,4 @@
-/*! 4.27.1 / Consumer  */
+/*! 4.27.2 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -416,7 +416,6 @@ var _default = function () {
         console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
       }
 
-      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
       return this;
     }
   }, {
@@ -471,7 +470,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.1';
+      return '4.27.2';
     }
   }, {
     key: "_decideUUID",
@@ -5203,7 +5202,9 @@ function prepareParams(modules, incomingParams) {
 
 function handleResponse(modules, getMessageActionsResponse) {
   var response = {
-    data: getMessageActionsResponse.data
+    data: getMessageActionsResponse.data,
+    start: null,
+    end: null
   };
 
   if (response.data.length) {
@@ -8253,11 +8254,11 @@ function handleResponse(modules, serverResponse) {
     (serverResponse.channels[channelName] || []).forEach(function (messageEnvelope) {
       var announce = {};
       announce.channel = channelName;
-      announce.subscription = null;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);
 
       if (messageEnvelope.actions) {
+        announce.actions = messageEnvelope.actions;
         announce.data = messageEnvelope.actions;
       }
 

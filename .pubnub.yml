@@ -3,6 +3,14 @@ changelog:
   -
     changes:
       -
+        text: "disable presence heartbeats by default"
+        type: bug
+      -
+    date: 2019-12-05
+    version: v4.27.2
+  -
+    changes:
+      -
         text: "Make changes in fetch_messages endpoint to move message actions (if any) for message from 'data' to 'actions' property (old 'data' will be in place for few updates to not break existing clients)."
         type: bug
       -
@@ -766,8 +774,8 @@ scm: github.com/pubnub/javascript
 supported-platforms:
   -
     frameworks:
-      - "Angular 1"
-      - "Angular 2 using Javascript Plain"
+      - "Angular JS"
+      - "Angular 2 and up"
     platforms:
       - "Safari 10 and up"
       - "Mozilla Firefox 51 and up"
@@ -778,15 +786,10 @@ supported-platforms:
     version: "Pubnub Javascript for Web"
   -
     editors:
-      - 0.12
-      - 4
-      - 5
-      - 6
-      - 7
-      - 8
+      - "4 and up"
     platforms:
       - "OSX 10.12 and up"
-      - "Ubuntu 14.04 and above"
-      - "Windows 7, 8, 10"
+      - "Ubuntu 14.04 and up"
+      - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.27.1"
+version: "4.27.2"
