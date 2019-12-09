@@ -54,7 +54,6 @@
     "gulp-clean": "^0.4.0",
     "gulp-eslint": "^6.0.0",
     "gulp-exec": "^4.0.0",
-    "gulp-flowtype": "^1.0.0",
     "gulp-gzip": "^1.4.2",
     "gulp-istanbul": "git+https://github.com/raipubnub/gulp-istanbul.git#gulp4",
     "gulp-mocha": "^7.0.2",
