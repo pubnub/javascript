@@ -8,18 +8,27 @@ export function getOperation(): string {
 }
 
 export function validateParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs) {
-  let { device, pushGateway, channels } = incomingParams;
+  let { device, pushGateway, channels, topic } = incomingParams;
   let { config } = modules;
 
   if (!device) return 'Missing Device ID (device)';
-  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm, apns or apns2)';
   if (!channels || channels.length === 0) return 'Missing Channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
+
+  if (pushGateway === 'apns2') {
+    if (!topic) return 'Missing APNS2 topic';
+  }
 }
 
 export function getURL(modules: ModulesInject, incomingParams: ModifyDeviceArgs): string {
-  let { device } = incomingParams;
+  let { device, pushGateway } = incomingParams;
   let { config } = modules;
+
+  if (pushGateway === 'apns2') {
+    return `/v2/push/sub-key/${config.subscribeKey}/devices-apns2/${device}`;
+  }
+
   return `/v1/push/sub-key/${config.subscribeKey}/devices/${device}`;
 }
 
@@ -32,8 +41,15 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs): Object {
-  let { pushGateway, channels = [] } = incomingParams;
-  return { type: pushGateway, add: channels.join(',') };
+  let { pushGateway, channels = [], environment = 'development', topic } = incomingParams;
+  let parameters = { type: pushGateway, add: channels.join(',') };
+
+  if (pushGateway === 'apns2') {
+    Object.assign(parameters, { environment, topic });
+    delete parameters.type;
+  }
+
+  return parameters;
 }
 
 export function handleResponse(): Object {
