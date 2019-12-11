@@ -45,7 +45,7 @@ export function prepareParams(modules: ModulesInject, incomingParams: ModifyDevi
   let parameters = { type: pushGateway, remove: channels.join(',') };
 
   if (pushGateway === 'apns2') {
-    Object.assign(parameters, { environment, topic });
+    parameters = Object.assign({}, parameters, { environment, topic });
     delete parameters.type;
   }
 
