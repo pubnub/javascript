@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it, before, after */
+/* global describe, beforeEach, it */
 
 import assert from 'assert';
 import PubNub from '../../src/node/index';
@@ -119,9 +119,6 @@ describe('#notifications helper', () => {
 
       assert.throws(() => {
         builder.buildPayload(['apns2', 'fcm']);
-      }, {
-        name: 'ReferenceError',
-        message: 'APNS2 configuration is missing'
       });
     });
   });
@@ -133,7 +130,7 @@ describe('#notifications helper', () => {
       platformPayloadStorage = {};
     });
 
-    it('should set default payload structure', function () {
+    it('should set default payload structure', () => {
       let builder = new APNSNotificationPayload(platformPayloadStorage);
 
       assert(builder);
@@ -143,17 +140,18 @@ describe('#notifications helper', () => {
       assert.equal(Object.keys(platformPayloadStorage.aps.alert).length, 0);
     });
 
-    it('should set notification \'title\' and \'body\' with constructor', function () {
+    it('should set notification \'title\' and \'body\' with constructor', () => {
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
 
       let builder = new APNSNotificationPayload(platformPayloadStorage, expectedTitle, expectedBody);
 
+      assert(builder);
       assert.equal(platformPayloadStorage.aps.alert.title, expectedTitle);
       assert.equal(platformPayloadStorage.aps.alert.body, expectedBody);
     });
 
-    it('should set \'subtitle\'', function () {
+    it('should set \'subtitle\'', () => {
       let expectedSubtitle = PubNub.generateUUID();
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -162,7 +160,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.aps.alert.subtitle, expectedSubtitle);
     });
 
-    it('should not set \'subtitle\' if value is empty', function () {
+    it('should not set \'subtitle\' if value is empty', () => {
       let expectedSubtitle = '';
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -171,7 +169,7 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.aps.alert.subtitle);
     });
 
-    it('should set \'body\'', function () {
+    it('should set \'body\'', () => {
       let expectedBody = PubNub.generateUUID();
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -180,7 +178,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.aps.alert.body, expectedBody);
     });
 
-    it('should not set \'body\' if value is empty', function () {
+    it('should not set \'body\' if value is empty', () => {
       let expectedBody = '';
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -189,7 +187,7 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.aps.alert.body);
     });
 
-    it('should set \'badge\'', function () {
+    it('should set \'badge\'', () => {
       let expectedBadged = 16;
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -198,14 +196,14 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.aps.badge, expectedBadged);
     });
 
-    it('should not set \'badge\' if value is empty', function () {
+    it('should not set \'badge\' if value is empty', () => {
       let builder = new APNSNotificationPayload(platformPayloadStorage);
       builder.badge = null;
 
       assert(!platformPayloadStorage.aps.badge);
     });
 
-    it('should set \'sound\'', function () {
+    it('should set \'sound\'', () => {
       let expectedSound = PubNub.generateUUID();
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -214,7 +212,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.aps.sound, expectedSound);
     });
 
-    it('should not set \'sound\' if value is empty', function () {
+    it('should not set \'sound\' if value is empty', () => {
       let expectedSound = '';
 
       let builder = new APNSNotificationPayload(platformPayloadStorage);
@@ -223,13 +221,13 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.aps.sound);
     });
 
-    it('should return null when no data provided', function () {
+    it('should return null when no data provided', () => {
       let builder = new APNSNotificationPayload(platformPayloadStorage);
 
       assert.equal(builder.toObject(), null);
     });
 
-    it('should set \'content-available\' when set silenced', function () {
+    it('should set \'content-available\' when set silenced', () => {
       let builder = new APNSNotificationPayload(platformPayloadStorage, PubNub.generateUUID(), PubNub.generateUUID());
       builder.sound = PubNub.generateUUID();
       builder.badge = 20;
@@ -241,7 +239,7 @@ describe('#notifications helper', () => {
       assert(!builder.toObject().aps.alert);
     });
 
-    it('should return valid payload object', function () {
+    it('should return valid payload object', () => {
       let expectedSubtitle = PubNub.generateUUID();
       let expectedTitle = PubNub.generateUUID();
       let expectedSound = PubNub.generateUUID();
@@ -263,7 +261,7 @@ describe('#notifications helper', () => {
       assert.deepEqual(builder.toObject(), expectedPayload);
     });
 
-    it('should return valid payload for APNS over HTTP/2', function () {
+    it('should return valid payload for APNS over HTTP/2', () => {
       let expectedSubtitle = PubNub.generateUUID();
       let expectedTitle = PubNub.generateUUID();
       let expectedSound = PubNub.generateUUID();
@@ -303,17 +301,18 @@ describe('#notifications helper', () => {
       platformPayloadStorage = {};
     });
 
-    it('should set notification \'title\' and \'body\' with constructor', function () {
+    it('should set notification \'title\' and \'body\' with constructor', () => {
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage, expectedTitle, expectedBody);
 
+      assert(builder);
       assert.equal(platformPayloadStorage.title, expectedTitle);
       assert.equal(platformPayloadStorage.back_content, expectedBody);
     });
 
-    it('should set \'back_title\' when \'subtitle\' passed', function () {
+    it('should set \'back_title\' when \'subtitle\' passed', () => {
       let expectedSubtitle = PubNub.generateUUID();
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -322,7 +321,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.back_title, expectedSubtitle);
     });
 
-    it('should set \'back_title\'', function () {
+    it('should set \'back_title\'', () => {
       let expectedBackTitle = PubNub.generateUUID();
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -331,7 +330,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.back_title, expectedBackTitle);
     });
 
-    it('should not set \'back_title\' if value is empty', function () {
+    it('should not set \'back_title\' if value is empty', () => {
       let expectedBackTitle = '';
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -340,7 +339,7 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.back_title);
     });
 
-    it('should set \'back_content\' when \'body\' passed', function () {
+    it('should set \'back_content\' when \'body\' passed', () => {
       let expectedBody = PubNub.generateUUID();
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -349,7 +348,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.back_content, expectedBody);
     });
 
-    it('should set \'back_content\' ', function () {
+    it('should set \'back_content\' ', () => {
       let expectedBackContent = PubNub.generateUUID();
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -358,7 +357,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.back_content, expectedBackContent);
     });
 
-    it('should not set \'back_content\' if value is empty', function () {
+    it('should not set \'back_content\' if value is empty', () => {
       let expectedBackContent = '';
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -367,7 +366,7 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.back_content);
     });
 
-    it('should set \'count\' when \'badge\' passed', function () {
+    it('should set \'count\' when \'badge\' passed', () => {
       let expectedBadge = 26;
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -376,7 +375,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.count, expectedBadge);
     });
 
-    it('should set \'count\' ', function () {
+    it('should set \'count\' ', () => {
       let expectedCount = 26;
 
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
@@ -385,20 +384,20 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.count, expectedCount);
     });
 
-    it('should not set \'count\' if value is empty', function () {
+    it('should not set \'count\' if value is empty', () => {
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
       builder.count = null;
 
       assert(!platformPayloadStorage.count);
     });
 
-    it('should return null when no data provided', function () {
+    it('should return null when no data provided', () => {
       let builder = new MPNSNotificationPayload(platformPayloadStorage);
 
       assert.equal(builder.toObject(), null);
     });
 
-    it('should return valid payload object', function () {
+    it('should return valid payload object', () => {
       let expectedSubtitle = PubNub.generateUUID();
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
@@ -427,7 +426,7 @@ describe('#notifications helper', () => {
       platformPayloadStorage = {};
     });
 
-    it('should set default payload structure', function () {
+    it('should set default payload structure', () => {
       let builder = new FCMNotificationPayload(platformPayloadStorage);
 
       assert(builder);
@@ -435,17 +434,18 @@ describe('#notifications helper', () => {
       assert(platformPayloadStorage.data);
     });
 
-    it('should set notification \'title\' and \'body\' with constructor', function () {
+    it('should set notification \'title\' and \'body\' with constructor', () => {
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
 
-      new FCMNotificationPayload(platformPayloadStorage, expectedTitle, expectedBody);
+      let builder = new FCMNotificationPayload(platformPayloadStorage, expectedTitle, expectedBody);
 
+      assert(builder);
       assert.equal(platformPayloadStorage.notification.title, expectedTitle);
       assert.equal(platformPayloadStorage.notification.body, expectedBody);
     });
 
-    it('should not set \'subtitle\' because it is not supported' , function () {
+    it('should not set \'subtitle\' because it is not supported', () => {
       let expectedSubtitle = PubNub.generateUUID();
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -454,7 +454,7 @@ describe('#notifications helper', () => {
       assert.equal(Object.keys(platformPayloadStorage.notification).length, 0);
     });
 
-    it('should set \'body\'', function () {
+    it('should set \'body\'', () => {
       let expectedBody = PubNub.generateUUID();
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -463,7 +463,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.notification.body, expectedBody);
     });
 
-    it('should not set \'body\' if value is empty', function () {
+    it('should not set \'body\' if value is empty', () => {
       let expectedBody = '';
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -472,14 +472,14 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.notification.body);
     });
 
-    it('should not set \'badge\' because it is not supported' , function () {
+    it('should not set \'badge\' because it is not supported', () => {
       let builder = new FCMNotificationPayload(platformPayloadStorage);
       builder.badge = 30;
 
       assert.equal(Object.keys(platformPayloadStorage.notification).length, 0);
     });
 
-    it('should set \'sound\'', function () {
+    it('should set \'sound\'', () => {
       let expectedSound = PubNub.generateUUID();
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -488,7 +488,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.notification.sound, expectedSound);
     });
 
-    it('should not set \'sound\' if value is empty', function () {
+    it('should not set \'sound\' if value is empty', () => {
       let expectedSound = '';
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -497,7 +497,7 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.notification.sound);
     });
 
-    it('should set \'icon\'', function () {
+    it('should set \'icon\'', () => {
       let expectedIcon = PubNub.generateUUID();
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -506,7 +506,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.notification.icon, expectedIcon);
     });
 
-    it('should not set \'icon\' if value is empty', function () {
+    it('should not set \'icon\' if value is empty', () => {
       let expectedIcon = '';
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -515,7 +515,7 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.notification.icon);
     });
 
-    it('should set \'tag\'', function () {
+    it('should set \'tag\'', () => {
       let expectedTag = PubNub.generateUUID();
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -524,7 +524,7 @@ describe('#notifications helper', () => {
       assert.equal(platformPayloadStorage.notification.tag, expectedTag);
     });
 
-    it('should not set \'tag\' if value is empty', function () {
+    it('should not set \'tag\' if value is empty', () => {
       let expectedTag = '';
 
       let builder = new FCMNotificationPayload(platformPayloadStorage);
@@ -533,13 +533,13 @@ describe('#notifications helper', () => {
       assert(!platformPayloadStorage.notification.tag);
     });
 
-    it('should return null when no data provided', function () {
+    it('should return null when no data provided', () => {
       let builder = new FCMNotificationPayload(platformPayloadStorage);
 
       assert.equal(builder.toObject(), null);
     });
 
-    it('should move \'notification\' under \'data\' when set silenced', function () {
+    it('should move \'notification\' under \'data\' when set silenced', () => {
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
       let expectedSound = PubNub.generateUUID();
@@ -557,7 +557,7 @@ describe('#notifications helper', () => {
       assert.deepEqual(builder.toObject().data.notification, expectedNotification);
     });
 
-    it('should return valid payload object', function () {
+    it('should return valid payload object', () => {
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
       let expectedSound = PubNub.generateUUID();

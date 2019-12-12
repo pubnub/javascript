@@ -1,5 +1,5 @@
 /* @flow */
-import { APNS2Configuration, APNS2Target } from '../flow_interfaces'
+import { APNS2Configuration, APNS2Target } from '../flow_interfaces';
 
 class BaseNotificationPayload {
   _subtitle: ?string;
@@ -183,7 +183,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
       version: string,
       collapse_id?: string,
       expiration?: string
-    } = { 'auth_method': 'token', targets, 'version': 'v2' };
+    } = { auth_method: 'token', targets, version: 'v2' };
 
     if (collapseId && collapseId.length) {
       objectifiedConfiguration.collapse_id = collapseId;
@@ -291,7 +291,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
   }
 
   get body() {
-    return self.backContent;
+    return this.backContent;
   }
 
   set body(value: ?string) {
@@ -398,7 +398,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
      * and put it into it if required.
      */
     if (Object.keys(this._payload).length > 2) {
-      let { notification, data: initialData, ...additionalData } = this._payload;
+      let { notification: initialNotification, data: initialData, ...additionalData } = this._payload;
 
       data = Object.assign({}, data, additionalData);
     }
