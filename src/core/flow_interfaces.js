@@ -296,34 +296,46 @@ type ListChannelsResponse = {
 
 // push
 
+export type APNS2Target = {
+  topic: string,
+  environment?: 'development' | 'production',
+  excludedDevices?: Array<string>
+}
+
+export type APNS2Configuration = {
+  collapseId?: string,
+  date?: Date,
+  targets: Array<APNS2Target>
+}
+
 type ProvisionDeviceArgs = {
   operation: 'add' | 'remove',
   pushGateway: 'gcm' | 'apns' | 'apns2' | 'mpns',
-  environment: 'development' | 'production',
-  topic: string,
+  environment?: 'development' | 'production',
+  topic?: string,
   device: string,
   channels: Array<string>
 };
 
 type ModifyDeviceArgs = {
   pushGateway: 'gcm' | 'apns' | 'apns2' | 'mpns',
-  environment: 'development' | 'production',
-  topic: string,
+  environment?: 'development' | 'production',
+  topic?: string,
   device: string,
   channels: Array<string>
 };
 
 type ListChannelsArgs = {
   pushGateway: 'gcm' | 'apns' | 'apns2' | 'mpns',
-  environment: 'development' | 'production',
-  topic: string,
+  environment?: 'development' | 'production',
+  topic?: string,
   device: string,
 };
 
 type RemoveDeviceArgs = {
   pushGateway: 'gcm' | 'apns' | 'apns2' | 'mpns',
-  environment: 'development' | 'production',
-  topic: string,
+  environment?: 'development' | 'production',
+  topic?: string,
   device: string,
 };
 

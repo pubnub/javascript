@@ -13,11 +13,8 @@ export function validateParams(modules: ModulesInject, incomingParams: ListChann
 
   if (!device) return 'Missing Device ID (device)';
   if (!pushGateway) return 'Missing GW Type (pushGateway: gcm, apns or apns2)';
+  if (pushGateway === 'apns2' && !topic) return 'Missing APNS2 topic';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
-
-  if (pushGateway === 'apns2') {
-    if (!topic) return 'Missing APNS2 topic';
-  }
 }
 
 export function getURL(modules: ModulesInject, incomingParams: ListChannelsArgs): string {
