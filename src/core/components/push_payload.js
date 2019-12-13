@@ -176,7 +176,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
       targets.push(this._objectFromAPNSTarget(target));
     });
 
-    const { collapseId, date } = configuration;
+    const { collapseId, expirationDate } = configuration;
     let objectifiedConfiguration: {
       auth_method: string,
       targets: Array<Object>,
@@ -189,8 +189,8 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
       objectifiedConfiguration.collapse_id = collapseId;
     }
 
-    if (date) {
-      objectifiedConfiguration.expiration = date.toISOString();
+    if (expirationDate) {
+      objectifiedConfiguration.expiration = expirationDate.toISOString();
     }
 
     return objectifiedConfiguration;

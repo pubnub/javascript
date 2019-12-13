@@ -304,7 +304,7 @@ export type APNS2Target = {
 
 export type APNS2Configuration = {
   collapseId?: string,
-  date?: Date,
+  expirationDate?: Date,
   targets: Array<APNS2Target>
 }
 
