@@ -49,6 +49,29 @@ describe('push endpoints', () => {
       );
     });
 
+    it('supports addition of multiple channels for apple (APNS2)', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice')
+        .query({
+          add: 'a,b',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          environment: 'development',
+          topic: 'com.test.apns',
+          uuid: 'myUUID',
+        })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.push.addChannels(
+        { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
+        (status) => {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });
+
     it('supports addition of multiple channels for microsoft', (done) => {
       const scope = utils
         .createNock()
@@ -108,6 +131,29 @@ describe('push endpoints', () => {
 
       pubnub.push.listChannels(
         { device: 'coolDevice', pushGateway: 'apns' },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });
+
+    it('supports channel listing for apple (APNS2)', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/coolDevice')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          environment: 'production',
+          topic: 'com.test.apns',
+          uuid: 'myUUID',
+        })
+        .reply(200, '["ch1", "ch2", "ch3"]');
+
+      pubnub.push.listChannels(
+        { device: 'coolDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
         (status, response) => {
           assert.equal(status.error, false);
           assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
@@ -185,6 +231,29 @@ describe('push endpoints', () => {
       );
     });
 
+    it('supports removal of multiple channels for apple (APNS2)', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice')
+        .query({
+          remove: 'a,b',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          environment: 'development',
+          topic: 'com.test.apns',
+          uuid: 'myUUID',
+        })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.push.removeChannels(
+        { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
+        (status) => {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });
+
     it('supports removal of multiple channels for microsoft', (done) => {
       const scope = utils
         .createNock()
@@ -249,6 +318,28 @@ describe('push endpoints', () => {
 
       pubnub.push.deleteDevice(
         { device: 'niceDevice', pushGateway: 'apns' },
+        (status) => {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });
+
+    it('supports removal of device for apple (APNS2)', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice/remove')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          environment: 'production',
+          topic: 'com.test.apns',
+          uuid: 'myUUID',
+        })
+        .reply(200, '[1, "Modified Channels"]');
+
+      pubnub.push.deleteDevice(
+        { device: 'niceDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
         (status) => {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
