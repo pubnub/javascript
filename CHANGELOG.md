@@ -1,4 +1,16 @@
-﻿## [v4.27.2](https://github.com/pubnub/javascript/tree/v4.27.2)
+﻿## [v4.27.3](https://github.com/pubnub/javascript/tree/v4.27.3)
+  January-06-2020
+
+
+  [Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.2...v4.27.3)
+
+
+
+- ⭐ Support for APNS2 Push API
+- ⭐ Restore functionality to set heartbeat interval when presence timeout is set below the default
+
+
+## [v4.27.2](https://github.com/pubnub/javascript/tree/v4.27.2)
   December-05-2019
 
 

@@ -11,6 +11,43 @@ describe('#core / mounting point', () => {
     assert(pn._config.getHeartbeatInterval() === undefined);
   });
 
+  it('should have correct heartbeat interval set when reducing presence timeout', () => {
+    let pn = new PubNub({});
+    let presenceTimeout = 200;
+    let expectedHeartBeat = presenceTimeout / 2 - 1;
+    pn._config.setPresenceTimeout(presenceTimeout);
+    assert(pn._config.getHeartbeatInterval() === expectedHeartBeat);
+  });
+
+  it('should support multiple pnsdk suffix', () => {
+    let pn = new PubNub({});
+    let suffix1 = 'suffix1/0.1';
+    let suffix2 = 'suffix2/0.2';
+
+    pn._addPnsdkSuffix('a', suffix1);
+    pn._addPnsdkSuffix('b', suffix2);
+
+    assert(pn._config._getPnsdkSuffix(' ') === ' suffix1/0.1 suffix2/0.2');
+  });
+
+  it('should replace duplicate pnsdk suffix by name', () => {
+    let pn = new PubNub({});
+    let suffix1 = 'suffix1/0.1';
+    let suffix2 = 'suffix2/0.2';
+    let suffix3 = 'suffix3/0.3';
+
+    pn._addPnsdkSuffix('a', suffix1);
+    pn._addPnsdkSuffix('b', suffix2);
+    pn._addPnsdkSuffix('a', suffix3); // duplicate name should replace
+
+    assert(pn._config._getPnsdkSuffix(' ') === ' suffix3/0.3 suffix2/0.2');
+  });
+
+  it('should default to empty pnsdk suffix', () => {
+    let pn = new PubNub({});
+    assert(pn._config._getPnsdkSuffix(' ') === '');
+  });
+
   it('supports UUID generation', () => {
     assert.equal(lilUUID.isUUID(PubNub.generateUUID()), true);
   });

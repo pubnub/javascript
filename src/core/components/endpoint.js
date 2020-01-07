@@ -56,6 +56,12 @@ function generatePNSDK(config: Config): string {
 
   base += `/${config.getVersion()}`;
 
+  let pnsdkSuffix = config._getPnsdkSuffix(' ');
+
+  if (pnsdkSuffix.length > 0) {
+    base += pnsdkSuffix;
+  }
+
   return base;
 }
 

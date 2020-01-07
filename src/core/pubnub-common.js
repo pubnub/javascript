@@ -514,6 +514,10 @@ export default class {
     return this._config.getVersion();
   }
 
+  _addPnsdkSuffix(name: string, suffix: string) {
+    this._config._addPnsdkSuffix(name, suffix);
+  }
+
   // network hooks to indicate network changes
   networkDownDetected() {
     this._listenerManager.announceNetworkDown();

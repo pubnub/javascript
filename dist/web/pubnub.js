@@ -1,4 +1,4 @@
-/*! 4.27.2 / Consumer  */
+/*! 4.27.3 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -312,6 +312,8 @@ var _default = function () {
 
     _defineProperty(this, "_useSendBeacon", void 0);
 
+    _defineProperty(this, "_PNSDKSuffix", void 0);
+
     _defineProperty(this, "requestMessageCountThreshold", void 0);
 
     _defineProperty(this, "restore", void 0);
@@ -324,6 +326,7 @@ var _default = function () {
 
     _defineProperty(this, "customDecrypt", void 0);
 
+    this._PNSDKSuffix = {};
     this._db = db;
     this.instanceId = "pn-".concat(_uuid["default"].createUUID());
     this.secretKey = setup.secretKey || setup.secret_key;
@@ -361,7 +364,12 @@ var _default = function () {
     this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
     this.setSubscribeTimeout(setup.subscribeRequestTimeout || 310 * 1000);
     this.setSendBeaconConfig(setup.useSendBeacon || true);
-    this.setPresenceTimeout(setup.presenceTimeout || PRESENCE_TIMEOUT_DEFAULT);
+
+    if (setup.presenceTimeout) {
+      this.setPresenceTimeout(setup.presenceTimeout);
+    } else {
+      this._presenceTimeout = PRESENCE_TIMEOUT_DEFAULT;
+    }
 
     if (setup.heartbeatInterval != null) {
       this.setHeartbeatInterval(setup.heartbeatInterval);
@@ -425,6 +433,7 @@ var _default = function () {
         console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
       }
 
+      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
       return this;
     }
   }, {
@@ -479,7 +488,21 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.2';
+      return '4.27.3';
+    }
+  }, {
+    key: "_addPnsdkSuffix",
+    value: function _addPnsdkSuffix(name, suffix) {
+      this._PNSDKSuffix[name] = suffix;
+    }
+  }, {
+    key: "_getPnsdkSuffix",
+    value: function _getPnsdkSuffix(separator) {
+      var _this = this;
+
+      return Object.keys(this._PNSDKSuffix).reduce(function (result, key) {
+        return result + separator + _this._PNSDKSuffix[key];
+      }, '');
     }
   }, {
     key: "_decideUUID",
@@ -3283,6 +3306,11 @@ var _default = function () {
       return this._config.getVersion();
     }
   }, {
+    key: "_addPnsdkSuffix",
+    value: function _addPnsdkSuffix(name, suffix) {
+      this._config._addPnsdkSuffix(name, suffix);
+    }
+  }, {
     key: "networkDownDetected",
     value: function networkDownDetected() {
       this._listenerManager.announceNetworkDown();
@@ -5571,6 +5599,13 @@ function generatePNSDK(config) {
   }
 
   base += "/".concat(config.getVersion());
+
+  var pnsdkSuffix = config._getPnsdkSuffix(' ');
+
+  if (pnsdkSuffix.length > 0) {
+    base += pnsdkSuffix;
+  }
+
   return base;
 }
 
