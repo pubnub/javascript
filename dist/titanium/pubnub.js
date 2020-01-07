@@ -1,4 +1,4 @@
-/*! 4.27.2 / Consumer  */
+/*! 4.27.3 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -303,6 +303,8 @@ var _default = function () {
 
     _defineProperty(this, "_useSendBeacon", void 0);
 
+    _defineProperty(this, "_PNSDKSuffix", void 0);
+
     _defineProperty(this, "requestMessageCountThreshold", void 0);
 
     _defineProperty(this, "restore", void 0);
@@ -315,6 +317,7 @@ var _default = function () {
 
     _defineProperty(this, "customDecrypt", void 0);
 
+    this._PNSDKSuffix = {};
     this._db = db;
     this.instanceId = "pn-".concat(_uuid["default"].createUUID());
     this.secretKey = setup.secretKey || setup.secret_key;
@@ -352,7 +355,12 @@ var _default = function () {
     this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
     this.setSubscribeTimeout(setup.subscribeRequestTimeout || 310 * 1000);
     this.setSendBeaconConfig(setup.useSendBeacon || true);
-    this.setPresenceTimeout(setup.presenceTimeout || PRESENCE_TIMEOUT_DEFAULT);
+
+    if (setup.presenceTimeout) {
+      this.setPresenceTimeout(setup.presenceTimeout);
+    } else {
+      this._presenceTimeout = PRESENCE_TIMEOUT_DEFAULT;
+    }
 
     if (setup.heartbeatInterval != null) {
       this.setHeartbeatInterval(setup.heartbeatInterval);
@@ -416,6 +424,7 @@ var _default = function () {
         console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
       }
 
+      this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
       return this;
     }
   }, {
@@ -470,7 +479,21 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.2';
+      return '4.27.3';
+    }
+  }, {
+    key: "_addPnsdkSuffix",
+    value: function _addPnsdkSuffix(name, suffix) {
+      this._PNSDKSuffix[name] = suffix;
+    }
+  }, {
+    key: "_getPnsdkSuffix",
+    value: function _getPnsdkSuffix(separator) {
+      var _this = this;
+
+      return Object.keys(this._PNSDKSuffix).reduce(function (result, key) {
+        return result + separator + _this._PNSDKSuffix[key];
+      }, '');
     }
   }, {
     key: "_decideUUID",
@@ -950,13 +973,13 @@ exports["default"] = void 0;
 
 var _pubnubCommon = _interopRequireDefault(__webpack_require__(10));
 
-var _networking = _interopRequireDefault(__webpack_require__(64));
+var _networking = _interopRequireDefault(__webpack_require__(65));
 
-var _common = _interopRequireDefault(__webpack_require__(65));
+var _common = _interopRequireDefault(__webpack_require__(66));
 
-var _common2 = _interopRequireDefault(__webpack_require__(66));
+var _common2 = _interopRequireDefault(__webpack_require__(67));
 
-var _titanium = __webpack_require__(68);
+var _titanium = __webpack_require__(69);
 
 var _flow_interfaces = __webpack_require__(0);
 
@@ -1007,6 +1030,8 @@ module.exports = exports.default;
 "use strict";
 
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -1018,105 +1043,107 @@ var _index = _interopRequireDefault(__webpack_require__(6));
 
 var _subscription_manager = _interopRequireDefault(__webpack_require__(13));
 
+var _push_payload = _interopRequireDefault(__webpack_require__(16));
+
 var _listener_manager = _interopRequireDefault(__webpack_require__(7));
 
-var _token_manager = _interopRequireDefault(__webpack_require__(16));
+var _token_manager = _interopRequireDefault(__webpack_require__(17));
 
-var _endpoint = _interopRequireDefault(__webpack_require__(17));
+var _endpoint = _interopRequireDefault(__webpack_require__(18));
 
-var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(18));
+var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(19));
 
-var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(19));
+var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(20));
 
-var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(20));
+var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(21));
 
-var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(21));
+var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(22));
 
-var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(22));
+var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(23));
 
-var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(23));
+var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(24));
 
-var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(24));
+var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(25));
 
-var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(25));
+var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(26));
 
-var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(26));
+var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(27));
 
-var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(27));
+var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(28));
 
-var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(28));
+var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(29));
 
-var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(29));
+var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(30));
 
-var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(30));
+var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(31));
 
-var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(31));
+var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(32));
 
-var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(32));
+var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(33));
 
-var addMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(33));
+var addMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
 
-var removeMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
+var removeMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(35));
 
-var getMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(35));
+var getMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
 
-var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
+var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
 
-var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
+var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
 
-var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
+var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
 
-var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
+var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
 
-var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
+var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
 
-var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
+var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
 
-var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
+var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
 
-var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
+var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
 
-var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
+var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
 
-var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
+var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
 
-var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
+var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
 
-var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
+var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
 
-var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
+var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
 
-var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
+var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
 
-var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
+var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
 
-var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
+var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
 
-var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
+var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
 
-var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
+var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
 
-var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
+var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
 
-var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
+var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
 
-var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
+var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
 
-var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
+var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
 
-var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
+var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
 
-var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
+var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
 
-var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
+var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(61));
 
-var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(61));
+var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(62));
 
-var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(62));
+var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(63));
 
 var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(8));
 
-var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(63));
+var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(64));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -1126,7 +1153,9 @@ var _flow_interfaces = __webpack_require__(0);
 
 var _uuid = _interopRequireDefault(__webpack_require__(5));
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj["default"] = obj; return newObj; } }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -1431,6 +1460,11 @@ var _default = function () {
       return this._config.getVersion();
     }
   }, {
+    key: "_addPnsdkSuffix",
+    value: function _addPnsdkSuffix(name, suffix) {
+      this._config._addPnsdkSuffix(name, suffix);
+    }
+  }, {
     key: "networkDownDetected",
     value: function networkDownDetected() {
       this._listenerManager.announceNetworkDown();
@@ -1449,6 +1483,11 @@ var _default = function () {
       this.reconnect();
     }
   }], [{
+    key: "notificationPayload",
+    value: function notificationPayload(title, body) {
+      return new _push_payload["default"](title, body);
+    }
+  }, {
     key: "generateUUID",
     value: function generateUUID() {
       return _uuid["default"].createUUID();
@@ -3331,6 +3370,698 @@ module.exports = exports.default;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = exports.FCMNotificationPayload = exports.MPNSNotificationPayload = exports.APNSNotificationPayload = void 0;
+
+var _flow_interfaces = __webpack_require__(0);
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var BaseNotificationPayload = function () {
+  _createClass(BaseNotificationPayload, [{
+    key: "payload",
+    get: function get() {
+      return this._payload;
+    }
+  }, {
+    key: "title",
+    set: function set(value) {
+      this._title = value;
+    }
+  }, {
+    key: "subtitle",
+    set: function set(value) {
+      this._subtitle = value;
+    }
+  }, {
+    key: "body",
+    set: function set(value) {
+      this._body = value;
+    }
+  }, {
+    key: "badge",
+    set: function set(value) {
+      this._badge = value;
+    }
+  }, {
+    key: "sound",
+    set: function set(value) {
+      this._sound = value;
+    }
+  }]);
+
+  function BaseNotificationPayload(payload, title, body) {
+    _classCallCheck(this, BaseNotificationPayload);
+
+    _defineProperty(this, "_subtitle", void 0);
+
+    _defineProperty(this, "_payload", void 0);
+
+    _defineProperty(this, "_badge", void 0);
+
+    _defineProperty(this, "_sound", void 0);
+
+    _defineProperty(this, "_title", void 0);
+
+    _defineProperty(this, "_body", void 0);
+
+    this._payload = payload;
+
+    this._setDefaultPayloadStructure();
+
+    this.title = title;
+    this.body = body;
+  }
+
+  _createClass(BaseNotificationPayload, [{
+    key: "_setDefaultPayloadStructure",
+    value: function _setDefaultPayloadStructure() {}
+  }, {
+    key: "toObject",
+    value: function toObject() {
+      return {};
+    }
+  }]);
+
+  return BaseNotificationPayload;
+}();
+
+var APNSNotificationPayload = function (_BaseNotificationPayl) {
+  _inherits(APNSNotificationPayload, _BaseNotificationPayl);
+
+  function APNSNotificationPayload() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, APNSNotificationPayload);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(APNSNotificationPayload)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "_configurations", void 0);
+
+    _defineProperty(_assertThisInitialized(_this), "_apnsPushType", void 0);
+
+    _defineProperty(_assertThisInitialized(_this), "_isSilent", void 0);
+
+    return _this;
+  }
+
+  _createClass(APNSNotificationPayload, [{
+    key: "_setDefaultPayloadStructure",
+    value: function _setDefaultPayloadStructure() {
+      this._payload.aps = {
+        alert: {}
+      };
+    }
+  }, {
+    key: "toObject",
+    value: function toObject() {
+      var _this2 = this;
+
+      var payload = _objectSpread({}, this._payload);
+
+      var aps = payload.aps;
+      var alert = aps.alert;
+
+      if (this._isSilent) {
+        aps['content-available'] = 1;
+      }
+
+      if (this._apnsPushType === 'apns2') {
+        if (!this._configurations || !this._configurations.length) {
+          throw new ReferenceError('APNS2 configuration is missing');
+        }
+
+        var configurations = [];
+
+        this._configurations.forEach(function (configuration) {
+          configurations.push(_this2._objectFromAPNS2Configuration(configuration));
+        });
+
+        if (configurations.length) {
+          payload.pn_push = configurations;
+        }
+      }
+
+      if (!alert || !Object.keys(alert).length) {
+        delete aps.alert;
+      }
+
+      if (this._isSilent) {
+        delete aps.alert;
+        delete aps.badge;
+        delete aps.sound;
+        alert = {};
+      }
+
+      return this._isSilent || Object.keys(alert).length ? payload : null;
+    }
+  }, {
+    key: "_objectFromAPNS2Configuration",
+    value: function _objectFromAPNS2Configuration(configuration) {
+      var _this3 = this;
+
+      if (!configuration.targets || !configuration.targets.length) {
+        throw new ReferenceError('At least one APNS2 target should be provided');
+      }
+
+      var targets = [];
+      configuration.targets.forEach(function (target) {
+        targets.push(_this3._objectFromAPNSTarget(target));
+      });
+      var collapseId = configuration.collapseId,
+          expirationDate = configuration.expirationDate;
+      var objectifiedConfiguration = {
+        auth_method: 'token',
+        targets: targets,
+        version: 'v2'
+      };
+
+      if (collapseId && collapseId.length) {
+        objectifiedConfiguration.collapse_id = collapseId;
+      }
+
+      if (expirationDate) {
+        objectifiedConfiguration.expiration = expirationDate.toISOString();
+      }
+
+      return objectifiedConfiguration;
+    }
+  }, {
+    key: "_objectFromAPNSTarget",
+    value: function _objectFromAPNSTarget(target) {
+      if (!target.topic || !target.topic.length) {
+        throw new TypeError('Target \'topic\' undefined.');
+      }
+
+      var topic = target.topic,
+          _target$environment = target.environment,
+          environment = _target$environment === void 0 ? 'development' : _target$environment,
+          _target$excludedDevic = target.excludedDevices,
+          excludedDevices = _target$excludedDevic === void 0 ? [] : _target$excludedDevic;
+      var objectifiedTarget = {
+        topic: topic,
+        environment: environment
+      };
+
+      if (excludedDevices.length) {
+        objectifiedTarget.excluded_devices = excludedDevices;
+      }
+
+      return objectifiedTarget;
+    }
+  }, {
+    key: "configurations",
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._configurations = value;
+    }
+  }, {
+    key: "notification",
+    get: function get() {
+      return this._payload.aps;
+    }
+  }, {
+    key: "title",
+    get: function get() {
+      return this._title;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.aps.alert.title = value;
+      this._title = value;
+    }
+  }, {
+    key: "subtitle",
+    get: function get() {
+      return this._subtitle;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.aps.alert.subtitle = value;
+      this._subtitle = value;
+    }
+  }, {
+    key: "body",
+    get: function get() {
+      return this._body;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.aps.alert.body = value;
+      this._body = value;
+    }
+  }, {
+    key: "badge",
+    get: function get() {
+      return this._badge;
+    },
+    set: function set(value) {
+      if (value === undefined || value === null) return;
+      this._payload.aps.badge = value;
+      this._badge = value;
+    }
+  }, {
+    key: "sound",
+    get: function get() {
+      return this._sound;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.aps.sound = value;
+      this._sound = value;
+    }
+  }, {
+    key: "silent",
+    set: function set(value) {
+      this._isSilent = value;
+    }
+  }]);
+
+  return APNSNotificationPayload;
+}(BaseNotificationPayload);
+
+exports.APNSNotificationPayload = APNSNotificationPayload;
+
+var MPNSNotificationPayload = function (_BaseNotificationPayl2) {
+  _inherits(MPNSNotificationPayload, _BaseNotificationPayl2);
+
+  function MPNSNotificationPayload() {
+    var _getPrototypeOf3;
+
+    var _this4;
+
+    _classCallCheck(this, MPNSNotificationPayload);
+
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    _this4 = _possibleConstructorReturn(this, (_getPrototypeOf3 = _getPrototypeOf(MPNSNotificationPayload)).call.apply(_getPrototypeOf3, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this4), "_backContent", void 0);
+
+    _defineProperty(_assertThisInitialized(_this4), "_backTitle", void 0);
+
+    _defineProperty(_assertThisInitialized(_this4), "_count", void 0);
+
+    _defineProperty(_assertThisInitialized(_this4), "_type", void 0);
+
+    return _this4;
+  }
+
+  _createClass(MPNSNotificationPayload, [{
+    key: "toObject",
+    value: function toObject() {
+      return Object.keys(this._payload).length ? _objectSpread({}, this._payload) : null;
+    }
+  }, {
+    key: "backContent",
+    get: function get() {
+      return this._backContent;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.back_content = value;
+      this._backContent = value;
+    }
+  }, {
+    key: "backTitle",
+    get: function get() {
+      return this._backTitle;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.back_title = value;
+      this._backTitle = value;
+    }
+  }, {
+    key: "count",
+    get: function get() {
+      return this._count;
+    },
+    set: function set(value) {
+      if (value === undefined || value === null) return;
+      this._payload.count = value;
+      this._count = value;
+    }
+  }, {
+    key: "title",
+    get: function get() {
+      return this._title;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.title = value;
+      this._title = value;
+    }
+  }, {
+    key: "type",
+    get: function get() {
+      return this._type;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.type = value;
+      this._type = value;
+    }
+  }, {
+    key: "subtitle",
+    get: function get() {
+      return this.backTitle;
+    },
+    set: function set(value) {
+      this.backTitle = value;
+    }
+  }, {
+    key: "body",
+    get: function get() {
+      return this.backContent;
+    },
+    set: function set(value) {
+      this.backContent = value;
+    }
+  }, {
+    key: "badge",
+    get: function get() {
+      return this.count;
+    },
+    set: function set(value) {
+      this.count = value;
+    }
+  }]);
+
+  return MPNSNotificationPayload;
+}(BaseNotificationPayload);
+
+exports.MPNSNotificationPayload = MPNSNotificationPayload;
+
+var FCMNotificationPayload = function (_BaseNotificationPayl3) {
+  _inherits(FCMNotificationPayload, _BaseNotificationPayl3);
+
+  function FCMNotificationPayload() {
+    var _getPrototypeOf4;
+
+    var _this5;
+
+    _classCallCheck(this, FCMNotificationPayload);
+
+    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      args[_key3] = arguments[_key3];
+    }
+
+    _this5 = _possibleConstructorReturn(this, (_getPrototypeOf4 = _getPrototypeOf(FCMNotificationPayload)).call.apply(_getPrototypeOf4, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this5), "_isSilent", void 0);
+
+    _defineProperty(_assertThisInitialized(_this5), "_icon", void 0);
+
+    _defineProperty(_assertThisInitialized(_this5), "_tag", void 0);
+
+    return _this5;
+  }
+
+  _createClass(FCMNotificationPayload, [{
+    key: "_setDefaultPayloadStructure",
+    value: function _setDefaultPayloadStructure() {
+      this._payload.notification = {};
+      this._payload.data = {};
+    }
+  }, {
+    key: "toObject",
+    value: function toObject() {
+      var data = _objectSpread({}, this._payload.data);
+
+      var notification = null;
+      var payload = {};
+
+      if (Object.keys(this._payload).length > 2) {
+        var _this$_payload = this._payload,
+            initialNotification = _this$_payload.notification,
+            initialData = _this$_payload.data,
+            additionalData = _objectWithoutProperties(_this$_payload, ["notification", "data"]);
+
+        data = _objectSpread({}, data, {}, additionalData);
+      }
+
+      if (this._isSilent) {
+        data.notification = this._payload.notification;
+      } else {
+        notification = this._payload.notification;
+      }
+
+      if (Object.keys(data).length) {
+        payload.data = data;
+      }
+
+      if (notification && Object.keys(notification).length) {
+        payload.notification = notification;
+      }
+
+      return Object.keys(payload).length ? payload : null;
+    }
+  }, {
+    key: "notification",
+    get: function get() {
+      return this._payload.notification;
+    }
+  }, {
+    key: "data",
+    get: function get() {
+      return this._payload.data;
+    }
+  }, {
+    key: "title",
+    get: function get() {
+      return this._title;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.notification.title = value;
+      this._title = value;
+    }
+  }, {
+    key: "body",
+    get: function get() {
+      return this._body;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.notification.body = value;
+      this._body = value;
+    }
+  }, {
+    key: "sound",
+    get: function get() {
+      return this._sound;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.notification.sound = value;
+      this._sound = value;
+    }
+  }, {
+    key: "icon",
+    get: function get() {
+      return this._icon;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.notification.icon = value;
+      this._icon = value;
+    }
+  }, {
+    key: "tag",
+    get: function get() {
+      return this._tag;
+    },
+    set: function set(value) {
+      if (!value || !value.length) return;
+      this._payload.notification.tag = value;
+      this._tag = value;
+    }
+  }, {
+    key: "silent",
+    set: function set(value) {
+      this._isSilent = value;
+    }
+  }]);
+
+  return FCMNotificationPayload;
+}(BaseNotificationPayload);
+
+exports.FCMNotificationPayload = FCMNotificationPayload;
+
+var NotificationsPayload = function () {
+  _createClass(NotificationsPayload, [{
+    key: "debugging",
+    set: function set(value) {
+      this._debugging = value;
+    }
+  }, {
+    key: "title",
+    get: function get() {
+      return this._title;
+    }
+  }, {
+    key: "body",
+    get: function get() {
+      return this._body;
+    }
+  }, {
+    key: "subtitle",
+    get: function get() {
+      return this._subtitle;
+    },
+    set: function set(value) {
+      this._subtitle = value;
+      this.apns.subtitle = value;
+      this.mpns.subtitle = value;
+      this.fcm.subtitle = value;
+    }
+  }, {
+    key: "badge",
+    get: function get() {
+      return this._badge;
+    },
+    set: function set(value) {
+      this._badge = value;
+      this.apns.badge = value;
+      this.mpns.badge = value;
+      this.fcm.badge = value;
+    }
+  }, {
+    key: "sound",
+    get: function get() {
+      return this._sound;
+    },
+    set: function set(value) {
+      this._sound = value;
+      this.apns.sound = value;
+      this.mpns.sound = value;
+      this.fcm.sound = value;
+    }
+  }]);
+
+  function NotificationsPayload(title, body) {
+    _classCallCheck(this, NotificationsPayload);
+
+    _defineProperty(this, "_payload", void 0);
+
+    _defineProperty(this, "_debugging", void 0);
+
+    _defineProperty(this, "_subtitle", void 0);
+
+    _defineProperty(this, "_badge", void 0);
+
+    _defineProperty(this, "_sound", void 0);
+
+    _defineProperty(this, "_title", void 0);
+
+    _defineProperty(this, "_body", void 0);
+
+    _defineProperty(this, "apns", void 0);
+
+    _defineProperty(this, "mpns", void 0);
+
+    _defineProperty(this, "fcm", void 0);
+
+    this._payload = {
+      apns: {},
+      mpns: {},
+      fcm: {}
+    };
+    this._title = title;
+    this._body = body;
+    this.apns = new APNSNotificationPayload(this._payload.apns, title, body);
+    this.mpns = new MPNSNotificationPayload(this._payload.mpns, title, body);
+    this.fcm = new FCMNotificationPayload(this._payload.fcm, title, body);
+  }
+
+  _createClass(NotificationsPayload, [{
+    key: "buildPayload",
+    value: function buildPayload(platforms) {
+      var payload = {};
+
+      if (platforms.includes('apns') || platforms.includes('apns2')) {
+        this.apns._apnsPushType = platforms.includes('apns') ? 'apns' : 'apns2';
+        var apnsPayload = this.apns.toObject();
+
+        if (apnsPayload && Object.keys(apnsPayload).length) {
+          payload.pn_apns = apnsPayload;
+        }
+      }
+
+      if (platforms.includes('mpns')) {
+        var mpnsPayload = this.mpns.toObject();
+
+        if (mpnsPayload && Object.keys(mpnsPayload).length) {
+          payload.pn_mpns = mpnsPayload;
+        }
+      }
+
+      if (platforms.includes('fcm')) {
+        var fcmPayload = this.fcm.toObject();
+
+        if (fcmPayload && Object.keys(fcmPayload).length) {
+          payload.pn_gcm = fcmPayload;
+        }
+      }
+
+      if (Object.keys(payload).length && this._debugging) {
+        payload.pn_debug = true;
+      }
+
+      return payload;
+    }
+  }]);
+
+  return NotificationsPayload;
+}();
+
+var _default = NotificationsPayload;
+exports["default"] = _default;
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports["default"] = void 0;
 
 var _config = _interopRequireDefault(__webpack_require__(3));
@@ -3612,7 +4343,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3719,6 +4450,13 @@ function generatePNSDK(config) {
   }
 
   base += "/".concat(config.getVersion());
+
+  var pnsdkSuffix = config._getPnsdkSuffix(' ');
+
+  if (pnsdkSuffix.length > 0) {
+    base += pnsdkSuffix;
+  }
+
   return base;
 }
 
@@ -3875,7 +4613,7 @@ function _default(modules, endpoint) {
 module.exports = exports.default;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3941,7 +4679,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4007,7 +4745,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4067,7 +4805,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4124,7 +4862,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4186,74 +4924,6 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getOperation = getOperation;
-exports.validateParams = validateParams;
-exports.getURL = getURL;
-exports.getRequestTimeout = getRequestTimeout;
-exports.isAuthSupported = isAuthSupported;
-exports.prepareParams = prepareParams;
-exports.handleResponse = handleResponse;
-
-var _flow_interfaces = __webpack_require__(0);
-
-var _operations = _interopRequireDefault(__webpack_require__(1));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function getOperation() {
-  return _operations["default"].PNPushNotificationEnabledChannelsOperation;
-}
-
-function validateParams(modules, incomingParams) {
-  var device = incomingParams.device,
-      pushGateway = incomingParams.pushGateway,
-      channels = incomingParams.channels;
-  var config = modules.config;
-  if (!device) return 'Missing Device ID (device)';
-  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
-  if (!channels || channels.length === 0) return 'Missing Channels';
-  if (!config.subscribeKey) return 'Missing Subscribe Key';
-}
-
-function getURL(modules, incomingParams) {
-  var device = incomingParams.device;
-  var config = modules.config;
-  return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
-}
-
-function getRequestTimeout(_ref) {
-  var config = _ref.config;
-  return config.getTransactionTimeout();
-}
-
-function isAuthSupported() {
-  return true;
-}
-
-function prepareParams(modules, incomingParams) {
-  var pushGateway = incomingParams.pushGateway,
-      _incomingParams$chann = incomingParams.channels,
-      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
-  return {
-    type: pushGateway,
-    add: channels.join(',')
-  };
-}
-
-function handleResponse() {
-  return {};
-}
-
-/***/ }),
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4284,17 +4954,25 @@ function getOperation() {
 function validateParams(modules, incomingParams) {
   var device = incomingParams.device,
       pushGateway = incomingParams.pushGateway,
-      channels = incomingParams.channels;
+      channels = incomingParams.channels,
+      topic = incomingParams.topic;
   var config = modules.config;
   if (!device) return 'Missing Device ID (device)';
-  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm, apns or apns2)';
+  if (pushGateway === 'apns2' && !topic) return 'Missing APNS2 topic';
   if (!channels || channels.length === 0) return 'Missing Channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
 function getURL(modules, incomingParams) {
-  var device = incomingParams.device;
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway;
   var config = modules.config;
+
+  if (pushGateway === 'apns2') {
+    return "/v2/push/sub-key/".concat(config.subscribeKey, "/devices-apns2/").concat(device);
+  }
+
   return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
 }
 
@@ -4310,11 +4988,24 @@ function isAuthSupported() {
 function prepareParams(modules, incomingParams) {
   var pushGateway = incomingParams.pushGateway,
       _incomingParams$chann = incomingParams.channels,
-      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann;
-  return {
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann,
+      _incomingParams$envir = incomingParams.environment,
+      environment = _incomingParams$envir === void 0 ? 'development' : _incomingParams$envir,
+      topic = incomingParams.topic;
+  var parameters = {
     type: pushGateway,
-    remove: channels.join(',')
+    add: channels.join(',')
   };
+
+  if (pushGateway === 'apns2') {
+    parameters = Object.assign({}, parameters, {
+      environment: environment,
+      topic: topic
+    });
+    delete parameters.type;
+  }
+
+  return parameters;
 }
 
 function handleResponse() {
@@ -4351,16 +5042,26 @@ function getOperation() {
 
 function validateParams(modules, incomingParams) {
   var device = incomingParams.device,
-      pushGateway = incomingParams.pushGateway;
+      pushGateway = incomingParams.pushGateway,
+      channels = incomingParams.channels,
+      topic = incomingParams.topic;
   var config = modules.config;
   if (!device) return 'Missing Device ID (device)';
-  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm, apns or apns2)';
+  if (pushGateway === 'apns2' && !topic) return 'Missing APNS2 topic';
+  if (!channels || channels.length === 0) return 'Missing Channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
 function getURL(modules, incomingParams) {
-  var device = incomingParams.device;
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway;
   var config = modules.config;
+
+  if (pushGateway === 'apns2') {
+    return "/v2/push/sub-key/".concat(config.subscribeKey, "/devices-apns2/").concat(device);
+  }
+
   return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
 }
 
@@ -4374,10 +5075,110 @@ function isAuthSupported() {
 }
 
 function prepareParams(modules, incomingParams) {
-  var pushGateway = incomingParams.pushGateway;
-  return {
+  var pushGateway = incomingParams.pushGateway,
+      _incomingParams$chann = incomingParams.channels,
+      channels = _incomingParams$chann === void 0 ? [] : _incomingParams$chann,
+      _incomingParams$envir = incomingParams.environment,
+      environment = _incomingParams$envir === void 0 ? 'development' : _incomingParams$envir,
+      topic = incomingParams.topic;
+  var parameters = {
+    type: pushGateway,
+    remove: channels.join(',')
+  };
+
+  if (pushGateway === 'apns2') {
+    parameters = Object.assign({}, parameters, {
+      environment: environment,
+      topic: topic
+    });
+    delete parameters.type;
+  }
+
+  return parameters;
+}
+
+function handleResponse() {
+  return {};
+}
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getOperation = getOperation;
+exports.validateParams = validateParams;
+exports.getURL = getURL;
+exports.getRequestTimeout = getRequestTimeout;
+exports.isAuthSupported = isAuthSupported;
+exports.prepareParams = prepareParams;
+exports.handleResponse = handleResponse;
+
+var _flow_interfaces = __webpack_require__(0);
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function getOperation() {
+  return _operations["default"].PNPushNotificationEnabledChannelsOperation;
+}
+
+function validateParams(modules, incomingParams) {
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway,
+      topic = incomingParams.topic;
+  var config = modules.config;
+  if (!device) return 'Missing Device ID (device)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm, apns or apns2)';
+  if (pushGateway === 'apns2' && !topic) return 'Missing APNS2 topic';
+  if (!config.subscribeKey) return 'Missing Subscribe Key';
+}
+
+function getURL(modules, incomingParams) {
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway;
+  var config = modules.config;
+
+  if (pushGateway === 'apns2') {
+    return "/v2/push/sub-key/".concat(config.subscribeKey, "/devices-apns2/").concat(device);
+  }
+
+  return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
+}
+
+function getRequestTimeout(_ref) {
+  var config = _ref.config;
+  return config.getTransactionTimeout();
+}
+
+function isAuthSupported() {
+  return true;
+}
+
+function prepareParams(modules, incomingParams) {
+  var pushGateway = incomingParams.pushGateway,
+      _incomingParams$envir = incomingParams.environment,
+      environment = _incomingParams$envir === void 0 ? 'development' : _incomingParams$envir,
+      topic = incomingParams.topic;
+  var parameters = {
     type: pushGateway
   };
+
+  if (pushGateway === 'apns2') {
+    parameters = Object.assign({}, parameters, {
+      environment: environment,
+      topic: topic
+    });
+    delete parameters.type;
+  }
+
+  return parameters;
 }
 
 function handleResponse(modules, serverResponse) {
@@ -4387,7 +5188,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4416,16 +5217,24 @@ function getOperation() {
 
 function validateParams(modules, incomingParams) {
   var device = incomingParams.device,
-      pushGateway = incomingParams.pushGateway;
+      pushGateway = incomingParams.pushGateway,
+      topic = incomingParams.topic;
   var config = modules.config;
   if (!device) return 'Missing Device ID (device)';
-  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns)';
+  if (!pushGateway) return 'Missing GW Type (pushGateway: gcm, apns or apns2)';
+  if (pushGateway === 'apns2' && !topic) return 'Missing APNS2 topic';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
 function getURL(modules, incomingParams) {
-  var device = incomingParams.device;
+  var device = incomingParams.device,
+      pushGateway = incomingParams.pushGateway;
   var config = modules.config;
+
+  if (pushGateway === 'apns2') {
+    return "/v2/push/sub-key/".concat(config.subscribeKey, "/devices-apns2/").concat(device, "/remove");
+  }
+
   return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device, "/remove");
 }
 
@@ -4439,10 +5248,23 @@ function isAuthSupported() {
 }
 
 function prepareParams(modules, incomingParams) {
-  var pushGateway = incomingParams.pushGateway;
-  return {
+  var pushGateway = incomingParams.pushGateway,
+      _incomingParams$envir = incomingParams.environment,
+      environment = _incomingParams$envir === void 0 ? 'development' : _incomingParams$envir,
+      topic = incomingParams.topic;
+  var parameters = {
     type: pushGateway
   };
+
+  if (pushGateway === 'apns2') {
+    parameters = Object.assign({}, parameters, {
+      environment: environment,
+      topic: topic
+    });
+    delete parameters.type;
+  }
+
+  return parameters;
 }
 
 function handleResponse() {
@@ -4450,7 +5272,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4518,7 +5340,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4583,7 +5405,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4656,7 +5478,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4740,7 +5562,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4819,7 +5641,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4984,7 +5806,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5069,7 +5891,7 @@ function handleResponse(modules, addMessageActionResponse) {
 }
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5140,7 +5962,7 @@ function handleResponse(modules, removeMessageActionResponse) {
 }
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5216,7 +6038,7 @@ function handleResponse(modules, getMessageActionsResponse) {
 }
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5335,7 +6157,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5456,7 +6278,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5523,7 +6345,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5609,7 +6431,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5704,7 +6526,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5823,7 +6645,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5944,7 +6766,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6011,7 +6833,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6106,7 +6928,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6192,7 +7014,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6298,7 +7120,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6444,7 +7266,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6632,7 +7454,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6772,7 +7594,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6878,7 +7700,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7066,7 +7888,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7212,7 +8034,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7352,7 +8174,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7425,7 +8247,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7516,7 +8338,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7685,7 +8507,7 @@ function handleResponse(modules, response) {
 }
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7813,7 +8635,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7885,7 +8707,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7996,7 +8818,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8066,7 +8888,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8093,7 +8915,7 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -8154,7 +8976,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8273,7 +9095,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8392,7 +9214,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8562,7 +9384,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8609,7 +9431,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8620,7 +9442,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _cborSync = _interopRequireDefault(__webpack_require__(67));
+var _cborSync = _interopRequireDefault(__webpack_require__(68));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8667,7 +9489,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
@@ -9301,7 +10123,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9317,7 +10139,7 @@ exports.del = del;
 
 var _flow_interfaces = __webpack_require__(0);
 
-var _utils = __webpack_require__(69);
+var _utils = __webpack_require__(70);
 
 function log(url, qs, res) {
   var _pickLogger = function _pickLogger() {
@@ -9415,7 +10237,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

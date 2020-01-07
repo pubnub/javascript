@@ -3,6 +3,7 @@
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
+import NotificationsPayload from './components/push_payload';
 import ListenerManager from './components/listener_manager';
 import TokenManager from './components/token_manager';
 
@@ -513,6 +514,10 @@ export default class {
     return this._config.getVersion();
   }
 
+  _addPnsdkSuffix(name: string, suffix: string) {
+    this._config._addPnsdkSuffix(name, suffix);
+  }
+
   // network hooks to indicate network changes
   networkDownDetected() {
     this._listenerManager.announceNetworkDown();
@@ -527,6 +532,10 @@ export default class {
   networkUpDetected() {
     this._listenerManager.announceNetworkUp();
     this.reconnect();
+  }
+
+  static notificationPayload(title: ?string, body: ?string): NotificationsPayload {
+    return new NotificationsPayload(title, body);
   }
 
   static generateUUID(): string {

@@ -113,6 +113,12 @@ export default class {
   _useSendBeacon: boolean;
 
   /*
+    allow frameworks to append to the PNSDK parameter
+    the key should be an identifier for the specific framework to prevent duplicates
+  */
+  _PNSDKSuffix: { [key: string]: string };
+
+  /*
     if set, the SDK will alert if more messages arrive in one subscribe than the theshold
   */
   requestMessageCountThreshold: number;
@@ -137,6 +143,7 @@ export default class {
   customDecrypt: Function; // function used to decrypt old version messages
 
   constructor({ setup, db }: ConfigConstructArgs) {
+    this._PNSDKSuffix = {};
     this._db = db;
 
     this.instanceId = `pn-${uuidGenerator.createUUID()}`;
@@ -189,7 +196,11 @@ export default class {
     // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
     this.setSendBeaconConfig(setup.useSendBeacon || true);
     // how long the SDK will report the client to be alive before issuing a timeout
-    this.setPresenceTimeout(setup.presenceTimeout || PRESENCE_TIMEOUT_DEFAULT);
+    if (setup.presenceTimeout) {
+      this.setPresenceTimeout(setup.presenceTimeout);
+    } else {
+      this._presenceTimeout = PRESENCE_TIMEOUT_DEFAULT;
+    }
 
     if (setup.heartbeatInterval != null) {
       this.setHeartbeatInterval(setup.heartbeatInterval);
@@ -249,6 +260,8 @@ export default class {
       );
     }
 
+    this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
+
     return this;
   }
 
@@ -294,7 +307,15 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.27.2';
+    return '4.27.3';
+  }
+
+  _addPnsdkSuffix(name: string, suffix: string) {
+    this._PNSDKSuffix[name] = suffix;
+  }
+
+  _getPnsdkSuffix(separator: string): string {
+    return Object.keys(this._PNSDKSuffix).reduce((result, key) => result + separator + this._PNSDKSuffix[key], '');
   }
 
   _decideUUID(providedUUID: string): string {

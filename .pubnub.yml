@@ -3,9 +3,18 @@ changelog:
   -
     changes:
       -
+        text: "Support for APNS2 Push API"
+        type: improvement
+      -
+        text: "Restore functionality to set heartbeat interval when presence timeout is set below the default"
+        type: bug
+    date: 2020-01-06
+    version: v4.27.3
+  -
+    changes:
+      -
         text: "disable presence heartbeats by default"
         type: bug
-      -
     date: 2019-12-05
     version: v4.27.2
   -
@@ -792,4 +801,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.27.2"
+version: "4.27.3"
