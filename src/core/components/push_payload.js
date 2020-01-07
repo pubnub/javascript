@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint max-classes-per-file: ["error", 5] */
 import { APNS2Configuration, APNS2Target } from '../flow_interfaces';
 
 class BaseNotificationPayload {
@@ -128,7 +129,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
   }
 
   toObject(): ?Object {
-    let payload = Object.assign({}, this._payload);
+    let payload = { ...this._payload };
     /** @type {{alert: Object, badge: number, sound: string}} */
     let aps = payload.aps;
     let alert = aps.alert;
@@ -307,7 +308,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
   }
 
   toObject(): ?Object {
-    return Object.keys(this._payload).length ? Object.assign({}, this._payload) : null;
+    return Object.keys(this._payload).length ? { ...this._payload } : null;
   }
 }
 
@@ -389,7 +390,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
   }
 
   toObject(): ?Object {
-    let data = Object.assign({}, this._payload.data);
+    let data = { ...this._payload.data };
     let notification = null;
     let payload = {};
 
@@ -400,7 +401,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     if (Object.keys(this._payload).length > 2) {
       let { notification: initialNotification, data: initialData, ...additionalData } = this._payload;
 
-      data = Object.assign({}, data, additionalData);
+      data = { ...data, ...additionalData };
     }
 
     if (this._isSilent) {
