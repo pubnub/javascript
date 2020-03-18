@@ -11,3 +11,10 @@ coverage/
 *.iml
 dist/web/stats.json
 dist/titanium/stats.json
+
+deployment_keys
+deployment_keys-private
+deployment_keys.tar
+
+.travis/README.md
+.travis/scripts

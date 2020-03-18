@@ -1,6 +1,12 @@
-import cbor from 'cbor-sync';
-
 export default class {
+  _base64ToBinary: (base64: string) => any;
+  _cborReader: { decode: (any) => Object };
+
+  constructor(decode: (any) => any, base64ToBinary: (base64: string) => any) {
+    this._base64ToBinary = base64ToBinary;
+    this._decode = decode;
+  }
+
   decodeToken(tokenString) {
     let padding = '';
 
@@ -10,9 +16,8 @@ export default class {
       padding = '==';
     }
 
-    let cleaned = tokenString.replace('-', '+').replace('_', '/') + padding;
-
-    let result = cbor.decode(new Buffer.from(cleaned, 'base64'));
+    const cleaned = tokenString.replace(/-/gi, '+').replace(/_/gi, '/') + padding;
+    const result = this._decode(this._base64ToBinary(cleaned));
 
     if (typeof result === 'object') {
       return result;

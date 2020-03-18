@@ -1,12 +1,13 @@
 /* global describe, it */
 
 import assert from 'assert';
+import CborReader from 'cbor-sync';
 
 import Cbor from '../../src/cbor/common';
 
 describe('cbor', () => {
   it('should decode token', () => {
-    const cbor = new Cbor();
+    const cbor = new Cbor(CborReader.decode, (base64String) => new Buffer.from(base64String, 'base64'));
     let token = 'p0F2AkF0Gl043rhDdHRsCkNyZXOkRGNoYW6hZnNlY3JldAFDZ3JwoEN1c3KgQ3NwY6BDcGF0pERjaGFuoENncnCgQ3VzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI-blahPGD9TuKlaW1YQgiB4uR_edmfq-61';
 
     let decodedToken = cbor.decodeToken(token);

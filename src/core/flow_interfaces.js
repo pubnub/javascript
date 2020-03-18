@@ -593,7 +593,8 @@ type UserListInput = {
   include?: {
     totalCount?: boolean,
     customFields?: boolean,
-  }
+  },
+  filter?: string,
 }
 
 type SingleUserInput = {
@@ -641,7 +642,8 @@ type SpaceListInput = {
   include?: {
     totalCount?: boolean,
     customFields?: boolean,
-  }
+  },
+  filter?: string,
 }
 
 type SingleSpaceInput = {
@@ -703,7 +705,8 @@ type MembershipsInput = {
     customFields?: boolean,
     spaceFields?: boolean,
     customSpaceFields?: boolean,
-  }
+  },
+  filter?: string,
 }
 
 type MembershipsObjectInput = {
@@ -758,7 +761,8 @@ type MembersInput = {
     customFields?: boolean,
     userFields?: boolean,
     customUserFields?: boolean,
-  }
+  },
+  filter?: string,
 }
 
 type MembersObjectInput = {

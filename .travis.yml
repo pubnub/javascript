@@ -1,19 +1,42 @@
 language: node_js
-sudo: false
-node_js:
-  - '8.10.0'
-  - '10.13.0'
-  - '12'
+cache: npm
+os: linux
+
 env:
-  - CXX=g++-4.8
+  jobs:
+    - CXX=g++-4.8
+
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
-script:
-  - gulp test
-after_success:
-  - npm install codecov codacy-coverage
-  - cat ./coverage/lcov.info | node_modules/.bin/codacy-coverage
+
+stages:
+  - name: "test"
+    if: |
+      type != pull_request
+  - name: "code coverage"
+    if: |
+      type == pull_request
+
+jobs:
+  include:
+    - stage: "test"
+      name: 'NodeJS 8.10.0'
+      node_js: '8.10.0'
+      script: gulp test
+    - name: 'NodeJS 10.13.0'
+      node_js: '10.13.0'
+      script: gulp test
+    - name: 'NodeJS 12'
+      node_js: '12'
+      script: gulp test
+    - stage: "code coverage"
+      name: 'Test & Code coverage'
+      node_js: '12'
+      script: gulp test
+      after_success:
+        - npm install codecov codacy-coverage
+        - cat ./coverage/lcov.info | node_modules/.bin/codacy-coverage

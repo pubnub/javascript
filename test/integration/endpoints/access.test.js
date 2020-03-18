@@ -49,14 +49,14 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.audit({ channel: 'ch1' }, (status, response) => {
         assert.equal(status.error, false);
         assert.deepEqual(response, {
           level: 'channel-group+auth',
-          subscribe_key: 'sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f',
+          subscribe_key: 'mySubscribeKey',
           'channel-group': 'cg2',
           auths: {
             key1: {
@@ -84,14 +84,14 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.audit({ channelGroup: 'cg1' }, (status, response) => {
         assert.equal(status.error, false);
         assert.deepEqual(response, {
           level: 'channel-group+auth',
-          subscribe_key: 'sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f',
+          subscribe_key: 'mySubscribeKey',
           'channel-group': 'cg2',
           auths: {
             key1: {
@@ -119,14 +119,14 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.audit({ authKeys: ['key1', 'key2'] }, (status, response) => {
         assert.equal(status.error, false);
         assert.deepEqual(response, {
           level: 'channel-group+auth',
-          subscribe_key: 'sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f',
+          subscribe_key: 'mySubscribeKey',
           'channel-group': 'cg2',
           auths: {
             key1: {
@@ -160,7 +160,7 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.grant(
@@ -190,7 +190,7 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.grant(
@@ -226,7 +226,7 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"sub-c-82ab2196-b64f-11e5-8622-0619f8945a4f","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.grant(
@@ -244,5 +244,78 @@ describe('access endpoints', () => {
         }
       );
     });
+  });
+});
+
+describe('access endpoints telemetry', () => {
+  let pubnub;
+
+  before(() => {
+    nock.disableNetConnect();
+  });
+
+  after(() => {
+    nock.enableNetConnect();
+  });
+
+  beforeEach(() => {
+    nock.cleanAll();
+    pubnub = new PubNub({
+      subscribeKey: 'mySubscribeKey',
+      publishKey: 'myPublishKey',
+      secretKey: 'mySecretKey',
+      uuid: 'myUUID',
+    });
+    pubnub._config.getVersion = () => 'suchJavascript';
+  });
+
+  describe('#audit', () => {
+    it('should add PAM audit API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v2/auth/audit/sub-key/mySubscribeKey').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}',
+        delays,
+        (completion) => {
+          pubnub.audit(
+            { channel: 'ch1' },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pam', average, leeway);
+          done();
+        });
+    }).timeout(20000);
+  });
+
+  describe('#grant', () => {
+    it('should add PAM grant API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}',
+        delays,
+        (completion) => {
+          pubnub.grant(
+            { channels: ['ch1', 'ch2'], authKeys: ['key1', 'key2'] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pam', average, leeway);
+          done();
+        });
+    }).timeout(20000);
   });
 });

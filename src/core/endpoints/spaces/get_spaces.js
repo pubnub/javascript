@@ -41,7 +41,7 @@ export function prepareParams(
   modules: ModulesInject,
   incomingParams: SpaceListInput
 ): Object {
-  const { include, limit, page } = incomingParams;
+  const { include, limit, page, filter } = incomingParams;
   const params = {};
 
   if (limit) {
@@ -73,6 +73,10 @@ export function prepareParams(
     if (page.prev) {
       params.end = page.prev;
     }
+  }
+
+  if (filter) {
+    params.filter = filter;
   }
 
   return params;

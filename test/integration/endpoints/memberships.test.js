@@ -79,6 +79,7 @@ describe('memberships endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
+            filter: 'space.name != "Main space"',
             limit: 2
           })
           .reply(200, {
@@ -106,7 +107,8 @@ describe('memberships endpoints', () => {
           limit: 2,
           include: {
             totalCount: true
-          }
+          },
+          filter: 'space.name != "Main space"'
         }).catch((err) => {
           assert.equal(scope.isDone(), false);
           assert.equal(err.status.message, 'Missing userId');
@@ -169,6 +171,29 @@ describe('memberships endpoints', () => {
         done();
       });
     });
+
+    it('should add list membership objects API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v1/objects/mySubKey/users/myUserId/spaces').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.getMemberships(
+            { userId: 'myUserId' },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('joinSpaces', () => {
@@ -282,6 +307,29 @@ describe('memberships endpoints', () => {
         done();
       });
     });
+
+    it('should add join spaces object API telemetry information', (done) => {
+      let scope = utils.createNock().patch('/v1/objects/mySubKey/users/myUserId/spaces').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.joinSpaces(
+            { userId: 'myUserId', spaces: [{ id: 'main' }] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('leaveSpaces', () => {
@@ -395,6 +443,29 @@ describe('memberships endpoints', () => {
         done();
       });
     });
+
+    it('should add leave spaces object API telemetry information', (done) => {
+      let scope = utils.createNock().patch('/v1/objects/mySubKey/users/myUserId/spaces').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.leaveSpaces(
+            { userId: 'myUserId', spaces: [{ id: 'main' }] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('updateMemberships', () => {
@@ -508,5 +579,28 @@ describe('memberships endpoints', () => {
         done();
       });
     });
+
+    it('should add update memberships object API telemetry information', (done) => {
+      let scope = utils.createNock().patch('/v1/objects/mySubKey/users/myUserId/spaces').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.updateMemberships(
+            { userId: 'myUserId', spaces: [{ id: 'main', custom: { foo: 'fum' } }] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 });

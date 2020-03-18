@@ -1,4 +1,6 @@
-﻿## [v4.27.3](https://github.com/pubnub/javascript/tree/v4.27.3)
+
+
+## [v4.27.3](https://github.com/pubnub/javascript/tree/v4.27.3)
   January-06-2020
 
 
@@ -1005,6 +1007,3 @@
 
 
 - 🌟New iteration of JS / Node SDK family
-
-
-

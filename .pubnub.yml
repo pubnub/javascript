@@ -1,5 +1,6 @@
 ---
 changelog:
+
   -
     changes:
       -
@@ -801,4 +802,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.27.3"
+version: "4.27.4"

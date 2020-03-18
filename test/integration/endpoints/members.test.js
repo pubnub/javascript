@@ -127,6 +127,7 @@ describe('members endpoints', () => {
           uuid: 'myUUID',
           auth: 'myAuthKey',
           count: true,
+          filter: 'user.name != "Bob Cat"',
           limit: 2
         })
         .reply(200, {
@@ -155,7 +156,8 @@ describe('members endpoints', () => {
         limit: 2,
         include: {
           totalCount: true
-        }
+        },
+        filter: 'user.name != "Bob Cat"'
       },
       (status, response) => {
         assert.equal(status.error, false);
@@ -172,6 +174,29 @@ describe('members endpoints', () => {
         done();
       });
     });
+
+    it('should add list members objects API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.getMembers(
+            { spaceId: 'mySpaceId' },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('addMembers', () => {
@@ -285,6 +310,29 @@ describe('members endpoints', () => {
         done();
       });
     });
+
+    it('should add members object add API telemetry information', (done) => {
+      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.addMembers(
+            { spaceId: 'mySpaceId', users: [{ id: 'user-1' }] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('removeMembers', () => {
@@ -398,6 +446,29 @@ describe('members endpoints', () => {
         done();
       });
     });
+
+    it('should add remove members object API telemetry information', (done) => {
+      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.removeMembers(
+            { spaceId: 'mySpaceId', users: [{ id: 'user-1' }] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('updateMembers', () => {
@@ -511,5 +582,28 @@ describe('members endpoints', () => {
         done();
       });
     });
+
+    it('should add update members object API telemetry information', (done) => {
+      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        { data: {} },
+        delays,
+        (completion) => {
+          pubnub.updateMembers(
+            { spaceId: 'mySpaceId', users: [{ id: 'user-1', custom: { foo: 'fum' } }] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 });

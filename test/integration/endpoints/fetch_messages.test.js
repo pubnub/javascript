@@ -349,4 +349,28 @@ describe('fetch messages endpoints', () => {
       });
     });
   }).timeout(60000);
+
+  it('should add fetch messages API telemetry information', (done) => {
+    nock.disableNetConnect();
+    let scope = utils.createNock().get(`/v3/history/sub-key/${subscribeKey}/channel/ch1%2Cch2`).query(true);
+    const delays = [100, 200, 300, 400];
+    const countedDelays = delays.slice(0, delays.length - 1);
+    const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+    const leeway = 50;
+
+    utils.runAPIWithResponseDelays(scope,
+      200,
+      '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }',
+      delays,
+      (completion) => {
+        pubnub.fetchMessages(
+          { channels: ['ch1', 'ch2'], count: 10 },
+          () => { completion(); }
+        );
+      })
+      .then((lastRequest) => {
+        utils.verifyRequestTelemetry(lastRequest.path, 'l_hist', average, leeway);
+        done();
+      });
+  }).timeout(60000);
 });

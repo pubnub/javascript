@@ -3,6 +3,7 @@
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
+import TelemetryManager from './components/telemetry_manager';
 import NotificationsPayload from './components/push_payload';
 import ListenerManager from './components/listener_manager';
 import TokenManager from './components/token_manager';
@@ -75,6 +76,7 @@ import uuidGenerator from './components/uuid';
 
 export default class {
   _config: Config;
+  _telemetryManager: TelemetryManager;
   _listenerManager: ListenerManager;
   _tokenManager: TokenManager;
 
@@ -182,8 +184,9 @@ export default class {
     networking.init(config);
 
     const tokenManager = (this._tokenManager = new TokenManager(config, cbor));
+    const telemetryManager = (this._telemetryManager = new TelemetryManager({ maximumSamplesCount: 60000 }));
 
-    let modules = { config, networking, crypto, tokenManager };
+    let modules = { config, networking, crypto, tokenManager, telemetryManager };
 
     const timeEndpoint = endpointCreator.bind(
       this,

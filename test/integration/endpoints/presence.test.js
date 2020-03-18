@@ -85,6 +85,29 @@ describe('presence endpoints', () => {
         done();
       });
     });
+
+    it('should add where now API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}',
+        delays,
+        (completion) => {
+          pubnub.whereNow(
+            {},
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('#setState', () => {
@@ -176,6 +199,29 @@ describe('presence endpoints', () => {
         }
       );
     });
+
+    it('should add set state API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+        delays,
+        (completion) => {
+          pubnub.setState(
+            { channels: ['testChannel'], state: { new: 'state' } },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('#getState', () => {
@@ -287,6 +333,29 @@ describe('presence endpoints', () => {
         }
       );
     });
+
+    it('should add get state API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+        delays,
+        (completion) => {
+          pubnub.getState(
+            { channels: ['testChannel'] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 
   describe('#hereNow', () => {
@@ -595,5 +664,28 @@ describe('presence endpoints', () => {
         done();
       });
     });
+
+    it('should add here now API telemetry information', (done) => {
+      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/game1').query(true);
+      const delays = [100, 200, 300, 400];
+      const countedDelays = delays.slice(0, delays.length - 1);
+      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const leeway = 50;
+
+      utils.runAPIWithResponseDelays(scope,
+        200,
+        '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
+        delays,
+        (completion) => {
+          pubnub.hereNow(
+            { channels: ['game1'] },
+            () => { completion(); }
+          );
+        })
+        .then((lastRequest) => {
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          done();
+        });
+    }).timeout(60000);
   });
 });

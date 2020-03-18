@@ -110,7 +110,8 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
 }
 
 export default function(modules, endpoint, ...args) {
-  let { networking, config } = modules;
+  let { networking, config, telemetryManager } = modules;
+  const requestId = uuidGenerator.createUUID();
   let callback = null;
   let promiseComponent = null;
   let incomingParams = {};
@@ -151,12 +152,18 @@ export default function(modules, endpoint, ...args) {
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
 
+  // Add telemetry information (if there is any available).
+  const telemetryLatencies = telemetryManager.operationsLatencyForRequest();
+  if (Object.keys(telemetryLatencies).length) {
+    outgoingParams = { ...outgoingParams, ...telemetryLatencies };
+  }
+
   if (config.useInstanceId) {
     outgoingParams.instanceid = config.instanceId;
   }
 
   if (config.useRequestId) {
-    outgoingParams.requestid = uuidGenerator.createUUID();
+    outgoingParams.requestid = requestId;
   }
 
   if (endpoint.isAuthSupported()) {
@@ -182,6 +189,9 @@ export default function(modules, endpoint, ...args) {
       return;
     }
 
+    // Stop endpoint latency tracking.
+    telemetryManager.stopLatencyMeasure(endpoint.getOperation(), requestId);
+
     let parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
 
     if (callback) {
@@ -190,6 +200,9 @@ export default function(modules, endpoint, ...args) {
       promiseComponent.fulfill(parsedPayload);
     }
   };
+
+  // Start endpoint latency tracking.
+  telemetryManager.startLatencyMeasure(endpoint.getOperation(), requestId);
 
   if (getHttpMethod(modules, endpoint, incomingParams) === 'POST') {
     let payload = endpoint.postPayload(modules, incomingParams);
