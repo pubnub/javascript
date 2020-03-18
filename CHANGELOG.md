@@ -1,4 +1,10 @@
+## [v4.27.4](https://github.com/pubnub/javascript/releases/tag/v4.27.4)
+March-18-2020
 
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.3...v4.27.4)
+
+- 🌟️ Add telemetry (latency) for all existing operation types. 
+- 🐛 Replace `cbor-sync` module with `cbor-js` for client implementation for web to fix compatibility with Salesforce Lightning Web Components. 
 
 ## [v4.27.3](https://github.com/pubnub/javascript/tree/v4.27.3)
   January-06-2020

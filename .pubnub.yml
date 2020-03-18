@@ -1,6 +1,15 @@
 ---
 changelog:
-
+  -
+    changes:
+      -
+        text: "Add telemetry (latency) for all existing operation types."
+        type: feature
+      -
+        text: "Replace `cbor-sync` module with `cbor-js` for client implementation for web to fix compatibility with Salesforce Lightning Web Components."
+        type: bug
+    date: 2020-03-18
+    version: v4.27.4
   -
     changes:
       -
