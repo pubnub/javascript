@@ -196,7 +196,7 @@ export default class {
     // set config on beacon (https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) usage
     this.setSendBeaconConfig(setup.useSendBeacon || true);
     // how long the SDK will report the client to be alive before issuing a timeout
-    if (setup.presenceTimeout) {
+    if (Number.isInteger(setup.presenceTimeout)) {
       this.setPresenceTimeout(setup.presenceTimeout);
     } else {
       this._presenceTimeout = PRESENCE_TIMEOUT_DEFAULT;
