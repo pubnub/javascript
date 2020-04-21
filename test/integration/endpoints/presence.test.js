@@ -665,6 +665,39 @@ describe('presence endpoints', () => {
       });
     });
 
+    it('passes arbitrary query parameters', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/game1')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+          test: 'param'
+        })
+        .reply(
+          200,
+          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}'
+        );
+
+      pubnub.hereNow({ channels: ['game1'], queryParameters: { test: 'param' } }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          game1: {
+            name: 'game1',
+            occupancy: 1,
+            occupants: [
+              {
+                state: null,
+                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
+              },
+            ],
+          },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
     it('should add here now API telemetry information', (done) => {
       let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/game1').query(true);
       const delays = [100, 200, 300, 400];

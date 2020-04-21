@@ -1,3 +1,11 @@
+## [v4.27.5](https://github.com/pubnub/javascript/releases/tag/v4.27.5)
+April-21-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.4...v4.27.5)
+
+- 🐛 Update READMEmd CDN links during deployment. 
+- 🐛 Fix pre-compiled scripts update. 
+
 ## [v4.27.4](https://github.com/pubnub/javascript/releases/tag/v4.27.4)
 March-18-2020
 

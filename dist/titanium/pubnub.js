@@ -1,4 +1,4 @@
-/*! 4.27.3 / Consumer  */
+/*! 4.27.5 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -479,7 +479,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.3';
+      return '4.27.5';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -554,7 +554,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _lilUuid = _interopRequireDefault(__webpack_require__(11));
+var _lilUuid = _interopRequireDefault(__webpack_require__(12));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -584,7 +584,7 @@ exports["default"] = void 0;
 
 var _config = _interopRequireDefault(__webpack_require__(3));
 
-var _hmacSha = _interopRequireDefault(__webpack_require__(12));
+var _hmacSha = _interopRequireDefault(__webpack_require__(13));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -971,15 +971,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _pubnubCommon = _interopRequireDefault(__webpack_require__(10));
+var _cborSync = _interopRequireDefault(__webpack_require__(10));
 
-var _networking = _interopRequireDefault(__webpack_require__(65));
+var _pubnubCommon = _interopRequireDefault(__webpack_require__(11));
 
-var _common = _interopRequireDefault(__webpack_require__(66));
+var _networking = _interopRequireDefault(__webpack_require__(67));
 
-var _common2 = _interopRequireDefault(__webpack_require__(67));
+var _common = _interopRequireDefault(__webpack_require__(68));
 
-var _titanium = __webpack_require__(69);
+var _common2 = _interopRequireDefault(__webpack_require__(69));
+
+var _titanium = __webpack_require__(70);
 
 var _flow_interfaces = __webpack_require__(0);
 
@@ -1006,7 +1008,9 @@ var PubNub = function (_PubNubCore) {
     _classCallCheck(this, PubNub);
 
     setup.db = new _common["default"]();
-    setup.cbor = new _common2["default"]();
+    setup.cbor = new _common2["default"](_cborSync["default"].decode, function (base64String) {
+      return new Buffer.from(base64String, 'base64');
+    });
     setup.sdkFamily = 'TitaniumSDK';
     setup.networking = new _networking["default"]({
       del: _titanium.del,
@@ -1027,6 +1031,640 @@ module.exports = exports.default;
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
+	if (true) {
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else {}
+})(this, function () {
+	var CBOR = (function () {
+		function BinaryHex(hex) {
+			this.$hex = hex;
+		}
+		BinaryHex.prototype = {
+			length: function () {
+				return this.$hex.length/2;
+			},
+			toString: function (format) {
+				if (!format || format === 'hex' || format === 16) return this.$hex;
+				if (format === 'utf-8') {
+					var encoded = '';
+					for (var i = 0; i < this.$hex.length; i += 2) {
+						encoded += '%' + this.$hex.substring(i, i + 2);
+					}
+					return decodeURIComponent(encoded);
+				}
+				if (format === 'latin') {
+					var encoded = [];
+					for (var i = 0; i < this.$hex.length; i += 2) {
+						encoded.push(parseInt(this.$hex.substring(i, i + 2), 16));
+					}
+					return String.fromCharCode.apply(String, encoded);
+				}
+				throw new Error('Unrecognised format: ' + format);
+			}
+		};
+		BinaryHex.fromLatinString = function (latinString) {
+			var hex = '';
+			for (var i = 0; i < latinString.length; i++) {
+				var pair = latinString.charCodeAt(i).toString(16);
+				if (pair.length === 1) pair = "0" + pair;
+				hex += pair;
+			}
+			return new BinaryHex(hex);
+		};
+		BinaryHex.fromUtf8String = function (utf8String) {
+			var encoded = encodeURIComponent(utf8String);
+			var hex = '';
+			for (var i = 0; i < encoded.length; i++) {
+				if (encoded.charAt(i) === '%') {
+					hex += encoded.substring(i + 1, i + 3);
+					i += 2;
+				} else {
+					var hexPair = encoded.charCodeAt(i).toString(16);
+					if (hexPair.length < 2) hexPair = "0" + hexPair;
+					hex += hexPair;
+				}
+			}
+			return new BinaryHex(hex);
+		};
+
+		var semanticEncoders = [];
+		var semanticDecoders = {};
+	
+		var notImplemented = function (label) {
+			return function () {
+				throw new Error(label + ' not implemented');
+			};
+		};
+	
+		function Reader() {
+		}
+		Reader.prototype = {
+			peekByte: notImplemented('peekByte'),
+			readByte: notImplemented('readByte'),
+			readChunk: notImplemented('readChunk'),
+			readFloat16: function () {
+				var half = this.readUint16();
+				var exponent = (half&0x7fff) >> 10;
+				var mantissa = half&0x3ff;
+				var negative = half&0x8000;
+				if (exponent === 0x1f) {
+					if (mantissa === 0) {
+						return negative ? -Infinity : Infinity;
+					}
+					return NaN;
+				}
+				var magnitude = exponent ? Math.pow(2, exponent - 25)*(1024 + mantissa) : Math.pow(2, -24)*mantissa;
+				return negative ? -magnitude : magnitude;
+			},
+			readFloat32: function () {
+				var intValue = this.readUint32();
+				var exponent = (intValue&0x7fffffff) >> 23;
+				var mantissa = intValue&0x7fffff;
+				var negative = intValue&0x80000000;
+				if (exponent === 0xff) {
+					if (mantissa === 0) {
+						return negative ? -Infinity : Infinity;
+					}
+					return NaN;
+				}
+				var magnitude = exponent ? Math.pow(2, exponent - 23 - 127)*(8388608 + mantissa) : Math.pow(2, -23 - 126)*mantissa;
+				return negative ? -magnitude : magnitude;
+			},
+			readFloat64: function () {
+				var int1 = this.readUint32(), int2 = this.readUint32();
+				var exponent = (int1 >> 20)&0x7ff;
+				var mantissa = (int1&0xfffff)*4294967296 + int2;
+				var negative = int1&0x80000000;
+				if (exponent === 0x7ff) {
+					if (mantissa === 0) {
+						return negative ? -Infinity : Infinity;
+					}
+					return NaN;
+				}
+				var magnitude = exponent ? Math.pow(2, exponent - 52 - 1023)*(4503599627370496 + mantissa) : Math.pow(2, -52 - 1022)*mantissa;
+				return negative ? -magnitude : magnitude;
+			},
+			readUint16: function () {
+				return this.readByte()*256 + this.readByte();
+			},
+			readUint32: function () {
+				return this.readUint16()*65536 + this.readUint16();
+			},
+			readUint64: function () {
+				return this.readUint32()*4294967296 + this.readUint32();
+			}
+		};
+		function Writer() {
+		}
+		Writer.prototype = {
+			writeByte: notImplemented('writeByte'),
+			result: notImplemented('result'),
+			writeFloat16: notImplemented('writeFloat16'),
+			writeFloat32: notImplemented('writeFloat32'),
+			writeFloat64: notImplemented('writeFloat64'),
+			writeUint16: function (value) {
+				this.writeByte((value >> 8)&0xff);
+				this.writeByte(value&0xff);
+			},
+			writeUint32: function (value) {
+				this.writeUint16((value>>16)&0xffff);
+				this.writeUint16(value&0xffff);
+			},
+			writeUint64: function (value) {
+				if (value >= 9007199254740992 || value <= -9007199254740992) {
+					throw new Error('Cannot encode Uint64 of: ' + value + ' magnitude to big (floating point errors)');
+				}
+				this.writeUint32(Math.floor(value/4294967296));
+				this.writeUint32(value%4294967296);
+			},
+			writeString: notImplemented('writeString'),
+			canWriteBinary: function (chunk) {
+				return false;
+			},
+			writeBinary: notImplemented('writeChunk')
+		};
+
+		function readHeaderRaw(reader) {
+			var firstByte = reader.readByte();
+			var majorType = firstByte >> 5, value = firstByte&0x1f;
+			return {type: majorType, value: value};
+		}
+	
+		function valueFromHeader(header, reader) {
+			var value = header.value;
+			if (value < 24) {
+				return value;
+			} else if (value == 24) {
+				return reader.readByte();
+			} else if (value == 25) {
+				return reader.readUint16();
+			} else if (value == 26) {
+				return reader.readUint32();
+			} else if (value == 27) {
+				return reader.readUint64();
+			} else if (value == 31) {
+				// special value for non-terminating arrays/objects
+				return null;
+			}
+			notImplemented('Additional info: ' + value)();
+		}
+	
+		function writeHeaderRaw(type, value, writer) {
+			writer.writeByte((type<<5)|value);
+		}
+	
+		function writeHeader(type, value, writer) {
+			var firstByte = type<<5;
+			if (value < 24) {
+				writer.writeByte(firstByte|value);
+			} else if (value < 256) {
+				writer.writeByte(firstByte|24);
+				writer.writeByte(value);
+			} else if (value < 65536) {
+				writer.writeByte(firstByte|25);
+				writer.writeUint16(value);
+			} else if (value < 4294967296) {
+				writer.writeByte(firstByte|26);
+				writer.writeUint32(value);
+			} else {
+				writer.writeByte(firstByte|27);
+				writer.writeUint64(value);
+			}
+		}
+	
+		var stopCode = new Error(); // Just a unique object, that won't compare strictly equal to anything else
+	
+		function decodeReader(reader) {
+			var header = readHeaderRaw(reader);
+			switch (header.type) {
+				case 0:
+					return valueFromHeader(header, reader);
+				case 1:
+					return -1 -valueFromHeader(header, reader);
+				case 2:
+					return reader.readChunk(valueFromHeader(header, reader));
+				case 3:
+					var buffer = reader.readChunk(valueFromHeader(header, reader));
+					return buffer.toString('utf-8');
+				case 4:
+				case 5:
+					var arrayLength = valueFromHeader(header, reader);
+					var result = [];
+					if (arrayLength !== null) {
+						if (header.type === 5) {
+							arrayLength *= 2;
+						} 
+						for (var i = 0; i < arrayLength; i++) {
+							result[i] = decodeReader(reader);
+						}
+					} else {
+						var item;
+						while ((item = decodeReader(reader)) !== stopCode) {
+							result.push(item);
+						}
+					}
+					if (header.type === 5) {
+						var objResult = {};
+						for (var i = 0; i < result.length; i += 2) {
+							objResult[result[i]] = result[i + 1];
+						}
+						return objResult;
+					} else {
+						return result;
+					}
+				case 6:
+					var tag = valueFromHeader(header, reader);
+					var decoder = semanticDecoders[tag];
+					var result = decodeReader(reader);
+					return decoder ? decoder(result) : result;
+				case 7:
+					if (header.value === 25) {
+						return reader.readFloat16();
+					} else if (header.value === 26) {
+						return reader.readFloat32();
+					} else if (header.value === 27) {
+						return reader.readFloat64();
+					}
+					switch (valueFromHeader(header, reader)) {
+						case 20:
+							return false;
+						case 21:
+							return true;
+						case 22:
+							return null;
+						case 23:
+							return undefined;
+						case null:
+							return stopCode;
+						default:
+							throw new Error('Unknown fixed value: ' + header.value);
+					}
+				default:
+					throw new Error('Unsupported header: ' + JSON.stringify(header));
+			}
+			throw new Error('not implemented yet');
+		}
+	
+		function encodeWriter(data, writer) {
+			for (var i = 0; i < semanticEncoders.length; i++) {
+				var replacement = semanticEncoders[i].fn(data);
+				if (replacement !== undefined) {
+					writeHeader(6, semanticEncoders[i].tag, writer);
+					return encodeWriter(replacement, writer);
+				}
+			}
+		
+			if (data && typeof data.toCBOR === 'function') {
+				data = data.toCBOR();
+			}
+		
+			if (data === false) {
+				writeHeader(7, 20, writer);
+			} else if (data === true) {
+				writeHeader(7, 21, writer);
+			} else if (data === null) {
+				writeHeader(7, 22, writer);
+			} else if (data === undefined) {
+				writeHeader(7, 23, writer);
+			} else if (typeof data === 'number') {
+				if (Math.floor(data) === data && data < 9007199254740992 && data > -9007199254740992) {
+					// Integer
+					if (data < 0) {
+						writeHeader(1, -1 - data, writer);
+					} else {
+						writeHeader(0, data, writer);
+					}
+				} else {
+					writeHeaderRaw(7, 27, writer);
+					writer.writeFloat64(data);
+				}
+			} else if (typeof data === 'string') {
+				writer.writeString(data, function (length) {
+					writeHeader(3, length, writer);
+				});
+			} else if (writer.canWriteBinary(data)) {
+				writer.writeBinary(data, function (length) {
+					writeHeader(2, length, writer);
+				});
+			} else if (typeof data === 'object') {
+				if (api.config.useToJSON && typeof data.toJSON === 'function') {
+			   		data = data.toJSON();
+			   	}
+				if (Array.isArray(data)) {
+					writeHeader(4, data.length, writer);
+					for (var i = 0; i < data.length; i++) {
+						encodeWriter(data[i], writer);
+					}
+				} else {
+					var keys = Object.keys(data);
+					writeHeader(5, keys.length, writer);
+					for (var i = 0; i < keys.length; i++) {
+						encodeWriter(keys[i], writer);
+						encodeWriter(data[keys[i]], writer);
+					}
+				}
+			} else {
+				throw new Error('CBOR encoding not supported: ' + data);
+			}
+		}
+		
+		var readerFunctions = [];
+		var writerFunctions = [];
+	
+		var api = {
+			config: {
+				useToJSON: true
+			},
+			addWriter: function (format, writerFunction) {
+				if (typeof format === 'string') {
+					writerFunctions.push(function (f) {
+						if (format === f) return writerFunction(f);
+					});
+				} else {
+					writerFunctions.push(format);
+				}
+			},
+			addReader: function (format, readerFunction) {
+				if (typeof format === 'string') {
+					readerFunctions.push(function (data, f) {
+						if (format === f) return readerFunction(data, f);
+					});
+				} else {
+					readerFunctions.push(format);
+				}
+			},
+			encode: function (data, format) {
+				for (var i = 0; i < writerFunctions.length; i++) {
+					var func = writerFunctions[i];
+					var writer = func(format);
+					if (writer) {
+						encodeWriter(data, writer);
+						return writer.result();
+					}
+				}
+				throw new Error('Unsupported output format: ' + format);
+			},
+			decode: function (data, format) {
+				for (var i = 0; i < readerFunctions.length; i++) {
+					var func = readerFunctions[i];
+					var reader = func(data, format);
+					if (reader) {
+						return decodeReader(reader);
+					}
+				}
+				throw new Error('Unsupported input format: ' + format);
+			},
+			addSemanticEncode: function (tag, fn) {
+				if (typeof tag !== 'number' || tag%1 !== 0 || tag < 0) {
+					throw new Error('Tag must be a positive integer');
+				}
+				semanticEncoders.push({tag: tag, fn: fn});
+				return this;
+			},
+			addSemanticDecode: function (tag, fn) {
+				if (typeof tag !== 'number' || tag%1 !== 0 || tag < 0) {
+					throw new Error('Tag must be a positive integer');
+				}
+				semanticDecoders[tag] = fn;
+				return this;
+			},
+			Reader: Reader,
+			Writer: Writer
+		};
+		
+		/** Node.js Buffers **/
+		function BufferReader(buffer) {
+			this.buffer = buffer;
+			this.pos = 0;
+		}
+		BufferReader.prototype = Object.create(Reader.prototype);
+		BufferReader.prototype.peekByte = function () {
+			return this.buffer[this.pos];
+		};
+		BufferReader.prototype.readByte = function () {
+			return this.buffer[this.pos++];
+		};
+		BufferReader.prototype.readUint16 = function () {
+			var result = this.buffer.readUInt16BE(this.pos);
+			this.pos += 2;
+			return result;
+		};
+		BufferReader.prototype.readUint32 = function () {
+			var result = this.buffer.readUInt32BE(this.pos);
+			this.pos += 4;
+			return result;
+		};
+		BufferReader.prototype.readFloat32 = function () {
+			var result = this.buffer.readFloatBE(this.pos);
+			this.pos += 4;
+			return result;
+		};
+		BufferReader.prototype.readFloat64 = function () {
+			var result = this.buffer.readDoubleBE(this.pos);
+			this.pos += 8;
+			return result;
+		};
+		BufferReader.prototype.readChunk = function (length) {
+			var result = Buffer.alloc(length);
+			this.buffer.copy(result, 0, this.pos, this.pos += length);
+			return result;
+		};
+	
+		function BufferWriter(stringFormat) {
+			this.byteLength = 0;
+			this.defaultBufferLength = 16384; // 16k
+			this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+			this.latestBufferOffset = 0;
+			this.completeBuffers = [];
+			this.stringFormat = stringFormat;
+		}
+		BufferWriter.prototype = Object.create(Writer.prototype);
+		BufferWriter.prototype.writeByte = function (value) {
+			this.latestBuffer[this.latestBufferOffset++] = value;
+			if (this.latestBufferOffset >= this.latestBuffer.length) {
+				this.completeBuffers.push(this.latestBuffer);
+				this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+				this.latestBufferOffset = 0;
+			}
+			this.byteLength++;
+		}
+		BufferWriter.prototype.writeFloat32 = function (value) {
+			var buffer = Buffer.alloc(4);
+			buffer.writeFloatBE(value, 0);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.writeFloat64 = function (value) {
+			var buffer = Buffer.alloc(8);
+			buffer.writeDoubleBE(value, 0);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.writeString = function (string, lengthFunc) {
+			var buffer = Buffer.from(string, 'utf-8');
+			lengthFunc(buffer.length);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.canWriteBinary = function (data) {
+			return data instanceof Buffer;
+		};
+		BufferWriter.prototype.writeBinary = function (buffer, lengthFunc) {
+			lengthFunc(buffer.length);
+			this.writeBuffer(buffer);
+		};
+		BufferWriter.prototype.writeBuffer = function (chunk) {
+			if (!(chunk instanceof Buffer)) throw new TypeError('BufferWriter only accepts Buffers');
+			if (!this.latestBufferOffset) {
+				this.completeBuffers.push(chunk);
+			} else if (this.latestBuffer.length - this.latestBufferOffset >= chunk.length) {
+				chunk.copy(this.latestBuffer, this.latestBufferOffset);
+				this.latestBufferOffset += chunk.length;
+				if (this.latestBufferOffset >= this.latestBuffer.length) {
+					this.completeBuffers.push(this.latestBuffer);
+					this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+					this.latestBufferOffset = 0;
+				}
+			} else {
+				this.completeBuffers.push(this.latestBuffer.slice(0, this.latestBufferOffset));
+				this.completeBuffers.push(chunk);
+				this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
+				this.latestBufferOffset = 0;
+			}
+			this.byteLength += chunk.length;
+		}
+		BufferWriter.prototype.result = function () {
+			// Copies them all into a single Buffer
+			var result = Buffer.alloc(this.byteLength);
+			var offset = 0;
+			for (var i = 0; i < this.completeBuffers.length; i++) {
+				var buffer = this.completeBuffers[i];
+				buffer.copy(result, offset, 0, buffer.length);
+				offset += buffer.length;
+			}
+			if (this.latestBufferOffset) {
+				this.latestBuffer.copy(result, offset, 0, this.latestBufferOffset);
+			}
+			
+			if (this.stringFormat) return result.toString(this.stringFormat);
+			return result;
+		}
+		
+		if (typeof Buffer === 'function') {
+			api.addReader(function (data, format) {
+				if (data instanceof Buffer) {
+					return new BufferReader(data);
+				}
+				if (format === 'hex' || format === 'base64') {
+					var buffer = Buffer.from(data, format);
+					return new BufferReader(buffer);
+				}
+			});
+			api.addWriter(function (format) {
+				if (!format || format === 'buffer') {
+					return new BufferWriter();
+				} else if (format === 'hex' || format === 'base64') {
+					return new BufferWriter(format);
+				}
+			});
+		}
+		
+		/** Hex-encoding (and Latin1) for browser **/
+		function HexReader(hex) {
+			this.hex = hex;
+			this.pos = 0;
+		}
+		HexReader.prototype = Object.create(Reader.prototype);
+		HexReader.prototype.peekByte = function () {
+			var pair = this.hex.substring(this.pos, 2);
+			return parseInt(pair, 16);
+		};
+		HexReader.prototype.readByte = function () {
+			var pair = this.hex.substring(this.pos, this.pos + 2);
+			this.pos += 2;
+			return parseInt(pair, 16);
+		};
+		HexReader.prototype.readChunk = function (length) {
+			var hex = this.hex.substring(this.pos, this.pos + length*2);
+			this.pos += length*2;
+			if (typeof Buffer === 'function') return Buffer.from(hex, 'hex');
+			return new BinaryHex(hex);
+		};
+	
+		function HexWriter(finalFormat) {
+			this.$hex = '';
+			this.finalFormat = finalFormat || 'hex'
+		}
+		HexWriter.prototype = Object.create(Writer.prototype);
+		HexWriter.prototype.writeByte = function (value) {
+			if (value < 0 || value > 255) throw new Error('Byte value out of range: ' + value);
+			var hex = value.toString(16);
+			if (hex.length == 1) {
+				hex = '0' + hex;
+			}
+			this.$hex += hex;
+		}
+		HexWriter.prototype.canWriteBinary = function (chunk) {
+			return chunk instanceof BinaryHex || (typeof Buffer === 'function' && chunk instanceof Buffer);
+		}
+		HexWriter.prototype.writeBinary = function (chunk, lengthFunction) {
+			if (chunk instanceof BinaryHex) {
+				lengthFunction(chunk.length());
+				this.$hex += chunk.$hex;
+			} else if (typeof Buffer === 'function' && chunk instanceof Buffer) {
+				lengthFunction(chunk.length);
+				this.$hex += chunk.toString('hex');
+			} else {
+				throw new TypeError('HexWriter only accepts BinaryHex or Buffers');
+			}
+		}
+		HexWriter.prototype.result = function () {
+			if (this.finalFormat === 'buffer' && typeof Buffer === 'function') {
+				return Buffer.from(this.$hex, 'hex');
+			}
+			return new BinaryHex(this.$hex).toString(this.finalFormat);
+		}
+		HexWriter.prototype.writeString = function (string, lengthFunction) {
+			var buffer = BinaryHex.fromUtf8String(string);
+			lengthFunction(buffer.length());
+			this.$hex += buffer.$hex;
+		}
+
+		api.addReader(function (data, format) {
+			if (data instanceof BinaryHex || data.$hex) {
+				return new HexReader(data.$hex);
+			}
+			if (format === 'hex') {
+				return new HexReader(data)
+			}
+		});
+		api.addWriter(function (format) {
+			if (format === 'hex') {
+				return new HexWriter();
+			}
+		});
+
+		return api;
+	})();
+
+	CBOR.addSemanticEncode(0, function (data) {
+		if (data instanceof Date) {
+			return data.toISOString();
+		}
+	}).addSemanticDecode(0, function (isoString) {
+		return new Date(isoString);
+	}).addSemanticDecode(1, function (isoString) {
+		return new Date(isoString);
+	});
+
+	return CBOR;
+});
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
@@ -1041,109 +1679,111 @@ var _config = _interopRequireDefault(__webpack_require__(3));
 
 var _index = _interopRequireDefault(__webpack_require__(6));
 
-var _subscription_manager = _interopRequireDefault(__webpack_require__(13));
+var _subscription_manager = _interopRequireDefault(__webpack_require__(14));
 
-var _push_payload = _interopRequireDefault(__webpack_require__(16));
+var _telemetry_manager = _interopRequireDefault(__webpack_require__(17));
+
+var _push_payload = _interopRequireDefault(__webpack_require__(18));
 
 var _listener_manager = _interopRequireDefault(__webpack_require__(7));
 
-var _token_manager = _interopRequireDefault(__webpack_require__(17));
+var _token_manager = _interopRequireDefault(__webpack_require__(19));
 
-var _endpoint = _interopRequireDefault(__webpack_require__(18));
+var _endpoint = _interopRequireDefault(__webpack_require__(20));
 
-var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(19));
+var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(21));
 
-var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(20));
+var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(22));
 
-var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(21));
+var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(23));
 
-var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(22));
+var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(24));
 
-var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(23));
+var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(25));
 
-var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(24));
+var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(26));
 
-var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(25));
+var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(27));
 
-var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(26));
+var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(28));
 
-var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(27));
+var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(29));
 
-var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(28));
+var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(30));
 
-var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(29));
+var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(31));
 
-var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(30));
+var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(32));
 
-var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(31));
+var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(33));
 
-var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(32));
+var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(34));
 
-var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(33));
+var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(35));
 
-var addMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
+var addMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
 
-var removeMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(35));
+var removeMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
 
-var getMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(36));
+var getMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
 
-var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
+var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
 
-var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
+var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
 
-var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
+var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
 
-var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
+var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
 
-var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
+var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
 
-var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
+var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
 
-var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
+var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
 
-var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
+var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
 
-var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
+var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
 
-var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
+var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
 
-var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
+var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
 
-var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
+var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
 
-var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
+var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
 
-var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
+var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
 
-var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
+var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
 
-var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
+var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
 
-var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
+var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
 
-var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
+var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
 
-var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
+var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
 
-var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
+var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
 
-var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
+var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
 
-var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
+var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
 
-var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
+var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(61));
 
-var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
+var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(62));
 
-var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(61));
+var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(63));
 
-var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(62));
+var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(64));
 
-var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(63));
+var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(65));
 
 var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(8));
 
-var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(64));
+var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(66));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -1174,6 +1814,8 @@ var _default = function () {
     _classCallCheck(this, _default);
 
     _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_telemetryManager", void 0);
 
     _defineProperty(this, "_listenerManager", void 0);
 
@@ -1327,11 +1969,15 @@ var _default = function () {
     });
     networking.init(config);
     var tokenManager = this._tokenManager = new _token_manager["default"](config, cbor);
+    var telemetryManager = this._telemetryManager = new _telemetry_manager["default"]({
+      maximumSamplesCount: 60000
+    });
     var modules = {
       config: config,
       networking: networking,
       crypto: crypto,
-      tokenManager: tokenManager
+      tokenManager: tokenManager,
+      telemetryManager: telemetryManager
     };
 
     var timeEndpoint = _endpoint["default"].bind(this, modules, timeEndpointConfig);
@@ -1506,7 +2152,7 @@ _defineProperty(_default, "CATEGORIES", _categories["default"]);
 module.exports = exports.default;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*! lil-uuid - v0.1 - MIT License - https://github.com/lil-js/uuid */
@@ -1550,7 +2196,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2457,7 +3103,7 @@ CryptoJS.mode.ECB = function () {
 module.exports = CryptoJS;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2474,9 +3120,9 @@ var _config = _interopRequireDefault(__webpack_require__(3));
 
 var _listener_manager = _interopRequireDefault(__webpack_require__(7));
 
-var _reconnection_manager = _interopRequireDefault(__webpack_require__(14));
+var _reconnection_manager = _interopRequireDefault(__webpack_require__(15));
 
-var _deduping_manager = _interopRequireDefault(__webpack_require__(15));
+var _deduping_manager = _interopRequireDefault(__webpack_require__(16));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -3197,7 +3843,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3274,7 +3920,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3361,7 +4007,193 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 16 */
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = function () {
+  function _default(configuration) {
+    _classCallCheck(this, _default);
+
+    _defineProperty(this, "_maximumSamplesCount", 100);
+
+    _defineProperty(this, "_trackedLatencies", {});
+
+    _defineProperty(this, "_latencies", {});
+
+    this._maximumSamplesCount = configuration.maximumSamplesCount || this._maximumSamplesCount;
+  }
+
+  _createClass(_default, [{
+    key: "operationsLatencyForRequest",
+    value: function operationsLatencyForRequest() {
+      var _this = this;
+
+      var latencies = {};
+      Object.keys(this._latencies).forEach(function (endpointName) {
+        var operationLatencies = _this._latencies[endpointName];
+
+        var averageLatency = _this._averageLatency(operationLatencies);
+
+        if (averageLatency > 0) {
+          latencies["l_".concat(endpointName)] = averageLatency;
+        }
+      });
+      return latencies;
+    }
+  }, {
+    key: "startLatencyMeasure",
+    value: function startLatencyMeasure(operationType, identifier) {
+      if (operationType === _operations["default"].PNSubscribeOperation || !identifier) {
+        return;
+      }
+
+      this._trackedLatencies[identifier] = Date.now();
+    }
+  }, {
+    key: "stopLatencyMeasure",
+    value: function stopLatencyMeasure(operationType, identifier) {
+      if (operationType === _operations["default"].PNSubscribeOperation || !identifier) {
+        return;
+      }
+
+      var endpointName = this._endpointName(operationType);
+
+      var endpointLatencies = this._latencies[endpointName];
+      var startDate = this._trackedLatencies[identifier];
+
+      if (!endpointLatencies) {
+        endpointLatencies = this._latencies[endpointName] = [];
+      }
+
+      endpointLatencies.push(Date.now() - startDate);
+
+      if (endpointLatencies.length > this._maximumSamplesCount) {
+        endpointLatencies.splice(0, endpointLatencies.length - this._maximumSamplesCount);
+      }
+
+      delete this._trackedLatencies[identifier];
+    }
+  }, {
+    key: "_averageLatency",
+    value: function _averageLatency(latencies) {
+      var arrayReduce = function arrayReduce(accumulatedLatency, latency) {
+        return accumulatedLatency + latency;
+      };
+
+      return Math.floor(latencies.reduce(arrayReduce, 0) / latencies.length);
+    }
+  }, {
+    key: "_endpointName",
+    value: function _endpointName(operationType) {
+      var operation = null;
+
+      switch (operationType) {
+        case _operations["default"].PNPublishOperation:
+          operation = 'pub';
+          break;
+
+        case _operations["default"].PNSignalOperation:
+          operation = 'sig';
+          break;
+
+        case _operations["default"].PNHistoryOperation:
+        case _operations["default"].PNFetchMessagesOperation:
+        case _operations["default"].PNDeleteMessagesOperation:
+        case _operations["default"].PNMessageCounts:
+          operation = 'hist';
+          break;
+
+        case _operations["default"].PNUnsubscribeOperation:
+        case _operations["default"].PNWhereNowOperation:
+        case _operations["default"].PNHereNowOperation:
+        case _operations["default"].PNHeartbeatOperation:
+        case _operations["default"].PNSetStateOperation:
+        case _operations["default"].PNGetStateOperation:
+          operation = 'pres';
+          break;
+
+        case _operations["default"].PNAddChannelsToGroupOperation:
+        case _operations["default"].PNRemoveChannelsFromGroupOperation:
+        case _operations["default"].PNChannelGroupsOperation:
+        case _operations["default"].PNRemoveGroupOperation:
+        case _operations["default"].PNChannelsForGroupOperation:
+          operation = 'cg';
+          break;
+
+        case _operations["default"].PNPushNotificationEnabledChannelsOperation:
+        case _operations["default"].PNRemoveAllPushNotificationsOperation:
+          operation = 'push';
+          break;
+
+        case _operations["default"].PNCreateUserOperation:
+        case _operations["default"].PNUpdateUserOperation:
+        case _operations["default"].PNDeleteUserOperation:
+        case _operations["default"].PNGetUserOperation:
+        case _operations["default"].PNGetUsersOperation:
+        case _operations["default"].PNCreateSpaceOperation:
+        case _operations["default"].PNUpdateSpaceOperation:
+        case _operations["default"].PNDeleteSpaceOperation:
+        case _operations["default"].PNGetSpaceOperation:
+        case _operations["default"].PNGetSpacesOperation:
+        case _operations["default"].PNGetMembersOperation:
+        case _operations["default"].PNUpdateMembersOperation:
+        case _operations["default"].PNGetMembershipsOperation:
+        case _operations["default"].PNUpdateMembershipsOperation:
+          operation = 'obj';
+          break;
+
+        case _operations["default"].PNAddMessageActionOperation:
+        case _operations["default"].PNRemoveMessageActionOperation:
+        case _operations["default"].PNGetMessageActionsOperation:
+          operation = 'msga';
+          break;
+
+        case _operations["default"].PNAccessManagerGrant:
+        case _operations["default"].PNAccessManagerAudit:
+          operation = 'pam';
+          break;
+
+        case _operations["default"].PNAccessManagerGrantToken:
+          operation = 'pam3';
+          break;
+
+        default:
+          operation = 'time';
+          break;
+      }
+
+      return operation;
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4053,7 +4885,7 @@ var _default = NotificationsPayload;
 exports["default"] = _default;
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4343,7 +5175,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4365,6 +5197,12 @@ var _config = _interopRequireDefault(__webpack_require__(3));
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -4506,7 +5344,11 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
 
 function _default(modules, endpoint) {
   var networking = modules.networking,
-      config = modules.config;
+      config = modules.config,
+      telemetryManager = modules.telemetryManager;
+
+  var requestId = _uuid["default"].createUUID();
+
   var callback = null;
   var promiseComponent = null;
   var incomingParams = {};
@@ -4546,13 +5388,18 @@ function _default(modules, endpoint) {
   };
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
+  var telemetryLatencies = telemetryManager.operationsLatencyForRequest();
+
+  if (Object.keys(telemetryLatencies).length) {
+    outgoingParams = _objectSpread({}, outgoingParams, {}, telemetryLatencies);
+  }
 
   if (config.useInstanceId) {
     outgoingParams.instanceid = config.instanceId;
   }
 
   if (config.useRequestId) {
-    outgoingParams.requestid = _uuid["default"].createUUID();
+    outgoingParams.requestid = requestId;
   }
 
   if (endpoint.isAuthSupported()) {
@@ -4579,6 +5426,7 @@ function _default(modules, endpoint) {
       return;
     }
 
+    telemetryManager.stopLatencyMeasure(endpoint.getOperation(), requestId);
     var parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
 
     if (callback) {
@@ -4587,6 +5435,8 @@ function _default(modules, endpoint) {
       promiseComponent.fulfill(parsedPayload);
     }
   };
+
+  telemetryManager.startLatencyMeasure(endpoint.getOperation(), requestId);
 
   if (getHttpMethod(modules, endpoint, incomingParams) === 'POST') {
     var payload = endpoint.postPayload(modules, incomingParams);
@@ -4613,7 +5463,7 @@ function _default(modules, endpoint) {
 module.exports = exports.default;
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4679,7 +5529,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4745,7 +5595,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4805,7 +5655,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4862,7 +5712,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4924,7 +5774,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5013,7 +5863,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5102,7 +5952,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5188,7 +6038,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5272,7 +6122,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5340,7 +6190,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5405,7 +6255,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5478,7 +6328,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5562,7 +6412,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5641,7 +6491,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 33 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5665,6 +6515,12 @@ var _operations = _interopRequireDefault(__webpack_require__(1));
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function getOperation() {
   return _operations["default"].PNHereNowOperation;
@@ -5706,7 +6562,9 @@ function prepareParams(modules, incomingParams) {
       _incomingParams$inclu = incomingParams.includeUUIDs,
       includeUUIDs = _incomingParams$inclu === void 0 ? true : _incomingParams$inclu,
       _incomingParams$inclu2 = incomingParams.includeState,
-      includeState = _incomingParams$inclu2 === void 0 ? false : _incomingParams$inclu2;
+      includeState = _incomingParams$inclu2 === void 0 ? false : _incomingParams$inclu2,
+      _incomingParams$query = incomingParams.queryParameters,
+      queryParameters = _incomingParams$query === void 0 ? {} : _incomingParams$query;
   var params = {};
   if (!includeUUIDs) params.disable_uuids = 1;
   if (includeState) params.state = 1;
@@ -5715,6 +6573,7 @@ function prepareParams(modules, incomingParams) {
     params['channel-group'] = channelGroups.join(',');
   }
 
+  params = _objectSpread({}, params, {}, queryParameters);
   return params;
 }
 
@@ -5806,7 +6665,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5891,7 +6750,7 @@ function handleResponse(modules, addMessageActionResponse) {
 }
 
 /***/ }),
-/* 35 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5962,7 +6821,7 @@ function handleResponse(modules, removeMessageActionResponse) {
 }
 
 /***/ }),
-/* 36 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6038,7 +6897,7 @@ function handleResponse(modules, getMessageActionsResponse) {
 }
 
 /***/ }),
-/* 37 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6157,7 +7016,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 38 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6278,7 +7137,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 39 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6345,7 +7204,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 40 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6431,7 +7290,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 41 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6483,7 +7342,8 @@ function getAuthToken(modules) {
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include,
       limit = incomingParams.limit,
-      page = incomingParams.page;
+      page = incomingParams.page,
+      filter = incomingParams.filter;
   var params = {};
 
   if (limit) {
@@ -6518,6 +7378,10 @@ function prepareParams(modules, incomingParams) {
     }
   }
 
+  if (filter) {
+    params.filter = filter;
+  }
+
   return params;
 }
 
@@ -6526,7 +7390,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 42 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6645,7 +7509,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 43 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6766,7 +7630,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 44 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6833,7 +7697,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 45 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6885,7 +7749,8 @@ function getAuthToken(modules) {
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include,
       limit = incomingParams.limit,
-      page = incomingParams.page;
+      page = incomingParams.page,
+      filter = incomingParams.filter;
   var params = {};
 
   if (limit) {
@@ -6920,6 +7785,10 @@ function prepareParams(modules, incomingParams) {
     }
   }
 
+  if (filter) {
+    params.filter = filter;
+  }
+
   return params;
 }
 
@@ -6928,7 +7797,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 46 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7014,7 +7883,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 47 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7069,7 +7938,8 @@ function getAuthToken(modules, incomingParams) {
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include,
       limit = incomingParams.limit,
-      page = incomingParams.page;
+      page = incomingParams.page,
+      filter = incomingParams.filter;
   var params = {};
 
   if (limit) {
@@ -7112,6 +7982,10 @@ function prepareParams(modules, incomingParams) {
     }
   }
 
+  if (filter) {
+    params.filter = filter;
+  }
+
   return params;
 }
 
@@ -7120,7 +7994,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 48 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7266,7 +8140,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 49 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7454,7 +8328,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 50 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7594,7 +8468,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 51 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7649,7 +8523,8 @@ function getAuthToken(modules, incomingParams) {
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include,
       limit = incomingParams.limit,
-      page = incomingParams.page;
+      page = incomingParams.page,
+      filter = incomingParams.filter;
   var params = {};
 
   if (limit) {
@@ -7692,6 +8567,10 @@ function prepareParams(modules, incomingParams) {
     }
   }
 
+  if (filter) {
+    params.filter = filter;
+  }
+
   return params;
 }
 
@@ -7700,7 +8579,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 52 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7888,7 +8767,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 53 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8034,7 +8913,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 54 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8174,7 +9053,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 55 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8247,7 +9126,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 56 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8338,7 +9217,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 57 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8507,7 +9386,7 @@ function handleResponse(modules, response) {
 }
 
 /***/ }),
-/* 58 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8635,7 +9514,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 59 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8707,7 +9586,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 60 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8818,7 +9697,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 61 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8888,7 +9767,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 62 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8976,7 +9855,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 63 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9095,7 +9974,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 64 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9214,7 +10093,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 65 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9384,7 +10263,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 66 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9431,7 +10310,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 67 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9442,10 +10321,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _cborSync = _interopRequireDefault(__webpack_require__(68));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -9454,9 +10329,18 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var _default = function () {
-  function _default() {
+  function _default(decode, base64ToBinary) {
     _classCallCheck(this, _default);
+
+    _defineProperty(this, "_base64ToBinary", void 0);
+
+    _defineProperty(this, "_cborReader", void 0);
+
+    this._base64ToBinary = base64ToBinary;
+    this._decode = decode;
   }
 
   _createClass(_default, [{
@@ -9470,9 +10354,9 @@ var _default = function () {
         padding = '==';
       }
 
-      var cleaned = tokenString.replace('-', '+').replace('_', '/') + padding;
+      var cleaned = tokenString.replace(/-/gi, '+').replace(/_/gi, '/') + padding;
 
-      var result = _cborSync["default"].decode(new Buffer.from(cleaned, 'base64'));
+      var result = this._decode(this._base64ToBinary(cleaned));
 
       if (_typeof(result) === 'object') {
         return result;
@@ -9489,641 +10373,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 68 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-	if (true) {
-		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else {}
-})(this, function () {
-	var CBOR = (function () {
-		function BinaryHex(hex) {
-			this.$hex = hex;
-		}
-		BinaryHex.prototype = {
-			length: function () {
-				return this.$hex.length/2;
-			},
-			toString: function (format) {
-				if (!format || format === 'hex' || format === 16) return this.$hex;
-				if (format === 'utf-8') {
-					var encoded = '';
-					for (var i = 0; i < this.$hex.length; i += 2) {
-						encoded += '%' + this.$hex.substring(i, i + 2);
-					}
-					return decodeURIComponent(encoded);
-				}
-				if (format === 'latin') {
-					var encoded = [];
-					for (var i = 0; i < this.$hex.length; i += 2) {
-						encoded.push(parseInt(this.$hex.substring(i, i + 2), 16));
-					}
-					return String.fromCharCode.apply(String, encoded);
-				}
-				throw new Error('Unrecognised format: ' + format);
-			}
-		};
-		BinaryHex.fromLatinString = function (latinString) {
-			var hex = '';
-			for (var i = 0; i < latinString.length; i++) {
-				var pair = latinString.charCodeAt(i).toString(16);
-				if (pair.length === 1) pair = "0" + pair;
-				hex += pair;
-			}
-			return new BinaryHex(hex);
-		};
-		BinaryHex.fromUtf8String = function (utf8String) {
-			var encoded = encodeURIComponent(utf8String);
-			var hex = '';
-			for (var i = 0; i < encoded.length; i++) {
-				if (encoded.charAt(i) === '%') {
-					hex += encoded.substring(i + 1, i + 3);
-					i += 2;
-				} else {
-					var hexPair = encoded.charCodeAt(i).toString(16);
-					if (hexPair.length < 2) hexPair = "0" + hexPair;
-					hex += hexPair;
-				}
-			}
-			return new BinaryHex(hex);
-		};
-
-		var semanticEncoders = [];
-		var semanticDecoders = {};
-	
-		var notImplemented = function (label) {
-			return function () {
-				throw new Error(label + ' not implemented');
-			};
-		};
-	
-		function Reader() {
-		}
-		Reader.prototype = {
-			peekByte: notImplemented('peekByte'),
-			readByte: notImplemented('readByte'),
-			readChunk: notImplemented('readChunk'),
-			readFloat16: function () {
-				var half = this.readUint16();
-				var exponent = (half&0x7fff) >> 10;
-				var mantissa = half&0x3ff;
-				var negative = half&0x8000;
-				if (exponent === 0x1f) {
-					if (mantissa === 0) {
-						return negative ? -Infinity : Infinity;
-					}
-					return NaN;
-				}
-				var magnitude = exponent ? Math.pow(2, exponent - 25)*(1024 + mantissa) : Math.pow(2, -24)*mantissa;
-				return negative ? -magnitude : magnitude;
-			},
-			readFloat32: function () {
-				var intValue = this.readUint32();
-				var exponent = (intValue&0x7fffffff) >> 23;
-				var mantissa = intValue&0x7fffff;
-				var negative = intValue&0x80000000;
-				if (exponent === 0xff) {
-					if (mantissa === 0) {
-						return negative ? -Infinity : Infinity;
-					}
-					return NaN;
-				}
-				var magnitude = exponent ? Math.pow(2, exponent - 23 - 127)*(8388608 + mantissa) : Math.pow(2, -23 - 126)*mantissa;
-				return negative ? -magnitude : magnitude;
-			},
-			readFloat64: function () {
-				var int1 = this.readUint32(), int2 = this.readUint32();
-				var exponent = (int1 >> 20)&0x7ff;
-				var mantissa = (int1&0xfffff)*4294967296 + int2;
-				var negative = int1&0x80000000;
-				if (exponent === 0x7ff) {
-					if (mantissa === 0) {
-						return negative ? -Infinity : Infinity;
-					}
-					return NaN;
-				}
-				var magnitude = exponent ? Math.pow(2, exponent - 52 - 1023)*(4503599627370496 + mantissa) : Math.pow(2, -52 - 1022)*mantissa;
-				return negative ? -magnitude : magnitude;
-			},
-			readUint16: function () {
-				return this.readByte()*256 + this.readByte();
-			},
-			readUint32: function () {
-				return this.readUint16()*65536 + this.readUint16();
-			},
-			readUint64: function () {
-				return this.readUint32()*4294967296 + this.readUint32();
-			}
-		};
-		function Writer() {
-		}
-		Writer.prototype = {
-			writeByte: notImplemented('writeByte'),
-			result: notImplemented('result'),
-			writeFloat16: notImplemented('writeFloat16'),
-			writeFloat32: notImplemented('writeFloat32'),
-			writeFloat64: notImplemented('writeFloat64'),
-			writeUint16: function (value) {
-				this.writeByte((value >> 8)&0xff);
-				this.writeByte(value&0xff);
-			},
-			writeUint32: function (value) {
-				this.writeUint16((value>>16)&0xffff);
-				this.writeUint16(value&0xffff);
-			},
-			writeUint64: function (value) {
-				if (value >= 9007199254740992 || value <= -9007199254740992) {
-					throw new Error('Cannot encode Uint64 of: ' + value + ' magnitude to big (floating point errors)');
-				}
-				this.writeUint32(Math.floor(value/4294967296));
-				this.writeUint32(value%4294967296);
-			},
-			writeString: notImplemented('writeString'),
-			canWriteBinary: function (chunk) {
-				return false;
-			},
-			writeBinary: notImplemented('writeChunk')
-		};
-
-		function readHeaderRaw(reader) {
-			var firstByte = reader.readByte();
-			var majorType = firstByte >> 5, value = firstByte&0x1f;
-			return {type: majorType, value: value};
-		}
-	
-		function valueFromHeader(header, reader) {
-			var value = header.value;
-			if (value < 24) {
-				return value;
-			} else if (value == 24) {
-				return reader.readByte();
-			} else if (value == 25) {
-				return reader.readUint16();
-			} else if (value == 26) {
-				return reader.readUint32();
-			} else if (value == 27) {
-				return reader.readUint64();
-			} else if (value == 31) {
-				// special value for non-terminating arrays/objects
-				return null;
-			}
-			notImplemented('Additional info: ' + value)();
-		}
-	
-		function writeHeaderRaw(type, value, writer) {
-			writer.writeByte((type<<5)|value);
-		}
-	
-		function writeHeader(type, value, writer) {
-			var firstByte = type<<5;
-			if (value < 24) {
-				writer.writeByte(firstByte|value);
-			} else if (value < 256) {
-				writer.writeByte(firstByte|24);
-				writer.writeByte(value);
-			} else if (value < 65536) {
-				writer.writeByte(firstByte|25);
-				writer.writeUint16(value);
-			} else if (value < 4294967296) {
-				writer.writeByte(firstByte|26);
-				writer.writeUint32(value);
-			} else {
-				writer.writeByte(firstByte|27);
-				writer.writeUint64(value);
-			}
-		}
-	
-		var stopCode = new Error(); // Just a unique object, that won't compare strictly equal to anything else
-	
-		function decodeReader(reader) {
-			var header = readHeaderRaw(reader);
-			switch (header.type) {
-				case 0:
-					return valueFromHeader(header, reader);
-				case 1:
-					return -1 -valueFromHeader(header, reader);
-				case 2:
-					return reader.readChunk(valueFromHeader(header, reader));
-				case 3:
-					var buffer = reader.readChunk(valueFromHeader(header, reader));
-					return buffer.toString('utf-8');
-				case 4:
-				case 5:
-					var arrayLength = valueFromHeader(header, reader);
-					var result = [];
-					if (arrayLength !== null) {
-						if (header.type === 5) {
-							arrayLength *= 2;
-						} 
-						for (var i = 0; i < arrayLength; i++) {
-							result[i] = decodeReader(reader);
-						}
-					} else {
-						var item;
-						while ((item = decodeReader(reader)) !== stopCode) {
-							result.push(item);
-						}
-					}
-					if (header.type === 5) {
-						var objResult = {};
-						for (var i = 0; i < result.length; i += 2) {
-							objResult[result[i]] = result[i + 1];
-						}
-						return objResult;
-					} else {
-						return result;
-					}
-				case 6:
-					var tag = valueFromHeader(header, reader);
-					var decoder = semanticDecoders[tag];
-					var result = decodeReader(reader);
-					return decoder ? decoder(result) : result;
-				case 7:
-					if (header.value === 25) {
-						return reader.readFloat16();
-					} else if (header.value === 26) {
-						return reader.readFloat32();
-					} else if (header.value === 27) {
-						return reader.readFloat64();
-					}
-					switch (valueFromHeader(header, reader)) {
-						case 20:
-							return false;
-						case 21:
-							return true;
-						case 22:
-							return null;
-						case 23:
-							return undefined;
-						case null:
-							return stopCode;
-						default:
-							throw new Error('Unknown fixed value: ' + header.value);
-					}
-				default:
-					throw new Error('Unsupported header: ' + JSON.stringify(header));
-			}
-			throw new Error('not implemented yet');
-		}
-	
-		function encodeWriter(data, writer) {
-			for (var i = 0; i < semanticEncoders.length; i++) {
-				var replacement = semanticEncoders[i].fn(data);
-				if (replacement !== undefined) {
-					writeHeader(6, semanticEncoders[i].tag, writer);
-					return encodeWriter(replacement, writer);
-				}
-			}
-		
-			if (data && typeof data.toCBOR === 'function') {
-				data = data.toCBOR();
-			}
-		
-			if (data === false) {
-				writeHeader(7, 20, writer);
-			} else if (data === true) {
-				writeHeader(7, 21, writer);
-			} else if (data === null) {
-				writeHeader(7, 22, writer);
-			} else if (data === undefined) {
-				writeHeader(7, 23, writer);
-			} else if (typeof data === 'number') {
-				if (Math.floor(data) === data && data < 9007199254740992 && data > -9007199254740992) {
-					// Integer
-					if (data < 0) {
-						writeHeader(1, -1 - data, writer);
-					} else {
-						writeHeader(0, data, writer);
-					}
-				} else {
-					writeHeaderRaw(7, 27, writer);
-					writer.writeFloat64(data);
-				}
-			} else if (typeof data === 'string') {
-				writer.writeString(data, function (length) {
-					writeHeader(3, length, writer);
-				});
-			} else if (writer.canWriteBinary(data)) {
-				writer.writeBinary(data, function (length) {
-					writeHeader(2, length, writer);
-				});
-			} else if (typeof data === 'object') {
-				if (api.config.useToJSON && typeof data.toJSON === 'function') {
-			   		data = data.toJSON();
-			   	}
-				if (Array.isArray(data)) {
-					writeHeader(4, data.length, writer);
-					for (var i = 0; i < data.length; i++) {
-						encodeWriter(data[i], writer);
-					}
-				} else {
-					var keys = Object.keys(data);
-					writeHeader(5, keys.length, writer);
-					for (var i = 0; i < keys.length; i++) {
-						encodeWriter(keys[i], writer);
-						encodeWriter(data[keys[i]], writer);
-					}
-				}
-			} else {
-				throw new Error('CBOR encoding not supported: ' + data);
-			}
-		}
-		
-		var readerFunctions = [];
-		var writerFunctions = [];
-	
-		var api = {
-			config: {
-				useToJSON: true
-			},
-			addWriter: function (format, writerFunction) {
-				if (typeof format === 'string') {
-					writerFunctions.push(function (f) {
-						if (format === f) return writerFunction(f);
-					});
-				} else {
-					writerFunctions.push(format);
-				}
-			},
-			addReader: function (format, readerFunction) {
-				if (typeof format === 'string') {
-					readerFunctions.push(function (data, f) {
-						if (format === f) return readerFunction(data, f);
-					});
-				} else {
-					readerFunctions.push(format);
-				}
-			},
-			encode: function (data, format) {
-				for (var i = 0; i < writerFunctions.length; i++) {
-					var func = writerFunctions[i];
-					var writer = func(format);
-					if (writer) {
-						encodeWriter(data, writer);
-						return writer.result();
-					}
-				}
-				throw new Error('Unsupported output format: ' + format);
-			},
-			decode: function (data, format) {
-				for (var i = 0; i < readerFunctions.length; i++) {
-					var func = readerFunctions[i];
-					var reader = func(data, format);
-					if (reader) {
-						return decodeReader(reader);
-					}
-				}
-				throw new Error('Unsupported input format: ' + format);
-			},
-			addSemanticEncode: function (tag, fn) {
-				if (typeof tag !== 'number' || tag%1 !== 0 || tag < 0) {
-					throw new Error('Tag must be a positive integer');
-				}
-				semanticEncoders.push({tag: tag, fn: fn});
-				return this;
-			},
-			addSemanticDecode: function (tag, fn) {
-				if (typeof tag !== 'number' || tag%1 !== 0 || tag < 0) {
-					throw new Error('Tag must be a positive integer');
-				}
-				semanticDecoders[tag] = fn;
-				return this;
-			},
-			Reader: Reader,
-			Writer: Writer
-		};
-		
-		/** Node.js Buffers **/
-		function BufferReader(buffer) {
-			this.buffer = buffer;
-			this.pos = 0;
-		}
-		BufferReader.prototype = Object.create(Reader.prototype);
-		BufferReader.prototype.peekByte = function () {
-			return this.buffer[this.pos];
-		};
-		BufferReader.prototype.readByte = function () {
-			return this.buffer[this.pos++];
-		};
-		BufferReader.prototype.readUint16 = function () {
-			var result = this.buffer.readUInt16BE(this.pos);
-			this.pos += 2;
-			return result;
-		};
-		BufferReader.prototype.readUint32 = function () {
-			var result = this.buffer.readUInt32BE(this.pos);
-			this.pos += 4;
-			return result;
-		};
-		BufferReader.prototype.readFloat32 = function () {
-			var result = this.buffer.readFloatBE(this.pos);
-			this.pos += 4;
-			return result;
-		};
-		BufferReader.prototype.readFloat64 = function () {
-			var result = this.buffer.readDoubleBE(this.pos);
-			this.pos += 8;
-			return result;
-		};
-		BufferReader.prototype.readChunk = function (length) {
-			var result = Buffer.alloc(length);
-			this.buffer.copy(result, 0, this.pos, this.pos += length);
-			return result;
-		};
-	
-		function BufferWriter(stringFormat) {
-			this.byteLength = 0;
-			this.defaultBufferLength = 16384; // 16k
-			this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
-			this.latestBufferOffset = 0;
-			this.completeBuffers = [];
-			this.stringFormat = stringFormat;
-		}
-		BufferWriter.prototype = Object.create(Writer.prototype);
-		BufferWriter.prototype.writeByte = function (value) {
-			this.latestBuffer[this.latestBufferOffset++] = value;
-			if (this.latestBufferOffset >= this.latestBuffer.length) {
-				this.completeBuffers.push(this.latestBuffer);
-				this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
-				this.latestBufferOffset = 0;
-			}
-			this.byteLength++;
-		}
-		BufferWriter.prototype.writeFloat32 = function (value) {
-			var buffer = Buffer.alloc(4);
-			buffer.writeFloatBE(value, 0);
-			this.writeBuffer(buffer);
-		};
-		BufferWriter.prototype.writeFloat64 = function (value) {
-			var buffer = Buffer.alloc(8);
-			buffer.writeDoubleBE(value, 0);
-			this.writeBuffer(buffer);
-		};
-		BufferWriter.prototype.writeString = function (string, lengthFunc) {
-			var buffer = Buffer.from(string, 'utf-8');
-			lengthFunc(buffer.length);
-			this.writeBuffer(buffer);
-		};
-		BufferWriter.prototype.canWriteBinary = function (data) {
-			return data instanceof Buffer;
-		};
-		BufferWriter.prototype.writeBinary = function (buffer, lengthFunc) {
-			lengthFunc(buffer.length);
-			this.writeBuffer(buffer);
-		};
-		BufferWriter.prototype.writeBuffer = function (chunk) {
-			if (!(chunk instanceof Buffer)) throw new TypeError('BufferWriter only accepts Buffers');
-			if (!this.latestBufferOffset) {
-				this.completeBuffers.push(chunk);
-			} else if (this.latestBuffer.length - this.latestBufferOffset >= chunk.length) {
-				chunk.copy(this.latestBuffer, this.latestBufferOffset);
-				this.latestBufferOffset += chunk.length;
-				if (this.latestBufferOffset >= this.latestBuffer.length) {
-					this.completeBuffers.push(this.latestBuffer);
-					this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
-					this.latestBufferOffset = 0;
-				}
-			} else {
-				this.completeBuffers.push(this.latestBuffer.slice(0, this.latestBufferOffset));
-				this.completeBuffers.push(chunk);
-				this.latestBuffer = Buffer.alloc(this.defaultBufferLength);
-				this.latestBufferOffset = 0;
-			}
-			this.byteLength += chunk.length;
-		}
-		BufferWriter.prototype.result = function () {
-			// Copies them all into a single Buffer
-			var result = Buffer.alloc(this.byteLength);
-			var offset = 0;
-			for (var i = 0; i < this.completeBuffers.length; i++) {
-				var buffer = this.completeBuffers[i];
-				buffer.copy(result, offset, 0, buffer.length);
-				offset += buffer.length;
-			}
-			if (this.latestBufferOffset) {
-				this.latestBuffer.copy(result, offset, 0, this.latestBufferOffset);
-			}
-			
-			if (this.stringFormat) return result.toString(this.stringFormat);
-			return result;
-		}
-		
-		if (typeof Buffer === 'function') {
-			api.addReader(function (data, format) {
-				if (data instanceof Buffer) {
-					return new BufferReader(data);
-				}
-				if (format === 'hex' || format === 'base64') {
-					var buffer = Buffer.from(data, format);
-					return new BufferReader(buffer);
-				}
-			});
-			api.addWriter(function (format) {
-				if (!format || format === 'buffer') {
-					return new BufferWriter();
-				} else if (format === 'hex' || format === 'base64') {
-					return new BufferWriter(format);
-				}
-			});
-		}
-		
-		/** Hex-encoding (and Latin1) for browser **/
-		function HexReader(hex) {
-			this.hex = hex;
-			this.pos = 0;
-		}
-		HexReader.prototype = Object.create(Reader.prototype);
-		HexReader.prototype.peekByte = function () {
-			var pair = this.hex.substring(this.pos, 2);
-			return parseInt(pair, 16);
-		};
-		HexReader.prototype.readByte = function () {
-			var pair = this.hex.substring(this.pos, this.pos + 2);
-			this.pos += 2;
-			return parseInt(pair, 16);
-		};
-		HexReader.prototype.readChunk = function (length) {
-			var hex = this.hex.substring(this.pos, this.pos + length*2);
-			this.pos += length*2;
-			if (typeof Buffer === 'function') return Buffer.from(hex, 'hex');
-			return new BinaryHex(hex);
-		};
-	
-		function HexWriter(finalFormat) {
-			this.$hex = '';
-			this.finalFormat = finalFormat || 'hex'
-		}
-		HexWriter.prototype = Object.create(Writer.prototype);
-		HexWriter.prototype.writeByte = function (value) {
-			if (value < 0 || value > 255) throw new Error('Byte value out of range: ' + value);
-			var hex = value.toString(16);
-			if (hex.length == 1) {
-				hex = '0' + hex;
-			}
-			this.$hex += hex;
-		}
-		HexWriter.prototype.canWriteBinary = function (chunk) {
-			return chunk instanceof BinaryHex || (typeof Buffer === 'function' && chunk instanceof Buffer);
-		}
-		HexWriter.prototype.writeBinary = function (chunk, lengthFunction) {
-			if (chunk instanceof BinaryHex) {
-				lengthFunction(chunk.length());
-				this.$hex += chunk.$hex;
-			} else if (typeof Buffer === 'function' && chunk instanceof Buffer) {
-				lengthFunction(chunk.length);
-				this.$hex += chunk.toString('hex');
-			} else {
-				throw new TypeError('HexWriter only accepts BinaryHex or Buffers');
-			}
-		}
-		HexWriter.prototype.result = function () {
-			if (this.finalFormat === 'buffer' && typeof Buffer === 'function') {
-				return Buffer.from(this.$hex, 'hex');
-			}
-			return new BinaryHex(this.$hex).toString(this.finalFormat);
-		}
-		HexWriter.prototype.writeString = function (string, lengthFunction) {
-			var buffer = BinaryHex.fromUtf8String(string);
-			lengthFunction(buffer.length());
-			this.$hex += buffer.$hex;
-		}
-
-		api.addReader(function (data, format) {
-			if (data instanceof BinaryHex || data.$hex) {
-				return new HexReader(data.$hex);
-			}
-			if (format === 'hex') {
-				return new HexReader(data)
-			}
-		});
-		api.addWriter(function (format) {
-			if (format === 'hex') {
-				return new HexWriter();
-			}
-		});
-
-		return api;
-	})();
-
-	CBOR.addSemanticEncode(0, function (data) {
-		if (data instanceof Date) {
-			return data.toISOString();
-		}
-	}).addSemanticDecode(0, function (isoString) {
-		return new Date(isoString);
-	}).addSemanticDecode(1, function (isoString) {
-		return new Date(isoString);
-	});
-
-	return CBOR;
-});
-
-/***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10139,7 +10389,7 @@ exports.del = del;
 
 var _flow_interfaces = __webpack_require__(0);
 
-var _utils = __webpack_require__(70);
+var _utils = __webpack_require__(71);
 
 function log(url, qs, res) {
   var _pickLogger = function _pickLogger() {
@@ -10237,7 +10487,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

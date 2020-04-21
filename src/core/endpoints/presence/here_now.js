@@ -46,8 +46,9 @@ export function prepareParams(
     channelGroups = [],
     includeUUIDs = true,
     includeState = false,
+    queryParameters = {}
   } = incomingParams;
-  const params = {};
+  let params = {};
 
   if (!includeUUIDs) params.disable_uuids = 1;
   if (includeState) params.state = 1;
@@ -55,6 +56,8 @@ export function prepareParams(
   if (channelGroups.length > 0) {
     params['channel-group'] = channelGroups.join(',');
   }
+
+  params = { ...params, ...queryParameters };
 
   return params;
 }

@@ -3,6 +3,16 @@ changelog:
   -
     changes:
       -
+        text: "Update READMEmd CDN links during deployment."
+        type: bug
+      -
+        text: "Fix pre-compiled scripts update."
+        type: bug
+    date: 2020-04-21
+    version: v4.27.5
+  -
+    changes:
+      -
         text: "Add telemetry (latency) for all existing operation types."
         type: feature
       -
@@ -811,4 +821,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.27.4"
+version: "4.27.5"
