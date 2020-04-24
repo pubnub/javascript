@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Added support for delete permission in the grant method of accesses manager."
+        type: feature
+    date: 2020-04-24
+    version: v4.27.6
+  -
+    changes:
+      -
         text: "Update READMEmd CDN links during deployment."
         type: bug
       -
@@ -706,7 +713,9 @@ features:
   access:
     - ACCESS-GRANT
     - ACCESS-SECRET-KEY-ALL-ACCESS
-    - ACCESS-GRANT-TOKEN
+    - ACCESS-GRANT-MANAGE
+    - ACCESS-GRANT-DELETE
+    - ACCESS-TOKEN-MANAGEMENT
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -735,6 +744,10 @@ features:
     - PUSH-REMOVE-DEVICE-FROM-CHANNELS
     - PUSH-LIST-CHANNELS-FROM-DEVICE
     - PUSH-REMOVE-DEVICE
+    - PUSH-TYPE-APNS
+    - PUSH-TYPE-APNS2
+    - PUSH-TYPE-FCM
+    - PUSH-TYPE-MPNS
   storage:
     - STORAGE-REVERSE
     - STORAGE-INCLUDE-TIMETOKEN
@@ -755,11 +768,16 @@ features:
     - SUBSCRIBE-WILDCARD
     - SUBSCRIBE-FILTER-EXPRESSION
     - SUBSCRIBE-PUBLISHER-UUID
+    - SUBSCRIBE-WITH-USERSTATE
+    - SUBSCRIBE-PUBSUB-V2
     - SUBSCRIBE-SIGNAL-LISTENER
     - SUBSCRIBE-USER-LISTENER
     - SUBSCRIBE-SPACE-LISTENER
     - SUBSCRIBE-MEMBERSHIP-LISTENER
     - SUBSCRIBE-MESSAGE-ACTIONS-LISTENER
+  unsubscribe:
+    - UNSUBSCRIBE-ALL
+    - UNSUBSCRIBE-SUPPRESS-LEAVE-EVENTS
   signal:
     - SIGNAL-SEND
   objects:
@@ -787,13 +805,9 @@ features:
     - MESSAGE-ACTIONS-REMOVE
   time:
     - TIME-TIME
-  token-management:
-    - TOKEN-PARSE-TOKEN
-    - TOKEN-SET-TOKEN
-    - TOKEN-SET-TOKENS
-    - TOKEN-GET-TOKEN
-    - TOKEN-GET-TOKENS
-    - TOKEN-CLEAR-TOKENS
+  others: 
+    - TELEMETRY
+    - CREATE-PUSH-PAYLOAD
 files:
   - dist/web/pubnub.js
   - dist/web/pubnub.min.js
@@ -821,4 +835,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.27.5"
+version: "4.27.6"

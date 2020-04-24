@@ -429,6 +429,7 @@ type GrantArguments = {
   read: boolean,
   write: boolean,
   manage: boolean,
+  delete: Boolean,
   authKeys: Array<string>
 }
 

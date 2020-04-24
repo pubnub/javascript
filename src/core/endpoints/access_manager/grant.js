@@ -30,11 +30,13 @@ export function isAuthSupported(): boolean {
 
 export function prepareParams(modules: ModulesInject, incomingParams: GrantArguments): Object {
   const { channels = [], channelGroups = [], ttl, read = false, write = false, manage = false, authKeys = [] } = incomingParams;
+  const deleteParam = incomingParams.delete;
   const params = {};
 
   params.r = (read) ? '1' : '0';
   params.w = (write) ? '1' : '0';
   params.m = (manage) ? '1' : '0';
+  params.d = (deleteParam) ? '1' : '0';
 
   if (channels.length > 0) {
     params.channel = channels.join(',');

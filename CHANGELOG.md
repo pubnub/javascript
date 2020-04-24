@@ -1,3 +1,11 @@
+## [v4.27.6](https://github.com/pubnub/javascript/releases/tag/v4.27.6)
+April-24-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.5...v4.27.6)
+
+- 🌟️ Added support for delete permission in the grant method of accesses manager. 
+- ⭐️️ Added missing feature entries. Removed incorrect feature entries. 
+
 ## [v4.27.5](https://github.com/pubnub/javascript/releases/tag/v4.27.5)
 April-21-2020
 

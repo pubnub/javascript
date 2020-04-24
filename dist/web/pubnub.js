@@ -1,4 +1,4 @@
-/*! 4.27.5 / Consumer  */
+/*! 4.27.6 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -488,7 +488,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.5';
+      return '4.27.6';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -9080,10 +9080,12 @@ function prepareParams(modules, incomingParams) {
       manage = _incomingParams$manag === void 0 ? false : _incomingParams$manag,
       _incomingParams$authK = incomingParams.authKeys,
       authKeys = _incomingParams$authK === void 0 ? [] : _incomingParams$authK;
+  var deleteParam = incomingParams["delete"];
   var params = {};
   params.r = read ? '1' : '0';
   params.w = write ? '1' : '0';
   params.m = manage ? '1' : '0';
+  params.d = deleteParam ? '1' : '0';
 
   if (channels.length > 0) {
     params.channel = channels.join(',');

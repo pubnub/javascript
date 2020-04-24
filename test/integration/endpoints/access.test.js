@@ -49,7 +49,7 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1,"d":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.audit({ channel: 'ch1' }, (status, response) => {
@@ -63,6 +63,7 @@ describe('access endpoints', () => {
               r: 1,
               m: 1,
               w: 1,
+              d: 1,
             },
           },
         });
@@ -84,7 +85,7 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1,"d":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.audit({ channelGroup: 'cg1' }, (status, response) => {
@@ -98,6 +99,7 @@ describe('access endpoints', () => {
               r: 1,
               m: 1,
               w: 1,
+              d: 1,
             },
           },
         });
@@ -119,7 +121,7 @@ describe('access endpoints', () => {
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1,"d":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.audit({ authKeys: ['key1', 'key2'] }, (status, response) => {
@@ -133,6 +135,7 @@ describe('access endpoints', () => {
               r: 1,
               m: 1,
               w: 1,
+              d: 1,
             },
           },
         });
@@ -153,14 +156,15 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'v2.D1gsJZ7zAo5CJAYNJW4gvegRoaF0QBkMZcCQonXJLKo',
+          signature: 'v2.8TcjX3viAUgXA92Olz7L6JEZJdce7bmHXRvrWYaSf5c',
           r: 0,
           w: 0,
           m: 0,
+          d: 0,
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":0,"m":0,"w":0,"d":0}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.grant(
@@ -183,14 +187,15 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'v2.zq2yORr4O0AjHIgGtI4rjmZ866o_iurekk9hVMpfsvY',
+          signature: 'v2.-3zcZp_1Frmux2e90a49Rcf5oYH1v7SxfVKaCSRzwEo',
           r: 1,
           w: 1,
           m: 0,
+          d: 0,
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1,"d":1}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.grant(
@@ -218,15 +223,16 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'v2.J7G4Z6DYnnSsLaeCfyRG4-2EMCvRyu_P3SFLl3E5A8g',
+          signature: 'v2.eWVAWEi8kDxs0EcgGrGNysjDEJ2nYI9Jhh54f8clA0Q',
           r: 1,
           w: 1,
           m: 0,
+          d: 0,
           ttl: 1337,
         })
         .reply(
           200,
-          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}'
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":0,"w":1,"d":0}}},"service":"Access Manager","status":200}'
         );
 
       pubnub.grant(
@@ -279,7 +285,7 @@ describe('access endpoints telemetry', () => {
 
       utils.runAPIWithResponseDelays(scope,
         200,
-        '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}',
+        '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1,"d":1}}},"service":"Access Manager","status":200}',
         delays,
         (completion) => {
           pubnub.audit(
@@ -304,7 +310,7 @@ describe('access endpoints telemetry', () => {
 
       utils.runAPIWithResponseDelays(scope,
         200,
-        '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1}}},"service":"Access Manager","status":200}',
+        '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":1,"w":1,"d":1}}},"service":"Access Manager","status":200}',
         delays,
         (completion) => {
           pubnub.grant(
