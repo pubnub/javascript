@@ -1,4 +1,4 @@
-/*! 4.27.6 / Consumer  */
+/*! 4.28.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -102,15 +102,6 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-module.exports = {};
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -142,6 +133,16 @@ var _default = {
   PNUpdateMembersOperation: 'PNUpdateMembersOperation',
   PNGetMembershipsOperation: 'PNGetMembershipsOperation',
   PNUpdateMembershipsOperation: 'PNUpdateMembershipsOperation',
+  PNGetAllUUIDMetadataOperation: 'PNGetAllUUIDMetadataOperation',
+  PNGetUUIDMetadataOperation: 'PNGetUUIDMetadataOperation',
+  PNSetUUIDMetadataOperation: 'PNSetUUIDMetadataOperation',
+  PNRemoveUUIDMetadataOperation: 'PNRemoveUUIDMetadataOperation',
+  PNGetAllChannelMetadataOperation: 'PNGetAllChannelMetadataOperation',
+  PNGetChannelMetadataOperation: 'PNGetChannelMetadataOperation',
+  PNSetChannelMetadataOperation: 'PNSetChannelMetadataOperation',
+  PNRemoveChannelMetadataOperation: 'PNRemoveChannelMetadataOperation',
+  PNSetMembersOperation: 'PNSetMembersOperation',
+  PNSetMembershipsOperation: 'PNSetMembershipsOperation',
   PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
   PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
   PNWhereNowOperation: 'PNWhereNowOperation',
@@ -162,11 +163,20 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 2 */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+
+module.exports = {};
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
 
 function objectToList(o) {
   var l = [];
@@ -211,12 +221,30 @@ function createPromise() {
   };
 }
 
+var deprecationMessage = "The Objects v1 API has been deprecated.\nYou can learn more about Objects v2 API at https://www.pubnub.com/docs/web-javascript/api-reference-objects.\nIf you have questions about the Objects v2 API or require additional help with migrating to the new data model, please contact PubNub Support at support@pubnub.com.";
+
+function deprecated(fn) {
+  return function () {
+    if (typeof process !== 'undefined') {
+      var _process, _process$env;
+
+      if (((_process = process) === null || _process === void 0 ? void 0 : (_process$env = _process.env) === null || _process$env === void 0 ? void 0 : "production") !== 'test') {
+        console.warn(deprecationMessage);
+      }
+    }
+
+    return fn.apply(void 0, arguments);
+  };
+}
+
 module.exports = {
   signPamFromParams: signPamFromParams,
   endsWith: endsWith,
   createPromise: createPromise,
-  encodeString: encodeString
+  encodeString: encodeString,
+  deprecated: deprecated
 };
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(18)))
 
 /***/ }),
 /* 3 */
@@ -232,7 +260,7 @@ exports["default"] = void 0;
 
 var _uuid = _interopRequireDefault(__webpack_require__(5));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -488,7 +516,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.27.6';
+      return '4.28.0';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -1700,7 +1728,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 var _categories = _interopRequireDefault(__webpack_require__(4));
 
@@ -1780,6 +1808,13 @@ var _default = function () {
       });
     }
   }, {
+    key: "announceObjects",
+    value: function announceObjects(announce) {
+      this._listeners.forEach(function (listener) {
+        if (listener.objects) listener.objects(announce);
+      });
+    }
+  }, {
     key: "announceUser",
     value: function announceUser(announce) {
       this._listeners.forEach(function (listener) {
@@ -1840,9 +1875,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.handleResponse = handleResponse;
 exports.validateParams = validateParams;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -1913,17 +1948,17 @@ var _cborJs = _interopRequireDefault(__webpack_require__(12));
 
 var _pubnubCommon = _interopRequireDefault(__webpack_require__(13));
 
-var _networking = _interopRequireDefault(__webpack_require__(68));
+var _networking = _interopRequireDefault(__webpack_require__(81));
 
 var _hmacSha = _interopRequireDefault(__webpack_require__(7));
 
-var _web = _interopRequireDefault(__webpack_require__(69));
+var _web = _interopRequireDefault(__webpack_require__(82));
 
-var _common = _interopRequireDefault(__webpack_require__(70));
+var _common = _interopRequireDefault(__webpack_require__(83));
 
-var _webNode = __webpack_require__(71);
+var _webNode = __webpack_require__(84);
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -2480,115 +2515,141 @@ var _index = _interopRequireDefault(__webpack_require__(6));
 
 var _subscription_manager = _interopRequireDefault(__webpack_require__(15));
 
-var _telemetry_manager = _interopRequireDefault(__webpack_require__(18));
+var _telemetry_manager = _interopRequireDefault(__webpack_require__(19));
 
-var _push_payload = _interopRequireDefault(__webpack_require__(19));
+var _push_payload = _interopRequireDefault(__webpack_require__(20));
 
 var _listener_manager = _interopRequireDefault(__webpack_require__(8));
 
-var _token_manager = _interopRequireDefault(__webpack_require__(20));
+var _token_manager = _interopRequireDefault(__webpack_require__(21));
 
-var _endpoint = _interopRequireDefault(__webpack_require__(21));
+var _endpoint = _interopRequireDefault(__webpack_require__(22));
 
-var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(22));
+var _utils = __webpack_require__(2);
 
-var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(23));
+var addChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(23));
 
-var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(24));
+var removeChannelsChannelGroupConfig = _interopRequireWildcard(__webpack_require__(24));
 
-var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(25));
+var deleteChannelGroupConfig = _interopRequireWildcard(__webpack_require__(25));
 
-var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(26));
+var listChannelGroupsConfig = _interopRequireWildcard(__webpack_require__(26));
 
-var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(27));
+var listChannelsInChannelGroupConfig = _interopRequireWildcard(__webpack_require__(27));
 
-var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(28));
+var addPushChannelsConfig = _interopRequireWildcard(__webpack_require__(28));
 
-var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(29));
+var removePushChannelsConfig = _interopRequireWildcard(__webpack_require__(29));
 
-var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(30));
+var listPushChannelsConfig = _interopRequireWildcard(__webpack_require__(30));
 
-var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(31));
+var removeDevicePushConfig = _interopRequireWildcard(__webpack_require__(31));
 
-var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(32));
+var presenceLeaveEndpointConfig = _interopRequireWildcard(__webpack_require__(32));
 
-var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(33));
+var presenceWhereNowEndpointConfig = _interopRequireWildcard(__webpack_require__(33));
 
-var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(34));
+var presenceHeartbeatEndpointConfig = _interopRequireWildcard(__webpack_require__(34));
 
-var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(35));
+var presenceGetStateConfig = _interopRequireWildcard(__webpack_require__(35));
 
-var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(36));
+var presenceSetStateConfig = _interopRequireWildcard(__webpack_require__(36));
 
-var addMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(37));
+var presenceHereNowConfig = _interopRequireWildcard(__webpack_require__(37));
 
-var removeMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
+var addMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(38));
 
-var getMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
+var removeMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(39));
 
-var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
+var getMessageActionEndpointConfig = _interopRequireWildcard(__webpack_require__(40));
 
-var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(41));
+var _get_all = _interopRequireDefault(__webpack_require__(41));
 
-var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(42));
+var _get = _interopRequireDefault(__webpack_require__(42));
 
-var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(43));
+var _set = _interopRequireDefault(__webpack_require__(43));
 
-var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(44));
+var _remove = _interopRequireDefault(__webpack_require__(44));
 
-var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(45));
+var _get_all2 = _interopRequireDefault(__webpack_require__(45));
 
-var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(46));
+var _get2 = _interopRequireDefault(__webpack_require__(46));
 
-var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(47));
+var _set2 = _interopRequireDefault(__webpack_require__(47));
 
-var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(48));
+var _remove2 = _interopRequireDefault(__webpack_require__(48));
 
-var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(49));
+var _get3 = _interopRequireDefault(__webpack_require__(49));
 
-var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(50));
+var _set3 = _interopRequireDefault(__webpack_require__(50));
 
-var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(51));
+var _get4 = _interopRequireDefault(__webpack_require__(51));
 
-var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(52));
+var _set4 = _interopRequireDefault(__webpack_require__(52));
 
-var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
+var createUserEndpointConfig = _interopRequireWildcard(__webpack_require__(53));
 
-var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
+var updateUserEndpointConfig = _interopRequireWildcard(__webpack_require__(54));
 
-var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
+var deleteUserEndpointConfig = _interopRequireWildcard(__webpack_require__(55));
 
-var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
+var getUserEndpointConfig = _interopRequireWildcard(__webpack_require__(56));
 
-var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
+var getUsersEndpointConfig = _interopRequireWildcard(__webpack_require__(57));
 
-var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
+var createSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(58));
 
-var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
+var updateSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(59));
 
-var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
+var deleteSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(60));
 
-var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(61));
+var getSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(61));
 
-var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(62));
+var getSpaceEndpointConfig = _interopRequireWildcard(__webpack_require__(62));
 
-var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(63));
+var getMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(63));
 
-var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(64));
+var addMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(64));
 
-var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(65));
+var updateMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(65));
 
-var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(66));
+var removeMembersEndpointConfig = _interopRequireWildcard(__webpack_require__(66));
+
+var getMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(67));
+
+var updateMembershipsEndpointConfig = _interopRequireWildcard(__webpack_require__(68));
+
+var joinSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(69));
+
+var leaveSpacesEndpointConfig = _interopRequireWildcard(__webpack_require__(70));
+
+var auditEndpointConfig = _interopRequireWildcard(__webpack_require__(71));
+
+var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(72));
+
+var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(73));
+
+var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(74));
+
+var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(75));
+
+var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(76));
+
+var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(77));
+
+var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(78));
+
+var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(79));
 
 var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(9));
 
-var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(67));
+var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(80));
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _categories = _interopRequireDefault(__webpack_require__(4));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 var _uuid = _interopRequireDefault(__webpack_require__(5));
 
@@ -2597,6 +2658,10 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2667,6 +2732,8 @@ var _default = function () {
     _defineProperty(this, "removeMessageAction", void 0);
 
     _defineProperty(this, "getMessageActions", void 0);
+
+    _defineProperty(this, "objects", void 0);
 
     _defineProperty(this, "createUser", void 0);
 
@@ -2845,24 +2912,56 @@ var _default = function () {
     this.addMessageAction = _endpoint["default"].bind(this, modules, addMessageActionEndpointConfig);
     this.removeMessageAction = _endpoint["default"].bind(this, modules, removeMessageActionEndpointConfig);
     this.getMessageActions = _endpoint["default"].bind(this, modules, getMessageActionEndpointConfig);
-    this.createUser = _endpoint["default"].bind(this, modules, createUserEndpointConfig);
-    this.updateUser = _endpoint["default"].bind(this, modules, updateUserEndpointConfig);
-    this.deleteUser = _endpoint["default"].bind(this, modules, deleteUserEndpointConfig);
-    this.getUser = _endpoint["default"].bind(this, modules, getUserEndpointConfig);
-    this.getUsers = _endpoint["default"].bind(this, modules, getUsersEndpointConfig);
-    this.createSpace = _endpoint["default"].bind(this, modules, createSpaceEndpointConfig);
-    this.updateSpace = _endpoint["default"].bind(this, modules, updateSpaceEndpointConfig);
-    this.deleteSpace = _endpoint["default"].bind(this, modules, deleteSpaceEndpointConfig);
-    this.getSpaces = _endpoint["default"].bind(this, modules, getSpacesEndpointConfig);
-    this.getSpace = _endpoint["default"].bind(this, modules, getSpaceEndpointConfig);
-    this.addMembers = _endpoint["default"].bind(this, modules, addMembersEndpointConfig);
-    this.updateMembers = _endpoint["default"].bind(this, modules, updateMembersEndpointConfig);
-    this.removeMembers = _endpoint["default"].bind(this, modules, removeMembersEndpointConfig);
-    this.getMembers = _endpoint["default"].bind(this, modules, getMembersEndpointConfig);
-    this.getMemberships = _endpoint["default"].bind(this, modules, getMembershipsEndpointConfig);
-    this.joinSpaces = _endpoint["default"].bind(this, modules, joinSpacesEndpointConfig);
-    this.updateMemberships = _endpoint["default"].bind(this, modules, updateMembershipsEndpointConfig);
-    this.leaveSpaces = _endpoint["default"].bind(this, modules, leaveSpacesEndpointConfig);
+    this.objects = {
+      getAllUUIDMetadata: _endpoint["default"].bind(this, modules, _get_all["default"]),
+      getUUIDMetadata: _endpoint["default"].bind(this, modules, _get["default"]),
+      setUUIDMetadata: _endpoint["default"].bind(this, modules, _set["default"]),
+      removeUUIDMetadata: _endpoint["default"].bind(this, modules, _remove["default"]),
+      getAllChannelMetadata: _endpoint["default"].bind(this, modules, _get_all2["default"]),
+      getChannelMetadata: _endpoint["default"].bind(this, modules, _get2["default"]),
+      setChannelMetadata: _endpoint["default"].bind(this, modules, _set2["default"]),
+      removeChannelMetadata: _endpoint["default"].bind(this, modules, _remove2["default"]),
+      getChannelMembers: _endpoint["default"].bind(this, modules, _get3["default"]),
+      setChannelMembers: function setChannelMembers(parameters) {
+        return _endpoint["default"].call(_this, modules, _set3["default"], _objectSpread({
+          type: 'set'
+        }, parameters));
+      },
+      removeChannelMembers: function removeChannelMembers(parameters) {
+        return _endpoint["default"].call(_this, modules, _set3["default"], _objectSpread({
+          type: 'remove'
+        }, parameters));
+      },
+      getMemberships: _endpoint["default"].bind(this, modules, _get4["default"]),
+      setMemberships: function setMemberships(parameters) {
+        return _endpoint["default"].call(_this, modules, _set4["default"], _objectSpread({
+          type: 'set'
+        }, parameters));
+      },
+      removeMemberships: function removeMemberships(parameters) {
+        return _endpoint["default"].call(_this, modules, _set4["default"], _objectSpread({
+          type: 'remove'
+        }, parameters));
+      }
+    };
+    this.createUser = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, createUserEndpointConfig));
+    this.updateUser = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, updateUserEndpointConfig));
+    this.deleteUser = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, deleteUserEndpointConfig));
+    this.getUser = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, getUserEndpointConfig));
+    this.getUsers = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, getUsersEndpointConfig));
+    this.createSpace = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, createSpaceEndpointConfig));
+    this.updateSpace = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, updateSpaceEndpointConfig));
+    this.deleteSpace = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, deleteSpaceEndpointConfig));
+    this.getSpaces = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, getSpacesEndpointConfig));
+    this.getSpace = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, getSpaceEndpointConfig));
+    this.addMembers = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, addMembersEndpointConfig));
+    this.updateMembers = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, updateMembersEndpointConfig));
+    this.removeMembers = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, removeMembersEndpointConfig));
+    this.getMembers = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, getMembersEndpointConfig));
+    this.getMemberships = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, getMembershipsEndpointConfig));
+    this.joinSpaces = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, joinSpacesEndpointConfig));
+    this.updateMemberships = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, updateMembershipsEndpointConfig));
+    this.leaveSpaces = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, leaveSpacesEndpointConfig));
     this.time = timeEndpoint;
     this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
     this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
@@ -3018,7 +3117,7 @@ var _deduping_manager = _interopRequireDefault(__webpack_require__(17));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 var _categories = _interopRequireDefault(__webpack_require__(4));
 
@@ -3664,6 +3763,8 @@ var _default = function () {
             data: message.payload.data
           };
 
+          _this7._listenerManager.announceObjects(_announce2);
+
           if (message.payload.type === 'user') {
             _this7._listenerManager.announceUser(_announce2);
           } else if (message.payload.type === 'space') {
@@ -3748,7 +3849,7 @@ exports["default"] = void 0;
 
 var _time = _interopRequireDefault(__webpack_require__(9));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -3825,7 +3926,7 @@ exports["default"] = void 0;
 
 var _config = _interopRequireDefault(__webpack_require__(3));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -3900,6 +4001,196 @@ module.exports = exports.default;
 
 /***/ }),
 /* 18 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3910,7 +4201,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -4085,7 +4376,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4096,7 +4387,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = exports.FCMNotificationPayload = exports.MPNSNotificationPayload = exports.APNSNotificationPayload = void 0;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -4777,7 +5068,7 @@ var _default = NotificationsPayload;
 exports["default"] = _default;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4790,7 +5081,7 @@ exports["default"] = void 0;
 
 var _config = _interopRequireDefault(__webpack_require__(3));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -5067,7 +5358,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5080,13 +5371,13 @@ exports["default"] = _default;
 
 var _uuid = _interopRequireDefault(__webpack_require__(5));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
 var _config = _interopRequireDefault(__webpack_require__(3));
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -5355,7 +5646,7 @@ function _default(modules, endpoint) {
 module.exports = exports.default;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5372,9 +5663,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -5421,7 +5712,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5438,9 +5729,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -5487,7 +5778,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5504,9 +5795,9 @@ exports.getRequestTimeout = getRequestTimeout;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -5547,7 +5838,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5564,9 +5855,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -5604,7 +5895,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5621,9 +5912,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -5666,7 +5957,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5683,9 +5974,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -5755,7 +6046,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5772,9 +6063,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -5844,7 +6135,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5861,9 +6152,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -5930,7 +6221,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5947,9 +6238,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -6014,7 +6305,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6031,9 +6322,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -6082,7 +6373,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6099,9 +6390,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -6147,7 +6438,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6164,9 +6455,9 @@ exports.getRequestTimeout = getRequestTimeout;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -6220,7 +6511,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6237,9 +6528,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -6304,7 +6595,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6321,9 +6612,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -6383,7 +6674,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6400,9 +6691,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -6557,7 +6848,7 @@ function handleResponse(modules, serverResponse, incomingParams) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6577,9 +6868,9 @@ exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -6642,7 +6933,7 @@ function handleResponse(modules, addMessageActionResponse) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6660,9 +6951,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -6713,7 +7004,7 @@ function handleResponse(modules, removeMessageActionResponse) {
 }
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6730,9 +7021,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -6789,7 +7080,1146 @@ function handleResponse(modules, getMessageActionsResponse) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNGetAllUUIDMetadataOperation;
+  },
+  validateParams: function validateParams() {},
+  getURL: function getURL(_ref) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('user');
+  },
+  prepareParams: function prepareParams(_modules, params) {
+    var _params$include, _params$include2, _params$page, _params$page3, _ref4;
+
+    var queryParams = {};
+
+    if (params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) {
+      queryParams.include = ['custom'];
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.totalCount) {
+      queryParams.count = true;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
+      var _params$page2;
+
+      queryParams.start = (_params$page2 = params.page) === null || _params$page2 === void 0 ? void 0 : _params$page2.next;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page3 = params.page) === null || _params$page3 === void 0 ? void 0 : _params$page3.prev) {
+      var _params$page4;
+
+      queryParams.end = (_params$page4 = params.page) === null || _params$page4 === void 0 ? void 0 : _params$page4.prev;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    queryParams.limit = (_ref4 = params === null || params === void 0 ? void 0 : params.limit) !== null && _ref4 !== void 0 ? _ref4 : 100;
+
+    if (params === null || params === void 0 ? void 0 : params.sort) {
+      var _params$sort;
+
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
+        var _ref6 = _slicedToArray(_ref5, 2),
+            key = _ref6[0],
+            value = _ref6[1];
+
+        if (value === 'asc' || value === 'desc') {
+          return "".concat(key, ":").concat(value);
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data,
+      totalCount: response.totalCount,
+      next: response.next,
+      prev: response.prev
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNGetUUIDMetadataOperation;
+  },
+  validateParams: function validateParams() {},
+  getURL: function getURL(_ref, params) {
+    var _ref2;
+
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_ref2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref2 !== void 0 ? _ref2 : config.getUUID());
+  },
+  getRequestTimeout: function getRequestTimeout(_ref3) {
+    var config = _ref3.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref4) {
+    var tokenManager = _ref4.tokenManager;
+    return tokenManager.getToken('user');
+  },
+  prepareParams: function prepareParams(_ref5, params) {
+    var _ref6, _ref7, _params$include;
+
+    var config = _ref5.config;
+    return {
+      uuid: (_ref6 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref6 !== void 0 ? _ref6 : config.getUUID(),
+      include: ((_ref7 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref7 !== void 0 ? _ref7 : true) && ['custom']
+    };
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 43 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNSetUUIDMetadataOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.data)) {
+      return 'Data cannot be empty';
+    }
+  },
+  usePatch: function usePatch() {
+    return true;
+  },
+  patchURL: function patchURL(_ref, params) {
+    var _ref2;
+
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_ref2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref2 !== void 0 ? _ref2 : config.getUUID());
+  },
+  patchPayload: function patchPayload(_, params) {
+    return params.data;
+  },
+  getRequestTimeout: function getRequestTimeout(_ref3) {
+    var config = _ref3.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref4) {
+    var tokenManager = _ref4.tokenManager;
+    return tokenManager.getToken('user');
+  },
+  prepareParams: function prepareParams(_ref5, params) {
+    var _ref6, _ref7, _params$include;
+
+    var config = _ref5.config;
+    return {
+      uuid: (_ref6 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref6 !== void 0 ? _ref6 : config.getUUID(),
+      include: ((_ref7 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref7 !== void 0 ? _ref7 : true) && ['custom']
+    };
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNRemoveUUIDMetadataOperation;
+  },
+  validateParams: function validateParams() {},
+  getURL: function getURL(_ref, params) {
+    var _ref2;
+
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_ref2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref2 !== void 0 ? _ref2 : config.getUUID());
+  },
+  useDelete: function useDelete() {
+    return true;
+  },
+  getRequestTimeout: function getRequestTimeout(_ref3) {
+    var config = _ref3.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref4) {
+    var tokenManager = _ref4.tokenManager;
+    return tokenManager.getToken('user');
+  },
+  prepareParams: function prepareParams(_ref5, params) {
+    var _ref6;
+
+    var config = _ref5.config;
+    return {
+      uuid: (_ref6 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref6 !== void 0 ? _ref6 : config.getUUID()
+    };
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNGetAllChannelMetadataOperation;
+  },
+  validateParams: function validateParams() {},
+  getURL: function getURL(_ref) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/channels");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('channel');
+  },
+  prepareParams: function prepareParams(_modules, params) {
+    var _ref4, _params$include, _ref5, _params$include2, _params$page, _params$page3;
+
+    var queryParams = {};
+
+    if ((_ref4 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref4 !== void 0 ? _ref4 : true) {
+      queryParams.include = ['custom'];
+    }
+
+    queryParams.count = (_ref5 = params === null || params === void 0 ? void 0 : (_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.totalCount) !== null && _ref5 !== void 0 ? _ref5 : true;
+
+    if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
+      var _params$page2;
+
+      queryParams.start = (_params$page2 = params.page) === null || _params$page2 === void 0 ? void 0 : _params$page2.next;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page3 = params.page) === null || _params$page3 === void 0 ? void 0 : _params$page3.prev) {
+      var _params$page4;
+
+      queryParams.end = (_params$page4 = params.page) === null || _params$page4 === void 0 ? void 0 : _params$page4.prev;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.limit) {
+      queryParams.limit = params.limit;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.sort) {
+      var _params$sort;
+
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref6) {
+        var _ref7 = _slicedToArray(_ref6, 2),
+            key = _ref7[0],
+            value = _ref7[1];
+
+        if (value === 'asc' || value === 'desc') {
+          return "".concat(key, ":").concat(value);
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data,
+      totalCount: response.totalCount,
+      prev: response.prev,
+      next: response.next
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNGetChannelMetadataOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.channel)) {
+      return 'Channel cannot be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel);
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('channel');
+  },
+  prepareParams: function prepareParams(_, params) {
+    var _ref4, _params$include;
+
+    return {
+      include: ((_ref4 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref4 !== void 0 ? _ref4 : true) && ['custom']
+    };
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNSetChannelMetadataOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.channel)) {
+      return 'Channel cannot be empty';
+    }
+
+    if (!(params === null || params === void 0 ? void 0 : params.data)) {
+      return 'Data cannot be empty';
+    }
+  },
+  usePatch: function usePatch() {
+    return true;
+  },
+  patchURL: function patchURL(_ref, params) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel);
+  },
+  patchPayload: function patchPayload(_, params) {
+    return params.data;
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('channel');
+  },
+  prepareParams: function prepareParams(_, params) {
+    var _ref4, _params$include;
+
+    return {
+      include: ((_ref4 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref4 !== void 0 ? _ref4 : true) && ['custom']
+    };
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 48 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNRemoveChannelMetadataOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.channel)) {
+      return 'Channel cannot be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(params.channel);
+  },
+  useDelete: function useDelete() {
+    return true;
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('channel');
+  },
+  prepareParams: function prepareParams() {
+    return {};
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNGetMembersOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.channel)) {
+      return 'UUID cannot be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/uuids");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('member');
+  },
+  prepareParams: function prepareParams(_modules, params) {
+    var _params$include4, _params$page, _params$page3, _ref5;
+
+    var queryParams = {};
+
+    if (params === null || params === void 0 ? void 0 : params.include) {
+      var _params$include, _params$include2, _ref4, _params$include3;
+
+      queryParams.include = [];
+
+      if ((_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) {
+        queryParams.include.push('custom');
+      }
+
+      if ((_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.customUUIDFields) {
+        queryParams.include.push('uuid.custom');
+      }
+
+      if ((_ref4 = (_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.UUIDFields) !== null && _ref4 !== void 0 ? _ref4 : true) {
+        queryParams.include.push('uuid');
+      }
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$include4 = params.include) === null || _params$include4 === void 0 ? void 0 : _params$include4.totalCount) {
+      queryParams.count = true;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
+      var _params$page2;
+
+      queryParams.start = (_params$page2 = params.page) === null || _params$page2 === void 0 ? void 0 : _params$page2.next;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page3 = params.page) === null || _params$page3 === void 0 ? void 0 : _params$page3.prev) {
+      var _params$page4;
+
+      queryParams.end = (_params$page4 = params.page) === null || _params$page4 === void 0 ? void 0 : _params$page4.prev;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    queryParams.limit = (_ref5 = params === null || params === void 0 ? void 0 : params.limit) !== null && _ref5 !== void 0 ? _ref5 : 100;
+
+    if (params === null || params === void 0 ? void 0 : params.sort) {
+      var _params$sort;
+
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref6) {
+        var _ref7 = _slicedToArray(_ref6, 2),
+            key = _ref7[0],
+            value = _ref7[1];
+
+        if (value === 'asc' || value === 'desc') {
+          return "".concat(key, ":").concat(value);
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNSetMembersOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.channel)) {
+      return 'Channel cannot be empty';
+    }
+
+    if (!(params === null || params === void 0 ? void 0 : params.uuids) || (params === null || params === void 0 ? void 0 : params.uuids.length) === 0) {
+      return 'UUIDs cannot be empty';
+    }
+  },
+  usePatch: function usePatch() {
+    return true;
+  },
+  patchURL: function patchURL(_ref, params) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/uuids");
+  },
+  patchPayload: function patchPayload(_, params) {
+    return _defineProperty({
+      set: [],
+      remove: []
+    }, params.type, params.uuids.map(function (uuid) {
+      if (typeof uuid === 'string') {
+        return {
+          uuid: {
+            id: uuid
+          }
+        };
+      } else {
+        return {
+          uuid: {
+            id: uuid.id
+          },
+          custom: uuid.custom
+        };
+      }
+    }));
+  },
+  getRequestTimeout: function getRequestTimeout(_ref3) {
+    var config = _ref3.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref4) {
+    var tokenManager = _ref4.tokenManager;
+    return tokenManager.getToken('member');
+  },
+  prepareParams: function prepareParams(_modules, params) {
+    var _params$include4, _params$page, _params$page3;
+
+    var queryParams = {};
+
+    if (params === null || params === void 0 ? void 0 : params.include) {
+      var _params$include, _params$include2, _params$include3;
+
+      queryParams.include = [];
+
+      if ((_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) {
+        queryParams.include.push('custom');
+      }
+
+      if ((_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.customUUIDFields) {
+        queryParams.include.push('uuid.custom');
+      }
+
+      if ((_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.UUIDFields) {
+        queryParams.include.push('uuid');
+      }
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$include4 = params.include) === null || _params$include4 === void 0 ? void 0 : _params$include4.totalCount) {
+      queryParams.count = true;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
+      var _params$page2;
+
+      queryParams.start = (_params$page2 = params.page) === null || _params$page2 === void 0 ? void 0 : _params$page2.next;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page3 = params.page) === null || _params$page3 === void 0 ? void 0 : _params$page3.prev) {
+      var _params$page4;
+
+      queryParams.end = (_params$page4 = params.page) === null || _params$page4 === void 0 ? void 0 : _params$page4.prev;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.limit) {
+      queryParams.limit = params.limit;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.sort) {
+      var _params$sort;
+
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
+        var _ref6 = _slicedToArray(_ref5, 2),
+            key = _ref6[0],
+            value = _ref6[1];
+
+        if (value === 'asc' || value === 'desc') {
+          return "".concat(key, ":").concat(value);
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data,
+      totalCount: response.totalCount,
+      prev: response.prev,
+      next: response.next
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNGetMembershipsOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.uuid)) {
+      return 'UUID cannot be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(params.uuid, "/channels");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
+    return tokenManager.getToken('membership');
+  },
+  prepareParams: function prepareParams(_modules, params) {
+    var _params$include4, _params$page, _params$page3, _ref4;
+
+    var queryParams = {};
+
+    if (params === null || params === void 0 ? void 0 : params.include) {
+      var _params$include, _params$include2, _params$include3;
+
+      queryParams.include = [];
+
+      if ((_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) {
+        queryParams.include.push('custom');
+      }
+
+      if ((_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.customChannelFields) {
+        queryParams.include.push('channel.custom');
+      }
+
+      if ((_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.channelFields) {
+        queryParams.include.push('channel');
+      }
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$include4 = params.include) === null || _params$include4 === void 0 ? void 0 : _params$include4.totalCount) {
+      queryParams.count = true;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
+      var _params$page2;
+
+      queryParams.start = (_params$page2 = params.page) === null || _params$page2 === void 0 ? void 0 : _params$page2.next;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page3 = params.page) === null || _params$page3 === void 0 ? void 0 : _params$page3.prev) {
+      var _params$page4;
+
+      queryParams.end = (_params$page4 = params.page) === null || _params$page4 === void 0 ? void 0 : _params$page4.prev;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    queryParams.limit = (_ref4 = params === null || params === void 0 ? void 0 : params.limit) !== null && _ref4 !== void 0 ? _ref4 : 100;
+
+    if (params === null || params === void 0 ? void 0 : params.sort) {
+      var _params$sort;
+
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
+        var _ref6 = _slicedToArray(_ref5, 2),
+            key = _ref6[0],
+            value = _ref6[1];
+
+        if (value === 'asc' || value === 'desc') {
+          return "".concat(key, ":").concat(value);
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(0));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNSetMembershipsOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.channels) || (params === null || params === void 0 ? void 0 : params.channels.length) === 0) {
+      return 'Channels cannot be empty';
+    }
+  },
+  usePatch: function usePatch() {
+    return true;
+  },
+  patchURL: function patchURL(_ref, params) {
+    var _params$uuid;
+
+    var config = _ref.config;
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID(), "/channels");
+  },
+  patchPayload: function patchPayload(_, params) {
+    return _defineProperty({
+      set: [],
+      remove: []
+    }, params.type, params.channels.map(function (channel) {
+      if (typeof channel === 'string') {
+        return {
+          channel: {
+            id: channel
+          }
+        };
+      } else {
+        return {
+          channel: {
+            id: channel.id
+          },
+          custom: channel.custom
+        };
+      }
+    }));
+  },
+  getRequestTimeout: function getRequestTimeout(_ref3) {
+    var config = _ref3.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAuthToken: function getAuthToken(_ref4) {
+    var tokenManager = _ref4.tokenManager;
+    return tokenManager.getToken('membership');
+  },
+  prepareParams: function prepareParams(_modules, params) {
+    var _params$include4, _params$page, _params$page3;
+
+    var queryParams = {};
+
+    if (params === null || params === void 0 ? void 0 : params.include) {
+      var _params$include, _params$include2, _params$include3;
+
+      queryParams.include = [];
+
+      if ((_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) {
+        queryParams.include.push('custom');
+      }
+
+      if ((_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.customChannelFields) {
+        queryParams.include.push('channel.custom');
+      }
+
+      if ((_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.channelFields) {
+        queryParams.include.push('channel');
+      }
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$include4 = params.include) === null || _params$include4 === void 0 ? void 0 : _params$include4.totalCount) {
+      queryParams.count = true;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
+      var _params$page2;
+
+      queryParams.start = (_params$page2 = params.page) === null || _params$page2 === void 0 ? void 0 : _params$page2.next;
+    }
+
+    if (params === null || params === void 0 ? void 0 : (_params$page3 = params.page) === null || _params$page3 === void 0 ? void 0 : _params$page3.prev) {
+      var _params$page4;
+
+      queryParams.end = (_params$page4 = params.page) === null || _params$page4 === void 0 ? void 0 : _params$page4.prev;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.limit) {
+      queryParams.limit = params.limit;
+    }
+
+    if (params === null || params === void 0 ? void 0 : params.sort) {
+      var _params$sort;
+
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
+        var _ref6 = _slicedToArray(_ref5, 2),
+            key = _ref6[0],
+            value = _ref6[1];
+
+        if (value === 'asc' || value === 'desc') {
+          return "".concat(key, ":").concat(value);
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data,
+      totalCount: response.totalCount,
+      prev: response.prev,
+      next: response.next
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6810,9 +8240,9 @@ exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -6908,7 +8338,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 41 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6929,9 +8359,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7029,7 +8459,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 42 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7048,9 +8478,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7096,7 +8526,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 43 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7114,9 +8544,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7182,7 +8612,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 44 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7200,9 +8630,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7282,7 +8712,7 @@ function handleResponse(modules, usersResponse) {
 }
 
 /***/ }),
-/* 45 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7303,9 +8733,9 @@ exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7401,7 +8831,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 46 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7422,9 +8852,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7522,7 +8952,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 47 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7541,9 +8971,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7589,7 +9019,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 48 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7607,9 +9037,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7689,7 +9119,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 49 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7707,9 +9137,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7775,7 +9205,7 @@ function handleResponse(modules, spacesResponse) {
 }
 
 /***/ }),
-/* 50 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7793,9 +9223,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -7886,7 +9316,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 51 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7907,9 +9337,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8032,7 +9462,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 52 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8053,9 +9483,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8220,7 +9650,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 53 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8241,9 +9671,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8360,7 +9790,7 @@ function handleResponse(modules, membersResponse) {
 }
 
 /***/ }),
-/* 54 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8378,9 +9808,9 @@ exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8471,7 +9901,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 55 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8492,9 +9922,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8659,7 +10089,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 56 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8680,9 +10110,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8805,7 +10235,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 57 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8826,9 +10256,9 @@ exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -8945,7 +10375,7 @@ function handleResponse(modules, membershipsResponse) {
 }
 
 /***/ }),
-/* 58 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8962,9 +10392,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -9018,7 +10448,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 59 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9035,9 +10465,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -9111,7 +10541,7 @@ function handleResponse() {
 }
 
 /***/ }),
-/* 60 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9131,9 +10561,9 @@ exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -9280,7 +10710,7 @@ function handleResponse(modules, response) {
 }
 
 /***/ }),
-/* 61 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9300,9 +10730,9 @@ exports.postPayload = postPayload;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9408,7 +10838,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 62 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9425,9 +10855,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9480,7 +10910,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 63 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9497,9 +10927,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9591,7 +11021,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 64 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9609,9 +11039,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9661,7 +11091,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 65 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9678,7 +11108,7 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9749,7 +11179,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 66 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9766,9 +11196,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9868,7 +11298,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 67 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9885,9 +11315,9 @@ exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
-var _operations = _interopRequireDefault(__webpack_require__(1));
+var _operations = _interopRequireDefault(__webpack_require__(0));
 
 var _utils = _interopRequireDefault(__webpack_require__(2));
 
@@ -9987,7 +11417,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 68 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10002,7 +11432,7 @@ var _config = _interopRequireDefault(__webpack_require__(3));
 
 var _categories = _interopRequireDefault(__webpack_require__(4));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -10062,7 +11492,7 @@ var _default = function () {
       }
 
       var newSubDomain;
-      this._currentSubDomain = this._currentSubDomain + 1;
+      this._currentSubDomain += 1;
 
       if (this._currentSubDomain >= this._maxSubDomain) {
         this._currentSubDomain = 1;
@@ -10157,7 +11587,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 69 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10187,7 +11617,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 70 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10250,7 +11680,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 71 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10264,9 +11694,9 @@ exports.post = post;
 exports.patch = patch;
 exports.del = del;
 
-var _superagent = _interopRequireDefault(__webpack_require__(72));
+var _superagent = _interopRequireDefault(__webpack_require__(85));
 
-var _flow_interfaces = __webpack_require__(0);
+var _flow_interfaces = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -10382,7 +11812,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 72 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -10399,11 +11829,11 @@ if (typeof window !== 'undefined') { // Browser window
   root = this;
 }
 
-var Emitter = __webpack_require__(73);
-var RequestBase = __webpack_require__(74);
+var Emitter = __webpack_require__(86);
+var RequestBase = __webpack_require__(87);
 var isObject = __webpack_require__(10);
-var ResponseBase = __webpack_require__(75);
-var Agent = __webpack_require__(77);
+var ResponseBase = __webpack_require__(88);
+var Agent = __webpack_require__(90);
 
 /**
  * Noop.
@@ -11308,7 +12738,7 @@ request.put = function(url, data, fn) {
 
 
 /***/ }),
-/* 73 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -11489,7 +12919,7 @@ Emitter.prototype.hasListeners = function(event){
 
 
 /***/ }),
-/* 74 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12190,7 +13620,7 @@ RequestBase.prototype._setTimeouts = function() {
 
 
 /***/ }),
-/* 75 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12200,7 +13630,7 @@ RequestBase.prototype._setTimeouts = function() {
  * Module dependencies.
  */
 
-var utils = __webpack_require__(76);
+var utils = __webpack_require__(89);
 
 /**
  * Expose `ResponseBase`.
@@ -12333,7 +13763,7 @@ ResponseBase.prototype._setStatusProperties = function(status){
 
 
 /***/ }),
-/* 76 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12411,7 +13841,7 @@ exports.cleanHeader = function(header, changesOrigin){
 
 
 /***/ }),
-/* 77 */
+/* 90 */
 /***/ (function(module, exports) {
 
 function Agent() {

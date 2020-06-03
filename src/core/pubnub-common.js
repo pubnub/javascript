@@ -1,4 +1,4 @@
-/* @flow */
+/** @flow */
 
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
@@ -9,6 +9,8 @@ import ListenerManager from './components/listener_manager';
 import TokenManager from './components/token_manager';
 
 import endpointCreator from './components/endpoint';
+
+import { deprecated } from './utils';
 
 import * as addChannelsChannelGroupConfig from './endpoints/channel_groups/add_channels';
 import * as removeChannelsChannelGroupConfig from './endpoints/channel_groups/remove_channels';
@@ -33,6 +35,69 @@ import * as presenceHereNowConfig from './endpoints/presence/here_now';
 import * as addMessageActionEndpointConfig from './endpoints/actions/add_message_action';
 import * as removeMessageActionEndpointConfig from './endpoints/actions/remove_message_action';
 import * as getMessageActionEndpointConfig from './endpoints/actions/get_message_actions';
+
+// Object API v2
+import getAllUUIDMetadataEndpointConfig, {
+  type GetAllUUIDMetadataParams,
+  type GetAllUUIDMetadataResult
+} from './endpoints/objects/uuid/get_all';
+
+import getUUIDMetadataEndpointConfig, {
+  type GetUUIDMetadataParams,
+  type GetUUIDMetadataResult
+} from './endpoints/objects/uuid/get';
+
+import setUUIDMetadataEndpointConfig, {
+  type SetUUIDMetadataParams,
+  type SetUUIDMetadataResult
+} from './endpoints/objects/uuid/set';
+
+import removeUUIDMetadataEndpointConfig, {
+  type RemoveUUIDMetadataParams,
+  type RemoveUUIDMetadataResult
+} from './endpoints/objects/uuid/remove';
+
+import getAllChannelMetadataEndpointConfig, {
+  type GetAllChannelMetadataParams,
+  type GetAllChannelMetadataResult
+} from './endpoints/objects/channel/get_all';
+
+import getChannelMetadataEndpointConfig, {
+  type GetChannelMetadataParams,
+  type GetChannelMetadataResult
+} from './endpoints/objects/channel/get';
+
+import setChannelMetadataEndpointConfig, {
+  type SetChannelMetadataParams,
+  type SetChannelMetadataResult
+} from './endpoints/objects/channel/set';
+
+import removeChannelMetadataEndpointConfig, {
+  type RemoveChannelMetadataParams,
+  type RemoveChannelMetadataResult
+} from './endpoints/objects/channel/remove';
+
+import getMembersV2EndpointConfig, {
+  type GetMembersParams,
+  type GetMembersResult
+} from './endpoints/objects/member/get';
+
+import setMembersV2EndpointConfig, {
+  type UpsertMembersParams,
+  type RemoveMembersParams,
+  type SetMembersResult
+} from './endpoints/objects/member/set';
+
+import getMembershipsV2EndpointConfig, {
+  type GetMembershipsParams,
+  type GetMembershipsResult
+} from './endpoints/objects/membership/get';
+
+import setMembershipsV2EndpointConfig, {
+  type UpsertMembershipsParams,
+  type RemoveMembershipsParams,
+  type SetMembershipsResult
+} from './endpoints/objects/membership/set';
 
 // Objects API
 
@@ -115,6 +180,28 @@ export default class {
   removeMessageAction: Function;
   getMessageActions: Function;
 
+  // Objects API v2
+
+  objects: {
+    getAllUUIDMetadata: (parameters?: GetAllUUIDMetadataParams) => Promise<GetAllUUIDMetadataResult>,
+    getUUIDMetadata: (parameters?: GetUUIDMetadataParams) => Promise<GetUUIDMetadataResult>,
+    setUUIDMetadata: (parameters: SetUUIDMetadataParams) => Promise<SetUUIDMetadataResult>,
+    removeUUIDMetadata: (parameters?: RemoveUUIDMetadataParams) => Promise<RemoveUUIDMetadataResult>,
+
+    getAllChannelMetadata: (parameters?: GetAllChannelMetadataParams) => Promise<GetAllChannelMetadataResult>,
+    getChannelMetadata: (parameters: GetChannelMetadataParams) => Promise<GetChannelMetadataResult>,
+    setChannelMetadata: (parameters: SetChannelMetadataParams) => Promise<SetChannelMetadataResult>,
+    removeChannelMetadata: (parameters: RemoveChannelMetadataParams) => Promise<RemoveChannelMetadataResult>,
+
+    getMemberships: (parameters: GetMembershipsParams) => Promise<GetMembershipsResult>,
+    setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>) => Promise<SetMembershipsResult>,
+    removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>) => Promise<SetMembershipsResult>,
+
+    getChannelMembers: (parameters: GetMembersParams) => Promise<GetMembersResult>,
+    setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>) => Promise<SetMembersResult>,
+    removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>) => Promise<SetMembersResult>,
+  };
+
   // Objects API
 
   createUser: Function;
@@ -188,31 +275,11 @@ export default class {
 
     let modules = { config, networking, crypto, tokenManager, telemetryManager };
 
-    const timeEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      timeEndpointConfig
-    );
-    const leaveEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      presenceLeaveEndpointConfig
-    );
-    const heartbeatEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      presenceHeartbeatEndpointConfig
-    );
-    const setStateEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      presenceSetStateConfig
-    );
-    const subscribeEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      subscribeEndpointConfig
-    );
+    const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
+    const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    const heartbeatEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    const setStateEndpoint = endpointCreator.bind(this, modules, presenceSetStateConfig);
+    const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
 
     // managers
     const listenerManager = (this._listenerManager = new ListenerManager());
@@ -230,9 +297,7 @@ export default class {
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
-    this.removeAllListeners = listenerManager.removeAllListeners.bind(
-      listenerManager
-    );
+    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
 
     this.parseToken = tokenManager.parseToken.bind(tokenManager);
     this.setToken = tokenManager.setToken.bind(tokenManager);
@@ -244,49 +309,23 @@ export default class {
     /* channel groups */
     this.channelGroups = {
       listGroups: endpointCreator.bind(this, modules, listChannelGroupsConfig),
-      listChannels: endpointCreator.bind(
-        this,
-        modules,
-        listChannelsInChannelGroupConfig
-      ),
-      addChannels: endpointCreator.bind(
-        this,
-        modules,
-        addChannelsChannelGroupConfig
-      ),
-      removeChannels: endpointCreator.bind(
-        this,
-        modules,
-        removeChannelsChannelGroupConfig
-      ),
-      deleteGroup: endpointCreator.bind(
-        this,
-        modules,
-        deleteChannelGroupConfig
-      ),
+      listChannels: endpointCreator.bind(this, modules, listChannelsInChannelGroupConfig),
+      addChannels: endpointCreator.bind(this, modules, addChannelsChannelGroupConfig),
+      removeChannels: endpointCreator.bind(this, modules, removeChannelsChannelGroupConfig),
+      deleteGroup: endpointCreator.bind(this, modules, deleteChannelGroupConfig),
     };
     /* push */
     this.push = {
       addChannels: endpointCreator.bind(this, modules, addPushChannelsConfig),
-      removeChannels: endpointCreator.bind(
-        this,
-        modules,
-        removePushChannelsConfig
-      ),
+      removeChannels: endpointCreator.bind(this, modules, removePushChannelsConfig),
       deleteDevice: endpointCreator.bind(this, modules, removeDevicePushConfig),
       listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig),
     };
     /* presence */
     this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
-    this.whereNow = endpointCreator.bind(
-      this,
-      modules,
-      presenceWhereNowEndpointConfig
-    );
+    this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
-    this.setState = subscriptionManager.adaptStateChange.bind(
-      subscriptionManager
-    );
+    this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
@@ -303,164 +342,96 @@ export default class {
     this.signal = endpointCreator.bind(this, modules, signalEndpointConfig);
 
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
-    this.deleteMessages = endpointCreator.bind(
-      this,
-      modules,
-      deleteMessagesEndpointConfig
-    );
-    this.messageCounts = endpointCreator.bind(
-      this,
-      modules,
-      messageCountsEndpointConfig
-    );
-    this.fetchMessages = endpointCreator.bind(
-      this,
-      modules,
-      fetchMessagesEndpointConfig
-    );
+    this.deleteMessages = endpointCreator.bind(this, modules, deleteMessagesEndpointConfig);
+    this.messageCounts = endpointCreator.bind(this, modules, messageCountsEndpointConfig);
+    this.fetchMessages = endpointCreator.bind(this, modules, fetchMessagesEndpointConfig);
 
     // Actions API
 
-    this.addMessageAction = endpointCreator.bind(
-      this,
-      modules,
-      addMessageActionEndpointConfig
-    );
+    this.addMessageAction = endpointCreator.bind(this, modules, addMessageActionEndpointConfig);
 
-    this.removeMessageAction = endpointCreator.bind(
-      this,
-      modules,
-      removeMessageActionEndpointConfig
-    );
+    this.removeMessageAction = endpointCreator.bind(this, modules, removeMessageActionEndpointConfig);
 
-    this.getMessageActions = endpointCreator.bind(
-      this,
-      modules,
-      getMessageActionEndpointConfig
-    );
+    this.getMessageActions = endpointCreator.bind(this, modules, getMessageActionEndpointConfig);
+
+    // Objects API v2
+
+    this.objects = {
+      getAllUUIDMetadata: endpointCreator.bind(this, modules, getAllUUIDMetadataEndpointConfig),
+      getUUIDMetadata: endpointCreator.bind(this, modules, getUUIDMetadataEndpointConfig),
+      setUUIDMetadata: endpointCreator.bind(this, modules, setUUIDMetadataEndpointConfig),
+      removeUUIDMetadata: endpointCreator.bind(this, modules, removeUUIDMetadataEndpointConfig),
+
+      getAllChannelMetadata: endpointCreator.bind(this, modules, getAllChannelMetadataEndpointConfig),
+      getChannelMetadata: endpointCreator.bind(this, modules, getChannelMetadataEndpointConfig),
+      setChannelMetadata: endpointCreator.bind(this, modules, setChannelMetadataEndpointConfig),
+      removeChannelMetadata: endpointCreator.bind(this, modules, removeChannelMetadataEndpointConfig),
+
+      getChannelMembers: endpointCreator.bind(this, modules, getMembersV2EndpointConfig),
+      setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembersV2EndpointConfig, {
+        type: 'set',
+        ...parameters,
+      }),
+      removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembersV2EndpointConfig, {
+        type: 'remove',
+        ...parameters,
+      }),
+
+      getMemberships: endpointCreator.bind(this, modules, getMembershipsV2EndpointConfig),
+      setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembershipsV2EndpointConfig, {
+        type: 'set',
+        ...parameters,
+      }),
+      removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembershipsV2EndpointConfig, {
+        type: 'remove',
+        ...parameters,
+      })
+    };
 
     // Objects API
 
-    this.createUser = endpointCreator.bind(
-      this,
-      modules,
-      createUserEndpointConfig
-    );
+    this.createUser = deprecated(endpointCreator.bind(this, modules, createUserEndpointConfig));
 
-    this.updateUser = endpointCreator.bind(
-      this,
-      modules,
-      updateUserEndpointConfig
-    );
+    this.updateUser = deprecated(endpointCreator.bind(this, modules, updateUserEndpointConfig));
 
-    this.deleteUser = endpointCreator.bind(
-      this,
-      modules,
-      deleteUserEndpointConfig
-    );
+    this.deleteUser = deprecated(endpointCreator.bind(this, modules, deleteUserEndpointConfig));
 
-    this.getUser = endpointCreator.bind(
-      this,
-      modules,
-      getUserEndpointConfig
-    );
+    this.getUser = deprecated(endpointCreator.bind(this, modules, getUserEndpointConfig));
 
-    this.getUsers = endpointCreator.bind(
-      this,
-      modules,
-      getUsersEndpointConfig
-    );
+    this.getUsers = deprecated(endpointCreator.bind(this, modules, getUsersEndpointConfig));
 
-    this.createSpace = endpointCreator.bind(
-      this,
-      modules,
-      createSpaceEndpointConfig
-    );
+    this.createSpace = deprecated(endpointCreator.bind(this, modules, createSpaceEndpointConfig));
 
-    this.updateSpace = endpointCreator.bind(
-      this,
-      modules,
-      updateSpaceEndpointConfig
-    );
+    this.updateSpace = deprecated(endpointCreator.bind(this, modules, updateSpaceEndpointConfig));
 
-    this.deleteSpace = endpointCreator.bind(
-      this,
-      modules,
-      deleteSpaceEndpointConfig
-    );
+    this.deleteSpace = deprecated(endpointCreator.bind(this, modules, deleteSpaceEndpointConfig));
 
-    this.getSpaces = endpointCreator.bind(
-      this,
-      modules,
-      getSpacesEndpointConfig
-    );
+    this.getSpaces = deprecated(endpointCreator.bind(this, modules, getSpacesEndpointConfig));
 
-    this.getSpace = endpointCreator.bind(
-      this,
-      modules,
-      getSpaceEndpointConfig
-    );
+    this.getSpace = deprecated(endpointCreator.bind(this, modules, getSpaceEndpointConfig));
 
-    this.addMembers = endpointCreator.bind(
-      this,
-      modules,
-      addMembersEndpointConfig
-    );
+    this.addMembers = deprecated(endpointCreator.bind(this, modules, addMembersEndpointConfig));
 
-    this.updateMembers = endpointCreator.bind(
-      this,
-      modules,
-      updateMembersEndpointConfig
-    );
+    this.updateMembers = deprecated(endpointCreator.bind(this, modules, updateMembersEndpointConfig));
 
-    this.removeMembers = endpointCreator.bind(
-      this,
-      modules,
-      removeMembersEndpointConfig
-    );
+    this.removeMembers = deprecated(endpointCreator.bind(this, modules, removeMembersEndpointConfig));
 
-    this.getMembers = endpointCreator.bind(
-      this,
-      modules,
-      getMembersEndpointConfig
-    );
+    this.getMembers = deprecated(endpointCreator.bind(this, modules, getMembersEndpointConfig));
 
-    this.getMemberships = endpointCreator.bind(
-      this,
-      modules,
-      getMembershipsEndpointConfig
-    );
+    this.getMemberships = deprecated(endpointCreator.bind(this, modules, getMembershipsEndpointConfig));
 
-    this.joinSpaces = endpointCreator.bind(
-      this,
-      modules,
-      joinSpacesEndpointConfig
-    );
+    this.joinSpaces = deprecated(endpointCreator.bind(this, modules, joinSpacesEndpointConfig));
 
-    this.updateMemberships = endpointCreator.bind(
-      this,
-      modules,
-      updateMembershipsEndpointConfig
-    );
+    this.updateMemberships = deprecated(endpointCreator.bind(this, modules, updateMembershipsEndpointConfig));
 
-    this.leaveSpaces = endpointCreator.bind(
-      this,
-      modules,
-      leaveSpacesEndpointConfig
-    );
+    this.leaveSpaces = deprecated(endpointCreator.bind(this, modules, leaveSpacesEndpointConfig));
 
     this.time = timeEndpoint;
 
     // subscription related methods
-    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(
-      subscriptionManager
-    );
-    this.presence = subscriptionManager.adaptPresenceChange.bind(
-      subscriptionManager
-    );
-    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(
-      subscriptionManager
-    );
+    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
+    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
@@ -473,16 +444,10 @@ export default class {
     this.stop = this.destroy; // --------
     // --- deprecated  ------------------
 
-    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(
-      subscriptionManager
-    );
+    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
 
-    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(
-      subscriptionManager
-    );
-    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(
-      subscriptionManager
-    );
+    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
+    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
     // mount crypto
     this.encrypt = crypto.encrypt.bind(crypto);
@@ -494,16 +459,10 @@ export default class {
     this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
     this.getUUID = modules.config.getUUID.bind(modules.config);
     this.setUUID = modules.config.setUUID.bind(modules.config);
-    this.getFilterExpression = modules.config.getFilterExpression.bind(
-      modules.config
-    );
-    this.setFilterExpression = modules.config.setFilterExpression.bind(
-      modules.config
-    );
+    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
+    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
 
-    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(
-      modules.config
-    );
+    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 
     if (networking.hasModule('proxy')) {
       this.setProxy = (proxy) => {

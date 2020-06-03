@@ -19,7 +19,6 @@ export default {
   PNGetMessageActionsOperation: 'PNGetMessageActionsOperation',
 
   // Objects API
-
   PNCreateUserOperation: 'PNCreateUserOperation',
   PNUpdateUserOperation: 'PNUpdateUserOperation',
   PNDeleteUserOperation: 'PNDeleteUserOperation',
@@ -34,6 +33,23 @@ export default {
   PNUpdateMembersOperation: 'PNUpdateMembersOperation',
   PNGetMembershipsOperation: 'PNGetMembershipsOperation',
   PNUpdateMembershipsOperation: 'PNUpdateMembershipsOperation',
+
+  // Objects API v2
+  //   UUID
+  PNGetAllUUIDMetadataOperation: 'PNGetAllUUIDMetadataOperation',
+  PNGetUUIDMetadataOperation: 'PNGetUUIDMetadataOperation',
+  PNSetUUIDMetadataOperation: 'PNSetUUIDMetadataOperation',
+  PNRemoveUUIDMetadataOperation: 'PNRemoveUUIDMetadataOperation',
+  //   channel
+  PNGetAllChannelMetadataOperation: 'PNGetAllChannelMetadataOperation',
+  PNGetChannelMetadataOperation: 'PNGetChannelMetadataOperation',
+  PNSetChannelMetadataOperation: 'PNSetChannelMetadataOperation',
+  PNRemoveChannelMetadataOperation: 'PNRemoveChannelMetadataOperation',
+  //   member
+  // PNGetMembersOperation: 'PNGetMembersOperation',
+  PNSetMembersOperation: 'PNSetMembersOperation',
+  // PNGetMembershipsOperation: 'PNGetMembersOperation',
+  PNSetMembershipsOperation: 'PNSetMembershipsOperation',
 
   // push
   PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
@@ -61,5 +77,4 @@ export default {
   PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
   //
-
 };

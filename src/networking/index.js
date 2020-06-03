@@ -50,7 +50,7 @@ export default class {
 
     let newSubDomain: string;
 
-    this._currentSubDomain = this._currentSubDomain + 1;
+    this._currentSubDomain += 1;
 
     if (this._currentSubDomain >= this._maxSubDomain) {
       this._currentSubDomain = 1;

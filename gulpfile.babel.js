@@ -150,7 +150,7 @@ gulp.task('test_web', done => {
 
 gulp.task('test_node', () => {
   return gulp.src(['test/**/*.test.js', '!test/dist/*.js'], { read: false })
-    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout, require: ['@babel/register'] }))
+    .pipe(mocha({ config: '.mocharc.yml' }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
@@ -168,13 +168,13 @@ gulp.task('test_titanium', gulp.series('unzip_titanium_sdk'), done => {
 
 gulp.task('test_react-native', () => {
   return gulp.src('test/dist/react-native.test.js', { read: false })
-    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout, require: ['@babel/register'] }))
+    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout, require: ['@babel/register'], noConfig: true }))
     .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
 });
 
 gulp.task('test_release', () => {
   return gulp.src('test/release/**/*.test.js', { read: false })
-    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout, require: ['@babel/register'] }));
+    .pipe(mocha({ reporter: 'spec', timeout: mochaTimeout, require: ['@babel/register'], noConfig: true }));
 });
 
 gulp.task('test', (done) => {

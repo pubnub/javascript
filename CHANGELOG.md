@@ -1,3 +1,10 @@
+## [v4.28.0](https://github.com/pubnub/javascript/releases/tag/v4.28.0)
+June-03-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.27.6...v4.28.0)
+
+- 🌟️ Added Objects v2 API and deprecated Objects v1 API. 
+
 ## [v4.27.6](https://github.com/pubnub/javascript/releases/tag/v4.27.6)
 April-24-2020
 

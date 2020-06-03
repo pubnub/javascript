@@ -667,6 +667,8 @@ export default class {
           data: message.payload.data,
         };
 
+        this._listenerManager.announceObjects(announce);
+
         if (message.payload.type === 'user') {
           this._listenerManager.announceUser(announce);
         } else if (message.payload.type === 'space') {

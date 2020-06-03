@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Added Objects v2 API and deprecated Objects v1 API."
+        type: feature
+    date: 2020-06-03
+    version: v4.28.0
+  -
+    changes:
+      -
         text: "Added support for delete permission in the grant method of accesses manager."
         type: feature
     date: 2020-04-24
@@ -781,24 +788,22 @@ features:
   signal:
     - SIGNAL-SEND
   objects:
-    - OBJECTS-GET-USER
-    - OBJECTS-GET-USERS
-    - OBJECTS-CREATE-USER
-    - OBJECTS-UPDATE-USER
-    - OBJECTS-DELETE-USER
-    - OBJECTS-GET-SPACE
-    - OBJECTS-GET-SPACES
-    - OBJECTS-CREATE-SPACE
-    - OBJECTS-UPDATE-SPACE
-    - OBJECTS-DELETE-SPACE
-    - OBJECTS-GET-MEMBERSHIPS
-    - OBJECTS-JOIN-SPACES
-    - OBJECTS-UPDATE-MEMBERSHIPS
-    - OBJECTS-LEAVE-SPACES
-    - OBJECTS-GET-MEMBERS
-    - OBJECTS-ADD-MEMBERS
-    - OBJECTS-UPDATE-MEMBERS
-    - OBJECTS-REMOVE-MEMBERS
+    - OBJECTS-GET-ALL-UUID-METADATA
+    - OBJECTS-GET-UUID-METADATA
+    - OBJECTS-SET-UUID-METADATA
+    - OBJECTS-REMOVE-UUID-METADATA
+    - OBJECTS-GET-ALL-CHANNEL-METADATA
+    - OBJECTS-GET-CHANNEL-METADATA
+    - OBJECTS-SET-CHANNEL-METADATA
+    - OBJECTS-REMOVE-CHANNEL-METADATA
+    - OBJECTS-GET-MEMBERSHIPS-V2
+    - OBJECTS-SET-MEMBERSHIPS-V2
+    - OBJECTS-REMOVE-MEMBERSHIPS-V2
+    - OBJECTS-GET-CHANNEL-MEMBERS-V2
+    - OBJECTS-SET-CHANNEL-MEMBERS-V2
+    - OBJECTS-REMOVE-CHANNEL-MEMBERS-V2
+    - OBJECTS-MANAGE-MEMBERSHIPS-V2
+    - OBJECTS-MANAGE-CHANNEL-MEMBERS-V2
   message-actions:
     - MESSAGE-ACTIONS-GET
     - MESSAGE-ACTIONS-ADD
@@ -835,4 +840,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.27.6"
+version: "4.28.0"

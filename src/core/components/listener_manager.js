@@ -65,6 +65,12 @@ export default class {
     });
   }
 
+  announceObjects(announce: ObjectAnnouncement) {
+    this._listeners.forEach((listener) => {
+      if (listener.objects) listener.objects(announce);
+    });
+  }
+
   announceUser(announce: ObjectAnnouncement) {
     this._listeners.forEach((listener) => {
       if (listener.user) listener.user(announce);

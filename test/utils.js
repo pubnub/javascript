@@ -1,3 +1,5 @@
+/** @flow */
+
 import assert from 'assert';
 import nock from 'nock';
 
@@ -7,7 +9,7 @@ module.exports = {
       filteringScope: () => true
     });
   },
-  runAPIWithResponseDelays(scope, statusCode, responseBody, delays, apiCall) {
+  runAPIWithResponseDelays(scope: any, statusCode: any, responseBody: any, delays: any, apiCall: any) {
     let lastRequest = null;
 
     const callAPIWithDelayedResponse = (previousDelay, delay) => new Promise(((resolve) => {
@@ -31,9 +33,9 @@ module.exports = {
 
     return promisesResult.then(() => lastRequest);
   },
-  verifyRequestTelemetry(requestPath, latencyKey, expectedLatency, leeway) {
+  verifyRequestTelemetry(requestPath: any, latencyKey: any, expectedLatency: any, leeway: any) {
     const re = new RegExp(`${latencyKey}=(\\d+)`, 'i');
-    const latencyString = re.exec(requestPath)[1];
+    const latencyString = (re.exec(requestPath) ?? [])[1];
     const latency = latencyString ? parseInt(latencyString, 10) : 0;
 
     assert(latency >= expectedLatency && latency <= (expectedLatency + leeway),

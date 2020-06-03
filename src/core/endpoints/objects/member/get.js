@@ -1,0 +1,90 @@
+/** @flow */
+
+import type { EndpointConfig } from '../../endpoint';
+import operationConstants from '../../../constants/operations';
+import type { Member, PaginatedResultParams } from './member';
+
+export type GetMembersParams = {|
+  channel: string,
+|} & PaginatedResultParams;
+
+export type GetMembersResult = {|
+  status: 200,
+  data: Member[],
+|};
+
+const endpoint: EndpointConfig<GetMembersParams, GetMembersResult> = {
+  getOperation: () => operationConstants.PNGetMembersOperation,
+
+  // No required parameters.
+  validateParams: (_, params) => {
+    if (!params?.channel) {
+      return 'UUID cannot be empty';
+    }
+  },
+
+  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${params.channel}/uuids`,
+
+  getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
+
+  isAuthSupported: () => true,
+
+  getAuthToken: ({ tokenManager }) => tokenManager.getToken('member'),
+
+  prepareParams: (_modules, params) => {
+    const queryParams = {};
+
+    if (params?.include) {
+      queryParams.include = [];
+
+      if (params.include?.customFields) {
+        queryParams.include.push('custom');
+      }
+
+      if (params.include?.customUUIDFields) {
+        queryParams.include.push('uuid.custom');
+      }
+
+      if (params.include?.UUIDFields ?? true) {
+        queryParams.include.push('uuid');
+      }
+    }
+
+    if (params?.include?.totalCount) {
+      queryParams.count = true;
+    }
+
+    if (params?.page?.next) {
+      queryParams.start = params.page?.next;
+    }
+
+    if (params?.page?.prev) {
+      queryParams.end = params.page?.prev;
+    }
+
+    if (params?.filter) {
+      queryParams.filter = params.filter;
+    }
+
+    queryParams.limit = params?.limit ?? 100;
+
+    if (params?.sort) {
+      queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
+        if (value === 'asc' || value === 'desc') {
+          return `${key}:${value}`;
+        } else {
+          return key;
+        }
+      });
+    }
+
+    return queryParams;
+  },
+
+  handleResponse: (_, response): GetMembersResult => ({
+    status: response.status,
+    data: response.data,
+  }),
+};
+
+export default endpoint;

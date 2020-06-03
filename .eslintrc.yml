@@ -1,8 +1,28 @@
 extends: airbnb/base
+
 parser: babel-eslint
+
 plugins:
   - mocha
   - flowtype
+
+ignorePatterns:
+  - "flow-typed/**/*"
+  - "test/**/*"
+
+globals:
+  "$Shape": readonly
+  "$Diff": readonly
+
+overrides:
+  - files: test/**/*
+    globals: 
+      "expect": readonly 
+    env:
+      mocha: true
+    rules:
+      no-unused-expressions: 0
+
 rules:
   mocha/no-exclusive-tests: 2
   flowtype/require-valid-file-annotation: 2

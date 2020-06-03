@@ -1,12 +1,9 @@
-[ignore]
-.*/test/.*
-.*/node_modules/nock/node_modules/changelog/examples/node.json
-
 [include]
 .*/src/.*
 
 [libs]
-./core/src/flow_interfaces.js
+./flow-typed
 
 [options]
 esproposal.class_static_fields=enable
+esproposal.optional_chaining=enable
