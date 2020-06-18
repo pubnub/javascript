@@ -42,6 +42,7 @@ function deprecated(fn: (...any[]) => any) {
   return (...args: any[]) => {
     if (typeof process !== 'undefined') {
       if (process?.env?.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.warn(deprecationMessage);
       }
     }

@@ -1,3 +1,10 @@
+## [v4.28.1](https://github.com/pubnub/javascript/releases/tag/v4.28.1)
+June-19-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.28.0...v4.28.1)
+
+- 🐛 Ensure proper bytes padding in ArrayBuffer prepared for `cbor-js` library. 
+
 ## [v4.28.0](https://github.com/pubnub/javascript/releases/tag/v4.28.0)
 June-03-2020
 

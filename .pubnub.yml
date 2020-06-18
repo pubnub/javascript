@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Ensure proper bytes padding in ArrayBuffer prepared for `cbor-js` library."
+        type: bug
+    date: 2020-06-19
+    version: v4.28.1
+  -
+    changes:
+      -
         text: "Added Objects v2 API and deprecated Objects v1 API."
         type: feature
     date: 2020-06-03
@@ -840,4 +847,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.28.0"
+version: "4.28.1"

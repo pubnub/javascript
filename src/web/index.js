@@ -23,17 +23,32 @@ function base64ToBinary(base64String: string) {
   const parsedWordArray = CryptoJS.enc.Base64.parse(base64String).words;
   const arrayBuffer = new ArrayBuffer(parsedWordArray.length * 4);
   const view = new Uint8Array(arrayBuffer);
+  let filledArrayBuffer = null;
+  let zeroBytesCount = 0;
+  let byteOffset = 0;
 
   for (let wordIdx = 0; wordIdx < parsedWordArray.length; wordIdx += 1) {
     const word = parsedWordArray[wordIdx];
-    const byteOffset = wordIdx * 4;
+    byteOffset = wordIdx * 4;
     view[byteOffset] = (word & 0xff000000) >> 24;
     view[byteOffset + 1] = (word & 0x00ff0000) >> 16;
     view[byteOffset + 2] = (word & 0x0000ff00) >> 8;
     view[byteOffset + 3] = (word & 0x000000ff);
   }
 
-  return view.buffer;
+  for (let byteIdx = byteOffset + 3; byteIdx >= byteOffset; byteIdx -= 1) {
+    if (view[byteIdx] === 0) {
+      zeroBytesCount += 1;
+    }
+  }
+
+  if (zeroBytesCount > 0) {
+    filledArrayBuffer = view.buffer.slice(0, view.byteLength - zeroBytesCount);
+  } else {
+    filledArrayBuffer = view.buffer;
+  }
+
+  return filledArrayBuffer;
 }
 
 function stringifyBufferKeys(obj) {
