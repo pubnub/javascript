@@ -22,5 +22,5 @@ please use the [master_3x](https://github.com/pubnub/javascript/tree/master_3x) 
 
 
 
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.28.1.min.js
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.28.1.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.28.2.min.js
+* https://cdn.pubnub.com/sdk/javascript/pubnub.4.28.2.js

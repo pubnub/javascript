@@ -1,4 +1,4 @@
-/*! 4.28.1 / Consumer  */
+/*! 4.28.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -516,7 +516,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.28.1';
+      return '4.28.2';
     }
   }, {
     key: "_addPnsdkSuffix",

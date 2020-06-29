@@ -1,3 +1,10 @@
+## [v4.28.2](https://github.com/pubnub/javascript/releases/tag/v4.28.2)
+June-29-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.28.1...v4.28.2)
+
+- 🐛 Fixes a bug in removeChannelMembers and removeMemberships. 
+
 ## [v4.28.1](https://github.com/pubnub/javascript/releases/tag/v4.28.1)
 June-19-2020
 
