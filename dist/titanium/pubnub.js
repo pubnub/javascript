@@ -1,4 +1,4 @@
-/*! 4.28.3 / Consumer  */
+/*! 4.28.4 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -506,7 +506,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.28.3';
+      return '4.28.4';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -3591,7 +3591,7 @@ var _default = function () {
     value: function _registerHeartbeatTimer() {
       this._stopHeartbeatTimer();
 
-      if (this._config.getHeartbeatInterval() === 0) {
+      if (this._config.getHeartbeatInterval() === 0 || this._config.getHeartbeatInterval() === undefined) {
         return;
       }
 

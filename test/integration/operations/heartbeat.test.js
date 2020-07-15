@@ -23,6 +23,7 @@ describe('heartbeat', () => {
       subscribeKey: 'mySubscribeKey',
       publishKey: 'myPublishKey',
       uuid: 'myUUID',
+      heartbeatInterval	:1, // for quick test of heartbeat calls
       announceSuccessfulHeartbeats: true,
     });
   });

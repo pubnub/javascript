@@ -1,3 +1,10 @@
+## [v4.28.4](https://github.com/pubnub/javascript/releases/tag/v4.28.4)
+July-15-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.28.3...v4.28.4)
+
+- 🐛 Fixes issue of high cpu usage when heartbeat interval is not set. 
+
 ## [v4.28.3](https://github.com/pubnub/javascript/releases/tag/v4.28.3)
 July-15-2020
 
