@@ -22,7 +22,7 @@ const endpoint: EndpointConfig<RemoveChannelMetadataParams, RemoveChannelMetadat
     }
   },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${params.channel}`,
+  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${params.channel}`,
   useDelete: () => true,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),

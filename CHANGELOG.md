@@ -1,3 +1,10 @@
+## [v4.28.3](https://github.com/pubnub/javascript/releases/tag/v4.28.3)
+July-15-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.28.2...v4.28.3)
+
+- 🐛 * getAllChannelMetadata no longer includes customFields by default, * removeChannelMetadata no longer hits wrong endpoint, * getMemberships and getChannelMembers now includes customFields by default, * getAllUUIDMetadata now includes totalCount by default, * getAllUUIDMetadata no longer includes limit by default, * all membership and channel members methods now accept a callback, * all objects v2 methods are properly typed now to include an optional callback, * getMemberships and getChannelMembers now include totalCount, prev, and next in the response. 
+
 ## [v4.28.2](https://github.com/pubnub/javascript/releases/tag/v4.28.2)
 June-29-2020
 

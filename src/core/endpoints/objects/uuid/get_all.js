@@ -48,7 +48,7 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
     }
 
     if (params?.include?.totalCount) {
-      queryParams.count = true;
+      queryParams.count = params.include?.totalCount;
     }
 
     if (params?.page?.next) {
@@ -63,7 +63,7 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
       queryParams.filter = params.filter;
     }
 
-    queryParams.limit = params?.limit ?? 100;
+    queryParams.limit = params?.limit;
 
     if (params?.sort) {
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {

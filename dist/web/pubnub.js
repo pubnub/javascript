@@ -1,4 +1,4 @@
-/*! 4.28.2 / Consumer  */
+/*! 4.28.3 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -516,7 +516,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.28.2';
+      return '4.28.3';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -2938,25 +2938,41 @@ var _default = function () {
       removeChannelMetadata: _endpoint["default"].bind(this, modules, _remove2["default"]),
       getChannelMembers: _endpoint["default"].bind(this, modules, _get3["default"]),
       setChannelMembers: function setChannelMembers(parameters) {
-        return _endpoint["default"].call(_this, modules, _set3["default"], _objectSpread({
+        for (var _len = arguments.length, rest = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          rest[_key - 1] = arguments[_key];
+        }
+
+        return _endpoint["default"].call.apply(_endpoint["default"], [_this, modules, _set3["default"], _objectSpread({
           type: 'set'
-        }, parameters));
+        }, parameters)].concat(rest));
       },
       removeChannelMembers: function removeChannelMembers(parameters) {
-        return _endpoint["default"].call(_this, modules, _set3["default"], _objectSpread({
-          type: 'remove'
-        }, parameters));
+        for (var _len2 = arguments.length, rest = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+          rest[_key2 - 1] = arguments[_key2];
+        }
+
+        return _endpoint["default"].call.apply(_endpoint["default"], [_this, modules, _set3["default"], _objectSpread({
+          type: 'delete'
+        }, parameters)].concat(rest));
       },
       getMemberships: _endpoint["default"].bind(this, modules, _get4["default"]),
       setMemberships: function setMemberships(parameters) {
-        return _endpoint["default"].call(_this, modules, _set4["default"], _objectSpread({
+        for (var _len3 = arguments.length, rest = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+          rest[_key3 - 1] = arguments[_key3];
+        }
+
+        return _endpoint["default"].call.apply(_endpoint["default"], [_this, modules, _set4["default"], _objectSpread({
           type: 'set'
-        }, parameters));
+        }, parameters)].concat(rest));
       },
       removeMemberships: function removeMemberships(parameters) {
-        return _endpoint["default"].call(_this, modules, _set4["default"], _objectSpread({
-          type: 'remove'
-        }, parameters));
+        for (var _len4 = arguments.length, rest = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+          rest[_key4 - 1] = arguments[_key4];
+        }
+
+        return _endpoint["default"].call.apply(_endpoint["default"], [_this, modules, _set4["default"], _objectSpread({
+          type: 'delete'
+        }, parameters)].concat(rest));
       }
     };
     this.createUser = (0, _utils.deprecated)(_endpoint["default"].bind(this, modules, createUserEndpointConfig));
@@ -7139,7 +7155,7 @@ var endpoint = {
     return tokenManager.getToken('user');
   },
   prepareParams: function prepareParams(_modules, params) {
-    var _params$include, _params$include2, _params$page, _params$page3, _ref4;
+    var _params$include, _params$include2, _params$page, _params$page3;
 
     var queryParams = {};
 
@@ -7148,7 +7164,9 @@ var endpoint = {
     }
 
     if (params === null || params === void 0 ? void 0 : (_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.totalCount) {
-      queryParams.count = true;
+      var _params$include3;
+
+      queryParams.count = (_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.totalCount;
     }
 
     if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
@@ -7167,15 +7185,15 @@ var endpoint = {
       queryParams.filter = params.filter;
     }
 
-    queryParams.limit = (_ref4 = params === null || params === void 0 ? void 0 : params.limit) !== null && _ref4 !== void 0 ? _ref4 : 100;
+    queryParams.limit = params === null || params === void 0 ? void 0 : params.limit;
 
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
-        var _ref6 = _slicedToArray(_ref5, 2),
-            key = _ref6[0],
-            value = _ref6[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
+        var _ref5 = _slicedToArray(_ref4, 2),
+            key = _ref5[0],
+            value = _ref5[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -7432,15 +7450,19 @@ var endpoint = {
     return tokenManager.getToken('channel');
   },
   prepareParams: function prepareParams(_modules, params) {
-    var _ref4, _params$include, _ref5, _params$include2, _params$page, _params$page3;
+    var _params$include, _params$include2, _params$page, _params$page3;
 
     var queryParams = {};
 
-    if ((_ref4 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref4 !== void 0 ? _ref4 : true) {
+    if (params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) {
       queryParams.include = ['custom'];
     }
 
-    queryParams.count = (_ref5 = params === null || params === void 0 ? void 0 : (_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.totalCount) !== null && _ref5 !== void 0 ? _ref5 : true;
+    if (params === null || params === void 0 ? void 0 : (_params$include2 = params.include) === null || _params$include2 === void 0 ? void 0 : _params$include2.totalCount) {
+      var _params$include3;
+
+      queryParams.count = (_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.totalCount;
+    }
 
     if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
       var _params$page2;
@@ -7465,10 +7487,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref6) {
-        var _ref7 = _slicedToArray(_ref6, 2),
-            key = _ref7[0],
-            value = _ref7[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
+        var _ref5 = _slicedToArray(_ref4, 2),
+            key = _ref5[0],
+            value = _ref5[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -7647,7 +7669,7 @@ var endpoint = {
   },
   getURL: function getURL(_ref, params) {
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(params.channel);
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel);
   },
   useDelete: function useDelete() {
     return true;
@@ -7749,7 +7771,9 @@ var endpoint = {
     }
 
     if (params === null || params === void 0 ? void 0 : (_params$include4 = params.include) === null || _params$include4 === void 0 ? void 0 : _params$include4.totalCount) {
-      queryParams.count = true;
+      var _params$include5;
+
+      queryParams.count = (_params$include5 = params.include) === null || _params$include5 === void 0 ? void 0 : _params$include5.totalCount;
     }
 
     if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
@@ -7791,7 +7815,10 @@ var endpoint = {
   handleResponse: function handleResponse(_, response) {
     return {
       status: response.status,
-      data: response.data
+      data: response.data,
+      totalCount: response.totalCount,
+      prev: response.prev,
+      next: response.next
     };
   }
 };
@@ -8028,7 +8055,9 @@ var endpoint = {
     }
 
     if (params === null || params === void 0 ? void 0 : (_params$include4 = params.include) === null || _params$include4 === void 0 ? void 0 : _params$include4.totalCount) {
-      queryParams.count = true;
+      var _params$include5;
+
+      queryParams.count = (_params$include5 = params.include) === null || _params$include5 === void 0 ? void 0 : _params$include5.totalCount;
     }
 
     if (params === null || params === void 0 ? void 0 : (_params$page = params.page) === null || _params$page === void 0 ? void 0 : _params$page.next) {
@@ -8070,7 +8099,10 @@ var endpoint = {
   handleResponse: function handleResponse(_, response) {
     return {
       status: response.status,
-      data: response.data
+      data: response.data,
+      totalCount: response.totalCount,
+      prev: response.prev,
+      next: response.next
     };
   }
 };

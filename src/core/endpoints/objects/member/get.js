@@ -4,13 +4,16 @@ import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { Member, PaginatedResultParams } from './member';
 
-export type GetMembersParams = {|
+export type GetMembersParams = {
   channel: string,
-|} & PaginatedResultParams;
+} & PaginatedResultParams;
 
 export type GetMembersResult = {|
   status: 200,
   data: Member[],
+  totalCount?: number,
+  prev?: string,
+  next?: string,
 |};
 
 const endpoint: EndpointConfig<GetMembersParams, GetMembersResult> = {
@@ -51,7 +54,7 @@ const endpoint: EndpointConfig<GetMembersParams, GetMembersResult> = {
     }
 
     if (params?.include?.totalCount) {
-      queryParams.count = true;
+      queryParams.count = params.include?.totalCount;
     }
 
     if (params?.page?.next) {
@@ -84,6 +87,9 @@ const endpoint: EndpointConfig<GetMembersParams, GetMembersResult> = {
   handleResponse: (_, response): GetMembersResult => ({
     status: response.status,
     data: response.data,
+    totalCount: response.totalCount,
+    prev: response.prev,
+    next: response.next,
   }),
 };
 

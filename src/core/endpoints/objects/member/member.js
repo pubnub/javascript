@@ -9,7 +9,7 @@ export type Member = {|
   eTag: string,
 |};
 
-export type PaginatedResultParams = {|
+export type PaginatedResultParams = {
   filter?: string,
   sort?: { [key: string]: 'asc' | 'desc' | null },
   limit?: number,
@@ -23,4 +23,4 @@ export type PaginatedResultParams = {|
     UUIDFields?: boolean, // uuid
     customUUIDFields?: boolean, // uuid.custom
   |},
-|};
+};

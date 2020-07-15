@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "* getAllChannelMetadata no longer includes customFields by default, * removeChannelMetadata no longer hits wrong endpoint, * getMemberships and getChannelMembers now includes customFields by default, * getAllUUIDMetadata now includes totalCount by default, * getAllUUIDMetadata no longer includes limit by default, * all membership and channel members methods now accept a callback, * all objects v2 methods are properly typed now to include an optional callback, * getMemberships and getChannelMembers now include totalCount, prev, and next in the response."
+        type: bug
+    date: 2020-07-15
+    version: v4.28.3
+  -
+    changes:
+      -
         text: "Fixes a bug in removeChannelMembers and removeMemberships."
         type: bug
     date: 2020-06-29
@@ -854,4 +861,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.28.2"
+version: "4.28.3"

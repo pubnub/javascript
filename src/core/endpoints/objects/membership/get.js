@@ -11,6 +11,9 @@ export type GetMembershipsParams = {
 export type GetMembershipsResult = {|
   status: 200,
   data: Membership[],
+  totalCount?: number,
+  prev?: string,
+  next?: string,
 |};
 
 const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
@@ -50,7 +53,7 @@ const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
     }
 
     if (params?.include?.totalCount) {
-      queryParams.count = true;
+      queryParams.count = params.include?.totalCount;
     }
 
     if (params?.page?.next) {
@@ -83,6 +86,9 @@ const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
   handleResponse: (_, response): GetMembershipsResult => ({
     status: response.status,
     data: response.data,
+    totalCount: response.totalCount,
+    prev: response.prev,
+    next: response.next,
   }),
 };
 

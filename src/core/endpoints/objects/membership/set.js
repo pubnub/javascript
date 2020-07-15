@@ -9,7 +9,7 @@ type CommonParams = {|
 |};
 
 export type RemoveMembershipsParams = {|
-  type: 'remove',
+  type: 'delete',
   channels: (string | { id: string, custom?: empty })[],
 |} & CommonParams & PaginatedResultParams;
 

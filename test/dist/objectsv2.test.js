@@ -101,6 +101,16 @@ describe('Objects V2 system tests', () => {
     expect(result.status).to.equal(200);
   });
 
+  it('should get channel members', async () => {
+    const result = await pubnub.objects.getChannelMembers({
+      channel: CHANNEL_1,
+      include: { customFields: true }
+    });
+
+    expect(result.status).to.equal(200);
+    expect(result.data[0]?.custom?.myData).to.equal(42);
+  });
+
   it('should get memberships', async () => {
     const result = await pubnub.objects.getMemberships({
       uuid: UUID_1,
@@ -118,10 +128,9 @@ describe('Objects V2 system tests', () => {
   });
 
   it('should remove memberships', async () => {
-    const result = await pubnub.objects.removeMemberships({ uuid: UUID_1, channels: [CHANNEL_1] });
-
-    expect(result.status).to.equal(200);
-    console.log(result);
+    const result = pubnub.objects.removeMemberships({ uuid: UUID_1, channels: [CHANNEL_1] }, (status, result) => {
+      expect(result.status).to.equal(200);
+    });
   })
 
   it('should remove uuid', async () => {

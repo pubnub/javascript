@@ -158,7 +158,7 @@ describe('objects channel', () => {
 
       const scope = utils
         .createNock()
-        .delete(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${channelName}`)
+        .delete(`/v2/objects/${SUBSCRIBE_KEY}/channels/${channelName}`)
         .query({
           auth: AUTH_KEY,
           uuid: UUID,

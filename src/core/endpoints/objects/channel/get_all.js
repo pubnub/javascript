@@ -43,11 +43,13 @@ const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadat
   prepareParams: (_modules, params) => {
     const queryParams = {};
 
-    if (params?.include?.customFields ?? true) {
+    if (params?.include?.customFields) {
       queryParams.include = ['custom'];
     }
 
-    queryParams.count = params?.include?.totalCount ?? true;
+    if (params?.include?.totalCount) {
+      queryParams.count = params.include?.totalCount;
+    }
 
     if (params?.page?.next) {
       queryParams.start = params.page?.next;

@@ -139,6 +139,12 @@ import CATEGORIES from './constants/categories';
 import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
 
+type CallbackStatus = {|
+  error: boolean,
+  operation: string,
+  statusCode: number
+|}
+
 export default class {
   _config: Config;
   _telemetryManager: TelemetryManager;
@@ -183,23 +189,23 @@ export default class {
   // Objects API v2
 
   objects: {
-    getAllUUIDMetadata: (parameters?: GetAllUUIDMetadataParams) => Promise<GetAllUUIDMetadataResult>,
-    getUUIDMetadata: (parameters?: GetUUIDMetadataParams) => Promise<GetUUIDMetadataResult>,
-    setUUIDMetadata: (parameters: SetUUIDMetadataParams) => Promise<SetUUIDMetadataResult>,
-    removeUUIDMetadata: (parameters?: RemoveUUIDMetadataParams) => Promise<RemoveUUIDMetadataResult>,
+    getAllUUIDMetadata: (parameters?: GetAllUUIDMetadataParams, cb?: (status: CallbackStatus, result: GetAllUUIDMetadataResult) => void) => Promise<GetAllUUIDMetadataResult>,
+    getUUIDMetadata: (parameters?: GetUUIDMetadataParams, cb?: (status: CallbackStatus, result: GetUUIDMetadataResult) => void) => Promise<GetUUIDMetadataResult>,
+    setUUIDMetadata: (parameters: SetUUIDMetadataParams, cb?: (status: CallbackStatus, result: SetUUIDMetadataResult) => void) => Promise<SetUUIDMetadataResult>,
+    removeUUIDMetadata: (parameters?: RemoveUUIDMetadataParams, cb?: (status: CallbackStatus, result: RemoveUUIDMetadataResult) => void) => Promise<RemoveUUIDMetadataResult>,
 
-    getAllChannelMetadata: (parameters?: GetAllChannelMetadataParams) => Promise<GetAllChannelMetadataResult>,
-    getChannelMetadata: (parameters: GetChannelMetadataParams) => Promise<GetChannelMetadataResult>,
-    setChannelMetadata: (parameters: SetChannelMetadataParams) => Promise<SetChannelMetadataResult>,
-    removeChannelMetadata: (parameters: RemoveChannelMetadataParams) => Promise<RemoveChannelMetadataResult>,
+    getAllChannelMetadata: (parameters?: GetAllChannelMetadataParams, cb?: (status: CallbackStatus, result: GetAllChannelMetadataResult) => void) => Promise<GetAllChannelMetadataResult>,
+    getChannelMetadata: (parameters: GetChannelMetadataParams, cb?: (status: CallbackStatus, result: GetChannelMetadataResult) => void) => Promise<GetChannelMetadataResult>,
+    setChannelMetadata: (parameters: SetChannelMetadataParams, cb?: (status: CallbackStatus, result: SetChannelMetadataResult) => void) => Promise<SetChannelMetadataResult>,
+    removeChannelMetadata: (parameters: RemoveChannelMetadataParams, cb?: (status: CallbackStatus, result: RemoveChannelMetadataResult) => void) => Promise<RemoveChannelMetadataResult>,
 
-    getMemberships: (parameters: GetMembershipsParams) => Promise<GetMembershipsResult>,
-    setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>) => Promise<SetMembershipsResult>,
-    removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>) => Promise<SetMembershipsResult>,
+    getMemberships: (parameters: GetMembershipsParams, cb?: (status: CallbackStatus, result: GetMembershipsResult) => void) => Promise<GetMembershipsResult>,
+    setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>, cb?: (status: CallbackStatus, result: SetMembershipsResult) => void) => Promise<SetMembershipsResult>,
+    removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>, cb?: (status: CallbackStatus, result: SetMembershipsResult) => void) => Promise<SetMembershipsResult>,
 
-    getChannelMembers: (parameters: GetMembersParams) => Promise<GetMembersResult>,
-    setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>) => Promise<SetMembersResult>,
-    removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>) => Promise<SetMembersResult>,
+    getChannelMembers: (parameters: GetMembersParams, cb?: (status: CallbackStatus, result: GetMembersResult) => void) => Promise<GetMembersResult>,
+    setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>, cb?: (status: CallbackStatus, result: SetMembersResult) => void) => Promise<SetMembersResult>,
+    removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>, cb?: (status: CallbackStatus, result: SetMembersResult) => void) => Promise<SetMembersResult>,
   };
 
   // Objects API
@@ -368,24 +374,24 @@ export default class {
       removeChannelMetadata: endpointCreator.bind(this, modules, removeChannelMetadataEndpointConfig),
 
       getChannelMembers: endpointCreator.bind(this, modules, getMembersV2EndpointConfig),
-      setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembersV2EndpointConfig, {
+      setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>, ...rest) => endpointCreator.call(this, modules, setMembersV2EndpointConfig, {
         type: 'set',
         ...parameters,
-      }),
-      removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembersV2EndpointConfig, {
-        type: 'remove',
+      }, ...rest),
+      removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>, ...rest) => endpointCreator.call(this, modules, setMembersV2EndpointConfig, {
+        type: 'delete',
         ...parameters,
-      }),
+      }, ...rest),
 
       getMemberships: endpointCreator.bind(this, modules, getMembershipsV2EndpointConfig),
-      setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembershipsV2EndpointConfig, {
+      setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>, ...rest) => endpointCreator.call(this, modules, setMembershipsV2EndpointConfig, {
         type: 'set',
         ...parameters,
-      }),
-      removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>) => endpointCreator.call(this, modules, setMembershipsV2EndpointConfig, {
-        type: 'remove',
+      }, ...rest),
+      removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>, ...rest) => endpointCreator.call(this, modules, setMembershipsV2EndpointConfig, {
+        type: 'delete',
         ...parameters,
-      })
+      }, ...rest)
     };
 
     // Objects API
