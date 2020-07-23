@@ -6,9 +6,10 @@ import CborReader from 'cbor-js';
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import CryptoJS from '../core/components/cryptography/hmac-sha256';
+import PubNubFile from './file';
 import db from '../db/web';
 import Cbor from '../cbor/common';
-import { del, get, post, patch } from '../networking/modules/web-node';
+import { del, get, post, patch, file } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 function sendBeacon(url: string) {
@@ -33,7 +34,7 @@ function base64ToBinary(base64String: string) {
     view[byteOffset] = (word & 0xff000000) >> 24;
     view[byteOffset + 1] = (word & 0x00ff0000) >> 16;
     view[byteOffset + 2] = (word & 0x0000ff00) >> 8;
-    view[byteOffset + 3] = (word & 0x000000ff);
+    view[byteOffset + 3] = word & 0x000000ff;
   }
 
   for (let byteIdx = byteOffset + 3; byteIdx >= byteOffset; byteIdx -= 1) {
@@ -67,14 +68,14 @@ function stringifyBufferKeys(obj) {
     let stringifiedKey = key;
     let value = obj[key];
 
-    if (Array.isArray(key) || keyIsString && key.indexOf(',') >= 0) {
+    if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
       const bytes: Array<any> = keyIsString ? key.split(',') : key;
 
       stringifiedKey = bytes.reduce((string, byte) => {
-        string += (String.fromCharCode(byte));
+        string += String.fromCharCode(byte);
         return string;
       }, '');
-    } else if (isNumber(key) || keyIsString && !isNaN(key)) {
+    } else if (isNumber(key) || (keyIsString && !isNaN(key))) {
       stringifiedKey = String.fromCharCode(keyIsString ? parseInt(key, 10) : 10);
     }
 
@@ -91,10 +92,15 @@ export default class extends PubNubCore {
 
     setup.db = db;
     setup.sdkFamily = 'Web';
-    setup.networking = new Networking({ del, get, post, patch, sendBeacon });
-    setup.cbor = new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), base64ToBinary);
+    setup.networking = new Networking({ del, get, post, patch, sendBeacon, file });
+    setup.cbor = new Cbor(
+      (arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)),
+      base64ToBinary
+    );
 
     super(setup);
+
+    this.File = PubNubFile;
 
     if (listenToBrowserNetworkEvents) {
       // mount network events.

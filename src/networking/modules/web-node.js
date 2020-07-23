@@ -2,10 +2,7 @@
 /* global window */
 
 import superagent from 'superagent';
-import {
-  EndpointDefinition,
-  StatusAnnouncement,
-} from '../../core/flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 
 function log(req: Object) {
   let _pickLogger = () => {
@@ -27,15 +24,7 @@ function log(req: Object) {
     let timestampDone = new Date().toISOString();
 
     logger.log('>>>>>>'); // eslint-disable-line no-console
-    logger.log(
-      `[${timestampDone} / ${elapsed}]`,
-      '\n',
-      req.url,
-      '\n',
-      req.qs,
-      '\n',
-      res.text
-    ); // eslint-disable-line no-console
+    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text); // eslint-disable-line no-console
     logger.log('-----'); // eslint-disable-line no-console
   });
 }
@@ -57,7 +46,13 @@ function xdr(
     superagentConstruct = this._modules.keepAlive(superagentConstruct);
   }
 
-  return superagentConstruct.timeout(endpoint.timeout).end((err, resp) => {
+  let sc = superagentConstruct;
+
+  if (typeof Blob === 'undefined') {
+    sc = sc.buffer(!endpoint.ignoreBody);
+  }
+
+  return sc.timeout(endpoint.timeout).end((err, resp) => {
     let parsedResponse;
     let status: StatusAnnouncement = {};
     status.error = err !== null;
@@ -81,12 +76,20 @@ function xdr(
       return callback(status, null);
     }
 
-    try {
-      parsedResponse = JSON.parse(resp.text);
-    } catch (e) {
-      status.errorData = resp;
-      status.error = true;
-      return callback(status, null);
+    if (endpoint.ignoreBody) {
+      parsedResponse = {
+        headers: resp.headers,
+        redirects: resp.redirects,
+        response: resp,
+      };
+    } else {
+      try {
+        parsedResponse = JSON.parse(resp.text);
+      } catch (e) {
+        status.errorData = resp;
+        status.error = true;
+        return callback(status, null);
+      }
     }
 
     if (
@@ -109,11 +112,25 @@ function xdr(
   });
 }
 
-export function get(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
-): superagent {
+export async function file(
+  url: string,
+  fields: $ReadOnlyArray<{ key: string, value: string }>,
+  fileInput: any
+): Promise<any> {
+  let agent = superagent.post(url);
+
+  fields.forEach(({ key, value }) => {
+    agent = agent.field(key, value);
+  });
+
+  agent.attach('file', fileInput);
+
+  const result = await agent;
+
+  return result;
+}
+
+export function get(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {
   let superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
@@ -149,11 +166,7 @@ export function patch(
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function del(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
-): superagent {
+export function del(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {
   let superagentConstruct = superagent
     .delete(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)

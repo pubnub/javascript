@@ -7,17 +7,21 @@ plugins:
   - flowtype
 
 ignorePatterns:
-  - "flow-typed/**/*"
-  - "test/**/*"
+  - 'flow-typed/**/*'
+  - 'test/**/*'
 
 globals:
-  "$Shape": readonly
-  "$Diff": readonly
+  '$Shape': readonly
+  '$Diff': readonly
+  '$ReadOnlyArray': readonly
+  'buffer$NonBufferEncoding': readonly
+  'File': readonly
+  'FileReader': readonly
 
 overrides:
   - files: test/**/*
-    globals: 
-      "expect": readonly 
+    globals:
+      'expect': readonly
     env:
       mocha: true
     rules:
@@ -43,12 +47,11 @@ rules:
   class-methods-use-this: 0
   no-await-in-loop: 0
   no-multi-assign: 0
-  arrow-parens: [2, "always"]
-  operator-linebreak: ["error", "after"]
+  arrow-parens: [2, 'always']
+  operator-linebreak: ['error', 'after']
   no-mixed-operators: 0
   lines-between-class-members: 0
   no-multi-spaces: 0
   object-curly-newline: 0
   prefer-destructuring: 0
   no-restricted-globals: 0
-  space-before-function-paren: ["error", "never"]

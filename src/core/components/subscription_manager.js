@@ -13,6 +13,7 @@ import {
   SubscribeEnvelope,
   StatusAnnouncement,
   PresenceAnnouncement,
+  FileAnnouncement,
 } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 
@@ -47,6 +48,7 @@ type SubscriptionManagerConstruct = {
   timeEndpoint: Function,
   heartbeatEndpoint: Function,
   setStateEndpoint: Function,
+  getFileUrl: ({| id: string, name: string, channel: string |}) => string,
   config: Config,
   crypto: Crypto,
   listenerManager: ListenerManager,
@@ -62,6 +64,7 @@ export default class {
   _heartbeatEndpoint: Function;
   _setStateEndpoint: Function;
   _subscribeEndpoint: Function;
+  _getFileUrl: ({| id: string, name: string, channel: string |}) => string;
 
   _channels: Object;
   _presenceChannels: Object;
@@ -99,6 +102,7 @@ export default class {
     heartbeatEndpoint,
     setStateEndpoint,
     timeEndpoint,
+    getFileUrl,
     config,
     crypto,
     listenerManager,
@@ -110,6 +114,7 @@ export default class {
     this._heartbeatEndpoint = heartbeatEndpoint;
     this._setStateEndpoint = setStateEndpoint;
     this._subscribeEndpoint = subscribeEndpoint;
+    this._getFileUrl = getFileUrl;
 
     this._crypto = crypto;
 
@@ -695,6 +700,27 @@ export default class {
         announce.event = message.payload.event;
 
         this._listenerManager.announceMessageAction(announce);
+      } else if (message.messageType === 4) {
+        // this is a file message
+        let announce: FileAnnouncement = {};
+        announce.channel = channel;
+        announce.subscription = subscriptionMatch;
+        announce.timetoken = publishMetaData.publishTimetoken;
+        announce.publisher = message.issuingClientId;
+
+        if (this._config.cipherKey) {
+          announce.message = this._crypto.decrypt(message.payload.message);
+        } else {
+          announce.message = message.payload.message;
+        }
+
+        announce.file = {
+          id: message.payload.file.id,
+          name: message.payload.file.name,
+          url: this._getFileUrl({ id: message.payload.file.id, name: message.payload.file.name, channel }),
+        };
+
+        this._listenerManager.announceFile(announce);
       } else {
         let announce: MessageAnnouncement = {};
         announce.channel = null;

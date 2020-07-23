@@ -34,8 +34,7 @@ export default class {
 
     this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
-    this._providedFQDN =
-      (this._config.secure ? 'https://' : 'http://') + this._config.origin;
+    this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
     this._coreParams = {};
 
     // create initial origins
@@ -58,10 +57,7 @@ export default class {
 
     newSubDomain = this._currentSubDomain.toString();
 
-    return this._providedFQDN.replace(
-      'ps.pndsn.com',
-      `ps${newSubDomain}.pndsn.com`
-    );
+    return this._providedFQDN.replace('ps.pndsn.com', `ps${newSubDomain}.pndsn.com`);
   }
 
   hasModule(name: string) {
@@ -79,21 +75,15 @@ export default class {
     return this._standardOrigin;
   }
 
-  POST(
-    params: Object,
-    body: string,
-    endpoint: EndpointDefinition,
-    callback: Function
-  ) {
+  FILE(url: string, fields: $ReadOnlyArray<{ key: string, value: string }>, file: any) {
+    return this._modules.file(url, fields, file);
+  }
+
+  POST(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
     return this._modules.post(params, body, endpoint, callback);
   }
 
-  PATCH(
-    params: Object,
-    body: string,
-    endpoint: EndpointDefinition,
-    callback: Function
-  ) {
+  PATCH(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
     return this._modules.patch(params, body, endpoint, callback);
   }
 
@@ -119,10 +109,7 @@ export default class {
       return categoryConstants.PNNetworkIssuesCategory;
     }
 
-    if (
-      err.status === 0 ||
-      (err.hasOwnProperty('status') && typeof err.status === 'undefined')
-    ) {
+    if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) {
       return categoryConstants.PNNetworkIssuesCategory;
     }
     if (err.timeout) return categoryConstants.PNTimeoutCategory;

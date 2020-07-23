@@ -1,6 +1,6 @@
 # PubNub JavaScript SDK (V4)
 
-[![Build Status](https://travis-ci.org/pubnub/javascript.svg?branch=master)](https://travis-ci.org/pubnub/javascript)
+[![Build Status](https://travis-ci.org/pubnub/javascript.svg?branch=v4.29.0-rc)](https://travis-ci.org/pubnub/javascript)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pubnub/javascript&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&utm_medium=referral&utm_content=pubnub/javascript&utm_campaign=Badge_Coverage)
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()

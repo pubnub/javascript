@@ -121,6 +121,8 @@ describe('fetch messages endpoints', () => {
         max: '10',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
       })
       .reply(
         200,
@@ -182,6 +184,8 @@ describe('fetch messages endpoints', () => {
         max: '10',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
       })
       .reply(
         200,
