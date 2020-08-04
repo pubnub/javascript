@@ -1,3 +1,12 @@
+## [v4.29.0](https://github.com/pubnub/javascript/releases/tag/v4.29.0)
+August-04-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.28.4...v4.29.0)
+
+- 🌟️ Allows to upload files to channels, download them with optional encryption support. 
+- 🌟️ Allows to enable random IVs when encrypting messages. 
+- 🐛 Fixes a bug with PAM and Objects v2. 
+
 ## [v4.28.4](https://github.com/pubnub/javascript/releases/tag/v4.28.4)
 July-15-2020
 

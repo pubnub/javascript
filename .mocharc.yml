@@ -1,5 +1,7 @@
 spec: test/**/*.test.js
 require: test/setup.js
-exclude: test/dist/*.js
+exclude:
+  - test/dist/*.js
+  - test/feature/*.js
 timeout: 5000
 reporter: spec

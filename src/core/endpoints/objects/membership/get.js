@@ -50,6 +50,8 @@ const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
       if (params.include?.channelFields) {
         queryParams.include.push('channel');
       }
+
+      queryParams.include = queryParams.include.join(',');
     }
 
     if (params?.include?.totalCount) {

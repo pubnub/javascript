@@ -4,17 +4,23 @@ import type Config from '../components/config';
 import type Crypto from '../components/cryptography';
 import type TokenManager from '../components/token_manager';
 import type TelemetryManager from '../components/telemetry_manager';
+import type { FileClass } from '../../file';
+import type { ICryptography } from '../../crypto';
 
 export type Modules = {|
   config: Config,
   crypto: Crypto,
+  cryptography: ICryptography<any>,
   tokenManager: TokenManager,
   telemetryManager: TelemetryManager,
+  networking: any,
+  PubNubFile: FileClass,
 |};
 
 export type Record = { [key: string]: any };
 
-type InjectedFunction<TArgs, TReturn> = (modules: Modules, ...args: TArgs) => TReturn
+type InjectedFunction<TArgs, TReturn> = (modules: Modules, ...args: TArgs) => TReturn;
+type InjectedMaybeAsyncFunction<TArgs, TReturn> = (modules: Modules, ...args: TArgs) => Promise<TReturn> | TReturn;
 
 // endpoint definition structure
 export type EndpointConfig<TParams, TResult> = {|
@@ -28,15 +34,18 @@ export type EndpointConfig<TParams, TResult> = {|
   getRequestHeaders?: () => Record,
 
   getURL?: InjectedFunction<[TParams], string>,
-  usePost?: InjectedFunction<[TParams], bool>,
+  usePost?: InjectedFunction<[TParams], boolean>,
   postURL?: InjectedFunction<[TParams], string>,
-  usePatch?: InjectedFunction<[TParams], bool>,
+  usePatch?: InjectedFunction<[TParams], boolean>,
   patchURL?: InjectedFunction<[TParams], string>,
-  useDelete?: InjectedFunction<[TParams], bool>,
+  useDelete?: InjectedFunction<[TParams], boolean>,
 
-  isAuthSupported: () => bool,
+  ignoreBody?: InjectedFunction<[TParams], boolean>,
+  forceBuffered?: InjectedFunction<[TParams], boolean>,
+
+  isAuthSupported: () => boolean,
   postPayload?: InjectedFunction<[TParams], any>,
   patchPayload?: InjectedFunction<[TParams], any>,
 
-  handleResponse?: InjectedFunction<[Record, TParams], TResult>,
+  handleResponse?: InjectedMaybeAsyncFunction<[Record, TParams], TResult>,
 |};

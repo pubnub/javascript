@@ -4,7 +4,7 @@ import utils from '../utils';
 import Config from './config';
 import operationConstants from '../constants/operations';
 
-class PubNubError extends Error {
+export class PubNubError extends Error {
   constructor(message, status) {
     super(message);
     this.name = this.constructor.name;
@@ -19,7 +19,7 @@ function createError(errorPayload: Object, type: string): Object {
   return errorPayload;
 }
 
-function createValidationError(message: string): Object {
+export function createValidationError(message: string): Object {
   return createError({ message }, 'validationError');
 }
 
@@ -109,14 +109,17 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   outgoingParams.signature = signature;
 }
 
-export default function(modules, endpoint, ...args) {
+export default function (modules, endpoint, ...args) {
   let { networking, config, telemetryManager } = modules;
   const requestId = uuidGenerator.createUUID();
   let callback = null;
   let promiseComponent = null;
   let incomingParams = {};
 
-  if (endpoint.getOperation() === operationConstants.PNTimeOperation || endpoint.getOperation() === operationConstants.PNChannelGroupsOperation) {
+  if (
+    endpoint.getOperation() === operationConstants.PNTimeOperation ||
+    endpoint.getOperation() === operationConstants.PNChannelGroupsOperation
+  ) {
     callback = args[0];
   } else {
     incomingParams = args[0];
@@ -134,7 +137,9 @@ export default function(modules, endpoint, ...args) {
     if (callback) {
       return callback(createValidationError(validationResult));
     } else if (promiseComponent) {
-      promiseComponent.reject(new PubNubError('Validation failed, check status for details', createValidationError(validationResult)));
+      promiseComponent.reject(
+        new PubNubError('Validation failed, check status for details', createValidationError(validationResult))
+      );
       return promiseComponent.promise;
     }
     return;
@@ -143,10 +148,14 @@ export default function(modules, endpoint, ...args) {
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
   let url = decideURL(endpoint, modules, incomingParams);
   let callInstance;
-  let networkingParams = { url,
+  let networkingParams = {
+    url,
     operation: endpoint.getOperation(),
     timeout: endpoint.getRequestTimeout(modules),
-    headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {}
+    headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {},
+    ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
+    forceBuffered:
+      typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
   };
 
   outgoingParams.uuid = config.UUID;
@@ -192,13 +201,27 @@ export default function(modules, endpoint, ...args) {
     // Stop endpoint latency tracking.
     telemetryManager.stopLatencyMeasure(endpoint.getOperation(), requestId);
 
-    let parsedPayload = endpoint.handleResponse(modules, payload, incomingParams);
+    let responseP = endpoint.handleResponse(modules, payload, incomingParams);
 
-    if (callback) {
-      callback(status, parsedPayload);
-    } else if (promiseComponent) {
-      promiseComponent.fulfill(parsedPayload);
+    if (typeof responseP.then !== 'function') {
+      responseP = Promise.resolve(responseP);
     }
+
+    responseP
+      .then((result) => {
+        if (callback) {
+          callback(status, result);
+        } else if (promiseComponent) {
+          promiseComponent.fulfill(result);
+        }
+      })
+      .catch((e) => {
+        if (callback) {
+          callback(e, null);
+        } else if (promiseComponent) {
+          promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', e));
+        }
+      });
   };
 
   // Start endpoint latency tracking.

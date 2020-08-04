@@ -23,7 +23,7 @@ export type GetAllUUIDMetadataResult = {|
   data: UUIDMetadata[],
   totalCount?: number,
   prev?: string,
-  next?: string
+  next?: string,
 |};
 
 const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResult> = {
@@ -44,7 +44,7 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
     const queryParams = {};
 
     if (params?.include?.customFields) {
-      queryParams.include = ['custom'];
+      queryParams.include = 'custom';
     }
 
     if (params?.include?.totalCount) {

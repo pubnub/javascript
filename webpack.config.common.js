@@ -1,24 +1,20 @@
 let config = {
   mode: 'production',
   optimization: {
-    minimize: false
+    minimize: false,
   },
   module: {
     rules: [
-      {
-        test: /\.json/,
-        use: 'json-loader'
-      },
       {
         test: /\.js$/,
         exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env']
-          }
-        }
-      }
+            presets: ['@babel/preset-env'],
+          },
+        },
+      },
     ],
   },
   node: {
@@ -28,7 +24,7 @@ let config = {
     formidable: 'empty',
   },
   externals: [],
-  profile: true
+  profile: true,
 };
 
 module.exports = config;

@@ -35,7 +35,7 @@ const endpoint: EndpointConfig<GetChannelMetadataParams, GetChannelMetadataResul
   getAuthToken: ({ tokenManager }) => tokenManager.getToken('channel'),
 
   prepareParams: (_, params) => ({
-    include: (params?.include?.customFields ?? true) && ['custom'],
+    include: (params?.include?.customFields ?? true) && 'custom',
   }),
 
   handleResponse: (_, response) => ({

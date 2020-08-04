@@ -38,11 +38,25 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
   publish(publishCompleted);
 }
 
-function addActionsInChannel(client: PubNub, count: Number, messageTimetokens: Array<Number>, channel: String, completion: Function) {
+function addActionsInChannel(
+  client: PubNub,
+  count: Number,
+  messageTimetokens: Array<Number>,
+  channel: String,
+  completion: Function
+) {
   const types = ['reaction', 'receipt', 'custom'];
   const values = [
-    PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(),
-    PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID()
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
+    PubNub.generateUUID(),
   ];
   let actionsToAdd = [];
   let actionsAdded = 0;
@@ -62,30 +76,26 @@ function addActionsInChannel(client: PubNub, count: Number, messageTimetokens: A
   const addAction = (actionIdx) => {
     const { messageTimetoken, action } = actionsToAdd[actionIdx];
 
-    client.addMessageAction(
-      { channel, messageTimetoken, action },
-      (status, response) => {
-        actionsAdded += 1;
+    client.addMessageAction({ channel, messageTimetoken, action }, (status, response) => {
+      actionsAdded += 1;
 
-        if (!status.error) {
-          actions.push(response.data);
-          actions = actions.sort((left, right) => left.actionTimetoken - right.actionTimetoken);
-        } else {
-          console.error('Action add did fail:', status);
-        }
-
-        if (actionsAdded < actionsToAdd.length) {
-          addAction(actionsAdded);
-        } else if (actionsAdded === actionsToAdd.length) {
-          completion(actions);
-        }
+      if (!status.error) {
+        actions.push(response.data);
+        actions = actions.sort((left, right) => left.actionTimetoken - right.actionTimetoken);
+      } else {
+        console.error('Action add did fail:', status);
       }
-    );
+
+      if (actionsAdded < actionsToAdd.length) {
+        addAction(actionsAdded);
+      } else if (actionsAdded === actionsToAdd.length) {
+        completion(actions);
+      }
+    });
   };
 
   addAction(actionsAdded);
 }
-
 
 describe('fetch messages endpoints', () => {
   const subscribeKey = process.env.SUBSCRIBE_KEY || 'demo';
@@ -121,56 +131,63 @@ describe('fetch messages endpoints', () => {
         max: '10',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
       })
       .reply(
         200,
         '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }'
       );
 
-    pubnub.fetchMessages(
-      { channels: ['ch1', 'ch2'], count: 10 },
-      (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response, {
-          channels: {
-            ch1: [
-              {
-                channel: 'ch1',
-                message: {
-                  text: 'hey1',
-                },
-                timetoken: '11',
+    pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response, {
+        channels: {
+          ch1: [
+            {
+              channel: 'ch1',
+              message: {
+                text: 'hey1',
               },
-              {
-                channel: 'ch1',
-                message: {
-                  text: 'hey2',
-                },
-                timetoken: '12',
+              timetoken: '11',
+              messageType: undefined,
+              uuid: undefined,
+            },
+            {
+              channel: 'ch1',
+              message: {
+                text: 'hey2',
               },
-            ],
-            ch2: [
-              {
-                channel: 'ch2',
-                message: {
-                  text: 'hey3',
-                },
-                timetoken: '21',
+              timetoken: '12',
+              messageType: undefined,
+              uuid: undefined,
+            },
+          ],
+          ch2: [
+            {
+              channel: 'ch2',
+              message: {
+                text: 'hey3',
               },
-              {
-                channel: 'ch2',
-                message: {
-                  text: 'hey2',
-                },
-                timetoken: '22',
+              timetoken: '21',
+              messageType: undefined,
+              uuid: undefined,
+            },
+            {
+              channel: 'ch2',
+              message: {
+                text: 'hey2',
               },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
-      }
-    );
+              timetoken: '22',
+              messageType: undefined,
+              uuid: undefined,
+            },
+          ],
+        },
+      });
+      assert.equal(scope.isDone(), true);
+      done();
+    });
   });
 
   it('supports encrypted payload', (done) => {
@@ -182,6 +199,8 @@ describe('fetch messages endpoints', () => {
         max: '10',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
       })
       .reply(
         200,
@@ -189,50 +208,55 @@ describe('fetch messages endpoints', () => {
       );
 
     pubnub.setCipherKey('cipherKey');
-    pubnub.fetchMessages(
-      { channels: ['ch1', 'ch2'], count: 10 },
-      (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response, {
-          channels: {
-            ch1: [
-              {
-                channel: 'ch1',
-                message: {
-                  text: 'hey',
-                },
-                timetoken: '11',
+    pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response, {
+        channels: {
+          ch1: [
+            {
+              channel: 'ch1',
+              message: {
+                text: 'hey',
               },
-              {
-                channel: 'ch1',
-                message: {
-                  text: 'hey',
-                },
-                timetoken: '12',
+              timetoken: '11',
+              messageType: undefined,
+              uuid: undefined,
+            },
+            {
+              channel: 'ch1',
+              message: {
+                text: 'hey',
               },
-            ],
-            ch2: [
-              {
-                channel: 'ch2',
-                message: {
-                  text2: 'hey2',
-                },
-                timetoken: '21',
+              timetoken: '12',
+              messageType: undefined,
+              uuid: undefined,
+            },
+          ],
+          ch2: [
+            {
+              channel: 'ch2',
+              message: {
+                text2: 'hey2',
               },
-              {
-                channel: 'ch2',
-                message: {
-                  text2: 'hey2',
-                },
-                timetoken: '22',
+              timetoken: '21',
+              messageType: undefined,
+              uuid: undefined,
+            },
+            {
+              channel: 'ch2',
+              message: {
+                text2: 'hey2',
               },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
-      }
-    );
+              timetoken: '22',
+              messageType: undefined,
+              uuid: undefined,
+            },
+          ],
+        },
+      });
+      assert.equal(scope.isDone(), true);
+      done();
+    });
   });
 
   it('supports metadata', (done) => {
@@ -254,19 +278,19 @@ describe('fetch messages endpoints', () => {
     let errorCatched = false;
 
     try {
-      pubnub.fetchMessages(
-        { channels: ['channelA', 'channelB'], includeMessageActions: true },
-        () => {}
-      );
+      pubnub.fetchMessages({ channels: ['channelA', 'channelB'], includeMessageActions: true }, () => {});
     } catch (error) {
-      assert.equal(error.message, 'History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.');
+      assert.equal(
+        error.message,
+        'History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.'
+      );
       errorCatched = true;
     }
 
     assert(errorCatched);
   });
 
-  it('supports actions (stored as \'data\' field)', (done) => {
+  it("supports actions (stored as 'data' field)", (done) => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 2;
     const expectedActionsCount = 4;
@@ -299,7 +323,10 @@ describe('fetch messages endpoints', () => {
 
             assert.equal(historyActionsCount, expectedActionsCount);
             assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
-            assert.equal(fetchedMessages[fetchedMessages.length - 1].timetoken, messageTimetokens[messageTimetokens.length - 1]);
+            assert.equal(
+              fetchedMessages[fetchedMessages.length - 1].timetoken,
+              messageTimetokens[messageTimetokens.length - 1]
+            );
 
             done();
           });
@@ -308,7 +335,7 @@ describe('fetch messages endpoints', () => {
     });
   }).timeout(60000);
 
-  it('supports actions (stored as \'actions\' field)', (done) => {
+  it("supports actions (stored as 'actions' field)", (done) => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 2;
     const expectedActionsCount = 4;
@@ -341,7 +368,10 @@ describe('fetch messages endpoints', () => {
 
             assert.equal(historyActionsCount, expectedActionsCount);
             assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
-            assert.equal(fetchedMessages[fetchedMessages.length - 1].timetoken, messageTimetokens[messageTimetokens.length - 1]);
+            assert.equal(
+              fetchedMessages[fetchedMessages.length - 1].timetoken,
+              messageTimetokens[messageTimetokens.length - 1]
+            );
 
             done();
           });
@@ -358,16 +388,18 @@ describe('fetch messages endpoints', () => {
     const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
     const leeway = 50;
 
-    utils.runAPIWithResponseDelays(scope,
-      200,
-      '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }',
-      delays,
-      (completion) => {
-        pubnub.fetchMessages(
-          { channels: ['ch1', 'ch2'], count: 10 },
-          () => { completion(); }
-        );
-      })
+    utils
+      .runAPIWithResponseDelays(
+        scope,
+        200,
+        '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }',
+        delays,
+        (completion) => {
+          pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, () => {
+            completion();
+          });
+        }
+      )
       .then((lastRequest) => {
         utils.verifyRequestTelemetry(lastRequest.path, 'l_hist', average, leeway);
         done();

@@ -2,10 +2,7 @@
 /* global window */
 
 import superagent from 'superagent';
-import {
-  EndpointDefinition,
-  StatusAnnouncement,
-} from '../../core/flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 
 function log(req: Object) {
   let _pickLogger = () => {
@@ -27,24 +24,12 @@ function log(req: Object) {
     let timestampDone = new Date().toISOString();
 
     logger.log('>>>>>>'); // eslint-disable-line no-console
-    logger.log(
-      `[${timestampDone} / ${elapsed}]`,
-      '\n',
-      req.url,
-      '\n',
-      req.qs,
-      '\n',
-      res.text
-    ); // eslint-disable-line no-console
+    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text); // eslint-disable-line no-console
     logger.log('-----'); // eslint-disable-line no-console
   });
 }
 
-function xdr(
-  superagentConstruct: superagent,
-  endpoint: EndpointDefinition,
-  callback: Function
-): Object {
+function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
   if (this._config.logVerbosity) {
     superagentConstruct = superagentConstruct.use(log);
   }
@@ -57,7 +42,19 @@ function xdr(
     superagentConstruct = this._modules.keepAlive(superagentConstruct);
   }
 
-  return superagentConstruct.timeout(endpoint.timeout).end((err, resp) => {
+  let sc = superagentConstruct;
+
+  if (endpoint.forceBuffered === true) {
+    if (typeof Blob === 'undefined') {
+      sc = sc.buffer().responseType('arraybuffer');
+    } else {
+      sc = sc.responseType('arraybuffer');
+    }
+  } else if (endpoint.forceBuffered === false) {
+    sc = sc.buffer(false);
+  }
+
+  return sc.timeout(endpoint.timeout).end((err, resp) => {
     let parsedResponse;
     let status: StatusAnnouncement = {};
     status.error = err !== null;
@@ -81,12 +78,20 @@ function xdr(
       return callback(status, null);
     }
 
-    try {
-      parsedResponse = JSON.parse(resp.text);
-    } catch (e) {
-      status.errorData = resp;
-      status.error = true;
-      return callback(status, null);
+    if (endpoint.ignoreBody) {
+      parsedResponse = {
+        headers: resp.headers,
+        redirects: resp.redirects,
+        response: resp,
+      };
+    } else {
+      try {
+        parsedResponse = JSON.parse(resp.text);
+      } catch (e) {
+        status.errorData = resp;
+        status.error = true;
+        return callback(status, null);
+      }
     }
 
     if (
@@ -109,11 +114,25 @@ function xdr(
   });
 }
 
-export function get(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
-): superagent {
+export async function file(
+  url: string,
+  fields: $ReadOnlyArray<{ key: string, value: string }>,
+  fileInput: any
+): Promise<any> {
+  let agent = superagent.post(url);
+
+  fields.forEach(({ key, value }) => {
+    agent = agent.field(key, value);
+  });
+
+  agent.attach('file', fileInput, { contentType: 'application/octet-stream' });
+
+  const result = await agent;
+
+  return result;
+}
+
+export function get(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {
   let superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
@@ -121,12 +140,7 @@ export function get(
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function post(
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
-): superagent {
+export function post(params: Object, body: string, endpoint: EndpointDefinition, callback: Function): superagent {
   let superagentConstruct = superagent
     .post(this.getStandardOrigin() + endpoint.url)
     .query(params)
@@ -135,12 +149,7 @@ export function post(
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function patch(
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
-): superagent {
+export function patch(params: Object, body: string, endpoint: EndpointDefinition, callback: Function): superagent {
   let superagentConstruct = superagent
     .patch(this.getStandardOrigin() + endpoint.url)
     .query(params)
@@ -149,11 +158,7 @@ export function patch(
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function del(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
-): superagent {
+export function del(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {
   let superagentConstruct = superagent
     .delete(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)

@@ -51,6 +51,8 @@ const endpoint: EndpointConfig<GetMembersParams, GetMembersResult> = {
       if (params.include?.UUIDFields ?? true) {
         queryParams.include.push('uuid');
       }
+
+      queryParams.include = queryParams.include.join(',');
     }
 
     if (params?.include?.totalCount) {

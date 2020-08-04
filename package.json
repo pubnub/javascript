@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.28.4",
+  "version": "4.29.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -9,7 +9,11 @@
     "build": "gulp compile",
     "lint": "eslint \"src/**/*\" --config .eslintrc.yml",
     "test:node": "mocha --config .mocharc.yml",
-    "test:objectsv2": "mocha --no-config --require test/setup.js --reporter spec test/dist/objectsv2.test.js",
+    "test:feature:objectsv2:node": "mocha --no-config --require test/setup.js --reporter spec test/dist/objectsv2.test.js",
+    "test:feature:fileupload:node": "mocha --no-config --require test/setup.js --reporter spec test/feature/file_upload.node.test.js",
+    "test:feature:fileupload:web": "karma start karma/chrome.config.js test/feature/file_upload.web.test.js",
+    "test:crypto:node": "mocha --no-config --require test/setup.js --reporter spec test/crypto/node.test.js",
+    "test:crypto:web": "karma start karma/chrome.config.js test/crypto/web.test.js",
     "coverage": "nyc npm run test:node",
     "codecov": "cat coverage/lcov.info | codecov"
   },
@@ -36,7 +40,9 @@
     "agentkeepalive": "^3.5.2",
     "cbor-js": "^0.1.0",
     "cbor-sync": "^1.0.4",
+    "isomorphic-webcrypto": "^2.3.6",
     "lil-uuid": "^0.1.1",
+    "mime-types": "^2.1.27",
     "superagent": "^3.8.1",
     "superagent-proxy": "^2.0.0"
   },
@@ -48,9 +54,11 @@
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
     "@babel/plugin-transform-flow-strip-types": "^7.7.4",
     "@babel/plugin-transform-modules-commonjs": "^7.7.5",
+    "@babel/plugin-transform-runtime": "^7.10.5",
     "@babel/polyfill": "^7.8.7",
     "@babel/preset-env": "^7.7.7",
     "@babel/register": "^7.7.7",
+    "@babel/runtime": "^7.10.5",
     "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.6",
     "babel-plugin-add-module-exports": "^1.0.2",
@@ -72,6 +80,7 @@
     "gulp-mocha": "^7.0.2",
     "gulp-rename": "^1.4.0",
     "gulp-sourcemaps": "^2.6.5",
+    "gulp-terser": "^1.2.0",
     "gulp-uglify": "^3.0.2",
     "gulp-unzip": "^1.1.0",
     "gulp4-run-sequence": "^0.4.0",
@@ -86,16 +95,20 @@
     "karma-mocha": "^2.0.1",
     "karma-phantomjs-launcher": "^1.0.4",
     "karma-sinon-chai": "^2.0.2",
+    "karma-sourcemap-loader": "^0.3.7",
     "karma-spec-reporter": "0.0.32",
+    "karma-webpack": "^4.0.2",
     "mocha": "^7.1.2",
     "nock": "^9.6.1",
     "node-fetch": "^1.7.3",
     "nyc": "^15.0.1",
     "phantomjs-prebuilt": "^2.1.16",
+    "puppeteer": "^5.2.0",
     "rimraf": "^3.0.2",
     "sinon": "^7.5.0",
     "sinon-chai": "^3.3.0",
     "stats-webpack-plugin": "^0.7.0",
+    "terser": "^4.8.0",
     "uglify-js": "^2.8.26",
     "underscore": "^1.9.2",
     "webpack": "^4.41.2",
@@ -106,5 +119,9 @@
   "license": "MIT",
   "engine": {
     "node": ">=0.8"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 120
   }
 }

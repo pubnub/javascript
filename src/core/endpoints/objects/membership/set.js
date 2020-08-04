@@ -11,12 +11,14 @@ type CommonParams = {|
 export type RemoveMembershipsParams = {|
   type: 'delete',
   channels: (string | { id: string, custom?: empty })[],
-|} & CommonParams & PaginatedResultParams;
+|} & CommonParams &
+  PaginatedResultParams;
 
 export type UpsertMembershipsParams = {|
   type: 'set',
   channels: (string | { id: string, custom?: any })[],
-|} & CommonParams & PaginatedResultParams;
+|} & CommonParams &
+  PaginatedResultParams;
 
 export type SetMembershipsParams = RemoveMembershipsParams | UpsertMembershipsParams;
 
@@ -39,7 +41,8 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${params.uuid ?? config.getUUID()}/channels`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${params.uuid ?? config.getUUID()}/channels`,
 
   patchPayload: (_, params) => ({
     set: [],
@@ -48,8 +51,8 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
       if (typeof channel === 'string') {
         return {
           channel: {
-            id: channel
-          }
+            id: channel,
+          },
         };
       } else {
         return {
@@ -57,7 +60,7 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
           custom: channel.custom,
         };
       }
-    })
+    }),
   }),
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
@@ -83,6 +86,8 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
       if (params.include?.channelFields) {
         queryParams.include.push('channel');
       }
+
+      queryParams.include = queryParams.include.join(',');
     }
 
     if (params?.include?.totalCount) {

@@ -3,6 +3,19 @@ changelog:
   -
     changes:
       -
+        text: "Allows to upload files to channels, download them with optional encryption support."
+        type: feature
+      -
+        text: "Allows to enable random IVs when encrypting messages."
+        type: feature
+      -
+        text: "Fixes a bug with PAM and Objects v2."
+        type: bug
+    date: 2020-08-04
+    version: v4.29.0
+  -
+    changes:
+      -
         text: "Fixes issue of high cpu usage when heartbeat interval is not set."
         type: bug
     date: 2020-07-15
@@ -868,4 +881,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.28.4"
+version: "4.29.0"

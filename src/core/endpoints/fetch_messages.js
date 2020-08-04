@@ -72,6 +72,8 @@ export function prepareParams(
     count,
     stringifiedTimeToken = false,
     includeMeta = false,
+    includeUuid = true,
+    includeMessageType = true
   } = incomingParams;
   let outgoingParams: Object = {};
 
@@ -80,6 +82,8 @@ export function prepareParams(
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (includeMeta) outgoingParams.include_meta = 'true';
+  if (includeUuid) outgoingParams.include_uuid = 'true';
+  if (includeMessageType) outgoingParams.include_message_type = 'true';
 
   return outgoingParams;
 }
@@ -100,6 +104,8 @@ export function handleResponse(
       announce.channel = channelName;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);
+      announce.messageType = messageEnvelope.message_type;
+      announce.uuid = messageEnvelope.uuid;
 
       if (messageEnvelope.actions) {
         announce.actions = messageEnvelope.actions;

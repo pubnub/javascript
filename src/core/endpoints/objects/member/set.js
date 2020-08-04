@@ -11,12 +11,14 @@ type CommonParams = {
 export type RemoveMembersParams = {
   type: 'delete',
   uuids: (string | { id: string, custom?: empty })[],
-} & CommonParams & PaginatedResultParams;
+} & CommonParams &
+  PaginatedResultParams;
 
 export type UpsertMembersParams = {
   type: 'set',
-  uuids: (string | { id: string, custom?: any })[]
-} & CommonParams & PaginatedResultParams;
+  uuids: (string | { id: string, custom?: any })[],
+} & CommonParams &
+  PaginatedResultParams;
 
 export type SetMembersParams = RemoveMembersParams | UpsertMembersParams;
 
@@ -52,8 +54,8 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
       if (typeof uuid === 'string') {
         return {
           uuid: {
-            id: uuid
-          }
+            id: uuid,
+          },
         };
       } else {
         return {
@@ -61,7 +63,7 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
           custom: uuid.custom,
         };
       }
-    })
+    }),
   }),
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
@@ -87,6 +89,8 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
       if (params.include?.UUIDFields) {
         queryParams.include.push('uuid');
       }
+
+      queryParams.include = queryParams.include.join(',');
     }
 
     if (params?.include?.totalCount) {

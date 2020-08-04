@@ -2,12 +2,7 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import {
-  InternalSetupStruct,
-  DatabaseInterface,
-  KeepAliveStruct,
-  ProxyStruct,
-} from '../flow_interfaces';
+import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
 const PRESENCE_TIMEOUT_MINIMUM: number = 20;
 const PRESENCE_TIMEOUT_DEFAULT: number = 300;
@@ -142,6 +137,12 @@ export default class {
 
   customDecrypt: Function; // function used to decrypt old version messages
 
+  // File Upload
+
+  // How many times the publish-file should be retried before giving up
+  fileUploadPublishRetryLimit: number;
+  useRandomIVs: boolean;
+
   constructor({ setup, db }: ConfigConstructArgs) {
     this._PNSDKSuffix = {};
     this._db = db;
@@ -172,6 +173,9 @@ export default class {
     this.customEncrypt = setup.customEncrypt;
     this.customDecrypt = setup.customDecrypt;
 
+    this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
+    this.useRandomIVs = setup.useRandomIVs ?? false;
+
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
       this.secure = true;
@@ -181,8 +185,7 @@ export default class {
     this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
     this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
-    this.announceSuccessfulHeartbeats =
-      setup.announceSuccessfulHeartbeats || false;
+    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
 
     this.useInstanceId = setup.useInstanceId || false;
     this.useRequestId = setup.useRequestId || false;
@@ -254,10 +257,7 @@ export default class {
       this._presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
 
       // eslint-disable-next-line no-console
-      console.log(
-        'WARNING: Presence timeout is less than the minimum. Using minimum value: ',
-        this._presenceTimeout
-      );
+      console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
     }
 
     this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
@@ -307,7 +307,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.28.4';
+    return '4.29.0';
   }
 
   _addPnsdkSuffix(name: string, suffix: string) {

@@ -40,7 +40,7 @@ const endpoint: EndpointConfig<SetUUIDMetadataParams, SetUUIDMetadataResult> = {
 
   prepareParams: ({ config }, params) => ({
     uuid: params?.uuid ?? config.getUUID(),
-    include: (params?.include?.customFields ?? true) && ['custom'],
+    include: (params?.include?.customFields ?? true) && 'custom',
   }),
 
   handleResponse: (_, response) => ({

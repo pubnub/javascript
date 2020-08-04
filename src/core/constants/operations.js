@@ -34,6 +34,13 @@ export default {
   PNGetMembershipsOperation: 'PNGetMembershipsOperation',
   PNUpdateMembershipsOperation: 'PNUpdateMembershipsOperation',
 
+  // File Upload API v1
+  PNListFilesOperation: 'PNListFilesOperation',
+  PNGenerateUploadUrlOperation: 'PNGenerateUploadUrlOperation',
+  PNPublishFileOperation: 'PNPublishFileOperation',
+  PNGetFileUrlOperation: 'PNGetFileUrlOperation',
+  PNDownloadFileOperation: 'PNDownloadFileOperation',
+
   // Objects API v2
   //   UUID
   PNGetAllUUIDMetadataOperation: 'PNGetAllUUIDMetadataOperation',

@@ -3,9 +3,20 @@
 import Config from '../config';
 import CryptoJS from './hmac-sha256';
 
+function bufferToWordArray(b: Buffer) {
+  let wa = [];
+  let i: number;
+  for (i = 0; i < b.length; i += 1) {
+    // eslint-disable-next-line no-bitwise
+    wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
+  }
+
+  return CryptoJS.lib.WordArray.create(wa, b.length);
+}
+
 type CryptoConstruct = {
   config: Config,
-}
+};
 
 export default class {
   _config: Config;
@@ -28,7 +39,7 @@ export default class {
       encryptKey: true,
       keyEncoding: 'utf8',
       keyLength: 256,
-      mode: 'cbc'
+      mode: 'cbc',
     };
   }
 
@@ -93,7 +104,11 @@ export default class {
   }
 
   _getIV(options: Object): string | null {
-    return (options.mode === 'cbc') ? CryptoJS.enc.Utf8.parse(this._iv) : null;
+    return options.mode === 'cbc' ? CryptoJS.enc.Utf8.parse(this._iv) : null;
+  }
+
+  _getRandomIV(): any {
+    return CryptoJS.lib.WordArray.random(16);
   }
 
   encrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
@@ -115,27 +130,52 @@ export default class {
   pnEncrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
     if (!customCipherKey && !this._config.cipherKey) return data;
     options = this._parseOptions(options);
-    let iv = this._getIV(options);
     let mode = this._getMode(options);
     let cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
-    let encryptedHexArray = CryptoJS.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
-    let base64Encrypted = encryptedHexArray.toString(CryptoJS.enc.Base64);
-    return base64Encrypted || data;
+
+    if (this._config.useRandomIVs) {
+      let waIv = this._getRandomIV();
+      let waPayload = CryptoJS.AES.encrypt(data, cipherKey, { iv: waIv, mode }).ciphertext;
+
+      return waIv.clone().concat(waPayload.clone()).toString(CryptoJS.enc.Base64);
+    } else {
+      let iv = this._getIV(options);
+      let encryptedHexArray = CryptoJS.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
+      let base64Encrypted = encryptedHexArray.toString(CryptoJS.enc.Base64);
+      return base64Encrypted || data;
+    }
   }
 
-  pnDecrypt(data: Object, customCipherKey: ?string, options: ?Object): Object | null {
+  pnDecrypt(data: string, customCipherKey: ?string, options: ?Object): Object | null {
     if (!customCipherKey && !this._config.cipherKey) return data;
     options = this._parseOptions(options);
-    let iv = this._getIV(options);
     let mode = this._getMode(options);
     let cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
-    try {
-      let ciphertext = CryptoJS.enc.Base64.parse(data);
-      let plainJSON = CryptoJS.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS.enc.Utf8);
-      let plaintext = JSON.parse(plainJSON);
-      return plaintext;
-    } catch (e) {
-      return null;
+    if (this._config.useRandomIVs) {
+      let ciphertext = Buffer.from(data, 'base64');
+
+      let iv = bufferToWordArray(ciphertext.slice(0, 16));
+      let payload = bufferToWordArray(ciphertext.slice(16));
+
+      try {
+        let plainJSON = CryptoJS.AES.decrypt({ ciphertext: payload }, cipherKey, { iv, mode }).toString(
+          CryptoJS.enc.Utf8
+        );
+        let plaintext = JSON.parse(plainJSON);
+        return plaintext;
+      } catch (e) {
+        return null;
+      }
+    } else {
+      let iv = this._getIV(options);
+      try {
+        let ciphertext = CryptoJS.enc.Base64.parse(data);
+        let plainJSON = CryptoJS.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS.enc.Utf8);
+        let plaintext = JSON.parse(plainJSON);
+        return plaintext;
+      } catch (e) {
+        return null;
+      }
     }
   }
 }

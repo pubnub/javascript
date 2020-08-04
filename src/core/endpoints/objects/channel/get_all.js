@@ -23,7 +23,7 @@ export type GetAllChannelMetadataResult = {|
   data: ChannelMetadata[],
   totalCount?: number,
   prev?: string,
-  next?: string
+  next?: string,
 |};
 
 const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadataResult> = {
@@ -44,7 +44,7 @@ const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadat
     const queryParams = {};
 
     if (params?.include?.customFields) {
-      queryParams.include = ['custom'];
+      queryParams.include = 'custom';
     }
 
     if (params?.include?.totalCount) {
