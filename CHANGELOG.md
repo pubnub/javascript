@@ -1,3 +1,10 @@
+## [v4.29.1](https://github.com/pubnub/javascript/releases/tag/v4.29.1)
+August-04-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.0...v4.29.1)
+
+- 🐛 Release 4.291. 
+
 ## [v4.29.0](https://github.com/pubnub/javascript/releases/tag/v4.29.0)
 August-04-2020
 

@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Release 4.291."
+        type: bug
+    date: 2020-08-04
+    version: v4.29.1
+  -
+    changes:
+      -
         text: "Allows to upload files to channels, download them with optional encryption support."
         type: feature
       -
@@ -870,7 +877,7 @@ supported-platforms:
       - "Mozilla Firefox 51 and up"
       - "Google Chrome 56 and up"
       - "Opera 41  and up"
-      - "IE 9 and up"
+      - "IE 9 and up (include a Promise polyfill for pubnub >= 4.29.0)"
       - "Microsoft Edge 38 and up"
     version: "Pubnub Javascript for Web"
   -
@@ -881,4 +888,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.0"
+version: "4.29.1"

@@ -1,4 +1,4 @@
-/*! 4.29.0 / Consumer  */
+/*! 4.29.1 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -566,7 +566,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.0';
+      return '4.29.1';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -663,25 +663,7 @@ module.exports = exports.default;
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _typeof = __webpack_require__(7);
-
-var assertThisInitialized = __webpack_require__(17);
-
-function _possibleConstructorReturn(self, call) {
-  if (call && (_typeof(call) === "object" || typeof call === "function")) {
-    return call;
-  }
-
-  return assertThisInitialized(self);
-}
-
-module.exports = _possibleConstructorReturn;
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var setPrototypeOf = __webpack_require__(14);
+var setPrototypeOf = __webpack_require__(13);
 
 function _inherits(subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
@@ -701,7 +683,7 @@ function _inherits(subClass, superClass) {
 module.exports = _inherits;
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 function _setPrototypeOf(o, p) {
@@ -714,6 +696,24 @@ function _setPrototypeOf(o, p) {
 }
 
 module.exports = _setPrototypeOf;
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _typeof = __webpack_require__(7);
+
+var assertThisInitialized = __webpack_require__(17);
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (_typeof(call) === "object" || typeof call === "function")) {
+    return call;
+  }
+
+  return assertThisInitialized(self);
+}
+
+module.exports = _possibleConstructorReturn;
 
 /***/ }),
 /* 15 */
@@ -763,11 +763,11 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
-var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(12));
+var _inherits2 = _interopRequireDefault(__webpack_require__(12));
+
+var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(14));
 
 var _getPrototypeOf2 = _interopRequireDefault(__webpack_require__(10));
-
-var _inherits2 = _interopRequireDefault(__webpack_require__(13));
 
 var _wrapNativeSuper2 = _interopRequireDefault(__webpack_require__(37));
 
@@ -785,14 +785,20 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = (0, _getPrototypeOf2["default"])(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = (0, _getPrototypeOf2["default"])(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return (0, _possibleConstructorReturn2["default"])(this, result); }; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
 var PubNubError = function (_Error) {
   (0, _inherits2["default"])(PubNubError, _Error);
+
+  var _super = _createSuper(PubNubError);
 
   function PubNubError(message, status) {
     var _this;
 
     (0, _classCallCheck2["default"])(this, PubNubError);
-    _this = (0, _possibleConstructorReturn2["default"])(this, (0, _getPrototypeOf2["default"])(PubNubError).call(this, message));
+    _this = _super.call(this, message);
     _this.name = _this.constructor.name;
     _this.status = status;
     _this.message = message;
@@ -953,7 +959,7 @@ function _default(modules, endpoint) {
   var telemetryLatencies = telemetryManager.operationsLatencyForRequest();
 
   if (Object.keys(telemetryLatencies).length) {
-    outgoingParams = _objectSpread({}, outgoingParams, {}, telemetryLatencies);
+    outgoingParams = _objectSpread(_objectSpread({}, outgoingParams), telemetryLatencies);
   }
 
   if (config.useInstanceId) {
@@ -1548,11 +1554,11 @@ exports["default"] = void 0;
 
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
-var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(12));
+var _inherits2 = _interopRequireDefault(__webpack_require__(12));
+
+var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(14));
 
 var _getPrototypeOf2 = _interopRequireDefault(__webpack_require__(10));
-
-var _inherits2 = _interopRequireDefault(__webpack_require__(13));
 
 var _cborSync = _interopRequireDefault(__webpack_require__(24));
 
@@ -1568,8 +1574,14 @@ var _titanium = __webpack_require__(117);
 
 var _flow_interfaces = __webpack_require__(2);
 
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = (0, _getPrototypeOf2["default"])(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = (0, _getPrototypeOf2["default"])(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return (0, _possibleConstructorReturn2["default"])(this, result); }; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
 var PubNub = function (_PubNubCore) {
   (0, _inherits2["default"])(PubNub, _PubNubCore);
+
+  var _super = _createSuper(PubNub);
 
   function PubNub(setup) {
     (0, _classCallCheck2["default"])(this, PubNub);
@@ -1584,7 +1596,7 @@ var PubNub = function (_PubNubCore) {
       post: _titanium.post,
       patch: _titanium.patch
     });
-    return (0, _possibleConstructorReturn2["default"])(this, (0, _getPrototypeOf2["default"])(PubNub).call(this, setup));
+    return _super.call(this, setup);
   }
 
   return PubNub;
@@ -4871,13 +4883,13 @@ exports["default"] = exports.FCMNotificationPayload = exports.MPNSNotificationPa
 
 var _objectWithoutProperties2 = _interopRequireDefault(__webpack_require__(34));
 
-var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(12));
-
-var _getPrototypeOf5 = _interopRequireDefault(__webpack_require__(10));
-
 var _assertThisInitialized2 = _interopRequireDefault(__webpack_require__(17));
 
-var _inherits2 = _interopRequireDefault(__webpack_require__(13));
+var _inherits2 = _interopRequireDefault(__webpack_require__(12));
+
+var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(14));
+
+var _getPrototypeOf2 = _interopRequireDefault(__webpack_require__(10));
 
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
@@ -4890,6 +4902,10 @@ var _flow_interfaces = __webpack_require__(2);
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = (0, _getPrototypeOf2["default"])(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = (0, _getPrototypeOf2["default"])(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return (0, _possibleConstructorReturn2["default"])(this, result); }; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 var BaseNotificationPayload = function () {
   (0, _createClass2["default"])(BaseNotificationPayload, [{
@@ -4955,9 +4971,9 @@ var BaseNotificationPayload = function () {
 var APNSNotificationPayload = function (_BaseNotificationPayl) {
   (0, _inherits2["default"])(APNSNotificationPayload, _BaseNotificationPayl);
 
-  function APNSNotificationPayload() {
-    var _getPrototypeOf2;
+  var _super = _createSuper(APNSNotificationPayload);
 
+  function APNSNotificationPayload() {
     var _this;
 
     (0, _classCallCheck2["default"])(this, APNSNotificationPayload);
@@ -4966,7 +4982,7 @@ var APNSNotificationPayload = function (_BaseNotificationPayl) {
       args[_key] = arguments[_key];
     }
 
-    _this = (0, _possibleConstructorReturn2["default"])(this, (_getPrototypeOf2 = (0, _getPrototypeOf5["default"])(APNSNotificationPayload)).call.apply(_getPrototypeOf2, [this].concat(args)));
+    _this = _super.call.apply(_super, [this].concat(args));
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "_configurations", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "_apnsPushType", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "_isSilent", void 0);
@@ -5152,9 +5168,9 @@ exports.APNSNotificationPayload = APNSNotificationPayload;
 var MPNSNotificationPayload = function (_BaseNotificationPayl2) {
   (0, _inherits2["default"])(MPNSNotificationPayload, _BaseNotificationPayl2);
 
-  function MPNSNotificationPayload() {
-    var _getPrototypeOf3;
+  var _super2 = _createSuper(MPNSNotificationPayload);
 
+  function MPNSNotificationPayload() {
     var _this4;
 
     (0, _classCallCheck2["default"])(this, MPNSNotificationPayload);
@@ -5163,7 +5179,7 @@ var MPNSNotificationPayload = function (_BaseNotificationPayl2) {
       args[_key2] = arguments[_key2];
     }
 
-    _this4 = (0, _possibleConstructorReturn2["default"])(this, (_getPrototypeOf3 = (0, _getPrototypeOf5["default"])(MPNSNotificationPayload)).call.apply(_getPrototypeOf3, [this].concat(args)));
+    _this4 = _super2.call.apply(_super2, [this].concat(args));
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this4), "_backContent", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this4), "_backTitle", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this4), "_count", void 0);
@@ -5259,9 +5275,9 @@ exports.MPNSNotificationPayload = MPNSNotificationPayload;
 var FCMNotificationPayload = function (_BaseNotificationPayl3) {
   (0, _inherits2["default"])(FCMNotificationPayload, _BaseNotificationPayl3);
 
-  function FCMNotificationPayload() {
-    var _getPrototypeOf4;
+  var _super3 = _createSuper(FCMNotificationPayload);
 
+  function FCMNotificationPayload() {
     var _this5;
 
     (0, _classCallCheck2["default"])(this, FCMNotificationPayload);
@@ -5270,7 +5286,7 @@ var FCMNotificationPayload = function (_BaseNotificationPayl3) {
       args[_key3] = arguments[_key3];
     }
 
-    _this5 = (0, _possibleConstructorReturn2["default"])(this, (_getPrototypeOf4 = (0, _getPrototypeOf5["default"])(FCMNotificationPayload)).call.apply(_getPrototypeOf4, [this].concat(args)));
+    _this5 = _super3.call.apply(_super3, [this].concat(args));
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this5), "_isSilent", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this5), "_icon", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this5), "_tag", void 0);
@@ -5296,7 +5312,7 @@ var FCMNotificationPayload = function (_BaseNotificationPayl3) {
             initialNotification = _this$_payload.notification,
             initialData = _this$_payload.data,
             additionalData = (0, _objectWithoutProperties2["default"])(_this$_payload, ["notification", "data"]);
-        data = _objectSpread({}, data, {}, additionalData);
+        data = _objectSpread(_objectSpread({}, data), additionalData);
       }
 
       if (this._isSilent) {
@@ -5838,7 +5854,7 @@ module.exports = exports.default;
 
 var getPrototypeOf = __webpack_require__(10);
 
-var setPrototypeOf = __webpack_require__(14);
+var setPrototypeOf = __webpack_require__(13);
 
 var isNativeFunction = __webpack_require__(38);
 
@@ -5894,7 +5910,7 @@ module.exports = _isNativeFunction;
 /* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var setPrototypeOf = __webpack_require__(14);
+var setPrototypeOf = __webpack_require__(13);
 
 var isNativeReflectConstruct = __webpack_require__(40);
 
@@ -7047,7 +7063,7 @@ function prepareParams(modules, incomingParams) {
     params['channel-group'] = channelGroups.join(',');
   }
 
-  params = _objectSpread({}, params, {}, queryParameters);
+  params = _objectSpread(_objectSpread({}, params), queryParameters);
   return params;
 }
 
@@ -7637,7 +7653,7 @@ var sendFile = function sendFile(_ref) {
       networking = _ref$modules.networking;
   return function () {
     var _ref3 = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref2) {
-      var channel, input, message, cipherKey, meta, ttl, store, file, _ref4, _ref4$file_upload_req, url, formFields, _ref4$data, id, name, formFieldsWithMimeType, result, retries, wasSuccessful;
+      var channel, input, message, cipherKey, meta, ttl, store, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, retries, wasSuccessful;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -7669,13 +7685,13 @@ var sendFile = function sendFile(_ref) {
               });
 
             case 8:
-              _ref4 = _context.sent;
-              _ref4$file_upload_req = _ref4.file_upload_request;
-              url = _ref4$file_upload_req.url;
-              formFields = _ref4$file_upload_req.form_fields;
-              _ref4$data = _ref4.data;
-              id = _ref4$data.id;
-              name = _ref4$data.name;
+              _yield$generateUpload = _context.sent;
+              _yield$generateUpload2 = _yield$generateUpload.file_upload_request;
+              url = _yield$generateUpload2.url;
+              formFields = _yield$generateUpload2.form_fields;
+              _yield$generateUpload3 = _yield$generateUpload.data;
+              id = _yield$generateUpload3.id;
+              name = _yield$generateUpload3.name;
 
               if (!(cipherKey !== null && cipherKey !== void 0 ? cipherKey : config.cipherKey)) {
                 _context.next = 19;
@@ -7868,6 +7884,24 @@ var runtime = (function (exports) {
   var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
   var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
 
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+    return obj[key];
+  }
+  try {
+    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+    define({}, "");
+  } catch (err) {
+    define = function(obj, key, value) {
+      return obj[key] = value;
+    };
+  }
+
   function wrap(innerFn, outerFn, self, tryLocsList) {
     // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
     var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
@@ -7938,16 +7972,19 @@ var runtime = (function (exports) {
     Generator.prototype = Object.create(IteratorPrototype);
   GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
   GeneratorFunctionPrototype.constructor = GeneratorFunction;
-  GeneratorFunctionPrototype[toStringTagSymbol] =
-    GeneratorFunction.displayName = "GeneratorFunction";
+  GeneratorFunction.displayName = define(
+    GeneratorFunctionPrototype,
+    toStringTagSymbol,
+    "GeneratorFunction"
+  );
 
   // Helper for defining the .next, .throw, and .return methods of the
   // Iterator interface in terms of a single ._invoke method.
   function defineIteratorMethods(prototype) {
     ["next", "throw", "return"].forEach(function(method) {
-      prototype[method] = function(arg) {
+      define(prototype, method, function(arg) {
         return this._invoke(method, arg);
-      };
+      });
     });
   }
 
@@ -7966,9 +8003,7 @@ var runtime = (function (exports) {
       Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
     } else {
       genFun.__proto__ = GeneratorFunctionPrototype;
-      if (!(toStringTagSymbol in genFun)) {
-        genFun[toStringTagSymbol] = "GeneratorFunction";
-      }
+      define(genFun, toStringTagSymbol, "GeneratorFunction");
     }
     genFun.prototype = Object.create(Gp);
     return genFun;
@@ -8238,7 +8273,7 @@ var runtime = (function (exports) {
   // unified ._invoke helper method.
   defineIteratorMethods(Gp);
 
-  Gp[toStringTagSymbol] = "Generator";
+  define(Gp, toStringTagSymbol, "Generator");
 
   // A Generator should always return itself as the iterator object when the
   // @@iterator function is called on it. Some browsers' implementations of the
@@ -9005,29 +9040,29 @@ var endpoint = {
   },
   validateParams: function validateParams() {},
   getURL: function getURL(_ref, params) {
-    var _ref2;
+    var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_ref2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref2 !== void 0 ? _ref2 : config.getUUID());
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID());
   },
-  getRequestTimeout: function getRequestTimeout(_ref3) {
-    var config = _ref3.config;
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
     return config.getTransactionTimeout();
   },
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref4) {
-    var tokenManager = _ref4.tokenManager;
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
     return tokenManager.getToken('user');
   },
-  prepareParams: function prepareParams(_ref5, params) {
-    var _ref6, _ref7, _params$include;
+  prepareParams: function prepareParams(_ref4, params) {
+    var _params$uuid2, _params$include$custo, _params$include;
 
-    var config = _ref5.config;
+    var config = _ref4.config;
     return {
-      uuid: (_ref6 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref6 !== void 0 ? _ref6 : config.getUUID(),
-      include: ((_ref7 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref7 !== void 0 ? _ref7 : true) && 'custom'
+      uuid: (_params$uuid2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid2 !== void 0 ? _params$uuid2 : config.getUUID(),
+      include: ((_params$include$custo = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _params$include$custo !== void 0 ? _params$include$custo : true) && 'custom'
     };
   },
   handleResponse: function handleResponse(_, response) {
@@ -9070,32 +9105,32 @@ var endpoint = {
     return true;
   },
   patchURL: function patchURL(_ref, params) {
-    var _ref2;
+    var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_ref2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref2 !== void 0 ? _ref2 : config.getUUID());
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID());
   },
   patchPayload: function patchPayload(_, params) {
     return params.data;
   },
-  getRequestTimeout: function getRequestTimeout(_ref3) {
-    var config = _ref3.config;
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
     return config.getTransactionTimeout();
   },
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref4) {
-    var tokenManager = _ref4.tokenManager;
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
     return tokenManager.getToken('user');
   },
-  prepareParams: function prepareParams(_ref5, params) {
-    var _ref6, _ref7, _params$include;
+  prepareParams: function prepareParams(_ref4, params) {
+    var _params$uuid2, _params$include$custo, _params$include;
 
-    var config = _ref5.config;
+    var config = _ref4.config;
     return {
-      uuid: (_ref6 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref6 !== void 0 ? _ref6 : config.getUUID(),
-      include: ((_ref7 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref7 !== void 0 ? _ref7 : true) && 'custom'
+      uuid: (_params$uuid2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid2 !== void 0 ? _params$uuid2 : config.getUUID(),
+      include: ((_params$include$custo = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _params$include$custo !== void 0 ? _params$include$custo : true) && 'custom'
     };
   },
   handleResponse: function handleResponse(_, response) {
@@ -9131,31 +9166,31 @@ var endpoint = {
   },
   validateParams: function validateParams() {},
   getURL: function getURL(_ref, params) {
-    var _ref2;
+    var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_ref2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref2 !== void 0 ? _ref2 : config.getUUID());
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID());
   },
   useDelete: function useDelete() {
     return true;
   },
-  getRequestTimeout: function getRequestTimeout(_ref3) {
-    var config = _ref3.config;
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
     return config.getTransactionTimeout();
   },
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref4) {
-    var tokenManager = _ref4.tokenManager;
+  getAuthToken: function getAuthToken(_ref3) {
+    var tokenManager = _ref3.tokenManager;
     return tokenManager.getToken('user');
   },
-  prepareParams: function prepareParams(_ref5, params) {
-    var _ref6;
+  prepareParams: function prepareParams(_ref4, params) {
+    var _params$uuid2;
 
-    var config = _ref5.config;
+    var config = _ref4.config;
     return {
-      uuid: (_ref6 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _ref6 !== void 0 ? _ref6 : config.getUUID()
+      uuid: (_params$uuid2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid2 !== void 0 ? _params$uuid2 : config.getUUID()
     };
   },
   handleResponse: function handleResponse(_, response) {
@@ -9315,10 +9350,10 @@ var endpoint = {
     return tokenManager.getToken('channel');
   },
   prepareParams: function prepareParams(_, params) {
-    var _ref4, _params$include;
+    var _params$include$custo, _params$include;
 
     return {
-      include: ((_ref4 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref4 !== void 0 ? _ref4 : true) && 'custom'
+      include: ((_params$include$custo = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _params$include$custo !== void 0 ? _params$include$custo : true) && 'custom'
     };
   },
   handleResponse: function handleResponse(_, response) {
@@ -9383,10 +9418,10 @@ var endpoint = {
     return tokenManager.getToken('channel');
   },
   prepareParams: function prepareParams(_, params) {
-    var _ref4, _params$include;
+    var _params$include$custo, _params$include;
 
     return {
-      include: ((_ref4 = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _ref4 !== void 0 ? _ref4 : true) && 'custom'
+      include: ((_params$include$custo = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _params$include$custo !== void 0 ? _params$include$custo : true) && 'custom'
     };
   },
   handleResponse: function handleResponse(_, response) {
@@ -9500,12 +9535,12 @@ var endpoint = {
     return tokenManager.getToken('member');
   },
   prepareParams: function prepareParams(_modules, params) {
-    var _params$include4, _params$page, _params$page3, _ref5;
+    var _params$include4, _params$page, _params$page3, _params$limit;
 
     var queryParams = {};
 
     if (params === null || params === void 0 ? void 0 : params.include) {
-      var _params$include, _params$include2, _ref4, _params$include3;
+      var _params$include, _params$include2, _params$include$UUIDF, _params$include3;
 
       queryParams.include = [];
 
@@ -9517,7 +9552,7 @@ var endpoint = {
         queryParams.include.push('uuid.custom');
       }
 
-      if ((_ref4 = (_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.UUIDFields) !== null && _ref4 !== void 0 ? _ref4 : true) {
+      if ((_params$include$UUIDF = (_params$include3 = params.include) === null || _params$include3 === void 0 ? void 0 : _params$include3.UUIDFields) !== null && _params$include$UUIDF !== void 0 ? _params$include$UUIDF : true) {
         queryParams.include.push('uuid');
       }
 
@@ -9546,15 +9581,15 @@ var endpoint = {
       queryParams.filter = params.filter;
     }
 
-    queryParams.limit = (_ref5 = params === null || params === void 0 ? void 0 : params.limit) !== null && _ref5 !== void 0 ? _ref5 : 100;
+    queryParams.limit = (_params$limit = params === null || params === void 0 ? void 0 : params.limit) !== null && _params$limit !== void 0 ? _params$limit : 100;
 
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref6) {
-        var _ref7 = (0, _slicedToArray2["default"])(_ref6, 2),
-            key = _ref7[0],
-            value = _ref7[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
+        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
+            key = _ref5[0],
+            value = _ref5[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -9776,7 +9811,7 @@ var endpoint = {
     return tokenManager.getToken('membership');
   },
   prepareParams: function prepareParams(_modules, params) {
-    var _params$include4, _params$page, _params$page3, _ref4;
+    var _params$include4, _params$page, _params$page3, _params$limit;
 
     var queryParams = {};
 
@@ -9822,15 +9857,15 @@ var endpoint = {
       queryParams.filter = params.filter;
     }
 
-    queryParams.limit = (_ref4 = params === null || params === void 0 ? void 0 : params.limit) !== null && _ref4 !== void 0 ? _ref4 : 100;
+    queryParams.limit = (_params$limit = params === null || params === void 0 ? void 0 : params.limit) !== null && _params$limit !== void 0 ? _params$limit : 100;
 
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
-        var _ref6 = (0, _slicedToArray2["default"])(_ref5, 2),
-            key = _ref6[0],
-            value = _ref6[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
+        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
+            key = _ref5[0],
+            value = _ref5[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);

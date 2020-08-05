@@ -15,6 +15,7 @@ export default (config) => {
 
     // list of files / patterns to load in the browser
     files: [
+      '../node_modules/es6-promise/dist/es6-promise.auto.js',
       '../dist/web/pubnub.js',
       '../test/dist/web-titanium.test.js'
     ],
