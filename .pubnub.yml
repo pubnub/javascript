@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Move @babel/runtime to runtime dependency."
+        type: bug
+    date: 2020-08-05
+    version: v4.29.2
+  -
+    changes:
+      -
         text: "Release 4.291."
         type: bug
     date: 2020-08-04
@@ -888,4 +895,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.1"
+version: "4.29.2"

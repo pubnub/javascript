@@ -1,3 +1,10 @@
+## [v4.29.2](https://github.com/pubnub/javascript/releases/tag/v4.29.2)
+August-05-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.1...v4.29.2)
+
+- 🐛 Move @babel/runtime to runtime dependency. 
+
 ## [v4.29.1](https://github.com/pubnub/javascript/releases/tag/v4.29.1)
 August-04-2020
 
