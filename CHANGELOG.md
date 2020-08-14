@@ -1,3 +1,10 @@
+## [v4.29.4](https://github.com/pubnub/javascript/releases/tag/v4.29.4)
+August-14-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.3...v4.29.4)
+
+- 🐛 Fixes an artifact where ract-native entrypoint didnt use ssl. 
+
 ## [v4.29.3](https://github.com/pubnub/javascript/releases/tag/v4.29.3)
 August-14-2020
 

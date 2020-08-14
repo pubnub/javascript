@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Fixes an artifact where ract-native entrypoint didnt use ssl."
+        type: bug
+    date: 2020-08-14
+    version: v4.29.4
+  -
+    changes:
+      -
         text: "Fixes an issue with react-native entrypoint where interfaces to File and Crypto are not included in the build."
         type: bug
       -
@@ -923,4 +930,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.3"
+version: "4.29.4"
