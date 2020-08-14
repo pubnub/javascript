@@ -13,9 +13,11 @@ export interface IFile {
   toBuffer(): Promise<Buffer>;
   toString(encoding: buffer$NonBufferEncoding): Promise<string>;
   toFile(): Promise<File>;
+  toBlob(): Promise<Blob>;
 }
 
 export interface FileClass {
+  supportsBlob: boolean;
   supportsFile: boolean;
   supportsBuffer: boolean;
   supportsStream: boolean;

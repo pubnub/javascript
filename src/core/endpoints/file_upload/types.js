@@ -11,11 +11,15 @@ export type FileDescriptor = {|
 
 export type ListFilesParams = {|
   channel: string,
+  limit?: number,
+  next?: string,
 |};
 
 export type ListFilesResult = {|
   status: number,
   data: $ReadOnlyArray<FileDescriptor>,
+  next: string,
+  count: number,
 |};
 
 export type GenerateUploadUrlParams = {|
@@ -42,7 +46,7 @@ export type PublishFileParams = {|
   message: any,
   fileId: string,
   fileName: string,
-  store?: boolean,
+  storeInHistory?: boolean,
   ttl?: number,
   meta?: any,
 |};
@@ -56,7 +60,7 @@ export type SendFileParams = {|
   file: any,
   message?: any,
   cipherKey?: string,
-  store?: boolean,
+  storeInHistory?: boolean,
   ttl?: number,
   meta?: any,
 |};

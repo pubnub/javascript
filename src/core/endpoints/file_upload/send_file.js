@@ -29,7 +29,7 @@ const sendFile = ({
   cipherKey,
   meta,
   ttl,
-  store,
+  storeInHistory,
 }: SendFileParams): Promise<SendFileResult> => {
   if (!channel) {
     throw new PubNubError(
@@ -57,7 +57,7 @@ const sendFile = ({
 
   if (file.mimeType) {
     formFieldsWithMimeType = formFields.map((entry) => {
-      if (entry.key === 'Content-Type') return { key: entry.key, value: file.mimeType ?? '' };
+      if (entry.key === 'Content-Type') return { key: entry.key, value: file.mimeType };
       else return entry;
     });
   }
@@ -65,10 +65,14 @@ const sendFile = ({
   let result;
 
   try {
-    if (typeof Blob !== 'undefined') {
+    if (PubNubFile.supportsFile) {
       result = await networking.FILE(url, formFieldsWithMimeType, await file.toFile());
-    } else {
+    } else if (PubNubFile.supportsBuffer) {
       result = await networking.FILE(url, formFieldsWithMimeType, await file.toBuffer());
+    } else if (PubNubFile.supportsBlob) {
+      result = await networking.FILE(url, formFieldsWithMimeType, await file.toBlob());
+    } else {
+      throw new Error('Unsupported environment');
     }
   } catch (e) {
     throw new PubNubError('Upload to bucket failed', e);
@@ -89,7 +93,7 @@ const sendFile = ({
         fileId: id,
         fileName: name,
         meta,
-        store,
+        storeInHistory,
         ttl,
       });
 

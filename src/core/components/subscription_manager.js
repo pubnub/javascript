@@ -686,6 +686,10 @@ export default class {
           }
         }
 
+        if (message.userMetadata) {
+          announce.userMetadata = message.userMetadata;
+        }
+
         announce.message = msgPayload.message;
 
         announce.file = {

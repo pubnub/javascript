@@ -65,8 +65,6 @@ export function prepareParams(
     count = 100,
     stringifiedTimeToken = false,
     includeMeta = false,
-    includeUuid = true,
-    includeMessageType = true
   } = incomingParams;
   let outgoingParams: Object = {
     include_token: 'true',
@@ -78,8 +76,6 @@ export function prepareParams(
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (reverse != null) outgoingParams.reverse = reverse.toString();
   if (includeMeta) outgoingParams.include_meta = 'true';
-  if (includeUuid) outgoingParams.include_uuid = 'true';
-  if (includeMessageType) outgoingParams.include_message_type = 'true';
 
   return outgoingParams;
 }

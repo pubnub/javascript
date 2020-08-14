@@ -1,3 +1,15 @@
+## [v4.29.3](https://github.com/pubnub/javascript/releases/tag/v4.29.3)
+August-14-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.2...v4.29.3)
+
+- 🐛 Fixes an issue with react-native entrypoint where interfaces to File and Crypto are not included in the build. 
+- 🐛 Fixes the ability to sendByPost in publish. 
+- 🐛 Fixes an issue where getFileUrl returned and URI without a protocol. 
+- 🐛 Fixes an issue where storeInHistory false would not include the param. 
+- 🐛 Removes mime types dependency since that will be handled by the server. 
+- 🐛 Adds userMetadata to file event listener. 
+
 ## [v4.29.2](https://github.com/pubnub/javascript/releases/tag/v4.29.2)
 August-05-2020
 

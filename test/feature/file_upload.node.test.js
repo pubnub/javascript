@@ -11,6 +11,9 @@ describe('File Upload API v1 tests', () => {
   const SUBSCRIBE_KEY = 'demo-36';
   const PUBLISH_KEY = 'demo-36';
 
+  // const ORIGIN = 'ingress-files.aws-pdx-1.ps.pn';
+  const ORIGIN = undefined;
+
   const TEST_PREFIX = 'javascript-fileUploadApiV1-tests';
   const UUID = `${TEST_PREFIX}-main`;
   const UUID_1 = `${TEST_PREFIX}-uuid-1`;
@@ -19,16 +22,14 @@ describe('File Upload API v1 tests', () => {
 
   const FILE_1 = `${TEST_PREFIX}-file-1`;
 
-  let pubnub = new PubNub({
-    subscribeKey: SUBSCRIBE_KEY,
-    publishKey: PUBLISH_KEY,
-  });
+  let pubnub;
 
   describe('with encryption', () => {
     pubnub = new PubNub({
       subscribeKey: SUBSCRIBE_KEY,
       publishKey: PUBLISH_KEY,
       uuid: UUID,
+      origin: ORIGIN,
       cipherKey: 'abcdef',
       // logVerbosity: true,
     });
@@ -40,6 +41,7 @@ describe('File Upload API v1 tests', () => {
     pubnub = new PubNub({
       subscribeKey: SUBSCRIBE_KEY,
       publishKey: PUBLISH_KEY,
+      origin: ORIGIN,
       uuid: UUID,
     });
 
@@ -64,11 +66,17 @@ describe('File Upload API v1 tests', () => {
 
       const file = await pubnub.downloadFile({ ...result, channel: CHANNEL_1 });
 
-      const output = await file.toBuffer();
+      const fileStream = await file.toStream();
+      const outputStream = fs.createWriteStream(`${__dirname}/output.json`);
 
-      const testFileBuffer = fs.readFileSync(`${__dirname}/input.json`);
+      fileStream.pipe(outputStream);
 
-      expect(output.toString('utf8')).to.equal(testFileBuffer.toString('utf8'));
+      outputStream.once('end', () => {
+        const expectedFileBuffer = fs.readFileSync(`${__dirname}/input.json`);
+        const actualFileBuffer = fs.readFileSync(`${__dirname}/output.json`);
+
+        expect(actualFileBuffer.toString('utf8')).to.equal(expectedFileBuffer.toString('utf8'));
+      });
     }).timeout(20000);
 
     it('should handle node.js buffers', async () => {
@@ -131,10 +139,12 @@ describe('File Upload API v1 tests', () => {
     }).timeout(10000);
 
     it('should list all available files on a channel', async () => {
-      const result = await pubnub.listFiles({ channel: CHANNEL_1 });
+      const result = await pubnub.listFiles({ channel: CHANNEL_1, limit: 10 });
 
       expect(result.status).to.equal(200);
       expect(result.data).to.have.length.greaterThan(0);
+      expect(result.next).to.exist;
+      expect(result.count).to.exist;
     });
 
     it('should handle file delete', async () => {

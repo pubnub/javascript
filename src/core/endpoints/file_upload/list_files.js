@@ -21,11 +21,25 @@ const endpoint: EndpointConfig<ListFilesParams, ListFilesResult> = {
 
   getAuthToken: ({ tokenManager }) => tokenManager.getToken('fileUpload'),
 
-  prepareParams: () => ({}),
+  prepareParams: (_, params) => {
+    const outParams = {};
+
+    if (params.limit) {
+      outParams.limit = params.limit;
+    }
+
+    if (params.next) {
+      outParams.next = params.next;
+    }
+
+    return outParams;
+  },
 
   handleResponse: (_, response): ListFilesResult => ({
     status: response.status,
     data: response.data,
+    next: response.next,
+    count: response.count,
   }),
 };
 

@@ -3,6 +3,28 @@ changelog:
   -
     changes:
       -
+        text: "Fixes an issue with react-native entrypoint where interfaces to File and Crypto are not included in the build."
+        type: bug
+      -
+        text: "Fixes the ability to sendByPost in publish."
+        type: bug
+      -
+        text: "Fixes an issue where getFileUrl returned and URI without a protocol."
+        type: bug
+      -
+        text: "Fixes an issue where storeInHistory false would not include the param."
+        type: bug
+      -
+        text: "Removes mime types dependency since that will be handled by the server."
+        type: bug
+      -
+        text: "Adds userMetadata to file event listener."
+        type: bug
+    date: 2020-08-14
+    version: v4.29.3
+  -
+    changes:
+      -
         text: "Move @babel/runtime to runtime dependency."
         type: bug
     date: 2020-08-05
@@ -863,6 +885,12 @@ features:
     - MESSAGE-ACTIONS-GET
     - MESSAGE-ACTIONS-ADD
     - MESSAGE-ACTIONS-REMOVE
+  files:
+    - FILES-SEND-FILE
+    - FILES-LIST-FILES
+    - FILES-GET-FILE-URL
+    - FILES-DELETE-FILE
+    - FILES-DOWNLOAD-FILE
   time:
     - TIME-TIME
   others: 
@@ -895,4 +923,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.2"
+version: "4.29.3"

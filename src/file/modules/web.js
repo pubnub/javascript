@@ -1,7 +1,5 @@
 /** @flow */
 
-import { lookup } from 'mime-types';
-
 import { IFile, FileClass } from '../';
 
 type PubNubFileWebConstructor =
@@ -19,6 +17,7 @@ type PubNubFileWebConstructor =
 
 const PubNubFile: FileClass = class PubNubFile implements IFile {
   static supportsFile = typeof File !== 'undefined';
+  static supportsBlob = true;
   static supportsArrayBuffer = true;
   static supportsBuffer = false;
   static supportsStream = false;
@@ -48,8 +47,6 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
       if (config.mimeType) {
         this.mimeType = config.mimeType;
-      } else {
-        this.mimeType = lookup(this.name);
       }
     }
 
@@ -68,6 +65,10 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
   async toStream() {
     throw new Error('This feature is only supported in Node.js environments.');
+  }
+
+  async toBlob() {
+    return this.data;
   }
 
   async toArrayBuffer() {

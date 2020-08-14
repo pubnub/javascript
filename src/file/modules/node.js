@@ -1,7 +1,5 @@
 /** @flow */
 
-import { lookup } from 'mime-types';
-
 import { Readable, PassThrough } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
@@ -19,6 +17,7 @@ type PubNubFileNodeConstructor = {|
 type PubNubFileNodeSupportedInputType = Readable | Buffer | string;
 
 const PubNubFile: FileClass = class PubNubFile implements IFile {
+  static supportsBlob = false;
   static supportsFile = false;
   static supportsBuffer = typeof Buffer !== 'undefined';
   static supportsStream = true;
@@ -41,8 +40,6 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
       if (stream instanceof ReadStream) {
         // $FlowFixMe: incomplete flow node definitions
         this.name = basename(stream.path);
-        // $FlowFixMe: incomplete flow node definitions
-        this.mimeType = lookup(stream.path);
       }
     } else if (data instanceof Buffer) {
       this.data = Buffer.from(data);
@@ -53,7 +50,6 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
     if (name) {
       this.name = basename(name);
-      this.mimeType = lookup(name);
     }
 
     if (mimeType) {
@@ -126,6 +122,10 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   }
 
   async toFile() {
+    throw new Error('This feature is only supported in browser environments.');
+  }
+
+  async toBlob() {
     throw new Error('This feature is only supported in browser environments.');
   }
 };

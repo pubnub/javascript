@@ -83,6 +83,12 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   let httpMethod = getHttpMethod(modules, endpoint, incomingParams);
 
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+
+  // This is because of a server-side bug, old publish using post should be deprecated
+  if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    httpMethod = 'GET';
+  }
+
   let signInput = `${httpMethod}\n${config.publishKey}\n${url}\n${utils.signPamFromParams(outgoingParams)}\n`;
 
   if (httpMethod === 'POST') {

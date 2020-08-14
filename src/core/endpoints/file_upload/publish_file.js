@@ -62,8 +62,8 @@ const endpoint: EndpointConfig<PublishFileParams, PublishFileResult> = {
       outParams.ttl = params.ttl;
     }
 
-    if (params.store) {
-      outParams.store = params.store ? '1' : '0';
+    if (params.storeInHistory !== undefined) {
+      outParams.store = params.storeInHistory ? '1' : '0';
     }
 
     if (params.meta && typeof params.meta === 'object') {

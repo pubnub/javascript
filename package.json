@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.29.2",
+  "version": "4.29.3",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -43,7 +43,6 @@
     "cbor-sync": "^1.0.4",
     "isomorphic-webcrypto": "^2.3.6",
     "lil-uuid": "^0.1.1",
-    "mime-types": "^2.1.27",
     "superagent": "^3.8.1",
     "superagent-proxy": "^2.0.0"
   },
@@ -119,9 +118,5 @@
   "license": "MIT",
   "engine": {
     "node": ">=0.8"
-  },
-  "prettier": {
-    "singleQuote": true,
-    "printWidth": 120
   }
 }

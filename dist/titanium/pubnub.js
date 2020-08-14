@@ -1,4 +1,4 @@
-/*! 4.29.2 / Consumer  */
+/*! 4.29.3 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -566,7 +566,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.2';
+      return '4.29.3';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -881,6 +881,11 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
       crypto = modules.crypto;
   var httpMethod = getHttpMethod(modules, endpoint, incomingParams);
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
+
+  if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    httpMethod = 'GET';
+  }
+
   var signInput = "".concat(httpMethod, "\n").concat(config.publishKey, "\n").concat(url, "\n").concat(_utils["default"].signPamFromParams(outgoingParams), "\n");
 
   if (httpMethod === 'POST') {
@@ -4481,6 +4486,10 @@ var _default = function () {
             }
           }
 
+          if (message.userMetadata) {
+            _announce4.userMetadata = message.userMetadata;
+          }
+
           _announce4.message = msgPayload.message;
           _announce4.file = {
             id: msgPayload.file.id,
@@ -7440,13 +7449,25 @@ var endpoint = {
     var tokenManager = _ref3.tokenManager;
     return tokenManager.getToken('fileUpload');
   },
-  prepareParams: function prepareParams() {
-    return {};
+  prepareParams: function prepareParams(_, params) {
+    var outParams = {};
+
+    if (params.limit) {
+      outParams.limit = params.limit;
+    }
+
+    if (params.next) {
+      outParams.next = params.next;
+    }
+
+    return outParams;
   },
   handleResponse: function handleResponse(_, response) {
     return {
       status: response.status,
-      data: response.data
+      data: response.data,
+      next: response.next,
+      count: response.count
     };
   }
 };
@@ -7603,8 +7624,8 @@ var endpoint = {
       outParams.ttl = params.ttl;
     }
 
-    if (params.store) {
-      outParams.store = params.store ? '1' : '0';
+    if (params.storeInHistory !== undefined) {
+      outParams.store = params.storeInHistory ? '1' : '0';
     }
 
     if (params.meta && (0, _typeof2["default"])(params.meta) === 'object') {
@@ -7653,13 +7674,13 @@ var sendFile = function sendFile(_ref) {
       networking = _ref$modules.networking;
   return function () {
     var _ref3 = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref2) {
-      var channel, input, message, cipherKey, meta, ttl, store, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, retries, wasSuccessful;
+      var channel, input, message, cipherKey, meta, ttl, storeInHistory, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, retries, wasSuccessful;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              channel = _ref2.channel, input = _ref2.file, message = _ref2.message, cipherKey = _ref2.cipherKey, meta = _ref2.meta, ttl = _ref2.ttl, store = _ref2.store;
+              channel = _ref2.channel, input = _ref2.file, message = _ref2.message, cipherKey = _ref2.cipherKey, meta = _ref2.meta, ttl = _ref2.ttl, storeInHistory = _ref2.storeInHistory;
 
               if (channel) {
                 _context.next = 3;
@@ -7709,18 +7730,16 @@ var sendFile = function sendFile(_ref) {
 
               if (file.mimeType) {
                 formFieldsWithMimeType = formFields.map(function (entry) {
-                  var _file$mimeType;
-
                   if (entry.key === 'Content-Type') return {
                     key: entry.key,
-                    value: (_file$mimeType = file.mimeType) !== null && _file$mimeType !== void 0 ? _file$mimeType : ''
+                    value: file.mimeType
                   };else return entry;
                 });
               }
 
               _context.prev = 21;
 
-              if (!(typeof Blob !== 'undefined')) {
+              if (!PubNubFile.supportsFile) {
                 _context.next = 34;
                 break;
               }
@@ -7738,80 +7757,112 @@ var sendFile = function sendFile(_ref) {
 
             case 31:
               result = _context.sent;
-              _context.next = 43;
+              _context.next = 59;
               break;
 
             case 34:
+              if (!PubNubFile.supportsBuffer) {
+                _context.next = 46;
+                break;
+              }
+
               _context.t4 = networking;
               _context.t5 = url;
               _context.t6 = formFieldsWithMimeType;
-              _context.next = 39;
+              _context.next = 40;
               return file.toBuffer();
 
-            case 39:
+            case 40:
               _context.t7 = _context.sent;
-              _context.next = 42;
+              _context.next = 43;
               return _context.t4.FILE.call(_context.t4, _context.t5, _context.t6, _context.t7);
 
-            case 42:
-              result = _context.sent;
-
             case 43:
-              _context.next = 48;
+              result = _context.sent;
+              _context.next = 59;
               break;
 
-            case 45:
-              _context.prev = 45;
-              _context.t8 = _context["catch"](21);
-              throw new _endpoint.PubNubError('Upload to bucket failed', _context.t8);
+            case 46:
+              if (!PubNubFile.supportsBlob) {
+                _context.next = 58;
+                break;
+              }
 
-            case 48:
+              _context.t8 = networking;
+              _context.t9 = url;
+              _context.t10 = formFieldsWithMimeType;
+              _context.next = 52;
+              return file.toBlob();
+
+            case 52:
+              _context.t11 = _context.sent;
+              _context.next = 55;
+              return _context.t8.FILE.call(_context.t8, _context.t9, _context.t10, _context.t11);
+
+            case 55:
+              result = _context.sent;
+              _context.next = 59;
+              break;
+
+            case 58:
+              throw new Error('Unsupported environment');
+
+            case 59:
+              _context.next = 64;
+              break;
+
+            case 61:
+              _context.prev = 61;
+              _context.t12 = _context["catch"](21);
+              throw new _endpoint.PubNubError('Upload to bucket failed', _context.t12);
+
+            case 64:
               if (!(result.status !== 204)) {
-                _context.next = 50;
+                _context.next = 66;
                 break;
               }
 
               throw new _endpoint.PubNubError('Upload to bucket was unsuccessful', result);
 
-            case 50:
+            case 66:
               retries = 5;
               wasSuccessful = false;
 
-            case 52:
+            case 68:
               if (!(!wasSuccessful && retries > 0)) {
-                _context.next = 64;
+                _context.next = 80;
                 break;
               }
 
-              _context.prev = 53;
-              _context.next = 56;
+              _context.prev = 69;
+              _context.next = 72;
               return publishFile({
                 channel: channel,
                 message: message,
                 fileId: id,
                 fileName: name,
                 meta: meta,
-                store: store,
+                storeInHistory: storeInHistory,
                 ttl: ttl
               });
 
-            case 56:
+            case 72:
               wasSuccessful = true;
-              _context.next = 62;
+              _context.next = 78;
               break;
 
-            case 59:
-              _context.prev = 59;
-              _context.t9 = _context["catch"](53);
+            case 75:
+              _context.prev = 75;
+              _context.t13 = _context["catch"](69);
               retries -= 1;
 
-            case 62:
-              _context.next = 52;
+            case 78:
+              _context.next = 68;
               break;
 
-            case 64:
+            case 80:
               if (wasSuccessful) {
-                _context.next = 68;
+                _context.next = 84;
                 break;
               }
 
@@ -7821,18 +7872,18 @@ var sendFile = function sendFile(_ref) {
                 name: name
               });
 
-            case 68:
+            case 84:
               return _context.abrupt("return", {
                 id: id,
                 name: name
               });
 
-            case 69:
+            case 85:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[21, 45], [53, 59]]);
+      }, _callee, null, [[21, 61], [69, 75]]);
     }));
 
     return function (_x) {
@@ -8648,7 +8699,7 @@ var _default = function _default(_ref, _ref2) {
     throw new _endpoint.PubNubError('Validation failed, check status for details', (0, _endpoint.createValidationError)("file name can't be empty"));
   }
 
-  return "".concat(config.origin, "/v1/files/").concat(config.subscribeKey, "/channels/").concat(channel, "/files/").concat(id, "/").concat(name);
+  return "https://".concat(config.origin, "/v1/files/").concat(config.subscribeKey, "/channels/").concat(channel, "/files/").concat(id, "/").concat(name);
 };
 
 exports["default"] = _default;
@@ -12806,11 +12857,7 @@ function prepareParams(modules, incomingParams) {
       _incomingParams$strin = incomingParams.stringifiedTimeToken,
       stringifiedTimeToken = _incomingParams$strin === void 0 ? false : _incomingParams$strin,
       _incomingParams$inclu = incomingParams.includeMeta,
-      includeMeta = _incomingParams$inclu === void 0 ? false : _incomingParams$inclu,
-      _incomingParams$inclu2 = incomingParams.includeUuid,
-      includeUuid = _incomingParams$inclu2 === void 0 ? true : _incomingParams$inclu2,
-      _incomingParams$inclu3 = incomingParams.includeMessageType,
-      includeMessageType = _incomingParams$inclu3 === void 0 ? true : _incomingParams$inclu3;
+      includeMeta = _incomingParams$inclu === void 0 ? false : _incomingParams$inclu;
   var outgoingParams = {
     include_token: 'true'
   };
@@ -12820,8 +12867,6 @@ function prepareParams(modules, incomingParams) {
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (reverse != null) outgoingParams.reverse = reverse.toString();
   if (includeMeta) outgoingParams.include_meta = 'true';
-  if (includeUuid) outgoingParams.include_uuid = 'true';
-  if (includeMessageType) outgoingParams.include_message_type = 'true';
   return outgoingParams;
 }
 
@@ -13085,8 +13130,9 @@ function prepareParams(modules, incomingParams) {
       stringifiedTimeToken = _incomingParams$strin === void 0 ? false : _incomingParams$strin,
       _incomingParams$inclu3 = incomingParams.includeMeta,
       includeMeta = _incomingParams$inclu3 === void 0 ? false : _incomingParams$inclu3,
-      _incomingParams$inclu4 = incomingParams.includeUuid,
-      includeUuid = _incomingParams$inclu4 === void 0 ? true : _incomingParams$inclu4,
+      includeUuid = incomingParams.includeUuid,
+      _incomingParams$inclu4 = incomingParams.includeUUID,
+      includeUUID = _incomingParams$inclu4 === void 0 ? true : _incomingParams$inclu4,
       _incomingParams$inclu5 = incomingParams.includeMessageType,
       includeMessageType = _incomingParams$inclu5 === void 0 ? true : _incomingParams$inclu5;
   var outgoingParams = {};
@@ -13095,7 +13141,7 @@ function prepareParams(modules, incomingParams) {
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (includeMeta) outgoingParams.include_meta = 'true';
-  if (includeUuid) outgoingParams.include_uuid = 'true';
+  if (includeUUID && includeUuid !== false) outgoingParams.include_uuid = 'true';
   if (includeMessageType) outgoingParams.include_message_type = 'true';
   return outgoingParams;
 }

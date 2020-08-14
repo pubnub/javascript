@@ -26,5 +26,5 @@ export default ({ config }: Modules, { channel, id, name }: GetFileUrlParams): G
     );
   }
 
-  return `${config.origin}/v1/files/${config.subscribeKey}/channels/${channel}/files/${id}/${name}`;
+  return `https://${config.origin}/v1/files/${config.subscribeKey}/channels/${channel}/files/${id}/${name}`;
 };

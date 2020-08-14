@@ -75,8 +75,6 @@ describe('history endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         string_message_token: true,
-        include_uuid: 'true',
-        include_message_type: 'true',
       })
       .reply(
         200,
@@ -110,8 +108,6 @@ describe('history endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         string_message_token: true,
-        include_uuid: 'true',
-        include_message_type: 'true',
       })
       .reply(
         200,
