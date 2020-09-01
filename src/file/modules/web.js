@@ -17,11 +17,13 @@ type PubNubFileWebConstructor =
 
 const PubNubFile: FileClass = class PubNubFile implements IFile {
   static supportsFile = typeof File !== 'undefined';
-  static supportsBlob = true;
-  static supportsArrayBuffer = true;
+  static supportsBlob = typeof Blob !== 'undefined';
+  static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
   static supportsBuffer = false;
   static supportsStream = false;
   static supportsString = true;
+  static supportsEncryptFile = true;
+  static supportsFileUri = false;
 
   static create(config: PubNubFileWebConstructor) {
     return new this(config);
@@ -67,6 +69,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
     throw new Error('This feature is only supported in Node.js environments.');
   }
 
+  async toFileUri() {
+    throw new Error('This feature is only supported in react native environments.');
+  }
   async toBlob() {
     return this.data;
   }

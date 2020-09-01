@@ -39,6 +39,8 @@ export type EndpointConfig<TParams, TResult> = {|
   usePatch?: InjectedFunction<[TParams], boolean>,
   patchURL?: InjectedFunction<[TParams], string>,
   useDelete?: InjectedFunction<[TParams], boolean>,
+  getFileURL?: InjectedFunction<[TParams], string>,
+  useGetFile?: InjectedFunction<[TParams], boolean>,
 
   ignoreBody?: InjectedFunction<[TParams], boolean>,
   forceBuffered?: InjectedFunction<[TParams], boolean>,

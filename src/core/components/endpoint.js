@@ -28,6 +28,8 @@ function decideURL(endpoint, modules, incomingParams) {
     return endpoint.postURL(modules, incomingParams);
   } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
     return endpoint.patchURL(modules, incomingParams);
+  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+    return endpoint.getFileURL(modules, incomingParams);
   } else {
     return endpoint.getURL(modules, incomingParams);
   }
@@ -72,6 +74,8 @@ function getHttpMethod(modules, endpoint, incomingParams) {
     return 'PATCH';
   } else if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
     return 'DELETE';
+  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+    return 'GETFILE';
   } else {
     return 'GET';
   }
@@ -209,7 +213,7 @@ export default function (modules, endpoint, ...args) {
 
     let responseP = endpoint.handleResponse(modules, payload, incomingParams);
 
-    if (typeof responseP.then !== 'function') {
+    if (typeof responseP?.then !== 'function') {
       responseP = Promise.resolve(responseP);
     }
 
@@ -241,6 +245,8 @@ export default function (modules, endpoint, ...args) {
     callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'GETFILE') {
+    callInstance = networking.GETFILE(outgoingParams, networkingParams, onResponse);
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }

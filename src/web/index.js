@@ -8,7 +8,7 @@ import Networking from '../networking';
 import CryptoJS from '../core/components/cryptography/hmac-sha256';
 import db from '../db/web';
 import Cbor from '../cbor/common';
-import { del, get, post, patch, file } from '../networking/modules/web-node';
+import { del, get, post, patch, getfile, postfile } from '../networking/modules/web-node';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 import WebCryptography from '../crypto/modules/web';
@@ -94,7 +94,7 @@ export default class extends PubNubCore {
 
     setup.db = db;
     setup.sdkFamily = 'Web';
-    setup.networking = new Networking({ del, get, post, patch, sendBeacon, file });
+    setup.networking = new Networking({ del, get, post, patch, sendBeacon, getfile, postfile });
     setup.cbor = new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), base64ToBinary);
 
     setup.PubNubFile = PubNubFile;

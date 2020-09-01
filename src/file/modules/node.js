@@ -23,6 +23,8 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   static supportsStream = true;
   static supportsString = true;
   static supportsArrayBuffer = false;
+  static supportsEncryptFile = true;
+  static supportsFileUri = false;
 
   data: PubNubFileNodeSupportedInputType;
 
@@ -123,6 +125,10 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
   async toFile() {
     throw new Error('This feature is only supported in browser environments.');
+  }
+
+  async toFileUri() {
+    throw new Error('This feature is only supported in react native environments.');
   }
 
   async toBlob() {

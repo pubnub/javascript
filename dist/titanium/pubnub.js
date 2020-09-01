@@ -1,4 +1,4 @@
-/*! 4.29.4 / Consumer  */
+/*! 4.29.5 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -566,7 +566,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.4';
+      return '4.29.5';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -827,6 +827,8 @@ function decideURL(endpoint, modules, incomingParams) {
     return endpoint.postURL(modules, incomingParams);
   } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
     return endpoint.patchURL(modules, incomingParams);
+  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+    return endpoint.getFileURL(modules, incomingParams);
   } else {
     return endpoint.getURL(modules, incomingParams);
   }
@@ -871,6 +873,8 @@ function getHttpMethod(modules, endpoint, incomingParams) {
     return 'PATCH';
   } else if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
     return 'DELETE';
+  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+    return 'GETFILE';
   } else {
     return 'GET';
   }
@@ -989,6 +993,8 @@ function _default(modules, endpoint) {
   }
 
   var onResponse = function onResponse(status, payload) {
+    var _responseP;
+
     if (status.error) {
       if (callback) {
         callback(status);
@@ -1002,7 +1008,7 @@ function _default(modules, endpoint) {
     telemetryManager.stopLatencyMeasure(endpoint.getOperation(), requestId);
     var responseP = endpoint.handleResponse(modules, payload, incomingParams);
 
-    if (typeof responseP.then !== 'function') {
+    if (typeof ((_responseP = responseP) === null || _responseP === void 0 ? void 0 : _responseP.then) !== 'function') {
       responseP = Promise.resolve(responseP);
     }
 
@@ -1032,6 +1038,8 @@ function _default(modules, endpoint) {
     callInstance = networking.PATCH(outgoingParams, _payload2, networkingParams, onResponse);
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'GETFILE') {
+    callInstance = networking.GETFILE(outgoingParams, networkingParams, onResponse);
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }
@@ -7714,7 +7722,7 @@ var sendFile = function sendFile(_ref) {
               id = _yield$generateUpload3.id;
               name = _yield$generateUpload3.name;
 
-              if (!(cipherKey !== null && cipherKey !== void 0 ? cipherKey : config.cipherKey)) {
+              if (!(PubNubFile.supportsEncryptFile && (cipherKey !== null && cipherKey !== void 0 ? cipherKey : config.cipherKey))) {
                 _context.next = 19;
                 break;
               }
@@ -7739,7 +7747,7 @@ var sendFile = function sendFile(_ref) {
 
               _context.prev = 21;
 
-              if (!PubNubFile.supportsFile) {
+              if (!(PubNubFile.supportsFileUri && input.uri)) {
                 _context.next = 34;
                 break;
               }
@@ -7748,20 +7756,20 @@ var sendFile = function sendFile(_ref) {
               _context.t1 = url;
               _context.t2 = formFieldsWithMimeType;
               _context.next = 28;
-              return file.toFile();
+              return file.toFileUri();
 
             case 28:
               _context.t3 = _context.sent;
               _context.next = 31;
-              return _context.t0.FILE.call(_context.t0, _context.t1, _context.t2, _context.t3);
+              return _context.t0.POSTFILE.call(_context.t0, _context.t1, _context.t2, _context.t3);
 
             case 31:
               result = _context.sent;
-              _context.next = 59;
+              _context.next = 71;
               break;
 
             case 34:
-              if (!PubNubFile.supportsBuffer) {
+              if (!PubNubFile.supportsFile) {
                 _context.next = 46;
                 break;
               }
@@ -7770,20 +7778,20 @@ var sendFile = function sendFile(_ref) {
               _context.t5 = url;
               _context.t6 = formFieldsWithMimeType;
               _context.next = 40;
-              return file.toBuffer();
+              return file.toFile();
 
             case 40:
               _context.t7 = _context.sent;
               _context.next = 43;
-              return _context.t4.FILE.call(_context.t4, _context.t5, _context.t6, _context.t7);
+              return _context.t4.POSTFILE.call(_context.t4, _context.t5, _context.t6, _context.t7);
 
             case 43:
               result = _context.sent;
-              _context.next = 59;
+              _context.next = 71;
               break;
 
             case 46:
-              if (!PubNubFile.supportsBlob) {
+              if (!PubNubFile.supportsBuffer) {
                 _context.next = 58;
                 break;
               }
@@ -7792,50 +7800,72 @@ var sendFile = function sendFile(_ref) {
               _context.t9 = url;
               _context.t10 = formFieldsWithMimeType;
               _context.next = 52;
-              return file.toBlob();
+              return file.toBuffer();
 
             case 52:
               _context.t11 = _context.sent;
               _context.next = 55;
-              return _context.t8.FILE.call(_context.t8, _context.t9, _context.t10, _context.t11);
+              return _context.t8.POSTFILE.call(_context.t8, _context.t9, _context.t10, _context.t11);
 
             case 55:
               result = _context.sent;
-              _context.next = 59;
+              _context.next = 71;
               break;
 
             case 58:
-              throw new Error('Unsupported environment');
+              if (!PubNubFile.supportsBlob) {
+                _context.next = 70;
+                break;
+              }
 
-            case 59:
+              _context.t12 = networking;
+              _context.t13 = url;
+              _context.t14 = formFieldsWithMimeType;
               _context.next = 64;
-              break;
-
-            case 61:
-              _context.prev = 61;
-              _context.t12 = _context["catch"](21);
-              throw new _endpoint.PubNubError('Upload to bucket failed', _context.t12);
+              return file.toBlob();
 
             case 64:
+              _context.t15 = _context.sent;
+              _context.next = 67;
+              return _context.t12.POSTFILE.call(_context.t12, _context.t13, _context.t14, _context.t15);
+
+            case 67:
+              result = _context.sent;
+              _context.next = 71;
+              break;
+
+            case 70:
+              throw new Error('Unsupported environment');
+
+            case 71:
+              _context.next = 76;
+              break;
+
+            case 73:
+              _context.prev = 73;
+              _context.t16 = _context["catch"](21);
+              throw new _endpoint.PubNubError('Upload to bucket failed', _context.t16);
+
+            case 76:
               if (!(result.status !== 204)) {
-                _context.next = 66;
+                _context.next = 78;
                 break;
               }
 
               throw new _endpoint.PubNubError('Upload to bucket was unsuccessful', result);
 
-            case 66:
+            case 78:
               retries = 5;
               wasSuccessful = false;
 
-            case 68:
+            case 80:
               if (!(!wasSuccessful && retries > 0)) {
-                _context.next = 80;
+                _context.next = 92;
                 break;
               }
 
-              _context.prev = 69;
-              _context.next = 72;
+              _context.prev = 81;
+              _context.next = 84;
               return publishFile({
                 channel: channel,
                 message: message,
@@ -7846,23 +7876,23 @@ var sendFile = function sendFile(_ref) {
                 ttl: ttl
               });
 
-            case 72:
+            case 84:
               wasSuccessful = true;
-              _context.next = 78;
+              _context.next = 90;
               break;
 
-            case 75:
-              _context.prev = 75;
-              _context.t13 = _context["catch"](69);
+            case 87:
+              _context.prev = 87;
+              _context.t17 = _context["catch"](81);
               retries -= 1;
 
-            case 78:
-              _context.next = 68;
+            case 90:
+              _context.next = 80;
               break;
 
-            case 80:
+            case 92:
               if (wasSuccessful) {
-                _context.next = 84;
+                _context.next = 96;
                 break;
               }
 
@@ -7872,18 +7902,18 @@ var sendFile = function sendFile(_ref) {
                 name: name
               });
 
-            case 84:
+            case 96:
               return _context.abrupt("return", {
                 id: id,
                 name: name
               });
 
-            case 85:
+            case 97:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[21, 61], [69, 75]]);
+      }, _callee, null, [[21, 73], [81, 87]]);
     }));
 
     return function (_x) {
@@ -8742,7 +8772,10 @@ var endpoint = {
       return "id can't be empty";
     }
   },
-  getURL: function getURL(_ref, params) {
+  useGetFile: function useGetFile() {
+    return true;
+  },
+  getFileURL: function getFileURL(_ref, params) {
     var config = _ref.config;
     return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/files/").concat(params.id, "/").concat(params.name);
   },
@@ -8779,7 +8812,7 @@ var endpoint = {
               PubNubFile = _ref4.PubNubFile, config = _ref4.config, cryptography = _ref4.cryptography;
               body = res.response.body;
 
-              if (!config.cipherKey) {
+              if (!(PubNubFile.supportsEncryptFile && config.cipherKey)) {
                 _context.next = 6;
                 break;
               }
@@ -13384,9 +13417,14 @@ var _default = function () {
       return this._standardOrigin;
     }
   }, {
-    key: "FILE",
-    value: function FILE(url, fields, file) {
-      return this._modules.file(url, fields, file);
+    key: "POSTFILE",
+    value: function POSTFILE(url, fields, file) {
+      return this._modules.postfile(url, fields, file);
+    }
+  }, {
+    key: "GETFILE",
+    value: function GETFILE(params, endpoint, callback) {
+      return this._modules.getfile(params, endpoint, callback);
     }
   }, {
     key: "POST",

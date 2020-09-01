@@ -49,7 +49,7 @@ const sendFile = ({
     data: { id, name },
   } = await generateUploadUrl({ channel, name: file.name });
 
-  if (cipherKey ?? config.cipherKey) {
+  if (PubNubFile.supportsEncryptFile && (cipherKey ?? config.cipherKey)) {
     file = await cryptography.encryptFile(cipherKey ?? config.cipherKey, file, PubNubFile);
   }
 
@@ -65,12 +65,14 @@ const sendFile = ({
   let result;
 
   try {
-    if (PubNubFile.supportsFile) {
-      result = await networking.FILE(url, formFieldsWithMimeType, await file.toFile());
+    if (PubNubFile.supportsFileUri && input.uri) {
+      result = await networking.POSTFILE(url, formFieldsWithMimeType, await file.toFileUri());
+    } else if (PubNubFile.supportsFile) {
+      result = await networking.POSTFILE(url, formFieldsWithMimeType, await file.toFile());
     } else if (PubNubFile.supportsBuffer) {
-      result = await networking.FILE(url, formFieldsWithMimeType, await file.toBuffer());
+      result = await networking.POSTFILE(url, formFieldsWithMimeType, await file.toBuffer());
     } else if (PubNubFile.supportsBlob) {
-      result = await networking.FILE(url, formFieldsWithMimeType, await file.toBlob());
+      result = await networking.POSTFILE(url, formFieldsWithMimeType, await file.toBlob());
     } else {
       throw new Error('Unsupported environment');
     }

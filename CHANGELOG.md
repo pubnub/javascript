@@ -1,3 +1,11 @@
+## [v4.29.5](https://github.com/pubnub/javascript/releases/tag/v4.29.5)
+September-01-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.4...v4.29.5)
+
+- 🌟️ Add support for file upload via file URI in React Native. 
+- 🐛 Fix file download to ArrayBuffer in React Native. 
+
 ## [v4.29.4](https://github.com/pubnub/javascript/releases/tag/v4.29.4)
 August-14-2020
 

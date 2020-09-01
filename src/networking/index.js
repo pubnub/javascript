@@ -75,8 +75,12 @@ export default class {
     return this._standardOrigin;
   }
 
-  FILE(url: string, fields: $ReadOnlyArray<{ key: string, value: string }>, file: any) {
-    return this._modules.file(url, fields, file);
+  POSTFILE(url: string, fields: $ReadOnlyArray<{ key: string, value: string }>, file: any) {
+    return this._modules.postfile(url, fields, file);
+  }
+
+  GETFILE(params: Object, endpoint: EndpointDefinition, callback: Function) {
+    return this._modules.getfile(params, endpoint, callback);
   }
 
   POST(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {

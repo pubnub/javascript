@@ -14,6 +14,7 @@ export interface IFile {
   toString(encoding: buffer$NonBufferEncoding): Promise<string>;
   toFile(): Promise<File>;
   toBlob(): Promise<Blob>;
+  toFileUri(): Promise<{ uri: String, name: string, type: string }>;
 }
 
 export interface FileClass {
@@ -23,6 +24,8 @@ export interface FileClass {
   supportsStream: boolean;
   supportsString: boolean;
   supportsArrayBuffer: boolean;
+  supportsEncryptFile: boolean;
+  supportsFileUri: boolean;
 
   create(input: any): IFile;
 }

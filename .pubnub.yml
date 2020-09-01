@@ -3,6 +3,16 @@ changelog:
   -
     changes:
       -
+        text: "Add support for file upload via file URI in React Native."
+        type: feature
+      -
+        text: "Fix file download to ArrayBuffer in React Native."
+        type: bug
+    date: 2020-09-01
+    version: v4.29.5
+  -
+    changes:
+      -
         text: "Fixes an artifact where ract-native entrypoint didnt use ssl."
         type: bug
     date: 2020-08-14
@@ -930,4 +940,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.4"
+version: "4.29.5"

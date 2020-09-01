@@ -29,7 +29,7 @@ function log(req: Object) {
   });
 }
 
-function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
+export function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
   if (this._config.logVerbosity) {
     superagentConstruct = superagentConstruct.use(log);
   }
@@ -114,7 +114,7 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
   });
 }
 
-export async function file(
+export async function postfile(
   url: string,
   fields: $ReadOnlyArray<{ key: string, value: string }>,
   fileInput: any
@@ -130,6 +130,14 @@ export async function file(
   const result = await agent;
 
   return result;
+}
+
+export function getfile(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {
+  let superagentConstruct = superagent
+    .get(this.getStandardOrigin() + endpoint.url)
+    .set(endpoint.headers)
+    .query(params);
+  return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
 export function get(params: Object, endpoint: EndpointDefinition, callback: Function): superagent {

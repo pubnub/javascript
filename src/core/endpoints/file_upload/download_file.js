@@ -21,7 +21,9 @@ const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
     }
   },
 
-  getURL: ({ config }, params) =>
+  useGetFile: () => true,
+
+  getFileURL: ({ config }, params) =>
     `/v1/files/${config.subscribeKey}/channels/${params.channel}/files/${params.id}/${params.name}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
@@ -37,7 +39,7 @@ const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
   handleResponse: async ({ PubNubFile, config, cryptography }, res, params): Promise<DownloadFileResult> => {
     let body = res.response.body;
 
-    if (config.cipherKey) {
+    if (PubNubFile.supportsEncryptFile && (config.cipherKey)) {
       body = await cryptography.decrypt(params.cipherKey ?? config.cipherKey, body);
     }
 
