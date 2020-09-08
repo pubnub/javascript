@@ -30,7 +30,6 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   }
 
   data: any;
-
   name: string;
   mimeType: string;
 
@@ -72,6 +71,7 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   async toFileUri() {
     throw new Error('This feature is only supported in react native environments.');
   }
+
   async toBlob() {
     return this.data;
   }

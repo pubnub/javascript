@@ -29,7 +29,7 @@ function log(req: Object) {
   });
 }
 
-export function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
+function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, callback: Function): Object {
   if (this._config.logVerbosity) {
     superagentConstruct = superagentConstruct.use(log);
   }

@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Add file download to Blob in React Native."
+        type: feature
+    date: 2020-09-08
+    version: v4.29.6
+  -
+    changes:
+      -
         text: "Add support for file upload via file URI in React Native."
         type: feature
       -
@@ -940,4 +947,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.5"
+version: "4.29.6"

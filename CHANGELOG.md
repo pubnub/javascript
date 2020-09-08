@@ -1,3 +1,10 @@
+## [v4.29.6](https://github.com/pubnub/javascript/releases/tag/v4.29.6)
+September-08-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.5...v4.29.6)
+
+- 🌟️ Add file download to Blob in React Native. 
+
 ## [v4.29.5](https://github.com/pubnub/javascript/releases/tag/v4.29.5)
 September-01-2020
 

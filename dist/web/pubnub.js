@@ -1,4 +1,4 @@
-/*! 4.29.5 / Consumer  */
+/*! 4.29.6 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -576,7 +576,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.5';
+      return '4.29.6';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -15787,7 +15787,6 @@ var _interopRequireDefault = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.xdr = xdr;
 exports.postfile = postfile;
 exports.getfile = getfile;
 exports.get = get;
