@@ -156,11 +156,14 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'v2.8TcjX3viAUgXA92Olz7L6JEZJdce7bmHXRvrWYaSf5c',
+          signature: 'v2.LEJCwKOBTApWy5jcdXPmtN1_N2aaJx0ZN3krPY6oLu8',
           r: 0,
           w: 0,
           m: 0,
           d: 0,
+          g: 0,
+          j: 0,
+          u: 0
         })
         .reply(
           200,
@@ -187,11 +190,14 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'v2.-3zcZp_1Frmux2e90a49Rcf5oYH1v7SxfVKaCSRzwEo',
+          signature: 'v2.ju-0ZJpcAk_Qm1vXe5FVsj6pkamMNkd6oatZAW_bLQ0',
           r: 1,
           w: 1,
           m: 0,
           d: 0,
+          g: 0,
+          j: 0,
+          u: 0
         })
         .reply(
           200,
@@ -223,12 +229,15 @@ describe('access endpoints', () => {
           auth: 'key1,key2',
           uuid: 'myUUID',
           pnsdk: 'PubNub-JS-Nodejs/suchJavascript',
-          signature: 'v2.eWVAWEi8kDxs0EcgGrGNysjDEJ2nYI9Jhh54f8clA0Q',
+          signature: 'v2.zneRpaqzdxJPegBrJHWMzj-mD8QVBxqh8Zl15N7n2d4',
           r: 1,
           w: 1,
           m: 0,
           d: 0,
           ttl: 1337,
+          g: 0,
+          j: 0,
+          u: 0
         })
         .reply(
           200,
@@ -250,6 +259,207 @@ describe('access endpoints', () => {
         }
       );
     });
+
+    it('issues the correct RESTful request for uuids', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query({
+          timestamp: 1317427200,
+          'target-uuid': 'uuid-1,uuid-2',
+          auth: 'key1,key2',
+          uuid: 'myUUID',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          signature: 'v2.v2PTWPil0EaEYHemsVjZFKXeW4n26ZaEND9bfQYoi8M',
+          r: 0,
+          w: 0,
+          m: 0,
+          d: 1,
+          g: 1,
+          j: 0,
+          u: 1
+        })
+        .reply(
+          200,
+          '{"message":"Success","payload":{"level":"uuid","subscribe_key":"mySubscribeKey","target-uuid":"uuid-1,uuid-2","auths":{"key1":{"r":0,"m":0,"w":0,"d":0}}},"service":"Access Manager","status":200}'
+        );
+
+      pubnub.grant(
+        { uuids: ['uuid-1', 'uuid-2'],
+          authKeys: ['key1', 'key2'],
+          get: true,
+          update: true,
+          delete: true},
+        (status) => {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });    
+    it('issues the correct RESTful request for uuids w/ ttl', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query({
+          timestamp: 1317427200,
+          'target-uuid': 'uuid-1,uuid-2',
+          auth: 'key1,key2',
+          uuid: 'myUUID',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          signature: 'v2.rTsZBrWV9IsI7XI6-UpWdO4b3DcrvIF_rcqzw48i_2I',
+          r: 0,
+          w: 0,
+          m: 0,
+          d: 1,
+          ttl: 1337,
+          g: 1,
+          j: 0,
+          u: 1
+        })
+        .reply(
+          200,
+          '{"message":"Success","payload":{"level":"uuid","subscribe_key":"mySubscribeKey","target-uuid":"uuid-1,uuid-2","auths":{"key1":{"r":0,"m":0,"w":0,"d":1,"j":0,"g":1,"u":1}}},"service":"Access Manager","status":200}'
+        );
+
+      pubnub.grant(
+        {
+          uuids: ['uuid-1', 'uuid-2'],
+          authKeys: ['key1', 'key2'],
+          get: true,
+          update: true,
+          delete: true,
+          ttl: 1337,
+        },
+        (status) => {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });
+  describe('##validation', () => {
+    it('channelGroups and uuids in single request', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query({
+          timestamp: 1317427200,
+          'channel-group': 'cg1,cg2',
+          'target-uuid': 'uuid-1, uuid-2',
+          auth: 'key1,key2',
+          uuid: 'myUUID',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          signature: 'v2.zneRpaqzdxJPegBrJHWMzj-mD8QVBxqh8Zl15N7n2d4',
+          r: 1,
+          w: 1,
+          m: 0,
+          d: 0,
+          ttl: 1337,
+          g: 0,
+          j: 0,
+          u: 0
+        })
+        .reply(
+          200,
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":0,"w":1,"d":0}}},"service":"Access Manager","status":200}'
+        );
+      pubnub.grant(
+        {
+          channelGroups: ['cg1', 'cg2'],
+          uuids: ['uuid-1', 'uuid-2'],
+          authKeys: ['key1', 'key2'],
+          read: true,
+          write: true,
+          ttl: 1337,
+        }
+      ).catch((error) => {
+        assert.equal(scope.isDone(), false);
+        assert.equal(error.status.message, 'Both channel/channelgroup and uuid cannot be used in the same request');
+        done();
+      });
+    });
+
+    it('channels and uuids in single request', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query({
+          timestamp: 1317427200,
+          'channel': 'ch1,ch2',
+          'target-uuid': 'uuid-1, uuid-2',
+          auth: 'key1,key2',
+          uuid: 'myUUID',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          signature: 'v2.zneRpaqzdxJPegBrJHWMzj-mD8QVBxqh8Zl15N7n2d4',
+          r: 1,
+          w: 1,
+          m: 0,
+          d: 0,
+          ttl: 1337,
+          g: 0,
+          j: 0,
+          u: 0
+        })
+        .reply(
+          200,
+          '{"message":"Success","payload":{"level":"channel-group+auth","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":0,"w":1,"d":0}}},"service":"Access Manager","status":200}'
+        );
+      pubnub.grant(
+        {
+          channels: ['ch1', 'ch2'],
+          uuids: ['uuid-1', 'uuid-2'],
+          authKeys: ['key1', 'key2'],
+          read: true,
+          write: true,
+          ttl: 1337,
+        }
+      ).catch((error) => {
+        assert.equal(scope.isDone(), false);
+        assert.equal(error.status.message, 'Both channel/channelgroup and uuid cannot be used in the same request');
+        done();
+      });
+    });
+
+    it('uuids and empty authKeys', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query({
+          timestamp: 1317427200,
+          'target-uuid': 'uuid-1, uuid-2',
+          uuid: 'myUUID',
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          signature: 'v2.zneRpaqzdxJPegBrJHWMzj-mD8QVBxqh8Zl15N7n2d4',
+          r: 1,
+          w: 1,
+          m: 0,
+          d: 0,
+          ttl: 1337,
+          g: 0,
+          j: 0,
+          u: 0
+        })
+        .reply(
+          200,
+          '{"message":"Success","payload":{"level":"uuid","subscribe_key":"mySubscribeKey","channel-group":"cg2","auths":{"key1":{"r":1,"m":0,"w":1,"d":0}}},"service":"Access Manager","status":200}'
+        );
+      pubnub.grant(
+        {
+          uuids: ['uuid-1', 'uuid-2'],
+          read: true,
+          write: true,
+          ttl: 1337,
+        }
+      ).catch((error) => {
+        assert.equal(scope.isDone(), false);
+        assert.equal(error.status.message, 'authKeys are required for grant request on uuids');
+        done();
+      });
+    });
+
+  });
+
   });
 });
 

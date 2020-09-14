@@ -3,6 +3,7 @@ import { StatusAnnouncement } from '../flow_interfaces';
 import utils from '../utils';
 import Config from './config';
 import operationConstants from '../constants/operations';
+import categoryConstants from '../constants/categories';
 
 export class PubNubError extends Error {
   constructor(message, status) {
@@ -227,7 +228,19 @@ export default function (modules, endpoint, ...args) {
       })
       .catch((e) => {
         if (callback) {
-          callback(e, null);
+          let errorData = e;
+
+          if (endpoint.getOperation() === operationConstants.PNSubscribeOperation) {
+            errorData = {
+              statusCode: 400,
+              error: true,
+              operation: endpoint.getOperation(),
+              errorData: e,
+              category: categoryConstants.PNUnknownCategory
+            };
+          }
+
+          callback(errorData, null);
         } else if (promiseComponent) {
           promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', e));
         }

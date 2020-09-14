@@ -7,12 +7,14 @@ export function getOperation(): string {
   return operationConstants.PNAccessManagerGrant;
 }
 
-export function validateParams(modules: ModulesInject) {
+export function validateParams(modules: ModulesInject, incomingParams: GrantArguments) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
   if (!config.publishKey) return 'Missing Publish Key';
   if (!config.secretKey) return 'Missing Secret Key';
+  if (incomingParams.uuids != null && !incomingParams.authKeys) { return 'authKeys are required for grant request on uuids'; }
+  if (incomingParams.uuids != null && (incomingParams.channels != null || incomingParams.channelGroups != null)) { return 'Both channel/channelgroup and uuid cannot be used in the same request'; }
 }
 
 export function getURL(modules: ModulesInject): string {
@@ -29,7 +31,17 @@ export function isAuthSupported(): boolean {
 }
 
 export function prepareParams(modules: ModulesInject, incomingParams: GrantArguments): Object {
-  const { channels = [], channelGroups = [], ttl, read = false, write = false, manage = false, authKeys = [] } = incomingParams;
+  const { channels = [],
+    channelGroups = [],
+    uuids = [],
+    ttl,
+    read = false,
+    write = false,
+    manage = false,
+    get = false,
+    join = false,
+    update = false,
+    authKeys = [] } = incomingParams;
   const deleteParam = incomingParams.delete;
   const params = {};
 
@@ -37,6 +49,9 @@ export function prepareParams(modules: ModulesInject, incomingParams: GrantArgum
   params.w = (write) ? '1' : '0';
   params.m = (manage) ? '1' : '0';
   params.d = (deleteParam) ? '1' : '0';
+  params.g = (get) ? '1'  : '0';
+  params.j = (join) ? '1' : '0';
+  params.u = (update) ? '1' : '0';
 
   if (channels.length > 0) {
     params.channel = channels.join(',');
@@ -50,10 +65,13 @@ export function prepareParams(modules: ModulesInject, incomingParams: GrantArgum
     params.auth = authKeys.join(',');
   }
 
+  if (uuids.length > 0) {
+    params['target-uuid'] = uuids.join(',');
+  }
+
   if (ttl || ttl === 0) {
     params.ttl = ttl;
   }
-
   return params;
 }
 

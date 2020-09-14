@@ -425,10 +425,14 @@ type AuditArguments = {
 type GrantArguments = {
   channels: Array<string>,
   channelGroups: Array<string>,
+  uuids: Array<string>,
   ttl: number,
   read: boolean,
   write: boolean,
   manage: boolean,
+  get: boolean,
+  join: boolean,
+  update: boolean,
   delete: Boolean,
   authKeys: Array<string>
 }

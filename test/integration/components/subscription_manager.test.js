@@ -193,6 +193,55 @@ describe('#components/subscription_manager', () => {
     pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
   });
 
+  it('Unknown category status returned when user trigger TypeError in subscription handler', (done) => {
+    const scope1 = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}'
+      );
+    const scope2 = utils
+      .createNock()
+      .get(/heartbeat$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","service":"Presence"}');
+    const scope3 = utils
+      .createNock()
+      .get(/leave$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","action":"leave","service":"Presence"}');
+    const scope4 = utils
+      .createNock()
+      .get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
+      .query(true)
+      .reply(200, '[1,"Sent","14647523059145592"]');
+
+    pubnub.addListener({
+      message(message) {
+        null.test;
+      },
+      status(status) {
+        if (status.category === "PNUnknownCategory") {
+          assert.equal(status.errorData instanceof Error, true);
+          done();
+        } else if (status.category === "PNConnectedCategory") {
+          pubnub.publish(
+            { message: { such: 'object' }, channel: 'ch1' },
+            (status, response) => { }
+          );
+        }
+      }
+    });
+
+    pubnub.subscribe({ channels: ['ch1'], withPresence: true });
+  });
+
   it('passes the correct presence information when state is changed', (done) => {
     const scope = utils
       .createNock()

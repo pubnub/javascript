@@ -3,6 +3,16 @@ changelog:
   -
     changes:
       -
+        text: "Added support for managing permissions of objects v2 while applying PAM v2."
+        type: feature
+      -
+        text: "Fix uncaught promise exception in subscription manager caused by error in user code inside of subscription handlers. Error will be handled and returned to status handler with PNUnknownCategory category where errorData can be examined."
+        type: bug
+    date: 2020-09-14
+    version: v4.29.7
+  -
+    changes:
+      -
         text: "Add file download to Blob in React Native."
         type: feature
     date: 2020-09-08
@@ -947,4 +957,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.6"
+version: "4.29.7"

@@ -1,3 +1,11 @@
+## [v4.29.7](https://github.com/pubnub/javascript/releases/tag/v4.29.7)
+September-14-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.6...v4.29.7)
+
+- 🌟️ Added support for managing permissions of objects v2 while applying PAM v2. 
+- 🐛 Fix uncaught promise exception in subscription manager caused by error in user code inside of subscription handlers. Error will be handled and returned to status handler with PNUnknownCategory category where errorData can be examined. 
+
 ## [v4.29.6](https://github.com/pubnub/javascript/releases/tag/v4.29.6)
 September-08-2020
 
