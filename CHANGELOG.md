@@ -1,3 +1,10 @@
+## [v4.29.8](https://github.com/pubnub/javascript/releases/tag/v4.29.8)
+September-21-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.7...v4.29.8)
+
+- 🐛 Fixes compatibility with @sentry/react-native library. 
+
 ## [v4.29.7](https://github.com/pubnub/javascript/releases/tag/v4.29.7)
 September-14-2020
 

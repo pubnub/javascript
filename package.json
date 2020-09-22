@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.29.7",
+  "version": "4.29.8",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},

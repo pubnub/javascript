@@ -9,7 +9,6 @@ import { del, get, post, patch } from '../networking/modules/web-node';
 import { getfile, postfile } from '../networking/modules/react_native';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
-import WebCryptography from '../crypto/modules/web';
 import PubNubFile from '../file/modules/react-native';
 
 export default class extends PubNubCore {
@@ -18,7 +17,6 @@ export default class extends PubNubCore {
     setup.cbor = new Cbor(CborReader.decode, (base64String) => Buffer.from(base64String, 'base64'));
 
     setup.PubNubFile = PubNubFile;
-    setup.cryptography = new WebCryptography();
 
     setup.networking = new Networking({ del, get, post, patch, getfile, postfile });
     setup.sdkFamily = 'ReactNative';
