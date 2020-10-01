@@ -16,7 +16,7 @@ please use the [master_3x](https://github.com/pubnub/javascript/tree/master_3x) 
 
 ## Communication
 
-- If you **need help** or have a **general question**, contact <support@pubnub.com>
+- If you **need help** or have any **Query**, contact <support@pubnub.com>
 
 ## CDN Links
 
