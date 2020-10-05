@@ -32,8 +32,6 @@ const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
   ignoreBody: () => true,
   forceBuffered: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('fileUpload'),
-
   prepareParams: () => ({}),
 
   handleResponse: async ({ PubNubFile, config, cryptography }, res, params): Promise<DownloadFileResult> => {

@@ -3,6 +3,19 @@ changelog:
   -
     changes:
       -
+        text: "Adds timetoken of file publish in the sendFile response."
+        type: feature
+      -
+        text: "Fixes getFileUrl so that it includes auth and signature query params."
+        type: bug
+      -
+        text: "Fixes downloadFile method to generate correct signature."
+        type: bug
+    date: 2020-10-05
+    version: v4.29.9
+  -
+    changes:
+      -
         text: "Fixes compatibility with @sentry/react-native library."
         type: bug
     date: 2020-09-21
@@ -841,6 +854,7 @@ features:
     - ACCESS-GRANT-MANAGE
     - ACCESS-GRANT-DELETE
     - ACCESS-TOKEN-MANAGEMENT
+    - ACCESS-OBJECTS-V2-MANAGEMENT
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -964,4 +978,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.8"
+version: "4.29.9"

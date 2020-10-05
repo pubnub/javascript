@@ -71,7 +71,7 @@ describe('test', () => {
 
       expect(result.name).to.equal('myFile.txt');
 
-      const pubnubFile = await pubnub.downloadFile({ ...result, channel: CHANNEL_1 });
+      const pubnubFile = await pubnub.downloadFile({ name: result.name, id: result.id, channel: CHANNEL_1 });
       const file = await pubnubFile.toFile();
 
       await new Promise(async (resolve) => {

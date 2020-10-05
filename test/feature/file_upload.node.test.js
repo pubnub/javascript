@@ -8,10 +8,9 @@ import PubNub from '../../src/node';
 import fs from 'fs';
 
 describe('File Upload API v1 tests', () => {
-  const SUBSCRIBE_KEY = 'demo-36';
-  const PUBLISH_KEY = 'demo-36';
+  const SUBSCRIBE_KEY = 'demo';
+  const PUBLISH_KEY = 'demo';
 
-  // const ORIGIN = 'ingress-files.aws-pdx-1.ps.pn';
   const ORIGIN = undefined;
 
   const TEST_PREFIX = 'javascript-fileUploadApiV1-tests';
@@ -64,7 +63,7 @@ describe('File Upload API v1 tests', () => {
 
       expect(result.name).to.equal('input.json');
 
-      const file = await pubnub.downloadFile({ ...result, channel: CHANNEL_1 });
+      const file = await pubnub.downloadFile({ name: result.name, id: result.id, channel: CHANNEL_1 });
 
       const fileStream = await file.toStream();
       const outputStream = fs.createWriteStream(`${__dirname}/output.json`);
@@ -143,8 +142,6 @@ describe('File Upload API v1 tests', () => {
 
       expect(result.status).to.equal(200);
       expect(result.data).to.have.length.greaterThan(0);
-      expect(result.next).to.exist;
-      expect(result.count).to.exist;
     });
 
     it('should handle file delete', async () => {

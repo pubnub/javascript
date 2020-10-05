@@ -46,7 +46,7 @@ function getAuthToken(endpoint, modules, incomingParams) {
   return token;
 }
 
-function generatePNSDK(config: Config): string {
+export function generatePNSDK(config: Config): string {
   if (config.sdkName) {
     return config.sdkName;
   }
@@ -82,7 +82,7 @@ function getHttpMethod(modules, endpoint, incomingParams) {
   }
 }
 
-function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
+export function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   let { config, crypto } = modules;
 
   let httpMethod = getHttpMethod(modules, endpoint, incomingParams);
@@ -91,6 +91,10 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
 
   // This is because of a server-side bug, old publish using post should be deprecated
   if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    httpMethod = 'GET';
+  }
+
+  if (httpMethod === 'GETFILE') {
     httpMethod = 'GET';
   }
 

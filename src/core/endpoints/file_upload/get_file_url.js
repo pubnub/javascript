@@ -1,10 +1,12 @@
 /** @flow */
 
-import { PubNubError, createValidationError } from '../../components/endpoint';
+import { PubNubError, createValidationError, signRequest, generatePNSDK } from '../../components/endpoint';
 import type { Modules } from '../endpoint';
 import type { GetFileUrlParams, GetFileUrlResult } from './types';
 
-export default ({ config }: Modules, { channel, id, name }: GetFileUrlParams): GetFileUrlResult => {
+export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetFileUrlResult => {
+  const { config } = modules;
+
   if (!channel) {
     throw new PubNubError(
       'Validation failed, check status for details',
@@ -26,5 +28,27 @@ export default ({ config }: Modules, { channel, id, name }: GetFileUrlParams): G
     );
   }
 
-  return `https://${config.origin}/v1/files/${config.subscribeKey}/channels/${channel}/files/${id}/${name}`;
+  const url = `/v1/files/${config.subscribeKey}/channels/${channel}/files/${id}/${name}`;
+  const params = {};
+
+  params.uuid = config.getUUID();
+  params.pnsdk = generatePNSDK(config);
+
+  if (config.getAuthKey()) {
+    params.auth = config.getAuthKey();
+  }
+
+  if (config.secretKey) {
+    signRequest(modules, url, params, {}, {
+      getOperation: () => 'PubNubGetFileUrlOperation',
+    });
+  }
+
+  const queryParams = Object.keys(params).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
+
+  if (queryParams !== '') {
+    return `https://${config.origin}${url}?${queryParams}`;
+  }
+
+  return `https://${config.origin}${url}`;
 };

@@ -18,6 +18,18 @@ type Dependencies = {|
   modules: Modules,
 |};
 
+const getErrorFromResponse = (response) => new Promise((resolve) => {
+  let result = '';
+
+  response.on('data', (data) => {
+    result += data.toString('utf8');
+  });
+
+  response.on('end', () => {
+    resolve(result);
+  });
+});
+
 const sendFile = ({
   generateUploadUrl,
   publishFile,
@@ -77,7 +89,11 @@ const sendFile = ({
       throw new Error('Unsupported environment');
     }
   } catch (e) {
-    throw new PubNubError('Upload to bucket failed', e);
+    const errorBody = await getErrorFromResponse(e.response);
+
+    const reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
+
+    throw new PubNubError(reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.', e);
   }
 
   if (result.status !== 204) {
@@ -87,9 +103,11 @@ const sendFile = ({
   let retries = 5;
   let wasSuccessful = false;
 
+  let publishResult = { timetoken: '0' };
+
   while (!wasSuccessful && retries > 0) {
     try {
-      await publishFile({
+      publishResult = await publishFile({
         channel,
         message,
         fileId: id,
@@ -104,6 +122,7 @@ const sendFile = ({
       retries -= 1;
     }
   }
+
   if (!wasSuccessful) {
     throw new PubNubError('Publish failed. You may want to execute that operation manually using pubnub.publishFile', {
       channel,
@@ -112,6 +131,7 @@ const sendFile = ({
     });
   } else {
     return {
+      timetoken: publishResult.timetoken,
       id,
       name,
     };

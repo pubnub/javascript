@@ -1,3 +1,12 @@
+## [v4.29.9](https://github.com/pubnub/javascript/releases/tag/v4.29.9)
+October-05-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.8...v4.29.9)
+
+- 🌟️ Adds timetoken of file publish in the sendFile response. 
+- 🐛 Fixes getFileUrl so that it includes auth and signature query params. 
+- 🐛 Fixes downloadFile method to generate correct signature. 
+
 ## [v4.29.8](https://github.com/pubnub/javascript/releases/tag/v4.29.8)
 September-21-2020
 

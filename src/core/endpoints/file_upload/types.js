@@ -66,6 +66,7 @@ export type SendFileParams = {|
 |};
 
 export type SendFileResult = {|
+  timetoken: string,
   id: string,
   name: string,
 |};
