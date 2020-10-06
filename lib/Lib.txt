@@ -1,0 +1,8 @@
+<!-- Create a simple Code instance -->
+<link rel="stylesheet" href="lib/code.css">
+<script src="lib/code.js"></script>
+<script>
+  var editor = Code.fromTextArea(myTextarea, {
+    lineNumbers: true
+  });
+</script
