@@ -1,0 +1,63 @@
+showresult(choise){
+var n1=parsefloat(document.getElementById('num1').value);
+var n2=parsefloat(document.getElementById('num2').value);
+var r;
+var c=choise;
+
+switch(c)
+	{
+	case '1':
+		r=n1+n2;
+		break;
+	case '2':
+		r=n1-n2;
+		break;
+	case '3':
+		r=n1*n2;
+		break;
+	case '4': 
+		r=n1/n2;
+		break;
+	case '5':
+		r=n2*100/n1;
+		break;
+	default:
+		break;
+			
+	}
+document.getElementById('result').innerHTML=r;
+}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Calculator</title>
+<script src="calculator.js" type="text/javascript"></script>
+</head>
+<body>
+
+
+<h1>My calculator</h1>
+<table border="1" cellpadding="5" cellspacing="5" width="600">
+<tr align="center">
+<td>First number</td>
+<td>Second Number</td>
+<td>Result</td>
+</tr>
+<tr align="center">
+<td><input name="number1" type="text" size=10 id='num1'/></td>
+<td><input name="number2" type="text" size=10 id='num2'/></td>
+<td> <input type="text" id='result' readonly ></td>
+</tr>
+<tr>
+<td colspan="3">
+<button onclick="showresult('1')">+</button>
+<button onclick="showresult('2')">-</button>
+<button onclick="showresult('3')">*</button>
+<button onclick="showresult('4')">/</button>
+<button onclick="showresult('5')">%</button>
+</td>
+</tr>
+
+</table>
+</body>
+</html>
