@@ -7,20 +7,89 @@
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
 [![Known Vulnerabilities](https://snyk.io/test/npm/pubnub/badge.svg)](https://snyk.io/test/npm/pubnub)
 
-### Looking for Javascript V3 SDK?
-please use the [master_3x](https://github.com/pubnub/javascript/tree/master_3x) branch
+This is the official PubNub JavaScript SDK repository.
 
-### PubNub for JavaScript Docs have been moved to:
-  * [web](https://www.pubnub.com/docs/javascript/pubnub-javascript-sdk-v4)
-  * [node](https://www.pubnub.com/docs/nodejs/pubnub-javascript-sdk-v4)
+PubNub takes care of the infrastructure and APIs needed for the realtime communication layer of your application. Work on your app's logic and let PubNub handle sending and receiving data across the world in less than 100ms.
 
-## Communication
+## Get keys
 
-- If you **need help** or have a **general question**, contact <support@pubnub.com>
+You will need the publish and subscribe keys to authenticate your app. Get your keys from the [Admin Portal](https://dashboard.pubnub.com/login).
 
-## CDN Links
+## Configure PubNub
 
+1. Integrate the JavaScript SDK into your project:
+   * use `npm`:
+     ```
+     npm install pubnub
+     ```
+   * or download one of our builds from our CDN: 
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.29.9.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.29.9.min.js
 
+2. Configure your keys:
 
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.29.9.min.js
-* https://cdn.pubnub.com/sdk/javascript/pubnub.4.29.9.js
+  ```javascript
+  pubnub = new PubNub({
+    publishKey : "myPublishKey",
+    subscribeKey : "mySubscribeKey",
+    uuid: "myUniqueUUID"
+  })
+  ```
+
+## Add event listeners
+
+```javascript
+pubnub.addListener({
+  message: function (m) {
+    // handle messages
+  },
+  presence: function (p) {
+    // handle presence  
+  },
+  signal: function (s) {
+    // handle signals
+  },
+  objects: (objectEvent) => {
+    // handle pbjects
+  },
+  messageAction: function (ma) {
+    // handle message actions
+  },
+  file: function (event) {
+    // handle files  
+  },
+  status: function (s) {
+  // handle status  
+  },
+});
+```
+
+## Publish/subscribe
+
+```javascript
+var publishPayload = {
+    channel : "hello_world",
+    message: {
+        title: "greeting",
+        description: "This is my first message!"
+    }
+}
+
+pubnub.publish(publishPayload, function(status, response) {
+    console.log(status, response);
+})
+
+pubnub.subscribe({
+    channels: ["hello_world"]
+});
+```
+
+## Documentation
+
+* [Build your first realtime JS app with PubNub](https://www.pubnub.com/docs/platform/quickstarts/javascript)
+* [API reference for JavaScript (web)](https://www.pubnub.com/docs/web-javascript/pubnub-javascript-sdk)
+* [API reference for JavaScript (Node.js)](https://www.pubnub.com/docs/nodejs-javascript/pubnub-javascript-sdk)
+
+## Support
+
+If you **need help** or have a **general question**, contact <support@pubnub.com>.
