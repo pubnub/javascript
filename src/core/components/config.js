@@ -307,7 +307,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.29.9';
+    return '4.29.10';
   }
 
   _addPnsdkSuffix(name: string, suffix: string) {

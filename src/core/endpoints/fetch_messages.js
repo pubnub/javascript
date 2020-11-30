@@ -121,6 +121,9 @@ export function handleResponse(
       response.channels[channelName].push(announce);
     });
   });
+  if (serverResponse.more) {
+    response.more  = serverResponse.more;
+  }
 
   return response;
 }

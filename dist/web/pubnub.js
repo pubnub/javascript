@@ -1,4 +1,4 @@
-/*! 4.29.8-rc1 / Consumer  */
+/*! 4.29.10 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -576,7 +576,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.8-rc1';
+      return '4.29.10';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -815,6 +815,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.createValidationError = createValidationError;
+exports.generatePNSDK = generatePNSDK;
+exports.signRequest = signRequest;
 exports["default"] = _default;
 exports.PubNubError = void 0;
 
@@ -948,6 +950,10 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
 
   if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    httpMethod = 'GET';
+  }
+
+  if (httpMethod === 'GETFILE') {
     httpMethod = 'GET';
   }
 
@@ -9878,6 +9884,18 @@ var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(12));
 
 var _endpoint = __webpack_require__(18);
 
+var getErrorFromResponse = function getErrorFromResponse(response) {
+  return new Promise(function (resolve) {
+    var result = '';
+    response.on('data', function (data) {
+      result += data.toString('utf8');
+    });
+    response.on('end', function () {
+      resolve(result);
+    });
+  });
+};
+
 var sendFile = function sendFile(_ref) {
   var generateUploadUrl = _ref.generateUploadUrl,
       publishFile = _ref.publishFile,
@@ -9888,7 +9906,7 @@ var sendFile = function sendFile(_ref) {
       networking = _ref$modules.networking;
   return function () {
     var _ref3 = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref2) {
-      var channel, input, message, cipherKey, meta, ttl, storeInHistory, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, retries, wasSuccessful;
+      var channel, input, message, cipherKey, meta, ttl, storeInHistory, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, errorBody, reason, retries, wasSuccessful, publishResult;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -10044,34 +10062,43 @@ var sendFile = function sendFile(_ref) {
               throw new Error('Unsupported environment');
 
             case 71:
-              _context.next = 76;
+              _context.next = 80;
               break;
 
             case 73:
               _context.prev = 73;
               _context.t16 = _context["catch"](21);
-              throw new _endpoint.PubNubError('Upload to bucket failed', _context.t16);
+              _context.next = 77;
+              return getErrorFromResponse(_context.t16.response);
 
-            case 76:
+            case 77:
+              errorBody = _context.sent;
+              reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
+              throw new _endpoint.PubNubError(reason ? "Upload to bucket failed: ".concat(reason[1]) : 'Upload to bucket failed.', _context.t16);
+
+            case 80:
               if (!(result.status !== 204)) {
-                _context.next = 78;
+                _context.next = 82;
                 break;
               }
 
               throw new _endpoint.PubNubError('Upload to bucket was unsuccessful', result);
 
-            case 78:
+            case 82:
               retries = 5;
               wasSuccessful = false;
+              publishResult = {
+                timetoken: '0'
+              };
 
-            case 80:
+            case 85:
               if (!(!wasSuccessful && retries > 0)) {
-                _context.next = 92;
+                _context.next = 98;
                 break;
               }
 
-              _context.prev = 81;
-              _context.next = 84;
+              _context.prev = 86;
+              _context.next = 89;
               return publishFile({
                 channel: channel,
                 message: message,
@@ -10082,23 +10109,24 @@ var sendFile = function sendFile(_ref) {
                 ttl: ttl
               });
 
-            case 84:
+            case 89:
+              publishResult = _context.sent;
               wasSuccessful = true;
-              _context.next = 90;
+              _context.next = 96;
               break;
 
-            case 87:
-              _context.prev = 87;
-              _context.t17 = _context["catch"](81);
+            case 93:
+              _context.prev = 93;
+              _context.t17 = _context["catch"](86);
               retries -= 1;
 
-            case 90:
-              _context.next = 80;
+            case 96:
+              _context.next = 85;
               break;
 
-            case 92:
+            case 98:
               if (wasSuccessful) {
-                _context.next = 96;
+                _context.next = 102;
                 break;
               }
 
@@ -10108,18 +10136,19 @@ var sendFile = function sendFile(_ref) {
                 name: name
               });
 
-            case 96:
+            case 102:
               return _context.abrupt("return", {
+                timetoken: publishResult.timetoken,
                 id: id,
                 name: name
               });
 
-            case 97:
+            case 103:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[21, 73], [81, 87]]);
+      }, _callee, null, [[21, 73], [86, 93]]);
     }));
 
     return function (_x) {
@@ -10917,11 +10946,11 @@ exports["default"] = void 0;
 
 var _endpoint = __webpack_require__(18);
 
-var _default = function _default(_ref, _ref2) {
-  var config = _ref.config;
-  var channel = _ref2.channel,
-      id = _ref2.id,
-      name = _ref2.name;
+var _default = function _default(modules, _ref) {
+  var channel = _ref.channel,
+      id = _ref.id,
+      name = _ref.name;
+  var config = modules.config;
 
   if (!channel) {
     throw new _endpoint.PubNubError('Validation failed, check status for details', (0, _endpoint.createValidationError)("channel can't be empty"));
@@ -10935,7 +10964,32 @@ var _default = function _default(_ref, _ref2) {
     throw new _endpoint.PubNubError('Validation failed, check status for details', (0, _endpoint.createValidationError)("file name can't be empty"));
   }
 
-  return "https://".concat(config.origin, "/v1/files/").concat(config.subscribeKey, "/channels/").concat(channel, "/files/").concat(id, "/").concat(name);
+  var url = "/v1/files/".concat(config.subscribeKey, "/channels/").concat(channel, "/files/").concat(id, "/").concat(name);
+  var params = {};
+  params.uuid = config.getUUID();
+  params.pnsdk = (0, _endpoint.generatePNSDK)(config);
+
+  if (config.getAuthKey()) {
+    params.auth = config.getAuthKey();
+  }
+
+  if (config.secretKey) {
+    (0, _endpoint.signRequest)(modules, url, params, {}, {
+      getOperation: function getOperation() {
+        return 'PubNubGetFileUrlOperation';
+      }
+    });
+  }
+
+  var queryParams = Object.keys(params).map(function (key) {
+    return "".concat(encodeURIComponent(key), "=").concat(encodeURIComponent(params[key]));
+  }).join('&');
+
+  if (queryParams !== '') {
+    return "https://".concat(config.origin).concat(url, "?").concat(queryParams);
+  }
+
+  return "https://".concat(config.origin).concat(url);
 };
 
 exports["default"] = _default;
@@ -10998,15 +11052,11 @@ var endpoint = {
   forceBuffered: function forceBuffered() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('fileUpload');
-  },
   prepareParams: function prepareParams() {
     return {};
   },
   handleResponse: function () {
-    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref4, res, params) {
+    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref3, res, params) {
       var _res$response$name;
 
       var PubNubFile, config, cryptography, body, _params$cipherKey;
@@ -11015,7 +11065,7 @@ var endpoint = {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              PubNubFile = _ref4.PubNubFile, config = _ref4.config, cryptography = _ref4.cryptography;
+              PubNubFile = _ref3.PubNubFile, config = _ref3.config, cryptography = _ref3.cryptography;
               body = res.response.body;
 
               if (!(PubNubFile.supportsEncryptFile && config.cipherKey)) {
@@ -15434,6 +15484,11 @@ function handleResponse(modules, serverResponse) {
       response.channels[channelName].push(announce);
     });
   });
+
+  if (serverResponse.more) {
+    response.more = serverResponse.more;
+  }
+
   return response;
 }
 

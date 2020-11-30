@@ -1,3 +1,10 @@
+## [v4.29.10](https://github.com/pubnub/javascript/releases/tag/v4.29.10)
+November-30-2020
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.9...v4.29.10)
+
+- 🐛 Fixes issue of missing more field in fetch messages response. 
+
 ## [v4.29.9](https://github.com/pubnub/javascript/releases/tag/v4.29.9)
 October-05-2020
 

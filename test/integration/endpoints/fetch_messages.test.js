@@ -405,4 +405,29 @@ describe('fetch messages endpoints', () => {
         done();
       });
   }).timeout(60000);
+
+  it('should return "more" field when server sends it', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history-with-actions/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true'
+      })
+      .reply(
+        200,
+        '{"status":200,"error":false,"error_message":"","channels":{"demo-channel":[{"message":"Hi","timetoken":15610547826970040,"actions":{"receipt":{"read":[{"uuid":"user-7","actionTimetoken":15610547826970044}]}}},{"message":"Hello","timetoken":15610547826970000,"actions":{"reaction":{"smiley_face":[{"uuid":"user-456","actionTimetoken":15610547826970050}]}}}]},"more":{"url":"/v1/history-with-actions/s/channel/c?start=15610547826970000&limit=98","start":"15610547826970000","limit":98}}'
+      );
+      pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true}, (status, response) => {
+      assert.equal(status.error, false);
+      assert.equal(response.more.url, '/v1/history-with-actions/s/channel/c?start=15610547826970000&limit=98');
+      assert.equal(response.more.start, '15610547826970000');
+      assert.equal(response.more.limit, 98);
+      done();
+      });
+  });
+
 });
