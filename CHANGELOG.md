@@ -1,3 +1,10 @@
+## [v4.29.11](https://github.com/pubnub/javascript/releases/tag/v4.29.11)
+January-11-2021
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.10...v4.29.11)
+
+- ⭐️️ Set default increased limit for message count of History v3 api single call. 
+
 ## [v4.29.10](https://github.com/pubnub/javascript/releases/tag/v4.29.10)
 November-30-2020
 

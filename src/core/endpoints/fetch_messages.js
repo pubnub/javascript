@@ -67,8 +67,10 @@ export function prepareParams(
   incomingParams: FetchMessagesArguments
 ): Object {
   const {
+    channels,
     start,
     end,
+    includeMessageActions,
     count,
     stringifiedTimeToken = false,
     includeMeta = false,
@@ -78,7 +80,11 @@ export function prepareParams(
   } = incomingParams;
   let outgoingParams: Object = {};
 
-  if (count) outgoingParams.max = count;
+  if (count) {
+    outgoingParams.max = count;
+  } else {
+    outgoingParams.max = (channels.length > 1 || includeMessageActions === true) ? 25 : 100;
+  }
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';

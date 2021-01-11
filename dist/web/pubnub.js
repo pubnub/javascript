@@ -1,4 +1,4 @@
-/*! 4.29.10 / Consumer  */
+/*! 4.29.11 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -576,7 +576,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.10';
+      return '4.29.11';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -15435,8 +15435,10 @@ function isAuthSupported() {
 }
 
 function prepareParams(modules, incomingParams) {
-  var start = incomingParams.start,
+  var channels = incomingParams.channels,
+      start = incomingParams.start,
       end = incomingParams.end,
+      includeMessageActions = incomingParams.includeMessageActions,
       count = incomingParams.count,
       _incomingParams$strin = incomingParams.stringifiedTimeToken,
       stringifiedTimeToken = _incomingParams$strin === void 0 ? false : _incomingParams$strin,
@@ -15448,7 +15450,13 @@ function prepareParams(modules, incomingParams) {
       _incomingParams$inclu5 = incomingParams.includeMessageType,
       includeMessageType = _incomingParams$inclu5 === void 0 ? true : _incomingParams$inclu5;
   var outgoingParams = {};
-  if (count) outgoingParams.max = count;
+
+  if (count) {
+    outgoingParams.max = count;
+  } else {
+    outgoingParams.max = channels.length > 1 || includeMessageActions === true ? 25 : 100;
+  }
+
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';

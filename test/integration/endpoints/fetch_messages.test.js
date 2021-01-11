@@ -414,20 +414,151 @@ describe('fetch messages endpoints', () => {
       .query({
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
+        max: '25',
         include_uuid: 'true',
         include_message_type: 'true'
       })
       .reply(
         200,
-        '{"status":200,"error":false,"error_message":"","channels":{"demo-channel":[{"message":"Hi","timetoken":15610547826970040,"actions":{"receipt":{"read":[{"uuid":"user-7","actionTimetoken":15610547826970044}]}}},{"message":"Hello","timetoken":15610547826970000,"actions":{"reaction":{"smiley_face":[{"uuid":"user-456","actionTimetoken":15610547826970050}]}}}]},"more":{"url":"/v1/history-with-actions/s/channel/c?start=15610547826970000&limit=98","start":"15610547826970000","limit":98}}'
+        '{"status":200,"error":false,"error_message":"","channels":{"demo-channel":[{"message":"Hi","timetoken":15610547826970040,"actions":{"receipt":{"read":[{"uuid":"user-7","actionTimetoken":15610547826970044}]}}},{"message":"Hello","timetoken":15610547826970000,"actions":{"reaction":{"smiley_face":[{"uuid":"user-456","actionTimetoken":15610547826970050}]}}}]},"more":{"url":"/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98","start":"15610547826970000","max":98}}'
       );
       pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true}, (status, response) => {
       assert.equal(status.error, false);
-      assert.equal(response.more.url, '/v1/history-with-actions/s/channel/c?start=15610547826970000&limit=98');
+      assert.equal(response.more.url, '/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98');
       assert.equal(response.more.start, '15610547826970000');
-      assert.equal(response.more.limit, 98);
+      assert.equal(response.more.max, 98);
+      done();
+      });
+  });
+  it('should request 100 messages when count not provided with single channel', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        max: '100',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
+      })
+      .reply(
+        200,
+        '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
+      );
+      pubnub.fetchMessages({ channels: ['ch1'] }, (status, response) => {
+      assert.equal(status.error, false);
       done();
       });
   });
 
+  it('should request 25 messages when count not provided with multiple channels', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history/sub-key/${subscribeKey}/channel/ch1%2Cch2`)
+      .query({
+        max: '25',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
+      })
+      .reply(
+        200,
+        '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
+      );
+      pubnub.fetchMessages({ channels: ['ch1', 'ch2'] }, (status, response) => {
+      assert.equal(status.error, false);
+      done();
+      });
+  });
+
+  it('should request 25 messages when count not provided for history-with-actions', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history-with-actions/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        max: '25',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true'
+      })
+      .reply(
+        200,
+        '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
+      );
+      pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true}, (status, response) => {
+      assert.equal(status.error, false);
+      done();
+      });
+  });
+
+  it('should request provided number of messages when count is specified for history-with-actions', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history-with-actions/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        max: '10',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true'
+      })
+      .reply(
+        200,
+        '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
+      );
+      pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true, count: 10}, (status, response) => {
+      assert.equal(status.error, false);
+      done();
+      });
+  });
+
+  it('should request provided number of messages when count is specified for batch history with single channel', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        max: '10',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true'
+      })
+      .reply(
+        200,
+        '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
+      );
+      pubnub.fetchMessages({ channels: ['ch1'], count: 10}, (status, response) => {
+      assert.equal(status.error, false);
+      done();
+      });
+  });
+
+  it('should request provided number of messages when count is specified for batch history with multiple channels', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history/sub-key/${subscribeKey}/channel/ch1%2Cch2`)
+      .query({
+        max: '10',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true'
+      })
+      .reply(
+        200,
+        '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
+      );
+      pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10}, (status, response) => {
+      assert.equal(status.error, false);
+      done();
+      });
+  });
 });
