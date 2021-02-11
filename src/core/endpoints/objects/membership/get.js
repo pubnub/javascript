@@ -19,13 +19,9 @@ export type GetMembershipsResult = {|
 const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
   getOperation: () => operationConstants.PNGetMembershipsOperation,
 
-  validateParams: (_, params) => {
-    if (!params?.uuid) {
-      return 'UUID cannot be empty';
-    }
-  },
+  validateParams: () => {},
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${params.uuid}/channels`,
+  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${params.uuid ?? config.getUUID()}/channels`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 
