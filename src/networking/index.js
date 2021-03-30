@@ -15,6 +15,8 @@ export default class {
   _standardOrigin: string;
   _subscribeOrigin: string;
 
+  _providedFQDN: string;
+
   _requestTimeout: number;
 
   _coreParams: Object; /* items that must be passed with each request. */
@@ -30,8 +32,9 @@ export default class {
   init(config: Config) {
     this._config = config;
 
-    this._maxSubDomain = 10;
+    this._maxSubDomain = 20;
     this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
+    this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
     this._coreParams = {};
 
     // create initial origins
@@ -39,20 +42,22 @@ export default class {
   }
 
   nextOrigin(): string {
+    // if a custom origin is supplied, use do not bother with shuffling subdomains
+    if (!this._providedFQDN.match(/ps\.pndsn\.com$/i)) {
+      return this._providedFQDN;
+    }
+
+    let newSubDomain: string;
+
     this._currentSubDomain += 1;
 
     if (this._currentSubDomain >= this._maxSubDomain) {
-      this._currentSubDomain = 0;
+      this._currentSubDomain = 1;
     }
 
-    const canonicalOrigin = this._config.origin;
-    const [thirdLevelDomain, ...restDomains] = canonicalOrigin.split('.');
+    newSubDomain = this._currentSubDomain.toString();
 
-    const protocol = this._config.secure ? 'https://' : 'http://';
-    const separator = this._config.hasCustomOrigin() ? '-' : '';
-    const shard = this._config.hasCustomOrigin() ? this._currentSubDomain : this._currentSubDomain + 1;
-
-    return `${protocol}${thirdLevelDomain}${separator}${shard}.${restDomains.join('.')}`;
+    return this._providedFQDN.replace('ps.pndsn.com', `ps${newSubDomain}.pndsn.com`);
   }
 
   hasModule(name: string) {

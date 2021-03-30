@@ -5,47 +5,16 @@ import sinon from 'sinon';
 import nock from 'nock';
 import assert from 'assert';
 
-
-import Config from '../../src/core/components/config';
 import Networking from '../../src/networking';
 import { del, get, post } from '../../src/networking/modules/web-node';
 import { keepAlive, proxy } from '../../src/networking/modules/node';
-
-describe('custom domain sharding', () => {
-  before(() => nock.disableNetConnect());
-  after(() => nock.enableNetConnect());
-
-  it('should generate sharded domains based on custom origin', () => {
-    const config = new Config({ setup: { ssl: true, origin: 'ringcentral.pubnubapi.com' } })
-    const networking = new Networking({})
-    networking.init(config);
-
-    const origin = networking.getStandardOrigin();
-
-    const regex = /^https:\/\/ringcentral-([0-9])\.pubnubapi\.com$/;
-
-    assert(regex.test(origin), `"${origin}" doesn't match the regex ${regex}`);
-  });
-
-  it('should generate sharded domains based on default origin', () => {
-    const config = new Config({ setup: { ssl: true } })
-    const networking = new Networking({})
-    networking.init(config);
-
-    const origin = networking.getStandardOrigin();
-
-    const regex = /^https:\/\/ps([1-9](0)?)\.pndsn\.com$/;
-
-    assert(regex.test(origin), `"${origin}" doesn't match the regex ${regex}`);
-  });
-})
 
 describe('keep-alive agent', () => {
   before(() => nock.disableNetConnect());
   after(() => nock.enableNetConnect());
 
   const setupNetwork = (shouldSecure, enableKeepAlive) => {
-    const config = new Config({ setup: { origin: 'pn.pndsn.com', ssl: shouldSecure, keepAlive: enableKeepAlive, logVerbosity: false } });
+    const config = { origin: 'ps.pndsn.com', secure: shouldSecure, keepAlive: enableKeepAlive, logVerbosity: false };
     const networking = new Networking({ keepAlive, del, get, post, proxy });
     networking.init(config);
 

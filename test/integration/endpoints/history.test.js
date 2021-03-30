@@ -61,7 +61,6 @@ describe('history endpoints', () => {
       subscribeKey,
       publishKey,
       uuid: 'myUUID',
-      useRandomIVs: false
     });
   });
 

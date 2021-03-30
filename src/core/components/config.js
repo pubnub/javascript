@@ -174,7 +174,7 @@ export default class {
     this.customDecrypt = setup.customDecrypt;
 
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
-    this.useRandomIVs = setup.useRandomIVs ?? true;
+    this.useRandomIVs = setup.useRandomIVs ?? false;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -210,10 +210,6 @@ export default class {
     }
 
     this.setUUID(this._decideUUID(setup.uuid)); // UUID decision depends on subKey.
-  }
-
-  hasCustomOrigin(): boolean {
-    return this.origin !== 'ps.pndsn.com';
   }
 
   // exposed setters
@@ -311,7 +307,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.30.0';
+    return '4.30.1';
   }
 
   _addPnsdkSuffix(name: string, suffix: string) {
