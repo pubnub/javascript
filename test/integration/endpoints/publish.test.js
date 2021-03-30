@@ -24,6 +24,7 @@ describe('publish endpoints', () => {
       publishKey: 'myPublishKey',
       uuid: 'myUUID',
       authKey: 'myAuthKey',
+      useRandomIVs: false
     });
   });
 

@@ -1,3 +1,11 @@
+## [v4.30.0](https://github.com/pubnub/javascript/releases/tag/v4.30.0)
+March-30-2021
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.29.11...v4.30.0)
+
+- 🌟️ Add random initialization vector. 
+- 🌟️ Add custom origin domain sharding handling. 
+
 ## [v4.29.11](https://github.com/pubnub/javascript/releases/tag/v4.29.11)
 January-11-2021
 

@@ -119,6 +119,7 @@ describe('fetch messages endpoints', () => {
       subscribeKey,
       publishKey,
       uuid: 'myUUID',
+      useRandomIVs: false
     });
   });
 

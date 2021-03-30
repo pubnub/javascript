@@ -53,7 +53,7 @@ describe('#core / mounting point', () => {
   });
 
   it('supports encryption', () => {
-    let pn = new PubNub({ cipherKey: 'customKey' });
+    let pn = new PubNub({ cipherKey: 'customKey', useRandomIVs: false });
     assert.equal(
       pn.encrypt(JSON.stringify({ hi: 'there' })),
       'TejX6F2JNqH/gIiGHWN4Cw=='
@@ -61,7 +61,7 @@ describe('#core / mounting point', () => {
   });
 
   it('supports encryption with custom key', () => {
-    let pn = new PubNub({});
+    let pn = new PubNub({ useRandomIVs: false });
     assert.equal(
       pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'),
       'TejX6F2JNqH/gIiGHWN4Cw=='
@@ -69,19 +69,19 @@ describe('#core / mounting point', () => {
   });
 
   it('supports decryption', () => {
-    let pn = new PubNub({ cipherKey: 'customKey' });
+    let pn = new PubNub({ cipherKey: 'customKey', useRandomIVs: false });
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
   });
 
   it('supports decryption with custom key', () => {
-    let pn = new PubNub({});
+    let pn = new PubNub({ useRandomIVs: false });
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });
   });
 
   it('supports decryption with custom key', () => {
-    let pn = new PubNub({});
+    let pn = new PubNub({ useRandomIVs: false });
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });

@@ -3,6 +3,16 @@ changelog:
   -
     changes:
       -
+        text: "Add random initialization vector."
+        type: feature
+      -
+        text: "Add custom origin domain sharding handling."
+        type: feature
+    date: 2021-03-30
+    version: v4.30.0
+  -
+    changes:
+      -
         text: "Set default increased limit for message count of History v3 api single call."
         type: improvement
     date: 2021-01-11
@@ -1013,4 +1023,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.29.11"
+version: "4.30.0"
