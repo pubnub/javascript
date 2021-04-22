@@ -3,7 +3,7 @@ changelog:
   -
     changes:
       -
-        text: "Set `true` for `useRandomIVs` by default."
+        text: "BREAKING CHANGE - Set `true` for `useRandomIVs` by default."
         type: improvement
       -
         text: "Fix `channel` and `uuid` which is used with: files API, Objects and presence."
