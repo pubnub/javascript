@@ -6,6 +6,7 @@ import {
   ModulesInject,
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 
 export function getOperation(): string {
@@ -37,7 +38,7 @@ export function postURL(
 ): string {
   let { channel, messageTimetoken } = incomingParams;
 
-  return `/v1/message-actions/${config.subscribeKey}/channel/${channel}/message/${messageTimetoken}`;
+  return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}/message/${messageTimetoken}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

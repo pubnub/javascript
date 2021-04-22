@@ -2,6 +2,7 @@
 
 import { SpacesResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNDeleteSpaceOperation;
@@ -18,7 +19,7 @@ export function useDelete() {
 
 export function getURL(modules: ModulesInject, spaceId: string): string {
   let { config } = modules;
-  return `/v1/objects/${config.subscribeKey}/spaces/${spaceId}`;
+  return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(spaceId)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

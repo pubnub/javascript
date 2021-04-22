@@ -135,10 +135,40 @@ describe('objects UUID', () => {
         data: asResponse(user1),
       });
     });
+
+    it('should resolve to encoded UUID metadata with UUID passed in', async () => {
+      const otherUUID = 'otherUUID#1';
+      const encodedOtherUUID = 'otherUUID%231';
+
+      const scope = utils
+        .createNock()
+        .get(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${encodedOtherUUID}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+          include: 'custom',
+        })
+        .reply(200, {
+          status: 200,
+          data: asResponse(user1),
+        });
+
+      const resultP = pubnub.objects.getUUIDMetadata({
+        uuid: otherUUID,
+        include: { customFields: true },
+      });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: asResponse(user1),
+      });
+    });
   });
 
   describe('setUUIDMetadata', () => {
-    it('should resolve to updated UUID metadata', async () => {
+    it('should resolve to updated UUID metadata without UUID passed in', async () => {
       const scope = utils
         .createNock()
         .patch(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${UUID}`)
@@ -162,6 +192,60 @@ describe('objects UUID', () => {
       });
     });
 
+    it('should resolve to updated UUID metadata with UUID passed in', async () => {
+      const scope = utils
+        .createNock()
+        .patch(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${UUID}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+          include: 'custom'
+        })
+        .reply(200, {
+          status: 200,
+          data: asResponse(user1),
+        });
+
+      const resultP = pubnub.objects.setUUIDMetadata({ data: user1.data });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: asResponse(user1),
+      });
+    });
+
+    it('should resolve to updated encoded UUID metadata with UUID passed in', async () => {
+      const otherUUID = 'otherUUID#1';
+      const encodedOtherUUID = 'otherUUID%231';
+
+      const scope = utils
+        .createNock()
+        .patch(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${encodedOtherUUID}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+          include: 'custom'
+        })
+        .reply(200, {
+          status: 200,
+          data: asResponse(user1),
+        });
+
+      const resultP = pubnub.objects.setUUIDMetadata({
+        uuid: otherUUID,
+        data: user1.data
+      });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: asResponse(user1),
+      });
+    });
+
     it('should reject if data is missing', async () => {
       // $FlowFixMe This is intentional to suppress Flow error
       const resultP = pubnub.objects.setUUIDMetadata();
@@ -171,12 +255,55 @@ describe('objects UUID', () => {
   });
 
   describe('removeUUIDMetadata', () => {
-    it('should resolve', async () => {
+    it('should resolve to UUID without UUID passed in', async () => {
+      const scope = utils
+        .createNock()
+        .delete(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${UUID}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+        })
+        .reply(200, { status: 200, data: {} });
+
+      const resultP = pubnub.objects.removeUUIDMetadata();
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: {},
+      });
+    });
+
+    it('should resolve to UUID with UUID passed in', async () => {
       const otherUUID = 'otherUUID';
 
       const scope = utils
         .createNock()
         .delete(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${otherUUID}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+        })
+        .reply(200, { status: 200, data: {} });
+
+      const resultP = pubnub.objects.removeUUIDMetadata({ uuid: otherUUID });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: {},
+      });
+    });
+
+    it('should resolve to encoded UUID with UUID passed in', async () => {
+      const otherUUID = 'otherUUID#1';
+      const encodedOtherUUID = 'otherUUID%231';
+
+      const scope = utils
+        .createNock()
+        .delete(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${encodedOtherUUID}`)
         .query({
           auth: AUTH_KEY,
           uuid: UUID,

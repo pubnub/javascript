@@ -7,6 +7,7 @@ import {
   ModulesInject,
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 function prepareMessagePayload(modules, incomingParams) {
   const { spaces } = incomingParams;
@@ -49,7 +50,7 @@ export function getURL(
 ): string {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${incomingParams.userId}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
 }
 
 export function patchURL(
@@ -58,7 +59,7 @@ export function patchURL(
 ): string {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${incomingParams.userId}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
 }
 
 export function usePatch() {

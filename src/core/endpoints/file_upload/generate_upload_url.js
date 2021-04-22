@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
 import type { GenerateUploadUrlParams, GenerateUploadUrlResult } from './types';
+import utils from '../../utils';
 
 const endpoint: EndpointConfig<GenerateUploadUrlParams, GenerateUploadUrlResult> = {
   getOperation: () => operationConstants.PNGenerateUploadUrlOperation,
@@ -18,7 +19,7 @@ const endpoint: EndpointConfig<GenerateUploadUrlParams, GenerateUploadUrlResult>
   },
 
   usePost: () => true,
-  postURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${params.channel}/generate-upload-url`,
+  postURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/generate-upload-url`,
 
   postPayload: (_, params) => ({
     name: params.name

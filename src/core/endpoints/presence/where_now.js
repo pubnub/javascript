@@ -2,6 +2,7 @@
 
 import { WhereNowArguments, WhereNowResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNWhereNowOperation;
@@ -16,7 +17,7 @@ export function validateParams(modules: ModulesInject) {
 export function getURL(modules: ModulesInject, incomingParams: WhereNowArguments): string {
   let { config } = modules;
   let { uuid = config.UUID } = incomingParams;
-  return `/v2/presence/sub-key/${config.subscribeKey}/uuid/${uuid}`;
+  return `/v2/presence/sub-key/${config.subscribeKey}/uuid/${utils.encodeString(uuid)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

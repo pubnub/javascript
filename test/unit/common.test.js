@@ -52,39 +52,74 @@ describe('#core / mounting point', () => {
     assert.equal(lilUUID.isUUID(PubNub.generateUUID()), true);
   });
 
-  it('supports encryption', () => {
-    let pn = new PubNub({ cipherKey: 'customKey' });
+  it('supports encryption with static IV', () => {
+    let pn = new PubNub({ cipherKey: 'customKey', useRandomIVs: false });
     assert.equal(
       pn.encrypt(JSON.stringify({ hi: 'there' })),
       'TejX6F2JNqH/gIiGHWN4Cw=='
     );
   });
 
-  it('supports encryption with custom key', () => {
-    let pn = new PubNub({});
+  it('supports encryption with random IV', () => {
+    let pn = new PubNub({ cipherKey: 'customKey' });
+    const data1 = pn.encrypt(JSON.stringify({ hi: 'there' }));
+    const data2 = pn.encrypt(JSON.stringify({ hi: 'there' }));
+
+    assert.notEqual(
+      pn.encrypt(JSON.stringify({ hi: 'there' })),
+      'TejX6F2JNqH/gIiGHWN4Cw=='
+    );
+    assert.notEqual(data1, data2);
+  });
+
+  it('supports encryption with custom key and static IV', () => {
+    let pn = new PubNub({ useRandomIVs: false });
     assert.equal(
       pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'),
       'TejX6F2JNqH/gIiGHWN4Cw=='
     );
   });
 
-  it('supports decryption', () => {
-    let pn = new PubNub({ cipherKey: 'customKey' });
+  it('supports encryption with custom key and random IV', () => {
+    let pn = new PubNub({});
+    const data1 = pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
+    const data2 = pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
+
+    assert.notEqual(
+      pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'),
+      'TejX6F2JNqH/gIiGHWN4Cw=='
+    );
+    assert.notEqual(data1, data2);
+  });
+
+  it('supports decryption with static IV', () => {
+    let pn = new PubNub({ cipherKey: 'customKey', useRandomIVs: false });
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
   });
 
-  it('supports decryption with custom key', () => {
-    let pn = new PubNub({});
+  it('supports decryption with random IV', () => {
+    let pn = new PubNub({ cipherKey: 'customKey' });
+    const data = pn.encrypt(JSON.stringify({ hi: 'there2' }));
+
+    assert.notDeepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
+    assert.deepEqual(pn.decrypt(data), { hi: 'there2' });
+  });
+
+  it('supports decryption with custom key and static IV', () => {
+    let pn = new PubNub({ useRandomIVs: false });
     assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });
   });
 
-  it('supports decryption with custom key', () => {
+  it('supports decryption with custom key and random IV', () => {
     let pn = new PubNub({});
-    assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
+    const data = pn.encrypt(JSON.stringify({ hi: 'there2' }), 'customKey');
+
+    assert.notDeepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });
+    assert.deepEqual(pn.decrypt(data, 'customKey'), { hi: 'there2', });
   });
 
   it('supports custom encryption/decryption', () => {

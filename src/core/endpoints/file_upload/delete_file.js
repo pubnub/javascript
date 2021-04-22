@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
 import type { DeleteFileParams, DeleteFileResult } from './types';
+import utils from '../../utils';
 
 const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
   getOperation: () => operationConstants.PNListFilesOperation,
@@ -22,7 +23,7 @@ const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
   },
 
   useDelete: () => true,
-  getURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${params.channel}/files/${params.id}/${params.name}`,
+  getURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files/${params.id}/${params.name}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 

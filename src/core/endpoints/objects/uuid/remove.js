@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { UUIDMetadata } from './uuid';
+import utils from '../../../utils';
 
 export type RemoveUUIDMetadataParams = {|
   uuid?: string,
@@ -19,7 +20,7 @@ const endpoint: EndpointConfig<RemoveUUIDMetadataParams, RemoveUUIDMetadataResul
   // No required parameters.
   validateParams: () => {},
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${params?.uuid ?? config.getUUID()}`,
+  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
   useDelete: () => true,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),

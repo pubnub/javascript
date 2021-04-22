@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { UUIDMetadata } from './uuid';
+import utils from '../../../utils';
 
 export type SetUUIDMetadataParams = {|
   uuid?: string,
@@ -28,7 +29,7 @@ const endpoint: EndpointConfig<SetUUIDMetadataParams, SetUUIDMetadataResult> = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${params?.uuid ?? config.getUUID()}`,
+  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}`,
 
   patchPayload: (_, params) => params.data,
 

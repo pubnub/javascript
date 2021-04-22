@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { Member, PaginatedResultParams } from './member';
+import utils from '../../../utils';
 
 type CommonParams = {
   channel: string,
@@ -45,7 +46,7 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${params.channel}/uuids`,
+  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
 
   patchPayload: (_, params) => ({
     set: [],

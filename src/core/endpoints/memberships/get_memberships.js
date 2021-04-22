@@ -6,6 +6,7 @@ import {
   ModulesInject,
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNGetMembershipsOperation;
@@ -23,7 +24,7 @@ export function getURL(
 ): string {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${incomingParams.userId}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

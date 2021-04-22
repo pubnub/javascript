@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { Membership, PaginatedResultParams } from './membership';
+import utils from '../../../utils';
 
 type CommonParams = {|
   uuid?: string,
@@ -42,7 +43,7 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
   usePatch: () => true,
 
   patchURL: ({ config }, params) =>
-    `/v2/objects/${config.subscribeKey}/uuids/${params.uuid ?? config.getUUID()}/channels`,
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}/channels`,
 
   patchPayload: (_, params) => ({
     set: [],

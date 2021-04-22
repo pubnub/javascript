@@ -1,3 +1,11 @@
+## [v4.31.0](https://github.com/pubnub/javascript/releases/tag/v4.31.0)
+April-22-2021
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.30.1...v4.31.0)
+
+- ⭐️️ Set `true` for `useRandomIVs` by default. 
+- 🐛 Fix `channel` and `uuid` which is used with: files API, Objects and presence. 
+
 ## [v4.30.1](https://github.com/pubnub/javascript/releases/tag/v4.30.1)
 March-30-2021
 

@@ -6,6 +6,7 @@ import {
   ModulesInject,
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
@@ -45,13 +46,13 @@ export function usePatch() {
 export function getURL(modules: ModulesInject, incomingParams: UsersObjectInput): string {
   let { config } = modules;
   const { id } = incomingParams;
-  return `/v1/objects/${config.subscribeKey}/users/${id}`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(id)}`;
 }
 
 export function patchURL(modules: ModulesInject, incomingParams: UsersObjectInput): string {
   const { config } = modules;
   const { id } = incomingParams;
-  return `/v1/objects/${config.subscribeKey}/users/${id}`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(id)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

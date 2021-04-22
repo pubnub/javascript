@@ -3,6 +3,7 @@
 import { PubNubError, createValidationError, signRequest, generatePNSDK } from '../../components/endpoint';
 import type { Modules } from '../endpoint';
 import type { GetFileUrlParams, GetFileUrlResult } from './types';
+import utils from '../../utils';
 
 export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetFileUrlResult => {
   const { config } = modules;
@@ -28,7 +29,7 @@ export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetF
     );
   }
 
-  const url = `/v1/files/${config.subscribeKey}/channels/${channel}/files/${id}/${name}`;
+  const url = `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(channel)}/files/${id}/${name}`;
   const params = {};
 
   params.uuid = config.getUUID();

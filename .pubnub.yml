@@ -3,6 +3,16 @@ changelog:
   -
     changes:
       -
+        text: "Set `true` for `useRandomIVs` by default."
+        type: improvement
+      -
+        text: "Fix `channel` and `uuid` which is used with: files API, Objects and presence."
+        type: bug
+    date: 2021-04-22
+    version: v4.31.0
+  -
+    changes:
+      -
         text: "Revert v4.300."
         type: bug
     date: 2021-03-30
@@ -1020,4 +1030,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.30.1"
+version: "4.31.0"

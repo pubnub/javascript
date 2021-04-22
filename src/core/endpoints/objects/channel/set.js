@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { ChannelMetadata } from './channel';
+import utils from '../../../utils';
 
 export type SetChannelMetadataParams = {|
   channel: string,
@@ -32,7 +33,7 @@ const endpoint: EndpointConfig<SetChannelMetadataParams, SetChannelMetadataResul
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${params.channel}`,
+  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}`,
 
   patchPayload: (_, params) => params.data,
 

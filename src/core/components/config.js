@@ -174,7 +174,7 @@ export default class {
     this.customDecrypt = setup.customDecrypt;
 
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
-    this.useRandomIVs = setup.useRandomIVs ?? false;
+    this.useRandomIVs = setup.useRandomIVs ?? true;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -307,7 +307,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.30.1';
+    return '4.31.0';
   }
 
   _addPnsdkSuffix(name: string, suffix: string) {

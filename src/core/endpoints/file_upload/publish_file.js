@@ -46,7 +46,7 @@ const endpoint: EndpointConfig<PublishFileParams, PublishFileResult> = {
 
     const payload = preparePayload(modules, message);
 
-    return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${params.channel}/0/${utils.encodeString(payload)}`;
+    return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${utils.encodeString(params.channel)}/0/${utils.encodeString(payload)}`;
   },
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),

@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
 import type { Member, PaginatedResultParams } from './member';
+import utils from '../../../utils';
 
 export type GetMembersParams = {
   channel: string,
@@ -19,14 +20,13 @@ export type GetMembersResult = {|
 const endpoint: EndpointConfig<GetMembersParams, GetMembersResult> = {
   getOperation: () => operationConstants.PNGetMembersOperation,
 
-  // No required parameters.
   validateParams: (_, params) => {
     if (!params?.channel) {
       return 'UUID cannot be empty';
     }
   },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${params.channel}/uuids`,
+  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 

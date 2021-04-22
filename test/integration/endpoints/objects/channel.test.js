@@ -110,6 +110,32 @@ describe('objects channel', () => {
       });
     });
 
+    it('should resolve to encoded channel metadata', async () => {
+      const channelName = 'test-channel#1';
+      const encodedChannelName = 'test-channel%231';
+      const scope = utils
+        .createNock()
+        .get(`/v2/objects/${SUBSCRIBE_KEY}/channels/${encodedChannelName}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+          include: 'custom'
+        })
+        .reply(200, {
+          status: 200,
+          data: asResponse(channel1),
+        });
+
+      const resultP = pubnub.objects.getChannelMetadata({ channel: channelName });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: asResponse(channel1),
+      });
+    });
+
     it('should reject if channel is empty', async () => {
       // $FlowFixMe This is intentional to suppress Flow error
       const resultP = pubnub.objects.getChannelMetadata();
@@ -144,6 +170,32 @@ describe('objects channel', () => {
       });
     });
 
+    it('should resolve to updated encoded channel metadata', async () => {
+      const channelName = 'test-channel#1';
+      const encodedChannelName = 'test-channel%231';
+      const scope = utils
+        .createNock()
+        .patch(`/v2/objects/${SUBSCRIBE_KEY}/channels/${encodedChannelName}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+          include: 'custom'
+        })
+        .reply(200, {
+          status: 200,
+          data: asResponse(channel1),
+        });
+
+      const resultP = pubnub.objects.setChannelMetadata({ channel: channelName, data: channel1.data });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: asResponse(channel1),
+      });
+    });
+
     it('should reject if data is missing', async () => {
       // $FlowFixMe This is intentional to suppress Flow error
       const resultP = pubnub.objects.setChannelMetadata();
@@ -159,6 +211,29 @@ describe('objects channel', () => {
       const scope = utils
         .createNock()
         .delete(`/v2/objects/${SUBSCRIBE_KEY}/channels/${channelName}`)
+        .query({
+          auth: AUTH_KEY,
+          uuid: UUID,
+          pnsdk: PNSDK,
+        })
+        .reply(200, { status: 200, data: {} });
+
+      const resultP = pubnub.objects.removeChannelMetadata({ channel: channelName });
+
+      await expect(scope).to.have.been.requested;
+      await expect(resultP).to.eventually.deep.equal({
+        status: 200,
+        data: {},
+      });
+    });
+
+    it('should resolve with encoded channel', async () => {
+      const channelName = 'test-channel#1';
+      const encodedChannelName = 'test-channel%231';
+
+      const scope = utils
+        .createNock()
+        .delete(`/v2/objects/${SUBSCRIBE_KEY}/channels/${encodedChannelName}`)
         .query({
           auth: AUTH_KEY,
           uuid: UUID,

@@ -2,6 +2,7 @@
 
 import { UsersResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
+import utils from '../../utils';
 
 export function getOperation(): string {
   return operationConstants.PNDeleteUserOperation;
@@ -18,7 +19,7 @@ export function useDelete() {
 
 export function getURL(modules: ModulesInject, userId: string): string {
   let { config } = modules;
-  return `/v1/objects/${config.subscribeKey}/users/${userId}`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(userId)}`;
 }
 
 export function getRequestTimeout({ config }: ModulesInject) {

@@ -6,6 +6,7 @@ import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
 describe('presence endpoints', () => {
+  let pubnubOther;
   let pubnub;
 
   before(() => {
@@ -40,6 +41,33 @@ describe('presence endpoints', () => {
         );
 
       pubnub.whereNow({}, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, ['a', 'b']);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
+    it('returns the requested data for user encoded UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID%231')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID#1',
+        })
+        .reply(
+          200,
+          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}'
+        );
+
+      const pubnubClient = new PubNub({
+        subscribeKey: 'mySubscribeKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID#1',
+      });
+
+      pubnubClient.whereNow({}, (status, response) => {
         assert.equal(status.error, false);
         assert.deepEqual(response.channels, ['a', 'b']);
         assert.equal(scope.isDone(), true);
@@ -129,6 +157,39 @@ describe('presence endpoints', () => {
 
       pubnub.setState(
         { channels: ['testChannel'], state: { new: 'state' } },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.deepEqual(response.state, { age: 20, status: 'online' });
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
+    });
+
+    it('sets presence data for user encoded UUID and encoded channel', (done) => {
+      const scope = utils
+        .createNock()
+        .get(
+          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel%231/uuid/myUUID%231/data'
+        )
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID#1',
+          state: '{"new":"state"}',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}'
+        );
+
+      const pubnubClient = new PubNub({
+        subscribeKey: 'mySubscribeKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID#1',
+      });
+
+      pubnubClient.setState(
+        { channels: ['testChannel#1'], state: { new: 'state' } },
         (status, response) => {
           assert.equal(status.error, false);
           assert.deepEqual(response.state, { age: 20, status: 'online' });

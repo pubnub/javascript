@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
 import type { DownloadFileParams, DownloadFileResult } from './types';
+import utils from '../../utils';
 
 const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
   getOperation: () => operationConstants.PNDownloadFileOperation,
@@ -24,7 +25,7 @@ const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
   useGetFile: () => true,
 
   getFileURL: ({ config }, params) =>
-    `/v1/files/${config.subscribeKey}/channels/${params.channel}/files/${params.id}/${params.name}`,
+    `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files/${params.id}/${params.name}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 

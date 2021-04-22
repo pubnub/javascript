@@ -3,6 +3,7 @@
 import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
 import type { ListFilesParams, ListFilesResult } from './types';
+import utils from '../../utils';
 
 const endpoint: EndpointConfig<ListFilesParams, ListFilesResult> = {
   getOperation: () => operationConstants.PNListFilesOperation,
@@ -13,7 +14,7 @@ const endpoint: EndpointConfig<ListFilesParams, ListFilesResult> = {
     }
   },
 
-  getURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${params.channel}/files`,
+  getURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 

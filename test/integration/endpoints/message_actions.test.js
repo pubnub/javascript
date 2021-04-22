@@ -252,6 +252,28 @@ describe('message actions endpoints', () => {
       });
     }).timeout(60000);
 
+    it('add message action with encoded channel', (done) => {
+      /** @type MessageAction */
+      const messageAction = { type: 'custom', value: PubNub.generateUUID() };
+      const channel = `${PubNub.generateUUID()}#1`;
+
+      publishMessages(pubnub, 1, channel, (timetokens) => {
+        pubnub.addMessageAction(
+          { channel, messageTimetoken: timetokens[0], action: messageAction },
+          (status, response) => {
+            assert.equal(status.error, false);
+            assert.equal(response.data.type, messageAction.type);
+            assert.equal(response.data.value, messageAction.value);
+            assert.equal(response.data.uuid, pubnub.getUUID());
+            assert.equal(response.data.messageTimetoken, timetokens[0]);
+            assert(response.data.actionTimetoken);
+
+            done();
+          }
+        );
+      });
+    }).timeout(60000);
+
     it('add message action and 207 status code', (done) => {
       nock.disableNetConnect();
       const scope = utils
@@ -416,6 +438,35 @@ describe('message actions endpoints', () => {
       });
     }).timeout(60000);
 
+    it('remove message action with encoded channel', (done) => {
+      const channel = `${PubNub.generateUUID()}#1`;
+
+      publishMessages(pubnub, 1, channel, (messageTimetokens) => {
+        addActions(pubnub, 1, messageTimetokens, channel, (actionTimetokens) => {
+          pubnub.getMessageActions({ channel }, (status, response) => {
+            assert.equal(status.error, false);
+            assert.equal(response.data.length, actionTimetokens.length);
+
+            pubnub.removeMessageAction(
+              { channel, actionTimetoken: actionTimetokens[0], messageTimetoken: messageTimetokens[0] },
+              (removeMessageStatus) => {
+                assert.equal(removeMessageStatus.error, false);
+
+                setTimeout(() => {
+                  pubnub.getMessageActions({ channel }, (getMessagesStatus, getMessagesResponse) => {
+                    assert.equal(getMessagesStatus.error, false);
+                    assert.equal(getMessagesResponse.data.length, 0);
+
+                    done();
+                  });
+                }, 2000);
+              }
+            );
+          });
+        });
+      });
+    }).timeout(60000);
+
     it('remove message action should trigger event', (done) => {
       const channel = PubNub.generateUUID();
 
@@ -469,6 +520,30 @@ describe('message actions endpoints', () => {
 
     it('fetch message actions', (done) => {
       const channel = PubNub.generateUUID();
+
+      publishMessages(pubnub, 2, channel, (messageTimetokens) => {
+        addActions(pubnub, 3, messageTimetokens, channel, (actionTimetokens) => {
+          const lastPublishedActionTimetoken = actionTimetokens[actionTimetokens.length - 1];
+          const firstPublishedActionTimetoken = actionTimetokens[0];
+
+          pubnub.getMessageActions({ channel }, (status, response) => {
+            assert.equal(status.error, false);
+            const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
+            const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
+            assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
+            assert.equal(lastFetchedActionTimetoken, lastPublishedActionTimetoken);
+            assert.equal(response.data.length, actionTimetokens.length);
+            assert.equal(response.start, firstPublishedActionTimetoken);
+            assert.equal(response.end, lastPublishedActionTimetoken);
+
+            done();
+          });
+        });
+      });
+    }).timeout(60000);
+
+    it('fetch message actions with encoded channel', (done) => {
+      const channel = `${PubNub.generateUUID()}#1`;
 
       publishMessages(pubnub, 2, channel, (messageTimetokens) => {
         addActions(pubnub, 3, messageTimetokens, channel, (actionTimetokens) => {
