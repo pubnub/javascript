@@ -1,4 +1,4 @@
-/*! 4.29.8-rc1 / Consumer  */
+/*! 4.32.0 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -426,7 +426,7 @@ var _default = function () {
     this.customEncrypt = setup.customEncrypt;
     this.customDecrypt = setup.customDecrypt;
     this.fileUploadPublishRetryLimit = (_setup$fileUploadPubl = setup.fileUploadPublishRetryLimit) !== null && _setup$fileUploadPubl !== void 0 ? _setup$fileUploadPubl : 5;
-    this.useRandomIVs = (_setup$useRandomIVs = setup.useRandomIVs) !== null && _setup$useRandomIVs !== void 0 ? _setup$useRandomIVs : false;
+    this.useRandomIVs = (_setup$useRandomIVs = setup.useRandomIVs) !== null && _setup$useRandomIVs !== void 0 ? _setup$useRandomIVs : true;
 
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
       this.secure = true;
@@ -566,7 +566,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.29.8-rc1';
+      return '4.32.0';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -756,6 +756,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.createValidationError = createValidationError;
+exports.generatePNSDK = generatePNSDK;
+exports.signRequest = signRequest;
 exports["default"] = _default;
 exports.PubNubError = void 0;
 
@@ -889,6 +891,10 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
 
   if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+    httpMethod = 'GET';
+  }
+
+  if (httpMethod === 'GETFILE') {
     httpMethod = 'GET';
   }
 
@@ -5808,8 +5814,12 @@ var _default = function () {
       if (parsed !== undefined) {
         var userResourcePermissions = Object.keys(parsed.res.usr);
         var spaceResourcePermissions = Object.keys(parsed.res.spc);
+        var channelResourcePermissions = Object.keys(parsed.res.chan);
+        var groupResourcePermissions = Object.keys(parsed.res.grp);
         var userPatternPermissions = Object.keys(parsed.pat.usr);
         var spacePatternPermissions = Object.keys(parsed.pat.spc);
+        var channelPatternPermissions = Object.keys(parsed.pat.chan);
+        var groupPatternPermissions = Object.keys(parsed.pat.grp);
         var result = {
           version: parsed.v,
           timestamp: parsed.t,
@@ -5817,8 +5827,10 @@ var _default = function () {
         };
         var userResources = userResourcePermissions.length > 0;
         var spaceResources = spaceResourcePermissions.length > 0;
+        var channelResources = channelResourcePermissions.length > 0;
+        var groupResources = groupResourcePermissions.length > 0;
 
-        if (userResources || spaceResources) {
+        if (userResources || spaceResources || channelResources || groupResources) {
           result.resources = {};
 
           if (userResources) {
@@ -5834,12 +5846,28 @@ var _default = function () {
               result.resources.spaces[id] = _this4.extractPermissions(parsed.res.spc[id]);
             });
           }
+
+          if (channelResources) {
+            result.resources.channels = {};
+            channelResourcePermissions.forEach(function (id) {
+              result.resources.channels[id] = _this4.extractPermissions(parsed.res.chan[id]);
+            });
+          }
+
+          if (groupResources) {
+            result.resources.groups = {};
+            groupResourcePermissions.forEach(function (id) {
+              result.resources.groups[id] = _this4.extractPermissions(parsed.res.grp[id]);
+            });
+          }
         }
 
         var userPatterns = userPatternPermissions.length > 0;
         var spacePatterns = spacePatternPermissions.length > 0;
+        var channelPatterns = channelPatternPermissions.length > 0;
+        var groupPatterns = groupPatternPermissions.length > 0;
 
-        if (userPatterns || spacePatterns) {
+        if (userPatterns || spacePatterns || channelPatterns || groupPatterns) {
           result.patterns = {};
 
           if (userPatterns) {
@@ -5853,6 +5881,20 @@ var _default = function () {
             result.patterns.spaces = {};
             spacePatternPermissions.forEach(function (id) {
               result.patterns.spaces[id] = _this4.extractPermissions(parsed.pat.spc[id]);
+            });
+          }
+
+          if (channelPatterns) {
+            result.patterns.channels = {};
+            channelPatternPermissions.forEach(function (id) {
+              result.patterns.channels[id] = _this4.extractPermissions(parsed.pat.chan[id]);
+            });
+          }
+
+          if (groupPatterns) {
+            result.patterns.groups = {};
+            groupPatternPermissions.forEach(function (id) {
+              result.patterns.groups[id] = _this4.extractPermissions(parsed.pat.grp[id]);
             });
           }
         }
@@ -6734,6 +6776,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNWhereNowOperation;
 }
@@ -6747,7 +6791,7 @@ function getURL(modules, incomingParams) {
   var config = modules.config;
   var _incomingParams$uuid = incomingParams.uuid,
       uuid = _incomingParams$uuid === void 0 ? config.UUID : _incomingParams$uuid;
-  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/uuid/").concat(uuid);
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/uuid/").concat(_utils["default"].encodeString(uuid));
 }
 
 function getRequestTimeout(_ref) {
@@ -6979,7 +7023,7 @@ function getURL(modules, incomingParams) {
   var _incomingParams$chann3 = incomingParams.channels,
       channels = _incomingParams$chann3 === void 0 ? [] : _incomingParams$chann3;
   var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels), "/uuid/").concat(config.UUID, "/data");
+  return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(stringifiedChannels), "/uuid/").concat(_utils["default"].encodeString(config.UUID), "/data");
 }
 
 function getRequestTimeout(_ref) {
@@ -7212,6 +7256,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNAddMessageActionOperation;
 }
@@ -7238,7 +7284,7 @@ function postURL(_ref2, incomingParams) {
   var config = _ref2.config;
   var channel = incomingParams.channel,
       messageTimetoken = incomingParams.messageTimetoken;
-  return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(channel, "/message/").concat(messageTimetoken);
+  return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(channel), "/message/").concat(messageTimetoken);
 }
 
 function getRequestTimeout(_ref3) {
@@ -7295,6 +7341,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNRemoveMessageActionOperation;
 }
@@ -7319,7 +7367,7 @@ function getURL(_ref2, incomingParams) {
   var channel = incomingParams.channel,
       actionTimetoken = incomingParams.actionTimetoken,
       messageTimetoken = incomingParams.messageTimetoken;
-  return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(channel, "/message/").concat(messageTimetoken, "/action/").concat(actionTimetoken);
+  return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(channel), "/message/").concat(messageTimetoken, "/action/").concat(actionTimetoken);
 }
 
 function getRequestTimeout(_ref3) {
@@ -7365,6 +7413,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNGetMessageActionsOperation;
 }
@@ -7379,7 +7429,7 @@ function validateParams(_ref, incomingParams) {
 function getURL(_ref2, incomingParams) {
   var config = _ref2.config;
   var channel = incomingParams.channel;
-  return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(channel);
+  return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(_utils["default"].encodeString(channel));
 }
 
 function getRequestTimeout(_ref3) {
@@ -7447,6 +7497,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNListFilesOperation;
@@ -7458,7 +7510,7 @@ var endpoint = {
   },
   getURL: function getURL(_ref, params) {
     var config = _ref.config;
-    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/files");
+    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel), "/files");
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -7513,6 +7565,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNGenerateUploadUrlOperation;
@@ -7531,7 +7585,7 @@ var endpoint = {
   },
   postURL: function postURL(_ref, params) {
     var config = _ref.config;
-    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/generate-upload-url");
+    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel), "/generate-upload-url");
   },
   postPayload: function postPayload(_, params) {
     return {
@@ -7626,7 +7680,7 @@ var endpoint = {
       }
     };
     var payload = preparePayload(modules, message);
-    return "/v1/files/publish-file/".concat(publishKey, "/").concat(subscribeKey, "/0/").concat(params.channel, "/0/").concat(_utils["default"].encodeString(payload));
+    return "/v1/files/publish-file/".concat(publishKey, "/").concat(subscribeKey, "/0/").concat(_utils["default"].encodeString(params.channel), "/0/").concat(_utils["default"].encodeString(payload));
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -7686,6 +7740,18 @@ var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(22));
 
 var _endpoint = __webpack_require__(16);
 
+var getErrorFromResponse = function getErrorFromResponse(response) {
+  return new Promise(function (resolve) {
+    var result = '';
+    response.on('data', function (data) {
+      result += data.toString('utf8');
+    });
+    response.on('end', function () {
+      resolve(result);
+    });
+  });
+};
+
 var sendFile = function sendFile(_ref) {
   var generateUploadUrl = _ref.generateUploadUrl,
       publishFile = _ref.publishFile,
@@ -7696,7 +7762,7 @@ var sendFile = function sendFile(_ref) {
       networking = _ref$modules.networking;
   return function () {
     var _ref3 = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref2) {
-      var channel, input, message, cipherKey, meta, ttl, storeInHistory, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, retries, wasSuccessful;
+      var channel, input, message, cipherKey, meta, ttl, storeInHistory, file, _yield$generateUpload, _yield$generateUpload2, url, formFields, _yield$generateUpload3, id, name, formFieldsWithMimeType, result, errorBody, reason, retries, wasSuccessful, publishResult;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -7852,34 +7918,43 @@ var sendFile = function sendFile(_ref) {
               throw new Error('Unsupported environment');
 
             case 71:
-              _context.next = 76;
+              _context.next = 80;
               break;
 
             case 73:
               _context.prev = 73;
               _context.t16 = _context["catch"](21);
-              throw new _endpoint.PubNubError('Upload to bucket failed', _context.t16);
+              _context.next = 77;
+              return getErrorFromResponse(_context.t16.response);
 
-            case 76:
+            case 77:
+              errorBody = _context.sent;
+              reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
+              throw new _endpoint.PubNubError(reason ? "Upload to bucket failed: ".concat(reason[1]) : 'Upload to bucket failed.', _context.t16);
+
+            case 80:
               if (!(result.status !== 204)) {
-                _context.next = 78;
+                _context.next = 82;
                 break;
               }
 
               throw new _endpoint.PubNubError('Upload to bucket was unsuccessful', result);
 
-            case 78:
+            case 82:
               retries = 5;
               wasSuccessful = false;
+              publishResult = {
+                timetoken: '0'
+              };
 
-            case 80:
+            case 85:
               if (!(!wasSuccessful && retries > 0)) {
-                _context.next = 92;
+                _context.next = 98;
                 break;
               }
 
-              _context.prev = 81;
-              _context.next = 84;
+              _context.prev = 86;
+              _context.next = 89;
               return publishFile({
                 channel: channel,
                 message: message,
@@ -7890,23 +7965,24 @@ var sendFile = function sendFile(_ref) {
                 ttl: ttl
               });
 
-            case 84:
+            case 89:
+              publishResult = _context.sent;
               wasSuccessful = true;
-              _context.next = 90;
+              _context.next = 96;
               break;
 
-            case 87:
-              _context.prev = 87;
-              _context.t17 = _context["catch"](81);
+            case 93:
+              _context.prev = 93;
+              _context.t17 = _context["catch"](86);
               retries -= 1;
 
-            case 90:
-              _context.next = 80;
+            case 96:
+              _context.next = 85;
               break;
 
-            case 92:
+            case 98:
               if (wasSuccessful) {
-                _context.next = 96;
+                _context.next = 102;
                 break;
               }
 
@@ -7916,18 +7992,19 @@ var sendFile = function sendFile(_ref) {
                 name: name
               });
 
-            case 96:
+            case 102:
               return _context.abrupt("return", {
+                timetoken: publishResult.timetoken,
                 id: id,
                 name: name
               });
 
-            case 97:
+            case 103:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[21, 73], [81, 87]]);
+      }, _callee, null, [[21, 73], [86, 93]]);
     }));
 
     return function (_x) {
@@ -8718,6 +8795,8 @@ try {
 "use strict";
 
 
+var _interopRequireDefault = __webpack_require__(0);
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -8725,11 +8804,13 @@ exports["default"] = void 0;
 
 var _endpoint = __webpack_require__(16);
 
-var _default = function _default(_ref, _ref2) {
-  var config = _ref.config;
-  var channel = _ref2.channel,
-      id = _ref2.id,
-      name = _ref2.name;
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
+var _default = function _default(modules, _ref) {
+  var channel = _ref.channel,
+      id = _ref.id,
+      name = _ref.name;
+  var config = modules.config;
 
   if (!channel) {
     throw new _endpoint.PubNubError('Validation failed, check status for details', (0, _endpoint.createValidationError)("channel can't be empty"));
@@ -8743,7 +8824,32 @@ var _default = function _default(_ref, _ref2) {
     throw new _endpoint.PubNubError('Validation failed, check status for details', (0, _endpoint.createValidationError)("file name can't be empty"));
   }
 
-  return "https://".concat(config.origin, "/v1/files/").concat(config.subscribeKey, "/channels/").concat(channel, "/files/").concat(id, "/").concat(name);
+  var url = "/v1/files/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(channel), "/files/").concat(id, "/").concat(name);
+  var params = {};
+  params.uuid = config.getUUID();
+  params.pnsdk = (0, _endpoint.generatePNSDK)(config);
+
+  if (config.getAuthKey()) {
+    params.auth = config.getAuthKey();
+  }
+
+  if (config.secretKey) {
+    (0, _endpoint.signRequest)(modules, url, params, {}, {
+      getOperation: function getOperation() {
+        return 'PubNubGetFileUrlOperation';
+      }
+    });
+  }
+
+  var queryParams = Object.keys(params).map(function (key) {
+    return "".concat(encodeURIComponent(key), "=").concat(encodeURIComponent(params[key]));
+  }).join('&');
+
+  if (queryParams !== '') {
+    return "https://".concat(config.origin).concat(url, "?").concat(queryParams);
+  }
+
+  return "https://".concat(config.origin).concat(url);
 };
 
 exports["default"] = _default;
@@ -8769,6 +8875,8 @@ var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(22));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNDownloadFileOperation;
@@ -8791,7 +8899,7 @@ var endpoint = {
   },
   getFileURL: function getFileURL(_ref, params) {
     var config = _ref.config;
-    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/files/").concat(params.id, "/").concat(params.name);
+    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel), "/files/").concat(params.id, "/").concat(params.name);
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -8806,15 +8914,11 @@ var endpoint = {
   forceBuffered: function forceBuffered() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('fileUpload');
-  },
   prepareParams: function prepareParams() {
     return {};
   },
   handleResponse: function () {
-    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref4, res, params) {
+    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref3, res, params) {
       var _res$response$name;
 
       var PubNubFile, config, cryptography, body, _params$cipherKey;
@@ -8823,7 +8927,7 @@ var endpoint = {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              PubNubFile = _ref4.PubNubFile, config = _ref4.config, cryptography = _ref4.cryptography;
+              PubNubFile = _ref3.PubNubFile, config = _ref3.config, cryptography = _ref3.cryptography;
               body = res.response.body;
 
               if (!(PubNubFile.supportsEncryptFile && config.cipherKey)) {
@@ -8879,6 +8983,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNListFilesOperation;
@@ -8901,7 +9007,7 @@ var endpoint = {
   },
   getURL: function getURL(_ref, params) {
     var config = _ref.config;
-    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/files/").concat(params.id, "/").concat(params.name);
+    return "/v1/files/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel), "/files/").concat(params.id, "/").concat(params.name);
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -9132,6 +9238,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNGetUUIDMetadataOperation;
@@ -9141,7 +9249,7 @@ var endpoint = {
     var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID());
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(_utils["default"].encodeString((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID()));
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -9190,6 +9298,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNSetUUIDMetadataOperation;
@@ -9206,7 +9316,7 @@ var endpoint = {
     var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID());
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(_utils["default"].encodeString((_params$uuid = params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID()));
   },
   patchPayload: function patchPayload(_, params) {
     return params.data;
@@ -9258,6 +9368,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNRemoveUUIDMetadataOperation;
@@ -9267,7 +9379,7 @@ var endpoint = {
     var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID());
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(_utils["default"].encodeString((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID()));
   },
   useDelete: function useDelete() {
     return true;
@@ -9423,6 +9535,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNGetChannelMetadataOperation;
@@ -9434,7 +9548,7 @@ var endpoint = {
   },
   getURL: function getURL(_ref, params) {
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel);
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel));
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -9481,6 +9595,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNSetChannelMetadataOperation;
@@ -9499,7 +9615,7 @@ var endpoint = {
   },
   patchURL: function patchURL(_ref, params) {
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel);
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel));
   },
   patchPayload: function patchPayload(_, params) {
     return params.data;
@@ -9549,6 +9665,8 @@ exports["default"] = void 0;
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNRemoveChannelMetadataOperation;
@@ -9560,7 +9678,7 @@ var endpoint = {
   },
   getURL: function getURL(_ref, params) {
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel);
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel));
   },
   useDelete: function useDelete() {
     return true;
@@ -9608,6 +9726,8 @@ var _slicedToArray2 = _interopRequireDefault(__webpack_require__(9));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNGetMembersOperation;
@@ -9619,7 +9739,7 @@ var endpoint = {
   },
   getURL: function getURL(_ref, params) {
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/uuids");
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel), "/uuids");
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -9733,6 +9853,8 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNSetMembersOperation;
@@ -9751,7 +9873,7 @@ var endpoint = {
   },
   patchURL: function patchURL(_ref, params) {
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(params.channel, "/uuids");
+    return "/v2/objects/".concat(config.subscribeKey, "/channels/").concat(_utils["default"].encodeString(params.channel), "/uuids");
   },
   patchPayload: function patchPayload(_, params) {
     return (0, _defineProperty2["default"])({
@@ -9884,18 +10006,18 @@ var _slicedToArray2 = _interopRequireDefault(__webpack_require__(9));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNGetMembershipsOperation;
   },
-  validateParams: function validateParams(_, params) {
-    if (!(params === null || params === void 0 ? void 0 : params.uuid)) {
-      return 'UUID cannot be empty';
-    }
-  },
+  validateParams: function validateParams() {},
   getURL: function getURL(_ref, params) {
+    var _params$uuid;
+
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(params.uuid, "/channels");
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(_utils["default"].encodeString((_params$uuid = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID()), "/channels");
   },
   getRequestTimeout: function getRequestTimeout(_ref2) {
     var config = _ref2.config;
@@ -10009,6 +10131,8 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 var endpoint = {
   getOperation: function getOperation() {
     return _operations["default"].PNSetMembershipsOperation;
@@ -10025,7 +10149,7 @@ var endpoint = {
     var _params$uuid;
 
     var config = _ref.config;
-    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat((_params$uuid = params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID(), "/channels");
+    return "/v2/objects/".concat(config.subscribeKey, "/uuids/").concat(_utils["default"].encodeString((_params$uuid = params.uuid) !== null && _params$uuid !== void 0 ? _params$uuid : config.getUUID()), "/channels");
   },
   patchPayload: function patchPayload(_, params) {
     return (0, _defineProperty2["default"])({
@@ -10287,6 +10411,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
 }
@@ -10320,13 +10446,13 @@ function usePatch() {
 function getURL(modules, incomingParams) {
   var config = modules.config;
   var id = incomingParams.id;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(id);
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(id));
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
   var id = incomingParams.id;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(id);
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(id));
 }
 
 function getRequestTimeout(_ref2) {
@@ -10406,6 +10532,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNDeleteUserOperation;
 }
@@ -10422,7 +10550,7 @@ function useDelete() {
 
 function getURL(modules, userId) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(userId);
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(userId));
 }
 
 function getRequestTimeout(_ref2) {
@@ -10472,6 +10600,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNGetUserOperation;
 }
@@ -10483,7 +10613,7 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId);
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId));
 }
 
 function getRequestTimeout(_ref) {
@@ -10780,6 +10910,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
 }
@@ -10813,13 +10945,13 @@ function usePatch() {
 function getURL(modules, incomingParams) {
   var config = modules.config;
   var id = incomingParams.id;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(id);
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(id));
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
   var id = incomingParams.id;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(id);
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(id));
 }
 
 function getRequestTimeout(_ref2) {
@@ -10899,6 +11031,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNDeleteSpaceOperation;
 }
@@ -10915,7 +11049,7 @@ function useDelete() {
 
 function getURL(modules, spaceId) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(spaceId);
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(spaceId));
 }
 
 function getRequestTimeout(_ref2) {
@@ -11065,6 +11199,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNGetSpaceOperation;
 }
@@ -11076,7 +11212,7 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId);
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId));
 }
 
 function getRequestTimeout(_ref) {
@@ -11151,6 +11287,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNGetMembersOperation;
 }
@@ -11162,7 +11300,7 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function getRequestTimeout(_ref) {
@@ -11265,6 +11403,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   var users = incomingParams.users;
   var payload = {};
@@ -11300,12 +11440,12 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function usePatch() {
@@ -11411,6 +11551,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   var addMembers = incomingParams.addMembers,
       updateMembers = incomingParams.updateMembers,
@@ -11488,12 +11630,12 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function usePatch() {
@@ -11599,6 +11741,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   var users = incomingParams.users;
   var payload = {};
@@ -11628,12 +11772,12 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(incomingParams.spaceId, "/users");
+  return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(_utils["default"].encodeString(incomingParams.spaceId), "/users");
 }
 
 function usePatch() {
@@ -11736,6 +11880,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function getOperation() {
   return _operations["default"].PNGetMembershipsOperation;
 }
@@ -11747,7 +11893,7 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function getRequestTimeout(_ref) {
@@ -11850,6 +11996,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   var addMemberships = incomingParams.addMemberships,
       updateMemberships = incomingParams.updateMemberships,
@@ -11927,12 +12075,12 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function usePatch() {
@@ -12038,6 +12186,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   var spaces = incomingParams.spaces;
   var payload = {};
@@ -12073,12 +12223,12 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function usePatch() {
@@ -12184,6 +12334,8 @@ var _flow_interfaces = __webpack_require__(2);
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
 function prepareMessagePayload(modules, incomingParams) {
   var spaces = incomingParams.spaces;
   var payload = {};
@@ -12213,12 +12365,12 @@ function validateParams(modules, incomingParams) {
 
 function getURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function patchURL(modules, incomingParams) {
   var config = modules.config;
-  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(incomingParams.userId, "/spaces");
+  return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(_utils["default"].encodeString(incomingParams.userId), "/spaces");
 }
 
 function usePatch() {
@@ -12568,7 +12720,9 @@ function prepareMessagePayload(modules, incomingParams) {
 
   if (resources) {
     var users = resources.users,
-        spaces = resources.spaces;
+        spaces = resources.spaces,
+        channels = resources.channels,
+        groups = resources.groups;
 
     if (users) {
       Object.keys(users).forEach(function (user) {
@@ -12581,11 +12735,25 @@ function prepareMessagePayload(modules, incomingParams) {
         params.permissions.resources.spaces[space] = extractPermissions(spaces[space]);
       });
     }
+
+    if (channels) {
+      Object.keys(channels).forEach(function (channel) {
+        params.permissions.resources.channels[channel] = extractPermissions(channels[channel]);
+      });
+    }
+
+    if (groups) {
+      Object.keys(groups).forEach(function (group) {
+        params.permissions.resources.groups[group] = extractPermissions(groups[group]);
+      });
+    }
   }
 
   if (patterns) {
     var _users = patterns.users,
-        _spaces = patterns.spaces;
+        _spaces = patterns.spaces,
+        _channels = patterns.channels,
+        _groups = patterns.groups;
 
     if (_users) {
       Object.keys(_users).forEach(function (user) {
@@ -12596,6 +12764,18 @@ function prepareMessagePayload(modules, incomingParams) {
     if (_spaces) {
       Object.keys(_spaces).forEach(function (space) {
         params.permissions.patterns.spaces[space] = extractPermissions(_spaces[space]);
+      });
+    }
+
+    if (_channels) {
+      Object.keys(_channels).forEach(function (channel) {
+        params.permissions.patterns.channels[channel] = extractPermissions(_channels[channel]);
+      });
+    }
+
+    if (_groups) {
+      Object.keys(_groups).forEach(function (group) {
+        params.permissions.patterns.groups[group] = extractPermissions(_groups[group]);
       });
     }
   }
@@ -12618,7 +12798,7 @@ function validateParams(modules, incomingParams) {
   if (!config.secretKey) return 'Missing Secret Key';
   if (!incomingParams.resources && !incomingParams.patterns) return 'Missing either Resources or Patterns.';
 
-  if (incomingParams.resources && (!incomingParams.resources.users || Object.keys(incomingParams.resources.users).length === 0) && (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0) || incomingParams.patterns && (!incomingParams.patterns.users || Object.keys(incomingParams.patterns.users).length === 0) && (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0)) {
+  if (incomingParams.resources && (!incomingParams.resources.users || Object.keys(incomingParams.resources.users).length === 0) && (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0) && (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) && (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0) || incomingParams.patterns && (!incomingParams.patterns.users || Object.keys(incomingParams.patterns.users).length === 0) && (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0) && (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) && (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)) {
     return 'Missing values for either Resources or Patterns.';
   }
 }
@@ -13193,8 +13373,10 @@ function isAuthSupported() {
 }
 
 function prepareParams(modules, incomingParams) {
-  var start = incomingParams.start,
+  var channels = incomingParams.channels,
+      start = incomingParams.start,
       end = incomingParams.end,
+      includeMessageActions = incomingParams.includeMessageActions,
       count = incomingParams.count,
       _incomingParams$strin = incomingParams.stringifiedTimeToken,
       stringifiedTimeToken = _incomingParams$strin === void 0 ? false : _incomingParams$strin,
@@ -13206,7 +13388,13 @@ function prepareParams(modules, incomingParams) {
       _incomingParams$inclu5 = incomingParams.includeMessageType,
       includeMessageType = _incomingParams$inclu5 === void 0 ? true : _incomingParams$inclu5;
   var outgoingParams = {};
-  if (count) outgoingParams.max = count;
+
+  if (count) {
+    outgoingParams.max = count;
+  } else {
+    outgoingParams.max = channels.length > 1 || includeMessageActions === true ? 25 : 100;
+  }
+
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
@@ -13242,6 +13430,11 @@ function handleResponse(modules, serverResponse) {
       response.channels[channelName].push(announce);
     });
   });
+
+  if (serverResponse.more) {
+    response.more = serverResponse.more;
+  }
+
   return response;
 }
 

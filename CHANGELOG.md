@@ -1,3 +1,10 @@
+## [v4.32.0](https://github.com/pubnub/javascript/releases/tag/v4.32.0)
+April-28-2021
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.31.0...v4.32.0)
+
+- 🌟️ Add grantToken support for channel and group resources. 
+
 ## [v4.31.0](https://github.com/pubnub/javascript/releases/tag/v4.31.0)
 April-22-2021
 

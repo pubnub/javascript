@@ -180,8 +180,12 @@ export default class {
     if (parsed !== undefined) {
       let userResourcePermissions = Object.keys(parsed.res.usr);
       let spaceResourcePermissions = Object.keys(parsed.res.spc);
+      let channelResourcePermissions = Object.keys(parsed.res.chan);
+      let groupResourcePermissions = Object.keys(parsed.res.grp);
       let userPatternPermissions = Object.keys(parsed.pat.usr);
       let spacePatternPermissions = Object.keys(parsed.pat.spc);
+      let channelPatternPermissions = Object.keys(parsed.pat.chan);
+      let groupPatternPermissions = Object.keys(parsed.pat.grp);
 
       let result: GrantTokenOutput  = {
         version: parsed.v,
@@ -191,8 +195,10 @@ export default class {
 
       let userResources = userResourcePermissions.length > 0;
       let spaceResources = spaceResourcePermissions.length > 0;
+      let channelResources = channelResourcePermissions.length > 0;
+      let groupResources = groupResourcePermissions.length > 0;
 
-      if (userResources  || spaceResources) {
+      if (userResources  || spaceResources || channelResources || groupResources) {
         result.resources = {};
 
         if (userResources) {
@@ -208,12 +214,28 @@ export default class {
             result.resources.spaces[id] = this.extractPermissions(parsed.res.spc[id]);
           });
         }
+
+        if (channelResources) {
+          result.resources.channels = {};
+          channelResourcePermissions.forEach((id) => {
+            result.resources.channels[id] = this.extractPermissions(parsed.res.chan[id]);
+          });
+        }
+
+        if (groupResources) {
+          result.resources.groups = {};
+          groupResourcePermissions.forEach((id) => {
+            result.resources.groups[id] = this.extractPermissions(parsed.res.grp[id]);
+          });
+        }
       }
 
       let userPatterns = userPatternPermissions.length > 0;
       let spacePatterns = spacePatternPermissions.length > 0;
+      let channelPatterns = channelPatternPermissions.length > 0;
+      let groupPatterns = groupPatternPermissions.length > 0;
 
-      if (userPatterns  || spacePatterns) {
+      if (userPatterns  || spacePatterns || channelPatterns || groupPatterns) {
         result.patterns = {};
 
         if (userPatterns) {
@@ -227,6 +249,20 @@ export default class {
           result.patterns.spaces = {};
           spacePatternPermissions.forEach((id) => {
             result.patterns.spaces[id] = this.extractPermissions(parsed.pat.spc[id]);
+          });
+        }
+
+        if (channelPatterns) {
+          result.patterns.channels = {};
+          channelPatternPermissions.forEach((id) => {
+            result.patterns.channels[id] = this.extractPermissions(parsed.pat.chan[id]);
+          });
+        }
+
+        if (groupPatterns) {
+          result.patterns.groups = {};
+          groupPatternPermissions.forEach((id) => {
+            result.patterns.groups[id] = this.extractPermissions(parsed.pat.grp[id]);
           });
         }
       }

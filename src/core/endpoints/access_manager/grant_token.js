@@ -59,7 +59,7 @@ function prepareMessagePayload(modules, incomingParams) {
   };
 
   if (resources) {
-    const { users, spaces } = resources;
+    const { users, spaces, channels, groups } = resources;
 
     if (users) {
       Object.keys(users).forEach((user) => {
@@ -72,10 +72,22 @@ function prepareMessagePayload(modules, incomingParams) {
         params.permissions.resources.spaces[space] = extractPermissions(spaces[space]);
       });
     }
+
+    if (channels) {
+      Object.keys(channels).forEach((channel) => {
+        params.permissions.resources.channels[channel] = extractPermissions(channels[channel]);
+      });
+    }
+
+    if (groups) {
+      Object.keys(groups).forEach((group) => {
+        params.permissions.resources.groups[group] = extractPermissions(groups[group]);
+      });
+    }
   }
 
   if (patterns) {
-    const { users, spaces } = patterns;
+    const { users, spaces, channels, groups } = patterns;
 
     if (users) {
       Object.keys(users).forEach((user) => {
@@ -86,6 +98,18 @@ function prepareMessagePayload(modules, incomingParams) {
     if (spaces) {
       Object.keys(spaces).forEach((space) => {
         params.permissions.patterns.spaces[space] = extractPermissions(spaces[space]);
+      });
+    }
+
+    if (channels) {
+      Object.keys(channels).forEach((channel) => {
+        params.permissions.patterns.channels[channel] = extractPermissions(channels[channel]);
+      });
+    }
+
+    if (groups) {
+      Object.keys(groups).forEach((group) => {
+        params.permissions.patterns.groups[group] = extractPermissions(groups[group]);
       });
     }
   }
@@ -117,12 +141,16 @@ export function validateParams(
     (
       (incomingParams.resources) &&
       (!incomingParams.resources.users || Object.keys(incomingParams.resources.users).length === 0) &&
-      (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0)
+      (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0) &&
+      (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) &&
+      (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0)
     ) ||
     (
       (incomingParams.patterns) &&
       (!incomingParams.patterns.users || Object.keys(incomingParams.patterns.users).length === 0) &&
-      (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0)
+      (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0) &&
+      (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) &&
+      (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)
     )
   ) {
     return 'Missing values for either Resources or Patterns.';
