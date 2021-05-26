@@ -43,6 +43,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
+          limit: 100
         })
         .reply(200, {
           status: 200,
@@ -69,6 +70,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
+          limit: 100
         })
         .reply(403, {
           status: 403,

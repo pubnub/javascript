@@ -63,9 +63,7 @@ const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadat
       queryParams.filter = params.filter;
     }
 
-    if (params?.limit) {
-      queryParams.limit = params.limit;
-    }
+    queryParams.limit = params?.limit ?? 100;
 
     if (params?.sort) {
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {

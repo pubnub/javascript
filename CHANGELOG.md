@@ -1,3 +1,11 @@
+## [v4.32.1](https://github.com/pubnub/javascript/releases/tag/v4.32.1)
+May-26-2021
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.32.0...v4.32.1)
+
+- 🐛 Fixes issue of signature does not match error with `getAllUUIDMetadata` call. 
+- 🐛 Error handling with global hereNow call to provide detailed error message when feature not enabled. 
+
 ## [v4.32.0](https://github.com/pubnub/javascript/releases/tag/v4.32.0)
 April-28-2021
 

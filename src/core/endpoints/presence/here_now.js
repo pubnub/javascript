@@ -1,6 +1,6 @@
 /* @flow */
 
-import { HereNowArguments, ModulesInject } from '../../flow_interfaces';
+import { HereNowArguments, ModulesInject, StatusAnnouncement } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
@@ -147,4 +147,10 @@ export function handleResponse(
   }
 
   return response;
+}
+
+export function handleError(modules: ModulesInject, params: HereNowArguments, status: StatusAnnouncement) {
+  if (status.statusCode === 402 && !this.getURL(modules, params).includes('channel')) {
+    status.errorData.message = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
+  }
 }

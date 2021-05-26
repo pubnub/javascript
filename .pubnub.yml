@@ -3,6 +3,16 @@ changelog:
   -
     changes:
       -
+        text: "Fixes issue of signature does not match error with `getAllUUIDMetadata` call."
+        type: bug
+      -
+        text: "Error handling with global hereNow call to provide detailed error message when feature not enabled."
+        type: bug
+    date: 2021-05-26
+    version: v4.32.1
+  -
+    changes:
+      -
         text: "Add grantToken support for channel and group resources."
         type: feature
     date: 2021-04-28
@@ -1037,4 +1047,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.32.0"
+version: "4.32.1"

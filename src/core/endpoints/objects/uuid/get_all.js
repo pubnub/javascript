@@ -63,7 +63,7 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
       queryParams.filter = params.filter;
     }
 
-    queryParams.limit = params?.limit;
+    queryParams.limit = params?.limit ?? 100;
 
     if (params?.sort) {
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {

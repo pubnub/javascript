@@ -205,6 +205,9 @@ export default function (modules, endpoint, ...args) {
 
   let onResponse = (status: StatusAnnouncement, payload: Object) => {
     if (status.error) {
+      if (endpoint.handleError) {
+        endpoint.handleError(modules, incomingParams, status);
+      }
       if (callback) {
         callback(status);
       } else if (promiseComponent) {

@@ -726,6 +726,27 @@ describe('presence endpoints', () => {
       });
     });
 
+    it('reports proper error message from 402 status for GlobalHereNow', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(
+          200,
+          '{"status": 402, "error": 1, "message": "This feature is not turned on for this account. Contact support@pubnub.com to activate this feature.", "service": "Presence"}'
+        );
+      let expected = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
+      pubnub.hereNow({channles: []}, (status) => {
+        assert.equal(status.error, true);
+        assert.equal(status.errorData.message, expected);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
+    });
+
     it('passes arbitrary query parameters', (done) => {
       const scope = utils
         .createNock()

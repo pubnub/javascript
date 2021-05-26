@@ -1,4 +1,4 @@
-/*! 4.32.0 / Consumer  */
+/*! 4.32.1 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -566,7 +566,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.32.0';
+      return '4.32.1';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -1004,6 +1004,10 @@ function _default(modules, endpoint) {
     var _responseP;
 
     if (status.error) {
+      if (endpoint.handleError) {
+        endpoint.handleError(modules, incomingParams, status);
+      }
+
       if (callback) {
         callback(status);
       } else if (promiseComponent) {
@@ -7074,6 +7078,7 @@ exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
+exports.handleError = handleError;
 
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
@@ -7227,6 +7232,12 @@ function handleResponse(modules, serverResponse, incomingParams) {
   }
 
   return response;
+}
+
+function handleError(modules, params, status) {
+  if (status.statusCode === 402 && !this.getURL(modules, params).includes('channel')) {
+    status.errorData.message = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
+  }
 }
 
 /***/ }),
@@ -9072,7 +9083,7 @@ var endpoint = {
     return tokenManager.getToken('user');
   },
   prepareParams: function prepareParams(_modules, params) {
-    var _params$include, _params$include2, _params$page, _params$page3;
+    var _params$include, _params$include2, _params$page, _params$page3, _params$limit;
 
     var queryParams = {};
 
@@ -9102,7 +9113,7 @@ var endpoint = {
       queryParams.filter = params.filter;
     }
 
-    queryParams.limit = params === null || params === void 0 ? void 0 : params.limit;
+    queryParams.limit = (_params$limit = params === null || params === void 0 ? void 0 : params.limit) !== null && _params$limit !== void 0 ? _params$limit : 100;
 
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
@@ -9453,7 +9464,7 @@ var endpoint = {
     return tokenManager.getToken('channel');
   },
   prepareParams: function prepareParams(_modules, params) {
-    var _params$include, _params$include2, _params$page, _params$page3;
+    var _params$include, _params$include2, _params$page, _params$page3, _params$limit;
 
     var queryParams = {};
 
@@ -9483,9 +9494,7 @@ var endpoint = {
       queryParams.filter = params.filter;
     }
 
-    if (params === null || params === void 0 ? void 0 : params.limit) {
-      queryParams.limit = params.limit;
-    }
+    queryParams.limit = (_params$limit = params === null || params === void 0 ? void 0 : params.limit) !== null && _params$limit !== void 0 ? _params$limit : 100;
 
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
