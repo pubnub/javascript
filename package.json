@@ -99,7 +99,7 @@
     "karma-webpack": "^4.0.2",
     "mocha": "^7.1.2",
     "nock": "^9.6.1",
-    "node-fetch": "^1.7.3",
+    "node-fetch": "^2.6.1",
     "nyc": "^15.0.1",
     "phantomjs-prebuilt": "^2.1.16",
     "puppeteer": "^5.2.0",
