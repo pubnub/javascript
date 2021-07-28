@@ -307,8 +307,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '5.0.0';
-  }
+    return 'v4.30.88';}
 
   _addPnsdkSuffix(name: string, suffix: string) {
     this._PNSDKSuffix[name] = suffix;

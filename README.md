@@ -23,10 +23,7 @@ You will need the publish and subscribe keys to authenticate your app. Get your 
      npm install pubnub
      ```
    * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.5.0.0.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.5.0.0.min.js
-
-2. Configure your keys:
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.30.88.js    * https://cdn.pubnub.com/sdk/javascript/pubnub.4.30.88.min.js2. Configure your keys:
 
   ```javascript
   pubnub = new PubNub({
