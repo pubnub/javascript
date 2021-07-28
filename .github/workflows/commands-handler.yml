@@ -23,6 +23,6 @@ jobs:
         uses: "./.github/.release/actions/actions/commands"
         with:
           token: ${{ secrets.GH_TOKEN }}
-          listener: pingyua
+          listener: client-engineering-bot
           publisher-name: Serhii Mamontov
           publisher-email: parfeon@me.com
