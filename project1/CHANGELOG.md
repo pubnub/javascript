@@ -1,3 +1,11 @@
+## 5.0.0
+July 28 2021
+
+#### Fixed
+- Replaced Random class with RandomNumberGenerator for secure random bytes .
+- Handling of SendFile file size exceeded error message and refactored DeleteFile.
+- BREAKING CHANGES: Refactored Encrypt/Decrypt methods in calling PubnubCrypto constructor with config. Fixed the following issues reported by [@dependabot[bot]](https://github.com/dependabot[bot]): [#212](https://github.com/pubnub/javascript/issues/212).
+
 ## [v4.32.1](https://github.com/pubnub/javascript/releases/tag/v4.32.1)
 May-26-2021
 

@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2021-07-28
+    version: 5.0.0
+    changes:
+      - type: bug
+        text: "Replaced Random class with RandomNumberGenerator for secure random bytes ."
+      - type: bug
+        text: "Handling of SendFile file size exceeded error message and refactored DeleteFile."
+      - type: bug
+        text: "BREAKING CHANGES: Refactored Encrypt/Decrypt methods in calling PubnubCrypto constructor with config."
   -
     changes:
       -
@@ -1047,4 +1056,4 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.32.1"
+version: "5.0.0"
