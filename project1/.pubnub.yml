@@ -1,0 +1,1050 @@
+---
+changelog:
+  -
+    changes:
+      -
+        text: "Fixes issue of signature does not match error with `getAllUUIDMetadata` call."
+        type: bug
+      -
+        text: "Error handling with global hereNow call to provide detailed error message when feature not enabled."
+        type: bug
+    date: 2021-05-26
+    version: v4.32.1
+  -
+    changes:
+      -
+        text: "Add grantToken support for channel and group resources."
+        type: feature
+    date: 2021-04-28
+    version: v4.32.0
+  -
+    changes:
+      -
+        text: "BREAKING CHANGE - Set `true` for `useRandomIVs` by default."
+        type: improvement
+      -
+        text: "Fix `channel` and `uuid` which is used with: files API, Objects and presence."
+        type: bug
+    date: 2021-04-22
+    version: v4.31.0
+  -
+    changes:
+      -
+        text: "Revert v4.300."
+        type: bug
+    date: 2021-03-30
+    version: v4.30.1
+  -
+    changes:
+      -
+        text: "Set default increased limit for message count of History v3 api single call."
+        type: improvement
+    date: 2021-01-11
+    version: v4.29.11
+  -
+    changes:
+      -
+        text: "Fixes issue of missing more field in fetch messages response."
+        type: bug
+    date: 2020-11-30
+    version: v4.29.10
+  -
+    changes:
+      -
+        text: "Adds timetoken of file publish in the sendFile response."
+        type: feature
+      -
+        text: "Fixes getFileUrl so that it includes auth and signature query params."
+        type: bug
+      -
+        text: "Fixes downloadFile method to generate correct signature."
+        type: bug
+    date: 2020-10-05
+    version: v4.29.9
+  -
+    changes:
+      -
+        text: "Fixes compatibility with @sentry/react-native library."
+        type: bug
+    date: 2020-09-21
+    version: v4.29.8
+  -
+    changes:
+      -
+        text: "Added support for managing permissions of objects v2 while applying PAM v2."
+        type: feature
+      -
+        text: "Fix uncaught promise exception in subscription manager caused by error in user code inside of subscription handlers. Error will be handled and returned to status handler with PNUnknownCategory category where errorData can be examined."
+        type: bug
+    date: 2020-09-14
+    version: v4.29.7
+  -
+    changes:
+      -
+        text: "Add file download to Blob in React Native."
+        type: feature
+    date: 2020-09-08
+    version: v4.29.6
+  -
+    changes:
+      -
+        text: "Add support for file upload via file URI in React Native."
+        type: feature
+      -
+        text: "Fix file download to ArrayBuffer in React Native."
+        type: bug
+    date: 2020-09-01
+    version: v4.29.5
+  -
+    changes:
+      -
+        text: "Fixes an artifact where ract-native entrypoint didnt use ssl."
+        type: bug
+    date: 2020-08-14
+    version: v4.29.4
+  -
+    changes:
+      -
+        text: "Fixes an issue with react-native entrypoint where interfaces to File and Crypto are not included in the build."
+        type: bug
+      -
+        text: "Fixes the ability to sendByPost in publish."
+        type: bug
+      -
+        text: "Fixes an issue where getFileUrl returned and URI without a protocol."
+        type: bug
+      -
+        text: "Fixes an issue where storeInHistory false would not include the param."
+        type: bug
+      -
+        text: "Removes mime types dependency since that will be handled by the server."
+        type: bug
+      -
+        text: "Adds userMetadata to file event listener."
+        type: bug
+    date: 2020-08-14
+    version: v4.29.3
+  -
+    changes:
+      -
+        text: "Move @babel/runtime to runtime dependency."
+        type: bug
+    date: 2020-08-05
+    version: v4.29.2
+  -
+    changes:
+      -
+        text: "Release 4.291."
+        type: bug
+    date: 2020-08-04
+    version: v4.29.1
+  -
+    changes:
+      -
+        text: "Allows to upload files to channels, download them with optional encryption support."
+        type: feature
+      -
+        text: "Allows to enable random IVs when encrypting messages."
+        type: feature
+      -
+        text: "Fixes a bug with PAM and Objects v2."
+        type: bug
+    date: 2020-08-04
+    version: v4.29.0
+  -
+    changes:
+      -
+        text: "Fixes issue of high cpu usage when heartbeat interval is not set."
+        type: bug
+    date: 2020-07-15
+    version: v4.28.4
+  -
+    changes:
+      -
+        text: "getAllChannelMetadata no longer includes customFields by default."
+        type: bug
+      -
+        text: "removeChannelMetadata no longer hits wrong endpoint."
+        type: bug
+      -
+        text: "getMemberships and getChannelMembers now includes customFields by default."
+        type: bug
+      -
+        text: "getAllUUIDMetadata now includes totalCount by default."
+        type: bug
+      -
+        text: "getAllUUIDMetadata no longer includes limit by default."
+        type: bug
+      -
+        text: "all membership and channel members methods now accept a callback."
+        type: bug
+      -
+        text: "all objects v2 methods are properly typed now to include an optional callback."
+        type: bug
+      -
+        text: "getMemberships and getChannelMembers now include totalCount, prev, and next in the response."
+        type: bug
+    date: 2020-07-15
+    version: v4.28.3
+  -
+    changes:
+      -
+        text: "Fixes a bug in removeChannelMembers and removeMemberships."
+        type: bug
+    date: 2020-06-29
+    version: v4.28.2
+  -
+    changes:
+      -
+        text: "Ensure proper bytes padding in ArrayBuffer prepared for `cbor-js` library."
+        type: bug
+    date: 2020-06-19
+    version: v4.28.1
+  -
+    changes:
+      -
+        text: "Added Objects v2 API and deprecated Objects v1 API."
+        type: feature
+    date: 2020-06-03
+    version: v4.28.0
+  -
+    changes:
+      -
+        text: "Added support for delete permission in the grant method of accesses manager."
+        type: feature
+    date: 2020-04-24
+    version: v4.27.6
+  -
+    changes:
+      -
+        text: "Update READMEmd CDN links during deployment."
+        type: bug
+      -
+        text: "Fix pre-compiled scripts update."
+        type: bug
+    date: 2020-04-21
+    version: v4.27.5
+  -
+    changes:
+      -
+        text: "Add telemetry (latency) for all existing operation types."
+        type: feature
+      -
+        text: "Replace `cbor-sync` module with `cbor-js` for client implementation for web to fix compatibility with Salesforce Lightning Web Components."
+        type: bug
+    date: 2020-03-18
+    version: v4.27.4
+  -
+    changes:
+      -
+        text: "Support for APNS2 Push API"
+        type: improvement
+      -
+        text: "Restore functionality to set heartbeat interval when presence timeout is set below the default"
+        type: bug
+    date: 2020-01-06
+    version: v4.27.3
+  -
+    changes:
+      -
+        text: "disable presence heartbeats by default"
+        type: bug
+    date: 2019-12-05
+    version: v4.27.2
+  -
+    changes:
+      -
+        text: "Make changes in fetch_messages endpoint to move message actions (if any) for message from 'data' to 'actions' property (old 'data' will be in place for few updates to not break existing clients)."
+        type: bug
+      -
+        text: "fix PAMv3 tests mocked signature"
+        type: improvement
+      -
+        text: "fix lint warnings for tests and code"
+        type: improvement
+      -
+        text: "fix gulp build so that failures in test and lint will trigger failure in travis"
+        type: improvement
+    date: 2019-11-20
+    version: v4.27.1
+  -
+    changes:
+      -
+        text: "Add Message Actions API support which allow to: add, remove and fetch previously added actions"
+        type: feature
+      -
+        text: "Add new arguments to fetch messages function which allow to fetch previously added actions and message metadata"
+        type: feature
+      -
+        text: "Add new handler which can be used to track message actions addition / removal events"
+        type: feature
+    date: 2019-10-08
+    version: v4.27.0
+  -
+    changes:
+      -
+        text: "Ensures history response is an array before iterating it"
+        type: bug
+    date: 2019-09-27
+    version: v4.26.1
+  -
+    changes:
+      -
+        text: "Add support for auth tokens with Objects for Users, Spaces and Memberships"
+        type: bug
+    date: 2019-09-20
+    version: v4.26.0
+  -
+    changes:
+      -
+        text: "Fix issue with subdomains ending in 'ps'"
+        type: bug
+    date: 2019-09-03
+    version: v4.25.2
+  -
+    changes:
+      -
+        text: "Fix titanium build to support recent version"
+        type: bug
+    date: 2019-08-23
+    version: v4.25.1
+  -
+    changes:
+      -
+        text: "Add Objects support for Users, Spaces and Memberships"
+        type: improvement
+    date: 2019-08-16
+    version: v4.25.0
+  -
+    changes:
+      -
+        text: "Fix regression: 'PubNub is not a constructor' in Node.js"
+        type: bug
+    date: 2019-08-09
+    version: v4.24.6
+  -
+    changes:
+      -
+        text: "Add Signals support"
+        type: improvement
+    date: 2019-08-07
+    version: v4.24.5
+  -
+    changes:
+      -
+        text: "Add minimum presence timeout"
+        type: improvement
+    date: 2019-07-26
+    version: v4.24.4
+  -
+    changes:
+      -
+        text: "Added support to enable heartbeat requests while subscribe when heartbeat interval is provided"
+        type: improvement
+    date: 2019-06-19
+    version: v4.24.3
+  -
+    changes:
+      -
+        text: "Added try catch block to handle exception for JSON.parse function"
+        type: improvement
+      -
+        text: "Updated default origin to ps.pndsn.com"
+        type: improvement
+    date: 2019-06-13
+    version: v4.24.2
+  -
+    changes:
+      -
+        text: "Maintains the state when the presence heartbeat is explicitly disabled"
+        type: improvement
+    date: 2019-06-06
+    version: v4.24.1
+  -
+    changes:
+      -
+        text: "Disables the presence heartbeat by default when a subscribe is called. Presence heartbeat can still be enabled explicitly."
+        type: improvement
+    date: 2019-05-09
+    version: v4.24.0
+  -
+    changes:
+      -
+        text: "The `timetoken` parameter is deprecated in the `message-counts` function. Use 'channelTimetokens' instead, pass one value in 'channelTimetokens' to achieve the same results."
+        type: improvement
+    date: 2019-03-14
+    version: v4.23.0
+  -
+    changes:
+      -
+        text: "message counts"
+        type: feature
+      -
+        text: "use null instead of '' for NativeScript networking module"
+        type: improvement
+    date: 2019-03-04
+    version: v4.22.0
+  -
+    changes:
+      -
+        text: "update dependencies"
+        type: improvement
+      -
+        text: "fix flow process on nativescript"
+        type: improvement
+    date: 2018-12-20
+    version: v4.21.7
+  -
+    changes:
+      -
+        text: "fix POST for nativescript adapter over android"
+        type: bug
+    date: 2018-10-04
+    version: v4.21.6
+  -
+    changes:
+      -
+        text: "update dependencies"
+        type: improvement
+    date: 2018-08-06
+    version: v4.21.5
+  -
+    changes:
+      -
+        text: "return error parameter into errorData when logVerbosity = true"
+        type: improvement
+    date: 2018-08-04
+    version: v4.21.4
+  -
+    changes:
+      -
+        text: "update dependencies"
+        type: improvement
+    date: 2018-07-10
+    version: v4.21.3
+  -
+    changes:
+      -
+        text: "add stringifiedTimeToken into the fetch endpoint"
+        type: improvement
+    date: 2018-06-12
+    version: v4.21.2
+  -
+    changes:
+      -
+        text: "avoid security vulnerability in growl < 1.10.0"
+        type: bug
+    date: 2018-06-08
+    version: v4.21.1
+  -
+    changes:
+      -
+        text: "subscribe without using the heartbeat loop with flag withHeartbeats = false"
+        type: feature
+    date: 2018-06-06
+    version: v4.21.0
+  -
+    changes:
+      -
+        text: "fix timetoken announces"
+        type: bug
+      -
+        text: "categorize ETIMEDOUT errors as PNNetworkIssuesCategory"
+        type: improvement
+    date: 2018-04-24
+    version: v4.20.3
+  -
+    changes:
+      -
+        text: "fix signature to delete message"
+        type: bug
+    date: 2018-02-28
+    version: v4.20.2
+  -
+    changes:
+      -
+        text: "allow set ssl to false for nodejs"
+        type: improvement
+    date: 2018-01-29
+    version: v4.20.1
+  -
+    changes:
+      -
+        text: "add support for heartbeat sending without subscription via .presence()"
+        type: feature
+      -
+        text: "add method setProxy for Nodejs"
+        type: feature
+      -
+        text: "set ssl to true for nodejs by default"
+        type: feature
+    date: 2018-01-04
+    version: v4.20.0
+  -
+    changes:
+      -
+        text: "add support for Native Script"
+        type: feature
+      -
+        text: "add missing flow types"
+        type: improvement
+      -
+        text: "upgrade superagent to ^3.8.1"
+        type: improvement
+    date: 2017-12-05
+    version: v4.19.0
+  -
+    changes:
+      -
+        text: "keepAlive is now initialized globally instead of per-call, allowing better connection reuse"
+        type: improvement
+      -
+        text: "added sdkName configuration parameter which allow completely override pnsdk in request query"
+        type: feature
+    date: 2017-11-20
+    version: v4.18.0
+  -
+    changes:
+      -
+        text: "allow disabling of heartbeats by passing 0 during initialization."
+        type: improvement
+    date: 2017-10-19
+    version: v4.17.0
+  -
+    changes:
+      -
+        text: "fix UUID library to work in browsers."
+        type: bug
+    date: 2017-10-19
+    version: v4.16.2
+  -
+    changes:
+      -
+        text: "fix incorrect packaging of lil-uuid and uuid"
+        type: bug
+    date: 2017-10-12
+    version: v4.16.1
+  -
+    changes:
+      -
+        text: "support delete messages from history"
+        type: feature
+      -
+        text: "swap uuid generator with support for IE9 and IE10"
+        type: improvement
+    date: 2017-10-10
+    version: v4.16.0
+  -
+    changes:
+      -
+        text: "fix typo to enable http keep alive support"
+        type: improvement
+    date: 2017-08-21
+    version: v4.15.1
+  -
+    changes:
+      -
+        text: "Support optional message deduping via the dedupeOnSubscribe config"
+        type: improvement
+      -
+        text: "Do not issue leave events if the channel mix is empty."
+        type: improvement
+    date: 2017-08-21
+    version: v4.15.0
+  -
+    changes:
+      -
+        text: "Allow disable of heartbeats by passing heartbeatInterval = 0"
+        type: improvement
+    date: 2017-08-14
+    version: v4.14.0
+  -
+    changes:
+      -
+        text: "patch up 503 reporting"
+        type: improvement
+      -
+        text: "fix issue with where now and invalid server response"
+        type: improvement
+      -
+        text: "fix issue with here now and invalid server response"
+        type: improvement
+    date: 2017-07-27
+    version: v4.13.0
+  -
+    changes:
+      -
+        text: "fix issue of net with android for titanium"
+        type: improvement
+      -
+        text: "add additional hooks for connectivity"
+        type: feature
+      -
+        text: "add auto network detection"
+        type: feature
+    date: 2017-06-19
+    version: v4.12.0
+  -
+    changes:
+      -
+        text: "fix issue of net with android for react-native"
+        type: improvement
+    date: 2017-05-23
+    version: v4.10.0
+  -
+    changes:
+      -
+        text: "metadata is now passed on message envelope"
+        type: feature
+    date: ~
+    version: v4.9.2
+  -
+    changes:
+      -
+        text: "add support custom encryption and decryption"
+        type: feature
+    date: 2017-05-18
+    version: v4.9.1
+  -
+    changes:
+      -
+        text: "integrate fetch for react-native SDK"
+        type: feature
+      -
+        text: "announce when subscription get reactivated"
+        type: improvement
+      -
+        text: "stop heartbeats for responses with status PNBadRequestCategory"
+        type: improvement
+    date: ~
+    version: v4.9.0
+  -
+    changes:
+      -
+        text: "allow manual control over network state via listenToBrowserNetworkEvents"
+        type: feature
+    date: 2017-04-06
+    version: v4.8.0
+  -
+    changes:
+      -
+        text: "add support for titanium SDK"
+        type: feature
+      -
+        text: "fix support for react-native SDK"
+        type: improvement
+      -
+        text: "add validation for web distribution"
+        type: improvement
+    date: 2017-03-30
+    version: v4.7.0
+  -
+    changes:
+      -
+        text: "add support for presence deltas."
+        type: feature
+      -
+        text: "keep track of new and upcoming timetokens on status messages"
+        type: feature
+    date: 2017-03-27
+    version: v4.6.0
+  -
+    changes:
+      -
+        text: "add optional support for keepAlive by passing the keepAlive config into the init logic"
+        type: feature
+    date: 2017-03-08
+    version: v4.5.0
+  -
+    changes:
+      -
+        text: "add guard to check for channel or channel group on state setting"
+        type: improvement
+      -
+        text: "add guard to check for publish, secret keys when performing a grant"
+        type: improvement
+    date: 2017-02-14
+    version: v4.4.4
+  -
+    changes:
+      -
+        text: "downgrade superagent to v2; add new entry point for react native."
+        type: improvement
+    date: 2017-02-07
+    version: v4.4.3
+  -
+    changes:
+      -
+        text: "adjust compilation for webpack based compilations"
+        type: improvement
+    date: 2017-01-31
+    version: v4.4.2
+  -
+    changes:
+      -
+        text: "proxy support for node"
+        type: improvement
+    date: 2017-01-31
+    version: v4.4.1
+  -
+    changes:
+      -
+        text: "upgrade dependencies; fix up linting."
+        type: improvement
+      -
+        text: "handle network outage cases for correct reporting."
+        type: improvement
+    date: 2017-01-23
+    version: v4.4.0
+  -
+    changes:
+      -
+        text: "bump version after v3 release."
+        type: improvement
+    date: 2016-12-16
+    version: v4.3.3
+  -
+    changes:
+      -
+        text: "removes bundling of package.json into the dist file"
+        type: improvement
+    date: 2016-11-28
+    version: v4.3.2
+  -
+    changes:
+      -
+        text: "SDK now supports the restore config to allow message catch-up"
+        type: improvement
+    date: 2016-11-22
+    version: v4.3.1
+  -
+    changes:
+      -
+        text: "bulk history exposed via pubnub.fetchMessages"
+        type: improvement
+      -
+        text: "publish supports custom ttl interval"
+        type: improvement
+      -
+        text: "v2 for audit and grant; no consumer facing changes."
+        type: improvement
+      -
+        text: "fixes for param validation on usage of promises"
+        type: improvement
+    date: 2016-11-18
+    version: v4.3.0
+  -
+    changes:
+      -
+        text: "SDK reports on the id of the publisher in the message"
+        type: improvement
+    date: 2016-11-04
+    version: v4.2.5
+  -
+    changes:
+      -
+        text: "Detection of support of promises improved."
+        type: improvement
+    date: 2016-11-01
+    version: v4.2.4
+  -
+    changes:
+      -
+        text: "Fixes on encoding of apostraphes."
+        type: improvement
+    date: 2016-11-01
+    version: v4.2.3
+  -
+    changes:
+      -
+        text: "Add promise support on setState operation (@jskrzypek)"
+        type: improvement
+      -
+        text: "Add hooks to stop polling time when the number of subscriptions drops to 0 (@jasonpoe)"
+        type: improvement
+    date: 2016-10-31
+    version: v4.2.2
+  -
+    changes:
+      -
+        text: "Encode signatures to avoid sending restricted characters"
+        type: improvement
+    date: 2016-10-30
+    version: v4.2.1
+  -
+    changes:
+      -
+        text: "Add optional support for promises on all endpoints."
+        type: improvement
+      -
+        text: "History always returns timetokens in the payloads."
+        type: improvement
+      -
+        text: "Optionally, if queue size is set, send status on queue size threshold"
+        type: improvement
+    date: 2016-10-26
+    version: v4.2.0
+  -
+    changes:
+      -
+        text: "Fix state setting for channels with reserved tags."
+        type: improvement
+    date: 2016-10-17
+    version: v4.1.1
+  -
+    changes:
+      -
+        text: "Reset timetoken when all unsubscribes happen"
+        type: improvement
+      -
+        text: "Sign requests when a a secret key is passed"
+        type: improvement
+    date: 2016-10-13
+    version: v4.1.0
+  -
+    changes:
+      -
+        text: "Propogate status events to the status callback on subscribe operations."
+        type: improvement
+    date: 2016-10-05
+    version: v4.0.13
+  -
+    changes:
+      -
+        text: "affectedChannels and affectedChannelGroups are now populated on subscribe / unsubscribe events"
+        type: improvement
+    date: 2016-10-03
+    version: v4.0.12
+  -
+    changes:
+      -
+        text: "Dependency upgrades"
+        type: improvement
+    date: 2016-09-27
+    version: v4.0.11
+  -
+    changes:
+      -
+        text: "Expose decryption and encryption as a global"
+        type: improvement
+    date: 2016-09-14
+    version: v4.0.10
+  -
+    changes:
+      -
+        text: "Channel / subscription items are populated in"
+        type: improvement
+      -
+        text: "Constants for operation and category are exposed on global object"
+        type: improvement
+    date: 2016-09-09
+    version: v4.0.9
+  -
+    changes:
+      -
+        text: "Re-publish of v4.0.7"
+        type: improvement
+    date: 2016-08-25
+    version: v4.0.8
+  -
+    changes:
+      -
+        text: "Dependency upgrades"
+        type: improvement
+      -
+        text: "Try..catch wrapped around localStorage for iframe compliance"
+        type: improvement
+    date: 2016-08-25
+    version: v4.0.7
+  -
+    changes:
+      -
+        text: "Adjustment of reconnection policies for web distributions."
+        type: improvement
+      -
+        text: "PNSDK support for partner identification"
+        type: improvement
+    date: 2016-08-18
+    version: v4.0.6
+  -
+    changes:
+      -
+        text: "Stop exposing .babelrc which causes unpredictable behavior on react native."
+        type: improvement
+    date: 2016-08-10
+    version: v4.0.5
+  -
+    changes:
+      -
+        text: "Adjust handling of presence payloads for state settings."
+        type: improvement
+      -
+        text: "Exposing generateUUID method to create uuids."
+        type: feature
+      -
+        text: "Triggering disconnect, reconnect events on Web distributions."
+        type: improvement
+      -
+        text: "React Native adjustments to package.json information."
+        type: improvement
+    date: 2016-08-09
+    version: v4.0.4
+  -
+    changes:
+      -
+        text: "Global Here Now parsing adjustments."
+        type: improvement
+    date: 2016-08-07
+    version: v4.0.3
+  -
+    changes:
+      -
+        text: "Adjustments to internet disconnects on node."
+        type: improvement
+    date: 2016-08-03
+    version: v4.0.2
+  -
+    changes:
+      -
+        text: "Fixes to avoid double encoding on JSON payloads."
+        type: bug
+    date: 2016-08-01
+    version: v4.0.1
+  -
+    changes:
+      -
+        text: "New iteration of JS / Node SDK family"
+        type: feature
+    version: v4.0.0
+features:
+  access:
+    - ACCESS-GRANT
+    - ACCESS-SECRET-KEY-ALL-ACCESS
+    - ACCESS-GRANT-MANAGE
+    - ACCESS-GRANT-DELETE
+    - ACCESS-TOKEN-MANAGEMENT
+    - ACCESS-OBJECTS-V2-MANAGEMENT
+  channel-groups:
+    - CHANNEL-GROUPS-ADD-CHANNELS
+    - CHANNEL-GROUPS-REMOVE-CHANNELS
+    - CHANNEL-GROUPS-REMOVE-GROUPS
+    - CHANNEL-GROUPS-LIST-CHANNELS-IN-GROUP
+  notify:
+    - REQUEST-MESSAGE-COUNT-EXCEEDED
+  presence:
+    - PRESENCE-HERE-NOW
+    - PRESENCE-WHERE-NOW
+    - PRESENCE-SET-STATE
+    - PRESENCE-GET-STATE
+    - PRESENCE-HEARTBEAT
+  publish:
+    - PUBLISH-STORE-FLAG
+    - PUBLISH-RAW-JSON
+    - PUBLISH-WITH-METADATA
+    - PUBLISH-GET
+    - PUBLISH-POST
+    - PUBLISH-ASYNC
+    - PUBLISH-FIRE
+    - PUBLISH-REPLICATION-FLAG
+    - PUBLISH-MESSAGE-TTL
+  push:
+    - PUSH-ADD-DEVICE-TO-CHANNELS
+    - PUSH-REMOVE-DEVICE-FROM-CHANNELS
+    - PUSH-LIST-CHANNELS-FROM-DEVICE
+    - PUSH-REMOVE-DEVICE
+    - PUSH-TYPE-APNS
+    - PUSH-TYPE-APNS2
+    - PUSH-TYPE-FCM
+    - PUSH-TYPE-MPNS
+  storage:
+    - STORAGE-REVERSE
+    - STORAGE-INCLUDE-TIMETOKEN
+    - STORAGE-START-END
+    - STORAGE-COUNT
+    - STORAGE-DELETE-MESSAGES
+    - STORAGE-FETCH-MESSAGES
+    - STORAGE-MESSAGE-COUNT
+    - STORAGE-HISTORY-WITH-META
+    - STORAGE-FETCH-WITH-META
+    - STORAGE-FETCH-WITH-MESSAGE-ACTIONS
+  subscribe:
+    - SUBSCRIBE-CHANNELS
+    - SUBSCRIBE-CHANNEL-GROUPS
+    - SUBSCRIBE-PRESENCE-CHANNELS
+    - SUBSCRIBE-PRESENCE-CHANNELS-GROUPS
+    - SUBSCRIBE-WITH-TIMETOKEN
+    - SUBSCRIBE-WILDCARD
+    - SUBSCRIBE-FILTER-EXPRESSION
+    - SUBSCRIBE-PUBLISHER-UUID
+    - SUBSCRIBE-WITH-USERSTATE
+    - SUBSCRIBE-PUBSUB-V2
+    - SUBSCRIBE-SIGNAL-LISTENER
+    - SUBSCRIBE-USER-LISTENER
+    - SUBSCRIBE-SPACE-LISTENER
+    - SUBSCRIBE-MEMBERSHIP-LISTENER
+    - SUBSCRIBE-MESSAGE-ACTIONS-LISTENER
+  unsubscribe:
+    - UNSUBSCRIBE-ALL
+    - UNSUBSCRIBE-SUPPRESS-LEAVE-EVENTS
+  signal:
+    - SIGNAL-SEND
+  objects:
+    - OBJECTS-GET-ALL-UUID-METADATA
+    - OBJECTS-GET-UUID-METADATA
+    - OBJECTS-SET-UUID-METADATA
+    - OBJECTS-REMOVE-UUID-METADATA
+    - OBJECTS-GET-ALL-CHANNEL-METADATA
+    - OBJECTS-GET-CHANNEL-METADATA
+    - OBJECTS-SET-CHANNEL-METADATA
+    - OBJECTS-REMOVE-CHANNEL-METADATA
+    - OBJECTS-GET-MEMBERSHIPS-V2
+    - OBJECTS-SET-MEMBERSHIPS-V2
+    - OBJECTS-REMOVE-MEMBERSHIPS-V2
+    - OBJECTS-GET-CHANNEL-MEMBERS-V2
+    - OBJECTS-SET-CHANNEL-MEMBERS-V2
+    - OBJECTS-REMOVE-CHANNEL-MEMBERS-V2
+    - OBJECTS-MANAGE-MEMBERSHIPS-V2
+    - OBJECTS-MANAGE-CHANNEL-MEMBERS-V2
+  message-actions:
+    - MESSAGE-ACTIONS-GET
+    - MESSAGE-ACTIONS-ADD
+    - MESSAGE-ACTIONS-REMOVE
+  files:
+    - FILES-SEND-FILE
+    - FILES-LIST-FILES
+    - FILES-GET-FILE-URL
+    - FILES-DELETE-FILE
+    - FILES-DOWNLOAD-FILE
+  time:
+    - TIME-TIME
+  others: 
+    - TELEMETRY
+    - CREATE-PUSH-PAYLOAD
+files:
+  - dist/web/pubnub.js
+  - dist/web/pubnub.min.js
+name: javascript
+schema: 1
+scm: github.com/pubnub/javascript
+supported-platforms:
+  -
+    frameworks:
+      - "Angular JS"
+      - "Angular 2 and up"
+    platforms:
+      - "Safari 10 and up"
+      - "Mozilla Firefox 51 and up"
+      - "Google Chrome 56 and up"
+      - "Opera 41  and up"
+      - "IE 9 and up (include a Promise polyfill for pubnub >= 4.29.0)"
+      - "Microsoft Edge 38 and up"
+    version: "Pubnub Javascript for Web"
+  -
+    editors:
+      - "4 and up"
+    platforms:
+      - "OSX 10.12 and up"
+      - "Ubuntu 14.04 and up"
+      - "Windows 7 and up"
+    version: "Pubnub Javascript for Node"
+version: "4.32.1"
