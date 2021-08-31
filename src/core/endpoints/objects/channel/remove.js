@@ -30,8 +30,6 @@ const endpoint: EndpointConfig<RemoveChannelMetadataParams, RemoveChannelMetadat
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('channel'),
-
   prepareParams: () => ({}),
 
   handleResponse: (_, response) => ({

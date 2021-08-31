@@ -74,7 +74,7 @@ describe('grant token endpoint', () => {
         });
       });
 
-      it('fail on resources without any user resource permissions', (done) => {
+      it('fail on resources without any resource permissions', (done) => {
         const scope = utils
           .createNock()
           .post('/v3/pam/mySubscribeKey/grant')
@@ -98,7 +98,13 @@ describe('grant token endpoint', () => {
           {
             ttl: 1440,
             resources: {
-              users: {
+              channels: {
+
+              },
+              groups: {
+
+              },
+              uuids: {
 
               }
             },
@@ -110,7 +116,7 @@ describe('grant token endpoint', () => {
         });
       });
 
-      it('fail on resources without any user pattern permissions', (done) => {
+      it('fail on resources without any pattern permissions', (done) => {
         const scope = utils
           .createNock()
           .post('/v3/pam/mySubscribeKey/grant')
@@ -134,7 +140,13 @@ describe('grant token endpoint', () => {
           {
             ttl: 1440,
             patterns: {
-              users: {
+              channels: {
+
+              },
+              groups: {
+
+              },
+              uuids: {
 
               }
             },
@@ -146,15 +158,15 @@ describe('grant token endpoint', () => {
         });
       });
 
-      it('fail on resources without any space resource permissions', (done) => {
+      it('issues the correct RESTful request for uuids', (done) => {
         const scope = utils
           .createNock()
-          .post('/v3/pam/mySubscribeKey/grant')
+          .post('/v3/pam/mySubscribeKey/grant', '{"ttl":1440,"permissions":{"resources":{"channels":{"channel1":1},"groups":{"group1":1},"uuids":{"user1":1},"users":{},"spaces":{}},"patterns":{"channels":{".*":1},"groups":{".*":1},"uuids":{".*":1},"users":{},"spaces":{}},"meta":{}}}')
           .query({
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
+            signature: 'v2.OnA6IDXZl30NXBHfzXEbPLSq53y5-xldTpn3SkQdabw',
           })
           .reply(
             200,
@@ -170,109 +182,47 @@ describe('grant token endpoint', () => {
           {
             ttl: 1440,
             resources: {
-              spaces: {
-
+              channels: {
+                channel1: {
+                  read: true
+                },
+              },
+              groups: {
+                group1: {
+                  read: true
+                },
+              },
+              uuids: {
+                user1: {
+                  read: true
+                },
               }
             },
-          }
-        ).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing values for either Resources or Patterns.');
-          done();
-        });
-      });
-
-      it('fail on resources without any space pattern permissions', (done) => {
-        const scope = utils
-          .createNock()
-          .post('/v3/pam/mySubscribeKey/grant')
-          .query({
-            uuid: 'myUUID',
-            pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-            timestamp: 1571360790,
-            signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
-          })
-          .reply(
-            200,
-            {
-              message: 'Success',
-              data: {
-                token: 'token'
-              }
-            }
-          );
-
-        pubnub.grantToken(
-          {
-            ttl: 1440,
             patterns: {
-              spaces: {
-
+              channels: {
+                '.*': {
+                  read: true
+                },
+              },
+              groups: {
+                '.*': {
+                  read: true
+                },
+              },
+              uuids: {
+                '.*': {
+                  read: true
+                },
               }
-            },
-          }
-        ).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing values for either Resources or Patterns.');
-          done();
-        });
-      });
-    });
-
-    it('issues the correct RESTful request for users and spaces', (done) => {
-      const scope = utils
-        .createNock()
-        .post('/v3/pam/mySubscribeKey/grant', '{"ttl":1440,"permissions":{"resources":{"channels":{},"groups":{},"users":{"user1":1},"spaces":{"space1":1}},"patterns":{"channels":{},"groups":{},"users":{".*":1},"spaces":{".*":1}},"meta":{}}}')
-        .query({
-          uuid: 'myUUID',
-          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          timestamp: 1571360790,
-          signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
-        })
-        .reply(
-          200,
-          {
-            message: 'Success',
-            data: {
-              token: 'token'
             }
+          },
+          (status) => {
+            assert.equal(scope.isDone(), true);
+            assert.equal(status.error, false);
+            done();
           }
         );
-
-      pubnub.grantToken(
-        {
-          ttl: 1440,
-          resources: {
-            users: {
-              user1: {
-                read: true
-              },
-            },
-            spaces: {
-              space1: {
-                read: true
-              },
-            },
-          },
-          patterns: {
-            users: {
-              '.*': {
-                read: true
-              },
-            },
-            spaces: {
-              '.*': {
-                read: true
-              },
-            },
-          }
-        },
-        (status) => {
-          assert.equal(scope.isDone(), true);
-          assert.equal(status.error, false);
-          done();
-        }
-      );
+      });
     });
   });
 });
@@ -308,7 +258,7 @@ describe('grant token endpoint telemetry', () => {
 
   describe('#grantToken', () => {
     it('should add PAM grant token API telemetry information', (done) => {
-      let scope = utils.createNock().post('/v3/pam/mySubscribeKey/grant', '{"ttl":1440,"permissions":{"resources":{"channels":{},"groups":{},"users":{"user1":1},"spaces":{"space1":1}},"patterns":{"channels":{},"groups":{},"users":{".*":1},"spaces":{".*":1}},"meta":{}}}').query(true);
+      let scope = utils.createNock().post('/v3/pam/mySubscribeKey/grant', '{"ttl":1440,"permissions":{"resources":{"channels":{},"groups":{},"uuids":{"user1":1},"users":{},"spaces":{}},"patterns":{"channels":{},"groups":{},"uuids":{".*":1},"users":{},"spaces":{}},"meta":{}}}').query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
@@ -323,12 +273,14 @@ describe('grant token endpoint telemetry', () => {
             {
               ttl: 1440,
               resources: {
-                users: { user1: { read: true }, },
-                spaces: { space1: { read: true }, },
+                channels: {},
+                groups: {},
+                uuids: { user1: { read: true }, },
               },
               patterns: {
-                users: { '.*': { read: true }, },
-                spaces: { '.*': { read: true }, },
+                channels: {},
+                groups: {},
+                uuids: { '.*': { read: true }, },
               }
             },
             () => { completion(); }

@@ -149,5 +149,40 @@ describe('File Upload API v1 tests', () => {
 
       expect(result.status).to.equal(200);
     });
+    it('should handle encryption/decryption with explicit cipherKey', (done) => {
+      const testContent = `Hello world! ${new Date().toLocaleString()}`;
+
+      pubnub.sendFile(
+        {
+          channel: CHANNEL_1,
+          file: { data: testContent, name: 'someFile.txt', mimeType: 'text/plain' },
+          cipherKey: 'cipherKey'
+        },
+        (err, result) => {
+          expect(err).to.be.null;
+
+          expect(result.name).to.equal('someFile.txt');
+
+          pubnub.downloadFile(
+            {
+              channel: CHANNEL_1,
+              id: result.id,
+              name: result.name,
+              cipherKey: 'cipherKey'
+            },
+            (err2, file) => {
+              fileId = result.id;
+              fileName = result.name;
+
+              const output = file.toString('utf8').then((output) => {
+                expect(output).to.equal(testContent);
+
+                done();
+              });
+            }
+          );
+        }
+      );
+    }).timeout(10000);
   }
 });

@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint camelcase: 0 */
 
 import { GrantTokenInput, GrantTokenObject, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
@@ -12,8 +13,16 @@ export function extractPermissions(permissions: GrantTokenObject) {
 
   /* eslint-disable */
 
-  if (permissions.create) {
-    permissionsResult |= 16;
+  if (permissions.join) {
+    permissionsResult |= 128;
+  }
+
+  if (permissions.update) {
+    permissionsResult |= 64;
+  }
+
+  if (permissions.get) {
+    permissionsResult |= 32;
   }
 
   if (permissions.delete) {
@@ -38,38 +47,34 @@ export function extractPermissions(permissions: GrantTokenObject) {
 }
 
 function prepareMessagePayload(modules, incomingParams) {
-  const { ttl, resources, patterns, meta } = incomingParams;
-  const params = {
+  const { ttl, resources, patterns, meta, authorized_uuid } = incomingParams;
+  const params: any = {
     ttl: 0,
     permissions: {
       resources: {
         channels: {},
         groups: {},
-        users: {},
-        spaces: {}
+        uuids: {},
+        users: {}, // not used, needed for api backward compatibility
+        spaces: {} // not used, needed for api backward compatibility
       },
       patterns: {
         channels: {},
         groups: {},
-        users: {},
-        spaces: {}
+        uuids: {},
+        users: {}, // not used, needed for api backward compatibility
+        spaces: {} // not used, needed for api backward compatibility
       },
       meta: {}
     }
   };
 
   if (resources) {
-    const { users, spaces, channels, groups } = resources;
+    const { uuids, channels, groups } = resources;
 
-    if (users) {
-      Object.keys(users).forEach((user) => {
-        params.permissions.resources.users[user] = extractPermissions(users[user]);
-      });
-    }
-
-    if (spaces) {
-      Object.keys(spaces).forEach((space) => {
-        params.permissions.resources.spaces[space] = extractPermissions(spaces[space]);
+    if (uuids) {
+      Object.keys(uuids).forEach((uuid) => {
+        params.permissions.resources.uuids[uuid] = extractPermissions(uuids[uuid]);
       });
     }
 
@@ -87,17 +92,11 @@ function prepareMessagePayload(modules, incomingParams) {
   }
 
   if (patterns) {
-    const { users, spaces, channels, groups } = patterns;
+    const { uuids, channels, groups } = patterns;
 
-    if (users) {
-      Object.keys(users).forEach((user) => {
-        params.permissions.patterns.users[user] = extractPermissions(users[user]);
-      });
-    }
-
-    if (spaces) {
-      Object.keys(spaces).forEach((space) => {
-        params.permissions.patterns.spaces[space] = extractPermissions(spaces[space]);
+    if (uuids) {
+      Object.keys(uuids).forEach((uuid) => {
+        params.permissions.patterns.uuids[uuid] = extractPermissions(uuids[uuid]);
       });
     }
 
@@ -122,6 +121,10 @@ function prepareMessagePayload(modules, incomingParams) {
     params.permissions.meta = meta;
   }
 
+  if (authorized_uuid) {
+    params.permissions.uuid = `${authorized_uuid}`; // ensure this is a string
+  }
+
   return params;
 }
 
@@ -140,15 +143,13 @@ export function validateParams(
   if (
     (
       (incomingParams.resources) &&
-      (!incomingParams.resources.users || Object.keys(incomingParams.resources.users).length === 0) &&
-      (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0) &&
+      (!incomingParams.resources.uuids || Object.keys(incomingParams.resources.uuids).length === 0) &&
       (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) &&
       (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0)
     ) ||
     (
       (incomingParams.patterns) &&
-      (!incomingParams.patterns.users || Object.keys(incomingParams.patterns.users).length === 0) &&
-      (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0) &&
+      (!incomingParams.patterns.uuids || Object.keys(incomingParams.patterns.uuids).length === 0) &&
       (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) &&
       (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)
     )

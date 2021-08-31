@@ -60,14 +60,6 @@ export function isAuthSupported() {
   return true;
 }
 
-export function getAuthToken(modules: ModulesInject, incomingParams: UsersObjectInput): string {
-  let token =
-    modules.tokenManager.getToken('user', incomingParams.id) ||
-    modules.tokenManager.getToken('user');
-
-  return token;
-}
-
 export function prepareParams(
   modules: ModulesInject,
   incomingParams: UsersObjectInput

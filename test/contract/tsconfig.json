@@ -1,0 +1,10 @@
+{
+    "extends": "@tsconfig/node12/tsconfig.json",
+    "compilerOptions": {
+      "preserveConstEnums": true,
+      "noImplicitAny": false,
+      "outDir": "../../dist/cucumber/"
+    },
+    "include": ["**/*"],
+    "exclude": ["node_modules"]
+  }

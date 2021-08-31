@@ -30,7 +30,6 @@ export type EndpointConfig<TParams, TResult> = {|
   validateParams: InjectedFunction<[$Shape<TParams>], string | void>,
   prepareParams: InjectedFunction<[$Shape<TParams>], Record>,
 
-  getAuthToken?: InjectedFunction<[TParams], string | void | null>,
   getRequestHeaders?: () => Record,
 
   getURL?: InjectedFunction<[TParams], string>,

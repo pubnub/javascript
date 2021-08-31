@@ -328,10 +328,7 @@ export default class {
 
   parseToken: Function;
   setToken: Function;
-  setTokens: Function;
   getToken: Function;
-  getTokens: Function;
-  clearTokens: Function;
 
   getAuthKey: Function;
   setAuthKey: Function;
@@ -409,10 +406,7 @@ export default class {
 
     this.parseToken = tokenManager.parseToken.bind(tokenManager);
     this.setToken = tokenManager.setToken.bind(tokenManager);
-    this.setTokens = tokenManager.setTokens.bind(tokenManager);
     this.getToken = tokenManager.getToken.bind(tokenManager);
-    this.getTokens = tokenManager.getTokens.bind(tokenManager);
-    this.clearTokens = tokenManager.clearTokens.bind(tokenManager);
 
     /* channel groups */
     this.channelGroups = {

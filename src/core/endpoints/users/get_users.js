@@ -30,12 +30,6 @@ export function isAuthSupported() {
   return true;
 }
 
-export function getAuthToken(modules: ModulesInject): string {
-  let token = modules.tokenManager.getToken('user');
-
-  return token;
-}
-
 export function prepareParams(
   modules: ModulesInject,
   incomingParams: UserListInput

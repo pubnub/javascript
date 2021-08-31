@@ -439,15 +439,18 @@ type GrantArguments = {
 
 // Base permissions object
 interface GrantTokenObject {
-  create: boolean,
   read: boolean,
   write: boolean,
   manage: boolean,
   delete: boolean,
+  get: boolean,
+  update: boolean,
+  join: boolean
 }
 
 interface GrantTokenInput {
   ttl: number,
+  authorizedUuid: String,
   resources?: {
     channels?: {
       [key: String]: GrantTokenObject,
@@ -455,12 +458,9 @@ interface GrantTokenInput {
     groups?: {
       [key: String]: GrantTokenObject,
     },
-    users?: {
+    uuids?: {
       [key: String]: GrantTokenObject,
-    },
-    spaces?: {
-      [key: String]: GrantTokenObject,
-    },
+    }
   },
   patterns?: {
     channels?: {
@@ -469,12 +469,9 @@ interface GrantTokenInput {
     groups?: {
       [key: String]: GrantTokenObject,
     },
-    users?: {
+    uuids?: {
       [key: String]: GrantTokenObject,
-    },
-    spaces?: {
-      [key: String]: GrantTokenObject,
-    },
+    }
   },
   meta?: Object
 }
@@ -484,26 +481,6 @@ interface GrantTokenOutput extends GrantTokenInput {
   timestamp: number,
   signature: Buffer
 }
-
-// token manager
-
-type TokensDefinition = {
-  user?: string,
-  space?: string,
-  users?: {
-    [key: String]: String
-  },
-  spaces?: {
-    [key: String]: String
-  }
-};
-
-type GetTokensInput= {
-  user?: boolean,
-  space?: boolean,
-  users?:  Array<string>,
-  spaces?:  Array<string>
-};
 
 // publish
 

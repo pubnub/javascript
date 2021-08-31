@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.32.1",
+  "version": "4.33.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -15,7 +15,12 @@
     "test:crypto:node": "mocha --no-config --require test/setup.js --reporter spec test/crypto/node.test.js",
     "test:crypto:web": "karma start karma/chrome.config.js test/crypto/web.test.js",
     "coverage": "nyc npm run test:node",
-    "codecov": "cat coverage/lcov.info | codecov"
+    "codecov": "cat coverage/lcov.info | codecov",
+    "contract:refresh": "rimraf dist/contract && git clone --branch contract git@github.com:pubnub/service-contract-mock.git dist/contract && npm install --prefix dist/contract && npm run refresh-files --prefix dist/contract",
+    "contract:server": "npm start --prefix dist/contract consumer",
+    "contract:build": "cd test/contract && tsc",
+    "contract:test": "cucumber-js --require dist/cucumber dist/contract/contract/features",
+    "contract:test-access": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags @feature=access"
   },
   "main": "./lib/node/index.js",
   "react-native": "./lib/react_native/index.js",
@@ -38,6 +43,7 @@
   ],
   "dependencies": {
     "@babel/runtime": "^7.10.5",
+    "@tsconfig/node12": "^1.0.9",
     "agentkeepalive": "^3.5.2",
     "cbor-js": "^0.1.0",
     "cbor-sync": "^1.0.4",
@@ -58,6 +64,7 @@
     "@babel/polyfill": "^7.8.7",
     "@babel/preset-env": "^7.7.7",
     "@babel/register": "^7.7.7",
+    "@cucumber/cucumber": "^7.3.1",
     "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.6",
     "babel-plugin-add-module-exports": "^1.0.2",
@@ -108,6 +115,7 @@
     "sinon-chai": "^3.3.0",
     "stats-webpack-plugin": "^0.7.0",
     "terser": "^4.8.0",
+    "typescript": "^4.3.5",
     "uglify-js": "^2.8.26",
     "underscore": "^1.9.2",
     "webpack": "^4.41.2",

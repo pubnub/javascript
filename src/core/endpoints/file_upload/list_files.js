@@ -20,8 +20,6 @@ const endpoint: EndpointConfig<ListFilesParams, ListFilesResult> = {
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('fileUpload'),
-
   prepareParams: (_, params) => {
     const outParams = {};
 

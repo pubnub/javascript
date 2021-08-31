@@ -1,3 +1,11 @@
+## [v4.33.0](https://github.com/pubnub/javascript/releases/tag/v4.33.0)
+August-31-2021
+
+[Full Changelog](https://github.com/pubnub/javascript/compare/v4.32.1...v4.33.0)
+
+- 🌟️ Added support for Objects v2 in PAM v3 api. 
+- 🐛 Fixes issue related to file decryption when cipherkey is provided in method. 
+
 ## [v4.32.1](https://github.com/pubnub/javascript/releases/tag/v4.32.1)
 May-26-2021
 

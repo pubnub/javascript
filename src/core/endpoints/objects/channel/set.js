@@ -41,8 +41,6 @@ const endpoint: EndpointConfig<SetChannelMetadataParams, SetChannelMetadataResul
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('channel'),
-
   prepareParams: (_, params) => ({
     include: (params?.include?.customFields ?? true) && 'custom',
   }),

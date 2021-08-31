@@ -37,8 +37,6 @@ const endpoint: EndpointConfig<SetUUIDMetadataParams, SetUUIDMetadataResult> = {
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('user'),
-
   prepareParams: ({ config }, params) => ({
     uuid: params?.uuid ?? config.getUUID(),
     include: (params?.include?.customFields ?? true) && 'custom',

@@ -38,7 +38,7 @@ const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
   handleResponse: async ({ PubNubFile, config, cryptography }, res, params): Promise<DownloadFileResult> => {
     let body = res.response.body;
 
-    if (PubNubFile.supportsEncryptFile && (config.cipherKey)) {
+    if (PubNubFile.supportsEncryptFile && (params.cipherKey ?? config.cipherKey)) {
       body = await cryptography.decrypt(params.cipherKey ?? config.cipherKey, body);
     }
 

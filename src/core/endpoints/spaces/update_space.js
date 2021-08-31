@@ -63,14 +63,6 @@ export function isAuthSupported() {
   return true;
 }
 
-export function getAuthToken(modules: ModulesInject, incomingParams: SpacesObjectInput): string {
-  let token =
-    modules.tokenManager.getToken('space', incomingParams.id) ||
-    modules.tokenManager.getToken('space');
-
-  return token;
-}
-
 export function prepareParams(
   modules: ModulesInject,
   incomingParams: SpacesObjectInput

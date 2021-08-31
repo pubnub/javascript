@@ -38,8 +38,6 @@ const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadat
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('channel'),
-
   prepareParams: (_modules, params) => {
     const queryParams = {};
 

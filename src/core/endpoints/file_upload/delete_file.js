@@ -29,8 +29,6 @@ const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('fileUpload'),
-
   prepareParams: () => ({}),
 
   handleResponse: (_, response): DeleteFileResult => ({

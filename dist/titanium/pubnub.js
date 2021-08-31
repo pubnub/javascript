@@ -1,4 +1,4 @@
-/*! 4.32.1 / Consumer  */
+/*! 4.33.0 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -566,7 +566,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.32.1';
+      return '4.33.0';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -838,16 +838,6 @@ function decideURL(endpoint, modules, incomingParams) {
   }
 }
 
-function getAuthToken(endpoint, modules, incomingParams) {
-  var token;
-
-  if (endpoint.getAuthToken) {
-    token = endpoint.getAuthToken(modules, incomingParams);
-  }
-
-  return token;
-}
-
 function generatePNSDK(config) {
   if (config.sdkName) {
     return config.sdkName;
@@ -928,7 +918,8 @@ function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
 function _default(modules, endpoint) {
   var networking = modules.networking,
       config = modules.config,
-      telemetryManager = modules.telemetryManager;
+      telemetryManager = modules.telemetryManager,
+      tokenManager = modules.tokenManager;
 
   var requestId = _uuid["default"].createUUID();
 
@@ -988,8 +979,7 @@ function _default(modules, endpoint) {
   }
 
   if (endpoint.isAuthSupported()) {
-    var token = getAuthToken(endpoint, modules, incomingParams);
-    var tokenOrKey = token || config.getAuthKey();
+    var tokenOrKey = tokenManager.getToken() || config.getAuthKey();
 
     if (tokenOrKey) {
       outgoingParams.auth = tokenOrKey;
@@ -2536,10 +2526,7 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "removeAllListeners", void 0);
     (0, _defineProperty2["default"])(this, "parseToken", void 0);
     (0, _defineProperty2["default"])(this, "setToken", void 0);
-    (0, _defineProperty2["default"])(this, "setTokens", void 0);
     (0, _defineProperty2["default"])(this, "getToken", void 0);
-    (0, _defineProperty2["default"])(this, "getTokens", void 0);
-    (0, _defineProperty2["default"])(this, "clearTokens", void 0);
     (0, _defineProperty2["default"])(this, "getAuthKey", void 0);
     (0, _defineProperty2["default"])(this, "setAuthKey", void 0);
     (0, _defineProperty2["default"])(this, "setCipherKey", void 0);
@@ -2615,10 +2602,7 @@ var _default = function () {
     this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
     this.parseToken = tokenManager.parseToken.bind(tokenManager);
     this.setToken = tokenManager.setToken.bind(tokenManager);
-    this.setTokens = tokenManager.setTokens.bind(tokenManager);
     this.getToken = tokenManager.getToken.bind(tokenManager);
-    this.getTokens = tokenManager.getTokens.bind(tokenManager);
-    this.clearTokens = tokenManager.clearTokens.bind(tokenManager);
     this.channelGroups = {
       listGroups: _endpoint["default"].bind(this, modules, listChannelGroupsConfig),
       listChannels: _endpoint["default"].bind(this, modules, listChannelsInChannelGroupConfig),
@@ -5623,8 +5607,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _typeof2 = _interopRequireDefault(__webpack_require__(7));
-
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
 var _createClass2 = _interopRequireDefault(__webpack_require__(6));
@@ -5640,154 +5622,48 @@ var _default = function () {
     (0, _classCallCheck2["default"])(this, _default);
     (0, _defineProperty2["default"])(this, "_config", void 0);
     (0, _defineProperty2["default"])(this, "_cbor", void 0);
-    (0, _defineProperty2["default"])(this, "_userTokens", void 0);
-    (0, _defineProperty2["default"])(this, "_spaceTokens", void 0);
-    (0, _defineProperty2["default"])(this, "_userToken", void 0);
-    (0, _defineProperty2["default"])(this, "_spaceToken", void 0);
+    (0, _defineProperty2["default"])(this, "_token", void 0);
     this._config = config;
     this._cbor = cbor;
-
-    this._initializeTokens();
   }
 
   (0, _createClass2["default"])(_default, [{
-    key: "_initializeTokens",
-    value: function _initializeTokens() {
-      this._userTokens = {};
-      this._spaceTokens = {};
-      this._userToken = undefined;
-      this._spaceToken = undefined;
-    }
-  }, {
-    key: "_setToken",
-    value: function _setToken(token) {
-      var _this = this;
-
-      var tokenObject = this.parseToken(token);
-
-      if (tokenObject && tokenObject.resources) {
-        if (tokenObject.resources.users) {
-          Object.keys(tokenObject.resources.users).forEach(function (id) {
-            _this._userTokens[id] = token;
-          });
-        }
-
-        if (tokenObject.resources.spaces) {
-          Object.keys(tokenObject.resources.spaces).forEach(function (id) {
-            _this._spaceTokens[id] = token;
-          });
-        }
-      }
-
-      if (tokenObject && tokenObject.patterns) {
-        if (tokenObject.patterns.users && Object.keys(tokenObject.patterns.users).length > 0) {
-          this._userToken = token;
-        }
-
-        if (tokenObject.patterns.spaces && Object.keys(tokenObject.patterns.spaces).length > 0) {
-          this._spaceToken = token;
-        }
-      }
-    }
-  }, {
     key: "setToken",
     value: function setToken(token) {
       if (token && token.length > 0) {
-        this._setToken(token);
-      }
-    }
-  }, {
-    key: "setTokens",
-    value: function setTokens(tokens) {
-      var _this2 = this;
-
-      if (tokens && tokens.length && (0, _typeof2["default"])(tokens) === 'object') {
-        tokens.forEach(function (token) {
-          _this2.setToken(token);
-        });
-      }
-    }
-  }, {
-    key: "getTokens",
-    value: function getTokens(tokenDef) {
-      var _this3 = this;
-
-      var result = {
-        users: {},
-        spaces: {}
-      };
-
-      if (tokenDef) {
-        if (tokenDef.user) {
-          result.user = this._userToken;
-        }
-
-        if (tokenDef.space) {
-          result.space = this._spaceToken;
-        }
-
-        if (tokenDef.users) {
-          tokenDef.users.forEach(function (user) {
-            result.users[user] = _this3._userTokens[user];
-          });
-        }
-
-        if (tokenDef.space) {
-          tokenDef.spaces.forEach(function (space) {
-            result.spaces[space] = _this3._spaceTokens[space];
-          });
-        }
+        this._token = token;
       } else {
-        if (this._userToken) {
-          result.user = this._userToken;
-        }
-
-        if (this._spaceToken) {
-          result.space = this._spaceToken;
-        }
-
-        Object.keys(this._userTokens).forEach(function (user) {
-          result.users[user] = _this3._userTokens[user];
-        });
-        Object.keys(this._spaceTokens).forEach(function (space) {
-          result.spaces[space] = _this3._spaceTokens[space];
-        });
+        this._token = undefined;
       }
-
-      return result;
     }
   }, {
     key: "getToken",
-    value: function getToken(type, id) {
-      var result;
-
-      if (id) {
-        if (type === 'user') {
-          result = this._userTokens[id];
-        } else if (type === 'space') {
-          result = this._spaceTokens[id];
-        }
-      } else if (type === 'user') {
-        result = this._userToken;
-      } else if (type === 'space') {
-        result = this._spaceToken;
-      }
-
-      return result;
+    value: function getToken() {
+      return this._token;
     }
   }, {
     key: "extractPermissions",
     value: function extractPermissions(permissions) {
       var permissionsResult = {
-        create: false,
         read: false,
         write: false,
         manage: false,
-        "delete": false
+        "delete": false,
+        get: false,
+        update: false,
+        join: false
       };
 
-      if ((permissions & 16) === 16) {
-        permissionsResult.create = true;
+      if ((permissions & 128) === 128) {
+        permissionsResult.join = true;
+      }
+
+      if ((permissions & 64) === 64) {
+        permissionsResult.update = true;
+      }
+
+      if ((permissions & 32) === 32) {
+        permissionsResult.get = true;
       }
 
       if ((permissions & 8) === 8) {
@@ -5811,94 +5687,77 @@ var _default = function () {
   }, {
     key: "parseToken",
     value: function parseToken(tokenString) {
-      var _this4 = this;
+      var _this = this;
 
       var parsed = this._cbor.decodeToken(tokenString);
 
       if (parsed !== undefined) {
-        var userResourcePermissions = Object.keys(parsed.res.usr);
-        var spaceResourcePermissions = Object.keys(parsed.res.spc);
+        var uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
         var channelResourcePermissions = Object.keys(parsed.res.chan);
         var groupResourcePermissions = Object.keys(parsed.res.grp);
-        var userPatternPermissions = Object.keys(parsed.pat.usr);
-        var spacePatternPermissions = Object.keys(parsed.pat.spc);
+        var uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
         var channelPatternPermissions = Object.keys(parsed.pat.chan);
         var groupPatternPermissions = Object.keys(parsed.pat.grp);
         var result = {
           version: parsed.v,
           timestamp: parsed.t,
-          ttl: parsed.ttl
+          ttl: parsed.ttl,
+          authorized_uuid: parsed.uuid
         };
-        var userResources = userResourcePermissions.length > 0;
-        var spaceResources = spaceResourcePermissions.length > 0;
+        var uuidResources = uuidResourcePermissions.length > 0;
         var channelResources = channelResourcePermissions.length > 0;
         var groupResources = groupResourcePermissions.length > 0;
 
-        if (userResources || spaceResources || channelResources || groupResources) {
+        if (uuidResources || channelResources || groupResources) {
           result.resources = {};
 
-          if (userResources) {
-            result.resources.users = {};
-            userResourcePermissions.forEach(function (id) {
-              result.resources.users[id] = _this4.extractPermissions(parsed.res.usr[id]);
-            });
-          }
-
-          if (spaceResources) {
-            result.resources.spaces = {};
-            spaceResourcePermissions.forEach(function (id) {
-              result.resources.spaces[id] = _this4.extractPermissions(parsed.res.spc[id]);
+          if (uuidResources) {
+            result.resources.uuids = {};
+            uuidResourcePermissions.forEach(function (id) {
+              result.resources.uuids[id] = _this.extractPermissions(parsed.res.uuid[id]);
             });
           }
 
           if (channelResources) {
             result.resources.channels = {};
             channelResourcePermissions.forEach(function (id) {
-              result.resources.channels[id] = _this4.extractPermissions(parsed.res.chan[id]);
+              result.resources.channels[id] = _this.extractPermissions(parsed.res.chan[id]);
             });
           }
 
           if (groupResources) {
             result.resources.groups = {};
             groupResourcePermissions.forEach(function (id) {
-              result.resources.groups[id] = _this4.extractPermissions(parsed.res.grp[id]);
+              result.resources.groups[id] = _this.extractPermissions(parsed.res.grp[id]);
             });
           }
         }
 
-        var userPatterns = userPatternPermissions.length > 0;
-        var spacePatterns = spacePatternPermissions.length > 0;
+        var uuidPatterns = uuidPatternPermissions.length > 0;
         var channelPatterns = channelPatternPermissions.length > 0;
         var groupPatterns = groupPatternPermissions.length > 0;
 
-        if (userPatterns || spacePatterns || channelPatterns || groupPatterns) {
+        if (uuidPatterns || channelPatterns || groupPatterns) {
           result.patterns = {};
 
-          if (userPatterns) {
-            result.patterns.users = {};
-            userPatternPermissions.forEach(function (id) {
-              result.patterns.users[id] = _this4.extractPermissions(parsed.pat.usr[id]);
-            });
-          }
-
-          if (spacePatterns) {
-            result.patterns.spaces = {};
-            spacePatternPermissions.forEach(function (id) {
-              result.patterns.spaces[id] = _this4.extractPermissions(parsed.pat.spc[id]);
+          if (uuidPatterns) {
+            result.patterns.uuids = {};
+            uuidPatternPermissions.forEach(function (id) {
+              result.patterns.uuids[id] = _this.extractPermissions(parsed.pat.uuid[id]);
             });
           }
 
           if (channelPatterns) {
             result.patterns.channels = {};
             channelPatternPermissions.forEach(function (id) {
-              result.patterns.channels[id] = _this4.extractPermissions(parsed.pat.chan[id]);
+              result.patterns.channels[id] = _this.extractPermissions(parsed.pat.chan[id]);
             });
           }
 
           if (groupPatterns) {
             result.patterns.groups = {};
             groupPatternPermissions.forEach(function (id) {
-              result.patterns.groups[id] = _this4.extractPermissions(parsed.pat.grp[id]);
+              result.patterns.groups[id] = _this.extractPermissions(parsed.pat.grp[id]);
             });
           }
         }
@@ -5912,11 +5771,6 @@ var _default = function () {
       } else {
         return undefined;
       }
-    }
-  }, {
-    key: "clearTokens",
-    value: function clearTokens() {
-      this._initializeTokens();
     }
   }]);
   return _default;
@@ -7530,10 +7384,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('fileUpload');
-  },
   prepareParams: function prepareParams(_, params) {
     var outParams = {};
 
@@ -7609,10 +7459,6 @@ var endpoint = {
   },
   isAuthSupported: function isAuthSupported() {
     return true;
-  },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('fileUpload');
   },
   prepareParams: function prepareParams() {
     return {};
@@ -7699,10 +7545,6 @@ var endpoint = {
   },
   isAuthSupported: function isAuthSupported() {
     return true;
-  },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('fileUpload');
   },
   prepareParams: function prepareParams(_, params) {
     var outParams = {};
@@ -8930,9 +8772,9 @@ var endpoint = {
   },
   handleResponse: function () {
     var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref3, res, params) {
-      var _res$response$name;
+      var _params$cipherKey, _res$response$name;
 
-      var PubNubFile, config, cryptography, body, _params$cipherKey;
+      var PubNubFile, config, cryptography, body, _params$cipherKey2;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -8941,13 +8783,13 @@ var endpoint = {
               PubNubFile = _ref3.PubNubFile, config = _ref3.config, cryptography = _ref3.cryptography;
               body = res.response.body;
 
-              if (!(PubNubFile.supportsEncryptFile && config.cipherKey)) {
+              if (!(PubNubFile.supportsEncryptFile && ((_params$cipherKey = params.cipherKey) !== null && _params$cipherKey !== void 0 ? _params$cipherKey : config.cipherKey))) {
                 _context.next = 6;
                 break;
               }
 
               _context.next = 5;
-              return cryptography.decrypt((_params$cipherKey = params.cipherKey) !== null && _params$cipherKey !== void 0 ? _params$cipherKey : config.cipherKey, body);
+              return cryptography.decrypt((_params$cipherKey2 = params.cipherKey) !== null && _params$cipherKey2 !== void 0 ? _params$cipherKey2 : config.cipherKey, body);
 
             case 5:
               body = _context.sent;
@@ -9027,10 +8869,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('fileUpload');
-  },
   prepareParams: function prepareParams() {
     return {};
   },
@@ -9078,10 +8916,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('user');
-  },
   prepareParams: function prepareParams(_modules, params) {
     var _params$include, _params$include2, _params$page, _params$page3, _params$limit;
 
@@ -9118,10 +8952,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
-        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
-            key = _ref5[0],
-            value = _ref5[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref3) {
+        var _ref4 = (0, _slicedToArray2["default"])(_ref3, 2),
+            key = _ref4[0],
+            value = _ref4[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -9269,14 +9103,10 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('user');
-  },
-  prepareParams: function prepareParams(_ref4, params) {
+  prepareParams: function prepareParams(_ref3, params) {
     var _params$uuid2, _params$include$custo, _params$include;
 
-    var config = _ref4.config;
+    var config = _ref3.config;
     return {
       uuid: (_params$uuid2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid2 !== void 0 ? _params$uuid2 : config.getUUID(),
       include: ((_params$include$custo = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _params$include$custo !== void 0 ? _params$include$custo : true) && 'custom'
@@ -9339,14 +9169,10 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('user');
-  },
-  prepareParams: function prepareParams(_ref4, params) {
+  prepareParams: function prepareParams(_ref3, params) {
     var _params$uuid2, _params$include$custo, _params$include;
 
-    var config = _ref4.config;
+    var config = _ref3.config;
     return {
       uuid: (_params$uuid2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid2 !== void 0 ? _params$uuid2 : config.getUUID(),
       include: ((_params$include$custo = params === null || params === void 0 ? void 0 : (_params$include = params.include) === null || _params$include === void 0 ? void 0 : _params$include.customFields) !== null && _params$include$custo !== void 0 ? _params$include$custo : true) && 'custom'
@@ -9402,14 +9228,10 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('user');
-  },
-  prepareParams: function prepareParams(_ref4, params) {
+  prepareParams: function prepareParams(_ref3, params) {
     var _params$uuid2;
 
-    var config = _ref4.config;
+    var config = _ref3.config;
     return {
       uuid: (_params$uuid2 = params === null || params === void 0 ? void 0 : params.uuid) !== null && _params$uuid2 !== void 0 ? _params$uuid2 : config.getUUID()
     };
@@ -9459,10 +9281,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('channel');
-  },
   prepareParams: function prepareParams(_modules, params) {
     var _params$include, _params$include2, _params$page, _params$page3, _params$limit;
 
@@ -9499,10 +9317,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
-        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
-            key = _ref5[0],
-            value = _ref5[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref3) {
+        var _ref4 = (0, _slicedToArray2["default"])(_ref3, 2),
+            key = _ref4[0],
+            value = _ref4[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -9565,10 +9383,6 @@ var endpoint = {
   },
   isAuthSupported: function isAuthSupported() {
     return true;
-  },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('channel');
   },
   prepareParams: function prepareParams(_, params) {
     var _params$include$custo, _params$include;
@@ -9636,10 +9450,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('channel');
-  },
   prepareParams: function prepareParams(_, params) {
     var _params$include$custo, _params$include;
 
@@ -9699,10 +9509,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('channel');
-  },
   prepareParams: function prepareParams() {
     return {};
   },
@@ -9757,10 +9563,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('member');
-  },
   prepareParams: function prepareParams(_modules, params) {
     var _params$include4, _params$page, _params$page3, _params$limit;
 
@@ -9813,10 +9615,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
-        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
-            key = _ref5[0],
-            value = _ref5[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref3) {
+        var _ref4 = (0, _slicedToArray2["default"])(_ref3, 2),
+            key = _ref4[0],
+            value = _ref4[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -9912,10 +9714,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref4) {
-    var tokenManager = _ref4.tokenManager;
-    return tokenManager.getToken('member');
-  },
   prepareParams: function prepareParams(_modules, params) {
     var _params$include4, _params$page, _params$page3;
 
@@ -9968,10 +9766,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
-        var _ref6 = (0, _slicedToArray2["default"])(_ref5, 2),
-            key = _ref6[0],
-            value = _ref6[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
+        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
+            key = _ref5[0],
+            value = _ref5[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -10035,10 +9833,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref3) {
-    var tokenManager = _ref3.tokenManager;
-    return tokenManager.getToken('membership');
-  },
   prepareParams: function prepareParams(_modules, params) {
     var _params$include4, _params$page, _params$page3, _params$limit;
 
@@ -10091,10 +9885,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
-        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
-            key = _ref5[0],
-            value = _ref5[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref3) {
+        var _ref4 = (0, _slicedToArray2["default"])(_ref3, 2),
+            key = _ref4[0],
+            value = _ref4[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -10188,10 +9982,6 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
-  getAuthToken: function getAuthToken(_ref4) {
-    var tokenManager = _ref4.tokenManager;
-    return tokenManager.getToken('membership');
-  },
   prepareParams: function prepareParams(_modules, params) {
     var _params$include4, _params$page, _params$page3;
 
@@ -10244,10 +10034,10 @@ var endpoint = {
     if (params === null || params === void 0 ? void 0 : params.sort) {
       var _params$sort;
 
-      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref5) {
-        var _ref6 = (0, _slicedToArray2["default"])(_ref5, 2),
-            key = _ref6[0],
-            value = _ref6[1];
+      queryParams.sort = Object.entries((_params$sort = params.sort) !== null && _params$sort !== void 0 ? _params$sort : {}).map(function (_ref4) {
+        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 2),
+            key = _ref5[0],
+            value = _ref5[1];
 
         if (value === 'asc' || value === 'desc') {
           return "".concat(key, ":").concat(value);
@@ -10292,7 +10082,6 @@ exports.getURL = getURL;
 exports.postURL = postURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
@@ -10348,11 +10137,6 @@ function getRequestTimeout(_ref2) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.id) || modules.tokenManager.getToken('user');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -10411,7 +10195,6 @@ exports.getURL = getURL;
 exports.patchURL = patchURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -10473,11 +10256,6 @@ function isAuthSupported() {
   return true;
 }
 
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.id) || modules.tokenManager.getToken('user');
-  return token;
-}
-
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include;
   var params = {};
@@ -10533,7 +10311,6 @@ exports.useDelete = useDelete;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -10571,11 +10348,6 @@ function isAuthSupported() {
   return true;
 }
 
-function getAuthToken(modules, userId) {
-  var token = modules.tokenManager.getToken('user', userId) || modules.tokenManager.getToken('user');
-  return token;
-}
-
 function prepareParams() {
   return {};
 }
@@ -10601,7 +10373,6 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -10632,11 +10403,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -10689,7 +10455,6 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -10715,11 +10480,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules) {
-  var token = modules.tokenManager.getToken('user');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -10791,7 +10551,6 @@ exports.getURL = getURL;
 exports.postURL = postURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.postPayload = postPayload;
 exports.handleResponse = handleResponse;
@@ -10847,11 +10606,6 @@ function getRequestTimeout(_ref2) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.id) || modules.tokenManager.getToken('space');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -10910,7 +10664,6 @@ exports.getURL = getURL;
 exports.patchURL = patchURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -10972,11 +10725,6 @@ function isAuthSupported() {
   return true;
 }
 
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.id) || modules.tokenManager.getToken('space');
-  return token;
-}
-
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include;
   var params = {};
@@ -11032,7 +10780,6 @@ exports.useDelete = useDelete;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -11070,11 +10817,6 @@ function isAuthSupported() {
   return true;
 }
 
-function getAuthToken(modules, spaceId) {
-  var token = modules.tokenManager.getToken('space', spaceId) || modules.tokenManager.getToken('space');
-  return token;
-}
-
 function prepareParams() {
   return {};
 }
@@ -11100,7 +10842,6 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -11126,11 +10867,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules) {
-  var token = modules.tokenManager.getToken('space');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -11200,7 +10936,6 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -11231,11 +10966,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -11288,7 +11018,6 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -11319,11 +11048,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -11403,7 +11127,6 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -11468,11 +11191,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -11551,7 +11269,6 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -11660,11 +11377,6 @@ function isAuthSupported() {
   return true;
 }
 
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
-  return token;
-}
-
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include,
       limit = incomingParams.limit,
@@ -11741,7 +11453,6 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -11800,11 +11511,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('space', incomingParams.spaceId) || modules.tokenManager.getToken('space');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -11881,7 +11587,6 @@ exports.validateParams = validateParams;
 exports.getURL = getURL;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.handleResponse = handleResponse;
 
@@ -11912,11 +11617,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -11996,7 +11696,6 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -12105,11 +11804,6 @@ function isAuthSupported() {
   return true;
 }
 
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
-  return token;
-}
-
 function prepareParams(modules, incomingParams) {
   var include = incomingParams.include,
       limit = incomingParams.limit,
@@ -12186,7 +11880,6 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -12251,11 +11944,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -12334,7 +12022,6 @@ exports.patchURL = patchURL;
 exports.usePatch = usePatch;
 exports.getRequestTimeout = getRequestTimeout;
 exports.isAuthSupported = isAuthSupported;
-exports.getAuthToken = getAuthToken;
 exports.prepareParams = prepareParams;
 exports.patchPayload = patchPayload;
 exports.handleResponse = handleResponse;
@@ -12393,11 +12080,6 @@ function getRequestTimeout(_ref) {
 
 function isAuthSupported() {
   return true;
-}
-
-function getAuthToken(modules, incomingParams) {
-  var token = modules.tokenManager.getToken('user', incomingParams.userId) || modules.tokenManager.getToken('user');
-  return token;
 }
 
 function prepareParams(modules, incomingParams) {
@@ -12680,8 +12362,16 @@ function getOperation() {
 function extractPermissions(permissions) {
   var permissionsResult = 0;
 
-  if (permissions.create) {
-    permissionsResult |= 16;
+  if (permissions.join) {
+    permissionsResult |= 128;
+  }
+
+  if (permissions.update) {
+    permissionsResult |= 64;
+  }
+
+  if (permissions.get) {
+    permissionsResult |= 32;
   }
 
   if (permissions["delete"]) {
@@ -12707,19 +12397,22 @@ function prepareMessagePayload(modules, incomingParams) {
   var ttl = incomingParams.ttl,
       resources = incomingParams.resources,
       patterns = incomingParams.patterns,
-      meta = incomingParams.meta;
+      meta = incomingParams.meta,
+      authorized_uuid = incomingParams.authorized_uuid;
   var params = {
     ttl: 0,
     permissions: {
       resources: {
         channels: {},
         groups: {},
+        uuids: {},
         users: {},
         spaces: {}
       },
       patterns: {
         channels: {},
         groups: {},
+        uuids: {},
         users: {},
         spaces: {}
       },
@@ -12728,20 +12421,13 @@ function prepareMessagePayload(modules, incomingParams) {
   };
 
   if (resources) {
-    var users = resources.users,
-        spaces = resources.spaces,
+    var uuids = resources.uuids,
         channels = resources.channels,
         groups = resources.groups;
 
-    if (users) {
-      Object.keys(users).forEach(function (user) {
-        params.permissions.resources.users[user] = extractPermissions(users[user]);
-      });
-    }
-
-    if (spaces) {
-      Object.keys(spaces).forEach(function (space) {
-        params.permissions.resources.spaces[space] = extractPermissions(spaces[space]);
+    if (uuids) {
+      Object.keys(uuids).forEach(function (uuid) {
+        params.permissions.resources.uuids[uuid] = extractPermissions(uuids[uuid]);
       });
     }
 
@@ -12759,20 +12445,13 @@ function prepareMessagePayload(modules, incomingParams) {
   }
 
   if (patterns) {
-    var _users = patterns.users,
-        _spaces = patterns.spaces,
+    var _uuids = patterns.uuids,
         _channels = patterns.channels,
         _groups = patterns.groups;
 
-    if (_users) {
-      Object.keys(_users).forEach(function (user) {
-        params.permissions.patterns.users[user] = extractPermissions(_users[user]);
-      });
-    }
-
-    if (_spaces) {
-      Object.keys(_spaces).forEach(function (space) {
-        params.permissions.patterns.spaces[space] = extractPermissions(_spaces[space]);
+    if (_uuids) {
+      Object.keys(_uuids).forEach(function (uuid) {
+        params.permissions.patterns.uuids[uuid] = extractPermissions(_uuids[uuid]);
       });
     }
 
@@ -12797,6 +12476,10 @@ function prepareMessagePayload(modules, incomingParams) {
     params.permissions.meta = meta;
   }
 
+  if (authorized_uuid) {
+    params.permissions.uuid = "".concat(authorized_uuid);
+  }
+
   return params;
 }
 
@@ -12807,7 +12490,7 @@ function validateParams(modules, incomingParams) {
   if (!config.secretKey) return 'Missing Secret Key';
   if (!incomingParams.resources && !incomingParams.patterns) return 'Missing either Resources or Patterns.';
 
-  if (incomingParams.resources && (!incomingParams.resources.users || Object.keys(incomingParams.resources.users).length === 0) && (!incomingParams.resources.spaces || Object.keys(incomingParams.resources.spaces).length === 0) && (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) && (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0) || incomingParams.patterns && (!incomingParams.patterns.users || Object.keys(incomingParams.patterns.users).length === 0) && (!incomingParams.patterns.spaces || Object.keys(incomingParams.patterns.spaces).length === 0) && (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) && (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)) {
+  if (incomingParams.resources && (!incomingParams.resources.uuids || Object.keys(incomingParams.resources.uuids).length === 0) && (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) && (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0) || incomingParams.patterns && (!incomingParams.patterns.uuids || Object.keys(incomingParams.patterns.uuids).length === 0) && (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) && (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)) {
     return 'Missing values for either Resources or Patterns.';
   }
 }

@@ -30,14 +30,6 @@ export function isAuthSupported() {
   return true;
 }
 
-export function getAuthToken(modules: ModulesInject, spaceId: string): string {
-  let token =
-    modules.tokenManager.getToken('space', spaceId) ||
-    modules.tokenManager.getToken('space');
-
-  return token;
-}
-
 export function prepareParams(): Object {
   return {};
 }

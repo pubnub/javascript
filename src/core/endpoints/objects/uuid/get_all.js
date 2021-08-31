@@ -38,8 +38,6 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('user'),
-
   prepareParams: (_modules, params) => {
     const queryParams = {};
 

@@ -71,8 +71,6 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('member'),
-
   prepareParams: (_modules, params) => {
     const queryParams = {};
 

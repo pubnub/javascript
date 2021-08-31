@@ -36,16 +36,6 @@ function decideURL(endpoint, modules, incomingParams) {
   }
 }
 
-function getAuthToken(endpoint, modules, incomingParams) {
-  let token;
-
-  if (endpoint.getAuthToken) {
-    token = endpoint.getAuthToken(modules, incomingParams);
-  }
-
-  return token;
-}
-
 export function generatePNSDK(config: Config): string {
   if (config.sdkName) {
     return config.sdkName;
@@ -125,7 +115,7 @@ export function signRequest(modules, url, outgoingParams, incomingParams, endpoi
 }
 
 export default function (modules, endpoint, ...args) {
-  let { networking, config, telemetryManager } = modules;
+  let { networking, config, telemetryManager, tokenManager } = modules;
   const requestId = uuidGenerator.createUUID();
   let callback = null;
   let promiseComponent = null;
@@ -191,8 +181,7 @@ export default function (modules, endpoint, ...args) {
   }
 
   if (endpoint.isAuthSupported()) {
-    let token = getAuthToken(endpoint, modules, incomingParams);
-    let tokenOrKey = token || config.getAuthKey();
+    let tokenOrKey = tokenManager.getToken() || config.getAuthKey();
 
     if (tokenOrKey) {
       outgoingParams.auth = tokenOrKey;

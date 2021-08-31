@@ -53,8 +53,6 @@ const endpoint: EndpointConfig<PublishFileParams, PublishFileResult> = {
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('fileUpload'),
-
   prepareParams: (_, params) => {
     const outParams = {};
 

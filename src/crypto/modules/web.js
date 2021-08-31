@@ -66,14 +66,10 @@ export default class WebCryptography implements ICryptography<ArrayBuffer | stri
 
     const abPlaindata = await this.decryptArrayBuffer(bKey, abCipherdata);
 
-    if (file.data instanceof ArrayBuffer) {
-      return File.create({
-        name: file.name,
-        data: abPlaindata,
-      });
-    } else {
-      throw new Error('Cannot decrypt this file. In browser environment file decryption supports only ArrayBuffer.');
-    }
+    return File.create({
+      name: file.name,
+      data: abPlaindata,
+    });
   }
 
   async getKey(key: string): Promise<$CryptoKey> {

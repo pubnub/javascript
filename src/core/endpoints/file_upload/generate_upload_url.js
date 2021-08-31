@@ -29,8 +29,6 @@ const endpoint: EndpointConfig<GenerateUploadUrlParams, GenerateUploadUrlResult>
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('fileUpload'),
-
   prepareParams: () => ({}),
 
   handleResponse: (_, response): GenerateUploadUrlResult => ({

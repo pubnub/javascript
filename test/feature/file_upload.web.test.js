@@ -160,5 +160,30 @@ describe('test', () => {
 
       expect(result.status).to.equal(200);
     });
+    it('should handle encryption/decryption with explicit cipherKey', async () => {
+      const testContent = `Hello world! ${new Date().toLocaleString()}`;
+
+      const result = await pubnub.sendFile({
+        channel: CHANNEL_1,
+        file: { data: testContent, name: 'someFile.txt', mimeType: 'text/plain' },
+        cipherKey: 'cipherKey'
+      });
+
+      expect(result.name).to.equal('someFile.txt');
+
+      const file = await pubnub.downloadFile({
+        channel: CHANNEL_1,
+        id: result.id,
+        name: result.name,
+        cipherKey: 'cipherKey'
+      });
+
+      fileId = result.id;
+      fileName = result.name;
+
+      const output = await file.toString('utf8');
+
+      expect(output).to.equal(testContent);
+    }).timeout(10000);
   }
 });

@@ -27,8 +27,6 @@ const endpoint: EndpointConfig<RemoveUUIDMetadataParams, RemoveUUIDMetadataResul
 
   isAuthSupported: () => true,
 
-  getAuthToken: ({ tokenManager }) => tokenManager.getToken('user'),
-
   prepareParams: ({ config }, params) => ({
     uuid: params?.uuid ?? config.getUUID(),
   }),
