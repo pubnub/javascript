@@ -1062,11 +1062,11 @@ sdks:
   -
     full-name: PubNub Javascript SDK
     short-name: Javascript
+    tier: 1
     artifacts:
       -
         artifact-type: api-client
         language: Javascript
-        tier: 1
         tags:
           - Web
         source-repository: https://github.com/pubnub/javascript
@@ -1830,7 +1830,6 @@ sdks:
       -
         artifact-type: library
         language: Javascript
-        tier: 1
         tags:
           - Web
         source-repository: https://github.com/pubnub/javascript
@@ -3348,12 +3347,13 @@ sdks:
                     - Safari 13.0
   -
     full-name: PubNub Javascript Node.js SDK
-    short-name: NodeJs
+    short-name: NodeJS
+    tier: 1
+    parent: Javascript
     artifacts:
       -
         artifact-type: package
         language: Javascript
-        tier: 1
         tags:
           - Server
         source-repository: https://github.com/pubnub/javascript
@@ -4136,7 +4136,6 @@ sdks:
       -
         artifact-type: api-client
         language: Javascript
-        tier: 1
         tags:
           - Server
         source-repository: https://github.com/pubnub/javascript
