@@ -1,4 +1,4 @@
-/*! 4.33.0 / Consumer  */
+/*! 4.32.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -576,7 +576,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.33.0';
+      return '4.32.1';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -10964,9 +10964,9 @@ var endpoint = {
   },
   handleResponse: function () {
     var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref3, res, params) {
-      var _params$cipherKey, _res$response$name;
+      var _res$response$name;
 
-      var PubNubFile, config, cryptography, body, _params$cipherKey2;
+      var PubNubFile, config, cryptography, body, _params$cipherKey;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -10975,13 +10975,13 @@ var endpoint = {
               PubNubFile = _ref3.PubNubFile, config = _ref3.config, cryptography = _ref3.cryptography;
               body = res.response.body;
 
-              if (!(PubNubFile.supportsEncryptFile && ((_params$cipherKey = params.cipherKey) !== null && _params$cipherKey !== void 0 ? _params$cipherKey : config.cipherKey))) {
+              if (!(PubNubFile.supportsEncryptFile && config.cipherKey)) {
                 _context.next = 6;
                 break;
               }
 
               _context.next = 5;
-              return cryptography.decrypt((_params$cipherKey2 = params.cipherKey) !== null && _params$cipherKey2 !== void 0 ? _params$cipherKey2 : config.cipherKey, body);
+              return cryptography.decrypt((_params$cipherKey = params.cipherKey) !== null && _params$cipherKey !== void 0 ? _params$cipherKey : config.cipherKey, body);
 
             case 5:
               body = _context.sent;
@@ -18153,12 +18153,21 @@ var WebCryptography = function () {
 
               case 8:
                 abPlaindata = _context4.sent;
+
+                if (!(file.data instanceof ArrayBuffer)) {
+                  _context4.next = 13;
+                  break;
+                }
+
                 return _context4.abrupt("return", File.create({
                   name: file.name,
                   data: abPlaindata
                 }));
 
-              case 10:
+              case 13:
+                throw new Error('Cannot decrypt this file. In browser environment file decryption supports only ArrayBuffer.');
+
+              case 14:
               case "end":
                 return _context4.stop();
             }
