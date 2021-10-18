@@ -100,12 +100,12 @@ const sendFile = ({
     throw new PubNubError('Upload to bucket was unsuccessful', result);
   }
 
-  let retries = 5;
+  let retries = config.fileUploadPublishRetryLimit;
   let wasSuccessful = false;
 
   let publishResult = { timetoken: '0' };
 
-  while (!wasSuccessful && retries > 0) {
+  do {
     try {
       publishResult = await publishFile({
         channel,
@@ -121,7 +121,7 @@ const sendFile = ({
     } catch (e) {
       retries -= 1;
     }
-  }
+  } while (!wasSuccessful && retries > 0);
 
   if (!wasSuccessful) {
     throw new PubNubError('Publish failed. You may want to execute that operation manually using pubnub.publishFile', {

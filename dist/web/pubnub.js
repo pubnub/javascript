@@ -1,4 +1,4 @@
-/*! 4.32.1 / Consumer  */
+/*! 4.33.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -576,7 +576,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.32.1';
+      return '4.33.1';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -9986,20 +9986,15 @@ var sendFile = function sendFile(_ref) {
               throw new _endpoint.PubNubError('Upload to bucket was unsuccessful', result);
 
             case 82:
-              retries = 5;
+              retries = config.fileUploadPublishRetryLimit;
               wasSuccessful = false;
               publishResult = {
                 timetoken: '0'
               };
 
             case 85:
-              if (!(!wasSuccessful && retries > 0)) {
-                _context.next = 98;
-                break;
-              }
-
-              _context.prev = 86;
-              _context.next = 89;
+              _context.prev = 85;
+              _context.next = 88;
               return publishFile({
                 channel: channel,
                 message: message,
@@ -10010,24 +10005,26 @@ var sendFile = function sendFile(_ref) {
                 ttl: ttl
               });
 
-            case 89:
+            case 88:
               publishResult = _context.sent;
               wasSuccessful = true;
-              _context.next = 96;
+              _context.next = 95;
               break;
 
-            case 93:
-              _context.prev = 93;
-              _context.t17 = _context["catch"](86);
+            case 92:
+              _context.prev = 92;
+              _context.t17 = _context["catch"](85);
               retries -= 1;
 
-            case 96:
-              _context.next = 85;
-              break;
+            case 95:
+              if (!wasSuccessful && retries > 0) {
+                _context.next = 85;
+                break;
+              }
 
-            case 98:
+            case 96:
               if (wasSuccessful) {
-                _context.next = 102;
+                _context.next = 100;
                 break;
               }
 
@@ -10037,19 +10034,19 @@ var sendFile = function sendFile(_ref) {
                 name: name
               });
 
-            case 102:
+            case 100:
               return _context.abrupt("return", {
                 timetoken: publishResult.timetoken,
                 id: id,
                 name: name
               });
 
-            case 103:
+            case 101:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[21, 73], [86, 93]]);
+      }, _callee, null, [[21, 73], [85, 92]]);
     }));
 
     return function (_x) {
@@ -10964,9 +10961,9 @@ var endpoint = {
   },
   handleResponse: function () {
     var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_ref3, res, params) {
-      var _res$response$name;
+      var _params$cipherKey, _res$response$name;
 
-      var PubNubFile, config, cryptography, body, _params$cipherKey;
+      var PubNubFile, config, cryptography, body, _params$cipherKey2;
 
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -10975,13 +10972,13 @@ var endpoint = {
               PubNubFile = _ref3.PubNubFile, config = _ref3.config, cryptography = _ref3.cryptography;
               body = res.response.body;
 
-              if (!(PubNubFile.supportsEncryptFile && config.cipherKey)) {
+              if (!(PubNubFile.supportsEncryptFile && ((_params$cipherKey = params.cipherKey) !== null && _params$cipherKey !== void 0 ? _params$cipherKey : config.cipherKey))) {
                 _context.next = 6;
                 break;
               }
 
               _context.next = 5;
-              return cryptography.decrypt((_params$cipherKey = params.cipherKey) !== null && _params$cipherKey !== void 0 ? _params$cipherKey : config.cipherKey, body);
+              return cryptography.decrypt((_params$cipherKey2 = params.cipherKey) !== null && _params$cipherKey2 !== void 0 ? _params$cipherKey2 : config.cipherKey, body);
 
             case 5:
               body = _context.sent;
@@ -18153,21 +18150,12 @@ var WebCryptography = function () {
 
               case 8:
                 abPlaindata = _context4.sent;
-
-                if (!(file.data instanceof ArrayBuffer)) {
-                  _context4.next = 13;
-                  break;
-                }
-
                 return _context4.abrupt("return", File.create({
                   name: file.name,
                   data: abPlaindata
                 }));
 
-              case 13:
-                throw new Error('Cannot decrypt this file. In browser environment file decryption supports only ArrayBuffer.');
-
-              case 14:
+              case 10:
               case "end":
                 return _context4.stop();
             }
