@@ -8,5 +8,6 @@ coverage/
 .idea
 *.iml
 .travis
+.javascript
 
 .babelrc
