@@ -1,0 +1,42 @@
+{
+  ".pubnub.yml": [
+    {
+      "pattern": "^version: \"(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\"$",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    },
+    { "pattern": "\/refs\/tags\/(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\\.zip", "cleared": false },
+    { "pattern": "\/releases\/download\/(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\/", "cleared": false },
+    {
+      "pattern": "\/releases\/download\/.+\/pubnub\\.(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\\.js$",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    }
+  ],
+  "package.json": [
+    {
+      "pattern": "^\\s{2,}\"version\": \"(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\",$",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    }
+  ],
+  "src/core/components/config.js": [
+    {
+      "pattern": "^\\s{2,}return '(v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)';$",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    }
+  ],
+  "README.md": [
+    {
+      "pattern": "javascript/pubnub.(v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?).js$",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    },
+    {
+      "pattern": "javascript/pubnub.(v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?).min.js$",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    }
+  ]
+}

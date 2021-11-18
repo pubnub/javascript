@@ -1,5 +1,0 @@
-report-dir: coverage
-reporter: ["json", "lcov", "text"]
-all: true
-
-include: src/**/*.js

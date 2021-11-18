@@ -25,14 +25,10 @@ export default (config) => {
     ],
 
 
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: { 'dist/*.js': ['coverage'] },
-
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['spec', 'coverage'],
+    reporters: ['spec'],
 
 
     // web server port
@@ -63,16 +59,5 @@ export default (config) => {
 
     browserDisconnectTimeout: 20000,
     browserNoActivityTimeout: 20000,
-
-    coverageReporter: {
-      // specify a common output directory
-      dir: 'coverage',
-      reporters: [
-        // reporters not supporting the `file` property
-        { type: 'html' },
-        { type: 'text-summary' },
-        { type: 'lcov' }
-      ]
-    }
   });
 };

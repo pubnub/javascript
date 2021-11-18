@@ -12,3 +12,7 @@ coverage/
 *.iml
 dist/web/stats.json
 dist/titanium/stats.json
+
+# GitHub Actions #
+##################
+.github/.release
