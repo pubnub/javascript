@@ -1,4 +1,4 @@
-/*! 4.33.0 / Consumer  */
+/*! 4.33.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -576,7 +576,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.33.0';
+      return '4.33.1';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -9986,20 +9986,15 @@ var sendFile = function sendFile(_ref) {
               throw new _endpoint.PubNubError('Upload to bucket was unsuccessful', result);
 
             case 82:
-              retries = 5;
+              retries = config.fileUploadPublishRetryLimit;
               wasSuccessful = false;
               publishResult = {
                 timetoken: '0'
               };
 
             case 85:
-              if (!(!wasSuccessful && retries > 0)) {
-                _context.next = 98;
-                break;
-              }
-
-              _context.prev = 86;
-              _context.next = 89;
+              _context.prev = 85;
+              _context.next = 88;
               return publishFile({
                 channel: channel,
                 message: message,
@@ -10010,24 +10005,26 @@ var sendFile = function sendFile(_ref) {
                 ttl: ttl
               });
 
-            case 89:
+            case 88:
               publishResult = _context.sent;
               wasSuccessful = true;
-              _context.next = 96;
+              _context.next = 95;
               break;
 
-            case 93:
-              _context.prev = 93;
-              _context.t17 = _context["catch"](86);
+            case 92:
+              _context.prev = 92;
+              _context.t17 = _context["catch"](85);
               retries -= 1;
 
-            case 96:
-              _context.next = 85;
-              break;
+            case 95:
+              if (!wasSuccessful && retries > 0) {
+                _context.next = 85;
+                break;
+              }
 
-            case 98:
+            case 96:
               if (wasSuccessful) {
-                _context.next = 102;
+                _context.next = 100;
                 break;
               }
 
@@ -10037,19 +10034,19 @@ var sendFile = function sendFile(_ref) {
                 name: name
               });
 
-            case 102:
+            case 100:
               return _context.abrupt("return", {
                 timetoken: publishResult.timetoken,
                 id: id,
                 name: name
               });
 
-            case 103:
+            case 101:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[21, 73], [86, 93]]);
+      }, _callee, null, [[21, 73], [85, 92]]);
     }));
 
     return function (_x) {

@@ -3,6 +3,13 @@ changelog:
   -
     changes:
       -
+        text: "Fixes issue of performing file publish message retry according to `fileUploadPublishRetryLimit` setting of PubNub instance."
+        type: bug
+    date: 2021-10-18
+    version: v4.33.1
+  -
+    changes:
+      -
         text: "Added support for Objects v2 in PAM v3 api."
         type: feature
       -
@@ -929,12 +936,9 @@ changelog:
     version: v4.0.0
 features:
   access:
-    - ACCESS-GRANT
-    - ACCESS-SECRET-KEY-ALL-ACCESS
-    - ACCESS-GRANT-MANAGE
-    - ACCESS-GRANT-DELETE
-    - ACCESS-TOKEN-MANAGEMENT
-    - ACCESS-OBJECTS-V2-MANAGEMENT
+    - ACCESS-GRANT-TOKEN
+    - ACCESS-PARSE-TOKEN
+    - ACCESS-SET-TOKEN
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -1057,7 +1061,7 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.33.0"
+version: "4.33.1"
 sdks:
   -
     full-name: PubNub Javascript SDK
