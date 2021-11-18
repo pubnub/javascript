@@ -44,12 +44,6 @@ jobs:
           ref: v1
           token: ${{ secrets.GH_TOKEN }}
           path: .github/.release/actions
-      - name: Publish to NPM
-        uses: ./.github/.release/actions/actions/services/npm
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          check-ownership: false
       - name: Publish to S3
         uses: ./.github/.release/actions/actions/services/aws
         with:
@@ -61,9 +55,16 @@ jobs:
           acl: public-read
           local-path: upload/gzip/*.js
           remote-path: pubnub/sdk/javascript
+      - name: Publish to NPM
+        uses: ./.github/.release/actions/actions/services/npm
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          check-ownership: false
       - name: Create Release
         uses: ./.github/.release/actions/actions/services/github-release
         with:
           token: ${{ secrets.GH_TOKEN }}
           artifacts-folder: upload/normal/
+          jira-api-key: ${{ secrets.JIRA_API_KEY }}
           last-service: true
