@@ -15,8 +15,6 @@ addons:
 
 stages:
   - name: "test"
-    if: |
-      type != pull_request
 
 jobs:
   include:
