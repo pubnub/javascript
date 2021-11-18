@@ -14,7 +14,6 @@ const exec = require('child_process').exec;
 const Karma = require('karma').Server;
 const mocha = require('gulp-mocha');
 const runSequence = require('gulp4-run-sequence');
-const gulpIstanbul = require('gulp-istanbul');
 const sourcemaps = require('gulp-sourcemaps');
 const packageJSON = require('./package.json');
 const gzip = require('gulp-gzip');
@@ -26,7 +25,7 @@ const mochaTimeout = 5000;
 gulp.on('error', process.exit.bind(process, 1));
 gulp.task('clean', () => {
   return gulp
-    .src(['lib', 'dist', 'coverage', 'upload'], { read: false, allowEmpty: true })
+    .src(['lib', 'dist', 'upload'], { read: false, allowEmpty: true })
     .pipe(clean());
 });
 
@@ -116,17 +115,6 @@ gulp.task('flow', (cb) => {
 
 gulp.task('validate', gulp.series('lint', 'flow'));
 
-gulp.task('pre-test', () => {
-  return gulp
-    .src(['lib/**/*.js'])
-    .pipe(
-      gulpIstanbul({
-        includeAllSources: true,
-      })
-    )
-    .pipe(gulpIstanbul.hookRequire());
-});
-
 gulp.task('test_web', (done) => {
   new Karma(
     {
@@ -144,8 +132,7 @@ gulp.task('test_web', (done) => {
 gulp.task('test_node', () => {
   return gulp
     .src(['test/**/*.test.js', '!test/dist/*.js', '!test/feature/*.js'], { read: false })
-    .pipe(mocha({ config: '.mocharc.yml' }))
-    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
+    .pipe(mocha({ config: '.mocharc.yml' }));
 });
 
 gulp.task('test_titanium', gulp.series('unzip_titanium_sdk'), (done) => {
@@ -172,8 +159,7 @@ gulp.task('test_react-native', () => {
         require: ['@babel/register'],
         noConfig: true,
       })
-    )
-    .pipe(gulpIstanbul.writeReports({ reporters: ['json', 'lcov', 'text'] }));
+    );
 });
 
 gulp.task('test_release', () => {
@@ -189,7 +175,6 @@ gulp.task('test_release', () => {
 
 gulp.task('test', (done) => {
   runSequence(
-    'pre-test',
     'test_node',
     'test_web',
     'test_titanium',
