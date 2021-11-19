@@ -1,3 +1,9 @@
+## v4.34.0
+November 19 2021
+
+#### Added
+- Upgrade superagent.
+
 ## [v4.33.1](https://github.com/pubnub/javascript/releases/tag/v4.33.1)
 October-18-2021
 
