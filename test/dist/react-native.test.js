@@ -1,12 +1,11 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import PubNub from '../../src/react_native';
+import nock from "nock";
 
 global.fetch = fetch;
 
 let pubnub;
-
-let listener = null;
 
 let channelSuffix = new Date().getTime() + (Math.random());
 
@@ -15,43 +14,46 @@ let myChannel2 = `mychannel2${channelSuffix}`;
 // let myChanneGroup1 = `myChannelGroup1${channelSuffix}`;
 
 describe('#distribution test (rkt-native)', function () {
-
-  before(function () {
-    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
-  });
-
   after(function () {
     pubnub.destroy();
   });
 
+  beforeEach(() => {
+    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
+  });
+
+  afterEach(() => {
+    pubnub.removeAllListeners();
+    pubnub.unsubscribeAll();
+    pubnub.stop();
+  });
+
   it('should have to subscribe a channel', (done) => {
-    listener = {
+    pubnub.addListener({
       status: (st) => {
         expect(st.operation).to.be.equal('PNSubscribeOperation');
+        pubnub.unsubscribeAll()
         done();
       }
-    };
-
-    pubnub.addListener(listener);
+    });
     pubnub.subscribe({channels: [myChannel1]});
   });
 
   it('should have to receive message from a channel', (done) => {
-    pubnub.disconnect();
-    pubnub.removeListener(listener);
-    pubnub.reconnect();
-
-    listener = {
+    pubnub.addListener({
+      status: (st) => {
+        if (st.operation === 'PNSubscribeOperation') {
+          pubnub.publish({ channel: myChannel2, message: { text: 'hello React-Native SDK' }});
+        }
+      },
       message: (m) => {
         expect(m.channel).to.be.equal(myChannel2);
         expect(m.message.text).to.be.equal('hello React-Native SDK');
+        pubnub.unsubscribeAll()
         done();
       }
-    };
-
-    pubnub.addListener(listener);
+    });
     pubnub.subscribe({channels: [myChannel2]});
-    pubnub.publish({ channel: myChannel2, message: { text: 'hello React-Native SDK' }});
   });
 
   it('should have to set state', (done) => {
@@ -120,24 +122,26 @@ describe('#distribution test (rkt-native)', function () {
     done();
   });
 
+  // TODO: fix test. it shouldn't rely on previous steps outcome.
   it('should have to unsubscribe', function (done) {
-    pubnub.disconnect();
-    pubnub.removeListener(listener);
-    pubnub.reconnect();
-
     let finished = false;
 
     pubnub.addListener({
       status: function (st) {
-        expect(st.operation).to.be.equal('PNUnsubscribeOperation');
+        if (st.operation === 'PNSubscribeOperation') {
+          pubnub.unsubscribe({channels: [myChannel1]});
+        } else {
+          expect(st.operation).to.be.equal('PNUnsubscribeOperation');
 
-        if (!finished) {
-          // prevent calling done twice
-          finished = true;
-          done();
+          if (!finished) {
+            // prevent calling done twice
+            finished = true;
+            pubnub.unsubscribeAll()
+            done();
+          }
         }
       }
     });
-    pubnub.unsubscribe({channels: [myChannel1]});
+    pubnub.subscribe({channels: [myChannel1]});
   });
 });

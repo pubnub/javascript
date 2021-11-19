@@ -340,6 +340,7 @@ describe('message actions endpoints', () => {
           assert.equal(messageActionEvent.data.messageTimetoken, messageTimetoken);
           assert(messageActionEvent.data.actionTimetoken);
           assert.equal(messageActionEvent.event, 'added');
+          pubnub.unsubscribeAll()
 
           done();
         }
@@ -489,6 +490,7 @@ describe('message actions endpoints', () => {
               assert.equal(messageActionEvent.data.messageTimetoken, messageTimetokens[0]);
               assert.equal(messageActionEvent.data.actionTimetoken, actionTimetokens[0]);
               assert.equal(messageActionEvent.event, 'removed');
+              pubnub.unsubscribeAll()
 
               done();
             }
