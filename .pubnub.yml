@@ -690,7 +690,7 @@ changelog:
   -
     changes:
       -
-        text: "downgrade superagent to v2; add new entry point for react native."
+        text: "downgrade superagent to v2; add a new entry point for react native."
         type: improvement
     date: 2017-02-07
     version: v4.4.3
@@ -772,7 +772,7 @@ changelog:
   -
     changes:
       -
-        text: "Fixes on encoding of apostraphes."
+        text: "Fixes on encoding of apostrophes."
         type: improvement
     date: 2016-11-01
     version: v4.2.3
@@ -826,7 +826,7 @@ changelog:
   -
     changes:
       -
-        text: "Propogate status events to the status callback on subscribe operations."
+        text: "Propagate status events to the status callback on subscribe operations."
         type: improvement
     date: 2016-10-05
     version: v4.0.13
