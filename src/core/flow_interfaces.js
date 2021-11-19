@@ -47,6 +47,7 @@ export type InternalSetupStruct = {
   subscribeKey: string, // API key required to subscribe
   cipherKey: string, // decryption keys
   origin: ?string, // an optional FQDN which will recieve calls from the SDK.
+  useDomainSharding: ?boolean, // domain sharding override
   ssl: boolean, // is SSL enabled?
   shutdown: Function, // function to call when pubnub is shutting down.
 

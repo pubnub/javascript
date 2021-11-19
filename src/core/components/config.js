@@ -62,6 +62,9 @@ export default class {
   // Custom optional origin.
   origin: string;
 
+  // Domain sharding override. By default it is on for default origins and off for custom origins.
+  useDomainSharding: ?boolean;
+
   // log verbosity: true to output lots of info
   logVerbosity: boolean;
 
@@ -160,6 +163,7 @@ export default class {
     this.setFilterExpression(setup.filterExpression);
 
     this.origin = setup.origin || 'ps.pndsn.com';
+    this.useDomainSharding = setup.useDomainSharding;
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
@@ -210,6 +214,18 @@ export default class {
     }
 
     this.setUUID(this._decideUUID(setup.uuid)); // UUID decision depends on subKey.
+  }
+
+  hasCustomOrigin(): boolean {
+    return this.origin !== 'ps.pndsn.com';
+  }
+
+  isDomainShardingEnabled(): boolean {
+    if (this.useDomainSharding === null || this.useDomainSharding === undefined) {
+      return !this.hasCustomOrigin();
+    } else {
+      return this.useDomainSharding;
+    }
   }
 
   // exposed setters
