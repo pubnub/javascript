@@ -1,3 +1,9 @@
+## v4.34.1
+November 19 2021
+
+#### Fixed
+- Update `.npmignore` and excluded resources from from NPM package. Fixed the following issues reported by [@ElridgeDMello](https://github.com/ElridgeDMello): [#228](https://github.com/pubnub/javascript/issues/228).
+
 ## v4.34.0
 November 19 2021
 
