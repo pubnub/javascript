@@ -16,5 +16,6 @@ dist/titanium/stats.json
 # GitHub Actions #
 ##################
 .github/.release
+release-artifacts-*
 
 .vscode
