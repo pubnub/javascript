@@ -7,6 +7,8 @@ import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct, ProxyStruct } 
 const PRESENCE_TIMEOUT_MINIMUM: number = 20;
 const PRESENCE_TIMEOUT_DEFAULT: number = 300;
 
+const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
+
 type ConfigConstructArgs = {
   setup: InternalSetupStruct,
   db: DatabaseInterface,
@@ -60,7 +62,7 @@ export default class {
   secure: boolean;
 
   // Custom optional origin.
-  origin: string;
+  origin: string | string[];
 
   // log verbosity: true to output lots of info
   logVerbosity: boolean;
@@ -159,7 +161,11 @@ export default class {
 
     this.setFilterExpression(setup.filterExpression);
 
-    this.origin = setup.origin || 'ps.pndsn.com';
+    if (typeof setup.origin !== 'string' && !Array.isArray(setup.origin) && setup.origin !== undefined) {
+      throw new Error('Origin must be either undefined, a string or a list of strings.');
+    }
+
+    this.origin = setup.origin || makeDefaultOrigins();
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
