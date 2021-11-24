@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "4.34.0",
+  "version": "4.34.1",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "bin": {},
@@ -103,7 +103,7 @@
     "karma-webpack": "^4.0.2",
     "mocha": "^7.1.2",
     "nock": "^9.6.1",
-    "node-fetch": "^1.7.3",
+    "node-fetch": "^2.6.1",
     "phantomjs-prebuilt": "^2.1.16",
     "puppeteer": "^5.2.0",
     "rimraf": "^3.0.2",

@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.com/pubnub/javascript.svg?branch=master)](https://travis-ci.com/pubnub/javascript)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pubnub/javascript&amp;utm_campaign=Badge_Grade)
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&utm_medium=referral&utm_content=pubnub/javascript&utm_campaign=Badge_Coverage)
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
 [![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
 [![Known Vulnerabilities](https://snyk.io/test/npm/pubnub/badge.svg)](https://snyk.io/test/npm/pubnub)
@@ -23,8 +22,8 @@ You will need the publish and subscribe keys to authenticate your app. Get your 
      npm install pubnub
      ```
    * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.34.0.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.34.0.min.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.34.1.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.4.34.1.min.js
 
 2. Configure your keys:
 
