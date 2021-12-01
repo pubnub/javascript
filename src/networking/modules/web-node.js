@@ -55,7 +55,7 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
   }
 
   sc = sc.timeout(endpoint.timeout);
-  
+
   sc.end((err, resp) => {
     let parsedResponse;
     let status: StatusAnnouncement = {};
