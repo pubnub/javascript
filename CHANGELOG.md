@@ -1,9 +1,3 @@
-## v4.34.2
-December 01 2021
-
-#### Fixed
-- Closes #230.
-
 ## v4.34.1
 November 19 2021
 
