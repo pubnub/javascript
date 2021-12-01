@@ -1,6 +1,11 @@
 ---
 changelog:
   - date: 2021-11-19
+    version: v4.34.1
+    changes:
+      - type: bug
+        text: "Update `.npmignore` and excluded resources from from NPM package."
+  - date: 2021-11-19
     version: v4.34.0
     changes:
       - type: feature
@@ -690,7 +695,7 @@ changelog:
   -
     changes:
       -
-        text: "downgrade superagent to v2; add new entry point for react native."
+        text: "downgrade superagent to v2; add a new entry point for react native."
         type: improvement
     date: 2017-02-07
     version: v4.4.3
@@ -772,7 +777,7 @@ changelog:
   -
     changes:
       -
-        text: "Fixes on encoding of apostraphes."
+        text: "Fixes on encoding of apostrophes."
         type: improvement
     date: 2016-11-01
     version: v4.2.3
@@ -826,7 +831,7 @@ changelog:
   -
     changes:
       -
-        text: "Propogate status events to the status callback on subscribe operations."
+        text: "Propagate status events to the status callback on subscribe operations."
         type: improvement
     date: 2016-10-05
     version: v4.0.13
@@ -1066,7 +1071,7 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.34.0"
+version: "4.34.1"
 sdks:
   -
     full-name: PubNub Javascript SDK
@@ -1085,7 +1090,7 @@ sdks:
             distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.34.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.34.1.zip
             requires:
               -
                 name: "agentkeepalive"
@@ -1849,7 +1854,7 @@ sdks:
             distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v4.34.0/pubnub.4.34.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v4.34.1/pubnub.4.34.1.js
             requires:
               -
                 name: "agentkeepalive"
