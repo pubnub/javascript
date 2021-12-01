@@ -16396,7 +16396,8 @@ function xdr(superagentConstruct, endpoint, callback) {
     sc = sc.buffer(false);
   }
 
-  return sc.timeout(endpoint.timeout).end(function (err, resp) {
+  sc = sc.timeout(endpoint.timeout);
+  sc.end(function (err, resp) {
     var parsedResponse;
     var status = {};
     status.error = err !== null;
@@ -16449,6 +16450,7 @@ function xdr(superagentConstruct, endpoint, callback) {
 
     return callback(status, parsedResponse);
   });
+  return sc;
 }
 
 function postfile(_x, _x2, _x3) {

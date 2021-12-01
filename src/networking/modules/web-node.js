@@ -54,7 +54,9 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
     sc = sc.buffer(false);
   }
 
-  return sc.timeout(endpoint.timeout).end((err, resp) => {
+  sc = sc.timeout(endpoint.timeout);
+  
+  sc.end((err, resp) => {
     let parsedResponse;
     let status: StatusAnnouncement = {};
     status.error = err !== null;
@@ -112,6 +114,8 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
 
     return callback(status, parsedResponse);
   });
+
+  return sc;
 }
 
 export async function postfile(
