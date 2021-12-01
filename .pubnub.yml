@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2021-12-01
+    version: v4.34.2
+    changes:
+      - type: bug
+        text: "Fix listener callback is invoked multiple times."
   - date: 2021-11-19
     version: v4.34.1
     changes:
@@ -1042,7 +1047,7 @@ features:
     - FILES-DOWNLOAD-FILE
   time:
     - TIME-TIME
-  others: 
+  others:
     - TELEMETRY
     - CREATE-PUSH-PAYLOAD
 files:
@@ -1071,7 +1076,7 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.34.1"
+version: "4.34.2"
 sdks:
   -
     full-name: PubNub Javascript SDK
@@ -1090,7 +1095,7 @@ sdks:
             distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.34.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.34.2.zip
             requires:
               -
                 name: "agentkeepalive"
@@ -1854,7 +1859,7 @@ sdks:
             distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v4.34.1/pubnub.4.34.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v4.34.2/pubnub.4.34.2.js
             requires:
               -
                 name: "agentkeepalive"
