@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2021-12-01
+    version: v4.34.2
+    changes:
+      - type: bug
+        text: "Fix listener callback is invoked multiple times."
   - date: 2021-11-19
     version: v4.34.1
     changes:

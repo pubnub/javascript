@@ -1,3 +1,9 @@
+## v4.34.2
+December 01 2021
+
+#### Fixed
+- Fix listener callback is invoked multiple times. Fixed the following issues reported by [@puopg](https://github.com/puopg): [#230](https://github.com/pubnub/javascript/issues/230).
+
 ## v4.34.1
 November 19 2021
 
