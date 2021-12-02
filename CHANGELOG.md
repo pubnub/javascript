@@ -1,3 +1,9 @@
+## v4.35.0
+December 02 2021
+
+#### Added
+- Allows to specify multiple origins in the config, which enables domain sharding for custom origins.
+
 ## v4.34.2
 December 01 2021
 
