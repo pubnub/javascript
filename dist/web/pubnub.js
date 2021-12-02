@@ -1,4 +1,4 @@
-/*! 4.34.1 / Consumer  */
+/*! 4.34.2 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -585,7 +585,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.34.1';
+      return '4.34.2';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -16396,7 +16396,8 @@ function xdr(superagentConstruct, endpoint, callback) {
     sc = sc.buffer(false);
   }
 
-  return sc.timeout(endpoint.timeout).end(function (err, resp) {
+  sc = sc.timeout(endpoint.timeout);
+  sc.end(function (err, resp) {
     var parsedResponse;
     var status = {};
     status.error = err !== null;
@@ -16449,6 +16450,7 @@ function xdr(superagentConstruct, endpoint, callback) {
 
     return callback(status, parsedResponse);
   });
+  return sc;
 }
 
 function postfile(_x, _x2, _x3) {
