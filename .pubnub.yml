@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2021-12-02
+    version: v4.35.0
+    changes:
+      - type: feature
+        text: "Allows to specify multiple origins in the config, which enables domain sharding for custom origins."
   - date: 2021-12-01
     version: v4.34.2
     changes:
@@ -1076,7 +1081,7 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.34.2"
+version: "4.35.0"
 sdks:
   -
     full-name: PubNub Javascript SDK
@@ -1095,7 +1100,7 @@ sdks:
             distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.34.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.35.0.zip
             requires:
               -
                 name: "agentkeepalive"
@@ -1859,7 +1864,7 @@ sdks:
             distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v4.34.2/pubnub.4.34.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v4.35.0/pubnub.4.35.0.js
             requires:
               -
                 name: "agentkeepalive"

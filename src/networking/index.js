@@ -9,13 +9,10 @@ export default class {
   _modules: NetworkingModules;
   _config: Config;
 
-  _maxSubDomain: number;
   _currentSubDomain: number;
 
   _standardOrigin: string;
   _subscribeOrigin: string;
-
-  _providedFQDN: string;
 
   _requestTimeout: number;
 
@@ -32,9 +29,12 @@ export default class {
   init(config: Config) {
     this._config = config;
 
-    this._maxSubDomain = 20;
-    this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
-    this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
+    if (Array.isArray(this._config.origin)) {
+      this._currentSubDomain = Math.floor(Math.random() * this._config.origin.length);
+    } else {
+      this._currentSubDomain = 0;
+    }
+
     this._coreParams = {};
 
     // create initial origins
@@ -42,22 +42,21 @@ export default class {
   }
 
   nextOrigin(): string {
-    // if a custom origin is supplied, use do not bother with shuffling subdomains
-    if (!this._providedFQDN.match(/ps\.pndsn\.com$/i)) {
-      return this._providedFQDN;
-    }
+    const protocol = this._config.secure ? 'https://' : 'http://';
 
-    let newSubDomain: string;
+    if (typeof this._config.origin === 'string') {
+      return `${protocol}${this._config.origin}`;
+    }
 
     this._currentSubDomain += 1;
 
-    if (this._currentSubDomain >= this._maxSubDomain) {
-      this._currentSubDomain = 1;
+    if (this._currentSubDomain >= this._config.origin.length) {
+      this._currentSubDomain = 0;
     }
 
-    newSubDomain = this._currentSubDomain.toString();
+    const origin = this._config.origin[this._currentSubDomain];
 
-    return this._providedFQDN.replace('ps.pndsn.com', `ps${newSubDomain}.pndsn.com`);
+    return `${protocol}${origin}`;
   }
 
   hasModule(name: string) {

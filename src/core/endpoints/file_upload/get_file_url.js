@@ -6,7 +6,7 @@ import type { GetFileUrlParams, GetFileUrlResult } from './types';
 import utils from '../../utils';
 
 export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetFileUrlResult => {
-  const { config } = modules;
+  const { config, networking } = modules;
 
   if (!channel) {
     throw new PubNubError(
@@ -48,8 +48,8 @@ export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetF
   const queryParams = Object.keys(params).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
 
   if (queryParams !== '') {
-    return `https://${config.origin}${url}?${queryParams}`;
+    return `${networking.getStandardOrigin()}${url}?${queryParams}`;
   }
 
-  return `https://${config.origin}${url}`;
+  return `${networking.getStandardOrigin()}${url}`;
 };

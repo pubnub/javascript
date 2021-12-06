@@ -1,4 +1,4 @@
-/*! 4.34.2 / Consumer  */
+/*! 4.35.0 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -366,6 +366,14 @@ var _flow_interfaces = __webpack_require__(2);
 var PRESENCE_TIMEOUT_MINIMUM = 20;
 var PRESENCE_TIMEOUT_DEFAULT = 300;
 
+var makeDefaultOrigins = function makeDefaultOrigins() {
+  return Array.from({
+    length: 20
+  }, function (_, i) {
+    return "ps".concat(i + 1, ".pndsn.com");
+  });
+};
+
 var _default = function () {
   function _default(_ref) {
     var _setup$fileUploadPubl, _setup$useRandomIVs;
@@ -423,7 +431,12 @@ var _default = function () {
     this.setAuthKey(setup.authKey);
     this.setCipherKey(setup.cipherKey);
     this.setFilterExpression(setup.filterExpression);
-    this.origin = setup.origin || 'ps.pndsn.com';
+
+    if (typeof setup.origin !== 'string' && !Array.isArray(setup.origin) && setup.origin !== undefined) {
+      throw new Error('Origin must be either undefined, a string or a list of strings.');
+    }
+
+    this.origin = setup.origin || makeDefaultOrigins();
     this.secure = setup.ssl || false;
     this.restore = setup.restore || false;
     this.proxy = setup.proxy;
@@ -575,7 +588,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.34.2';
+      return '4.35.0';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -8638,7 +8651,8 @@ var _default = function _default(modules, _ref) {
   var channel = _ref.channel,
       id = _ref.id,
       name = _ref.name;
-  var config = modules.config;
+  var config = modules.config,
+      networking = modules.networking;
 
   if (!channel) {
     throw new _endpoint.PubNubError('Validation failed, check status for details', (0, _endpoint.createValidationError)("channel can't be empty"));
@@ -8674,10 +8688,10 @@ var _default = function _default(modules, _ref) {
   }).join('&');
 
   if (queryParams !== '') {
-    return "https://".concat(config.origin).concat(url, "?").concat(queryParams);
+    return "".concat(networking.getStandardOrigin()).concat(url, "?").concat(queryParams);
   }
 
-  return "https://".concat(config.origin).concat(url);
+  return "".concat(networking.getStandardOrigin()).concat(url);
 };
 
 exports["default"] = _default;
@@ -13265,11 +13279,9 @@ var _default = function () {
     (0, _classCallCheck2["default"])(this, _default);
     (0, _defineProperty2["default"])(this, "_modules", void 0);
     (0, _defineProperty2["default"])(this, "_config", void 0);
-    (0, _defineProperty2["default"])(this, "_maxSubDomain", void 0);
     (0, _defineProperty2["default"])(this, "_currentSubDomain", void 0);
     (0, _defineProperty2["default"])(this, "_standardOrigin", void 0);
     (0, _defineProperty2["default"])(this, "_subscribeOrigin", void 0);
-    (0, _defineProperty2["default"])(this, "_providedFQDN", void 0);
     (0, _defineProperty2["default"])(this, "_requestTimeout", void 0);
     (0, _defineProperty2["default"])(this, "_coreParams", void 0);
     this._modules = {};
@@ -13282,28 +13294,33 @@ var _default = function () {
     key: "init",
     value: function init(config) {
       this._config = config;
-      this._maxSubDomain = 20;
-      this._currentSubDomain = Math.floor(Math.random() * this._maxSubDomain);
-      this._providedFQDN = (this._config.secure ? 'https://' : 'http://') + this._config.origin;
+
+      if (Array.isArray(this._config.origin)) {
+        this._currentSubDomain = Math.floor(Math.random() * this._config.origin.length);
+      } else {
+        this._currentSubDomain = 0;
+      }
+
       this._coreParams = {};
       this.shiftStandardOrigin();
     }
   }, {
     key: "nextOrigin",
     value: function nextOrigin() {
-      if (!this._providedFQDN.match(/ps\.pndsn\.com$/i)) {
-        return this._providedFQDN;
+      var protocol = this._config.secure ? 'https://' : 'http://';
+
+      if (typeof this._config.origin === 'string') {
+        return "".concat(protocol).concat(this._config.origin);
       }
 
-      var newSubDomain;
       this._currentSubDomain += 1;
 
-      if (this._currentSubDomain >= this._maxSubDomain) {
-        this._currentSubDomain = 1;
+      if (this._currentSubDomain >= this._config.origin.length) {
+        this._currentSubDomain = 0;
       }
 
-      newSubDomain = this._currentSubDomain.toString();
-      return this._providedFQDN.replace('ps.pndsn.com', "ps".concat(newSubDomain, ".pndsn.com"));
+      var origin = this._config.origin[this._currentSubDomain];
+      return "".concat(protocol).concat(origin);
     }
   }, {
     key: "hasModule",
