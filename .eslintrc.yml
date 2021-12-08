@@ -20,6 +20,7 @@ globals:
   'atob': readonly
   'btoa': readonly
   'Blob': readonly
+  'crypto': readonly
 
 overrides:
   - files: test/**/*
