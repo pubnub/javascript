@@ -1,9 +1,9 @@
 /** @flow */
-
-import crypto, { type $CryptoKey } from 'isomorphic-webcrypto';
-
 import type { ICryptography } from '../';
 import type { IFile, FileClass } from '../../file';
+
+// This version of flow doesn't know about the Web Crypto API
+declare var crypto: any;
 
 function concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer): ArrayBuffer {
   const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
@@ -72,7 +72,7 @@ export default class WebCryptography implements ICryptography<ArrayBuffer | stri
     });
   }
 
-  async getKey(key: string): Promise<$CryptoKey> {
+  async getKey(key: string): Promise<any> {
     const bKey = Buffer.from(key);
     const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
 
@@ -81,19 +81,19 @@ export default class WebCryptography implements ICryptography<ArrayBuffer | stri
     return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
   }
 
-  async encryptArrayBuffer(key: $CryptoKey, plaintext: ArrayBuffer) {
+  async encryptArrayBuffer(key: any, plaintext: ArrayBuffer) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
     return concatArrayBuffer(abIv.buffer, await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, plaintext));
   }
 
-  async decryptArrayBuffer(key: $CryptoKey, ciphertext: ArrayBuffer) {
+  async decryptArrayBuffer(key: any, ciphertext: ArrayBuffer) {
     const abIv = ciphertext.slice(0, 16);
 
     return crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
   }
 
-  async encryptString(key: $CryptoKey, plaintext: string) {
+  async encryptString(key: any, plaintext: string) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
     const abPlaintext = Buffer.from(plaintext).buffer;
@@ -104,7 +104,7 @@ export default class WebCryptography implements ICryptography<ArrayBuffer | stri
     return Buffer.from(ciphertext).toString('utf8');
   }
 
-  async decryptString(key: $CryptoKey, ciphertext: string) {
+  async decryptString(key: any, ciphertext: string) {
     const abCiphertext = Buffer.from(ciphertext);
     const abIv = abCiphertext.slice(0, 16);
     const abPayload = abCiphertext.slice(16);

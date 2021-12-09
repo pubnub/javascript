@@ -1,6 +1,7 @@
 /* @flow */
 
 import CborReader from 'cbor-sync';
+import { Buffer } from 'buffer';
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import Database from '../db/common';
@@ -10,6 +11,8 @@ import { getfile, postfile } from '../networking/modules/react_native';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 import PubNubFile from '../file/modules/react-native';
+
+global.Buffer = global.Buffer ||  Buffer;
 
 export default class extends PubNubCore {
   constructor(setup: InternalSetupStruct) {
