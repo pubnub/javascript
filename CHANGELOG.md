@@ -1,3 +1,9 @@
+## v4.36.0
+December 09 2021
+
+#### Fixed
+- Remove isomorphic-webcrypto polyfill for web Add buffer polyfill to react native. Fixed the following issues reported by [@JakeOrel](https://github.com/JakeOrel): [#233](https://github.com/pubnub/javascript/issues/233).
+
 ## v4.35.0
 December 02 2021
 

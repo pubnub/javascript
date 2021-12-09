@@ -1,4 +1,4 @@
-/*! 4.35.0 / Consumer  */
+/*! 4.36.0 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -598,7 +598,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.35.0';
+      return '4.36.0';
     }
   }, {
     key: "_addPnsdkSuffix",
