@@ -1,3 +1,9 @@
+## v4.37.0
+December 16 2021
+
+#### Added
+- Add revoke token feature.
+
 ## v4.36.0
 December 09 2021
 

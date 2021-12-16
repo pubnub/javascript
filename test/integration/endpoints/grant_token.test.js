@@ -221,7 +221,7 @@ describe('grant token endpoint telemetry', () => {
           );
         })
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_pam3', average, leeway);
+          utils.verifyRequestTelemetry(lastRequest.path, 'l_pamv3', average, leeway);
           done();
         });
     }).timeout(60000);

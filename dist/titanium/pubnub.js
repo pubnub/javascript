@@ -1,4 +1,4 @@
-/*! 4.36.0 / Consumer  */
+/*! 4.37.0 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -166,7 +166,8 @@ var _default = {
   PNRemoveChannelsFromGroupOperation: 'PNRemoveChannelsFromGroupOperation',
   PNAccessManagerGrant: 'PNAccessManagerGrant',
   PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
-  PNAccessManagerAudit: 'PNAccessManagerAudit'
+  PNAccessManagerAudit: 'PNAccessManagerAudit',
+  PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken'
 };
 exports["default"] = _default;
 module.exports = exports.default;
@@ -588,7 +589,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '4.36.0';
+      return '4.37.0';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -1624,13 +1625,13 @@ var _cborSync = _interopRequireDefault(__webpack_require__(24));
 
 var _pubnubCommon = _interopRequireDefault(__webpack_require__(25));
 
-var _networking = _interopRequireDefault(__webpack_require__(113));
+var _networking = _interopRequireDefault(__webpack_require__(114));
 
-var _common = _interopRequireDefault(__webpack_require__(114));
+var _common = _interopRequireDefault(__webpack_require__(115));
 
-var _common2 = _interopRequireDefault(__webpack_require__(115));
+var _common2 = _interopRequireDefault(__webpack_require__(116));
 
-var _titanium = __webpack_require__(116);
+var _titanium = __webpack_require__(117);
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -2459,21 +2460,23 @@ var grantEndpointConfig = _interopRequireWildcard(__webpack_require__(104));
 
 var grantTokenEndpointConfig = _interopRequireWildcard(__webpack_require__(105));
 
-var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(106));
+var _revoke_token = _interopRequireDefault(__webpack_require__(106));
 
-var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(107));
+var publishEndpointConfig = _interopRequireWildcard(__webpack_require__(107));
 
-var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(108));
+var signalEndpointConfig = _interopRequireWildcard(__webpack_require__(108));
 
-var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(109));
+var historyEndpointConfig = _interopRequireWildcard(__webpack_require__(109));
 
-var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(110));
+var deleteMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(110));
 
-var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(111));
+var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(111));
+
+var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(112));
 
 var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(20));
 
-var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(112));
+var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(113));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -2516,6 +2519,7 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "grant", void 0);
     (0, _defineProperty2["default"])(this, "grantToken", void 0);
     (0, _defineProperty2["default"])(this, "audit", void 0);
+    (0, _defineProperty2["default"])(this, "revokeToken", void 0);
     (0, _defineProperty2["default"])(this, "subscribe", void 0);
     (0, _defineProperty2["default"])(this, "signal", void 0);
     (0, _defineProperty2["default"])(this, "presence", void 0);
@@ -2660,6 +2664,7 @@ var _default = function () {
     this.grant = _endpoint["default"].bind(this, modules, grantEndpointConfig);
     this.grantToken = _endpoint["default"].bind(this, modules, grantTokenEndpointConfig);
     this.audit = _endpoint["default"].bind(this, modules, auditEndpointConfig);
+    this.revokeToken = _endpoint["default"].bind(this, modules, _revoke_token["default"]);
     this.publish = _endpoint["default"].bind(this, modules, publishEndpointConfig);
 
     this.fire = function (args, callback) {
@@ -4852,7 +4857,8 @@ var _default = function () {
           break;
 
         case _operations["default"].PNAccessManagerGrantToken:
-          operation = 'pam3';
+        case _operations["default"].PNAccessManagerRevokeToken:
+          operation = 'pamv3';
           break;
 
         default:
@@ -12535,6 +12541,70 @@ var _interopRequireDefault = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNAccessManagerRevokeToken;
+  },
+  validateParams: function validateParams(modules, token) {
+    var secretKey = modules.config.secretKey;
+
+    if (!secretKey) {
+      return 'Missing Secret Key';
+    }
+
+    if (!token) {
+      return "token can't be empty";
+    }
+  },
+  getURL: function getURL(_ref, token) {
+    var config = _ref.config;
+    return "/v3/pam/".concat(config.subscribeKey, "/grant/").concat(_utils["default"].encodeString(token));
+  },
+  useDelete: function useDelete() {
+    return true;
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getTransactionTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return false;
+  },
+  prepareParams: function prepareParams(_ref3) {
+    var config = _ref3.config;
+    return {
+      uuid: config.getUUID()
+    };
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      status: response.status,
+      data: response.data
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 107 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(0);
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.getOperation = getOperation;
 exports.getRequestTimeout = getRequestTimeout;
 exports.getURL = getURL;
@@ -12652,7 +12722,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 107 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12724,7 +12794,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 108 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12835,7 +12905,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 109 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12905,7 +12975,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 110 */
+/* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12987,7 +13057,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 111 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13128,7 +13198,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 112 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13247,7 +13317,7 @@ function handleResponse(modules, serverResponse) {
 }
 
 /***/ }),
-/* 113 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13417,7 +13487,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 114 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13461,7 +13531,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 115 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13520,7 +13590,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 116 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13536,7 +13606,7 @@ exports.post = post;
 
 var _flow_interfaces = __webpack_require__(2);
 
-var _utils = __webpack_require__(117);
+var _utils = __webpack_require__(118);
 
 function log(url, qs, res) {
   var _pickLogger = function _pickLogger() {
@@ -13634,7 +13704,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 117 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
