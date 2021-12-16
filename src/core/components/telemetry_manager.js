@@ -133,7 +133,8 @@ export default class {
         operation = 'pam';
         break;
       case operationConstants.PNAccessManagerGrantToken:
-        operation = 'pam3';
+      case operationConstants.PNAccessManagerRevokeToken:
+        operation = 'pamv3';
         break;
       default:
         operation = 'time';

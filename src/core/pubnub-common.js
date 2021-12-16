@@ -137,6 +137,10 @@ import * as leaveSpacesEndpointConfig from './endpoints/memberships/leave_spaces
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
 import * as grantTokenEndpointConfig from './endpoints/access_manager/grant_token';
+import revokeTokenEndpointConfig, {
+  type RevokeTokenParams,
+  type RevokeTokenResult,
+} from './endpoints/access_manager/revoke_token';
 
 import * as publishEndpointConfig from './endpoints/publish';
 import * as signalEndpointConfig from './endpoints/signal';
@@ -188,6 +192,10 @@ export default class {
   grant: Function;
   grantToken: Function;
   audit: Function;
+  revokeToken: (
+    parameters: RevokeTokenParams,
+    callback?: (status: CallbackStatus, result: RevokeTokenResult) => void
+  ) => Promise<RevokeTokenResult>;
   //
   subscribe: Function;
   signal: Function;
@@ -432,6 +440,7 @@ export default class {
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
+    this.revokeToken = endpointCreator.bind(this, modules, revokeTokenEndpointConfig);
     //
     this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);
 

@@ -83,5 +83,6 @@ export default {
   PNAccessManagerGrant: 'PNAccessManagerGrant',
   PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
+  PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
   //
 };

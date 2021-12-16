@@ -86,7 +86,7 @@ When('I attempt to grant a token specifying those permissions', async function()
   try {
     this.token = await pubnub.grantToken(this.grantPayload);
     // console.log('not expected token', this.token)
-  } catch (e) {
+  } catch (e: any) {
     // console.log('expected error', e)
     this.expectedError = e?.status?.errorData;
   }
@@ -159,6 +159,10 @@ Then('the error message is {string}', function (errorMessage) {
   expect(this.expectedError.error.message).to.equal(errorMessage);
 });
 
+Then('the error service is {string}', function (errorService) {
+  expect(this.expectedError.service).to.equal(errorService);
+});
+
 Then('the error source is {string}', function (errorSource: string) {
   expect(this.expectedError.error.source).to.equal(errorSource);
 });
@@ -166,6 +170,11 @@ Then('the error source is {string}', function (errorSource: string) {
 Then('the error detail message is {string}', function (detailsMessage) {
   let details = this.expectedError.error.details[0];
   expect(details.message).to.equal(detailsMessage);
+});
+
+Then('the error detail message is not empty', function () {
+  let details = this.expectedError.error.details[0];
+  expect(details.message).to.not.to.be.empty;
 });
 
 Then('the error detail location is {string}', function (errorLocation: string) {

@@ -12,6 +12,8 @@ coverage/
 *.iml
 dist/web/stats.json
 dist/titanium/stats.json
+dist/contract
+dist/cucumber
 
 # GitHub Actions #
 ##################
