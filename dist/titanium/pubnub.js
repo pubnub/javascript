@@ -379,10 +379,8 @@ var _default = function () {
   function _default(_ref) {
     var _setup$fileUploadPubl, _setup$useRandomIVs;
 
-    var setup = _ref.setup,
-        db = _ref.db;
+    var setup = _ref.setup;
     (0, _classCallCheck2["default"])(this, _default);
-    (0, _defineProperty2["default"])(this, "_db", void 0);
     (0, _defineProperty2["default"])(this, "subscribeKey", void 0);
     (0, _defineProperty2["default"])(this, "publishKey", void 0);
     (0, _defineProperty2["default"])(this, "secretKey", void 0);
@@ -421,7 +419,6 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "fileUploadPublishRetryLimit", void 0);
     (0, _defineProperty2["default"])(this, "useRandomIVs", void 0);
     this._PNSDKSuffix = {};
-    this._db = db;
     this.instanceId = "pn-".concat(_uuid["default"].createUUID());
     this.secretKey = setup.secretKey || setup.secret_key;
     this.subscribeKey = setup.subscribeKey || setup.subscribe_key;
@@ -476,7 +473,7 @@ var _default = function () {
       this.setHeartbeatInterval(setup.heartbeatInterval);
     }
 
-    this.setUUID(this._decideUUID(setup.uuid));
+    this.setUUID(setup.uuid);
   }
 
   (0, _createClass2["default"])(_default, [{
@@ -504,7 +501,10 @@ var _default = function () {
   }, {
     key: "setUUID",
     value: function setUUID(val) {
-      if (this._db && this._db.set) this._db.set("".concat(this.subscribeKey, "uuid"), val);
+      if (!val || typeof val !== 'string' || val.trim().length === 0) {
+        throw new Error('Missing uuid parameter. Provide a valid string uuid');
+      }
+
       this.UUID = val;
       return this;
     }
@@ -604,19 +604,6 @@ var _default = function () {
       return Object.keys(this._PNSDKSuffix).reduce(function (result, key) {
         return result + separator + _this._PNSDKSuffix[key];
       }, '');
-    }
-  }, {
-    key: "_decideUUID",
-    value: function _decideUUID(providedUUID) {
-      if (providedUUID) {
-        return providedUUID;
-      }
-
-      if (this._db && this._db.get && this._db.get("".concat(this.subscribeKey, "uuid"))) {
-        return this._db.get("".concat(this.subscribeKey, "uuid"));
-      }
-
-      return "pn-".concat(_uuid["default"].createUUID());
     }
   }]);
   return _default;
@@ -2579,12 +2566,10 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "setProxy", void 0);
     (0, _defineProperty2["default"])(this, "encrypt", void 0);
     (0, _defineProperty2["default"])(this, "decrypt", void 0);
-    var db = setup.db,
-        networking = setup.networking,
+    var networking = setup.networking,
         cbor = setup.cbor;
     var config = this._config = new _config["default"]({
-      setup: setup,
-      db: db
+      setup: setup
     });
     var crypto = new _index["default"]({
       config: config
