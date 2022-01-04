@@ -16,7 +16,7 @@ describe('multiple origins', () => {
 
   it('should use a random origin from a supplied array of origins', () => {
     const origins = ['test1.example.com', 'test2.example.com']; 
-    const config = new Config({ setup: { ssl: true, origin: origins } })
+    const config = new Config({ setup: { ssl: true, origin: origins, uuid: 'myUUID' } })
     const networking = new Networking({});
     networking.init(config);
 
@@ -26,7 +26,7 @@ describe('multiple origins', () => {
   });
 
   it('should use string origin if a string is supplied', () => {
-    const config = new Config({ setup: { ssl: true, origin: 'example.com' } })
+    const config = new Config({ setup: { ssl: true, origin: 'example.com', uuid: 'myUUID' } })
     const networking = new Networking({});
     networking.init(config);
 
@@ -38,7 +38,7 @@ describe('multiple origins', () => {
   describe('shiftStandardOrigin', () => {
     it('should use all origins if array is supplied', () => {
       const origins = ['test1.example.com', 'test2.example.com']; 
-      const config = new Config({ setup: { ssl: true, origin: origins } })
+      const config = new Config({ setup: { ssl: true, origin: origins, uuid: 'myUUID' } })
       const networking = new Networking({});
       networking.init(config);
 
@@ -51,7 +51,7 @@ describe('multiple origins', () => {
     });
 
     it('should do nothing if string is supplied', () => { 
-      const config = new Config({ setup: { ssl: true, origin: 'example.com' } })
+      const config = new Config({ setup: { ssl: true, origin: 'example.com', uuid: 'myUUID' } })
       const networking = new Networking({});
       networking.init(config);
 
@@ -71,7 +71,7 @@ describe('keep-alive agent', () => {
   after(() => nock.enableNetConnect());
 
   const setupNetwork = (shouldSecure, enableKeepAlive) => {
-    const config = new Config({ setup: { origin: 'ps.pndsn.com', ssl: shouldSecure, keepAlive: enableKeepAlive, logVerbosity: false } });
+    const config = new Config({ setup: { origin: 'ps.pndsn.com', ssl: shouldSecure, keepAlive: enableKeepAlive, logVerbosity: false, uuid: 'myUUID' } });
     const networking = new Networking({ keepAlive, del, get, post, proxy });
     networking.init(config);
 

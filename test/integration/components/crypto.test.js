@@ -8,6 +8,7 @@ describe('components/crypto useRandomIVs', () => {
     publishKey: 'demo-36',
     useRandomIVs: true,
     cipherKey: 'abcdef',
+    uuid: 'myUUID'
   });
 
   it('should be able to encrypt and decrypt a message', () => {

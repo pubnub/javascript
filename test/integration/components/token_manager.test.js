@@ -10,7 +10,8 @@ describe('#components/token_manager', () => {
   beforeEach(() => {
     pubnub = new PubNub({
       subscribeKey: 'mySubKey',
-      publishKey: 'myPublishKey'
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID'
     });
   });
 

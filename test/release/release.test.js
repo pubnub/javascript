@@ -24,7 +24,7 @@ describe('release should be consistent', () => {
   });
 
   it('with correct version in code', () => {
-    assert.equal(packageJSON.version, new PubNub({}).getVersion());
+    assert.equal(packageJSON.version, new PubNub({uuid: 'myUUID'}).getVersion());
   });
 
   it('with updated readme', () => {
