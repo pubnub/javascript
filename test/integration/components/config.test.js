@@ -52,5 +52,16 @@ describe('components/config', () => {
         new PubNub(config);
       });
     });
+
+    it('setUUID throws while trying to set invalid uuid', () => {
+      let pubnub = new PubNub({
+        subscribeKey: 'mySubKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID'
+      });
+      assert.throws(() => {
+        pubnub.setUUID(' ');
+      });
+    });
   });
 });
