@@ -15,7 +15,7 @@ var myChanneGroup1 = 'myChannelGroup1' + channelSuffix;
 describe('#distribution test (titanium)', function () {
 
   before(function () {
-    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
+    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUUID' });
   });
 
   after(function () {

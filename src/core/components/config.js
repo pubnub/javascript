@@ -2,7 +2,7 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, DatabaseInterface, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
+import { InternalSetupStruct, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
 const PRESENCE_TIMEOUT_MINIMUM: number = 20;
 const PRESENCE_TIMEOUT_DEFAULT: number = 300;
@@ -10,13 +10,10 @@ const PRESENCE_TIMEOUT_DEFAULT: number = 300;
 const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
 
 type ConfigConstructArgs = {
-  setup: InternalSetupStruct,
-  db: DatabaseInterface,
+  setup: InternalSetupStruct
 };
 
 export default class {
-  _db: DatabaseInterface;
-
   subscribeKey: string;
   publishKey: string;
   secretKey: string;
@@ -145,9 +142,8 @@ export default class {
   fileUploadPublishRetryLimit: number;
   useRandomIVs: boolean;
 
-  constructor({ setup, db }: ConfigConstructArgs) {
+  constructor({ setup }: ConfigConstructArgs) {
     this._PNSDKSuffix = {};
-    this._db = db;
 
     this.instanceId = `pn-${uuidGenerator.createUUID()}`;
     this.secretKey = setup.secretKey || setup.secret_key;
@@ -215,7 +211,7 @@ export default class {
       this.setHeartbeatInterval(setup.heartbeatInterval);
     }
 
-    this.setUUID(this._decideUUID(setup.uuid)); // UUID decision depends on subKey.
+    this.setUUID(setup.uuid);
   }
 
   // exposed setters
@@ -238,7 +234,9 @@ export default class {
   }
 
   setUUID(val: string): this {
-    if (this._db && this._db.set) this._db.set(`${this.subscribeKey}uuid`, val);
+    if (!val || typeof val !== 'string' || val.trim().length === 0) {
+      throw new Error('Missing uuid parameter. Provide a valid string uuid');
+    }
     this.UUID = val;
     return this;
   }
@@ -313,7 +311,7 @@ export default class {
   }
 
   getVersion(): string {
-    return '4.37.0';
+    return '5.0.0';
   }
 
   _addPnsdkSuffix(name: string, suffix: string) {
@@ -322,20 +320,5 @@ export default class {
 
   _getPnsdkSuffix(separator: string): string {
     return Object.keys(this._PNSDKSuffix).reduce((result, key) => result + separator + this._PNSDKSuffix[key], '');
-  }
-
-  _decideUUID(providedUUID: string): string {
-    // if the uuid was provided by setup, use this UUID.
-    if (providedUUID) {
-      return providedUUID;
-    }
-
-    // if the database module is enabled and we have something saved, use this.
-    if (this._db && this._db.get && this._db.get(`${this.subscribeKey}uuid`)) {
-      return this._db.get(`${this.subscribeKey}uuid`);
-    }
-
-    // randomize the UUID and push to storage
-    return `pn-${uuidGenerator.createUUID()}`;
   }
 }

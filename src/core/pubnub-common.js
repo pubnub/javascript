@@ -358,9 +358,9 @@ export default class {
   //
 
   constructor(setup: InternalSetupStruct) {
-    let { db, networking, cbor } = setup;
+    let { networking, cbor } = setup;
 
-    const config = (this._config = new Config({ setup, db }));
+    const config = (this._config = new Config({ setup }));
     const crypto = new Crypto({ config }); // LEGACY
 
     const cryptography = setup.cryptography;

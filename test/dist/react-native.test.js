@@ -19,7 +19,7 @@ describe('#distribution test (rkt-native)', function () {
   });
 
   beforeEach(() => {
-    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo' });
+    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUUID' });
   });
 
   afterEach(() => {

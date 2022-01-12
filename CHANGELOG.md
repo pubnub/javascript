@@ -1,3 +1,9 @@
+## v5.0.0
+January 12 2022
+
+#### Modified
+- BREAKING CHANGES: `uuid` is required parameter in PubNub constructor.
+
 ## v4.37.0
 December 16 2021
 

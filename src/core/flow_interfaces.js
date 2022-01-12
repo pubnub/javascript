@@ -64,13 +64,7 @@ export type InternalSetupStruct = {
 
   suppressLev: ?boolean,
 
-  db: Function, // get / set implementation to store data
   networking: Function // component of networking to use
-}
-
-type DatabaseInterface = {
-  get: Function,
-  set: Function
 }
 
 type EndpointKeyDefinition = {

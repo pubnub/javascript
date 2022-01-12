@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2022-01-12
+    version: v5.0.0
+    changes:
+      - type: improvement
+        text: "BREAKING CHANGES: `uuid` is required parameter in PubNub constructor."
   - date: 2021-12-16
     version: v4.37.0
     changes:
@@ -1091,7 +1096,7 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "4.37.0"
+version: "5.0.0"
 sdks:
   -
     full-name: PubNub Javascript SDK
@@ -1110,7 +1115,7 @@ sdks:
             distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v4.37.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v5.0.0.zip
             requires:
               -
                 name: "agentkeepalive"
@@ -1874,7 +1879,7 @@ sdks:
             distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v4.37.0/pubnub.4.37.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v5.0.0/pubnub.5.0.0.js
             requires:
               -
                 name: "agentkeepalive"
