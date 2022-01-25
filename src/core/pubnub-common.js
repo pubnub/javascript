@@ -188,6 +188,15 @@ export default class {
   whereNow: Function;
   getState: Function;
   setState: Function;
+  // presence utility methods
+  iAmHere: Function;
+  iAmAway: Function;
+  setPresenceState: Function;
+
+  // subscription utility methods
+  handshake: Function;
+  receiveMessages: Function;
+
   //
   grant: Function;
   grantToken: Function;
@@ -436,6 +445,22 @@ export default class {
     this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+
+    /* presence utilities */
+    this.iAmHere = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    this.iAmAway = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
+
+    /* subscription utilities */
+    this.handshake  = (args, cb) => subscribeEndpoint({ channels: args.channels, channelGroups: args.channelGroups, state: {} }, cb);
+    this.receiveMessages = (args, cb) => subscribeEndpoint({
+      channels: args.channels,
+      channelGroups: args.channelGroups,
+      timetoken: args.timetoken,
+      region: args.region,
+      state: {},
+    }, cb);
+
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
