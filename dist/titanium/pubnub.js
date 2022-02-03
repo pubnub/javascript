@@ -167,7 +167,9 @@ var _default = {
   PNAccessManagerGrant: 'PNAccessManagerGrant',
   PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
-  PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken'
+  PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
+  PNHandshakeOperation: 'PNHandshakeOperation',
+  PNReceiveMessagesOperation: 'PNReceiveMessagesOperation'
 };
 exports["default"] = _default;
 module.exports = exports.default;
@@ -719,7 +721,7 @@ module.exports["default"] = module.exports, module.exports.__esModule = true;
 
 var _typeof = __webpack_require__(7)["default"];
 
-var assertThisInitialized = __webpack_require__(17);
+var assertThisInitialized = __webpack_require__(19);
 
 function _possibleConstructorReturn(self, call) {
   if (call && (_typeof(call) === "object" || typeof call === "function")) {
@@ -1088,6 +1090,56 @@ function _default(modules, endpoint) {
 
 /***/ }),
 /* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(64);
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+module.exports = _asyncToGenerator;
+module.exports["default"] = module.exports, module.exports.__esModule = true;
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports) {
 
 function _assertThisInitialized(self) {
@@ -1102,7 +1154,7 @@ module.exports = _assertThisInitialized;
 module.exports["default"] = module.exports, module.exports.__esModule = true;
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1341,7 +1393,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1484,7 +1536,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1537,56 +1589,6 @@ function handleResponse(modules, serverResponse) {
 function validateParams() {}
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(64);
-
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports) {
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
-module.exports = _asyncToGenerator;
-module.exports["default"] = module.exports, module.exports.__esModule = true;
-
-/***/ }),
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1612,13 +1614,13 @@ var _cborSync = _interopRequireDefault(__webpack_require__(24));
 
 var _pubnubCommon = _interopRequireDefault(__webpack_require__(25));
 
-var _networking = _interopRequireDefault(__webpack_require__(114));
+var _networking = _interopRequireDefault(__webpack_require__(117));
 
-var _common = _interopRequireDefault(__webpack_require__(115));
+var _common = _interopRequireDefault(__webpack_require__(118));
 
-var _common2 = _interopRequireDefault(__webpack_require__(116));
+var _common2 = _interopRequireDefault(__webpack_require__(119));
 
-var _titanium = __webpack_require__(117);
+var _titanium = __webpack_require__(120);
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -2311,7 +2313,7 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _config = _interopRequireDefault(__webpack_require__(8));
 
-var _index = _interopRequireDefault(__webpack_require__(18));
+var _index = _interopRequireDefault(__webpack_require__(20));
 
 var _subscription_manager = _interopRequireDefault(__webpack_require__(28));
 
@@ -2319,7 +2321,7 @@ var _telemetry_manager = _interopRequireDefault(__webpack_require__(31));
 
 var _push_payload = _interopRequireDefault(__webpack_require__(32));
 
-var _listener_manager = _interopRequireDefault(__webpack_require__(19));
+var _listener_manager = _interopRequireDefault(__webpack_require__(21));
 
 var _token_manager = _interopRequireDefault(__webpack_require__(35));
 
@@ -2461,9 +2463,15 @@ var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(11
 
 var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(112));
 
-var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(20));
+var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(22));
 
 var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(113));
+
+var _handshake = _interopRequireDefault(__webpack_require__(114));
+
+var _receiveMessages = _interopRequireDefault(__webpack_require__(115));
+
+var subscriptionTypes = _interopRequireWildcard(__webpack_require__(116));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -2503,6 +2511,11 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "whereNow", void 0);
     (0, _defineProperty2["default"])(this, "getState", void 0);
     (0, _defineProperty2["default"])(this, "setState", void 0);
+    (0, _defineProperty2["default"])(this, "iAmHere", void 0);
+    (0, _defineProperty2["default"])(this, "iAmAway", void 0);
+    (0, _defineProperty2["default"])(this, "setPresenceState", void 0);
+    (0, _defineProperty2["default"])(this, "handshake", void 0);
+    (0, _defineProperty2["default"])(this, "receiveMessages", void 0);
     (0, _defineProperty2["default"])(this, "grant", void 0);
     (0, _defineProperty2["default"])(this, "grantToken", void 0);
     (0, _defineProperty2["default"])(this, "audit", void 0);
@@ -2646,6 +2659,9 @@ var _default = function () {
     this.whereNow = _endpoint["default"].bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = _endpoint["default"].bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+    this.iAmHere = _endpoint["default"].bind(this, modules, presenceHeartbeatEndpointConfig);
+    this.iAmAway = _endpoint["default"].bind(this, modules, presenceLeaveEndpointConfig);
+    this.setPresenceState = _endpoint["default"].bind(this, modules, presenceSetStateConfig);
     this.grant = _endpoint["default"].bind(this, modules, grantEndpointConfig);
     this.grantToken = _endpoint["default"].bind(this, modules, grantTokenEndpointConfig);
     this.audit = _endpoint["default"].bind(this, modules, auditEndpointConfig);
@@ -2683,6 +2699,8 @@ var _default = function () {
 
     this.downloadFile = _endpoint["default"].bind(this, modules, _download_file["default"]);
     this.deleteFile = _endpoint["default"].bind(this, modules, _delete_file["default"]);
+    this.handshake = _endpoint["default"].bind(this, modules, _handshake["default"]);
+    this.receiveMessages = _endpoint["default"].bind(this, modules, _receiveMessages["default"]);
     this.objects = {
       getAllUUIDMetadata: _endpoint["default"].bind(this, modules, _get_all["default"]),
       getUUIDMetadata: _endpoint["default"].bind(this, modules, _get["default"]),
@@ -3805,11 +3823,11 @@ var _createClass2 = _interopRequireDefault(__webpack_require__(6));
 
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
-var _cryptography = _interopRequireDefault(__webpack_require__(18));
+var _cryptography = _interopRequireDefault(__webpack_require__(20));
 
 var _config = _interopRequireDefault(__webpack_require__(8));
 
-var _listener_manager = _interopRequireDefault(__webpack_require__(19));
+var _listener_manager = _interopRequireDefault(__webpack_require__(21));
 
 var _reconnection_manager = _interopRequireDefault(__webpack_require__(29));
 
@@ -4551,7 +4569,7 @@ var _createClass2 = _interopRequireDefault(__webpack_require__(6));
 
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
-var _time = _interopRequireDefault(__webpack_require__(20));
+var _time = _interopRequireDefault(__webpack_require__(22));
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -4876,7 +4894,7 @@ exports["default"] = exports.MPNSNotificationPayload = exports.FCMNotificationPa
 
 var _objectWithoutProperties2 = _interopRequireDefault(__webpack_require__(33));
 
-var _assertThisInitialized2 = _interopRequireDefault(__webpack_require__(17));
+var _assertThisInitialized2 = _interopRequireDefault(__webpack_require__(19));
 
 var _inherits2 = _interopRequireDefault(__webpack_require__(12));
 
@@ -7563,9 +7581,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(21));
+var _regenerator = _interopRequireDefault(__webpack_require__(17));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(22));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(18));
 
 var _endpoint = __webpack_require__(16);
 
@@ -8702,9 +8720,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(21));
+var _regenerator = _interopRequireDefault(__webpack_require__(17));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(22));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(18));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -13315,6 +13333,189 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNHandshakeOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params !== null && params !== void 0 && params.channels) && !(params !== null && params !== void 0 && params.channelGroups)) {
+      return 'channels and channleGroups both should not be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    var channelsString = params.channels ? params.channels.join(',') : ',';
+    return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(_utils["default"].encodeString(channelsString), "/0");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getSubscribeTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  prepareParams: function prepareParams(_, params) {
+    var outParams = {};
+
+    if (params.channelGroups) {
+      outParams['channel-group'] = params.channelGroups.join(',');
+    }
+
+    outParams.tt = 0;
+    return outParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      region: response.t.r,
+      timetoken: response.t.t
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 115 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(0);
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _regenerator = _interopRequireDefault(__webpack_require__(17));
+
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(18));
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNReceiveMessagesOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params !== null && params !== void 0 && params.channels) && !(params !== null && params !== void 0 && params.channelGroups)) {
+      return 'channels and channleGroups both should not be empty';
+    }
+
+    if (!(params !== null && params !== void 0 && params.timetoken)) {
+      return 'timetoken can not be empty';
+    }
+
+    if (!(params !== null && params !== void 0 && params.region)) {
+      return 'region can not be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    var channelsString = params.channels ? params.channels.join(',') : ',';
+    return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(_utils["default"].encodeString(channelsString), "/0");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getSubscribeTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  prepareParams: function prepareParams(_, params) {
+    var outParams = {};
+
+    if (params.channelGroups) {
+      outParams['channel-group'] = params.channelGroups.join(',');
+    }
+
+    outParams.tt = params.timetoken;
+    outParams.tr = params.region;
+    return outParams;
+  },
+  handleResponse: function () {
+    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_, response) {
+      var parsedMessages;
+      return _regenerator["default"].wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              parsedMessages = [];
+              response.m.forEach(function (message) {
+                var envelope = {
+                  shard: parseInt(message.a, 10),
+                  subscriptionMatch: message.b,
+                  channel: message.c,
+                  messageType: message.e,
+                  payload: message.d,
+                  flags: message.f,
+                  issuingClientId: message.i,
+                  subscribeKey: message.k,
+                  originationTimetoken: message.o,
+                  userMetadata: message.u,
+                  publishMetaData: {
+                    timetoken: message.p.t,
+                    region: message.p.r
+                  }
+                };
+                parsedMessages.push(envelope);
+              });
+              return _context.abrupt("return", {
+                messages: parsedMessages,
+                metadata: {
+                  region: response.t.r,
+                  timetoken: response.t.t
+                }
+              });
+
+            case 3:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    function handleResponse(_x, _x2) {
+      return _handleResponse.apply(this, arguments);
+    }
+
+    return handleResponse;
+  }()
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 116 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/***/ }),
+/* 117 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(0);
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
 var _createClass2 = _interopRequireDefault(__webpack_require__(6));
@@ -13472,7 +13673,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 115 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13516,7 +13717,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 116 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13575,7 +13776,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 117 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13591,7 +13792,7 @@ exports.post = post;
 
 var _flow_interfaces = __webpack_require__(2);
 
-var _utils = __webpack_require__(118);
+var _utils = __webpack_require__(121);
 
 function log(url, qs, res) {
   var _pickLogger = function _pickLogger() {
@@ -13689,7 +13890,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 118 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
