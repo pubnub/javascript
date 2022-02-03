@@ -389,7 +389,7 @@ var makeDefaultOrigins = function makeDefaultOrigins() {
 
 var _default = function () {
   function _default(_ref) {
-    var _setup$fileUploadPubl, _setup$useRandomIVs;
+    var _setup$fileUploadPubl, _setup$useRandomIVs, _setup$enableSubscrib;
 
     var setup = _ref.setup;
     (0, _classCallCheck2["default"])(this, _default);
@@ -430,6 +430,7 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "customDecrypt", void 0);
     (0, _defineProperty2["default"])(this, "fileUploadPublishRetryLimit", void 0);
     (0, _defineProperty2["default"])(this, "useRandomIVs", void 0);
+    (0, _defineProperty2["default"])(this, "enableSubscribeBeta", void 0);
     this._PNSDKSuffix = {};
     this.instanceId = "pn-".concat(_uuid["default"].createUUID());
     this.secretKey = setup.secretKey || setup.secret_key;
@@ -459,6 +460,11 @@ var _default = function () {
     this.customDecrypt = setup.customDecrypt;
     this.fileUploadPublishRetryLimit = (_setup$fileUploadPubl = setup.fileUploadPublishRetryLimit) !== null && _setup$fileUploadPubl !== void 0 ? _setup$fileUploadPubl : 5;
     this.useRandomIVs = (_setup$useRandomIVs = setup.useRandomIVs) !== null && _setup$useRandomIVs !== void 0 ? _setup$useRandomIVs : true;
+    this.enableSubscribeBeta = (_setup$enableSubscrib = setup.enableSubscribeBeta) !== null && _setup$enableSubscrib !== void 0 ? _setup$enableSubscrib : false;
+
+    if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
+      throw new Error('not implemented');
+    }
 
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
       this.secure = true;
