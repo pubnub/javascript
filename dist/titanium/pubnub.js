@@ -727,7 +727,7 @@ module.exports["default"] = module.exports, module.exports.__esModule = true;
 
 var _typeof = __webpack_require__(7)["default"];
 
-var assertThisInitialized = __webpack_require__(19);
+var assertThisInitialized = __webpack_require__(17);
 
 function _possibleConstructorReturn(self, call) {
   if (call && (_typeof(call) === "object" || typeof call === "function")) {
@@ -987,7 +987,8 @@ function _default(modules, endpoint) {
     timeout: endpoint.getRequestTimeout(modules),
     headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {},
     ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
-    forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null
+    forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
+    getAbortController: typeof endpoint.getAbortController === 'function' ? endpoint.getAbortController(modules, incomingParams) : null
   };
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
@@ -1096,56 +1097,6 @@ function _default(modules, endpoint) {
 
 /***/ }),
 /* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(64);
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports) {
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
-module.exports = _asyncToGenerator;
-module.exports["default"] = module.exports, module.exports.__esModule = true;
-
-/***/ }),
-/* 19 */
 /***/ (function(module, exports) {
 
 function _assertThisInitialized(self) {
@@ -1160,7 +1111,7 @@ module.exports = _assertThisInitialized;
 module.exports["default"] = module.exports, module.exports.__esModule = true;
 
 /***/ }),
-/* 20 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1399,7 +1350,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 21 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1542,7 +1493,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 22 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1593,6 +1544,56 @@ function handleResponse(modules, serverResponse) {
 }
 
 function validateParams() {}
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(64);
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports) {
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+module.exports = _asyncToGenerator;
+module.exports["default"] = module.exports, module.exports.__esModule = true;
 
 /***/ }),
 /* 23 */
@@ -2319,7 +2320,7 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _config = _interopRequireDefault(__webpack_require__(8));
 
-var _index = _interopRequireDefault(__webpack_require__(20));
+var _index = _interopRequireDefault(__webpack_require__(18));
 
 var _subscription_manager = _interopRequireDefault(__webpack_require__(28));
 
@@ -2327,7 +2328,7 @@ var _telemetry_manager = _interopRequireDefault(__webpack_require__(31));
 
 var _push_payload = _interopRequireDefault(__webpack_require__(32));
 
-var _listener_manager = _interopRequireDefault(__webpack_require__(21));
+var _listener_manager = _interopRequireDefault(__webpack_require__(19));
 
 var _token_manager = _interopRequireDefault(__webpack_require__(35));
 
@@ -2469,7 +2470,7 @@ var messageCountsEndpointConfig = _interopRequireWildcard(__webpack_require__(11
 
 var fetchMessagesEndpointConfig = _interopRequireWildcard(__webpack_require__(112));
 
-var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(22));
+var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(20));
 
 var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(113));
 
@@ -3829,11 +3830,11 @@ var _createClass2 = _interopRequireDefault(__webpack_require__(6));
 
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
-var _cryptography = _interopRequireDefault(__webpack_require__(20));
+var _cryptography = _interopRequireDefault(__webpack_require__(18));
 
 var _config = _interopRequireDefault(__webpack_require__(8));
 
-var _listener_manager = _interopRequireDefault(__webpack_require__(21));
+var _listener_manager = _interopRequireDefault(__webpack_require__(19));
 
 var _reconnection_manager = _interopRequireDefault(__webpack_require__(29));
 
@@ -4575,7 +4576,7 @@ var _createClass2 = _interopRequireDefault(__webpack_require__(6));
 
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
-var _time = _interopRequireDefault(__webpack_require__(22));
+var _time = _interopRequireDefault(__webpack_require__(20));
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -4900,7 +4901,7 @@ exports["default"] = exports.MPNSNotificationPayload = exports.FCMNotificationPa
 
 var _objectWithoutProperties2 = _interopRequireDefault(__webpack_require__(33));
 
-var _assertThisInitialized2 = _interopRequireDefault(__webpack_require__(19));
+var _assertThisInitialized2 = _interopRequireDefault(__webpack_require__(17));
 
 var _inherits2 = _interopRequireDefault(__webpack_require__(12));
 
@@ -7587,9 +7588,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(17));
+var _regenerator = _interopRequireDefault(__webpack_require__(21));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(18));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(22));
 
 var _endpoint = __webpack_require__(16);
 
@@ -8726,9 +8727,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(17));
+var _regenerator = _interopRequireDefault(__webpack_require__(21));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(18));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(22));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -13399,10 +13400,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(17));
-
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(18));
-
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
 var _utils = _interopRequireDefault(__webpack_require__(3));
@@ -13436,6 +13433,9 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
+  getAbortController: function getAbortController(_, params) {
+    return params.abortController;
+  },
   prepareParams: function prepareParams(_, params) {
     var outParams = {};
 
@@ -13447,55 +13447,34 @@ var endpoint = {
     outParams.tr = params.region;
     return outParams;
   },
-  handleResponse: function () {
-    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_, response) {
-      var parsedMessages;
-      return _regenerator["default"].wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              parsedMessages = [];
-              response.m.forEach(function (message) {
-                var envelope = {
-                  shard: parseInt(message.a, 10),
-                  subscriptionMatch: message.b,
-                  channel: message.c,
-                  messageType: message.e,
-                  payload: message.d,
-                  flags: message.f,
-                  issuingClientId: message.i,
-                  subscribeKey: message.k,
-                  originationTimetoken: message.o,
-                  userMetadata: message.u,
-                  publishMetaData: {
-                    timetoken: message.p.t,
-                    region: message.p.r
-                  }
-                };
-                parsedMessages.push(envelope);
-              });
-              return _context.abrupt("return", {
-                messages: parsedMessages,
-                metadata: {
-                  region: response.t.r,
-                  timetoken: response.t.t
-                }
-              });
-
-            case 3:
-            case "end":
-              return _context.stop();
-          }
+  handleResponse: function handleResponse(_, response) {
+    var parsedMessages = [];
+    response.m.forEach(function (envelope) {
+      var parsedMessage = {
+        shard: parseInt(envelope.a, 10),
+        subscriptionMatch: envelope.b,
+        channel: envelope.c,
+        messageType: envelope.e,
+        payload: envelope.d,
+        flags: envelope.f,
+        issuingClientId: envelope.i,
+        subscribeKey: envelope.k,
+        originationTimetoken: envelope.o,
+        publishMetaData: {
+          timetoken: envelope.p.t,
+          region: envelope.p.r
         }
-      }, _callee);
-    }));
-
-    function handleResponse(_x, _x2) {
-      return _handleResponse.apply(this, arguments);
-    }
-
-    return handleResponse;
-  }()
+      };
+      parsedMessages.push(parsedMessage);
+    });
+    return {
+      messages: parsedMessages,
+      metadata: {
+        region: response.t.r,
+        timetoken: response.t.t
+      }
+    };
+  }
 };
 var _default = endpoint;
 exports["default"] = _default;

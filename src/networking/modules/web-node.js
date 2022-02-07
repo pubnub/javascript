@@ -44,6 +44,12 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
 
   let sc = superagentConstruct;
 
+  if (endpoint.getAbortController) {
+    endpoint.getAbortController.on('abort', () => {
+      sc.abort();
+    });
+  }
+
   if (endpoint.forceBuffered === true) {
     if (typeof Blob === 'undefined') {
       sc = sc.buffer().responseType('arraybuffer');

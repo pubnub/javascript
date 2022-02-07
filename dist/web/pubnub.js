@@ -653,11 +653,37 @@ module.exports["default"] = module.exports, module.exports.__esModule = true;
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+var _default = {
+  PNNetworkUpCategory: 'PNNetworkUpCategory',
+  PNNetworkDownCategory: 'PNNetworkDownCategory',
+  PNNetworkIssuesCategory: 'PNNetworkIssuesCategory',
+  PNTimeoutCategory: 'PNTimeoutCategory',
+  PNBadRequestCategory: 'PNBadRequestCategory',
+  PNAccessDeniedCategory: 'PNAccessDeniedCategory',
+  PNUnknownCategory: 'PNUnknownCategory',
+  PNReconnectedCategory: 'PNReconnectedCategory',
+  PNConnectedCategory: 'PNConnectedCategory',
+  PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory'
+};
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
 module.exports = __webpack_require__(75);
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -698,32 +724,6 @@ function _asyncToGenerator(fn) {
 
 module.exports = _asyncToGenerator;
 module.exports["default"] = module.exports, module.exports.__esModule = true;
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = void 0;
-var _default = {
-  PNNetworkUpCategory: 'PNNetworkUpCategory',
-  PNNetworkDownCategory: 'PNNetworkDownCategory',
-  PNNetworkIssuesCategory: 'PNNetworkIssuesCategory',
-  PNTimeoutCategory: 'PNTimeoutCategory',
-  PNBadRequestCategory: 'PNBadRequestCategory',
-  PNAccessDeniedCategory: 'PNAccessDeniedCategory',
-  PNUnknownCategory: 'PNUnknownCategory',
-  PNReconnectedCategory: 'PNReconnectedCategory',
-  PNConnectedCategory: 'PNConnectedCategory',
-  PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory'
-};
-exports["default"] = _default;
-module.exports = exports.default;
 
 /***/ }),
 /* 13 */
@@ -870,7 +870,7 @@ var _config = _interopRequireDefault(__webpack_require__(8));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
-var _categories = _interopRequireDefault(__webpack_require__(12));
+var _categories = _interopRequireDefault(__webpack_require__(10));
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
@@ -1047,7 +1047,8 @@ function _default(modules, endpoint) {
     timeout: endpoint.getRequestTimeout(modules),
     headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {},
     ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
-    forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null
+    forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
+    getAbortController: typeof endpoint.getAbortController === 'function' ? endpoint.getAbortController(modules, incomingParams) : null
   };
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
@@ -4514,7 +4515,7 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _flow_interfaces = __webpack_require__(2);
 
-var _categories = _interopRequireDefault(__webpack_require__(12));
+var _categories = _interopRequireDefault(__webpack_require__(10));
 
 var _default = function () {
   function _default() {
@@ -5750,7 +5751,7 @@ var subscriptionTypes = _interopRequireWildcard(__webpack_require__(127));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
-var _categories = _interopRequireDefault(__webpack_require__(12));
+var _categories = _interopRequireDefault(__webpack_require__(10));
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -6490,7 +6491,7 @@ var _utils = _interopRequireDefault(__webpack_require__(3));
 
 var _flow_interfaces = __webpack_require__(2);
 
-var _categories = _interopRequireDefault(__webpack_require__(12));
+var _categories = _interopRequireDefault(__webpack_require__(10));
 
 var _default = function () {
   function _default(_ref) {
@@ -10417,9 +10418,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(10));
+var _regenerator = _interopRequireDefault(__webpack_require__(11));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(12));
 
 var _endpoint = __webpack_require__(18);
 
@@ -11556,9 +11557,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(10));
+var _regenerator = _interopRequireDefault(__webpack_require__(11));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(12));
 
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
@@ -16229,10 +16230,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(10));
-
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(11));
-
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
 var _utils = _interopRequireDefault(__webpack_require__(3));
@@ -16266,6 +16263,9 @@ var endpoint = {
   isAuthSupported: function isAuthSupported() {
     return true;
   },
+  getAbortController: function getAbortController(_, params) {
+    return params.abortController;
+  },
   prepareParams: function prepareParams(_, params) {
     var outParams = {};
 
@@ -16277,55 +16277,34 @@ var endpoint = {
     outParams.tr = params.region;
     return outParams;
   },
-  handleResponse: function () {
-    var _handleResponse = (0, _asyncToGenerator2["default"])(_regenerator["default"].mark(function _callee(_, response) {
-      var parsedMessages;
-      return _regenerator["default"].wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              parsedMessages = [];
-              response.m.forEach(function (message) {
-                var envelope = {
-                  shard: parseInt(message.a, 10),
-                  subscriptionMatch: message.b,
-                  channel: message.c,
-                  messageType: message.e,
-                  payload: message.d,
-                  flags: message.f,
-                  issuingClientId: message.i,
-                  subscribeKey: message.k,
-                  originationTimetoken: message.o,
-                  userMetadata: message.u,
-                  publishMetaData: {
-                    timetoken: message.p.t,
-                    region: message.p.r
-                  }
-                };
-                parsedMessages.push(envelope);
-              });
-              return _context.abrupt("return", {
-                messages: parsedMessages,
-                metadata: {
-                  region: response.t.r,
-                  timetoken: response.t.t
-                }
-              });
-
-            case 3:
-            case "end":
-              return _context.stop();
-          }
+  handleResponse: function handleResponse(_, response) {
+    var parsedMessages = [];
+    response.m.forEach(function (envelope) {
+      var parsedMessage = {
+        shard: parseInt(envelope.a, 10),
+        subscriptionMatch: envelope.b,
+        channel: envelope.c,
+        messageType: envelope.e,
+        payload: envelope.d,
+        flags: envelope.f,
+        issuingClientId: envelope.i,
+        subscribeKey: envelope.k,
+        originationTimetoken: envelope.o,
+        publishMetaData: {
+          timetoken: envelope.p.t,
+          region: envelope.p.r
         }
-      }, _callee);
-    }));
-
-    function handleResponse(_x, _x2) {
-      return _handleResponse.apply(this, arguments);
-    }
-
-    return handleResponse;
-  }()
+      };
+      parsedMessages.push(parsedMessage);
+    });
+    return {
+      messages: parsedMessages,
+      metadata: {
+        region: response.t.r,
+        timetoken: response.t.t
+      }
+    };
+  }
 };
 var _default = endpoint;
 exports["default"] = _default;
@@ -16360,7 +16339,7 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(4));
 
 var _config = _interopRequireDefault(__webpack_require__(8));
 
-var _categories = _interopRequireDefault(__webpack_require__(12));
+var _categories = _interopRequireDefault(__webpack_require__(10));
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -16616,9 +16595,9 @@ exports.patch = patch;
 exports.post = post;
 exports.postfile = postfile;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(10));
+var _regenerator = _interopRequireDefault(__webpack_require__(11));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(12));
 
 var _superagent = _interopRequireDefault(__webpack_require__(132));
 
@@ -16665,6 +16644,12 @@ function xdr(superagentConstruct, endpoint, callback) {
   }
 
   var sc = superagentConstruct;
+
+  if (endpoint.getAbortController) {
+    endpoint.getAbortController.on('abort', function () {
+      sc.abort();
+    });
+  }
 
   if (endpoint.forceBuffered === true) {
     if (typeof Blob === 'undefined') {
@@ -20784,9 +20769,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(10));
+var _regenerator = _interopRequireDefault(__webpack_require__(11));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(12));
 
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
@@ -21184,9 +21169,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _regenerator = _interopRequireDefault(__webpack_require__(10));
+var _regenerator = _interopRequireDefault(__webpack_require__(11));
 
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(12));
 
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 

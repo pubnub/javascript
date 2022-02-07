@@ -161,6 +161,7 @@ export default function (modules, endpoint, ...args) {
     ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
     forceBuffered:
       typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
+    getAbortController: typeof endpoint.getAbortController === 'function' ? endpoint.getAbortController(modules, incomingParams) : null
   };
 
   outgoingParams.uuid = config.UUID;

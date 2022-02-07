@@ -1,3 +1,5 @@
+/** @flow */
+
 export type HandshakeParams = {|
   channels?: string[],
   channelGroups?: string[]
@@ -12,7 +14,8 @@ export type ReceiveMessagesParams = {|
   channels?: string[],
   channelGroups?: string[],
   timetoken: number,
-  region: number
+  region: number,
+  abortController: Object,
 |};
 
 export type Metadata = {|

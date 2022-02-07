@@ -2,7 +2,7 @@
 
 import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
-import type { ReceiveMessagesParams, ReceiveMessagesResult } from './types';
+import type { ReceiveMessagesParams, ReceiveMessagesResult, Message } from './types';
 import utils from '../../utils';
 
 const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = {
@@ -29,6 +29,8 @@ const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = 
 
   isAuthSupported: () => true,
 
+  getAbortController: (_, params) => params.abortController,
+
   prepareParams: (_, params) => {
     const outParams = {};
     if (params.channelGroups) {
@@ -39,30 +41,28 @@ const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = 
     return outParams;
   },
 
-  handleResponse: async (_, response): ReceiveMessagesResult => {
+  handleResponse: (_, response): ReceiveMessagesResult => {
     const parsedMessages = [];
 
-    response.m.forEach((message) => {
-      let envelope = {
-        shard: parseInt(message.a, 10),
-        subscriptionMatch: message.b,
-        channel: message.c,
-        messageType: message.e,
-        payload: message.d,
-        flags: message.f,
-        issuingClientId: message.i,
-        subscribeKey: message.k,
-        originationTimetoken: message.o,
-        userMetadata: message.u,
+    response.m.forEach((envelope) => {
+      let parsedMessage: Message = {
+        shard: parseInt(envelope.a, 10),
+        subscriptionMatch: envelope.b,
+        channel: envelope.c,
+        messageType: envelope.e,
+        payload: envelope.d,
+        flags: envelope.f,
+        issuingClientId: envelope.i,
+        subscribeKey: envelope.k,
+        originationTimetoken: envelope.o,
         publishMetaData: {
-          timetoken: message.p.t,
-          region: message.p.r
+          timetoken: envelope.p.t,
+          region: envelope.p.r,
         },
       };
-      parsedMessages.push(envelope);
+      parsedMessages.push(parsedMessage);
     });
-    return {
-      messages: parsedMessages,
+    return { messages: parsedMessages,
       metadata: {
         region: response.t.r,
         timetoken: response.t.t

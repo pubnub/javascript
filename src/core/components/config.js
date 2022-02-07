@@ -182,7 +182,7 @@ export default class {
     // flag for beta subscribe feature enablement
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
-    if(setup.enableSubscribeBeta && setup.enableSubscribeBeta === true){
+    if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
       throw new Error('not implemented');
     }
 
