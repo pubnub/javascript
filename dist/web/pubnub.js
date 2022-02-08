@@ -1048,7 +1048,7 @@ function _default(modules, endpoint) {
     headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {},
     ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
     forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
-    getAbortSignal: typeof endpoint.getAbortSignal === 'function' ? endpoint.getAbortSignal(modules, incomingParams) : null
+    abortSignal: typeof endpoint.getAbortSignal === 'function' ? endpoint.getAbortSignal(modules, incomingParams) : null
   };
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
@@ -16645,8 +16645,8 @@ function xdr(superagentConstruct, endpoint, callback) {
 
   var sc = superagentConstruct;
 
-  if (endpoint.getAbortSignal) {
-    endpoint.getAbortSignal.on('abort', function () {
+  if (endpoint.abortSignal) {
+    endpoint.abortSignal.on('abort', function () {
       sc.abort();
     });
   }
