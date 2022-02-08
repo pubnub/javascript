@@ -44,8 +44,8 @@ function xdr(superagentConstruct: superagent, endpoint: EndpointDefinition, call
 
   let sc = superagentConstruct;
 
-  if (endpoint.getAbortController) {
-    endpoint.getAbortController.on('abort', () => {
+  if (endpoint.getAbortSignal) {
+    endpoint.getAbortSignal.on('abort', () => {
       sc.abort();
     });
   }

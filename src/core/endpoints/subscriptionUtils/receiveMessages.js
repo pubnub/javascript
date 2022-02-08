@@ -29,7 +29,7 @@ const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = 
 
   isAuthSupported: () => true,
 
-  getAbortController: (_, params) => params.abortController,
+  getAbortSignal: (_, params) => params.abortSignal,
 
   prepareParams: (_, params) => {
     const outParams = {};

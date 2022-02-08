@@ -15,7 +15,7 @@ export type ReceiveMessagesParams = {|
   channelGroups?: string[],
   timetoken: number,
   region: number,
-  abortController: Object,
+  abortSignal: Object,
 |};
 
 export type Metadata = {|
