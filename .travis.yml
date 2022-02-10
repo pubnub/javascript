@@ -24,10 +24,7 @@ stages:
 jobs:
   include:
     - stage: "test"
-      name: 'NodeJS 8.10.0'
-      node_js: '8.10.0'
-      script: gulp test
-    - name: 'NodeJS 10.13.0'
+      name: 'NodeJS 10.13.0'
       node_js: '10.13.0'
       script: gulp test
     - name: 'NodeJS 12'
