@@ -17,10 +17,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 8.10.0
-      - name: Update and install APT packages
-        run: |
-          sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
-          sudo -E apt-get -yq --no-install-suggests install g++-4.8
       - name: Build and run tests for NodeJS 8.10.0
         run: |
           gulp test
