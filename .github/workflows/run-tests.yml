@@ -19,6 +19,7 @@ jobs:
           node-version: 8.10.0
       - name: Build and run tests for NodeJS 8.10.0
         run: |
+          npm install
           gulp test
       - name: Setup NodeJS 10.13.0
         uses: actions/setup-node@v2
@@ -26,6 +27,7 @@ jobs:
           node-version: 10.13.0
       - name: Build and run tests for NodeJS 10.13.0
         run: |
+          npm install
           gulp test
       - name: Setup NodeJS 12
         uses: actions/setup-node@v2
@@ -33,4 +35,5 @@ jobs:
           node-version: 12
       - name: Build and run tests for NodeJS 12
         run: |
+          npm install
           gulp test
