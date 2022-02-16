@@ -1,23 +1,23 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
+                                                     
 import operationConstants from '../../../constants/operations';
-import type { Membership, PaginatedResultParams } from './membership';
+                                                                      
 import utils from '../../../utils';
 
-export type GetMembershipsParams = {
-  uuid: string,
-} & PaginatedResultParams;
+                                    
+               
+                          
 
-export type GetMembershipsResult = {|
-  status: 200,
-  data: Membership[],
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
+                                     
+              
+                     
+                      
+                
+                
+   
 
-const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
+const endpoint                                                             = {
   getOperation: () => operationConstants.PNGetMembershipsOperation,
 
   // No required parameters.
@@ -81,7 +81,7 @@ const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
     return queryParams;
   },
 
-  handleResponse: (_, response): GetMembershipsResult => ({
+  handleResponse: (_, response)                       => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

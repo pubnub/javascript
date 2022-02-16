@@ -1,5 +1,7 @@
+/*       */
+
 export default class {
-  storage: Object;
+  storage        ;
 
   constructor() {
     this.storage = {};

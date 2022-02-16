@@ -1,13 +1,13 @@
-/* @flow */
+/*       */
 
 import { ListChannelsArgs, ListChannelsResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNPushNotificationEnabledChannelsOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: ListChannelsArgs) {
+export function validateParams(modules               , incomingParams                  ) {
   let { device, pushGateway, topic } = incomingParams;
   let { config } = modules;
 
@@ -17,7 +17,7 @@ export function validateParams(modules: ModulesInject, incomingParams: ListChann
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: ListChannelsArgs): string {
+export function getURL(modules               , incomingParams                  )         {
   let { device, pushGateway } = incomingParams;
   let { config } = modules;
 
@@ -28,7 +28,7 @@ export function getURL(modules: ModulesInject, incomingParams: ListChannelsArgs)
   return `/v1/push/sub-key/${config.subscribeKey}/devices/${device}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -36,7 +36,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: ListChannelsArgs): Object {
+export function prepareParams(modules               , incomingParams                  )         {
   let { pushGateway, environment = 'development', topic } = incomingParams;
   let parameters = { type: pushGateway };
 
@@ -48,6 +48,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: ListChanne
   return parameters;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Array<string>): ListChannelsResponse {
+export function handleResponse(modules               , serverResponse               )                       {
   return { channels: serverResponse };
 }

@@ -1,32 +1,32 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
+                                                     
 import operationConstants from '../../../constants/operations';
-import type { ChannelMetadata } from './channel';
+                                                 
 
-export type GetAllChannelMetadataParams = {|
-  filter?: string,
-  sort?: { [key: string]: 'asc' | 'desc' | null },
-  limit?: number,
-  page?: {|
-    next?: string,
-    prev?: string,
-  |},
-  include?: {|
-    totalCount?: boolean,
-    customFields?: boolean,
-  |},
-|};
+                                            
+                  
+                                                  
+                 
+           
+                  
+                  
+     
+              
+                         
+                           
+     
+   
 
-export type GetAllChannelMetadataResult = {|
-  status: 200,
-  data: ChannelMetadata[],
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
+                                            
+              
+                          
+                      
+                
+                
+   
 
-const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadataResult> = {
+const endpoint                                                                           = {
   getOperation: () => operationConstants.PNGetAllChannelMetadataOperation,
 
   // No required parameters.
@@ -76,7 +76,7 @@ const endpoint: EndpointConfig<GetAllChannelMetadataParams, GetAllChannelMetadat
     return queryParams;
   },
 
-  handleResponse: (_, response): GetAllChannelMetadataResult => ({
+  handleResponse: (_, response)                              => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

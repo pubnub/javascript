@@ -1,37 +1,37 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
+                                                     
 import operationConstants from '../../../constants/operations';
-import type { Member, PaginatedResultParams } from './member';
+                                                              
 import utils from '../../../utils';
 
-type CommonParams = {
-  channel: string,
-};
+                     
+                  
+  
 
-export type RemoveMembersParams = {
-  type: 'delete',
-  uuids: (string | { id: string, custom?: empty })[],
-} & CommonParams &
-  PaginatedResultParams;
+                                   
+                 
+                                                     
+                  
+                        
 
-export type UpsertMembersParams = {
-  type: 'set',
-  uuids: (string | { id: string, custom?: any })[],
-} & CommonParams &
-  PaginatedResultParams;
+                                   
+              
+                                                   
+                  
+                        
 
-export type SetMembersParams = RemoveMembersParams | UpsertMembersParams;
+                                                                         
 
-export type SetMembersResult = {|
-  status: 200,
-  data: Member,
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
+                                 
+              
+               
+                      
+                
+                
+   
 
-const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
+const endpoint                                                     = {
   getOperation: () => operationConstants.PNSetMembersOperation,
 
   validateParams: (_, params) => {

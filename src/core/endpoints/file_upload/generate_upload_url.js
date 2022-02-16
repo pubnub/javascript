@@ -1,11 +1,11 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../endpoint';
+                                                  
 import operationConstants from '../../constants/operations';
-import type { GenerateUploadUrlParams, GenerateUploadUrlResult } from './types';
+                                                                                
 import utils from '../../utils';
 
-const endpoint: EndpointConfig<GenerateUploadUrlParams, GenerateUploadUrlResult> = {
+const endpoint                                                                   = {
   getOperation: () => operationConstants.PNGenerateUploadUrlOperation,
 
   validateParams: (_, params) => {
@@ -31,7 +31,7 @@ const endpoint: EndpointConfig<GenerateUploadUrlParams, GenerateUploadUrlResult>
 
   prepareParams: () => ({}),
 
-  handleResponse: (_, response): GenerateUploadUrlResult => ({
+  handleResponse: (_, response)                          => ({
     status: response.status,
     data: response.data,
     file_upload_request: response.file_upload_request,

@@ -1,32 +1,32 @@
-/* @flow */
+/*       */
 
 import { AuditArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNAccessManagerAudit;
 }
 
-export function validateParams(modules: ModulesInject) {
+export function validateParams(modules               ) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject): string {
+export function getURL(modules               )         {
   let { config } = modules;
   return `/v2/auth/audit/sub-key/${config.subscribeKey}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): number {
+export function getRequestTimeout({ config }               )         {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return false;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: AuditArguments): Object {
+export function prepareParams(modules               , incomingParams                )         {
   const { channel, channelGroup, authKeys = [] } = incomingParams;
   const params = {};
 
@@ -45,6 +45,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: AuditArgum
   return params;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object): Object {
+export function handleResponse(modules               , serverResponse        )         {
   return serverResponse.payload;
 }

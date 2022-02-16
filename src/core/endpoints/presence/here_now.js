@@ -1,23 +1,23 @@
-/* @flow */
+/*       */
 
 import { HereNowArguments, ModulesInject, StatusAnnouncement } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNHereNowOperation;
 }
 
-export function validateParams(modules: ModulesInject) {
+export function validateParams(modules               ) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
 export function getURL(
-  modules: ModulesInject,
-  incomingParams: HereNowArguments
-): string {
+  modules               ,
+  incomingParams                  
+)         {
   let { config } = modules;
   let { channels = [], channelGroups = [] } = incomingParams;
   let baseURL = `/v2/presence/sub-key/${config.subscribeKey}`;
@@ -30,18 +30,18 @@ export function getURL(
   return baseURL;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): number {
+export function getRequestTimeout({ config }               )         {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return true;
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: HereNowArguments
-): Object {
+  modules               ,
+  incomingParams                  
+)         {
   let {
     channelGroups = [],
     includeUUIDs = true,
@@ -63,10 +63,10 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  serverResponse: Object,
-  incomingParams: HereNowArguments
-): Object {
+  modules               ,
+  serverResponse        ,
+  incomingParams                  
+)         {
   let {
     channels = [],
     channelGroups = [],
@@ -149,7 +149,7 @@ export function handleResponse(
   return response;
 }
 
-export function handleError(modules: ModulesInject, params: HereNowArguments, status: StatusAnnouncement) {
+export function handleError(modules               , params                  , status                    ) {
   if (status.statusCode === 402 && !this.getURL(modules, params).includes('channel')) {
     status.errorData.message = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
   }

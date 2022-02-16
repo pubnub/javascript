@@ -1,11 +1,11 @@
-/** @flow */
+/**       */
 
 import { PubNubError, createValidationError, signRequest, generatePNSDK } from '../../components/endpoint';
-import type { Modules } from '../endpoint';
-import type { GetFileUrlParams, GetFileUrlResult } from './types';
+                                           
+                                                                  
 import utils from '../../utils';
 
-export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetFileUrlResult => {
+export default (modules         , { channel, id, name }                  )                   => {
   const { config, networking } = modules;
 
   if (!channel) {

@@ -1,14 +1,14 @@
-/* @flow */
+/*       */
 /* eslint camelcase: 0 */
 
 import { GrantTokenInput, GrantTokenObject, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNAccessManagerGrantToken;
 }
 
-export function extractPermissions(permissions: GrantTokenObject) {
+export function extractPermissions(permissions                  ) {
   let permissionsResult = 0;
 
   /* eslint-disable */
@@ -48,7 +48,7 @@ export function extractPermissions(permissions: GrantTokenObject) {
 
 function prepareMessagePayload(modules, incomingParams) {
   const { ttl, resources, patterns, meta, authorized_uuid } = incomingParams;
-  const params: any = {
+  const params      = {
     ttl: 0,
     permissions: {
       resources: {
@@ -129,8 +129,8 @@ function prepareMessagePayload(modules, incomingParams) {
 }
 
 export function validateParams(
-  modules: ModulesInject,
-  incomingParams: GrantTokenInput
+  modules               ,
+  incomingParams                 
 ) {
   let { config } = modules;
 
@@ -158,7 +158,7 @@ export function validateParams(
   }
 }
 
-export function postURL(modules: ModulesInject): string {
+export function postURL(modules               )         {
   let { config } = modules;
   return `/v3/pam/${config.subscribeKey}/grant`;
 }
@@ -167,29 +167,29 @@ export function usePost() {
   return true;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): number {
+export function getRequestTimeout({ config }               )         {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return false;
 }
 
-export function prepareParams(): Object {
+export function prepareParams()         {
   return {};
 }
 
 export function postPayload(
-  modules: ModulesInject,
-  incomingParams: GrantTokenInput
-): Object {
+  modules               ,
+  incomingParams                 
+)         {
   return prepareMessagePayload(modules, incomingParams);
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  response: Object
-): string {
+  modules               ,
+  response        
+)         {
   let token = response.data.token;
 
   return token;

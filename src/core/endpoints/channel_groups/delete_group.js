@@ -1,14 +1,14 @@
-/* @flow */
+/*       */
 
 import { DeleteGroupParams, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNRemoveGroupOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: DeleteGroupParams) {
+export function validateParams(modules               , incomingParams                   ) {
   let { channelGroup } = incomingParams;
   let { config } = modules;
 
@@ -16,7 +16,7 @@ export function validateParams(modules: ModulesInject, incomingParams: DeleteGro
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: DeleteGroupParams): string {
+export function getURL(modules               , incomingParams                   )         {
   let { channelGroup } = incomingParams;
   let { config } = modules;
   return `/v1/channel-registration/sub-key/${config.subscribeKey}/channel-group/${utils.encodeString(channelGroup)}/remove`;
@@ -26,14 +26,14 @@ export function isAuthSupported() {
   return true;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
-export function prepareParams(): Object {
+export function prepareParams()         {
   return {};
 }
 
-export function handleResponse(): Object {
+export function handleResponse()         {
   return {};
 }

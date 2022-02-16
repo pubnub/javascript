@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 /* global XMLHttpRequest */
 
 import {
@@ -7,7 +7,7 @@ import {
 } from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
-declare var Ti: any;
+                    
 
 function log(url, qs, res) {
   let _pickLogger = () => {
@@ -31,7 +31,7 @@ function log(url, qs, res) {
   logger.log('-----');
 }
 
-function getHttpClient(): any {
+function getHttpClient()      {
   if (Ti.Platform.osname === 'mobileweb') {
     return new XMLHttpRequest();
   } else {
@@ -39,22 +39,22 @@ function getHttpClient(): any {
   }
 }
 
-function keepAlive(xhr: any): void {
+function keepAlive(xhr     )       {
   if (Ti.Platform.osname !== 'mobileweb' && this._config.keepAlive) {
     xhr.enableKeepAlive = true;
   }
 }
 
 function xdr(
-  xhr: any,
-  method: string,
-  url: string,
-  params: Object,
-  body: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
-): void {
-  let status: StatusAnnouncement = {};
+  xhr     ,
+  method        ,
+  url        ,
+  params        ,
+  body        ,
+  endpoint                    ,
+  callback          
+)       {
+  let status                     = {};
   status.operation = endpoint.operation;
 
   xhr.open(method, buildUrl(url, params), true);
@@ -90,9 +90,9 @@ function xdr(
 }
 
 export function get(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  endpoint                    ,
+  callback          
 ) {
   let xhr = getHttpClient();
 
@@ -102,10 +102,10 @@ export function get(
 }
 
 export function post(
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  body        ,
+  endpoint                    ,
+  callback          
 ) {
   let xhr = getHttpClient();
 
@@ -124,10 +124,10 @@ export function post(
 }
 
 export function patch(
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  body        ,
+  endpoint                    ,
+  callback          
 ) {
   let xhr = getHttpClient();
 
@@ -137,9 +137,9 @@ export function patch(
 }
 
 export function del(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  endpoint                    ,
+  callback          
 ) {
   let xhr = getHttpClient();
 

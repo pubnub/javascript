@@ -1,20 +1,20 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
+                                                     
 import operationConstants from '../../../constants/operations';
-import type { ChannelMetadata } from './channel';
+                                                 
 import utils from '../../../utils';
 
-export type RemoveChannelMetadataParams = {|
-  channel: string,
-|};
+                                            
+                  
+   
 
-export type RemoveChannelMetadataResult = {|
-  status: 200,
-  data: ChannelMetadata,
-|};
+                                            
+              
+                        
+   
 
-const endpoint: EndpointConfig<RemoveChannelMetadataParams, RemoveChannelMetadataResult> = {
+const endpoint                                                                           = {
   getOperation: () => operationConstants.PNRemoveChannelMetadataOperation,
 
   validateParams: (_, params) => {

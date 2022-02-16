@@ -105,14 +105,6 @@ gulp.task('lint_tests', () => {
 
 gulp.task('lint', gulp.series('lint_code', 'lint_tests'));
 
-gulp.task('flow', (cb) => {
-  return exec('./node_modules/.bin/flow --show-all-errors', (err, stdout, stderr) => {
-    console.log(stdout);
-    console.log(stderr);
-    cb(err);
-  });
-});
-
 gulp.task('validate', gulp.series('lint', 'flow'));
 
 gulp.task('test_web', (done) => {

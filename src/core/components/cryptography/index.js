@@ -1,11 +1,11 @@
-/* @flow */
+/*       */
 
 import Config from '../config';
 import CryptoJS from './hmac-sha256';
 
-function bufferToWordArray(b: Buffer) {
+function bufferToWordArray(b        ) {
   let wa = [];
-  let i: number;
+  let i        ;
   for (i = 0; i < b.length; i += 1) {
     // eslint-disable-next-line no-bitwise
     wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
@@ -14,19 +14,19 @@ function bufferToWordArray(b: Buffer) {
   return CryptoJS.lib.WordArray.create(wa, b.length);
 }
 
-type CryptoConstruct = {
-  config: Config,
-};
+                        
+                 
+  
 
 export default class {
-  _config: Config;
-  _iv: string;
-  _allowedKeyEncodings: Array<string>;
-  _allowedKeyLengths: Array<number>;
-  _allowedModes: Array<string>;
-  _defaultOptions: Object;
+  _config        ;
+  _iv        ;
+  _allowedKeyEncodings               ;
+  _allowedKeyLengths               ;
+  _allowedModes               ;
+  _defaultOptions        ;
 
-  constructor({ config }: CryptoConstruct) {
+  constructor({ config }                 ) {
     this._config = config;
 
     this._iv = '0123456789012345';
@@ -43,16 +43,16 @@ export default class {
     };
   }
 
-  HMACSHA256(data: string): string {
+  HMACSHA256(data        )         {
     let hash = CryptoJS.HmacSHA256(data, this._config.secretKey);
     return hash.toString(CryptoJS.enc.Base64);
   }
 
-  SHA256(s: string): string {
+  SHA256(s        )         {
     return CryptoJS.SHA256(s).toString(CryptoJS.enc.Hex);
   }
 
-  _parseOptions(incomingOptions: ?Object): Object {
+  _parseOptions(incomingOptions         )         {
     // Defaults
     let options = incomingOptions || {};
     if (!options.hasOwnProperty('encryptKey')) options.encryptKey = this._defaultOptions.encryptKey;
@@ -76,7 +76,7 @@ export default class {
     return options;
   }
 
-  _decodeKey(key: string, options: Object): string {
+  _decodeKey(key        , options        )         {
     if (options.keyEncoding === 'base64') {
       return CryptoJS.enc.Base64.parse(key);
     } else if (options.keyEncoding === 'hex') {
@@ -86,7 +86,7 @@ export default class {
     }
   }
 
-  _getPaddedKey(key: string, options: Object): string {
+  _getPaddedKey(key        , options        )         {
     key = this._decodeKey(key, options);
     if (options.encryptKey) {
       return CryptoJS.enc.Utf8.parse(this.SHA256(key).slice(0, 32));
@@ -95,7 +95,7 @@ export default class {
     }
   }
 
-  _getMode(options: Object): string {
+  _getMode(options        )         {
     if (options.mode === 'ecb') {
       return CryptoJS.mode.ECB;
     } else {
@@ -103,15 +103,15 @@ export default class {
     }
   }
 
-  _getIV(options: Object): string | null {
+  _getIV(options        )                {
     return options.mode === 'cbc' ? CryptoJS.enc.Utf8.parse(this._iv) : null;
   }
 
-  _getRandomIV(): any {
+  _getRandomIV()      {
     return CryptoJS.lib.WordArray.random(16);
   }
 
-  encrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
+  encrypt(data        , customCipherKey         , options         )                         {
     if (this._config.customEncrypt) {
       return this._config.customEncrypt(data);
     } else {
@@ -119,7 +119,7 @@ export default class {
     }
   }
 
-  decrypt(data: Object, customCipherKey: ?string, options: ?Object): Object | string | null {
+  decrypt(data        , customCipherKey         , options         )                         {
     if (this._config.customDecrypt) {
       return this._config.customDecrypt(data);
     } else {
@@ -127,7 +127,7 @@ export default class {
     }
   }
 
-  pnEncrypt(data: string, customCipherKey: ?string, options: ?Object): Object | string | null {
+  pnEncrypt(data        , customCipherKey         , options         )                         {
     if (!customCipherKey && !this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let mode = this._getMode(options);
@@ -146,7 +146,7 @@ export default class {
     }
   }
 
-  pnDecrypt(data: string, customCipherKey: ?string, options: ?Object): Object | null {
+  pnDecrypt(data        , customCipherKey         , options         )                {
     if (!customCipherKey && !this._config.cipherKey) return data;
     options = this._parseOptions(options);
     let mode = this._getMode(options);

@@ -1,19 +1,19 @@
-/* @flow */
+/*       */
 
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
-import type {
-  MessageCounterArguments,
-  MessageCountersResponse,
-  ModulesInject
-} from '../../flow_interfaces';
+             
+                          
+                          
+               
+                               
 
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNMessageCounts;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: MessageCounterArguments) {
+export function validateParams(modules               , incomingParams                         ) {
   let { channels, timetoken, channelTimetokens } = incomingParams;
   let { config } = modules;
 
@@ -23,7 +23,7 @@ export function validateParams(modules: ModulesInject, incomingParams: MessageCo
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: MessageCounterArguments): string {
+export function getURL(modules               , incomingParams                         )         {
   let { channels } = incomingParams;
   let { config } = modules;
 
@@ -32,17 +32,17 @@ export function getURL(modules: ModulesInject, incomingParams: MessageCounterArg
   return `/v3/history/sub-key/${config.subscribeKey}/message-counts/${utils.encodeString(stringifiedChannels)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): boolean {
+export function getRequestTimeout({ config }               )          {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: MessageCounterArguments): Object {
+export function prepareParams(modules               , incomingParams                         )         {
   const { timetoken, channelTimetokens } = incomingParams;
-  let outgoingParams: Object = {};
+  let outgoingParams         = {};
 
   if ((channelTimetokens) && (channelTimetokens.length === 1)) {
     let [tt] = channelTimetokens;
@@ -56,6 +56,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: MessageCou
   return outgoingParams;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: MessageCounterArguments): MessageCountersResponse {
+export function handleResponse(modules               , serverResponse                         )                          {
   return { channels: serverResponse.channels };
 }

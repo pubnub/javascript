@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 export default {
   PNTimeOperation: 'PNTimeOperation',
 

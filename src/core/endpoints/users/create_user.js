@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   UsersObjectInput,
@@ -11,13 +11,13 @@ function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
 }
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNCreateUserOperation;
 }
 
 export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: UsersObjectInput
+  { config }               ,
+  incomingParams                  
 ) {
   let { id, name, custom } = incomingParams;
 
@@ -42,17 +42,17 @@ export function usePost() {
   return true;
 }
 
-export function getURL(modules: ModulesInject): string {
+export function getURL(modules               )         {
   let { config } = modules;
   return `/v1/objects/${config.subscribeKey}/users`;
 }
 
-export function postURL(modules: ModulesInject): string {
+export function postURL(modules               )         {
   const { config } = modules;
   return `/v1/objects/${config.subscribeKey}/users`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -61,9 +61,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: UsersObjectInput
-): Object {
+  modules               ,
+  incomingParams                  
+)         {
   let { include } = incomingParams;
   const params = {};
 
@@ -94,15 +94,15 @@ export function prepareParams(
 }
 
 export function postPayload(
-  modules: ModulesInject,
-  incomingParams: UsersObjectInput
-): Object {
+  modules               ,
+  incomingParams                  
+)         {
   return prepareMessagePayload(modules, incomingParams);
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  usersResponse: Object
-): UsersResponse {
+  modules               ,
+  usersResponse        
+)                {
   return usersResponse;
 }

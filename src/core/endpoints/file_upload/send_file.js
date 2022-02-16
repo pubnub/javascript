@@ -1,22 +1,22 @@
-/** @flow */
+/**       */
 
 import { PubNubError, createValidationError } from '../../components/endpoint';
-import type {
-  SendFileParams,
-  SendFileResult,
-  GenerateUploadUrlParams,
-  GenerateUploadUrlResult,
-  PublishFileParams,
-  PublishFileResult,
-} from './types';
+             
+                 
+                 
+                          
+                          
+                    
+                    
+                 
 
-import type { Modules } from '../endpoint';
+                                           
 
-type Dependencies = {|
-  generateUploadUrl: (params: GenerateUploadUrlParams) => Promise<GenerateUploadUrlResult>,
-  publishFile: (params: PublishFileParams) => Promise<PublishFileResult>,
-  modules: Modules,
-|};
+                      
+                                                                                           
+                                                                         
+                   
+   
 
 const getErrorFromResponse = (response) => new Promise((resolve) => {
   let result = '';
@@ -34,7 +34,7 @@ const sendFile = ({
   generateUploadUrl,
   publishFile,
   modules: { PubNubFile, config, cryptography, networking },
-}: Dependencies) => async ({
+}              ) => async ({
   channel,
   file: input,
   message,
@@ -42,7 +42,7 @@ const sendFile = ({
   meta,
   ttl,
   storeInHistory,
-}: SendFileParams): Promise<SendFileResult> => {
+}                )                          => {
   if (!channel) {
     throw new PubNubError(
       'Validation failed, check status for details',
@@ -138,14 +138,14 @@ const sendFile = ({
   }
 };
 
-export default (deps: Dependencies) => {
+export default (deps              ) => {
   const f = sendFile(deps);
 
-  return (params: SendFileParams, cb?: (error: any, params: SendFileResult) => void): Promise<SendFileResult> => {
+  return (params                , cb                                               )                          => {
     const resultP = f(params);
 
     if (typeof cb === 'function') {
-      resultP.then((result) => cb(null, result)).catch((error) => cb(error, (null: any)));
+      resultP.then((result) => cb(null, result)).catch((error) => cb(error, (null     )));
 
       return resultP;
     } else {

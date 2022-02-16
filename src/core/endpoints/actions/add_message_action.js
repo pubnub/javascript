@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   AddMessageActionInput,
@@ -9,13 +9,13 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNAddMessageActionOperation;
 }
 
 export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: AddMessageActionInput
+  { config }               ,
+  incomingParams                       
 ) {
   let { action, channel, messageTimetoken } = incomingParams;
 
@@ -33,19 +33,19 @@ export function usePost() {
 }
 
 export function postURL(
-  { config }: ModulesInject,
-  incomingParams: AddMessageActionInput
-): string {
+  { config }               ,
+  incomingParams                       
+)         {
   let { channel, messageTimetoken } = incomingParams;
 
   return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}/message/${messageTimetoken}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
-export function getRequestHeaders(): Object {
+export function getRequestHeaders()         {
   return { 'Content-Type': 'application/json' };
 }
 
@@ -53,20 +53,20 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams()         {
   return {};
 }
 
 export function postPayload(
-  modules: ModulesInject,
-  incomingParams: AddMessageActionInput
-): string {
+  modules               ,
+  incomingParams                       
+)         {
   return incomingParams.action;
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  addMessageActionResponse: Object
-): AddMessageActionResponse {
+  modules               ,
+  addMessageActionResponse        
+)                           {
   return { data: addMessageActionResponse.data };
 }

@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   MembersInput,
@@ -8,26 +8,26 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNGetMembersOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: MembersInput) {
+export function validateParams(modules               , incomingParams              ) {
   let { spaceId } = incomingParams;
 
   if (!spaceId) return 'Missing spaceId';
 }
 
 export function getURL(
-  modules: ModulesInject,
-  incomingParams: MembersInput
-): string {
+  modules               ,
+  incomingParams              
+)         {
   let { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -36,9 +36,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: MembersInput
-): Object {
+  modules               ,
+  incomingParams              
+)         {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -89,8 +89,8 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  membersResponse: Object
-): MembersListResponse {
+  modules               ,
+  membersResponse        
+)                      {
   return membersResponse;
 }

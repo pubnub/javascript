@@ -1,11 +1,11 @@
-/* @flow */
+/*       */
 
 import Config from '../components/config';
 import { SubscribeMessage } from '../flow_interfaces';
 
-type DedupingManagerConsturct = {
-  config: Config,
-};
+                                 
+                 
+  
 
 const hashCode = (payload) => {
   let hash = 0;
@@ -19,25 +19,25 @@ const hashCode = (payload) => {
 };
 
 export default class {
-  _config: Config;
-  hashHistory: Array<string>;
+  _config        ;
+  hashHistory               ;
 
-  constructor({ config }: DedupingManagerConsturct) {
+  constructor({ config }                          ) {
     this.hashHistory = [];
     this._config = config;
   }
 
-  getKey(message: SubscribeMessage) {
+  getKey(message                  ) {
     const hashedPayload = hashCode(JSON.stringify(message.payload)).toString();
     const timetoken = message.publishMetaData.publishTimetoken;
     return `${timetoken}-${hashedPayload}`;
   }
 
-  isDuplicate(message: SubscribeMessage) {
+  isDuplicate(message                  ) {
     return this.hashHistory.includes(this.getKey(message));
   }
 
-  addEntry(message: SubscribeMessage) {
+  addEntry(message                  ) {
     if (this.hashHistory.length >= this._config.maximumCacheSize) {
       this.hashHistory.shift();
     }

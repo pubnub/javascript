@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import { PublishResponse, PublishArguments, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
@@ -16,11 +16,11 @@ function prepareMessagePayload(modules, messagePayload) {
   return stringifiedPayload;
 }
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNPublishOperation;
 }
 
-export function validateParams({ config }: ModulesInject, incomingParams: PublishArguments) {
+export function validateParams({ config }               , incomingParams                  ) {
   let { message, channel } = incomingParams;
 
   if (!channel) return 'Missing Channel';
@@ -28,25 +28,25 @@ export function validateParams({ config }: ModulesInject, incomingParams: Publis
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function usePost(modules: ModulesInject, incomingParams: PublishArguments) {
+export function usePost(modules               , incomingParams                  ) {
   let { sendByPost = false } = incomingParams;
   return sendByPost;
 }
 
-export function getURL(modules: ModulesInject, incomingParams: PublishArguments): string {
+export function getURL(modules               , incomingParams                  )         {
   const { config } = modules;
   const { channel, message } = incomingParams;
   let stringifiedPayload = prepareMessagePayload(modules, message);
   return `/publish/${config.publishKey}/${config.subscribeKey}/0/${utils.encodeString(channel)}/0/${utils.encodeString(stringifiedPayload)}`;
 }
 
-export function postURL(modules: ModulesInject, incomingParams: PublishArguments): string {
+export function postURL(modules               , incomingParams                  )         {
   const { config } = modules;
   const { channel } = incomingParams;
   return `/publish/${config.publishKey}/${config.subscribeKey}/0/${utils.encodeString(channel)}/0`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -54,12 +54,12 @@ export function isAuthSupported() {
   return true;
 }
 
-export function postPayload(modules: ModulesInject, incomingParams: PublishArguments): string {
+export function postPayload(modules               , incomingParams                  )         {
   const { message } = incomingParams;
   return prepareMessagePayload(modules, message);
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: PublishArguments): Object {
+export function prepareParams(modules               , incomingParams                  )         {
   const { meta, replicate = true, storeInHistory, ttl } = incomingParams;
   const params = {};
 
@@ -86,6 +86,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: PublishArg
   return params;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object): PublishResponse {
+export function handleResponse(modules               , serverResponse        )                  {
   return { timetoken: serverResponse[2] };
 }

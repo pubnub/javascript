@@ -1,21 +1,21 @@
-/** @flow */
+/**       */
 
 import { IFile, FileClass } from '../';
 
-type PubNubFileWebConstructor =
-  | File
-  | {|
-      data: string,
-      name: string,
-      mimeType: string,
-    |}
-  | {|
-      data: ArrayBuffer,
-      name: string,
-      mimeType: string,
-    |};
+                               
+        
+      
+                   
+                   
+                       
+      
+      
+                        
+                   
+                       
+       
 
-const PubNubFile: FileClass = class PubNubFile implements IFile {
+const PubNubFile            = class PubNubFile                  {
   static supportsFile = typeof File !== 'undefined';
   static supportsBlob = typeof Blob !== 'undefined';
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
@@ -25,15 +25,15 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   static supportsEncryptFile = true;
   static supportsFileUri = false;
 
-  static create(config: PubNubFileWebConstructor) {
+  static create(config                          ) {
     return new this(config);
   }
 
-  data: any;
-  name: string;
-  mimeType: string;
+  data     ;
+  name        ;
+  mimeType        ;
 
-  constructor(config: PubNubFileWebConstructor) {
+  constructor(config                          ) {
     if (config instanceof File) {
       this.data = config;
 

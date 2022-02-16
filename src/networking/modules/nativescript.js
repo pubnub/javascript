@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import { request as HttpRequest } from 'http';
 import {
@@ -30,14 +30,14 @@ function log(url, qs, res) {
 }
 
 function xdr(
-  method: string,
-  url: string,
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
-): void {
-  let status: StatusAnnouncement = {};
+  method        ,
+  url        ,
+  params        ,
+  body        ,
+  endpoint                    ,
+  callback          
+)       {
+  let status                     = {};
   status.operation = endpoint.operation;
 
   const httpConfig = {
@@ -76,38 +76,38 @@ function xdr(
 }
 
 export function get(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  endpoint                    ,
+  callback          
 ) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'GET', url, params, '', endpoint, callback);
 }
 
 export function post(
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  body        ,
+  endpoint                    ,
+  callback          
 ) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'POST', url, params, body, endpoint, callback);
 }
 
 export function patch(
-  params: Object,
-  body: string,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  body        ,
+  endpoint                    ,
+  callback          
 ) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'PATCH', url, params, body, endpoint, callback);
 }
 
 export function del(
-  params: Object,
-  endpoint: EndpointDefinition,
-  callback: Function
+  params        ,
+  endpoint                    ,
+  callback          
 ) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'DELETE', url, params, '', endpoint, callback);
