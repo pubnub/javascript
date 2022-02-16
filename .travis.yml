@@ -14,26 +14,26 @@ addons:
       - g++-4.8
 
 stages:
-  - name: "test"
+  - name: 'test'
     if: |
       type != pull_request
-  - name: "test pr branch"
+  - name: 'test pr branch'
     if: |
       type == pull_request
 
 jobs:
   include:
-    - stage: "test"
+    - stage: 'test'
       name: 'NodeJS 8.10.0'
       node_js: '8.10.0'
-      script: gulp test
+      script: npm run test
     - name: 'NodeJS 10.13.0'
       node_js: '10.13.0'
-      script: gulp test
+      script: npm run test
     - name: 'NodeJS 12'
       node_js: '12'
-      script: gulp test
-    - stage: "test pr branch"
+      script: npm run test
+    - stage: 'test pr branch'
       name: 'NodeJS 12'
       node_js: '12'
-      script: gulp test
+      script: npm run test
