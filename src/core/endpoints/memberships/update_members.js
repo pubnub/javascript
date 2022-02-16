@@ -18,7 +18,7 @@ function prepareMessagePayload(modules, incomingParams) {
     payload.add = [];
 
     addMembers.forEach((addMember) => {
-      let currentAdd             = { id: addMember.id };
+      let currentAdd = { id: addMember.id };
 
       if (addMember.custom) {
         currentAdd.custom = addMember.custom;
@@ -32,7 +32,7 @@ function prepareMessagePayload(modules, incomingParams) {
     payload.update = [];
 
     updateMembers.forEach((updateMember) => {
-      let currentUpdate                = { id: updateMember.id };
+      let currentUpdate = { id: updateMember.id };
 
       if (updateMember.custom) {
         currentUpdate.custom = updateMember.custom;
@@ -47,7 +47,7 @@ function prepareMessagePayload(modules, incomingParams) {
     payload.update = payload.update || [];
 
     users.forEach((updateMember) => {
-      let currentUpdate                = { id: updateMember.id };
+      let currentUpdate = { id: updateMember.id };
 
       if (updateMember.custom) {
         currentUpdate.custom = updateMember.custom;
@@ -68,43 +68,38 @@ function prepareMessagePayload(modules, incomingParams) {
   return payload;
 }
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNUpdateMembersOperation;
 }
 
-export function validateParams(
-  modules               ,
-  incomingParams              
-) {
+export function validateParams(modules, incomingParams) {
   let { spaceId, users } = incomingParams;
 
   if (!spaceId) return 'Missing spaceId';
   if (!users) return 'Missing users';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams              
-)         {
+export function getURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
+  return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(
+    incomingParams.spaceId
+  )}/users`;
 }
 
-export function patchURL(
-  modules               ,
-  incomingParams              
-)         {
+export function patchURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
+  return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(
+    incomingParams.spaceId
+  )}/users`;
 }
 
 export function usePatch() {
   return true;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -112,10 +107,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams              
-)         {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page } = incomingParams;
   const params = {};
 
@@ -161,16 +153,10 @@ export function prepareParams(
   return params;
 }
 
-export function patchPayload(
-  modules               ,
-  incomingParams              
-)         {
+export function patchPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules               ,
-  membersResponse        
-)                      {
+export function handleResponse(modules, membersResponse) {
   return membersResponse;
 }

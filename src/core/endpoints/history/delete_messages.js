@@ -1,14 +1,18 @@
 /*       */
 
-import { FetchHistoryArguments, HistoryResponse, ModulesInject } from '../../flow_interfaces';
+import {
+  FetchHistoryArguments,
+  HistoryResponse,
+  ModulesInject,
+} from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNDeleteMessagesOperation;
 }
 
-export function validateParams(modules               , incomingParams                       ) {
+export function validateParams(modules, incomingParams) {
   let { channel } = incomingParams;
   let { config } = modules;
 
@@ -20,25 +24,27 @@ export function useDelete() {
   return true;
 }
 
-export function getURL(modules               , incomingParams                       )         {
+export function getURL(modules, incomingParams) {
   let { channel } = incomingParams;
   let { config } = modules;
 
-  return `/v3/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
+  return `/v3/history/sub-key/${
+    config.subscribeKey
+  }/channel/${utils.encodeString(channel)}`;
 }
 
-export function getRequestTimeout({ config }               )          {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported()          {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(modules               , incomingParams                       )         {
+export function prepareParams(modules, incomingParams) {
   const { start, end } = incomingParams;
 
-  let outgoingParams         = {};
+  let outgoingParams = {};
 
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
@@ -46,6 +52,6 @@ export function prepareParams(modules               , incomingParams            
   return outgoingParams;
 }
 
-export function handleResponse(modules               , serverResponse        )                  {
+export function handleResponse(modules, serverResponse) {
   return serverResponse.payload;
 }

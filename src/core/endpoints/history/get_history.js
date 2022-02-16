@@ -9,7 +9,7 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-function __processMessage(modules, message        )                {
+function __processMessage(modules, message) {
   let { config, crypto } = modules;
   if (!config.cipherKey) return message;
 
@@ -20,14 +20,11 @@ function __processMessage(modules, message        )                {
   }
 }
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNHistoryOperation;
 }
 
-export function validateParams(
-  modules               ,
-  incomingParams                       
-) {
+export function validateParams(modules, incomingParams) {
   let { channel } = incomingParams;
   let { config } = modules;
 
@@ -35,10 +32,7 @@ export function validateParams(
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams                       
-)         {
+export function getURL(modules, incomingParams) {
   let { channel } = incomingParams;
   let { config } = modules;
   return `/v2/history/sub-key/${
@@ -46,18 +40,15 @@ export function getURL(
   }/channel/${utils.encodeString(channel)}`;
 }
 
-export function getRequestTimeout({ config }               )          {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported()          {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                       
-)         {
+export function prepareParams(modules, incomingParams) {
   const {
     start,
     end,
@@ -66,7 +57,7 @@ export function prepareParams(
     stringifiedTimeToken = false,
     includeMeta = false,
   } = incomingParams;
-  let outgoingParams         = {
+  let outgoingParams = {
     include_token: 'true',
   };
 
@@ -80,11 +71,8 @@ export function prepareParams(
   return outgoingParams;
 }
 
-export function handleResponse(
-  modules               ,
-  serverResponse                       
-)                  {
-  const response                  = {
+export function handleResponse(modules, serverResponse) {
+  const response = {
     messages: [],
     startTimeToken: serverResponse[1],
     endTimeToken: serverResponse[2],
@@ -92,7 +80,7 @@ export function handleResponse(
 
   if (Array.isArray(serverResponse[0])) {
     serverResponse[0].forEach((serverHistoryItem) => {
-      const item              = {
+      const item = {
         timetoken: serverHistoryItem.timetoken,
         entry: __processMessage(modules, serverHistoryItem.message),
       };

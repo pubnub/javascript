@@ -1,37 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                                      
+
 import utils from '../../../utils';
 
-                      
-                
-   
-
-                                        
-                 
-                                                        
-                   
-                        
-
-                                        
-              
-                                                      
-                   
-                        
-
-                                                                                     
-
-                                     
-              
-                   
-                      
-                
-                
-   
-
-const endpoint                                                             = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetMembershipsOperation,
 
   validateParams: (_, params) => {
@@ -43,7 +16,9 @@ const endpoint                                                             = {
   usePatch: () => true,
 
   patchURL: ({ config }, params) =>
-    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}/channels`,
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(
+      params.uuid ?? config.getUUID()
+    )}/channels`,
 
   patchPayload: (_, params) => ({
     set: [],
@@ -110,13 +85,15 @@ const endpoint                                                             = {
     }
 
     if (params?.sort) {
-      queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
-        if (value === 'asc' || value === 'desc') {
-          return `${key}:${value}`;
-        } else {
-          return key;
+      queryParams.sort = Object.entries(params.sort ?? {}).map(
+        ([key, value]) => {
+          if (value === 'asc' || value === 'desc') {
+            return `${key}:${value}`;
+          } else {
+            return key;
+          }
         }
-      });
+      );
     }
 
     return queryParams;

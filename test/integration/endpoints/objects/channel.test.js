@@ -1,4 +1,4 @@
-/** @flow */
+/*       */
 
 import nock from 'nock';
 import utils from '../../../utils';
@@ -12,8 +12,8 @@ describe('objects channel', () => {
   const UUID = 'myUUID';
   const AUTH_KEY = 'myAuthKey';
 
-  let pubnub: PubNub;
-  let PNSDK: string;
+  let pubnub;
+  let PNSDK;
 
   before(() => {
     nock.disableNetConnect();
@@ -79,7 +79,7 @@ describe('objects channel', () => {
         data: allChannels.map(asResponse),
         next: undefined,
         prev: undefined,
-        totalCount: undefined
+        totalCount: undefined,
       });
     });
   });
@@ -94,14 +94,16 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.getChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.getChannelMetadata({
+        channel: channelName,
+      });
 
       await expect(scope).to.have.been.requested;
       await expect(resultP).to.eventually.deep.equal({
@@ -120,14 +122,16 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.getChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.getChannelMetadata({
+        channel: channelName,
+      });
 
       await expect(scope).to.have.been.requested;
       await expect(resultP).to.eventually.deep.equal({
@@ -154,14 +158,17 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.setChannelMetadata({ channel: 'test-channel', data: channel1.data });
+      const resultP = pubnub.objects.setChannelMetadata({
+        channel: 'test-channel',
+        data: channel1.data,
+      });
 
       await expect(scope).to.have.been.requested;
       await expect(resultP).to.eventually.deep.equal({
@@ -180,14 +187,17 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.setChannelMetadata({ channel: channelName, data: channel1.data });
+      const resultP = pubnub.objects.setChannelMetadata({
+        channel: channelName,
+        data: channel1.data,
+      });
 
       await expect(scope).to.have.been.requested;
       await expect(resultP).to.eventually.deep.equal({
@@ -218,7 +228,9 @@ describe('objects channel', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.removeChannelMetadata({
+        channel: channelName,
+      });
 
       await expect(scope).to.have.been.requested;
       await expect(resultP).to.eventually.deep.equal({
@@ -241,7 +253,9 @@ describe('objects channel', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.removeChannelMetadata({
+        channel: channelName,
+      });
 
       await expect(scope).to.have.been.requested;
       await expect(resultP).to.eventually.deep.equal({

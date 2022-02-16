@@ -6,19 +6,19 @@ import categoryConstants from '../core/constants/categories';
 import { EndpointDefinition, NetworkingModules } from '../core/flow_interfaces';
 
 export default class {
-  _modules                   ;
-  _config        ;
+  _modules;
+  _config;
 
-  _currentSubDomain        ;
+  _currentSubDomain;
 
-  _standardOrigin        ;
-  _subscribeOrigin        ;
+  _standardOrigin;
+  _subscribeOrigin;
 
-  _requestTimeout        ;
+  _requestTimeout;
 
-  _coreParams        ; /* items that must be passed with each request. */
+  _coreParams; /* items that must be passed with each request. */
 
-  constructor(modules                   ) {
+  constructor(modules) {
     this._modules = {};
 
     Object.keys(modules).forEach((key) => {
@@ -26,11 +26,13 @@ export default class {
     });
   }
 
-  init(config        ) {
+  init(config) {
     this._config = config;
 
     if (Array.isArray(this._config.origin)) {
-      this._currentSubDomain = Math.floor(Math.random() * this._config.origin.length);
+      this._currentSubDomain = Math.floor(
+        Math.random() * this._config.origin.length
+      );
     } else {
       this._currentSubDomain = 0;
     }
@@ -41,7 +43,7 @@ export default class {
     this.shiftStandardOrigin();
   }
 
-  nextOrigin()         {
+  nextOrigin() {
     const protocol = this._config.secure ? 'https://' : 'http://';
 
     if (typeof this._config.origin === 'string') {
@@ -59,46 +61,46 @@ export default class {
     return `${protocol}${origin}`;
   }
 
-  hasModule(name        ) {
+  hasModule(name) {
     return name in this._modules;
   }
 
   // origin operations
-  shiftStandardOrigin()         {
+  shiftStandardOrigin() {
     this._standardOrigin = this.nextOrigin();
 
     return this._standardOrigin;
   }
 
-  getStandardOrigin()         {
+  getStandardOrigin() {
     return this._standardOrigin;
   }
 
-  POSTFILE(url        , fields                                                , file     ) {
+  POSTFILE(url, fields, file) {
     return this._modules.postfile(url, fields, file);
   }
 
-  GETFILE(params        , endpoint                    , callback          ) {
+  GETFILE(params, endpoint, callback) {
     return this._modules.getfile(params, endpoint, callback);
   }
 
-  POST(params        , body        , endpoint                    , callback          ) {
+  POST(params, body, endpoint, callback) {
     return this._modules.post(params, body, endpoint, callback);
   }
 
-  PATCH(params        , body        , endpoint                    , callback          ) {
+  PATCH(params, body, endpoint, callback) {
     return this._modules.patch(params, body, endpoint, callback);
   }
 
-  GET(params        , endpoint                    , callback          ) {
+  GET(params, endpoint, callback) {
     return this._modules.get(params, endpoint, callback);
   }
 
-  DELETE(params        , endpoint                    , callback          ) {
+  DELETE(params, endpoint, callback) {
     return this._modules.del(params, endpoint, callback);
   }
 
-  _detectErrorCategory(err        )         {
+  _detectErrorCategory(err) {
     if (err.code === 'ENOTFOUND') {
       return categoryConstants.PNNetworkIssuesCategory;
     }
@@ -112,7 +114,10 @@ export default class {
       return categoryConstants.PNNetworkIssuesCategory;
     }
 
-    if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) {
+    if (
+      err.status === 0 ||
+      (err.hasOwnProperty('status') && typeof err.status === 'undefined')
+    ) {
       return categoryConstants.PNNetworkIssuesCategory;
     }
     if (err.timeout) return categoryConstants.PNTimeoutCategory;

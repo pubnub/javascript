@@ -1,21 +1,6 @@
 /**       */
 
-import { IFile, FileClass } from '../';
-
-                               
-        
-      
-                   
-                   
-                       
-      
-      
-                        
-                   
-                       
-       
-
-const PubNubFile            = class PubNubFile                  {
+const PubNubFile = class PubNubFile {
   static supportsFile = typeof File !== 'undefined';
   static supportsBlob = typeof Blob !== 'undefined';
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
@@ -25,15 +10,15 @@ const PubNubFile            = class PubNubFile                  {
   static supportsEncryptFile = true;
   static supportsFileUri = false;
 
-  static create(config                          ) {
+  static create(config) {
     return new this(config);
   }
 
-  data     ;
-  name        ;
-  mimeType        ;
+  data;
+  name;
+  mimeType;
 
-  constructor(config                          ) {
+  constructor(config) {
     if (config instanceof File) {
       this.data = config;
 
@@ -56,7 +41,9 @@ const PubNubFile            = class PubNubFile                  {
     }
 
     if (this.name === undefined) {
-      throw new Error("Couldn't guess filename out of the options. Please provide one.");
+      throw new Error(
+        "Couldn't guess filename out of the options. Please provide one."
+      );
     }
   }
 
@@ -69,7 +56,9 @@ const PubNubFile            = class PubNubFile                  {
   }
 
   async toFileUri() {
-    throw new Error('This feature is only supported in react native environments.');
+    throw new Error(
+      'This feature is only supported in react native environments.'
+    );
   }
 
   async toBlob() {

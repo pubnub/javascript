@@ -4,19 +4,7 @@ import { Readable, PassThrough } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
 
-import { IFile, FileClass } from '../';
-
-                                   
-                    
-                         
-                    
-                
-                    
-   
-
-                                                                   
-
-const PubNubFile            = class PubNubFile                  {
+const PubNubFile = class PubNubFile {
   static supportsBlob = false;
   static supportsFile = false;
   static supportsBuffer = typeof Buffer !== 'undefined';
@@ -26,16 +14,16 @@ const PubNubFile            = class PubNubFile                  {
   static supportsEncryptFile = true;
   static supportsFileUri = false;
 
-  data                                  ;
+  data;
 
-  name        ;
-  mimeType        ;
+  name;
+  mimeType;
 
-  static create(config                           ) {
+  static create(config) {
     return new this(config);
   }
 
-  constructor({ stream, data, encoding, name, mimeType }                           ) {
+  constructor({ stream, data, encoding, name, mimeType }) {
     if (stream instanceof Readable) {
       this.data = stream;
 
@@ -63,11 +51,13 @@ const PubNubFile            = class PubNubFile                  {
     }
 
     if (this.name === undefined) {
-      throw new Error("Couldn't guess filename out of the options. Please provide one.");
+      throw new Error(
+        "Couldn't guess filename out of the options. Please provide one."
+      );
     }
   }
 
-  toBuffer()                  {
+  toBuffer() {
     if (this.data instanceof Buffer) {
       return Promise.resolve(Buffer.from(this.data));
     }
@@ -96,7 +86,7 @@ const PubNubFile            = class PubNubFile                  {
     throw new Error('This feature is only supported in browser environments.');
   }
 
-  async toString(encoding                           = 'utf8') {
+  async toString(encoding = 'utf8') {
     const buffer = await this.toBuffer();
 
     return buffer.toString(encoding);
@@ -128,7 +118,9 @@ const PubNubFile            = class PubNubFile                  {
   }
 
   async toFileUri() {
-    throw new Error('This feature is only supported in react native environments.');
+    throw new Error(
+      'This feature is only supported in react native environments.'
+    );
   }
 
   async toBlob() {

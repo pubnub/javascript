@@ -29,15 +29,8 @@ function log(url, qs, res) {
   logger.log('-----'); // eslint-disable-line no-console
 }
 
-function xdr(
-  method        ,
-  url        ,
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-)       {
-  let status                     = {};
+function xdr(method, url, params, body, endpoint, callback) {
+  let status = {};
   status.operation = endpoint.operation;
 
   const httpConfig = {
@@ -75,40 +68,22 @@ function xdr(
     });
 }
 
-export function get(
-  params        ,
-  endpoint                    ,
-  callback          
-) {
+export function get(params, endpoint, callback) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'GET', url, params, '', endpoint, callback);
 }
 
-export function post(
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-) {
+export function post(params, body, endpoint, callback) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'POST', url, params, body, endpoint, callback);
 }
 
-export function patch(
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-) {
+export function patch(params, body, endpoint, callback) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'PATCH', url, params, body, endpoint, callback);
 }
 
-export function del(
-  params        ,
-  endpoint                    ,
-  callback          
-) {
+export function del(params, endpoint, callback) {
   let url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'DELETE', url, params, '', endpoint, callback);
 }

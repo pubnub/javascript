@@ -16,13 +16,13 @@ export class PubNubError extends Error {
   }
 }
 
-function createError(errorPayload        , type        )         {
+function createError(errorPayload, type) {
   errorPayload.type = type;
   errorPayload.error = true;
   return errorPayload;
 }
 
-export function createValidationError(message        )         {
+export function createValidationError(message) {
   return createError({ message }, 'validationError');
 }
 
@@ -31,14 +31,17 @@ function decideURL(endpoint, modules, incomingParams) {
     return endpoint.postURL(modules, incomingParams);
   } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
     return endpoint.patchURL(modules, incomingParams);
-  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+  } else if (
+    endpoint.useGetFile &&
+    endpoint.useGetFile(modules, incomingParams)
+  ) {
     return endpoint.getFileURL(modules, incomingParams);
   } else {
     return endpoint.getURL(modules, incomingParams);
   }
 }
 
-export function generatePNSDK(config        )         {
+export function generatePNSDK(config) {
   if (config.sdkName) {
     return config.sdkName;
   }
@@ -65,16 +68,28 @@ function getHttpMethod(modules, endpoint, incomingParams) {
     return 'POST';
   } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
     return 'PATCH';
-  } else if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
+  } else if (
+    endpoint.useDelete &&
+    endpoint.useDelete(modules, incomingParams)
+  ) {
     return 'DELETE';
-  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+  } else if (
+    endpoint.useGetFile &&
+    endpoint.useGetFile(modules, incomingParams)
+  ) {
     return 'GETFILE';
   } else {
     return 'GET';
   }
 }
 
-export function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
+export function signRequest(
+  modules,
+  url,
+  outgoingParams,
+  incomingParams,
+  endpoint
+) {
   let { config, crypto } = modules;
 
   let httpMethod = getHttpMethod(modules, endpoint, incomingParams);
@@ -82,7 +97,11 @@ export function signRequest(modules, url, outgoingParams, incomingParams, endpoi
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
 
   // This is because of a server-side bug, old publish using post should be deprecated
-  if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+  if (
+    endpoint.getOperation() === 'PNPublishOperation' &&
+    endpoint.usePost &&
+    endpoint.usePost(modules, incomingParams)
+  ) {
     httpMethod = 'GET';
   }
 
@@ -90,7 +109,9 @@ export function signRequest(modules, url, outgoingParams, incomingParams, endpoi
     httpMethod = 'GET';
   }
 
-  let signInput = `${httpMethod}\n${config.publishKey}\n${url}\n${utils.signPamFromParams(outgoingParams)}\n`;
+  let signInput = `${httpMethod}\n${
+    config.publishKey
+  }\n${url}\n${utils.signPamFromParams(outgoingParams)}\n`;
 
   if (httpMethod === 'POST') {
     let payload = endpoint.postPayload(modules, incomingParams);
@@ -145,7 +166,10 @@ export default function (modules, endpoint, ...args) {
       return callback(createValidationError(validationResult));
     } else if (promiseComponent) {
       promiseComponent.reject(
-        new PubNubError('Validation failed, check status for details', createValidationError(validationResult))
+        new PubNubError(
+          'Validation failed, check status for details',
+          createValidationError(validationResult)
+        )
       );
       return promiseComponent.promise;
     }
@@ -160,9 +184,14 @@ export default function (modules, endpoint, ...args) {
     operation: endpoint.getOperation(),
     timeout: endpoint.getRequestTimeout(modules),
     headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {},
-    ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
+    ignoreBody:
+      typeof endpoint.ignoreBody === 'function'
+        ? endpoint.ignoreBody(modules)
+        : false,
     forceBuffered:
-      typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
+      typeof endpoint.forceBuffered === 'function'
+        ? endpoint.forceBuffered(modules, incomingParams)
+        : null,
   };
 
   outgoingParams.uuid = config.UUID;
@@ -194,7 +223,7 @@ export default function (modules, endpoint, ...args) {
     signRequest(modules, url, outgoingParams, incomingParams, endpoint);
   }
 
-  let onResponse = (status                    , payload        ) => {
+  let onResponse = (status, payload) => {
     if (status.error) {
       if (endpoint.handleError) {
         endpoint.handleError(modules, incomingParams, status);
@@ -202,7 +231,12 @@ export default function (modules, endpoint, ...args) {
       if (callback) {
         callback(status);
       } else if (promiseComponent) {
-        promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', status));
+        promiseComponent.reject(
+          new PubNubError(
+            'PubNub call failed, check status for details',
+            status
+          )
+        );
       }
       return;
     }
@@ -228,19 +262,23 @@ export default function (modules, endpoint, ...args) {
         if (callback) {
           let errorData = e;
 
-          if (endpoint.getOperation() === operationConstants.PNSubscribeOperation) {
+          if (
+            endpoint.getOperation() === operationConstants.PNSubscribeOperation
+          ) {
             errorData = {
               statusCode: 400,
               error: true,
               operation: endpoint.getOperation(),
               errorData: e,
-              category: categoryConstants.PNUnknownCategory
+              category: categoryConstants.PNUnknownCategory,
             };
           }
 
           callback(errorData, null);
         } else if (promiseComponent) {
-          promiseComponent.reject(new PubNubError('PubNub call failed, check status for details', e));
+          promiseComponent.reject(
+            new PubNubError('PubNub call failed, check status for details', e)
+          );
         }
       });
   };
@@ -250,14 +288,32 @@ export default function (modules, endpoint, ...args) {
 
   if (getHttpMethod(modules, endpoint, incomingParams) === 'POST') {
     let payload = endpoint.postPayload(modules, incomingParams);
-    callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
+    callInstance = networking.POST(
+      outgoingParams,
+      payload,
+      networkingParams,
+      onResponse
+    );
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'PATCH') {
     let payload = endpoint.patchPayload(modules, incomingParams);
-    callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
+    callInstance = networking.PATCH(
+      outgoingParams,
+      payload,
+      networkingParams,
+      onResponse
+    );
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
-    callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
+    callInstance = networking.DELETE(
+      outgoingParams,
+      networkingParams,
+      onResponse
+    );
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'GETFILE') {
-    callInstance = networking.GETFILE(outgoingParams, networkingParams, onResponse);
+    callInstance = networking.GETFILE(
+      outgoingParams,
+      networkingParams,
+      onResponse
+    );
   } else {
     callInstance = networking.GET(outgoingParams, networkingParams, onResponse);
   }

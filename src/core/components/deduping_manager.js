@@ -3,10 +3,6 @@
 import Config from '../components/config';
 import { SubscribeMessage } from '../flow_interfaces';
 
-                                 
-                 
-  
-
 const hashCode = (payload) => {
   let hash = 0;
   if (payload.length === 0) return hash;
@@ -19,25 +15,25 @@ const hashCode = (payload) => {
 };
 
 export default class {
-  _config        ;
-  hashHistory               ;
+  _config;
+  hashHistory;
 
-  constructor({ config }                          ) {
+  constructor({ config }) {
     this.hashHistory = [];
     this._config = config;
   }
 
-  getKey(message                  ) {
+  getKey(message) {
     const hashedPayload = hashCode(JSON.stringify(message.payload)).toString();
     const timetoken = message.publishMetaData.publishTimetoken;
     return `${timetoken}-${hashedPayload}`;
   }
 
-  isDuplicate(message                  ) {
+  isDuplicate(message) {
     return this.hashHistory.includes(this.getKey(message));
   }
 
-  addEntry(message                  ) {
+  addEntry(message) {
     if (this.hashHistory.length >= this._config.maximumCacheSize) {
       this.hashHistory.shift();
     }

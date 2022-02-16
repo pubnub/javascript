@@ -1,22 +1,20 @@
 /*       */
 import Config from './config';
-import {
-  GrantTokenOutput,
-} from '../flow_interfaces';
+import { GrantTokenOutput } from '../flow_interfaces';
 
 export default class {
-  _config        ;
+  _config;
 
-  _cbor     ;
+  _cbor;
 
-  _token     ;
+  _token;
 
-  constructor(config        , cbor     ) {
+  constructor(config, cbor) {
     this._config = config;
     this._cbor = cbor;
   }
 
-  setToken(token        ) {
+  setToken(token) {
     if (token && token.length > 0) {
       this._token = token;
     } else {
@@ -28,7 +26,7 @@ export default class {
     return this._token;
   }
 
-  extractPermissions(permissions        ) {
+  extractPermissions(permissions) {
     let permissionsResult = {
       read: false,
       write: false,
@@ -36,7 +34,7 @@ export default class {
       delete: false,
       get: false,
       update: false,
-      join: false
+      join: false,
     };
 
     /* eslint-disable */
@@ -60,36 +58,40 @@ export default class {
     if ((permissions & 4) === 4) {
       permissionsResult.manage = true;
     }
-    
+
     if ((permissions & 2) === 2) {
       permissionsResult.write = true;
     }
-    
+
     if ((permissions & 1) === 1) {
       permissionsResult.read = true;
     }
-    
+
     /* eslint-enable */
 
     return permissionsResult;
   }
 
-  parseToken(tokenString        )                   {
+  parseToken(tokenString) {
     let parsed = this._cbor.decodeToken(tokenString);
 
     if (parsed !== undefined) {
-      let uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
+      let uuidResourcePermissions = parsed.res.uuid
+        ? Object.keys(parsed.res.uuid)
+        : [];
       let channelResourcePermissions = Object.keys(parsed.res.chan);
       let groupResourcePermissions = Object.keys(parsed.res.grp);
-      let uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
+      let uuidPatternPermissions = parsed.pat.uuid
+        ? Object.keys(parsed.pat.uuid)
+        : [];
       let channelPatternPermissions = Object.keys(parsed.pat.chan);
       let groupPatternPermissions = Object.keys(parsed.pat.grp);
 
-      let result                    = {
+      let result = {
         version: parsed.v,
         timestamp: parsed.t,
         ttl: parsed.ttl,
-        authorized_uuid: parsed.uuid
+        authorized_uuid: parsed.uuid,
       };
 
       let uuidResources = uuidResourcePermissions.length > 0;
@@ -102,21 +104,27 @@ export default class {
         if (uuidResources) {
           result.resources.uuids = {};
           uuidResourcePermissions.forEach((id) => {
-            result.resources.uuids[id] = this.extractPermissions(parsed.res.uuid[id]);
+            result.resources.uuids[id] = this.extractPermissions(
+              parsed.res.uuid[id]
+            );
           });
         }
 
         if (channelResources) {
           result.resources.channels = {};
           channelResourcePermissions.forEach((id) => {
-            result.resources.channels[id] = this.extractPermissions(parsed.res.chan[id]);
+            result.resources.channels[id] = this.extractPermissions(
+              parsed.res.chan[id]
+            );
           });
         }
 
         if (groupResources) {
           result.resources.groups = {};
           groupResourcePermissions.forEach((id) => {
-            result.resources.groups[id] = this.extractPermissions(parsed.res.grp[id]);
+            result.resources.groups[id] = this.extractPermissions(
+              parsed.res.grp[id]
+            );
           });
         }
       }
@@ -131,21 +139,27 @@ export default class {
         if (uuidPatterns) {
           result.patterns.uuids = {};
           uuidPatternPermissions.forEach((id) => {
-            result.patterns.uuids[id] = this.extractPermissions(parsed.pat.uuid[id]);
+            result.patterns.uuids[id] = this.extractPermissions(
+              parsed.pat.uuid[id]
+            );
           });
         }
 
         if (channelPatterns) {
           result.patterns.channels = {};
           channelPatternPermissions.forEach((id) => {
-            result.patterns.channels[id] = this.extractPermissions(parsed.pat.chan[id]);
+            result.patterns.channels[id] = this.extractPermissions(
+              parsed.pat.chan[id]
+            );
           });
         }
 
         if (groupPatterns) {
           result.patterns.groups = {};
           groupPatternPermissions.forEach((id) => {
-            result.patterns.groups[id] = this.extractPermissions(parsed.pat.grp[id]);
+            result.patterns.groups[id] = this.extractPermissions(
+              parsed.pat.grp[id]
+            );
           });
         }
       }

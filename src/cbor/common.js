@@ -1,10 +1,10 @@
 /*       */
 
 export default class {
-  _base64ToBinary                         ;
-  _cborReader                             ;
+  _base64ToBinary;
+  _cborReader;
 
-  constructor(decode              , base64ToBinary                         ) {
+  constructor(decode, base64ToBinary) {
     this._base64ToBinary = base64ToBinary;
     this._decode = decode;
   }
@@ -18,7 +18,8 @@ export default class {
       padding = '==';
     }
 
-    const cleaned = tokenString.replace(/-/gi, '+').replace(/_/gi, '/') + padding;
+    const cleaned =
+      tokenString.replace(/-/gi, '+').replace(/_/gi, '/') + padding;
     const result = this._decode(this._base64ToBinary(cleaned));
 
     if (typeof result === 'object') {

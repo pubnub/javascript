@@ -1,4 +1,3 @@
-
 import uuidGenerator from 'lil-uuid';
 
 export default {
@@ -8,5 +7,5 @@ export default {
     } else {
       return uuidGenerator();
     }
-  }
+  },
 };

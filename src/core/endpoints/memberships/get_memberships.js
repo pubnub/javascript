@@ -8,26 +8,25 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNGetMembershipsOperation;
 }
 
-export function validateParams(modules               , incomingParams                  ) {
+export function validateParams(modules, incomingParams) {
   let { userId } = incomingParams;
 
   if (!userId) return 'Missing userId';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams                  
-)         {
+export function getURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(
+    incomingParams.userId
+  )}/spaces`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -35,10 +34,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                  
-)         {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -88,9 +84,6 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules               ,
-  membershipsResponse        
-)                          {
+export function handleResponse(modules, membershipsResponse) {
   return membershipsResponse;
 }

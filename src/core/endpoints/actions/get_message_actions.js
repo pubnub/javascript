@@ -8,32 +8,26 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNGetMessageActionsOperation;
 }
 
-export function validateParams(
-  { config }               ,
-  incomingParams                        
-) {
+export function validateParams({ config }, incomingParams) {
   let { channel } = incomingParams;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
   if (!channel) return 'Missing message channel';
 }
 
-
-export function getURL(
-  { config }               ,
-  incomingParams                        
-)         {
+export function getURL({ config }, incomingParams) {
   let { channel } = incomingParams;
 
-  return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
+  return `/v1/message-actions/${
+    config.subscribeKey
+  }/channel/${utils.encodeString(channel)}`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -41,12 +35,9 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                        
-)         {
+export function prepareParams(modules, incomingParams) {
   const { limit, start, end } = incomingParams;
-  let outgoingParams         = {};
+  let outgoingParams = {};
 
   if (limit) outgoingParams.limit = limit;
   if (start) outgoingParams.start = start;
@@ -55,12 +46,13 @@ export function prepareParams(
   return outgoingParams;
 }
 
-export function handleResponse(
-  modules               ,
-  getMessageActionsResponse        
-)                            {
+export function handleResponse(modules, getMessageActionsResponse) {
   /** @type GetMessageActionsResponse */
-  let response = { data: getMessageActionsResponse.data, start: null, end: null };
+  let response = {
+    data: getMessageActionsResponse.data,
+    start: null,
+    end: null,
+  };
 
   if (response.data.length) {
     response.end = response.data[response.data.length - 1].actionTimetoken;

@@ -2,147 +2,148 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
+import {
+  InternalSetupStruct,
+  KeepAliveStruct,
+  ProxyStruct,
+} from '../flow_interfaces';
 
-const PRESENCE_TIMEOUT_MINIMUM         = 20;
-const PRESENCE_TIMEOUT_DEFAULT         = 300;
+const PRESENCE_TIMEOUT_MINIMUM = 20;
+const PRESENCE_TIMEOUT_DEFAULT = 300;
 
-const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
-
-                            
-                            
-  
+const makeDefaultOrigins = () =>
+  Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
 
 export default class {
-  subscribeKey        ;
-  publishKey        ;
-  secretKey        ;
-  cipherKey        ;
-  authKey        ;
-  UUID        ;
+  subscribeKey;
+  publishKey;
+  secretKey;
+  cipherKey;
+  authKey;
+  UUID;
 
-  proxy             ;
+  proxy;
 
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
   */
-  instanceId        ;
+  instanceId;
 
   /*
     If the SDK is running as part of another SDK built atop of it, allow a custom pnsdk with name and version.
    */
-  sdkName        ;
+  sdkName;
 
   /*
     keep track of the SDK family for identifier generator
   */
-  sdkFamily        ;
+  sdkFamily;
 
   /*
     If the SDK is operated by a partner, allow a custom pnsdk item for them.
   */
-  partnerId        ;
+  partnerId;
 
   /*
     filter expression to pass along when subscribing.
   */
-  filterExpression        ;
+  filterExpression;
   /*
     configuration to supress leave events; when a presence leave is performed
     this configuration will disallow the leave event from happening
   */
-  suppressLeaveEvents         ;
+  suppressLeaveEvents;
 
   /*
     use SSL for http requests?
   */
-  secure         ;
+  secure;
 
   // Custom optional origin.
-  origin                   ;
+  origin;
 
   // log verbosity: true to output lots of info
-  logVerbosity         ;
+  logVerbosity;
 
   // if instanceId config is true, the SDK will pass the unique instance identifier to the server as instanceId=<UUID>
-  useInstanceId         ;
+  useInstanceId;
 
   // if requestId config is true, the SDK will pass a unique request identifier with each request as request_id=<UUID>
-  useRequestId         ;
+  useRequestId;
 
   // use connection keep-alive for http requests
-  keepAlive          ;
+  keepAlive;
 
-  keepAliveSettings                  ;
+  keepAliveSettings;
 
   // if autoNetworkDetection config is true, the SDK will emit NetworkUp and NetworkDown when there changes in the networking
-  autoNetworkDetection          ;
+  autoNetworkDetection;
 
   // alert when a heartbeat works out.
-  announceSuccessfulHeartbeats         ;
-  announceFailedHeartbeats         ;
+  announceSuccessfulHeartbeats;
+  announceFailedHeartbeats;
 
   /*
     how long the server will wait before declaring that the client is gone.
   */
-  _presenceTimeout        ;
+  _presenceTimeout;
 
   /*
     how often (in seconds) the client should announce its presence to server
   */
-  _heartbeatInterval        ;
+  _heartbeatInterval;
 
   /*
     how long to wait for the server when running the subscribe loop
   */
-  _subscribeRequestTimeout        ;
+  _subscribeRequestTimeout;
   /*
     how long to wait for the server when making transactional requests
   */
-  _transactionalRequestTimeout        ;
+  _transactionalRequestTimeout;
   /*
     use send beacon API when unsubscribing.
     https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
   */
-  _useSendBeacon         ;
+  _useSendBeacon;
 
   /*
     allow frameworks to append to the PNSDK parameter
     the key should be an identifier for the specific framework to prevent duplicates
   */
-  _PNSDKSuffix                           ;
+  _PNSDKSuffix;
 
   /*
     if set, the SDK will alert if more messages arrive in one subscribe than the theshold
   */
-  requestMessageCountThreshold        ;
+  requestMessageCountThreshold;
 
   /*
     Restore subscription list on disconnection.
    */
-  restore         ;
+  restore;
 
   /*
     support for client deduping
   */
-  dedupeOnSubscribe         ;
+  dedupeOnSubscribe;
 
-  maximumCacheSize        ;
+  maximumCacheSize;
 
   /*
     support customp encryption and decryption functions.
   */
-  customEncrypt          ; // function to support custome encryption of messages
+  customEncrypt; // function to support custome encryption of messages
 
-  customDecrypt          ; // function used to decrypt old version messages
+  customDecrypt; // function used to decrypt old version messages
 
   // File Upload
 
   // How many times the publish-file should be retried before giving up
-  fileUploadPublishRetryLimit        ;
-  useRandomIVs         ;
+  fileUploadPublishRetryLimit;
+  useRandomIVs;
 
-  constructor({ setup }                     ) {
+  constructor({ setup }) {
     this._PNSDKSuffix = {};
 
     this.instanceId = `pn-${uuidGenerator.createUUID()}`;
@@ -157,8 +158,14 @@ export default class {
 
     this.setFilterExpression(setup.filterExpression);
 
-    if (typeof setup.origin !== 'string' && !Array.isArray(setup.origin) && setup.origin !== undefined) {
-      throw new Error('Origin must be either undefined, a string or a list of strings.');
+    if (
+      typeof setup.origin !== 'string' &&
+      !Array.isArray(setup.origin) &&
+      setup.origin !== undefined
+    ) {
+      throw new Error(
+        'Origin must be either undefined, a string or a list of strings.'
+      );
     }
 
     this.origin = setup.origin || makeDefaultOrigins();
@@ -187,7 +194,8 @@ export default class {
     this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
     this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
-    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
+    this.announceSuccessfulHeartbeats =
+      setup.announceSuccessfulHeartbeats || false;
 
     this.useInstanceId = setup.useInstanceId || false;
     this.useRequestId = setup.useRequestId || false;
@@ -215,25 +223,25 @@ export default class {
   }
 
   // exposed setters
-  getAuthKey()         {
+  getAuthKey() {
     return this.authKey;
   }
 
-  setAuthKey(val        )       {
+  setAuthKey(val) {
     this.authKey = val;
     return this;
   }
 
-  setCipherKey(val        )       {
+  setCipherKey(val) {
     this.cipherKey = val;
     return this;
   }
 
-  getUUID()         {
+  getUUID() {
     return this.UUID;
   }
 
-  setUUID(val        )       {
+  setUUID(val) {
     if (!val || typeof val !== 'string' || val.trim().length === 0) {
       throw new Error('Missing uuid parameter. Provide a valid string uuid');
     }
@@ -241,27 +249,30 @@ export default class {
     return this;
   }
 
-  getFilterExpression()         {
+  getFilterExpression() {
     return this.filterExpression;
   }
 
-  setFilterExpression(val        )       {
+  setFilterExpression(val) {
     this.filterExpression = val;
     return this;
   }
 
-  getPresenceTimeout()         {
+  getPresenceTimeout() {
     return this._presenceTimeout;
   }
 
-  setPresenceTimeout(val        )       {
+  setPresenceTimeout(val) {
     if (val >= PRESENCE_TIMEOUT_MINIMUM) {
       this._presenceTimeout = val;
     } else {
       this._presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
 
       // eslint-disable-next-line no-console
-      console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
+      console.log(
+        'WARNING: Presence timeout is less than the minimum. Using minimum value: ',
+        this._presenceTimeout
+      );
     }
 
     this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
@@ -269,56 +280,59 @@ export default class {
     return this;
   }
 
-  setProxy(proxy             ) {
+  setProxy(proxy) {
     this.proxy = proxy;
   }
 
-  getHeartbeatInterval()         {
+  getHeartbeatInterval() {
     return this._heartbeatInterval;
   }
 
-  setHeartbeatInterval(val        )       {
+  setHeartbeatInterval(val) {
     this._heartbeatInterval = val;
     return this;
   }
 
   // deprecated setters.
-  getSubscribeTimeout()         {
+  getSubscribeTimeout() {
     return this._subscribeRequestTimeout;
   }
 
-  setSubscribeTimeout(val        )       {
+  setSubscribeTimeout(val) {
     this._subscribeRequestTimeout = val;
     return this;
   }
 
-  getTransactionTimeout()         {
+  getTransactionTimeout() {
     return this._transactionalRequestTimeout;
   }
 
-  setTransactionTimeout(val        )       {
+  setTransactionTimeout(val) {
     this._transactionalRequestTimeout = val;
     return this;
   }
 
-  isSendBeaconEnabled()          {
+  isSendBeaconEnabled() {
     return this._useSendBeacon;
   }
 
-  setSendBeaconConfig(val         )       {
+  setSendBeaconConfig(val) {
     this._useSendBeacon = val;
     return this;
   }
 
-  getVersion()         {
+  getVersion() {
     return '5.0.0';
   }
 
-  _addPnsdkSuffix(name        , suffix        ) {
+  _addPnsdkSuffix(name, suffix) {
     this._PNSDKSuffix[name] = suffix;
   }
 
-  _getPnsdkSuffix(separator        )         {
-    return Object.keys(this._PNSDKSuffix).reduce((result, key) => result + separator + this._PNSDKSuffix[key], '');
+  _getPnsdkSuffix(separator) {
+    return Object.keys(this._PNSDKSuffix).reduce(
+      (result, key) => result + separator + this._PNSDKSuffix[key],
+      ''
+    );
   }
 }

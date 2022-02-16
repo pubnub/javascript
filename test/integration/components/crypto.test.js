@@ -1,4 +1,4 @@
-/** @flow */
+/**       */
 
 import PubNub from '../../../src/node';
 

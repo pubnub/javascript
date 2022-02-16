@@ -10,7 +10,7 @@ import {
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
-function __processMessage(modules, message        )                {
+function __processMessage(modules, message) {
   let { config, crypto } = modules;
   if (!config.cipherKey) return message;
 
@@ -21,14 +21,11 @@ function __processMessage(modules, message        )                {
   }
 }
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNFetchMessagesOperation;
 }
 
-export function validateParams(
-  modules               ,
-  incomingParams                        
-) {
+export function validateParams(modules, incomingParams) {
   let { channels, includeMessageActions = false } = incomingParams;
   let { config } = modules;
 
@@ -36,14 +33,13 @@ export function validateParams(
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
   if (includeMessageActions && channels.length > 1) {
-    throw new TypeError('History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.');
+    throw new TypeError(
+      'History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.'
+    );
   }
 }
 
-export function getURL(
-  modules               ,
-  incomingParams                        
-)         {
+export function getURL(modules, incomingParams) {
   let { channels = [], includeMessageActions = false } = incomingParams;
   let { config } = modules;
   const endpoint = !includeMessageActions ? 'history' : 'history-with-actions';
@@ -54,18 +50,15 @@ export function getURL(
   }/channel/${utils.encodeString(stringifiedChannels)}`;
 }
 
-export function getRequestTimeout({ config }               )          {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported()          {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                        
-)         {
+export function prepareParams(modules, incomingParams) {
   const {
     channels,
     start,
@@ -76,30 +69,29 @@ export function prepareParams(
     includeMeta = false,
     includeUuid,
     includeUUID = true,
-    includeMessageType = true
+    includeMessageType = true,
   } = incomingParams;
-  let outgoingParams         = {};
+  let outgoingParams = {};
 
   if (count) {
     outgoingParams.max = count;
   } else {
-    outgoingParams.max = (channels.length > 1 || includeMessageActions === true) ? 25 : 100;
+    outgoingParams.max =
+      channels.length > 1 || includeMessageActions === true ? 25 : 100;
   }
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (includeMeta) outgoingParams.include_meta = 'true';
-  if (includeUUID && includeUuid !== false) outgoingParams.include_uuid = 'true';
+  if (includeUUID && includeUuid !== false)
+    outgoingParams.include_uuid = 'true';
   if (includeMessageType) outgoingParams.include_message_type = 'true';
 
   return outgoingParams;
 }
 
-export function handleResponse(
-  modules               ,
-  serverResponse                   
-)                        {
-  const response                        = {
+export function handleResponse(modules, serverResponse) {
+  const response = {
     channels: {},
   };
 
@@ -107,7 +99,7 @@ export function handleResponse(
     response.channels[channelName] = [];
 
     (serverResponse.channels[channelName] || []).forEach((messageEnvelope) => {
-      let announce                      = {};
+      let announce = {};
       announce.channel = channelName;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);
@@ -128,7 +120,7 @@ export function handleResponse(
     });
   });
   if (serverResponse.more) {
-    response.more  = serverResponse.more;
+    response.more = serverResponse.more;
   }
 
   return response;

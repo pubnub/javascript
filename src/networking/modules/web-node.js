@@ -2,9 +2,8 @@
 /* global window */
 
 import superagent from 'superagent';
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 
-function log(req        ) {
+function log(req) {
   let _pickLogger = () => {
     if (console && console.log) return console; // eslint-disable-line no-console
     if (window && window.console && window.console.log) return window.console;
@@ -24,12 +23,20 @@ function log(req        ) {
     let timestampDone = new Date().toISOString();
 
     logger.log('>>>>>>'); // eslint-disable-line no-console
-    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text); // eslint-disable-line no-console
+    logger.log(
+      `[${timestampDone} / ${elapsed}]`,
+      '\n',
+      req.url,
+      '\n',
+      req.qs,
+      '\n',
+      res.text
+    ); // eslint-disable-line no-console
     logger.log('-----'); // eslint-disable-line no-console
   });
 }
 
-function xdr(superagentConstruct            , endpoint                    , callback          )         {
+function xdr(superagentConstruct, endpoint, callback) {
   if (this._config.logVerbosity) {
     superagentConstruct = superagentConstruct.use(log);
   }
@@ -58,7 +65,7 @@ function xdr(superagentConstruct            , endpoint                    , call
 
   sc.end((err, resp) => {
     let parsedResponse;
-    let status                     = {};
+    let status = {};
     status.error = err !== null;
     status.operation = endpoint.operation;
 
@@ -118,11 +125,7 @@ function xdr(superagentConstruct            , endpoint                    , call
   return sc;
 }
 
-export async function postfile(
-  url        ,
-  fields                                                ,
-  fileInput     
-)               {
+export async function postfile(url, fields, fileInput) {
   let agent = superagent.post(url);
 
   fields.forEach(({ key, value }) => {
@@ -136,7 +139,7 @@ export async function postfile(
   return result;
 }
 
-export function getfile(params        , endpoint                    , callback          )             {
+export function getfile(params, endpoint, callback) {
   let superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
@@ -144,7 +147,7 @@ export function getfile(params        , endpoint                    , callback  
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function get(params        , endpoint                    , callback          )             {
+export function get(params, endpoint, callback) {
   let superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
@@ -152,7 +155,7 @@ export function get(params        , endpoint                    , callback      
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function post(params        , body        , endpoint                    , callback          )             {
+export function post(params, body, endpoint, callback) {
   let superagentConstruct = superagent
     .post(this.getStandardOrigin() + endpoint.url)
     .query(params)
@@ -161,7 +164,7 @@ export function post(params        , body        , endpoint                    ,
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function patch(params        , body        , endpoint                    , callback          )             {
+export function patch(params, body, endpoint, callback) {
   let superagentConstruct = superagent
     .patch(this.getStandardOrigin() + endpoint.url)
     .query(params)
@@ -170,7 +173,7 @@ export function patch(params        , body        , endpoint                    
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function del(params        , endpoint                    , callback          )             {
+export function del(params, endpoint, callback) {
   let superagentConstruct = superagent
     .delete(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)

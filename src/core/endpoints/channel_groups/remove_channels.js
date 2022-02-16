@@ -4,11 +4,11 @@ import { RemoveChannelParams, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNRemoveChannelsFromGroupOperation;
 }
 
-export function validateParams(modules               , incomingParams                     ) {
+export function validateParams(modules, incomingParams) {
   let { channels, channelGroup } = incomingParams;
   let { config } = modules;
 
@@ -17,13 +17,15 @@ export function validateParams(modules               , incomingParams           
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules               , incomingParams                     )         {
+export function getURL(modules, incomingParams) {
   let { channelGroup } = incomingParams;
   let { config } = modules;
-  return `/v1/channel-registration/sub-key/${config.subscribeKey}/channel-group/${utils.encodeString(channelGroup)}`;
+  return `/v1/channel-registration/sub-key/${
+    config.subscribeKey
+  }/channel-group/${utils.encodeString(channelGroup)}`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -31,14 +33,14 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(modules               , incomingParams                     )         {
+export function prepareParams(modules, incomingParams) {
   let { channels = [] } = incomingParams;
 
   return {
-    remove: channels.join(',')
+    remove: channels.join(','),
   };
 }
 
-export function handleResponse()         {
+export function handleResponse() {
   return {};
 }

@@ -7,7 +7,7 @@ import { del, get, post, patch } from '../networking/modules/nativescript';
 import { InternalSetupStruct } from '../core/flow_interfaces';
 
 export default class extends PubNubCore {
-  constructor(setup                     ) {
+  constructor(setup) {
     setup.db = new Database();
     setup.networking = new Networking({ del, get, post, patch });
     setup.sdkFamily = 'NativeScript';

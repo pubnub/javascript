@@ -1,24 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                 
+
 import utils from '../../../utils';
 
-                                         
-                  
-              
-                           
-     
-                                
-   
-
-                                         
-              
-                        
-   
-
-const endpoint                                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetChannelMetadataOperation,
 
   validateParams: (_, params) => {
@@ -33,7 +19,10 @@ const endpoint                                                                  
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}`,
 
   patchPayload: (_, params) => params.data,
 

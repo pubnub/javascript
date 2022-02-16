@@ -59,8 +59,10 @@ export default {
   PNSetMembershipsOperation: 'PNSetMembershipsOperation',
 
   // push
-  PNPushNotificationEnabledChannelsOperation: 'PNPushNotificationEnabledChannelsOperation',
-  PNRemoveAllPushNotificationsOperation: 'PNRemoveAllPushNotificationsOperation',
+  PNPushNotificationEnabledChannelsOperation:
+    'PNPushNotificationEnabledChannelsOperation',
+  PNRemoveAllPushNotificationsOperation:
+    'PNRemoveAllPushNotificationsOperation',
   //
 
   // presence

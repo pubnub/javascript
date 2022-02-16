@@ -1,7 +1,7 @@
 /*       */
 
 export default class {
-  storage        ;
+  storage;
 
   constructor() {
     this.storage = {};

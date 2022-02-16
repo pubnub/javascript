@@ -1,11 +1,10 @@
 /**       */
 
-                                                  
 import operationConstants from '../../constants/operations';
-                                                                  
+
 import utils from '../../utils';
 
-const endpoint                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNListFilesOperation,
 
   validateParams: (_, params) => {
@@ -23,7 +22,10 @@ const endpoint                                                     = {
   },
 
   useDelete: () => true,
-  getURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files/${params.id}/${params.name}`,
+  getURL: ({ config }, params) =>
+    `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}/files/${params.id}/${params.name}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 
@@ -31,7 +33,7 @@ const endpoint                                                     = {
 
   prepareParams: () => ({}),
 
-  handleResponse: (_, response)                   => ({
+  handleResponse: (_, response) => ({
     status: response.status,
   }),
 };

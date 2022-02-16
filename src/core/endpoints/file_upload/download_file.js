@@ -1,11 +1,10 @@
 /**       */
 
-                                                  
 import operationConstants from '../../constants/operations';
-                                                                      
+
 import utils from '../../utils';
 
-const endpoint                                                         = {
+const endpoint = {
   getOperation: () => operationConstants.PNDownloadFileOperation,
 
   validateParams: (_, params) => {
@@ -25,7 +24,9 @@ const endpoint                                                         = {
   useGetFile: () => true,
 
   getFileURL: ({ config }, params) =>
-    `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files/${params.id}/${params.name}`,
+    `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}/files/${params.id}/${params.name}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 
@@ -35,11 +36,17 @@ const endpoint                                                         = {
 
   prepareParams: () => ({}),
 
-  handleResponse: async ({ PubNubFile, config, cryptography }, res, params)                              => {
+  handleResponse: async ({ PubNubFile, config, cryptography }, res, params) => {
     let body = res.response.body;
 
-    if (PubNubFile.supportsEncryptFile && (params.cipherKey ?? config.cipherKey)) {
-      body = await cryptography.decrypt(params.cipherKey ?? config.cipherKey, body);
+    if (
+      PubNubFile.supportsEncryptFile &&
+      (params.cipherKey ?? config.cipherKey)
+    ) {
+      body = await cryptography.decrypt(
+        params.cipherKey ?? config.cipherKey,
+        body
+      );
     }
 
     return PubNubFile.create({

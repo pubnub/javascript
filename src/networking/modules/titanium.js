@@ -7,8 +7,6 @@ import {
 } from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
-                    
-
 function log(url, qs, res) {
   let _pickLogger = () => {
     if (Ti && Ti.API && Ti.API.log) return Ti.API;
@@ -31,7 +29,7 @@ function log(url, qs, res) {
   logger.log('-----');
 }
 
-function getHttpClient()      {
+function getHttpClient() {
   if (Ti.Platform.osname === 'mobileweb') {
     return new XMLHttpRequest();
   } else {
@@ -39,22 +37,14 @@ function getHttpClient()      {
   }
 }
 
-function keepAlive(xhr     )       {
+function keepAlive(xhr) {
   if (Ti.Platform.osname !== 'mobileweb' && this._config.keepAlive) {
     xhr.enableKeepAlive = true;
   }
 }
 
-function xdr(
-  xhr     ,
-  method        ,
-  url        ,
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-)       {
-  let status                     = {};
+function xdr(xhr, method, url, params, body, endpoint, callback) {
+  let status = {};
   status.operation = endpoint.operation;
 
   xhr.open(method, buildUrl(url, params), true);
@@ -89,11 +79,7 @@ function xdr(
   xhr.send(body);
 }
 
-export function get(
-  params        ,
-  endpoint                    ,
-  callback          
-) {
+export function get(params, endpoint, callback) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;
@@ -101,12 +87,7 @@ export function get(
   return xdr.call(this, xhr, 'GET', url, params, {}, endpoint, callback);
 }
 
-export function post(
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-) {
+export function post(params, body, endpoint, callback) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;
@@ -123,24 +104,24 @@ export function post(
   );
 }
 
-export function patch(
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-) {
+export function patch(params, body, endpoint, callback) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;
 
-  return xdr.call(this, xhr, 'PATCH', url, params, JSON.parse(body), endpoint, callback);
+  return xdr.call(
+    this,
+    xhr,
+    'PATCH',
+    url,
+    params,
+    JSON.parse(body),
+    endpoint,
+    callback
+  );
 }
 
-export function del(
-  params        ,
-  endpoint                    ,
-  callback          
-) {
+export function del(params, endpoint, callback) {
   let xhr = getHttpClient();
 
   let url = this.getStandardOrigin() + endpoint.url;

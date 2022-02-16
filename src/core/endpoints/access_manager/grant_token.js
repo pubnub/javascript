@@ -1,14 +1,18 @@
 /*       */
 /* eslint camelcase: 0 */
 
-import { GrantTokenInput, GrantTokenObject, ModulesInject } from '../../flow_interfaces';
+import {
+  GrantTokenInput,
+  GrantTokenObject,
+  ModulesInject,
+} from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNAccessManagerGrantToken;
 }
 
-export function extractPermissions(permissions                  ) {
+export function extractPermissions(permissions) {
   let permissionsResult = 0;
 
   /* eslint-disable */
@@ -48,7 +52,7 @@ export function extractPermissions(permissions                  ) {
 
 function prepareMessagePayload(modules, incomingParams) {
   const { ttl, resources, patterns, meta, authorized_uuid } = incomingParams;
-  const params      = {
+  const params = {
     ttl: 0,
     permissions: {
       resources: {
@@ -56,17 +60,17 @@ function prepareMessagePayload(modules, incomingParams) {
         groups: {},
         uuids: {},
         users: {}, // not used, needed for api backward compatibility
-        spaces: {} // not used, needed for api backward compatibility
+        spaces: {}, // not used, needed for api backward compatibility
       },
       patterns: {
         channels: {},
         groups: {},
         uuids: {},
         users: {}, // not used, needed for api backward compatibility
-        spaces: {} // not used, needed for api backward compatibility
+        spaces: {}, // not used, needed for api backward compatibility
       },
-      meta: {}
-    }
+      meta: {},
+    },
   };
 
   if (resources) {
@@ -74,19 +78,25 @@ function prepareMessagePayload(modules, incomingParams) {
 
     if (uuids) {
       Object.keys(uuids).forEach((uuid) => {
-        params.permissions.resources.uuids[uuid] = extractPermissions(uuids[uuid]);
+        params.permissions.resources.uuids[uuid] = extractPermissions(
+          uuids[uuid]
+        );
       });
     }
 
     if (channels) {
       Object.keys(channels).forEach((channel) => {
-        params.permissions.resources.channels[channel] = extractPermissions(channels[channel]);
+        params.permissions.resources.channels[channel] = extractPermissions(
+          channels[channel]
+        );
       });
     }
 
     if (groups) {
       Object.keys(groups).forEach((group) => {
-        params.permissions.resources.groups[group] = extractPermissions(groups[group]);
+        params.permissions.resources.groups[group] = extractPermissions(
+          groups[group]
+        );
       });
     }
   }
@@ -96,19 +106,25 @@ function prepareMessagePayload(modules, incomingParams) {
 
     if (uuids) {
       Object.keys(uuids).forEach((uuid) => {
-        params.permissions.patterns.uuids[uuid] = extractPermissions(uuids[uuid]);
+        params.permissions.patterns.uuids[uuid] = extractPermissions(
+          uuids[uuid]
+        );
       });
     }
 
     if (channels) {
       Object.keys(channels).forEach((channel) => {
-        params.permissions.patterns.channels[channel] = extractPermissions(channels[channel]);
+        params.permissions.patterns.channels[channel] = extractPermissions(
+          channels[channel]
+        );
       });
     }
 
     if (groups) {
       Object.keys(groups).forEach((group) => {
-        params.permissions.patterns.groups[group] = extractPermissions(groups[group]);
+        params.permissions.patterns.groups[group] = extractPermissions(
+          groups[group]
+        );
       });
     }
   }
@@ -128,37 +144,37 @@ function prepareMessagePayload(modules, incomingParams) {
   return params;
 }
 
-export function validateParams(
-  modules               ,
-  incomingParams                 
-) {
+export function validateParams(modules, incomingParams) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
   if (!config.publishKey) return 'Missing Publish Key';
   if (!config.secretKey) return 'Missing Secret Key';
 
-  if (!incomingParams.resources && !incomingParams.patterns) return 'Missing either Resources or Patterns.';
+  if (!incomingParams.resources && !incomingParams.patterns)
+    return 'Missing either Resources or Patterns.';
 
   if (
-    (
-      (incomingParams.resources) &&
-      (!incomingParams.resources.uuids || Object.keys(incomingParams.resources.uuids).length === 0) &&
-      (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) &&
-      (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0)
-    ) ||
-    (
-      (incomingParams.patterns) &&
-      (!incomingParams.patterns.uuids || Object.keys(incomingParams.patterns.uuids).length === 0) &&
-      (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) &&
-      (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)
-    )
+    (incomingParams.resources &&
+      (!incomingParams.resources.uuids ||
+        Object.keys(incomingParams.resources.uuids).length === 0) &&
+      (!incomingParams.resources.channels ||
+        Object.keys(incomingParams.resources.channels).length === 0) &&
+      (!incomingParams.resources.groups ||
+        Object.keys(incomingParams.resources.groups).length === 0)) ||
+    (incomingParams.patterns &&
+      (!incomingParams.patterns.uuids ||
+        Object.keys(incomingParams.patterns.uuids).length === 0) &&
+      (!incomingParams.patterns.channels ||
+        Object.keys(incomingParams.patterns.channels).length === 0) &&
+      (!incomingParams.patterns.groups ||
+        Object.keys(incomingParams.patterns.groups).length === 0))
   ) {
     return 'Missing values for either Resources or Patterns.';
   }
 }
 
-export function postURL(modules               )         {
+export function postURL(modules) {
   let { config } = modules;
   return `/v3/pam/${config.subscribeKey}/grant`;
 }
@@ -167,29 +183,23 @@ export function usePost() {
   return true;
 }
 
-export function getRequestTimeout({ config }               )         {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported()          {
+export function isAuthSupported() {
   return false;
 }
 
-export function prepareParams()         {
+export function prepareParams() {
   return {};
 }
 
-export function postPayload(
-  modules               ,
-  incomingParams                 
-)         {
+export function postPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules               ,
-  response        
-)         {
+export function handleResponse(modules, response) {
   let token = response.data.token;
 
   return token;

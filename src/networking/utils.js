@@ -1,10 +1,6 @@
 /*       */
 
-export function encodedKeyValuePair(
-  pairs               ,
-  key        ,
-  value        
-)       {
+export function encodedKeyValuePair(pairs, key, value) {
   if (value != null) {
     if (Array.isArray(value)) {
       value.forEach((item) => {
@@ -22,7 +18,7 @@ export function encodedKeyValuePair(
   }
 }
 
-export function buildUrl(url        , params        )         {
+export function buildUrl(url, params) {
   let pairs = [];
 
   Object.keys(params).forEach((key) => {

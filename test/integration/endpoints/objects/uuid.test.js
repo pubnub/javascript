@@ -1,4 +1,4 @@
-/** @flow */
+/*       */
 
 import nock from 'nock';
 import utils from '../../../utils';
@@ -12,8 +12,8 @@ describe('objects UUID', () => {
   const UUID = 'myUUID';
   const AUTH_KEY = 'myAuthKey';
 
-  let pubnub: PubNub;
-  let PNSDK: string;
+  let pubnub;
+  let PNSDK;
 
   before(() => {
     nock.disableNetConnect();
@@ -43,7 +43,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          limit: 100
+          limit: 100,
         })
         .reply(200, {
           status: 200,
@@ -58,7 +58,7 @@ describe('objects UUID', () => {
         data: allUsers.map(asResponse),
         prev: undefined,
         next: undefined,
-        totalCount: undefined
+        totalCount: undefined,
       });
     });
 
@@ -70,7 +70,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          limit: 100
+          limit: 100,
         })
         .reply(403, {
           status: 403,
@@ -93,7 +93,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
@@ -178,7 +178,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
@@ -202,7 +202,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
@@ -229,7 +229,7 @@ describe('objects UUID', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
@@ -238,7 +238,7 @@ describe('objects UUID', () => {
 
       const resultP = pubnub.objects.setUUIDMetadata({
         uuid: otherUUID,
-        data: user1.data
+        data: user1.data,
       });
 
       await expect(scope).to.have.been.requested;

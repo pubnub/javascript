@@ -17,7 +17,7 @@ function prepareMessagePayload(modules, incomingParams) {
     payload.add = [];
 
     spaces.forEach((addMembership) => {
-      let currentAdd                 = { id: addMembership.id };
+      let currentAdd = { id: addMembership.id };
 
       if (addMembership.custom) {
         currentAdd.custom = addMembership.custom;
@@ -30,43 +30,38 @@ function prepareMessagePayload(modules, incomingParams) {
   return payload;
 }
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNUpdateMembershipsOperation;
 }
 
-export function validateParams(
-  modules               ,
-  incomingParams                  
-) {
+export function validateParams(modules, incomingParams) {
   let { userId, spaces } = incomingParams;
 
   if (!userId) return 'Missing userId';
   if (!spaces) return 'Missing spaces';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams                  
-)         {
+export function getURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(
+    incomingParams.userId
+  )}/spaces`;
 }
 
-export function patchURL(
-  modules               ,
-  incomingParams                  
-)         {
+export function patchURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(
+    incomingParams.userId
+  )}/spaces`;
 }
 
 export function usePatch() {
   return true;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -74,10 +69,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                  
-)         {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page } = incomingParams;
   const params = {};
 
@@ -123,16 +115,10 @@ export function prepareParams(
   return params;
 }
 
-export function patchPayload(
-  modules               ,
-  incomingParams                  
-)         {
+export function patchPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules               ,
-  membershipsResponse        
-)                          {
+export function handleResponse(modules, membershipsResponse) {
   return membershipsResponse;
 }

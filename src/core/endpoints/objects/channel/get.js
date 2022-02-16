@@ -1,23 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                 
+
 import utils from '../../../utils';
 
-                                         
-                  
-              
-                           
-     
-   
-
-                                         
-              
-                        
-   
-
-const endpoint                                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetChannelMetadataOperation,
 
   validateParams: (_, params) => {
@@ -26,7 +13,10 @@ const endpoint                                                                  
     }
   },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 

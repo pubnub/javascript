@@ -1,32 +1,8 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                 
 
-                                            
-                  
-                                                  
-                 
-           
-                  
-                  
-     
-              
-                         
-                           
-     
-   
-
-                                            
-              
-                          
-                      
-                
-                
-   
-
-const endpoint                                                                           = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetAllChannelMetadataOperation,
 
   // No required parameters.
@@ -64,19 +40,21 @@ const endpoint                                                                  
     queryParams.limit = params?.limit ?? 100;
 
     if (params?.sort) {
-      queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
-        if (value === 'asc' || value === 'desc') {
-          return `${key}:${value}`;
-        } else {
-          return key;
+      queryParams.sort = Object.entries(params.sort ?? {}).map(
+        ([key, value]) => {
+          if (value === 'asc' || value === 'desc') {
+            return `${key}:${value}`;
+          } else {
+            return key;
+          }
         }
-      });
+      );
     }
 
     return queryParams;
   },
 
-  handleResponse: (_, response)                              => ({
+  handleResponse: (_, response) => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

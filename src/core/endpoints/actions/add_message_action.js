@@ -8,15 +8,11 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNAddMessageActionOperation;
 }
 
-export function validateParams(
-  { config }               ,
-  incomingParams                       
-) {
+export function validateParams({ config }, incomingParams) {
   let { action, channel, messageTimetoken } = incomingParams;
 
   if (!messageTimetoken) return 'Missing message timetoken';
@@ -25,27 +21,27 @@ export function validateParams(
   if (!action) return 'Missing Action';
   if (!action.value) return 'Missing Action.value';
   if (!action.type) return 'Missing Action.type';
-  if (action.type.length > 15) return 'Action.type value exceed maximum length of 15';
+  if (action.type.length > 15)
+    return 'Action.type value exceed maximum length of 15';
 }
 
 export function usePost() {
   return true;
 }
 
-export function postURL(
-  { config }               ,
-  incomingParams                       
-)         {
+export function postURL({ config }, incomingParams) {
   let { channel, messageTimetoken } = incomingParams;
 
-  return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}/message/${messageTimetoken}`;
+  return `/v1/message-actions/${
+    config.subscribeKey
+  }/channel/${utils.encodeString(channel)}/message/${messageTimetoken}`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function getRequestHeaders()         {
+export function getRequestHeaders() {
   return { 'Content-Type': 'application/json' };
 }
 
@@ -53,20 +49,14 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams()         {
+export function prepareParams() {
   return {};
 }
 
-export function postPayload(
-  modules               ,
-  incomingParams                       
-)         {
+export function postPayload(modules, incomingParams) {
   return incomingParams.action;
 }
 
-export function handleResponse(
-  modules               ,
-  addMessageActionResponse        
-)                           {
+export function handleResponse(modules, addMessageActionResponse) {
   return { data: addMessageActionResponse.data };
 }

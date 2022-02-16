@@ -1,24 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                           
+
 import utils from '../../../utils';
 
-                                      
-                
-              
-                           
-     
-                             
-   
-
-                                      
-              
-                     
-   
-
-const endpoint                                                               = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetUUIDMetadataOperation,
 
   validateParams: (_, params) => {
@@ -29,7 +15,10 @@ const endpoint                                                               = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(
+      params.uuid ?? config.getUUID()
+    )}`,
 
   patchPayload: (_, params) => params.data,
 
