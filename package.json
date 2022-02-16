@@ -90,6 +90,8 @@
     "rollup-plugin-terser": "^7.0.2",
     "sinon": "^7.5.0",
     "sinon-chai": "^3.3.0",
+    "ts-mocha": "^9.0.2",
+    "ts-node": "^10.5.0",
     "typescript": "^4.5.5",
     "underscore": "^1.9.2"
   },

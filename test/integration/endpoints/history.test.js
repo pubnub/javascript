@@ -1,3 +1,4 @@
+/*       */
 /* global describe, beforeEach, afterEach, it, after */
 /* eslint no-console: 0 */
 
@@ -6,12 +7,23 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(client: PubNub, count: Number, channel: String, completion: Function) {
+function publishMessagesToChannel(
+  client        ,
+  count        ,
+  channel        ,
+  completion          
+) {
   let publishCompleted = 0;
   let messages = [];
 
   const publish = (messageIdx) => {
-    let payload = { message: { messageIdx: [channel, messageIdx].join(': '), time: Date.now() }, channel };
+    let payload = {
+      message: {
+        messageIdx: [channel, messageIdx].join(': '),
+        time: Date.now(),
+      },
+      channel,
+    };
 
     if (messageIdx % 2 === 0) {
       payload.meta = { time: payload.message.time };
@@ -21,8 +33,13 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
       publishCompleted += 1;
 
       if (!status.error) {
-        messages.push({ message: payload.message, timetoken: response.timetoken });
-        messages = messages.sort((left, right) => left.timetoken - right.timetoken);
+        messages.push({
+          message: payload.message,
+          timetoken: response.timetoken,
+        });
+        messages = messages.sort(
+          (left, right) => left.timetoken - right.timetoken
+        );
       } else {
         console.error('Publish did fail:', status);
       }
@@ -37,7 +54,6 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
 
   publish(publishCompleted);
 }
-
 
 describe('history endpoints', () => {
   const subscribeKey = process.env.SUBSCRIBE_KEY || 'demo';
@@ -61,7 +77,7 @@ describe('history endpoints', () => {
       subscribeKey,
       publishKey,
       uuid: 'myUUID',
-      useRandomIVs: false
+      useRandomIVs: false,
     });
   });
 
@@ -136,35 +152,55 @@ describe('history endpoints', () => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 10;
 
-    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
-      pubnub.history({ channel, includeMeta: true }, (status, response) => {
-        assert.deepEqual(response.messages[0].meta, { time: messages[0].message.time });
-        assert(!response.messages[1].meta);
-        done();
-      });
-    });
+    publishMessagesToChannel(
+      pubnub,
+      expectedMessagesCount,
+      channel,
+      (messages) => {
+        pubnub.history({ channel, includeMeta: true }, (status, response) => {
+          assert.deepEqual(response.messages[0].meta, {
+            time: messages[0].message.time,
+          });
+          assert(!response.messages[1].meta);
+          done();
+        });
+      }
+    );
   }).timeout(60000);
 
   it('should add history API telemetry information', (done) => {
     nock.disableNetConnect();
-    let scope = utils.createNock().get(`/v2/history/sub-key/${subscribeKey}/channel/ch1`).query(true);
+    let scope = utils
+      .createNock()
+      .get(`/v2/history/sub-key/${subscribeKey}/channel/ch1`)
+      .query(true);
     const delays = [100, 200, 300, 400];
     const countedDelays = delays.slice(0, delays.length - 1);
-    const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+    const average = Math.floor(
+      countedDelays.reduce((acc, delay) => acc + delay, 0) /
+        countedDelays.length
+    );
     const leeway = 50;
 
-    utils.runAPIWithResponseDelays(scope,
-      200,
-      '[[{"message":{"text":"hey"},"timetoken":"14648503433058358"},{"message":{"text2":"hey2"},"timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]',
-      delays,
-      (completion) => {
-        pubnub.history(
-          { channel: 'ch1', stringifiedTimeToken: true },
-          () => { completion(); }
-        );
-      })
+    utils
+      .runAPIWithResponseDelays(
+        scope,
+        200,
+        '[[{"message":{"text":"hey"},"timetoken":"14648503433058358"},{"message":{"text2":"hey2"},"timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]',
+        delays,
+        (completion) => {
+          pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, () => {
+            completion();
+          });
+        }
+      )
       .then((lastRequest) => {
-        utils.verifyRequestTelemetry(lastRequest.path, 'l_hist', average, leeway);
+        utils.verifyRequestTelemetry(
+          lastRequest.path,
+          'l_hist',
+          average,
+          leeway
+        );
         done();
       });
   }).timeout(60000);

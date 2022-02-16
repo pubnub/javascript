@@ -9,7 +9,8 @@
     "allowJs": true,
     "noEmitOnError": true,
     "strict": true,
-    "esModuleInterop": false
+    "esModuleInterop": false,
+    "outDir": "./lib"
   },
   "include": ["src/**/*"],
   "exclude": ["test", "node_modules"]
