@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('time endpoints', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -53,11 +53,7 @@ describe('time endpoints', () => {
   });
 
   it('calls the callback function when fetch failed', (done) => {
-    utils
-      .createNock()
-      .get('/time/0')
-      .query(true)
-      .reply(500, null);
+    utils.createNock().get('/time/0').query(true).reply(500, null);
 
     pubnub.time((status, response) => {
       assert.equal(response, null);
@@ -67,11 +63,7 @@ describe('time endpoints', () => {
   });
 
   it('calls the callback function when fetch failed', (done) => {
-    utils
-      .createNock()
-      .get('/time/0')
-      .query(true)
-      .reply(500, null);
+    utils.createNock().get('/time/0').query(true).reply(500, null);
 
     pubnub.time().catch((ex) => {
       assert(ex instanceof Error);
@@ -86,21 +78,32 @@ describe('time endpoints', () => {
     let scope = utils.createNock().get('/time/0').query(true);
     const delays = [100, 200, 300, 400];
     const countedDelays = delays.slice(0, delays.length - 1);
-    const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+    const average = Math.floor(
+      countedDelays.reduce((acc, delay) => acc + delay, 0) /
+        countedDelays.length
+    );
     const leeway = 50;
 
-    utils.runAPIWithResponseDelays(scope,
-      200,
-      [14570763868573725],
-      delays,
-      (completion) => {
-        pubnub.time(() => {
-          completion();
-        });
-      })
+    utils
+      .runAPIWithResponseDelays(
+        scope,
+        200,
+        [14570763868573725],
+        delays,
+        (completion) => {
+          pubnub.time(() => {
+            completion();
+          });
+        }
+      )
       .then((lastRequest) => {
-        utils.verifyRequestTelemetry(lastRequest.path, 'l_time', average, leeway);
+        utils.verifyRequestTelemetry(
+          lastRequest.path,
+          'l_time',
+          average,
+          leeway
+        );
         done();
       });
-  }).timeout(60000);
+  });
 });

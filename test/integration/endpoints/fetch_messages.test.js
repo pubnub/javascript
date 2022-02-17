@@ -7,6 +7,8 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
+jest.setTimeout(30000);
+
 function publishMessagesToChannel(client, count, channel, completion) {
   let publishCompleted = 0;
   let messages = [];
@@ -130,7 +132,7 @@ describe('fetch messages endpoints', () => {
   const publishKey = process.env.PUBLISH_KEY || 'demo';
   let pubnub;
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -317,7 +319,7 @@ describe('fetch messages endpoints', () => {
         );
       }
     );
-  }).timeout(60000);
+  });
 
   it('throws when requested actions for multiple channels', () => {
     let errorCatched = false;
@@ -400,7 +402,7 @@ describe('fetch messages endpoints', () => {
         );
       }
     );
-  }).timeout(60000);
+  });
 
   it("supports actions (stored as 'actions' field)", (done) => {
     const channel = PubNub.generateUUID();
@@ -464,7 +466,7 @@ describe('fetch messages endpoints', () => {
         );
       }
     );
-  }).timeout(60000);
+  });
 
   it('should add fetch messages API telemetry information', (done) => {
     nock.disableNetConnect();
@@ -501,7 +503,7 @@ describe('fetch messages endpoints', () => {
         );
         done();
       });
-  }).timeout(60000);
+  });
 
   it('should return "more" field when server sends it', (done) => {
     nock.disableNetConnect();

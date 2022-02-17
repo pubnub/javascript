@@ -37,11 +37,11 @@ describe('spaces endpoints', () => {
 
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -110,12 +110,15 @@ describe('spaces endpoints', () => {
 
       const scope = utils
         .createNock()
-        .post('/v1/objects/mySubKey/spaces', '{"id":"simple-space-test","name":"test-space"}')
+        .post(
+          '/v1/objects/mySubKey/spaces',
+          '{"id":"simple-space-test","name":"test-space"}'
+        )
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           auth: 'myAuthKey',
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           ...space,
@@ -124,41 +127,54 @@ describe('spaces endpoints', () => {
           eTag,
         });
 
-      pubnub.createSpace(
-        testSpace,
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.equal(response.name, 'test-space');
-          assert.equal(response.eTag, eTag);
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.createSpace(testSpace, (status, response) => {
+        assert.equal(status.error, false);
+        assert.equal(response.name, 'test-space');
+        assert.equal(response.eTag, eTag);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('should add create space object API telemetry information', (done) => {
-      let scope = utils.createNock().post('/v1/objects/mySubKey/spaces', '{"id":"simple-space-test","name":"test-space"}').query(true);
+      let scope = utils
+        .createNock()
+        .post(
+          '/v1/objects/mySubKey/spaces',
+          '{"id":"simple-space-test","name":"test-space"}'
+        )
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
       const testSpace = { id: 'simple-space-test', name: 'test-space' };
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.createSpace(
-            testSpace,
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.createSpace(testSpace, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('updateSpace', () => {
@@ -172,7 +188,7 @@ describe('spaces endpoints', () => {
             created,
             updated,
             eTag,
-            include: 'custom'
+            include: 'custom',
           });
         const { id, ...noIdSpace } = space;
 
@@ -217,7 +233,7 @@ describe('spaces endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           auth: 'myAuthKey',
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           ...space,
@@ -243,27 +259,43 @@ describe('spaces endpoints', () => {
     });
 
     it('should add update space object API telemetry information', (done) => {
-      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/simple-space-test').query(true);
+      let scope = utils
+        .createNock()
+        .patch('/v1/objects/mySubKey/spaces/simple-space-test')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.updateSpace(
-            { id: 'simple-space-test', name: 'Simple Space' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.updateSpace(
+              { id: 'simple-space-test', name: 'Simple Space' },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('deleteSpace', () => {
@@ -292,7 +324,7 @@ describe('spaces endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
-          auth: 'myAuthKey'
+          auth: 'myAuthKey',
         })
         .reply(200, {
           status: 'ok',
@@ -309,27 +341,40 @@ describe('spaces endpoints', () => {
     });
 
     it('should add delete space object API telemetry information', (done) => {
-      let scope = utils.createNock().delete('/v1/objects/mySubKey/spaces/delete-space-1').query(true);
+      let scope = utils
+        .createNock()
+        .delete('/v1/objects/mySubKey/spaces/delete-space-1')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { status: 'ok', data: {} },
-        delays,
-        (completion) => {
-          pubnub.deleteSpace(
-            'delete-space-1',
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { status: 'ok', data: {} },
+          delays,
+          (completion) => {
+            pubnub.deleteSpace('delete-space-1', () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('getSpace', () => {
@@ -342,7 +387,7 @@ describe('spaces endpoints', () => {
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             uuid: 'myUUID',
             auth: 'myAuthKey',
-            include: 'custom'
+            include: 'custom',
           })
           .reply(200, {
             ...space,
@@ -367,7 +412,7 @@ describe('spaces endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           auth: 'myAuthKey',
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           data: {
@@ -375,43 +420,58 @@ describe('spaces endpoints', () => {
             created,
             updated,
             eTag,
-          }
+          },
         });
 
-      pubnub.getSpace({
-        spaceId: 'mySpaceId'
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
-        assert.equal(response.data.name, 'test-space');
-        assert.equal(response.data.eTag, eTag);
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+      pubnub.getSpace(
+        {
+          spaceId: 'mySpaceId',
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.equal(response.data.name, 'test-space');
+          assert.equal(response.data.eTag, eTag);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
     });
 
     it('should add get space object API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/objects/mySubKey/spaces/mySpaceId').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/objects/mySubKey/spaces/mySpaceId')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.getSpace(
-            { spaceId: 'mySpaceId' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.getSpace({ spaceId: 'mySpaceId' }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('getSpaces', () => {
@@ -425,7 +485,7 @@ describe('spaces endpoints', () => {
           auth: 'myAuthKey',
           count: true,
           filter: 'name != "test-space2"',
-          limit: 2
+          limit: 2,
         })
         .reply(200, {
           data: [
@@ -440,58 +500,73 @@ describe('spaces endpoints', () => {
               created: created2,
               updated: updated2,
               eTag: eTag2,
-            }
+            },
           ],
           next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
           prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
           status: 200,
-          totalCount: 9
+          totalCount: 9,
         });
 
-      pubnub.getSpaces({
-        limit: 2,
-        include: {
-          totalCount: true
+      pubnub.getSpaces(
+        {
+          limit: 2,
+          include: {
+            totalCount: true,
+          },
+          filter: 'name != "test-space2"',
         },
-        filter: 'name != "test-space2"'
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
+        (status, response) => {
+          assert.equal(status.error, false);
 
-        assert.equal(response.data[0].name, 'test-space');
-        assert.equal(response.data[0].eTag, eTag);
+          assert.equal(response.data[0].name, 'test-space');
+          assert.equal(response.data[0].eTag, eTag);
 
-        assert.equal(response.data[1].name, 'test-space2');
-        assert.equal(response.data[1].eTag, eTag2);
+          assert.equal(response.data[1].name, 'test-space2');
+          assert.equal(response.data[1].eTag, eTag2);
 
-        assert.equal(response.totalCount, 9);
+          assert.equal(response.totalCount, 9);
 
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
     });
 
     it('should add list space objects API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/objects/mySubKey/spaces').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/objects/mySubKey/spaces')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.getSpaces(
-            { limit: 2 },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.getSpaces({ limit: 2 }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

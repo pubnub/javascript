@@ -8,12 +8,7 @@ import nock from 'nock';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
 
-function publishMessages(
-  client        ,
-  count        ,
-  channel        ,
-  completion          
-) {
+function publishMessages(client, count, channel, completion) {
   let publishCompleted = 0;
   let timetokens = [];
 
@@ -40,13 +35,7 @@ function publishMessages(
   publish(publishCompleted);
 }
 
-function addActions(
-  client        ,
-  count        ,
-  messageTimetokens               ,
-  channel        ,
-  completion          
-) {
+function addActions(client, count, messageTimetokens, channel, completion) {
   const types = ['reaction', 'receipt', 'custom'];
   const values = [
     PubNub.generateUUID(),
@@ -117,7 +106,7 @@ describe('message actions endpoints', () => {
   const publishKey = process.env.PUBLISH_KEY || 'demo';
   let pubnub;
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -298,7 +287,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
 
     it('add message action with encoded channel', (done) => {
       /** @type MessageAction */
@@ -320,7 +309,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
 
     it('add message action and 207 status code', (done) => {
       nock.disableNetConnect();
@@ -406,7 +395,7 @@ describe('message actions endpoints', () => {
       });
 
       pubnub.subscribe({ channels: [channel] });
-    }).timeout(60000);
+    });
   });
 
   describe('removeMessageAction', () => {
@@ -518,7 +507,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
 
     it('remove message action with encoded channel', (done) => {
       const channel = `${PubNub.generateUUID()}#1`;
@@ -560,7 +549,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
 
     it('remove message action should trigger event', (done) => {
       const channel = PubNub.generateUUID();
@@ -609,7 +598,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
   });
 
   describe('getMessageAction', () => {
@@ -667,7 +656,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
 
     it('fetch message actions with encoded channel', (done) => {
       const channel = `${PubNub.generateUUID()}#1`;
@@ -706,7 +695,7 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
 
     it('fetch next message actions page', (done) => {
       const channel = PubNub.generateUUID();
@@ -789,6 +778,6 @@ describe('message actions endpoints', () => {
           }
         );
       });
-    }).timeout(60000);
+    });
   });
 });

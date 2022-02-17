@@ -1,7 +1,7 @@
 /**       */
 
-import util from 'util'
-import PubNub from '../../src/node'
+import util from 'util';
+import PubNub from '../../src/node';
 
 describe('Objects V2 system tests', () => {
   const SUBSCRIBE_KEY = 'sub-c-d86a1698-889e-11ea-b883-d2d532c9a1bf';
@@ -13,16 +13,16 @@ describe('Objects V2 system tests', () => {
 
   const CHANNEL_1 = `${TEST_PREFIX}-channel-1`;
 
-  let pubnub        ;
+  let pubnub;
 
   const events = [];
   const listener = {
     objects: (event) => {
       events.push(event);
-    }
+    },
   };
 
-  before(() => {
+  beforeAll(() => {
     pubnub = new PubNub({
       subscribeKey: SUBSCRIBE_KEY,
       publishKey: PUBLISH_KEY,
@@ -30,39 +30,45 @@ describe('Objects V2 system tests', () => {
       // logVerbosity: true
     });
 
-    pubnub.subscribe({ channels: [UUID_1] })
+    pubnub.subscribe({ channels: [UUID_1] });
     pubnub.addListener(listener);
   });
 
-  after(() => {
+  afterAll(() => {
     pubnub.unsubscribeAll();
     pubnub.removeListener(listener);
     pubnub.destroy();
   });
 
   const USER_NAME = `Test Name ${Math.random().toString(16).substr(2, 5)}`;
-  const CHANNEL_NAME = `Test Channel Name ${Math.random().toString(16).substr(2, 5)}`;
+  const CHANNEL_NAME = `Test Channel Name ${Math.random()
+    .toString(16)
+    .substr(2, 5)}`;
 
   it('should set uuid', async () => {
-    const result = await pubnub.objects.setUUIDMetadata({ uuid: UUID_1, data: { name: USER_NAME } });
+    const result = await pubnub.objects.setUUIDMetadata({
+      uuid: UUID_1,
+      data: { name: USER_NAME },
+    });
 
-    expect(result.status).to.equal(200);
-    expect(result.data.id).to.equal(UUID_1);
+    expect(result.status).toEqual(200);
+    expect(result.data.id).toEqual(UUID_1);
   });
 
   it('should get uuid', async () => {
     const result = await pubnub.objects.getUUIDMetadata({ uuid: UUID_1 });
 
-    expect(result.status).to.equal(200);
-    expect(result.data.name).to.equal(USER_NAME);
+    expect(result.status).toEqual(200);
+    expect(result.data.name).toEqual(USER_NAME);
   });
 
   it('should get all uuids', async () => {
-    const result = await pubnub.objects.getAllUUIDMetadata({ include: { totalCount: true }});
+    const result = await pubnub.objects.getAllUUIDMetadata({
+      include: { totalCount: true },
+    });
 
-
-    expect(result.status).to.equal(200);
-    expect(result.data[0].name).to.equal(USER_NAME);
+    expect(result.status).toEqual(200);
+    expect(result.data[0].name).toEqual(USER_NAME);
   });
 
   it('should set channel', async () => {
@@ -70,26 +76,28 @@ describe('Objects V2 system tests', () => {
       channel: CHANNEL_1,
       data: {
         name: CHANNEL_NAME,
-        custom: { foo: true }
-      }
+        custom: { foo: true },
+      },
     });
 
-    expect(result.status).to.equal(200);
-    expect(result.data.name).to.equal(CHANNEL_NAME);
+    expect(result.status).toEqual(200);
+    expect(result.data.name).toEqual(CHANNEL_NAME);
   });
 
   it('should get channel', async () => {
-    const result = await pubnub.objects.getChannelMetadata({ channel: CHANNEL_1 });
+    const result = await pubnub.objects.getChannelMetadata({
+      channel: CHANNEL_1,
+    });
 
-    expect(result.status).to.equal(200);
-    expect(result.data.name).to.equal(CHANNEL_NAME);
+    expect(result.status).toEqual(200);
+    expect(result.data.name).toEqual(CHANNEL_NAME);
   });
 
   it('should get all channels', async () => {
     const result = await pubnub.objects.getAllChannelMetadata();
 
-    expect(result.status).to.equal(200);
-    expect(result.data[0].name).to.equal(CHANNEL_NAME);
+    expect(result.status).toEqual(200);
+    expect(result.data[0].name).toEqual(CHANNEL_NAME);
   });
 
   it('should set memberships', async () => {
@@ -98,17 +106,17 @@ describe('Objects V2 system tests', () => {
       channels: [{ id: CHANNEL_1, custom: { myData: 42 } }],
     });
 
-    expect(result.status).to.equal(200);
+    expect(result.status).toEqual(200);
   });
 
   it('should get channel members', async () => {
     const result = await pubnub.objects.getChannelMembers({
       channel: CHANNEL_1,
-      include: { customFields: true }
+      include: { customFields: true },
     });
 
-    expect(result.status).to.equal(200);
-    expect(result.data[0]?.custom?.myData).to.equal(42);
+    expect(result.status).toEqual(200);
+    expect(result.data[0]?.custom?.myData).toEqual(42);
   });
 
   it('should get memberships', async () => {
@@ -118,25 +126,28 @@ describe('Objects V2 system tests', () => {
         customFields: true,
         customChannelFields: true,
         channelFields: true,
-      }
+      },
     });
 
-    expect(result.status).to.equal(200);
-    expect(result.data[0]?.custom?.myData).to.equal(42);
-    expect(result.data[0]?.channel?.name).to.equal(CHANNEL_NAME);
+    expect(result.status).toEqual(200);
+    expect(result.data[0]?.custom?.myData).toEqual(42);
+    expect(result.data[0]?.channel?.name).toEqual(CHANNEL_NAME);
     expect(result.data[0]?.channel?.custom?.foo).to.be.true;
   });
 
   it('should remove memberships', async () => {
-    const result = pubnub.objects.removeMemberships({ uuid: UUID_1, channels: [CHANNEL_1] }, (status, result) => {
-      expect(result.status).to.equal(200);
-    });
-  })
+    const result = pubnub.objects.removeMemberships(
+      { uuid: UUID_1, channels: [CHANNEL_1] },
+      (status, result) => {
+        expect(result.status).toEqual(200);
+      }
+    );
+  });
 
   it('should remove uuid', async () => {
     const result = await pubnub.objects.removeUUIDMetadata({ uuid: UUID_1 });
 
-    expect(result.status).to.equal(200);
-    expect(result.data).to.be.null;
+    expect(result.status).toEqual(200);
+    expect(result.data).toBeNull();
   });
 });

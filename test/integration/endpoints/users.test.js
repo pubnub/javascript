@@ -41,11 +41,11 @@ describe('users endpoints', () => {
 
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -114,56 +114,72 @@ describe('users endpoints', () => {
 
       const scope = utils
         .createNock()
-        .post('/v1/objects/mySubKey/users', '{"id":"simple-user-test","name":"test-user"}')
+        .post(
+          '/v1/objects/mySubKey/users',
+          '{"id":"simple-user-test","name":"test-user"}'
+        )
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           auth: 'myAuthKey',
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           ...user,
           created,
           updated,
           eTag,
-          include: 'custom'
+          include: 'custom',
         });
 
-      pubnub.createUser(
-        testUser,
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.equal(response.name, 'test-user');
-          assert.equal(response.eTag, eTag);
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.createUser(testUser, (status, response) => {
+        assert.equal(status.error, false);
+        assert.equal(response.name, 'test-user');
+        assert.equal(response.eTag, eTag);
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('should add create user object API telemetry information', (done) => {
-      let scope = utils.createNock().post('/v1/objects/mySubKey/users', '{"id":"simple-user-test","name":"test-user"}').query(true);
+      let scope = utils
+        .createNock()
+        .post(
+          '/v1/objects/mySubKey/users',
+          '{"id":"simple-user-test","name":"test-user"}'
+        )
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
       const testUser = { id: 'simple-user-test', name: 'test-user' };
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.createUser(
-            testUser,
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.createUser(testUser, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('updateUser', () => {
@@ -177,7 +193,7 @@ describe('users endpoints', () => {
             created,
             updated,
             eTag,
-            include: 'custom'
+            include: 'custom',
           });
         const { id, ...noIdUser } = user;
 
@@ -198,7 +214,7 @@ describe('users endpoints', () => {
             created,
             updated,
             eTag,
-            include: 'custom'
+            include: 'custom',
           });
         const { name, ...noNameUser } = user;
 
@@ -223,7 +239,7 @@ describe('users endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           auth: 'myAuthKey',
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           ...user,
@@ -249,27 +265,43 @@ describe('users endpoints', () => {
     });
 
     it('should add update user object API telemetry information', (done) => {
-      let scope = utils.createNock().patch('/v1/objects/mySubKey/users/simple-user-test').query(true);
+      let scope = utils
+        .createNock()
+        .patch('/v1/objects/mySubKey/users/simple-user-test')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.updateUser(
-            { id: 'simple-user-test', name: 'Simple User' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.updateUser(
+              { id: 'simple-user-test', name: 'Simple User' },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('deleteUser', () => {
@@ -320,27 +352,40 @@ describe('users endpoints', () => {
     });
 
     it('should add delete user object API telemetry information', (done) => {
-      let scope = utils.createNock().delete('/v1/objects/mySubKey/users/delete-user-1').query(true);
+      let scope = utils
+        .createNock()
+        .delete('/v1/objects/mySubKey/users/delete-user-1')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { status: 'ok', data: {} },
-        delays,
-        (completion) => {
-          pubnub.deleteUser(
-            'delete-user-1',
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { status: 'ok', data: {} },
+          delays,
+          (completion) => {
+            pubnub.deleteUser('delete-user-1', () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('getUser', () => {
@@ -353,7 +398,7 @@ describe('users endpoints', () => {
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             uuid: 'myUUID',
             auth: 'myAuthKey',
-            include: 'custom'
+            include: 'custom',
           })
           .reply(200, {
             ...user,
@@ -378,7 +423,7 @@ describe('users endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           auth: 'myAuthKey',
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           data: {
@@ -386,43 +431,58 @@ describe('users endpoints', () => {
             created,
             updated,
             eTag,
-          }
+          },
         });
 
-      pubnub.getUser({
-        userId: 'myUserId'
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
-        assert.equal(response.data.name, 'test-user');
-        assert.equal(response.data.eTag, eTag);
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+      pubnub.getUser(
+        {
+          userId: 'myUserId',
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.equal(response.data.name, 'test-user');
+          assert.equal(response.data.eTag, eTag);
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
     });
 
     it('should add get user object API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/objects/mySubKey/users/myUserId').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/objects/mySubKey/users/myUserId')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.getUser(
-            { userId: 'myUserId' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.getUser({ userId: 'myUserId' }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('getUsers', () => {
@@ -436,7 +496,7 @@ describe('users endpoints', () => {
           auth: 'myAuthKey',
           count: true,
           filter: "name != 'test-user2'",
-          limit: 2
+          limit: 2,
         })
         .reply(200, {
           data: [
@@ -451,58 +511,73 @@ describe('users endpoints', () => {
               created: created2,
               updated: updated2,
               eTag: eTag2,
-            }
+            },
           ],
           next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
           prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
           status: 200,
-          totalCount: 9
+          totalCount: 9,
         });
 
-      pubnub.getUsers({
-        limit: 2,
-        include: {
-          totalCount: true
+      pubnub.getUsers(
+        {
+          limit: 2,
+          include: {
+            totalCount: true,
+          },
+          filter: "name != 'test-user2'",
         },
-        filter: "name != 'test-user2'"
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
+        (status, response) => {
+          assert.equal(status.error, false);
 
-        assert.equal(response.data[0].name, 'test-user');
-        assert.equal(response.data[0].eTag, eTag);
+          assert.equal(response.data[0].name, 'test-user');
+          assert.equal(response.data[0].eTag, eTag);
 
-        assert.equal(response.data[1].name, 'test-user2');
-        assert.equal(response.data[1].eTag, eTag2);
+          assert.equal(response.data[1].name, 'test-user2');
+          assert.equal(response.data[1].eTag, eTag2);
 
-        assert.equal(response.totalCount, 9);
+          assert.equal(response.totalCount, 9);
 
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
     });
 
     it('should add list user objects API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/objects/mySubKey/users').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/objects/mySubKey/users')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.getUsers(
-            { limit: 2 },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.getUsers({ limit: 2 }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

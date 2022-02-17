@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('channel group endpoints', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -52,27 +52,43 @@ describe('channel group endpoints', () => {
     });
 
     it('should add channels add API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}',
-        delays,
-        (completion) => {
-          pubnub.channelGroups.addChannels(
-            { channels: ['a', 'b'], channelGroup: 'cg1' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}',
+          delays,
+          (completion) => {
+            pubnub.channelGroups.addChannels(
+              { channels: ['a', 'b'], channelGroup: 'cg1' },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_cg', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_cg',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('removal of channel group', () => {
@@ -99,27 +115,42 @@ describe('channel group endpoints', () => {
     });
 
     it('should add channel group remove API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1/remove').query(true);
+      let scope = utils
+        .createNock()
+        .get(
+          '/v1/channel-registration/sub-key/mySubKey/channel-group/cg1/remove'
+        )
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}',
-        delays,
-        (completion) => {
-          pubnub.channelGroups.deleteGroup(
-            { channelGroup: 'cg1' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}',
+          delays,
+          (completion) => {
+            pubnub.channelGroups.deleteGroup({ channelGroup: 'cg1' }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_cg', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_cg',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('listing of channel groups', () => {
@@ -145,24 +176,40 @@ describe('channel group endpoints', () => {
     });
 
     it('should add channel groups list API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/channel-registration/sub-key/mySubKey/channel-group')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {"groups": ["a","b"]}, "service": "ChannelGroups"}',
-        delays,
-        (completion) => {
-          pubnub.channelGroups.listGroups(() => { completion(); });
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {"groups": ["a","b"]}, "service": "ChannelGroups"}',
+          delays,
+          (completion) => {
+            pubnub.channelGroups.listGroups(() => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_cg', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_cg',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('listing of channels inside channel group', () => {
@@ -191,27 +238,40 @@ describe('channel group endpoints', () => {
     });
 
     it('should add channel group channels list API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "ChannelGroups"}',
-        delays,
-        (completion) => {
-          pubnub.channelGroups.listChannels(
-            { channelGroup: 'cg1' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "ChannelGroups"}',
+          delays,
+          (completion) => {
+            pubnub.channelGroups.listChannels({ channelGroup: 'cg1' }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_cg', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_cg',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('deletion of channels from channel group', () => {
@@ -240,26 +300,42 @@ describe('channel group endpoints', () => {
     });
 
     it('should add channels remove API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/channel-registration/sub-key/mySubKey/channel-group/cg1')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}',
-        delays,
-        (completion) => {
-          pubnub.channelGroups.removeChannels(
-            { channels: ['a', 'b'], channelGroup: 'cg1' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {} , "service": "ChannelGroups"}',
+          delays,
+          (completion) => {
+            pubnub.channelGroups.removeChannels(
+              { channels: ['a', 'b'], channelGroup: 'cg1' },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_cg', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_cg',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

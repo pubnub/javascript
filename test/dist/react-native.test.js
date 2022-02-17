@@ -1,25 +1,29 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import PubNub from '../../src/react_native';
-import nock from "nock";
+import nock from 'nock';
 
 global.fetch = fetch;
 
 let pubnub;
 
-let channelSuffix = new Date().getTime() + (Math.random());
+let channelSuffix = new Date().getTime() + Math.random();
 
 let myChannel1 = `mychannel1${channelSuffix}`;
 let myChannel2 = `mychannel2${channelSuffix}`;
 // let myChanneGroup1 = `myChannelGroup1${channelSuffix}`;
 
 describe('#distribution test (rkt-native)', function () {
-  after(function () {
+  afterAll(function () {
     pubnub.destroy();
   });
 
   beforeEach(() => {
-    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUUID' });
+    pubnub = new PubNub({
+      subscribeKey: 'demo',
+      publishKey: 'demo',
+      uuid: 'myUUID',
+    });
   });
 
   afterEach(() => {
@@ -31,43 +35,49 @@ describe('#distribution test (rkt-native)', function () {
   it('should have to subscribe a channel', (done) => {
     pubnub.addListener({
       status: (st) => {
-        expect(st.operation).to.be.equal('PNSubscribeOperation');
-        pubnub.unsubscribeAll()
+        expect(st.operation).toEqual('PNSubscribeOperation');
+        pubnub.unsubscribeAll();
         done();
-      }
+      },
     });
-    pubnub.subscribe({channels: [myChannel1]});
+    pubnub.subscribe({ channels: [myChannel1] });
   });
 
   it('should have to receive message from a channel', (done) => {
     pubnub.addListener({
       status: (st) => {
         if (st.operation === 'PNSubscribeOperation') {
-          pubnub.publish({ channel: myChannel2, message: { text: 'hello React-Native SDK' }});
+          pubnub.publish({
+            channel: myChannel2,
+            message: { text: 'hello React-Native SDK' },
+          });
         }
       },
       message: (m) => {
-        expect(m.channel).to.be.equal(myChannel2);
-        expect(m.message.text).to.be.equal('hello React-Native SDK');
-        pubnub.unsubscribeAll()
+        expect(m.channel).toEqual(myChannel2);
+        expect(m.message.text).toEqual('hello React-Native SDK');
+        pubnub.unsubscribeAll();
         done();
-      }
+      },
     });
-    pubnub.subscribe({channels: [myChannel2]});
+    pubnub.subscribe({ channels: [myChannel2] });
   });
 
   it('should have to set state', (done) => {
-    pubnub.setState({ channels: [myChannel1], state: { hello: 'there' } }, (status, response) => {
-      expect(status.error).to.be.equal(false);
-      expect(response.state.hello).to.be.equal('there');
-      done();
-    });
+    pubnub.setState(
+      { channels: [myChannel1], state: { hello: 'there' } },
+      (status, response) => {
+        expect(status.error).toEqual(false);
+        expect(response.state.hello).toEqual('there');
+        done();
+      }
+    );
   });
 
   it('should have to get the time', (done) => {
     pubnub.time((status) => {
-      expect(status.operation).to.be.equal('PNTimeOperation');
-      expect(status.statusCode).to.be.equal(200);
+      expect(status.operation).toEqual('PNTimeOperation');
+      expect(status.statusCode).toEqual(200);
       done();
     });
   });
@@ -75,14 +85,17 @@ describe('#distribution test (rkt-native)', function () {
   it('should have to get the last message', (done) => {
     // add delay to ensure publish completes
     setTimeout(function () {
-      pubnub.history({
-        channel: myChannel2,
-        count: 1,
-        reverse: false
-      }, function(status, response) {
-        expect(response.messages).to.have.length(1);
-        done();
-      });
+      pubnub.history(
+        {
+          channel: myChannel2,
+          count: 1,
+          reverse: false,
+        },
+        function (status, response) {
+          expect(response.messages).to.have.length(1);
+          done();
+        }
+      );
     }, 3000);
   });
 
@@ -96,7 +109,7 @@ describe('#distribution test (rkt-native)', function () {
   //       channelGroup: myChannelGroup1
   //     },
   //     (status) => {
-  //       expect(status.error).to.be.equal(false);
+  //       expect(status.error).toEqual(false);
   //       done();
   //     }
   //   );
@@ -108,7 +121,7 @@ describe('#distribution test (rkt-native)', function () {
   //       channelGroup: myChannelGroup1
   //     },
   //     (status, response) => {
-  //       expect(status.error).to.be.equal(false);
+  //       expect(status.error).toEqual(false);
   //       expect(response.channels).to.have.length(2);
   //       done();
   //     }
@@ -116,9 +129,9 @@ describe('#distribution test (rkt-native)', function () {
   // });
 
   it('should have to change the UUID', function (done) {
-    pubnub.setUUID("CustomUUID");
+    pubnub.setUUID('CustomUUID');
 
-    expect(pubnub.getUUID()).to.be.equal("CustomUUID");
+    expect(pubnub.getUUID()).toEqual('CustomUUID');
     done();
   });
 
@@ -129,19 +142,19 @@ describe('#distribution test (rkt-native)', function () {
     pubnub.addListener({
       status: function (st) {
         if (st.operation === 'PNSubscribeOperation') {
-          pubnub.unsubscribe({channels: [myChannel1]});
+          pubnub.unsubscribe({ channels: [myChannel1] });
         } else {
-          expect(st.operation).to.be.equal('PNUnsubscribeOperation');
+          expect(st.operation).toEqual('PNUnsubscribeOperation');
 
           if (!finished) {
             // prevent calling done twice
             finished = true;
-            pubnub.unsubscribeAll()
+            pubnub.unsubscribeAll();
             done();
           }
         }
-      }
+      },
     });
-    pubnub.subscribe({channels: [myChannel1]});
+    pubnub.subscribe({ channels: [myChannel1] });
   });
 });

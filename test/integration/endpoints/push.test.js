@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('push endpoints', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -63,7 +63,12 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.addChannels(
-        { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
+        {
+          channels: ['a', 'b'],
+          device: 'niceDevice',
+          pushGateway: 'apns2',
+          topic: 'com.test.apns',
+        },
         (status) => {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
@@ -117,50 +122,91 @@ describe('push endpoints', () => {
     });
 
     it('should add push enabled for channels API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/push/sub-key/mySubKey/devices/niceDevice')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '[1, "Modified Channels"]',
-        delays,
-        (completion) => {
-          pubnub.push.addChannels(
-            { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '[1, "Modified Channels"]',
+          delays,
+          (completion) => {
+            pubnub.push.addChannels(
+              {
+                channels: ['a', 'b'],
+                device: 'niceDevice',
+                pushGateway: 'apns',
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
 
     it('should add APNS2 enabled for channels API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '[1, "Modified Channels"]',
-        delays,
-        (completion) => {
-          pubnub.push.addChannels(
-            { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '[1, "Modified Channels"]',
+          delays,
+          (completion) => {
+            pubnub.push.addChannels(
+              {
+                channels: ['a', 'b'],
+                device: 'niceDevice',
+                pushGateway: 'apns2',
+                topic: 'com.test.apns',
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('listing channels for device', () => {
@@ -199,7 +245,12 @@ describe('push endpoints', () => {
         .reply(200, '["ch1", "ch2", "ch3"]');
 
       pubnub.push.listChannels(
-        { device: 'coolDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
+        {
+          device: 'coolDevice',
+          pushGateway: 'apns2',
+          environment: 'production',
+          topic: 'com.test.apns',
+        },
         (status, response) => {
           assert.equal(status.error, false);
           assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
@@ -254,50 +305,87 @@ describe('push endpoints', () => {
     });
 
     it('should add push audit API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/coolDevice').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/push/sub-key/mySubKey/devices/coolDevice')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '["ch1", "ch2", "ch3"]',
-        delays,
-        (completion) => {
-          pubnub.push.listChannels(
-            { device: 'coolDevice', pushGateway: 'apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '["ch1", "ch2", "ch3"]',
+          delays,
+          (completion) => {
+            pubnub.push.listChannels(
+              { device: 'coolDevice', pushGateway: 'apns' },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
 
     it('should add APNS2 audit API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/push/sub-key/mySubKey/devices-apns2/coolDevice').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/coolDevice')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '["ch1", "ch2", "ch3"]',
-        delays,
-        (completion) => {
-          pubnub.push.listChannels(
-            { device: 'coolDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '["ch1", "ch2", "ch3"]',
+          delays,
+          (completion) => {
+            pubnub.push.listChannels(
+              {
+                device: 'coolDevice',
+                pushGateway: 'apns2',
+                environment: 'production',
+                topic: 'com.test.apns',
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('supports deletion of channels', () => {
@@ -337,7 +425,12 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.removeChannels(
-        { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
+        {
+          channels: ['a', 'b'],
+          device: 'niceDevice',
+          pushGateway: 'apns2',
+          topic: 'com.test.apns',
+        },
         (status) => {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
@@ -396,50 +489,91 @@ describe('push endpoints', () => {
     });
 
     it('should add push disable for channels API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/push/sub-key/mySubKey/devices/niceDevice')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '[1, "Modified Channels"]',
-        delays,
-        (completion) => {
-          pubnub.push.removeChannels(
-            { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '[1, "Modified Channels"]',
+          delays,
+          (completion) => {
+            pubnub.push.removeChannels(
+              {
+                channels: ['a', 'b'],
+                device: 'niceDevice',
+                pushGateway: 'apns',
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
 
     it('should add APNS2 disable for channels API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '[1, "Modified Channels"]',
-        delays,
-        (completion) => {
-          pubnub.push.removeChannels(
-            { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '[1, "Modified Channels"]',
+          delays,
+          (completion) => {
+            pubnub.push.removeChannels(
+              {
+                channels: ['a', 'b'],
+                device: 'niceDevice',
+                pushGateway: 'apns2',
+                topic: 'com.test.apns',
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('supports removal of device', () => {
@@ -477,7 +611,12 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]');
 
       pubnub.push.deleteDevice(
-        { device: 'niceDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
+        {
+          device: 'niceDevice',
+          pushGateway: 'apns2',
+          environment: 'production',
+          topic: 'com.test.apns',
+        },
         (status) => {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
@@ -529,49 +668,86 @@ describe('push endpoints', () => {
     });
 
     it('should add push disable for device API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '[1, "Modified Channels"]',
-        delays,
-        (completion) => {
-          pubnub.push.deleteDevice(
-            { device: 'niceDevice', pushGateway: 'apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '[1, "Modified Channels"]',
+          delays,
+          (completion) => {
+            pubnub.push.deleteDevice(
+              { device: 'niceDevice', pushGateway: 'apns' },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
 
     it('should add APNS2 disable for device API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice/remove').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/niceDevice/remove')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '[1, "Modified Channels"]',
-        delays,
-        (completion) => {
-          pubnub.push.deleteDevice(
-            { device: 'niceDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '[1, "Modified Channels"]',
+          delays,
+          (completion) => {
+            pubnub.push.deleteDevice(
+              {
+                device: 'niceDevice',
+                pushGateway: 'apns2',
+                environment: 'production',
+                topic: 'com.test.apns',
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_push', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_push',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

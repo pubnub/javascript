@@ -7,12 +7,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(
-  client        ,
-  count        ,
-  channel        ,
-  completion          
-) {
+function publishMessagesToChannel(client, count, channel, completion) {
   let publishCompleted = 0;
   let messages = [];
 
@@ -60,7 +55,7 @@ describe('history endpoints', () => {
   const publishKey = process.env.PUBLISH_KEY || 'demo';
   let pubnub;
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -166,7 +161,7 @@ describe('history endpoints', () => {
         });
       }
     );
-  }).timeout(60000);
+  });
 
   it('should add history API telemetry information', (done) => {
     nock.disableNetConnect();
@@ -203,5 +198,5 @@ describe('history endpoints', () => {
         );
         done();
       });
-  }).timeout(60000);
+  });
 });

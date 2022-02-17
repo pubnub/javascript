@@ -10,11 +10,11 @@ describe('subscribe endpoints', () => {
   let pubnub;
   let pubnubWithFiltering;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 

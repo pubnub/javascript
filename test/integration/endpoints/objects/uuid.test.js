@@ -15,11 +15,11 @@ describe('objects UUID', () => {
   let pubnub;
   let PNSDK;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -50,10 +50,10 @@ describe('objects UUID', () => {
           data: allUsers.map(asResponse),
         });
 
-      const resultP = pubnub.objects.getAllUUIDMetadata();
+      const result = await pubnub.objects.getAllUUIDMetadata();
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: allUsers.map(asResponse),
         prev: undefined,
@@ -79,8 +79,8 @@ describe('objects UUID', () => {
 
       const resultP = pubnub.objects.getAllUUIDMetadata();
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.be.rejected;
+      scope.done();
+      await expect(resultP).rejects.toThrowError();
     });
   });
 
@@ -100,10 +100,10 @@ describe('objects UUID', () => {
           data: asResponse(user1),
         });
 
-      const resultP = pubnub.objects.getUUIDMetadata();
+      const result = await pubnub.objects.getUUIDMetadata();
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: asResponse(user1),
       });
@@ -126,13 +126,13 @@ describe('objects UUID', () => {
           data: asResponse(user1),
         });
 
-      const resultP = pubnub.objects.getUUIDMetadata({
+      const result = await pubnub.objects.getUUIDMetadata({
         uuid: otherUUID,
         include: { customFields: true },
       });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: asResponse(user1),
       });
@@ -156,13 +156,13 @@ describe('objects UUID', () => {
           data: asResponse(user1),
         });
 
-      const resultP = pubnub.objects.getUUIDMetadata({
+      const result = await pubnub.objects.getUUIDMetadata({
         uuid: otherUUID,
         include: { customFields: true },
       });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: asResponse(user1),
       });
@@ -185,10 +185,10 @@ describe('objects UUID', () => {
           data: asResponse(user1),
         });
 
-      const resultP = pubnub.objects.setUUIDMetadata({ data: user1.data });
+      const result = await pubnub.objects.setUUIDMetadata({ data: user1.data });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: asResponse(user1),
       });
@@ -209,10 +209,10 @@ describe('objects UUID', () => {
           data: asResponse(user1),
         });
 
-      const resultP = pubnub.objects.setUUIDMetadata({ data: user1.data });
+      const result = await pubnub.objects.setUUIDMetadata({ data: user1.data });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: asResponse(user1),
       });
@@ -236,13 +236,13 @@ describe('objects UUID', () => {
           data: asResponse(user1),
         });
 
-      const resultP = pubnub.objects.setUUIDMetadata({
+      const result = await pubnub.objects.setUUIDMetadata({
         uuid: otherUUID,
         data: user1.data,
       });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: asResponse(user1),
       });
@@ -250,9 +250,9 @@ describe('objects UUID', () => {
 
     it('should reject if data is missing', async () => {
       // $FlowFixMe This is intentional to suppress Flow error
-      const resultP = pubnub.objects.setUUIDMetadata();
+      const result = pubnub.objects.setUUIDMetadata();
 
-      await expect(resultP).to.be.rejected;
+      await expect(result).rejects.toThrowError();
     });
   });
 
@@ -268,10 +268,10 @@ describe('objects UUID', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeUUIDMetadata();
+      const result = await pubnub.objects.removeUUIDMetadata();
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: {},
       });
@@ -290,10 +290,12 @@ describe('objects UUID', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeUUIDMetadata({ uuid: otherUUID });
+      const result = await pubnub.objects.removeUUIDMetadata({
+        uuid: otherUUID,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: {},
       });
@@ -313,10 +315,12 @@ describe('objects UUID', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeUUIDMetadata({ uuid: otherUUID });
+      const result = await pubnub.objects.removeUUIDMetadata({
+        uuid: otherUUID,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(result).toEqual({
         status: 200,
         data: {},
       });
@@ -324,9 +328,9 @@ describe('objects UUID', () => {
 
     it('should reject if uuid is missing', async () => {
       // $FlowFixMe This is intentional to suppress Flow error
-      const resultP = pubnub.objects.removeUUIDMetadata();
+      const result = pubnub.objects.removeUUIDMetadata();
 
-      await expect(resultP).to.be.rejected;
+      await expect(result).rejects.toThrowError();
     });
   });
 });

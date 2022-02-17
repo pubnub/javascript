@@ -8,7 +8,7 @@ describe('components/crypto useRandomIVs', () => {
     publishKey: 'demo-36',
     useRandomIVs: true,
     cipherKey: 'abcdef',
-    uuid: 'myUUID'
+    uuid: 'myUUID',
   });
 
   it('should be able to encrypt and decrypt a message', () => {
@@ -21,6 +21,6 @@ describe('components/crypto useRandomIVs', () => {
 
     const decrypted = pubnub.decrypt(ciphertext);
 
-    expect(decrypted).to.deep.equal(data);
+    expect(decrypted).toEqual(data);
   });
 });

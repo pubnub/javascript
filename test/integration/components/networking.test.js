@@ -12,11 +12,11 @@ describe('#components/networking', () => {
   let pubnubPartner;
   let pubnubSDKName;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 

@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('setting state operation', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
