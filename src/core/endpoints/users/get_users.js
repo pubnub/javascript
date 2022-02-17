@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   UserListInput,
@@ -7,7 +7,7 @@ import {
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNGetUsersOperation;
 }
 
@@ -15,14 +15,12 @@ export function validateParams() {
   // no required parameters
 }
 
-export function getURL(
-  modules: ModulesInject,
-): string {
+export function getURL(modules) {
   let { config } = modules;
   return `/v1/objects/${config.subscribeKey}/users`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -30,10 +28,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: UserListInput
-): Object {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -75,9 +70,6 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  usersResponse: Object
-): UsersListResponse {
+export function handleResponse(modules, usersResponse) {
   return usersResponse;
 }

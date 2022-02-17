@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('publish endpoints', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -24,7 +24,7 @@ describe('publish endpoints', () => {
       publishKey: 'myPublishKey',
       uuid: 'myUUID',
       authKey: 'myAuthKey',
-      useRandomIVs: false
+      useRandomIVs: false,
     });
   });
 
@@ -248,27 +248,45 @@ describe('publish endpoints', () => {
   });
 
   it('should add publish API telemetry information', (done) => {
-    let scope = utils.createNock().get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D').query(true);
+    let scope = utils
+      .createNock()
+      .get(
+        '/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D'
+      )
+      .query(true);
     const delays = [100, 200, 300, 400];
     const countedDelays = delays.slice(0, delays.length - 1);
-    const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+    const average = Math.floor(
+      countedDelays.reduce((acc, delay) => acc + delay, 0) /
+        countedDelays.length
+    );
     const leeway = 50;
 
-    utils.runAPIWithResponseDelays(scope,
-      200,
-      '[1,"Sent","14647523059145592"]',
-      delays,
-      (completion) => {
-        pubnub.publish(
-          { message: { such: 'object' }, channel: 'ch1' },
-          () => { completion(); }
-        );
-      })
+    utils
+      .runAPIWithResponseDelays(
+        scope,
+        200,
+        '[1,"Sent","14647523059145592"]',
+        delays,
+        (completion) => {
+          pubnub.publish(
+            { message: { such: 'object' }, channel: 'ch1' },
+            () => {
+              completion();
+            }
+          );
+        }
+      )
       .then((lastRequest) => {
-        utils.verifyRequestTelemetry(lastRequest.path, 'l_pub', average, leeway);
+        utils.verifyRequestTelemetry(
+          lastRequest.path,
+          'l_pub',
+          average,
+          leeway
+        );
         done();
       });
-  }).timeout(60000);
+  });
 
   describe('#fire', () => {
     it('publishes a complex object via GET', (done) => {

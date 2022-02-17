@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SpacesObjectInput,
@@ -11,14 +11,11 @@ function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
 }
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNCreateSpaceOperation;
 }
 
-export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: SpacesObjectInput
-) {
+export function validateParams({ config }, incomingParams) {
   let { id, name, custom } = incomingParams;
 
   if (!id) return 'Missing Space.id';
@@ -28,9 +25,10 @@ export function validateParams(
   if (custom) {
     if (
       !Object.values(custom).every(
-        (value) => typeof value === 'string' ||
-                   typeof value === 'number' ||
-                   typeof value === 'boolean'
+        (value) =>
+          typeof value === 'string' ||
+          typeof value === 'number' ||
+          typeof value === 'boolean'
       )
     ) {
       return 'Invalid custom type, only string, number and boolean values are allowed.';
@@ -42,17 +40,17 @@ export function usePost() {
   return true;
 }
 
-export function getURL(modules: ModulesInject): string {
+export function getURL(modules) {
   let { config } = modules;
   return `/v1/objects/${config.subscribeKey}/spaces`;
 }
 
-export function postURL(modules: ModulesInject): string {
+export function postURL(modules) {
   const { config } = modules;
   return `/v1/objects/${config.subscribeKey}/spaces`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -60,17 +58,14 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SpacesObjectInput
-): Object {
+export function prepareParams(modules, incomingParams) {
   let { include } = incomingParams;
   const params = {};
 
   // default to include custom fields in response
   if (!include) {
     include = {
-      customFields: true
+      customFields: true,
     };
   } else if (include.customFields === undefined) {
     include.customFields = true;
@@ -93,16 +88,10 @@ export function prepareParams(
   return params;
 }
 
-export function postPayload(
-  modules: ModulesInject,
-  incomingParams: SpacesObjectInput
-): Object {
+export function postPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  spacesResponse: Object
-): SpacesResponse {
+export function handleResponse(modules, spacesResponse) {
   return spacesResponse;
 }

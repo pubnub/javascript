@@ -1,18 +1,20 @@
-/** @flow */
+/**       */
 import { Readable, PassThrough } from 'stream';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from 'crypto';
 
-import type { ICryptography } from '../';
-import type { IFile, FileClass } from '../../file';
-
-export default class NodeCryptography implements ICryptography<Buffer | Readable | string> {
+export default class NodeCryptography {
   static IV_LENGTH = 16;
 
   get algo() {
     return 'aes-256-cbc';
   }
 
-  async encrypt(key: string, input: Buffer | Readable | string): Promise<Buffer | Readable | string> {
+  async encrypt(key, input) {
     const bKey = this.getKey(key);
     if (input instanceof Buffer) {
       return this.encryptBuffer(bKey, input);
@@ -25,7 +27,7 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
     }
   }
 
-  async decrypt(key: string, input: Buffer | Readable | string): Promise<Buffer | Readable | string> {
+  async decrypt(key, input) {
     const bKey = this.getKey(key);
     if (input instanceof Buffer) {
       return this.decryptBuffer(bKey, input);
@@ -38,7 +40,7 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
     }
   }
 
-  async encryptFile(key: string, file: IFile, File: FileClass): Promise<IFile> {
+  async encryptFile(key, file, File) {
     const bKey = this.getKey(key);
 
     if (file.data instanceof Buffer) {
@@ -54,11 +56,13 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
         stream: await this.encryptStream(bKey, file.data),
       });
     } else {
-      throw new Error('Cannot encrypt this file. In Node.js file encryption supports only string, Buffer or Stream.');
+      throw new Error(
+        'Cannot encrypt this file. In Node.js file encryption supports only string, Buffer or Stream.'
+      );
     }
   }
 
-  async decryptFile(key: string, file: IFile, File: FileClass): Promise<IFile> {
+  async decryptFile(key, file, File) {
     const bKey = this.getKey(key);
 
     if (file.data instanceof Buffer) {
@@ -72,11 +76,13 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
         stream: await this.decryptStream(bKey, file.data),
       });
     } else {
-      throw new Error('Cannot decrypt this file. In Node.js file decryption supports only string, Buffer or Stream.');
+      throw new Error(
+        'Cannot decrypt this file. In Node.js file decryption supports only string, Buffer or Stream.'
+      );
     }
   }
 
-  getKey(key: string): Buffer {
+  getKey(key) {
     const sha = createHash('sha256');
 
     sha.update(Buffer.from(key, 'utf8'));
@@ -84,31 +90,35 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
     return Buffer.from(sha.digest('hex').slice(0, 32), 'utf8');
   }
 
-  getIv(): Buffer {
+  getIv() {
     return randomBytes(NodeCryptography.IV_LENGTH);
   }
 
-  encryptString(key: Buffer, plaintext: string): string {
+  encryptString(key, plaintext) {
     const bIv = this.getIv();
 
     const bPlaintext = Buffer.from(plaintext);
 
     const aes = createCipheriv(this.algo, key, bIv);
 
-    return Buffer.concat([bIv, aes.update(bPlaintext), aes.final()]).toString('utf8');
+    return Buffer.concat([bIv, aes.update(bPlaintext), aes.final()]).toString(
+      'utf8'
+    );
   }
 
-  decryptString(key: Buffer, sCiphertext: string): string {
+  decryptString(key, sCiphertext) {
     const ciphertext = Buffer.from(sCiphertext);
     const bIv = ciphertext.slice(0, NodeCryptography.IV_LENGTH);
     const bCiphertext = ciphertext.slice(NodeCryptography.IV_LENGTH);
 
     const aes = createDecipheriv(this.algo, key, bIv);
 
-    return Buffer.concat([aes.update(bCiphertext), aes.final()]).toString('utf8');
+    return Buffer.concat([aes.update(bCiphertext), aes.final()]).toString(
+      'utf8'
+    );
   }
 
-  encryptBuffer(key: Buffer, plaintext: Buffer): Buffer {
+  encryptBuffer(key, plaintext) {
     const bIv = this.getIv();
 
     const aes = createCipheriv(this.algo, key, bIv);
@@ -116,7 +126,7 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
     return Buffer.concat([bIv, aes.update(plaintext), aes.final()]);
   }
 
-  decryptBuffer(key: Buffer, ciphertext: Buffer): Buffer {
+  decryptBuffer(key, ciphertext) {
     const bIv = ciphertext.slice(0, NodeCryptography.IV_LENGTH);
     const bCiphertext = ciphertext.slice(NodeCryptography.IV_LENGTH);
 
@@ -125,7 +135,7 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
     return Buffer.concat([aes.update(bCiphertext), aes.final()]);
   }
 
-  encryptStream(key: Buffer, stream: Readable): Readable {
+  encryptStream(key, stream) {
     const output = new PassThrough();
     const bIv = this.getIv();
 
@@ -137,7 +147,7 @@ export default class NodeCryptography implements ICryptography<Buffer | Readable
     return output;
   }
 
-  decryptStream(key: Buffer, stream: Readable): Readable {
+  decryptStream(key, stream) {
     const output = new PassThrough();
 
     let bIv = Buffer.alloc(0);

@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SignalResponse,
@@ -14,14 +14,11 @@ function prepareMessagePayload(modules, messagePayload) {
   return stringifiedPayload;
 }
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNSignalOperation;
 }
 
-export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: SignalArguments
-) {
+export function validateParams({ config }, incomingParams) {
   let { message, channel } = incomingParams;
 
   if (!channel) return 'Missing Channel';
@@ -29,17 +26,18 @@ export function validateParams(
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(
-  modules: ModulesInject,
-  incomingParams: SignalArguments
-): string {
+export function getURL(modules, incomingParams) {
   const { config } = modules;
   const { channel, message } = incomingParams;
   let stringifiedPayload = prepareMessagePayload(modules, message);
-  return `/signal/${config.publishKey}/${config.subscribeKey}/0/${utils.encodeString(channel)}/0/${utils.encodeString(stringifiedPayload)}`;
+  return `/signal/${config.publishKey}/${
+    config.subscribeKey
+  }/0/${utils.encodeString(channel)}/0/${utils.encodeString(
+    stringifiedPayload
+  )}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -47,15 +45,12 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   const params = {};
 
   return params;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  serverResponse: Object
-): SignalResponse {
+export function handleResponse(modules, serverResponse) {
   return { timetoken: serverResponse[2] };
 }

@@ -12,14 +12,14 @@ describe('grant token endpoint', () => {
   let pubnub;
   let clock;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
     clock = sinon.useFakeTimers(
       new Date(Date.UTC(2019, 9, 18, 1, 6, 30)).getTime()
     );
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
     nock.enableNetConnect();
     pubnub._config.getVersion = originalVersionFunction;
@@ -53,25 +53,25 @@ describe('grant token endpoint', () => {
             timestamp: 1571360790,
             signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
-          .reply(
-            200,
-            {
-              message: 'Success',
-              data: {
-                token: 'token'
-              }
-            }
-          );
+          .reply(200, {
+            message: 'Success',
+            data: {
+              token: 'token',
+            },
+          });
 
-        pubnub.grantToken(
-          {
-            ttl: 1440
-          }
-        ).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing either Resources or Patterns.');
-          done();
-        });
+        pubnub
+          .grantToken({
+            ttl: 1440,
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(
+              err.status.message,
+              'Missing either Resources or Patterns.'
+            );
+            done();
+          });
       });
 
       it('fail on resources without any resource permissions', (done) => {
@@ -84,36 +84,30 @@ describe('grant token endpoint', () => {
             timestamp: 1571360790,
             signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
-          .reply(
-            200,
-            {
-              message: 'Success',
-              data: {
-                token: 'token'
-              }
-            }
-          );
+          .reply(200, {
+            message: 'Success',
+            data: {
+              token: 'token',
+            },
+          });
 
-        pubnub.grantToken(
-          {
+        pubnub
+          .grantToken({
             ttl: 1440,
             resources: {
-              channels: {
-
-              },
-              groups: {
-
-              },
-              uuids: {
-
-              }
+              channels: {},
+              groups: {},
+              uuids: {},
             },
-          }
-        ).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing values for either Resources or Patterns.');
-          done();
-        });
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(
+              err.status.message,
+              'Missing values for either Resources or Patterns.'
+            );
+            done();
+          });
       });
 
       it('fail on resources without any pattern permissions', (done) => {
@@ -126,36 +120,30 @@ describe('grant token endpoint', () => {
             timestamp: 1571360790,
             signature: 'v2.pJobOYLaDTsauQo8UZa-4Eu4JKYYRuaeyPS8IHpNN-E',
           })
-          .reply(
-            200,
-            {
-              message: 'Success',
-              data: {
-                token: 'token'
-              }
-            }
-          );
+          .reply(200, {
+            message: 'Success',
+            data: {
+              token: 'token',
+            },
+          });
 
-        pubnub.grantToken(
-          {
+        pubnub
+          .grantToken({
             ttl: 1440,
             patterns: {
-              channels: {
-
-              },
-              groups: {
-
-              },
-              uuids: {
-
-              }
+              channels: {},
+              groups: {},
+              uuids: {},
             },
-          }
-        ).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing values for either Resources or Patterns.');
-          done();
-        });
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(
+              err.status.message,
+              'Missing values for either Resources or Patterns.'
+            );
+            done();
+          });
       });
     });
   });
@@ -165,11 +153,11 @@ describe('grant token endpoint telemetry', () => {
   let originalVersionFunction = null;
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
     pubnub._config.getVersion = originalVersionFunction;
   });
@@ -192,38 +180,57 @@ describe('grant token endpoint telemetry', () => {
 
   describe('#grantToken', () => {
     it('should add PAM grant token API telemetry information', (done) => {
-      let scope = utils.createNock().post('/v3/pam/mySubscribeKey/grant', '{"ttl":1440,"permissions":{"resources":{"channels":{},"groups":{},"uuids":{"user1":1},"users":{},"spaces":{}},"patterns":{"channels":{},"groups":{},"uuids":{".*":1},"users":{},"spaces":{}},"meta":{}}}').query(true);
+      let scope = utils
+        .createNock()
+        .post(
+          '/v3/pam/mySubscribeKey/grant',
+          '{"ttl":1440,"permissions":{"resources":{"channels":{},"groups":{},"uuids":{"user1":1},"users":{},"spaces":{}},"patterns":{"channels":{},"groups":{},"uuids":{".*":1},"users":{},"spaces":{}},"meta":{}}}'
+        )
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { message: 'Success', data: { token: 'token' } },
-        delays,
-        (completion) => {
-          pubnub.grantToken(
-            {
-              ttl: 1440,
-              resources: {
-                channels: {},
-                groups: {},
-                uuids: { user1: { read: true }, },
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { message: 'Success', data: { token: 'token' } },
+          delays,
+          (completion) => {
+            pubnub.grantToken(
+              {
+                ttl: 1440,
+                resources: {
+                  channels: {},
+                  groups: {},
+                  uuids: { user1: { read: true } },
+                },
+                patterns: {
+                  channels: {},
+                  groups: {},
+                  uuids: { '.*': { read: true } },
+                },
               },
-              patterns: {
-                channels: {},
-                groups: {},
-                uuids: { '.*': { read: true }, },
+              () => {
+                completion();
               }
-            },
-            () => { completion(); }
-          );
-        })
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_pamv3', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_pamv3',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

@@ -13,11 +13,11 @@ describe('#components/subscription_manager', () => {
   let pubnubWithPassingHeartbeats;
   let pubnubWithLimitedQueue;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -215,10 +215,15 @@ describe('#components/subscription_manager', () => {
       .createNock()
       .get(/leave$/)
       .query(true)
-      .reply(200, '{"status": 200,"message":"OK","action":"leave","service":"Presence"}');
+      .reply(
+        200,
+        '{"status": 200,"message":"OK","action":"leave","service":"Presence"}'
+      );
     const scope4 = utils
       .createNock()
-      .get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
+      .get(
+        '/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D'
+      )
       .query(true)
       .reply(200, '[1,"Sent","14647523059145592"]');
 
@@ -227,16 +232,16 @@ describe('#components/subscription_manager', () => {
         null.test;
       },
       status(status) {
-        if (status.category === "PNUnknownCategory") {
+        if (status.category === 'PNUnknownCategory') {
           assert.equal(status.errorData instanceof Error, true);
           done();
-        } else if (status.category === "PNConnectedCategory") {
+        } else if (status.category === 'PNConnectedCategory') {
           pubnub.publish(
             { message: { such: 'object' }, channel: 'ch1' },
-            (status, response) => { }
+            (status, response) => {}
           );
         }
-      }
+      },
     });
 
     pubnub.subscribe({ channels: ['ch1'], withPresence: true });

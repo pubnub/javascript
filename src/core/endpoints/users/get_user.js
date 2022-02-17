@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SingleUserInput,
@@ -8,26 +8,25 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNGetUserOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: SingleUserInput) {
+export function validateParams(modules, incomingParams) {
   let { userId } = incomingParams;
 
   if (!userId) return 'Missing userId';
 }
 
-export function getURL(
-  modules: ModulesInject,
-  incomingParams: SingleUserInput
-): string {
+export function getURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(
+    incomingParams.userId
+  )}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -35,17 +34,14 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SingleUserInput
-): Object {
+export function prepareParams(modules, incomingParams) {
   let { include } = incomingParams;
   const params = {};
 
   // default to include custom fields in response
   if (!include) {
     include = {
-      customFields: true
+      customFields: true,
     };
   } else if (include.customFields === undefined) {
     include.customFields = true;
@@ -68,9 +64,6 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  usersResponse: Object
-): UsersResponse {
+export function handleResponse(modules, usersResponse) {
   return usersResponse;
 }

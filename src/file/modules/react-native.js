@@ -1,26 +1,6 @@
-/** @flow */
+/**       */
 
-import { IFile, FileClass } from '../';
-
-type PubNubFileReactNativeConstructor =
-| File
-| {|
-    data: string,
-    name: string,
-    mimeType: string,
-  |}
-| {|
-    data: ArrayBuffer,
-    name: string,
-    mimeType: string,
-  |}
-| {|
-    uri: string,
-    name: string,
-    mimeType: string,
-  |};
-
-const PubNubFile: FileClass = class PubNubFile implements IFile {
+const PubNubFile = class PubNubFile {
   static supportsFile = typeof File !== 'undefined';
   static supportsBlob = typeof Blob !== 'undefined';
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
@@ -30,15 +10,15 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   static supportsEncryptFile = false;
   static supportsFileUri = true;
 
-  static create(config: PubNubFileReactNativeConstructor) {
+  static create(config) {
     return new this(config);
   }
 
-  data: any;
-  name: string;
-  mimeType: string;
+  data;
+  name;
+  mimeType;
 
-  constructor(config: PubNubFileReactNativeConstructor) {
+  constructor(config) {
     if (config instanceof File) {
       this.data = config;
 
@@ -49,7 +29,7 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
       this.data = {
         uri: config.uri,
         name: config.name,
-        type: config.mimeType
+        type: config.mimeType,
       };
 
       this.name = config.name;
@@ -65,7 +45,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
         this.mimeType = config.mimeType;
       }
     } else {
-      throw new Error("Couldn't construct a file out of supplied options. URI or file data required.");
+      throw new Error(
+        "Couldn't construct a file out of supplied options. URI or file data required."
+      );
     }
 
     if (this.data === undefined) {
@@ -73,7 +55,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
     }
 
     if (this.name === undefined) {
-      throw new Error("Couldn't guess filename out of the options. Please provide one.");
+      throw new Error(
+        "Couldn't guess filename out of the options. Please provide one."
+      );
     }
   }
 
@@ -87,7 +71,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
   async toBlob() {
     if (this.data && this.data.uri) {
-      throw new Error('This file contains a file URI and does not contain the file contents.');
+      throw new Error(
+        'This file contains a file URI and does not contain the file contents.'
+      );
     } else if (this.data instanceof File) {
       return this.data;
     } else {
@@ -98,7 +84,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
   async toArrayBuffer() {
     if (this.data && this.data.uri) {
-      throw new Error('This file contains a file URI and does not contain the file contents.');
+      throw new Error(
+        'This file contains a file URI and does not contain the file contents.'
+      );
     } else if (this.data instanceof File) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -122,7 +110,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
       try {
         result = await this.data.arrayBuffer();
       } catch (e) {
-        throw new Error(`Unable to support toArrayBuffer in ReactNative environment: ${e}`);
+        throw new Error(
+          `Unable to support toArrayBuffer in ReactNative environment: ${e}`
+        );
       }
 
       return result;
@@ -156,7 +146,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
   async toFile() {
     if (this.data.uri) {
-      throw new Error('This file contains a file URI and does not contain the file contents.');
+      throw new Error(
+        'This file contains a file URI and does not contain the file contents.'
+      );
     } else if (this.data instanceof File) {
       return this.data;
     } else {

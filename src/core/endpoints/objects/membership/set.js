@@ -1,37 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { Membership, PaginatedResultParams } from './membership';
+
 import utils from '../../../utils';
 
-type CommonParams = {|
-  uuid?: string,
-|};
-
-export type RemoveMembershipsParams = {|
-  type: 'delete',
-  channels: (string | { id: string, custom?: empty })[],
-|} & CommonParams &
-  PaginatedResultParams;
-
-export type UpsertMembershipsParams = {|
-  type: 'set',
-  channels: (string | { id: string, custom?: any })[],
-|} & CommonParams &
-  PaginatedResultParams;
-
-export type SetMembershipsParams = RemoveMembershipsParams | UpsertMembershipsParams;
-
-export type SetMembershipsResult = {|
-  status: 200,
-  data: Membership,
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
-
-const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetMembershipsOperation,
 
   validateParams: (_, params) => {
@@ -43,7 +16,9 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
   usePatch: () => true,
 
   patchURL: ({ config }, params) =>
-    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}/channels`,
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(
+      params.uuid ?? config.getUUID()
+    )}/channels`,
 
   patchPayload: (_, params) => ({
     set: [],
@@ -110,13 +85,15 @@ const endpoint: EndpointConfig<SetMembershipsParams, SetMembershipsResult> = {
     }
 
     if (params?.sort) {
-      queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
-        if (value === 'asc' || value === 'desc') {
-          return `${key}:${value}`;
-        } else {
-          return key;
+      queryParams.sort = Object.entries(params.sort ?? {}).map(
+        ([key, value]) => {
+          if (value === 'asc' || value === 'desc') {
+            return `${key}:${value}`;
+          } else {
+            return key;
+          }
         }
-      });
+      );
     }
 
     return queryParams;

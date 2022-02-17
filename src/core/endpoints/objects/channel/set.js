@@ -1,24 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { ChannelMetadata } from './channel';
+
 import utils from '../../../utils';
 
-export type SetChannelMetadataParams = {|
-  channel: string,
-  include?: {|
-    customFields: ?boolean,
-  |},
-  data: $Shape<ChannelMetadata>,
-|};
-
-export type SetChannelMetadataResult = {|
-  status: 200,
-  data: ChannelMetadata,
-|};
-
-const endpoint: EndpointConfig<SetChannelMetadataParams, SetChannelMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetChannelMetadataOperation,
 
   validateParams: (_, params) => {
@@ -33,7 +19,10 @@ const endpoint: EndpointConfig<SetChannelMetadataParams, SetChannelMetadataResul
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}`,
 
   patchPayload: (_, params) => params.data,
 

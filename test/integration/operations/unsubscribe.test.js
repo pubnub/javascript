@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('unsubscribe', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -56,7 +56,7 @@ describe('unsubscribe', () => {
       pubnub.addListener({
         status(status) {
           if (status.category !== 'PNConnectedCategory') {
-            console.log('status', JSON.stringify(status ))
+            console.log('status', JSON.stringify(status));
             assert.equal(status.error, false);
             assert.equal(scope.isDone(), true);
             assert.deepEqual(status.affectedChannels, ['ch1']);

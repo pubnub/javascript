@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   FetchHistoryArguments,
@@ -9,7 +9,7 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-function __processMessage(modules, message: Object): Object | null {
+function __processMessage(modules, message) {
   let { config, crypto } = modules;
   if (!config.cipherKey) return message;
 
@@ -20,14 +20,11 @@ function __processMessage(modules, message: Object): Object | null {
   }
 }
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNHistoryOperation;
 }
 
-export function validateParams(
-  modules: ModulesInject,
-  incomingParams: FetchHistoryArguments
-) {
+export function validateParams(modules, incomingParams) {
   let { channel } = incomingParams;
   let { config } = modules;
 
@@ -35,10 +32,7 @@ export function validateParams(
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(
-  modules: ModulesInject,
-  incomingParams: FetchHistoryArguments
-): string {
+export function getURL(modules, incomingParams) {
   let { channel } = incomingParams;
   let { config } = modules;
   return `/v2/history/sub-key/${
@@ -46,18 +40,15 @@ export function getURL(
   }/channel/${utils.encodeString(channel)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): boolean {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: FetchHistoryArguments
-): Object {
+export function prepareParams(modules, incomingParams) {
   const {
     start,
     end,
@@ -66,7 +57,7 @@ export function prepareParams(
     stringifiedTimeToken = false,
     includeMeta = false,
   } = incomingParams;
-  let outgoingParams: Object = {
+  let outgoingParams = {
     include_token: 'true',
   };
 
@@ -80,11 +71,8 @@ export function prepareParams(
   return outgoingParams;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  serverResponse: FetchHistoryArguments
-): HistoryResponse {
-  const response: HistoryResponse = {
+export function handleResponse(modules, serverResponse) {
+  const response = {
     messages: [],
     startTimeToken: serverResponse[1],
     endTimeToken: serverResponse[2],
@@ -92,7 +80,7 @@ export function handleResponse(
 
   if (Array.isArray(serverResponse[0])) {
     serverResponse[0].forEach((serverHistoryItem) => {
-      const item: HistoryItem = {
+      const item = {
         timetoken: serverHistoryItem.timetoken,
         entry: __processMessage(modules, serverHistoryItem.message),
       };

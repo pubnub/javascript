@@ -21,9 +21,9 @@ describe('members endpoints', () => {
       profileUrl: null,
       email: 'bobc@example.com',
       custom: {
-        phone: '999-999-9999'
+        phone: '999-999-9999',
       },
-    }
+    },
   };
   const created = new Date().toISOString();
   const updated = new Date().toISOString();
@@ -43,9 +43,9 @@ describe('members endpoints', () => {
       profileUrl: null,
       email: 'bobc2@example.com',
       custom: {
-        phone: '999-999-9999'
+        phone: '999-999-9999',
       },
-    }
+    },
   };
   const created2 = new Date().toISOString();
   const updated2 = new Date().toISOString();
@@ -53,11 +53,11 @@ describe('members endpoints', () => {
 
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -82,7 +82,7 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [
@@ -97,24 +97,26 @@ describe('members endpoints', () => {
                 created: created2,
                 updated: updated2,
                 eTag: eTag2,
-              }
+              },
             ],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.getMembers({
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing spaceId');
-          done();
-        });
+        pubnub
+          .getMembers({
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing spaceId');
+            done();
+          });
       });
     });
 
@@ -128,7 +130,7 @@ describe('members endpoints', () => {
           auth: 'myAuthKey',
           count: true,
           filter: 'user.name != "Bob Cat"',
-          limit: 2
+          limit: 2,
         })
         .reply(200, {
           data: [
@@ -143,60 +145,75 @@ describe('members endpoints', () => {
               created: created2,
               updated: updated2,
               eTag: eTag2,
-            }
+            },
           ],
           next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
           prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
           status: 200,
-          totalCount: 9
+          totalCount: 9,
         });
 
-      pubnub.getMembers({
-        spaceId: 'mySpaceId',
-        limit: 2,
-        include: {
-          totalCount: true
+      pubnub.getMembers(
+        {
+          spaceId: 'mySpaceId',
+          limit: 2,
+          include: {
+            totalCount: true,
+          },
+          filter: 'user.name != "Bob Cat"',
         },
-        filter: 'user.name != "Bob Cat"'
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
+        (status, response) => {
+          assert.equal(status.error, false);
 
-        assert.equal(response.data[0].id, 'member-test-1');
-        assert.equal(response.data[0].eTag, eTag);
+          assert.equal(response.data[0].id, 'member-test-1');
+          assert.equal(response.data[0].eTag, eTag);
 
-        assert.equal(response.data[1].id, 'member-test-2');
-        assert.equal(response.data[1].eTag, eTag2);
+          assert.equal(response.data[1].id, 'member-test-2');
+          assert.equal(response.data[1].eTag, eTag2);
 
-        assert.equal(response.totalCount, 9);
+          assert.equal(response.totalCount, 9);
 
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
     });
 
     it('should add list members objects API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v1/objects/mySubKey/spaces/mySpaceId/users')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.getMembers(
-            { spaceId: 'mySpaceId' },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.getMembers({ spaceId: 'mySpaceId' }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('addMembers', () => {
@@ -210,30 +227,29 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.addMembers({
-          users: [
-            { id: 'user-1' },
-            { id: 'user-2' },
-          ],
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing spaceId');
-          done();
-        });
+        pubnub
+          .addMembers({
+            users: [{ id: 'user-1' }, { id: 'user-2' }],
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing spaceId');
+            done();
+          });
       });
 
       it('fails if users is missing', (done) => {
@@ -245,27 +261,29 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.addMembers({
-          spaceId: 'mySpaceId',
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing users');
-          done();
-        });
+        pubnub
+          .addMembers({
+            spaceId: 'mySpaceId',
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing users');
+            done();
+          });
       });
     });
 
@@ -278,61 +296,76 @@ describe('members endpoints', () => {
           uuid: 'myUUID',
           auth: 'myAuthKey',
           count: true,
-          limit: 2
+          limit: 2,
         })
         .reply(200, {
           data: [],
           next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
           prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
           status: 200,
-          totalCount: 0
+          totalCount: 0,
         });
 
-      pubnub.addMembers({
-        spaceId: 'mySpaceId',
-        users: [
-          { id: 'user-1' },
-          { id: 'user-2' },
-        ],
-        limit: 2,
-        include: {
-          totalCount: true
+      pubnub.addMembers(
+        {
+          spaceId: 'mySpaceId',
+          users: [{ id: 'user-1' }, { id: 'user-2' }],
+          limit: 2,
+          include: {
+            totalCount: true,
+          },
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+
+          assert.equal(response.data.length, 0);
+
+          assert.equal(response.totalCount, 0);
+
+          assert.equal(scope.isDone(), true);
+          done();
         }
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
-
-        assert.equal(response.data.length, 0);
-
-        assert.equal(response.totalCount, 0);
-
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+      );
     });
 
     it('should add members object add API telemetry information', (done) => {
-      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      let scope = utils
+        .createNock()
+        .patch('/v1/objects/mySubKey/spaces/mySpaceId/users')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.addMembers(
-            { spaceId: 'mySpaceId', users: [{ id: 'user-1' }] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.addMembers(
+              { spaceId: 'mySpaceId', users: [{ id: 'user-1' }] },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('removeMembers', () => {
@@ -346,30 +379,29 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.removeMembers({
-          users: [
-            { id: 'user-1' },
-            { id: 'user-2' },
-          ],
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing spaceId');
-          done();
-        });
+        pubnub
+          .removeMembers({
+            users: [{ id: 'user-1' }, { id: 'user-2' }],
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing spaceId');
+            done();
+          });
       });
 
       it('fails if users is missing', (done) => {
@@ -381,27 +413,29 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.removeMembers({
-          spaceId: 'mySpaceId',
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing users');
-          done();
-        });
+        pubnub
+          .removeMembers({
+            spaceId: 'mySpaceId',
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing users');
+            done();
+          });
       });
     });
 
@@ -414,61 +448,76 @@ describe('members endpoints', () => {
           uuid: 'myUUID',
           auth: 'myAuthKey',
           count: true,
-          limit: 2
+          limit: 2,
         })
         .reply(200, {
           data: [],
           next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
           prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
           status: 200,
-          totalCount: 0
+          totalCount: 0,
         });
 
-      pubnub.removeMembers({
-        spaceId: 'mySpaceId',
-        users: [
-          { id: 'user-1' },
-          { id: 'user-2' },
-        ],
-        limit: 2,
-        include: {
-          totalCount: true
+      pubnub.removeMembers(
+        {
+          spaceId: 'mySpaceId',
+          users: [{ id: 'user-1' }, { id: 'user-2' }],
+          limit: 2,
+          include: {
+            totalCount: true,
+          },
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+
+          assert.equal(response.data.length, 0);
+
+          assert.equal(response.totalCount, 0);
+
+          assert.equal(scope.isDone(), true);
+          done();
         }
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
-
-        assert.equal(response.data.length, 0);
-
-        assert.equal(response.totalCount, 0);
-
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+      );
     });
 
     it('should add remove members object API telemetry information', (done) => {
-      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      let scope = utils
+        .createNock()
+        .patch('/v1/objects/mySubKey/spaces/mySpaceId/users')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.removeMembers(
-            { spaceId: 'mySpaceId', users: [{ id: 'user-1' }] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.removeMembers(
+              { spaceId: 'mySpaceId', users: [{ id: 'user-1' }] },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('updateMembers', () => {
@@ -482,30 +531,29 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.updateMembers({
-          users: [
-            { id: 'user-1' },
-            { id: 'user-2' },
-          ],
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing spaceId');
-          done();
-        });
+        pubnub
+          .updateMembers({
+            users: [{ id: 'user-1' }, { id: 'user-2' }],
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing spaceId');
+            done();
+          });
       });
 
       it('fails if users is missing', (done) => {
@@ -517,27 +565,29 @@ describe('members endpoints', () => {
             uuid: 'myUUID',
             auth: 'myAuthKey',
             count: true,
-            limit: 2
+            limit: 2,
           })
           .reply(200, {
             data: [],
             next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
             prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
             status: 200,
-            totalCount: 9
+            totalCount: 9,
           });
 
-        pubnub.updateMembers({
-          spaceId: 'mySpaceId',
-          limit: 2,
-          include: {
-            totalCount: true
-          }
-        }).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing users');
-          done();
-        });
+        pubnub
+          .updateMembers({
+            spaceId: 'mySpaceId',
+            limit: 2,
+            include: {
+              totalCount: true,
+            },
+          })
+          .catch((err) => {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, 'Missing users');
+            done();
+          });
       });
     });
 
@@ -550,60 +600,81 @@ describe('members endpoints', () => {
           uuid: 'myUUID',
           auth: 'myAuthKey',
           count: true,
-          limit: 2
+          limit: 2,
         })
         .reply(200, {
           data: [],
           next: 'MUIwQTAwMUItQkRBRC00NDkyLTgyMEMtODg2OUU1N0REMTNBCg==',
           prev: 'M0FFODRENzMtNjY2Qy00RUExLTk4QzktNkY1Q0I2MUJFNDRCCg==',
           status: 200,
-          totalCount: 0
+          totalCount: 0,
         });
 
-      pubnub.updateMembers({
-        spaceId: 'mySpaceId',
-        users: [
-          { id: 'user-1', custom: { foo: 'fum' } },
-          { id: 'user-2', custom: { foo: 'fee' }  },
-        ],
-        limit: 2,
-        include: {
-          totalCount: true
+      pubnub.updateMembers(
+        {
+          spaceId: 'mySpaceId',
+          users: [
+            { id: 'user-1', custom: { foo: 'fum' } },
+            { id: 'user-2', custom: { foo: 'fee' } },
+          ],
+          limit: 2,
+          include: {
+            totalCount: true,
+          },
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+
+          assert.equal(response.data.length, 0);
+
+          assert.equal(response.totalCount, 0);
+
+          assert.equal(scope.isDone(), true);
+          done();
         }
-      },
-      (status, response) => {
-        assert.equal(status.error, false);
-
-        assert.equal(response.data.length, 0);
-
-        assert.equal(response.totalCount, 0);
-
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+      );
     });
 
     it('should add update members object API telemetry information', (done) => {
-      let scope = utils.createNock().patch('/v1/objects/mySubKey/spaces/mySpaceId/users').query(true);
+      let scope = utils
+        .createNock()
+        .patch('/v1/objects/mySubKey/spaces/mySpaceId/users')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        { data: {} },
-        delays,
-        (completion) => {
-          pubnub.updateMembers(
-            { spaceId: 'mySpaceId', users: [{ id: 'user-1', custom: { foo: 'fum' } }] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          { data: {} },
+          delays,
+          (completion) => {
+            pubnub.updateMembers(
+              {
+                spaceId: 'mySpaceId',
+                users: [{ id: 'user-1', custom: { foo: 'fum' } }],
+              },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_obj', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_obj',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

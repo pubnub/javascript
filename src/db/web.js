@@ -1,8 +1,8 @@
-/* @flow */
+/*       */
 /* global localStorage */
 
 export default {
-  get(key: string) {
+  get(key) {
     // try catch for operating within iframes which disable localStorage
     try {
       return localStorage.getItem(key);
@@ -10,12 +10,12 @@ export default {
       return null;
     }
   },
-  set(key: string, data: any) {
+  set(key, data) {
     // try catch for operating within iframes which disable localStorage
     try {
       return localStorage.setItem(key, data);
     } catch (e) {
       return null;
     }
-  }
+  },
 };

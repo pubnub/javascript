@@ -13,25 +13,28 @@ var myChannel2 = 'mychannel2' + channelSuffix;
 var myChanneGroup1 = 'myChannelGroup1' + channelSuffix;
 
 describe('#distribution test (titanium)', function () {
-
-  before(function () {
-    pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUUID' });
+  beforeAll(function () {
+    pubnub = new PubNub({
+      subscribeKey: 'demo',
+      publishKey: 'demo',
+      uuid: 'myUUID',
+    });
   });
 
-  after(function () {
+  afterAll(function () {
     pubnub.destroy();
   });
 
   it('should have to subscribe a channel', function (done) {
     listener = {
       status: function (st) {
-        expect(st.operation).to.be.equal('PNSubscribeOperation');
+        expect(st.operation).toEqual('PNSubscribeOperation');
         done();
-      }
+      },
     };
 
     pubnub.addListener(listener);
-    pubnub.subscribe({channels: [myChannel1]});
+    pubnub.subscribe({ channels: [myChannel1] });
   });
 
   it('should have to receive message from a channel', function (done) {
@@ -41,28 +44,34 @@ describe('#distribution test (titanium)', function () {
 
     listener = pubnub.addListener({
       message: function (m) {
-        expect(m.channel).to.be.equal(myChannel2);
-        expect(m.message.text).to.be.equal('hello Titanium SDK');
+        expect(m.channel).toEqual(myChannel2);
+        expect(m.message.text).toEqual('hello Titanium SDK');
         done();
-      }
+      },
     });
 
-    pubnub.subscribe({channels: [myChannel2]});
-    pubnub.publish({ channel: myChannel2, message: { text: 'hello Titanium SDK' }});
+    pubnub.subscribe({ channels: [myChannel2] });
+    pubnub.publish({
+      channel: myChannel2,
+      message: { text: 'hello Titanium SDK' },
+    });
   });
 
   it('should have to set state', function (done) {
-    pubnub.setState({ channels: [myChannel1], state: { hello: 'there' } }, function (status, response) {
-      expect(status.error).to.be.equal(false);
-      expect(response.state.hello).to.be.equal('there');
-      done();
-    });
+    pubnub.setState(
+      { channels: [myChannel1], state: { hello: 'there' } },
+      function (status, response) {
+        expect(status.error).toEqual(false);
+        expect(response.state.hello).toEqual('there');
+        done();
+      }
+    );
   });
 
   it('should have to get the time', function (done) {
     pubnub.time(function (status) {
-      expect(status.operation).to.be.equal('PNTimeOperation');
-      expect(status.statusCode).to.be.equal(200);
+      expect(status.operation).toEqual('PNTimeOperation');
+      expect(status.statusCode).toEqual(200);
       done();
     });
   });
@@ -70,14 +79,17 @@ describe('#distribution test (titanium)', function () {
   it('should have to get the last message', function (done) {
     // add delay to ensure publish completes
     setTimeout(function () {
-      pubnub.history({
-        channel: myChannel2,
-        count: 1,
-        reverse: false
-      }, function(status, response) {
-        expect(response.messages).to.have.length(1);
-        done();
-      });
+      pubnub.history(
+        {
+          channel: myChannel2,
+          count: 1,
+          reverse: false,
+        },
+        function (status, response) {
+          expect(response.messages).to.have.length(1);
+          done();
+        }
+      );
     }, 3000);
   });
 
@@ -91,7 +103,7 @@ describe('#distribution test (titanium)', function () {
   //       channelGroup: myChanneGroup1
   //     },
   //     function(status) {
-  //       expect(status.error).to.be.equal(false);
+  //       expect(status.error).toEqual(false);
   //       done();
   //     }
   //   );
@@ -103,7 +115,7 @@ describe('#distribution test (titanium)', function () {
   //       channelGroup: myChanneGroup1
   //     },
   //     function (status, response) {
-  //       expect(status.error).to.be.equal(false);
+  //       expect(status.error).toEqual(false);
   //       expect(response.channels).to.have.length(2);
   //       done();
   //     }
@@ -111,9 +123,9 @@ describe('#distribution test (titanium)', function () {
   // });
 
   it('should have to change the UUID', function (done) {
-    pubnub.setUUID("CustomUUID");
+    pubnub.setUUID('CustomUUID');
 
-    expect(pubnub.getUUID()).to.be.equal("CustomUUID");
+    expect(pubnub.getUUID()).toEqual('CustomUUID');
     done();
   });
 
@@ -126,15 +138,15 @@ describe('#distribution test (titanium)', function () {
 
     pubnub.addListener({
       status: function (st) {
-        expect(st.operation).to.be.equal('PNUnsubscribeOperation');
+        expect(st.operation).toEqual('PNUnsubscribeOperation');
 
         if (!finished) {
           // prevent calling done twice
           finished = true;
           done();
         }
-      }
+      },
     });
-    pubnub.unsubscribe({channels: [myChannel1]});
+    pubnub.unsubscribe({ channels: [myChannel1] });
   });
 });

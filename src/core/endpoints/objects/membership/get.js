@@ -1,29 +1,19 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { Membership, PaginatedResultParams } from './membership';
+
 import utils from '../../../utils';
 
-export type GetMembershipsParams = {
-  uuid: string,
-} & PaginatedResultParams;
-
-export type GetMembershipsResult = {|
-  status: 200,
-  data: Membership[],
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
-
-const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetMembershipsOperation,
 
   // No required parameters.
   validateParams: () => {},
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}/channels`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(
+      params?.uuid ?? config.getUUID()
+    )}/channels`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 
@@ -69,19 +59,21 @@ const endpoint: EndpointConfig<GetMembershipsParams, GetMembershipsResult> = {
     queryParams.limit = params?.limit ?? 100;
 
     if (params?.sort) {
-      queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
-        if (value === 'asc' || value === 'desc') {
-          return `${key}:${value}`;
-        } else {
-          return key;
+      queryParams.sort = Object.entries(params.sort ?? {}).map(
+        ([key, value]) => {
+          if (value === 'asc' || value === 'desc') {
+            return `${key}:${value}`;
+          } else {
+            return key;
+          }
         }
-      });
+      );
     }
 
     return queryParams;
   },
 
-  handleResponse: (_, response): GetMembershipsResult => ({
+  handleResponse: (_, response) => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

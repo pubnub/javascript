@@ -9,11 +9,11 @@ describe('presence endpoints', () => {
   let pubnubOther;
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -115,27 +115,40 @@ describe('presence endpoints', () => {
     });
 
     it('should add where now API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.whereNow(
-            {},
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.whereNow({}, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_pres',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('#setState', () => {
@@ -262,27 +275,45 @@ describe('presence endpoints', () => {
     });
 
     it('should add set state API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data').query(true);
+      let scope = utils
+        .createNock()
+        .get(
+          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data'
+        )
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.setState(
-            { channels: ['testChannel'], state: { new: 'state' } },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.setState(
+              { channels: ['testChannel'], state: { new: 'state' } },
+              () => {
+                completion();
+              }
+            );
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_pres',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('#getState', () => {
@@ -396,27 +427,42 @@ describe('presence endpoints', () => {
     });
 
     it('should add get state API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID').query(true);
+      let scope = utils
+        .createNock()
+        .get(
+          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID'
+        )
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.getState(
-            { channels: ['testChannel'] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.getState({ channels: ['testChannel'] }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_pres',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 
   describe('#hereNow', () => {
@@ -738,8 +784,9 @@ describe('presence endpoints', () => {
           200,
           '{"status": 402, "error": 1, "message": "This feature is not turned on for this account. Contact support@pubnub.com to activate this feature.", "service": "Presence"}'
         );
-      let expected = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
-      pubnub.hereNow({channles: []}, (status) => {
+      let expected =
+        'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
+      pubnub.hereNow({ channles: [] }, (status) => {
         assert.equal(status.error, true);
         assert.equal(status.errorData.message, expected);
         assert.equal(scope.isDone(), true);
@@ -754,53 +801,69 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
-          test: 'param'
+          test: 'param',
         })
         .reply(
           200,
           '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}'
         );
 
-      pubnub.hereNow({ channels: ['game1'], queryParameters: { test: 'param' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response.channels, {
-          game1: {
-            name: 'game1',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
-      });
+      pubnub.hereNow(
+        { channels: ['game1'], queryParameters: { test: 'param' } },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.deepEqual(response.channels, {
+            game1: {
+              name: 'game1',
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
+                },
+              ],
+            },
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        }
+      );
     });
 
     it('should add here now API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/game1').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/game1')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
-      const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+      const average = Math.floor(
+        countedDelays.reduce((acc, delay) => acc + delay, 0) /
+          countedDelays.length
+      );
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.hereNow(
-            { channels: ['game1'] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.hereNow({ channels: ['game1'] }, () => {
+              completion();
+            });
+          }
+        )
         .then((lastRequest) => {
-          utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
+          utils.verifyRequestTelemetry(
+            lastRequest.path,
+            'l_pres',
+            average,
+            leeway
+          );
           done();
         });
-    }).timeout(60000);
+    });
   });
 });

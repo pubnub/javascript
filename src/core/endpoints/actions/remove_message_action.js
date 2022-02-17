@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   RemoveMessageActionInput,
@@ -8,15 +8,11 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNRemoveMessageActionOperation;
 }
 
-export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: RemoveMessageActionInput
-) {
+export function validateParams({ config }, incomingParams) {
   let { channel, actionTimetoken, messageTimetoken } = incomingParams;
 
   if (!messageTimetoken) return 'Missing message timetoken';
@@ -29,16 +25,17 @@ export function useDelete() {
   return true;
 }
 
-export function getURL(
-  { config }: ModulesInject,
-  incomingParams: RemoveMessageActionInput
-): string {
+export function getURL({ config }, incomingParams) {
   let { channel, actionTimetoken, messageTimetoken } = incomingParams;
 
-  return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}/message/${messageTimetoken}/action/${actionTimetoken}`;
+  return `/v1/message-actions/${
+    config.subscribeKey
+  }/channel/${utils.encodeString(
+    channel
+  )}/message/${messageTimetoken}/action/${actionTimetoken}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -46,13 +43,10 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   return {};
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  removeMessageActionResponse: Object
-): RemoveMessageActionResponse {
+export function handleResponse(modules, removeMessageActionResponse) {
   return { data: removeMessageActionResponse.data };
 }

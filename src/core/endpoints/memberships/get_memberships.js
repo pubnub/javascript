@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   MembershipsInput,
@@ -8,26 +8,25 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNGetMembershipsOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: MembershipsInput) {
+export function validateParams(modules, incomingParams) {
   let { userId } = incomingParams;
 
   if (!userId) return 'Missing userId';
 }
 
-export function getURL(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-): string {
+export function getURL(modules, incomingParams) {
   let { config } = modules;
 
-  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
+  return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(
+    incomingParams.userId
+  )}/spaces`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -35,10 +34,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-): Object {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -88,9 +84,6 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  membershipsResponse: Object
-): MembershipsListResponse {
+export function handleResponse(modules, membershipsResponse) {
   return membershipsResponse;
 }

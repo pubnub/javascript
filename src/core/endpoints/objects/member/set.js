@@ -1,37 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { Member, PaginatedResultParams } from './member';
+
 import utils from '../../../utils';
 
-type CommonParams = {
-  channel: string,
-};
-
-export type RemoveMembersParams = {
-  type: 'delete',
-  uuids: (string | { id: string, custom?: empty })[],
-} & CommonParams &
-  PaginatedResultParams;
-
-export type UpsertMembersParams = {
-  type: 'set',
-  uuids: (string | { id: string, custom?: any })[],
-} & CommonParams &
-  PaginatedResultParams;
-
-export type SetMembersParams = RemoveMembersParams | UpsertMembersParams;
-
-export type SetMembersResult = {|
-  status: 200,
-  data: Member,
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
-
-const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetMembersOperation,
 
   validateParams: (_, params) => {
@@ -46,7 +19,10 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}/uuids`,
 
   patchPayload: (_, params) => ({
     set: [],
@@ -113,13 +89,15 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
     }
 
     if (params?.sort) {
-      queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
-        if (value === 'asc' || value === 'desc') {
-          return `${key}:${value}`;
-        } else {
-          return key;
+      queryParams.sort = Object.entries(params.sort ?? {}).map(
+        ([key, value]) => {
+          if (value === 'asc' || value === 'desc') {
+            return `${key}:${value}`;
+          } else {
+            return key;
+          }
         }
-      });
+      );
     }
 
     return queryParams;

@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('heartbeat', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -23,7 +23,7 @@ describe('heartbeat', () => {
       subscribeKey: 'mySubscribeKey',
       publishKey: 'myPublishKey',
       uuid: 'myUUID',
-      heartbeatInterval	:1, // for quick test of heartbeat calls
+      heartbeatInterval: 1, // for quick test of heartbeat calls
       announceSuccessfulHeartbeats: true,
     });
   });
@@ -52,9 +52,9 @@ describe('heartbeat', () => {
         })
         .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
       pubnub.subscribe({ channels: ['ch1', 'ch2'], withHeartbeats: true });
-      await expect(scope).to.have.not.been.requested;
+      expect(scope.isDone()).toBe(false);
     });
-    
+
     it('supports heartbeating for one channel', (done) => {
       const scope = utils
         .createNock()

@@ -9,11 +9,11 @@ import PubNub from '../../../src/node/index';
 describe('message counts', () => {
   let pubnub;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -163,25 +163,41 @@ describe('message counts', () => {
   });
 
   it('should add message count API telemetry information', (done) => {
-    let scope = utils.createNock().get('/v3/history/sub-key/mySubKey/message-counts/ch1').query(true);
+    let scope = utils
+      .createNock()
+      .get('/v3/history/sub-key/mySubKey/message-counts/ch1')
+      .query(true);
     const delays = [100, 200, 300, 400];
     const countedDelays = delays.slice(0, delays.length - 1);
-    const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
+    const average = Math.floor(
+      countedDelays.reduce((acc, delay) => acc + delay, 0) /
+        countedDelays.length
+    );
     const leeway = 50;
 
-    utils.runAPIWithResponseDelays(scope,
-      200,
-      '{"status": 200, "error": false, "error_message": "", "channels": {"ch1":0}}',
-      delays,
-      (completion) => {
-        pubnub.messageCounts(
-          { channels: ['ch1'], timetoken: 15495750401727535 },
-          () => { completion(); }
-        );
-      })
+    utils
+      .runAPIWithResponseDelays(
+        scope,
+        200,
+        '{"status": 200, "error": false, "error_message": "", "channels": {"ch1":0}}',
+        delays,
+        (completion) => {
+          pubnub.messageCounts(
+            { channels: ['ch1'], timetoken: 15495750401727535 },
+            () => {
+              completion();
+            }
+          );
+        }
+      )
       .then((lastRequest) => {
-        utils.verifyRequestTelemetry(lastRequest.path, 'l_hist', average, leeway);
+        utils.verifyRequestTelemetry(
+          lastRequest.path,
+          'l_hist',
+          average,
+          leeway
+        );
         done();
       });
-  }).timeout(60000);
+  });
 });

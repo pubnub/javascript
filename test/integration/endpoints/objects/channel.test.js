@@ -1,4 +1,4 @@
-/** @flow */
+/*       */
 
 import nock from 'nock';
 import utils from '../../../utils';
@@ -6,20 +6,24 @@ import PubNub from '../../../../src/node/index';
 
 import { asResponse, allChannels, channel1 } from './fixtures';
 
+process.on('unhandledRejection', (r, p) => {
+  console.log(r, p);
+});
+
 describe('objects channel', () => {
   const SUBSCRIBE_KEY = 'mySubKey';
   const PUBLISH_KEY = 'myPublishKey';
   const UUID = 'myUUID';
   const AUTH_KEY = 'myAuthKey';
 
-  let pubnub: PubNub;
-  let PNSDK: string;
+  let pubnub;
+  let PNSDK;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 
@@ -73,13 +77,13 @@ describe('objects channel', () => {
         },
       });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: allChannels.map(asResponse),
         next: undefined,
         prev: undefined,
-        totalCount: undefined
+        totalCount: undefined,
       });
     });
   });
@@ -94,17 +98,19 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.getChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.getChannelMetadata({
+        channel: channelName,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: asResponse(channel1),
       });
@@ -120,27 +126,27 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.getChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.getChannelMetadata({
+        channel: channelName,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: asResponse(channel1),
       });
     });
 
     it('should reject if channel is empty', async () => {
-      // $FlowFixMe This is intentional to suppress Flow error
       const resultP = pubnub.objects.getChannelMetadata();
-
-      await expect(resultP).to.be.rejected;
+      await expect(resultP).rejects.toThrowError();
     });
   });
 
@@ -154,17 +160,20 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.setChannelMetadata({ channel: 'test-channel', data: channel1.data });
+      const resultP = pubnub.objects.setChannelMetadata({
+        channel: 'test-channel',
+        data: channel1.data,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: asResponse(channel1),
       });
@@ -180,27 +189,29 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'custom',
         })
         .reply(200, {
           status: 200,
           data: asResponse(channel1),
         });
 
-      const resultP = pubnub.objects.setChannelMetadata({ channel: channelName, data: channel1.data });
+      const resultP = pubnub.objects.setChannelMetadata({
+        channel: channelName,
+        data: channel1.data,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: asResponse(channel1),
       });
     });
 
     it('should reject if data is missing', async () => {
-      // $FlowFixMe This is intentional to suppress Flow error
       const resultP = pubnub.objects.setChannelMetadata();
 
-      await expect(resultP).to.be.rejected;
+      await expect(resultP).rejects.toThrowError();
     });
   });
 
@@ -218,10 +229,12 @@ describe('objects channel', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.removeChannelMetadata({
+        channel: channelName,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: {},
       });
@@ -241,20 +254,21 @@ describe('objects channel', () => {
         })
         .reply(200, { status: 200, data: {} });
 
-      const resultP = pubnub.objects.removeChannelMetadata({ channel: channelName });
+      const resultP = pubnub.objects.removeChannelMetadata({
+        channel: channelName,
+      });
 
-      await expect(scope).to.have.been.requested;
-      await expect(resultP).to.eventually.deep.equal({
+      scope.done();
+      await expect(resultP).resolves.toEqual({
         status: 200,
         data: {},
       });
     });
 
     it('should reject if uuid is missing', async () => {
-      // $FlowFixMe This is intentional to suppress Flow error
       const resultP = pubnub.objects.removeChannelMetadata();
 
-      await expect(resultP).to.be.rejected;
+      await expect(resultP).rejects.toThrowError();
     });
   });
 });

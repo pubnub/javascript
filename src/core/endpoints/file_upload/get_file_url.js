@@ -1,11 +1,15 @@
-/** @flow */
+/**       */
 
-import { PubNubError, createValidationError, signRequest, generatePNSDK } from '../../components/endpoint';
-import type { Modules } from '../endpoint';
-import type { GetFileUrlParams, GetFileUrlResult } from './types';
+import {
+  PubNubError,
+  createValidationError,
+  signRequest,
+  generatePNSDK,
+} from '../../components/endpoint';
+
 import utils from '../../utils';
 
-export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetFileUrlResult => {
+export default (modules, { channel, id, name }) => {
   const { config, networking } = modules;
 
   if (!channel) {
@@ -29,7 +33,9 @@ export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetF
     );
   }
 
-  const url = `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(channel)}/files/${id}/${name}`;
+  const url = `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(
+    channel
+  )}/files/${id}/${name}`;
   const params = {};
 
   params.uuid = config.getUUID();
@@ -40,12 +46,22 @@ export default (modules: Modules, { channel, id, name }: GetFileUrlParams): GetF
   }
 
   if (config.secretKey) {
-    signRequest(modules, url, params, {}, {
-      getOperation: () => 'PubNubGetFileUrlOperation',
-    });
+    signRequest(
+      modules,
+      url,
+      params,
+      {},
+      {
+        getOperation: () => 'PubNubGetFileUrlOperation',
+      }
+    );
   }
 
-  const queryParams = Object.keys(params).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
+  const queryParams = Object.keys(params)
+    .map(
+      (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
+    )
+    .join('&');
 
   if (queryParams !== '') {
     return `${networking.getStandardOrigin()}${url}?${queryParams}`;

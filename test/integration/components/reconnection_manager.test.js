@@ -13,11 +13,11 @@ describe('#components/reconnection_manger', () => {
   let pubnub;
   let clock;
 
-  before(() => {
+  beforeAll(() => {
     nock.disableNetConnect();
   });
 
-  after(() => {
+  afterAll(() => {
     nock.enableNetConnect();
   });
 

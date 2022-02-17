@@ -7,7 +7,6 @@ let fs = require('fs');
 let path = require('path');
 
 let packageJSON = require('../../package.json');
-let bowerJSON = require('../../bower.json');
 
 let readMe = fs.readFileSync(
   path.resolve(__dirname, '../../README.md'),
@@ -15,16 +14,15 @@ let readMe = fs.readFileSync(
 );
 
 describe('release should be consistent', () => {
-  it('with bower valid entry point', () => {
-    assert.equal(bowerJSON.main, 'dist/web/pubnub.min.js');
-  });
-
   it('with npm valid entry point', () => {
     assert.equal(packageJSON.main, './lib/node/index.js');
   });
 
   it('with correct version in code', () => {
-    assert.equal(packageJSON.version, new PubNub({uuid: 'myUUID'}).getVersion());
+    assert.equal(
+      packageJSON.version,
+      new PubNub({ uuid: 'myUUID' }).getVersion()
+    );
   });
 
   it('with updated readme', () => {
@@ -35,9 +33,7 @@ describe('release should be consistent', () => {
     );
     assert(
       readMe.indexOf(
-        `https://cdn.pubnub.com/sdk/javascript/pubnub.${
-          packageJSON.version
-        }.min.js`
+        `https://cdn.pubnub.com/sdk/javascript/pubnub.${packageJSON.version}.min.js`
       ) > 1
     );
   });

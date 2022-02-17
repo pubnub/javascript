@@ -1,20 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { ChannelMetadata } from './channel';
+
 import utils from '../../../utils';
 
-export type RemoveChannelMetadataParams = {|
-  channel: string,
-|};
-
-export type RemoveChannelMetadataResult = {|
-  status: 200,
-  data: ChannelMetadata,
-|};
-
-const endpoint: EndpointConfig<RemoveChannelMetadataParams, RemoveChannelMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNRemoveChannelMetadataOperation,
 
   validateParams: (_, params) => {
@@ -23,7 +13,10 @@ const endpoint: EndpointConfig<RemoveChannelMetadataParams, RemoveChannelMetadat
     }
   },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(
+      params.channel
+    )}`,
   useDelete: () => true,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
