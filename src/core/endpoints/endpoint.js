@@ -48,6 +48,8 @@ export type EndpointConfig<TParams, TResult> = {|
   postPayload?: InjectedFunction<[TParams], any>,
   patchPayload?: InjectedFunction<[TParams], any>,
 
+  getAbortSignal?: InjectedFunction<[TParams], any>,
+
   handleResponse?: InjectedMaybeAsyncFunction<[Record, TParams], TResult>,
   handleError?: InjectedMaybeAsyncFunction<[Record, TParams], any>
 |};

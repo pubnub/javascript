@@ -167,7 +167,9 @@ var _default = {
   PNAccessManagerGrant: 'PNAccessManagerGrant',
   PNAccessManagerGrantToken: 'PNAccessManagerGrantToken',
   PNAccessManagerAudit: 'PNAccessManagerAudit',
-  PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken'
+  PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
+  PNHandshakeOperation: 'PNHandshakeOperation',
+  PNReceiveMessagesOperation: 'PNReceiveMessagesOperation'
 };
 exports["default"] = _default;
 module.exports = exports.default;
@@ -377,7 +379,7 @@ var makeDefaultOrigins = function makeDefaultOrigins() {
 
 var _default = function () {
   function _default(_ref) {
-    var _setup$fileUploadPubl, _setup$useRandomIVs;
+    var _setup$fileUploadPubl, _setup$useRandomIVs, _setup$enableSubscrib;
 
     var setup = _ref.setup;
     (0, _classCallCheck2["default"])(this, _default);
@@ -418,6 +420,7 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "customDecrypt", void 0);
     (0, _defineProperty2["default"])(this, "fileUploadPublishRetryLimit", void 0);
     (0, _defineProperty2["default"])(this, "useRandomIVs", void 0);
+    (0, _defineProperty2["default"])(this, "enableSubscribeBeta", void 0);
     this._PNSDKSuffix = {};
     this.instanceId = "pn-".concat(_uuid["default"].createUUID());
     this.secretKey = setup.secretKey || setup.secret_key;
@@ -447,6 +450,11 @@ var _default = function () {
     this.customDecrypt = setup.customDecrypt;
     this.fileUploadPublishRetryLimit = (_setup$fileUploadPubl = setup.fileUploadPublishRetryLimit) !== null && _setup$fileUploadPubl !== void 0 ? _setup$fileUploadPubl : 5;
     this.useRandomIVs = (_setup$useRandomIVs = setup.useRandomIVs) !== null && _setup$useRandomIVs !== void 0 ? _setup$useRandomIVs : true;
+    this.enableSubscribeBeta = (_setup$enableSubscrib = setup.enableSubscribeBeta) !== null && _setup$enableSubscrib !== void 0 ? _setup$enableSubscrib : false;
+
+    if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
+      throw new Error('not implemented');
+    }
 
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
       this.secure = true;
@@ -979,7 +987,8 @@ function _default(modules, endpoint) {
     timeout: endpoint.getRequestTimeout(modules),
     headers: endpoint.getRequestHeaders ? endpoint.getRequestHeaders() : {},
     ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
-    forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null
+    forceBuffered: typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
+    abortSignal: typeof endpoint.getAbortSignal === 'function' ? endpoint.getAbortSignal(modules, incomingParams) : null
   };
   outgoingParams.uuid = config.UUID;
   outgoingParams.pnsdk = generatePNSDK(config);
@@ -1612,13 +1621,13 @@ var _cborSync = _interopRequireDefault(__webpack_require__(24));
 
 var _pubnubCommon = _interopRequireDefault(__webpack_require__(25));
 
-var _networking = _interopRequireDefault(__webpack_require__(114));
+var _networking = _interopRequireDefault(__webpack_require__(117));
 
-var _common = _interopRequireDefault(__webpack_require__(115));
+var _common = _interopRequireDefault(__webpack_require__(118));
 
-var _common2 = _interopRequireDefault(__webpack_require__(116));
+var _common2 = _interopRequireDefault(__webpack_require__(119));
 
-var _titanium = __webpack_require__(117);
+var _titanium = __webpack_require__(120);
 
 var _flow_interfaces = __webpack_require__(2);
 
@@ -2465,6 +2474,12 @@ var timeEndpointConfig = _interopRequireWildcard(__webpack_require__(20));
 
 var subscribeEndpointConfig = _interopRequireWildcard(__webpack_require__(113));
 
+var _handshake = _interopRequireDefault(__webpack_require__(114));
+
+var _receiveMessages = _interopRequireDefault(__webpack_require__(115));
+
+var subscriptionTypes = _interopRequireWildcard(__webpack_require__(116));
+
 var _operations = _interopRequireDefault(__webpack_require__(1));
 
 var _categories = _interopRequireDefault(__webpack_require__(10));
@@ -2503,6 +2518,11 @@ var _default = function () {
     (0, _defineProperty2["default"])(this, "whereNow", void 0);
     (0, _defineProperty2["default"])(this, "getState", void 0);
     (0, _defineProperty2["default"])(this, "setState", void 0);
+    (0, _defineProperty2["default"])(this, "iAmHere", void 0);
+    (0, _defineProperty2["default"])(this, "iAmAway", void 0);
+    (0, _defineProperty2["default"])(this, "setPresenceState", void 0);
+    (0, _defineProperty2["default"])(this, "handshake", void 0);
+    (0, _defineProperty2["default"])(this, "receiveMessages", void 0);
     (0, _defineProperty2["default"])(this, "grant", void 0);
     (0, _defineProperty2["default"])(this, "grantToken", void 0);
     (0, _defineProperty2["default"])(this, "audit", void 0);
@@ -2646,6 +2666,9 @@ var _default = function () {
     this.whereNow = _endpoint["default"].bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = _endpoint["default"].bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+    this.iAmHere = _endpoint["default"].bind(this, modules, presenceHeartbeatEndpointConfig);
+    this.iAmAway = _endpoint["default"].bind(this, modules, presenceLeaveEndpointConfig);
+    this.setPresenceState = _endpoint["default"].bind(this, modules, presenceSetStateConfig);
     this.grant = _endpoint["default"].bind(this, modules, grantEndpointConfig);
     this.grantToken = _endpoint["default"].bind(this, modules, grantTokenEndpointConfig);
     this.audit = _endpoint["default"].bind(this, modules, auditEndpointConfig);
@@ -2683,6 +2706,8 @@ var _default = function () {
 
     this.downloadFile = _endpoint["default"].bind(this, modules, _download_file["default"]);
     this.deleteFile = _endpoint["default"].bind(this, modules, _delete_file["default"]);
+    this.handshake = _endpoint["default"].bind(this, modules, _handshake["default"]);
+    this.receiveMessages = _endpoint["default"].bind(this, modules, _receiveMessages["default"]);
     this.objects = {
       getAllUUIDMetadata: _endpoint["default"].bind(this, modules, _get_all["default"]),
       getUUIDMetadata: _endpoint["default"].bind(this, modules, _get["default"]),
@@ -13315,6 +13340,167 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNHandshakeOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params !== null && params !== void 0 && params.channels) && !(params !== null && params !== void 0 && params.channelGroups)) {
+      return 'channels and channleGroups both should not be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    var channelsString = params.channels ? params.channels.join(',') : ',';
+    return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(_utils["default"].encodeString(channelsString), "/0");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getSubscribeTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  prepareParams: function prepareParams(_, params) {
+    var outParams = {};
+
+    if (params.channelGroups) {
+      outParams['channel-group'] = params.channelGroups.join(',');
+    }
+
+    outParams.tt = 0;
+    return outParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    return {
+      region: response.t.r,
+      timetoken: response.t.t
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 115 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(0);
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _operations = _interopRequireDefault(__webpack_require__(1));
+
+var _utils = _interopRequireDefault(__webpack_require__(3));
+
+var endpoint = {
+  getOperation: function getOperation() {
+    return _operations["default"].PNReceiveMessagesOperation;
+  },
+  validateParams: function validateParams(_, params) {
+    if (!(params !== null && params !== void 0 && params.channels) && !(params !== null && params !== void 0 && params.channelGroups)) {
+      return 'channels and channleGroups both should not be empty';
+    }
+
+    if (!(params !== null && params !== void 0 && params.timetoken)) {
+      return 'timetoken can not be empty';
+    }
+
+    if (!(params !== null && params !== void 0 && params.region)) {
+      return 'region can not be empty';
+    }
+  },
+  getURL: function getURL(_ref, params) {
+    var config = _ref.config;
+    var channelsString = params.channels ? params.channels.join(',') : ',';
+    return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(_utils["default"].encodeString(channelsString), "/0");
+  },
+  getRequestTimeout: function getRequestTimeout(_ref2) {
+    var config = _ref2.config;
+    return config.getSubscribeTimeout();
+  },
+  isAuthSupported: function isAuthSupported() {
+    return true;
+  },
+  getAbortSignal: function getAbortSignal(_, params) {
+    return params.abortSignal;
+  },
+  prepareParams: function prepareParams(_, params) {
+    var outParams = {};
+
+    if (params.channelGroups) {
+      outParams['channel-group'] = params.channelGroups.join(',');
+    }
+
+    outParams.tt = params.timetoken;
+    outParams.tr = params.region;
+    return outParams;
+  },
+  handleResponse: function handleResponse(_, response) {
+    var parsedMessages = [];
+    response.m.forEach(function (envelope) {
+      var parsedMessage = {
+        shard: parseInt(envelope.a, 10),
+        subscriptionMatch: envelope.b,
+        channel: envelope.c,
+        messageType: envelope.e,
+        payload: envelope.d,
+        flags: envelope.f,
+        issuingClientId: envelope.i,
+        subscribeKey: envelope.k,
+        originationTimetoken: envelope.o,
+        publishMetaData: {
+          timetoken: envelope.p.t,
+          region: envelope.p.r
+        }
+      };
+      parsedMessages.push(parsedMessage);
+    });
+    return {
+      messages: parsedMessages,
+      metadata: {
+        region: response.t.r,
+        timetoken: response.t.t
+      }
+    };
+  }
+};
+var _default = endpoint;
+exports["default"] = _default;
+module.exports = exports.default;
+
+/***/ }),
+/* 116 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/***/ }),
+/* 117 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(0);
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(5));
 
 var _createClass2 = _interopRequireDefault(__webpack_require__(6));
@@ -13472,7 +13658,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 115 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13516,7 +13702,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 116 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13575,7 +13761,7 @@ exports["default"] = _default;
 module.exports = exports.default;
 
 /***/ }),
-/* 117 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13591,7 +13777,7 @@ exports.post = post;
 
 var _flow_interfaces = __webpack_require__(2);
 
-var _utils = __webpack_require__(118);
+var _utils = __webpack_require__(121);
 
 function log(url, qs, res) {
   var _pickLogger = function _pickLogger() {
@@ -13689,7 +13875,7 @@ function del(params, endpoint, callback) {
 }
 
 /***/ }),
-/* 118 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
