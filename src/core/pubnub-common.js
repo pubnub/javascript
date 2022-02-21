@@ -106,10 +106,13 @@ import * as fetchMessagesEndpointConfig from './endpoints/fetch_messages';
 import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
 
+// subscription utilities
+import handshakeEndpointConfig from './endpoints/subscriptionUtils/handshake';
+import receiveMessagesConfig from './endpoints/subscriptionUtils/receiveMessages';
+
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
-import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
 
 export default class {
@@ -128,21 +131,25 @@ export default class {
   messageCounts;
   fetchMessages;
 
-  //
   channelGroups;
-  //
+
   push;
-  //
+
   hereNow;
   whereNow;
   getState;
   setState;
-  //
+  iAmHere;
+  iAmAway;
+  setPresenceState;
+  handshake;
+  receiveMessages;
+
   grant;
   grantToken;
   audit;
   revokeToken;
-  //
+
   subscribe;
   signal;
   presence;
@@ -353,8 +360,27 @@ export default class {
       presenceWhereNowEndpointConfig
     );
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
+
     this.setState =
       subscriptionManager.adaptStateChange.bind(subscriptionManager);
+
+    /* presence utilities */
+    this.iAmHere = endpointCreator.bind(
+      this,
+      modules,
+      presenceHeartbeatEndpointConfig
+    );
+    this.iAmAway = endpointCreator.bind(
+      this,
+      modules,
+      presenceLeaveEndpointConfig
+    );
+    this.setPresenceState = endpointCreator.bind(
+      this,
+      modules,
+      presenceSetStateConfig
+    );
+
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(
@@ -453,6 +479,18 @@ export default class {
       this,
       modules,
       deleteFileEndpointConfig
+    );
+
+    this.handshake = endpointCreator.bind(
+      this,
+      modules,
+      handshakeEndpointConfig
+    );
+
+    this.receiveMessages = endpointCreator.bind(
+      this,
+      modules,
+      receiveMessagesConfig
     );
 
     // Objects API v2

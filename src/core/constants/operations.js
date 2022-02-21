@@ -87,4 +87,8 @@ export default {
   PNAccessManagerAudit: 'PNAccessManagerAudit',
   PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
   //
+
+  // subscription utilities
+  PNHandshakeOperation: 'PNHandshakeOperation',
+  PNReceiveMessagesOperation: 'PNReceiveMessagesOperation'
 };

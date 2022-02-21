@@ -51,6 +51,12 @@ function xdr(superagentConstruct, endpoint, callback) {
 
   let sc = superagentConstruct;
 
+  if (endpoint.abortSignal) {
+    endpoint.abortSignal.on('abort', () => {
+      sc.abort();
+    });
+  }
+
   if (endpoint.forceBuffered === true) {
     if (typeof Blob === 'undefined') {
       sc = sc.buffer().responseType('arraybuffer');
