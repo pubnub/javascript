@@ -2,17 +2,11 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import {
-  InternalSetupStruct,
-  KeepAliveStruct,
-  ProxyStruct,
-} from '../flow_interfaces';
 
 const PRESENCE_TIMEOUT_MINIMUM = 20;
 const PRESENCE_TIMEOUT_DEFAULT = 300;
 
-const makeDefaultOrigins = () =>
-  Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
+const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
 
 export default class {
   subscribeKey;
@@ -160,14 +154,8 @@ export default class {
 
     this.setFilterExpression(setup.filterExpression);
 
-    if (
-      typeof setup.origin !== 'string' &&
-      !Array.isArray(setup.origin) &&
-      setup.origin !== undefined
-    ) {
-      throw new Error(
-        'Origin must be either undefined, a string or a list of strings.'
-      );
+    if (typeof setup.origin !== 'string' && !Array.isArray(setup.origin) && setup.origin !== undefined) {
+      throw new Error('Origin must be either undefined, a string or a list of strings.');
     }
 
     this.origin = setup.origin || makeDefaultOrigins();
@@ -190,9 +178,9 @@ export default class {
     // flag for beta subscribe feature enablement
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
-    if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
-      throw new Error('not implemented');
-    }
+    // if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
+    //   throw new Error('not implemented');
+    // }
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -203,8 +191,7 @@ export default class {
     this.suppressLeaveEvents = setup.suppressLeaveEvents || false;
 
     this.announceFailedHeartbeats = setup.announceFailedHeartbeats || true;
-    this.announceSuccessfulHeartbeats =
-      setup.announceSuccessfulHeartbeats || false;
+    this.announceSuccessfulHeartbeats = setup.announceSuccessfulHeartbeats || false;
 
     this.useInstanceId = setup.useInstanceId || false;
     this.useRequestId = setup.useRequestId || false;
@@ -278,10 +265,7 @@ export default class {
       this._presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
 
       // eslint-disable-next-line no-console
-      console.log(
-        'WARNING: Presence timeout is less than the minimum. Using minimum value: ',
-        this._presenceTimeout
-      );
+      console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', this._presenceTimeout);
     }
 
     this.setHeartbeatInterval(this._presenceTimeout / 2 - 1);
@@ -339,9 +323,6 @@ export default class {
   }
 
   _getPnsdkSuffix(separator) {
-    return Object.keys(this._PNSDKSuffix).reduce(
-      (result, key) => result + separator + this._PNSDKSuffix[key],
-      ''
-    );
+    return Object.keys(this._PNSDKSuffix).reduce((result, key) => result + separator + this._PNSDKSuffix[key], '');
   }
 }

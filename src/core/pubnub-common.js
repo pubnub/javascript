@@ -1,14 +1,12 @@
-/**       */
-
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
-import SubscriptionManager from './components/subscription_manager';
+import SubscriptionManager from './components/subscription_manager'; // HERE!
 import TelemetryManager from './components/telemetry_manager';
 import NotificationsPayload from './components/push_payload';
 import ListenerManager from './components/listener_manager';
 import TokenManager from './components/token_manager';
-
 import endpointCreator from './components/endpoint';
+import { EventEngine } from '../event-engine';
 
 import { deprecated } from './utils';
 
@@ -48,27 +46,16 @@ import deleteFileEndpointConfig from './endpoints/file_upload/delete_file';
 
 // Object API v2
 import getAllUUIDMetadataEndpointConfig from './endpoints/objects/uuid/get_all';
-
 import getUUIDMetadataEndpointConfig from './endpoints/objects/uuid/get';
-
 import setUUIDMetadataEndpointConfig from './endpoints/objects/uuid/set';
-
 import removeUUIDMetadataEndpointConfig from './endpoints/objects/uuid/remove';
-
 import getAllChannelMetadataEndpointConfig from './endpoints/objects/channel/get_all';
-
 import getChannelMetadataEndpointConfig from './endpoints/objects/channel/get';
-
 import setChannelMetadataEndpointConfig from './endpoints/objects/channel/set';
-
 import removeChannelMetadataEndpointConfig from './endpoints/objects/channel/remove';
-
 import getMembersV2EndpointConfig from './endpoints/objects/member/get';
-
 import setMembersV2EndpointConfig from './endpoints/objects/member/set';
-
 import getMembershipsV2EndpointConfig from './endpoints/objects/membership/get';
-
 import setMembershipsV2EndpointConfig from './endpoints/objects/membership/set';
 
 // Objects API
@@ -262,56 +249,66 @@ export default class {
 
     this.File = setup.PubNubFile;
 
-    this.encryptFile = (key, file) =>
-      cryptography.encryptFile(key, file, this.File);
-    this.decryptFile = (key, file) =>
-      cryptography.decryptFile(key, file, this.File);
+    this.encryptFile = (key, file) => cryptography.encryptFile(key, file, this.File);
+    this.decryptFile = (key, file) => cryptography.decryptFile(key, file, this.File);
 
-    const timeEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      timeEndpointConfig
-    );
-    const leaveEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      presenceLeaveEndpointConfig
-    );
-    const heartbeatEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      presenceHeartbeatEndpointConfig
-    );
-    const setStateEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      presenceSetStateConfig
-    );
-    const subscribeEndpoint = endpointCreator.bind(
-      this,
-      modules,
-      subscribeEndpointConfig
-    );
+    const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
+    const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    const heartbeatEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    const setStateEndpoint = endpointCreator.bind(this, modules, presenceSetStateConfig);
+    const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
+
+    /* Subscribe Beta */
+    const handshakeEndpoint = endpointCreator.bind(this, modules, handshakeEndpointConfig);
+    const receiveMessagesEndpoint = endpointCreator.bind(this, modules, receiveMessagesConfig);
+    const iAmHereEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    const iAmAwayEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    const setPresenceStateEndpoint = endpointCreator.bind(this, modules, presenceSetStateConfig);
 
     // managers
     const listenerManager = (this._listenerManager = new ListenerManager());
 
-    const subscriptionManager = new SubscriptionManager({
-      timeEndpoint,
-      leaveEndpoint,
-      heartbeatEndpoint,
-      setStateEndpoint,
-      subscribeEndpoint,
-      crypto: modules.crypto,
-      config: modules.config,
-      listenerManager,
-      getFileUrl: (params) => getFileUrlFunction(modules, params),
-    });
+    let subscriptionManager;
+
+    if (config.enableSubscribeBeta) {
+      subscriptionManager = new EventEngine({
+        handshakeEndpoint,
+        receiveEndpoint: receiveMessagesEndpoint,
+      });
+    } else {
+      subscriptionManager = new SubscriptionManager({
+        // HERE!
+        timeEndpoint,
+        leaveEndpoint,
+        heartbeatEndpoint,
+        setStateEndpoint,
+        subscribeEndpoint,
+        crypto: modules.crypto,
+        config: modules.config,
+        listenerManager,
+        getFileUrl: (params) => getFileUrlFunction(modules, params),
+      });
+    }
+
+    this.sm = subscriptionManager;
+
+    // subscription related methods
+    // this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager); // HERE!
+    // this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager); // HERE!
+    // this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager); // HERE!
+    // this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager); // HERE!
+    // this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager); // HERE!
+
+    // subscription related methods
+    this.subscribe = subscriptionManager.subscribe.bind(subscriptionManager); // HERE!
+    // this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager); // HERE!
+    this.unsubscribe = subscriptionManager.unsubscribe.bind(subscriptionManager); // HERE!
+    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager); // HERE!
+    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager); // HERE!
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
-    this.removeAllListeners =
-      listenerManager.removeAllListeners.bind(listenerManager);
+    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
 
     this.parseToken = tokenManager.parseToken.bind(tokenManager);
     this.setToken = tokenManager.setToken.bind(tokenManager);
@@ -320,80 +317,30 @@ export default class {
     /* channel groups */
     this.channelGroups = {
       listGroups: endpointCreator.bind(this, modules, listChannelGroupsConfig),
-      listChannels: endpointCreator.bind(
-        this,
-        modules,
-        listChannelsInChannelGroupConfig
-      ),
-      addChannels: endpointCreator.bind(
-        this,
-        modules,
-        addChannelsChannelGroupConfig
-      ),
-      removeChannels: endpointCreator.bind(
-        this,
-        modules,
-        removeChannelsChannelGroupConfig
-      ),
-      deleteGroup: endpointCreator.bind(
-        this,
-        modules,
-        deleteChannelGroupConfig
-      ),
+      listChannels: endpointCreator.bind(this, modules, listChannelsInChannelGroupConfig),
+      addChannels: endpointCreator.bind(this, modules, addChannelsChannelGroupConfig),
+      removeChannels: endpointCreator.bind(this, modules, removeChannelsChannelGroupConfig),
+      deleteGroup: endpointCreator.bind(this, modules, deleteChannelGroupConfig),
     };
     /* push */
     this.push = {
       addChannels: endpointCreator.bind(this, modules, addPushChannelsConfig),
-      removeChannels: endpointCreator.bind(
-        this,
-        modules,
-        removePushChannelsConfig
-      ),
+      removeChannels: endpointCreator.bind(this, modules, removePushChannelsConfig),
       deleteDevice: endpointCreator.bind(this, modules, removeDevicePushConfig),
       listChannels: endpointCreator.bind(this, modules, listPushChannelsConfig),
     };
+
     /* presence */
     this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
-    this.whereNow = endpointCreator.bind(
-      this,
-      modules,
-      presenceWhereNowEndpointConfig
-    );
+    this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
-
-    this.setState =
-      subscriptionManager.adaptStateChange.bind(subscriptionManager);
-
-    /* presence utilities */
-    this.iAmHere = endpointCreator.bind(
-      this,
-      modules,
-      presenceHeartbeatEndpointConfig
-    );
-    this.iAmAway = endpointCreator.bind(
-      this,
-      modules,
-      presenceLeaveEndpointConfig
-    );
-    this.setPresenceState = endpointCreator.bind(
-      this,
-      modules,
-      presenceSetStateConfig
-    );
+    // this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
 
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
-    this.grantToken = endpointCreator.bind(
-      this,
-      modules,
-      grantTokenEndpointConfig
-    );
+    this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
-    this.revokeToken = endpointCreator.bind(
-      this,
-      modules,
-      revokeTokenEndpointConfig
-    );
+    this.revokeToken = endpointCreator.bind(this, modules, revokeTokenEndpointConfig);
     //
     this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);
 
@@ -406,143 +353,45 @@ export default class {
     this.signal = endpointCreator.bind(this, modules, signalEndpointConfig);
 
     this.history = endpointCreator.bind(this, modules, historyEndpointConfig);
-    this.deleteMessages = endpointCreator.bind(
-      this,
-      modules,
-      deleteMessagesEndpointConfig
-    );
-    this.messageCounts = endpointCreator.bind(
-      this,
-      modules,
-      messageCountsEndpointConfig
-    );
-    this.fetchMessages = endpointCreator.bind(
-      this,
-      modules,
-      fetchMessagesEndpointConfig
-    );
+    this.deleteMessages = endpointCreator.bind(this, modules, deleteMessagesEndpointConfig);
+    this.messageCounts = endpointCreator.bind(this, modules, messageCountsEndpointConfig);
+    this.fetchMessages = endpointCreator.bind(this, modules, fetchMessagesEndpointConfig);
 
     // Actions API
 
-    this.addMessageAction = endpointCreator.bind(
-      this,
-      modules,
-      addMessageActionEndpointConfig
-    );
-
-    this.removeMessageAction = endpointCreator.bind(
-      this,
-      modules,
-      removeMessageActionEndpointConfig
-    );
-
-    this.getMessageActions = endpointCreator.bind(
-      this,
-      modules,
-      getMessageActionEndpointConfig
-    );
+    this.addMessageAction = endpointCreator.bind(this, modules, addMessageActionEndpointConfig);
+    this.removeMessageAction = endpointCreator.bind(this, modules, removeMessageActionEndpointConfig);
+    this.getMessageActions = endpointCreator.bind(this, modules, getMessageActionEndpointConfig);
 
     // File Upload API v1
 
-    this.listFiles = endpointCreator.bind(
-      this,
-      modules,
-      listFilesEndpointConfig
-    );
+    this.listFiles = endpointCreator.bind(this, modules, listFilesEndpointConfig);
 
-    const generateUploadUrl = endpointCreator.bind(
-      this,
-      modules,
-      generateUploadUrlEndpointConfig
-    );
-    this.publishFile = endpointCreator.bind(
-      this,
-      modules,
-      publishFileEndpointConfig
-    );
-
+    const generateUploadUrl = endpointCreator.bind(this, modules, generateUploadUrlEndpointConfig);
+    this.publishFile = endpointCreator.bind(this, modules, publishFileEndpointConfig);
     this.sendFile = sendFileFunction({
       generateUploadUrl,
       publishFile: this.publishFile,
       modules,
     });
-
     this.getFileUrl = (params) => getFileUrlFunction(modules, params);
-
-    this.downloadFile = endpointCreator.bind(
-      this,
-      modules,
-      downloadFileEndpointConfig
-    );
-
-    this.deleteFile = endpointCreator.bind(
-      this,
-      modules,
-      deleteFileEndpointConfig
-    );
-
-    this.handshake = endpointCreator.bind(
-      this,
-      modules,
-      handshakeEndpointConfig
-    );
-
-    this.receiveMessages = endpointCreator.bind(
-      this,
-      modules,
-      receiveMessagesConfig
-    );
+    this.downloadFile = endpointCreator.bind(this, modules, downloadFileEndpointConfig);
+    this.deleteFile = endpointCreator.bind(this, modules, deleteFileEndpointConfig);
 
     // Objects API v2
 
     this.objects = {
-      getAllUUIDMetadata: endpointCreator.bind(
-        this,
-        modules,
-        getAllUUIDMetadataEndpointConfig
-      ),
-      getUUIDMetadata: endpointCreator.bind(
-        this,
-        modules,
-        getUUIDMetadataEndpointConfig
-      ),
-      setUUIDMetadata: endpointCreator.bind(
-        this,
-        modules,
-        setUUIDMetadataEndpointConfig
-      ),
-      removeUUIDMetadata: endpointCreator.bind(
-        this,
-        modules,
-        removeUUIDMetadataEndpointConfig
-      ),
+      getAllUUIDMetadata: endpointCreator.bind(this, modules, getAllUUIDMetadataEndpointConfig),
+      getUUIDMetadata: endpointCreator.bind(this, modules, getUUIDMetadataEndpointConfig),
+      setUUIDMetadata: endpointCreator.bind(this, modules, setUUIDMetadataEndpointConfig),
+      removeUUIDMetadata: endpointCreator.bind(this, modules, removeUUIDMetadataEndpointConfig),
 
-      getAllChannelMetadata: endpointCreator.bind(
-        this,
-        modules,
-        getAllChannelMetadataEndpointConfig
-      ),
-      getChannelMetadata: endpointCreator.bind(
-        this,
-        modules,
-        getChannelMetadataEndpointConfig
-      ),
-      setChannelMetadata: endpointCreator.bind(
-        this,
-        modules,
-        setChannelMetadataEndpointConfig
-      ),
-      removeChannelMetadata: endpointCreator.bind(
-        this,
-        modules,
-        removeChannelMetadataEndpointConfig
-      ),
+      getAllChannelMetadata: endpointCreator.bind(this, modules, getAllChannelMetadataEndpointConfig),
+      getChannelMetadata: endpointCreator.bind(this, modules, getChannelMetadataEndpointConfig),
+      setChannelMetadata: endpointCreator.bind(this, modules, setChannelMetadataEndpointConfig),
+      removeChannelMetadata: endpointCreator.bind(this, modules, removeChannelMetadataEndpointConfig),
 
-      getChannelMembers: endpointCreator.bind(
-        this,
-        modules,
-        getMembersV2EndpointConfig
-      ),
+      getChannelMembers: endpointCreator.bind(this, modules, getMembersV2EndpointConfig),
       setChannelMembers: (parameters, ...rest) =>
         endpointCreator.call(
           this,
@@ -566,11 +415,7 @@ export default class {
           ...rest
         ),
 
-      getMemberships: endpointCreator.bind(
-        this,
-        modules,
-        getMembershipsV2EndpointConfig
-      ),
+      getMemberships: endpointCreator.bind(this, modules, getMembershipsV2EndpointConfig),
       setMemberships: (parameters, ...rest) =>
         endpointCreator.call(
           this,
@@ -597,106 +442,40 @@ export default class {
 
     // Objects API
 
-    this.createUser = deprecated(
-      endpointCreator.bind(this, modules, createUserEndpointConfig)
-    );
-
-    this.updateUser = deprecated(
-      endpointCreator.bind(this, modules, updateUserEndpointConfig)
-    );
-
-    this.deleteUser = deprecated(
-      endpointCreator.bind(this, modules, deleteUserEndpointConfig)
-    );
-
-    this.getUser = deprecated(
-      endpointCreator.bind(this, modules, getUserEndpointConfig)
-    );
-
-    this.getUsers = deprecated(
-      endpointCreator.bind(this, modules, getUsersEndpointConfig)
-    );
-
-    this.createSpace = deprecated(
-      endpointCreator.bind(this, modules, createSpaceEndpointConfig)
-    );
-
-    this.updateSpace = deprecated(
-      endpointCreator.bind(this, modules, updateSpaceEndpointConfig)
-    );
-
-    this.deleteSpace = deprecated(
-      endpointCreator.bind(this, modules, deleteSpaceEndpointConfig)
-    );
-
-    this.getSpaces = deprecated(
-      endpointCreator.bind(this, modules, getSpacesEndpointConfig)
-    );
-
-    this.getSpace = deprecated(
-      endpointCreator.bind(this, modules, getSpaceEndpointConfig)
-    );
-
-    this.addMembers = deprecated(
-      endpointCreator.bind(this, modules, addMembersEndpointConfig)
-    );
-
-    this.updateMembers = deprecated(
-      endpointCreator.bind(this, modules, updateMembersEndpointConfig)
-    );
-
-    this.removeMembers = deprecated(
-      endpointCreator.bind(this, modules, removeMembersEndpointConfig)
-    );
-
-    this.getMembers = deprecated(
-      endpointCreator.bind(this, modules, getMembersEndpointConfig)
-    );
-
-    this.getMemberships = deprecated(
-      endpointCreator.bind(this, modules, getMembershipsEndpointConfig)
-    );
-
-    this.joinSpaces = deprecated(
-      endpointCreator.bind(this, modules, joinSpacesEndpointConfig)
-    );
-
-    this.updateMemberships = deprecated(
-      endpointCreator.bind(this, modules, updateMembershipsEndpointConfig)
-    );
-
-    this.leaveSpaces = deprecated(
-      endpointCreator.bind(this, modules, leaveSpacesEndpointConfig)
-    );
+    this.createUser = deprecated(endpointCreator.bind(this, modules, createUserEndpointConfig));
+    this.updateUser = deprecated(endpointCreator.bind(this, modules, updateUserEndpointConfig));
+    this.deleteUser = deprecated(endpointCreator.bind(this, modules, deleteUserEndpointConfig));
+    this.getUser = deprecated(endpointCreator.bind(this, modules, getUserEndpointConfig));
+    this.getUsers = deprecated(endpointCreator.bind(this, modules, getUsersEndpointConfig));
+    this.createSpace = deprecated(endpointCreator.bind(this, modules, createSpaceEndpointConfig));
+    this.updateSpace = deprecated(endpointCreator.bind(this, modules, updateSpaceEndpointConfig));
+    this.deleteSpace = deprecated(endpointCreator.bind(this, modules, deleteSpaceEndpointConfig));
+    this.getSpaces = deprecated(endpointCreator.bind(this, modules, getSpacesEndpointConfig));
+    this.getSpace = deprecated(endpointCreator.bind(this, modules, getSpaceEndpointConfig));
+    this.addMembers = deprecated(endpointCreator.bind(this, modules, addMembersEndpointConfig));
+    this.updateMembers = deprecated(endpointCreator.bind(this, modules, updateMembersEndpointConfig));
+    this.removeMembers = deprecated(endpointCreator.bind(this, modules, removeMembersEndpointConfig));
+    this.getMembers = deprecated(endpointCreator.bind(this, modules, getMembersEndpointConfig));
+    this.getMemberships = deprecated(endpointCreator.bind(this, modules, getMembershipsEndpointConfig));
+    this.joinSpaces = deprecated(endpointCreator.bind(this, modules, joinSpacesEndpointConfig));
+    this.updateMemberships = deprecated(endpointCreator.bind(this, modules, updateMembershipsEndpointConfig));
+    this.leaveSpaces = deprecated(endpointCreator.bind(this, modules, leaveSpacesEndpointConfig));
 
     this.time = timeEndpoint;
 
-    // subscription related methods
-    this.subscribe =
-      subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
-    this.presence =
-      subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
-    this.unsubscribe =
-      subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
-    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
-    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-
     this.destroy = (isOffline) => {
-      subscriptionManager.unsubscribeAll(isOffline);
-      subscriptionManager.disconnect();
+      subscriptionManager.unsubscribeAll(isOffline); // HERE!
+      subscriptionManager.disconnect(); // HERE!
     };
 
     // --- deprecated  ------------------
     this.stop = this.destroy; // --------
     // --- deprecated  ------------------
 
-    this.unsubscribeAll =
-      subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager); // HERE!
 
-    this.getSubscribedChannels =
-      subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
-    this.getSubscribedChannelGroups =
-      subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager); // HERE!
+    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager); // HERE!
 
     // mount crypto
     this.encrypt = crypto.encrypt.bind(crypto);
@@ -708,16 +487,10 @@ export default class {
     this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
     this.getUUID = modules.config.getUUID.bind(modules.config);
     this.setUUID = modules.config.setUUID.bind(modules.config);
-    this.getFilterExpression = modules.config.getFilterExpression.bind(
-      modules.config
-    );
-    this.setFilterExpression = modules.config.setFilterExpression.bind(
-      modules.config
-    );
+    this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
+    this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
 
-    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(
-      modules.config
-    );
+    this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 
     if (networking.hasModule('proxy')) {
       this.setProxy = (proxy) => {
