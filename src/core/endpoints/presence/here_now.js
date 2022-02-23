@@ -4,50 +4,39 @@ import { HereNowArguments, ModulesInject, StatusAnnouncement } from '../../flow_
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNHereNowOperation;
 }
 
-export function validateParams(modules               ) {
-  let { config } = modules;
+export function validateParams(modules) {
+  const { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams                  
-)         {
-  let { config } = modules;
-  let { channels = [], channelGroups = [] } = incomingParams;
+export function getURL(modules, incomingParams) {
+  const { config } = modules;
+  const { channels = [], channelGroups = [] } = incomingParams;
   let baseURL = `/v2/presence/sub-key/${config.subscribeKey}`;
 
   if (channels.length > 0 || channelGroups.length > 0) {
-    let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    const stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
     baseURL += `/channel/${utils.encodeString(stringifiedChannels)}`;
   }
 
   return baseURL;
 }
 
-export function getRequestTimeout({ config }               )         {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported()          {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                  
-)         {
-  let {
-    channelGroups = [],
-    includeUUIDs = true,
-    includeState = false,
-    queryParameters = {}
-  } = incomingParams;
+export function prepareParams(modules, incomingParams) {
+  const { channelGroups = [], includeUUIDs = true, includeState = false, queryParameters = {} } = incomingParams;
   let params = {};
 
   if (!includeUUIDs) params.disable_uuids = 1;
@@ -62,21 +51,12 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules               ,
-  serverResponse        ,
-  incomingParams                  
-)         {
-  let {
-    channels = [],
-    channelGroups = [],
-    includeUUIDs = true,
-    includeState = false,
-  } = incomingParams;
+export function handleResponse(modules, serverResponse, incomingParams) {
+  const { channels = [], channelGroups = [], includeUUIDs = true, includeState = false } = incomingParams;
 
-  let prepareSingularChannel = () => {
-    let response = {};
-    let occupantsList = [];
+  const prepareSingularChannel = () => {
+    const response = {};
+    const occupantsList = [];
     response.totalChannels = 1;
     response.totalOccupancy = serverResponse.occupancy;
     response.channels = {};
@@ -101,15 +81,15 @@ export function handleResponse(
     return response;
   };
 
-  let prepareMultipleChannel = () => {
-    let response = {};
+  const prepareMultipleChannel = () => {
+    const response = {};
     response.totalChannels = serverResponse.payload.total_channels;
     response.totalOccupancy = serverResponse.payload.total_occupancy;
     response.channels = {};
 
     Object.keys(serverResponse.payload.channels).forEach((channelName) => {
-      let channelEntry = serverResponse.payload.channels[channelName];
-      let occupantsList = [];
+      const channelEntry = serverResponse.payload.channels[channelName];
+      const occupantsList = [];
       response.channels[channelName] = {
         occupants: occupantsList,
         name: channelName,
@@ -136,11 +116,7 @@ export function handleResponse(
   };
 
   let response;
-  if (
-    channels.length > 1 ||
-    channelGroups.length > 0 ||
-    (channelGroups.length === 0 && channels.length === 0)
-  ) {
+  if (channels.length > 1 || channelGroups.length > 0 || (channelGroups.length === 0 && channels.length === 0)) {
     response = prepareMultipleChannel();
   } else {
     response = prepareSingularChannel();
@@ -149,8 +125,11 @@ export function handleResponse(
   return response;
 }
 
-export function handleError(modules               , params                  , status                    ) {
+export function handleError(modules, params, status) {
   if (status.statusCode === 402 && !this.getURL(modules, params).includes('channel')) {
-    status.errorData.message = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
+    status.errorData.message =
+      'You have tried to perform a Global Here Now operation, ' +
+      'your keyset configuration does not support that. Please provide a channel, ' +
+      'or enable the Global Here Now feature from the Portal.';
   }
 }

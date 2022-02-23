@@ -1,11 +1,10 @@
 /**       */
 
-                                                           
 import operationConstants from '../../constants/operations';
-                                                                    
+
 import utils from '../../utils';
 
-const preparePayload = ({ crypto, config }         , payload     )         => {
+const preparePayload = ({ crypto, config }, payload) => {
   let stringifiedPayload = JSON.stringify(payload);
 
   if (config.cipherKey) {
@@ -16,7 +15,7 @@ const preparePayload = ({ crypto, config }         , payload     )         => {
   return stringifiedPayload || '';
 };
 
-const endpoint                                                       = {
+const endpoint = {
   getOperation: () => operationConstants.PNPublishFileOperation,
 
   validateParams: (_, params) => {
@@ -46,7 +45,9 @@ const endpoint                                                       = {
 
     const payload = preparePayload(modules, message);
 
-    return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${utils.encodeString(params.channel)}/0/${utils.encodeString(payload)}`;
+    return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${utils.encodeString(
+      params.channel,
+    )}/0/${utils.encodeString(payload)}`;
   },
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
@@ -71,7 +72,7 @@ const endpoint                                                       = {
     return outParams;
   },
 
-  handleResponse: (_, response)                    => ({
+  handleResponse: (_, response) => ({
     timetoken: response['2'],
   }),
 };

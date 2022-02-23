@@ -11,29 +11,24 @@ import {
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNSubscribeOperation;
 }
 
-export function validateParams(modules               ) {
-  let { config } = modules;
+export function validateParams(modules) {
+  const { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams                    
-)         {
-  let { config } = modules;
-  let { channels = [] } = incomingParams;
-  let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(
-    stringifiedChannels
-  )}/0`;
+export function getURL(modules, incomingParams) {
+  const { config } = modules;
+  const { channels = [] } = incomingParams;
+  const stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(stringifiedChannels)}/0`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getSubscribeTimeout();
 }
 
@@ -41,18 +36,9 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  { config }               ,
-  incomingParams                    
-)         {
-  let {
-    state,
-    channelGroups = [],
-    timetoken,
-    filterExpression,
-    region,
-  } = incomingParams;
-  const params         = {
+export function prepareParams({ config }, incomingParams) {
+  const { state, channelGroups = [], timetoken, filterExpression, region } = incomingParams;
+  const params = {
     heartbeat: config.getPresenceTimeout(),
   };
 
@@ -79,18 +65,15 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules               ,
-  serverResponse        
-)                    {
-  const messages                          = [];
+export function handleResponse(modules, serverResponse) {
+  const messages = [];
 
   serverResponse.m.forEach((rawMessage) => {
-    let publishMetaData                  = {
+    const publishMetaData = {
       publishTimetoken: rawMessage.p.t,
       region: rawMessage.p.r,
     };
-    let parsedMessage                   = {
+    const parsedMessage = {
       shard: parseInt(rawMessage.a, 10),
       subscriptionMatch: rawMessage.b,
       channel: rawMessage.c,
@@ -106,7 +89,7 @@ export function handleResponse(
     messages.push(parsedMessage);
   });
 
-  const metadata                    = {
+  const metadata = {
     timetoken: serverResponse.t.t,
     region: serverResponse.t.r,
   };

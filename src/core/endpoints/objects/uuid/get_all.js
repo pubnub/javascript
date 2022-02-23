@@ -1,36 +1,13 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                           
 
-                                         
-                  
-                                                  
-                 
-           
-                  
-                  
-     
-              
-                         
-                           
-     
-   
-
-                                         
-              
-                       
-                      
-                
-                
-   
-
-const endpoint                                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetAllUUIDMetadataOperation,
 
-  // No required parameters.
-  validateParams: () => {},
+  validateParams: () => {
+    // No required parameters.
+  },
 
   getURL: ({ config }) => `/v2/objects/${config.subscribeKey}/uuids`,
 
@@ -67,16 +44,15 @@ const endpoint                                                                  
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
         if (value === 'asc' || value === 'desc') {
           return `${key}:${value}`;
-        } else {
-          return key;
         }
+        return key;
       });
     }
 
     return queryParams;
   },
 
-  handleResponse: (_, response)                           => ({
+  handleResponse: (_, response) => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

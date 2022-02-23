@@ -1,20 +1,18 @@
 import TimeEndpoint from '../endpoints/time';
 import { StatusAnnouncement } from '../flow_interfaces';
 
-                                
-                            
- 
-
 export default class {
-  _reconnectionCallback          ;
-  _timeEndpoint              ;
-  _timeTimer        ;
+  _reconnectionCallback;
 
-  constructor({ timeEndpoint }                         ) {
+  _timeEndpoint;
+
+  _timeTimer;
+
+  constructor({ timeEndpoint }) {
     this._timeEndpoint = timeEndpoint;
   }
 
-  onReconnection(reconnectionCallback          ) {
+  onReconnection(reconnectionCallback) {
     this._reconnectionCallback = reconnectionCallback;
   }
 
@@ -27,7 +25,7 @@ export default class {
   }
 
   _performTimeLoop() {
-    this._timeEndpoint((status                    ) => {
+    this._timeEndpoint((status) => {
       if (!status.error) {
         clearInterval(this._timeTimer);
         this._reconnectionCallback();

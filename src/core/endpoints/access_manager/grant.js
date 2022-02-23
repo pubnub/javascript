@@ -3,35 +3,40 @@
 import { GrantArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNAccessManagerGrant;
 }
 
-export function validateParams(modules               , incomingParams                ) {
-  let { config } = modules;
+export function validateParams(modules, incomingParams) {
+  const { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
   if (!config.publishKey) return 'Missing Publish Key';
   if (!config.secretKey) return 'Missing Secret Key';
-  if (incomingParams.uuids != null && !incomingParams.authKeys) { return 'authKeys are required for grant request on uuids'; }
-  if (incomingParams.uuids != null && (incomingParams.channels != null || incomingParams.channelGroups != null)) { return 'Both channel/channelgroup and uuid cannot be used in the same request'; }
+  if (incomingParams.uuids != null && !incomingParams.authKeys) {
+    return 'authKeys are required for grant request on uuids';
+  }
+  if (incomingParams.uuids != null && (incomingParams.channels != null || incomingParams.channelGroups != null)) {
+    return 'Both channel/channelgroup and uuid cannot be used in the same request';
+  }
 }
 
-export function getURL(modules               )         {
-  let { config } = modules;
+export function getURL(modules) {
+  const { config } = modules;
   return `/v2/auth/grant/sub-key/${config.subscribeKey}`;
 }
 
-export function getRequestTimeout({ config }               )         {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported()          {
+export function isAuthSupported() {
   return false;
 }
 
-export function prepareParams(modules               , incomingParams                )         {
-  const { channels = [],
+export function prepareParams(modules, incomingParams) {
+  const {
+    channels = [],
     channelGroups = [],
     uuids = [],
     ttl,
@@ -41,17 +46,18 @@ export function prepareParams(modules               , incomingParams            
     get = false,
     join = false,
     update = false,
-    authKeys = [] } = incomingParams;
+    authKeys = [],
+  } = incomingParams;
   const deleteParam = incomingParams.delete;
   const params = {};
 
-  params.r = (read) ? '1' : '0';
-  params.w = (write) ? '1' : '0';
-  params.m = (manage) ? '1' : '0';
-  params.d = (deleteParam) ? '1' : '0';
-  params.g = (get) ? '1'  : '0';
-  params.j = (join) ? '1' : '0';
-  params.u = (update) ? '1' : '0';
+  params.r = read ? '1' : '0';
+  params.w = write ? '1' : '0';
+  params.m = manage ? '1' : '0';
+  params.d = deleteParam ? '1' : '0';
+  params.g = get ? '1' : '0';
+  params.j = join ? '1' : '0';
+  params.u = update ? '1' : '0';
 
   if (channels.length > 0) {
     params.channel = channels.join(',');
@@ -75,6 +81,6 @@ export function prepareParams(modules               , incomingParams            
   return params;
 }
 
-export function handleResponse()         {
+export function handleResponse() {
   return {};
 }

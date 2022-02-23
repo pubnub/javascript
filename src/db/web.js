@@ -2,7 +2,7 @@
 /* global localStorage */
 
 export default {
-  get(key        ) {
+  get(key) {
     // try catch for operating within iframes which disable localStorage
     try {
       return localStorage.getItem(key);
@@ -10,12 +10,12 @@ export default {
       return null;
     }
   },
-  set(key        , data     ) {
+  set(key, data) {
     // try catch for operating within iframes which disable localStorage
     try {
       return localStorage.setItem(key, data);
     } catch (e) {
       return null;
     }
-  }
+  },
 };

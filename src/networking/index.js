@@ -6,19 +6,21 @@ import categoryConstants from '../core/constants/categories';
 import { EndpointDefinition, NetworkingModules } from '../core/flow_interfaces';
 
 export default class {
-  _modules                   ;
-  _config        ;
+  _modules;
 
-  _currentSubDomain        ;
+  _config;
 
-  _standardOrigin        ;
-  _subscribeOrigin        ;
+  _currentSubDomain;
 
-  _requestTimeout        ;
+  _standardOrigin;
 
-  _coreParams        ; /* items that must be passed with each request. */
+  _subscribeOrigin;
 
-  constructor(modules                   ) {
+  _requestTimeout;
+
+  _coreParams; /* items that must be passed with each request. */
+
+  constructor(modules) {
     this._modules = {};
 
     Object.keys(modules).forEach((key) => {
@@ -26,7 +28,7 @@ export default class {
     });
   }
 
-  init(config        ) {
+  init(config) {
     this._config = config;
 
     if (Array.isArray(this._config.origin)) {
@@ -41,7 +43,7 @@ export default class {
     this.shiftStandardOrigin();
   }
 
-  nextOrigin()         {
+  nextOrigin() {
     const protocol = this._config.secure ? 'https://' : 'http://';
 
     if (typeof this._config.origin === 'string') {
@@ -59,46 +61,46 @@ export default class {
     return `${protocol}${origin}`;
   }
 
-  hasModule(name        ) {
+  hasModule(name) {
     return name in this._modules;
   }
 
   // origin operations
-  shiftStandardOrigin()         {
+  shiftStandardOrigin() {
     this._standardOrigin = this.nextOrigin();
 
     return this._standardOrigin;
   }
 
-  getStandardOrigin()         {
+  getStandardOrigin() {
     return this._standardOrigin;
   }
 
-  POSTFILE(url        , fields                                                , file     ) {
+  POSTFILE(url, fields, file) {
     return this._modules.postfile(url, fields, file);
   }
 
-  GETFILE(params        , endpoint                    , callback          ) {
+  GETFILE(params, endpoint, callback) {
     return this._modules.getfile(params, endpoint, callback);
   }
 
-  POST(params        , body        , endpoint                    , callback          ) {
+  POST(params, body, endpoint, callback) {
     return this._modules.post(params, body, endpoint, callback);
   }
 
-  PATCH(params        , body        , endpoint                    , callback          ) {
+  PATCH(params, body, endpoint, callback) {
     return this._modules.patch(params, body, endpoint, callback);
   }
 
-  GET(params        , endpoint                    , callback          ) {
+  GET(params, endpoint, callback) {
     return this._modules.get(params, endpoint, callback);
   }
 
-  DELETE(params        , endpoint                    , callback          ) {
+  DELETE(params, endpoint, callback) {
     return this._modules.del(params, endpoint, callback);
   }
 
-  _detectErrorCategory(err        )         {
+  _detectErrorCategory(err) {
     if (err.code === 'ENOTFOUND') {
       return categoryConstants.PNNetworkIssuesCategory;
     }

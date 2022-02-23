@@ -1,31 +1,30 @@
 /**       */
 
 import { PubNubError, createValidationError, signRequest, generatePNSDK } from '../../components/endpoint';
-                                           
-                                                                  
+
 import utils from '../../utils';
 
-export default (modules         , { channel, id, name }                  )                   => {
+export default (modules, { channel, id, name }) => {
   const { config, networking } = modules;
 
   if (!channel) {
     throw new PubNubError(
       'Validation failed, check status for details',
-      createValidationError("channel can't be empty")
+      createValidationError("channel can't be empty"),
     );
   }
 
   if (!id) {
     throw new PubNubError(
       'Validation failed, check status for details',
-      createValidationError("file id can't be empty")
+      createValidationError("file id can't be empty"),
     );
   }
 
   if (!name) {
     throw new PubNubError(
       'Validation failed, check status for details',
-      createValidationError("file name can't be empty")
+      createValidationError("file name can't be empty"),
     );
   }
 
@@ -40,12 +39,20 @@ export default (modules         , { channel, id, name }                  )      
   }
 
   if (config.secretKey) {
-    signRequest(modules, url, params, {}, {
-      getOperation: () => 'PubNubGetFileUrlOperation',
-    });
+    signRequest(
+      modules,
+      url,
+      params,
+      {},
+      {
+        getOperation: () => 'PubNubGetFileUrlOperation',
+      },
+    );
   }
 
-  const queryParams = Object.keys(params).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
+  const queryParams = Object.keys(params)
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&');
 
   if (queryParams !== '') {
     return `${networking.getStandardOrigin()}${url}?${queryParams}`;

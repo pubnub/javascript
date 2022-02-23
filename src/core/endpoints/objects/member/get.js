@@ -1,23 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                              
+
 import utils from '../../../utils';
 
-                                
-                  
-                          
-
-                                 
-              
-                 
-                      
-                
-                
-   
-
-const endpoint                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetMembersOperation,
 
   validateParams: (_, params) => {
@@ -26,7 +13,8 @@ const endpoint                                                     = {
     }
   },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 
@@ -75,16 +63,15 @@ const endpoint                                                     = {
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
         if (value === 'asc' || value === 'desc') {
           return `${key}:${value}`;
-        } else {
-          return key;
         }
+        return key;
       });
     }
 
     return queryParams;
   },
 
-  handleResponse: (_, response)                   => ({
+  handleResponse: (_, response) => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

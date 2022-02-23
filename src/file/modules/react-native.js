@@ -1,44 +1,35 @@
-/**       */
+/* global File, FileReader */
 
-import { IFile, FileClass } from '../';
+import { IFile, FileClass } from '..';
 
-                                       
-      
-    
-                 
-                 
-                     
-    
-    
-                      
-                 
-                     
-    
-    
-                
-                 
-                     
-     
-
-const PubNubFile            = class PubNubFile                  {
+const PubNubFile = class PubNubFile {
   static supportsFile = typeof File !== 'undefined';
+
   static supportsBlob = typeof Blob !== 'undefined';
+
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
+
   static supportsBuffer = false;
+
   static supportsStream = false;
+
   static supportsString = true;
+
   static supportsEncryptFile = false;
+
   static supportsFileUri = true;
 
-  static create(config                                  ) {
+  static create(config) {
     return new this(config);
   }
 
-  data     ;
-  name        ;
-  mimeType        ;
+  data;
 
-  constructor(config                                  ) {
+  name;
+
+  mimeType;
+
+  constructor(config) {
     if (config instanceof File) {
       this.data = config;
 
@@ -49,7 +40,7 @@ const PubNubFile            = class PubNubFile                  {
       this.data = {
         uri: config.uri,
         name: config.name,
-        type: config.mimeType
+        type: config.mimeType,
       };
 
       this.name = config.name;
@@ -132,7 +123,8 @@ const PubNubFile            = class PubNubFile                  {
   async toString() {
     if (this.data && this.data.uri) {
       return JSON.stringify(this.data);
-    } else if (this.data instanceof File) {
+    }
+    if (this.data instanceof File) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -148,10 +140,9 @@ const PubNubFile            = class PubNubFile                  {
 
         reader.readAsBinaryString(this.data);
       });
-    } else {
-      // data must be a fetch response
-      return this.data.text();
     }
+    // data must be a fetch response
+    return this.data.text();
   }
 
   async toFile() {
@@ -168,9 +159,8 @@ const PubNubFile            = class PubNubFile                  {
   async toFileUri() {
     if (this.data && this.data.uri) {
       return this.data;
-    } else {
-      throw new Error('This file does not contain a file URI');
     }
+    throw new Error('This file does not contain a file URI');
   }
 };
 

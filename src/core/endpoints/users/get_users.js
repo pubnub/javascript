@@ -1,13 +1,9 @@
 /*       */
 
-import {
-  UserListInput,
-  UsersListResponse,
-  ModulesInject,
-} from '../../flow_interfaces';
+import { UserListInput, UsersListResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNGetUsersOperation;
 }
 
@@ -15,14 +11,12 @@ export function validateParams() {
   // no required parameters
 }
 
-export function getURL(
-  modules               ,
-)         {
-  let { config } = modules;
+export function getURL(modules) {
+  const { config } = modules;
   return `/v1/objects/${config.subscribeKey}/users`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -30,10 +24,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams               
-)         {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -42,7 +33,7 @@ export function prepareParams(
   }
 
   if (include) {
-    let includes = [];
+    const includes = [];
 
     if (include.totalCount) {
       params.count = true;
@@ -52,7 +43,7 @@ export function prepareParams(
       includes.push('custom');
     }
 
-    let includesString = includes.join(',');
+    const includesString = includes.join(',');
 
     if (includesString.length > 0) {
       params.include = includesString;
@@ -75,9 +66,6 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules               ,
-  usersResponse        
-)                    {
+export function handleResponse(modules, usersResponse) {
   return usersResponse;
 }

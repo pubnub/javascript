@@ -4,32 +4,33 @@
 import superagent from 'superagent';
 import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 
-function log(req        ) {
-  let _pickLogger = () => {
+function log(req) {
+  const _pickLogger = () => {
     if (console && console.log) return console; // eslint-disable-line no-console
     if (window && window.console && window.console.log) return window.console;
     return console;
   };
 
-  let start = new Date().getTime();
-  let timestamp = new Date().toISOString();
-  let logger = _pickLogger();
-  logger.log('<<<<<'); // eslint-disable-line no-console
-  logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs); // eslint-disable-line no-console
-  logger.log('-----'); // eslint-disable-line no-console
+  const start = new Date().getTime();
+  const timestamp = new Date().toISOString();
+  const logger = _pickLogger();
+  logger.log('<<<<<');
+  logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs);
+  logger.log('-----');
 
   req.on('response', (res) => {
-    let now = new Date().getTime();
-    let elapsed = now - start;
-    let timestampDone = new Date().toISOString();
+    const now = new Date().getTime();
+    const elapsed = now - start;
+    const timestampDone = new Date().toISOString();
 
-    logger.log('>>>>>>'); // eslint-disable-line no-console
-    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text); // eslint-disable-line no-console
-    logger.log('-----'); // eslint-disable-line no-console
+    logger.log('>>>>>>');
+
+    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text);
+    logger.log('-----');
   });
 }
 
-function xdr(superagentConstruct            , endpoint                    , callback          )         {
+function xdr(superagentConstruct, endpoint, callback) {
   if (this._config.logVerbosity) {
     superagentConstruct = superagentConstruct.use(log);
   }
@@ -58,7 +59,7 @@ function xdr(superagentConstruct            , endpoint                    , call
 
   sc.end((err, resp) => {
     let parsedResponse;
-    let status                     = {};
+    const status = {};
     status.error = err !== null;
     status.operation = endpoint.operation;
 
@@ -108,7 +109,8 @@ function xdr(superagentConstruct            , endpoint                    , call
       status.error = true;
       status.category = this._detectErrorCategory(status);
       return callback(status, null);
-    } else if (parsedResponse.error && parsedResponse.error.message) {
+    }
+    if (parsedResponse.error && parsedResponse.error.message) {
       status.errorData = parsedResponse.error;
     }
 
@@ -118,11 +120,7 @@ function xdr(superagentConstruct            , endpoint                    , call
   return sc;
 }
 
-export async function postfile(
-  url        ,
-  fields                                                ,
-  fileInput     
-)               {
+export async function postfile(url, fields, fileInput) {
   let agent = superagent.post(url);
 
   fields.forEach(({ key, value }) => {
@@ -136,24 +134,24 @@ export async function postfile(
   return result;
 }
 
-export function getfile(params        , endpoint                    , callback          )             {
-  let superagentConstruct = superagent
+export function getfile(params, endpoint, callback) {
+  const superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
     .query(params);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function get(params        , endpoint                    , callback          )             {
-  let superagentConstruct = superagent
+export function get(params, endpoint, callback) {
+  const superagentConstruct = superagent
     .get(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
     .query(params);
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function post(params        , body        , endpoint                    , callback          )             {
-  let superagentConstruct = superagent
+export function post(params, body, endpoint, callback) {
+  const superagentConstruct = superagent
     .post(this.getStandardOrigin() + endpoint.url)
     .query(params)
     .set(endpoint.headers)
@@ -161,8 +159,8 @@ export function post(params        , body        , endpoint                    ,
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function patch(params        , body        , endpoint                    , callback          )             {
-  let superagentConstruct = superagent
+export function patch(params, body, endpoint, callback) {
+  const superagentConstruct = superagent
     .patch(this.getStandardOrigin() + endpoint.url)
     .query(params)
     .set(endpoint.headers)
@@ -170,8 +168,8 @@ export function patch(params        , body        , endpoint                    
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
-export function del(params        , endpoint                    , callback          )             {
-  let superagentConstruct = superagent
+export function del(params, endpoint, callback) {
+  const superagentConstruct = superagent
     .delete(this.getStandardOrigin() + endpoint.url)
     .set(endpoint.headers)
     .query(params);

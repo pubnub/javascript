@@ -51,67 +51,29 @@ import downloadFileEndpointConfig from './endpoints/file_upload/download_file';
 import deleteFileEndpointConfig from './endpoints/file_upload/delete_file';
 
 // Object API v2
-import getAllUUIDMetadataEndpointConfig, {
-                                
-                                
-} from './endpoints/objects/uuid/get_all';
+import getAllUUIDMetadataEndpointConfig from './endpoints/objects/uuid/get_all';
 
-import getUUIDMetadataEndpointConfig, {
-                             
-                             
-} from './endpoints/objects/uuid/get';
+import getUUIDMetadataEndpointConfig from './endpoints/objects/uuid/get';
 
-import setUUIDMetadataEndpointConfig, {
-                             
-                             
-} from './endpoints/objects/uuid/set';
+import setUUIDMetadataEndpointConfig from './endpoints/objects/uuid/set';
 
-import removeUUIDMetadataEndpointConfig, {
-                                
-                                
-} from './endpoints/objects/uuid/remove';
+import removeUUIDMetadataEndpointConfig from './endpoints/objects/uuid/remove';
 
-import getAllChannelMetadataEndpointConfig, {
-                                   
-                                   
-} from './endpoints/objects/channel/get_all';
+import getAllChannelMetadataEndpointConfig from './endpoints/objects/channel/get_all';
 
-import getChannelMetadataEndpointConfig, {
-                                
-                                
-} from './endpoints/objects/channel/get';
+import getChannelMetadataEndpointConfig from './endpoints/objects/channel/get';
 
-import setChannelMetadataEndpointConfig, {
-                                
-                                
-} from './endpoints/objects/channel/set';
+import setChannelMetadataEndpointConfig from './endpoints/objects/channel/set';
 
-import removeChannelMetadataEndpointConfig, {
-                                   
-                                   
-} from './endpoints/objects/channel/remove';
+import removeChannelMetadataEndpointConfig from './endpoints/objects/channel/remove';
 
-import getMembersV2EndpointConfig, {
-                        
-                        
-} from './endpoints/objects/member/get';
+import getMembersV2EndpointConfig from './endpoints/objects/member/get';
 
-import setMembersV2EndpointConfig, {
-                           
-                           
-                        
-} from './endpoints/objects/member/set';
+import setMembersV2EndpointConfig from './endpoints/objects/member/set';
 
-import getMembershipsV2EndpointConfig, {
-                            
-                            
-} from './endpoints/objects/membership/get';
+import getMembershipsV2EndpointConfig from './endpoints/objects/membership/get';
 
-import setMembershipsV2EndpointConfig, {
-                               
-                               
-                            
-} from './endpoints/objects/membership/set';
+import setMembershipsV2EndpointConfig from './endpoints/objects/membership/set';
 
 // Objects API
 
@@ -137,10 +99,7 @@ import * as leaveSpacesEndpointConfig from './endpoints/memberships/leave_spaces
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
 import * as grantTokenEndpointConfig from './endpoints/access_manager/grant_token';
-import revokeTokenEndpointConfig, {
-                         
-                         
-} from './endpoints/access_manager/revoke_token';
+import revokeTokenEndpointConfig from './endpoints/access_manager/revoke_token';
 
 import * as publishEndpointConfig from './endpoints/publish';
 import * as signalEndpointConfig from './endpoints/signal';
@@ -157,222 +116,203 @@ import CATEGORIES from './constants/categories';
 import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
 
-                        
-                 
-                    
-                     
-   
-
 export default class {
-  _config        ;
-  _telemetryManager                  ;
-  _listenerManager                 ;
-  _tokenManager              ;
+  _config;
+
+  _telemetryManager;
+
+  _listenerManager;
+
+  _tokenManager;
 
   // tell flow about the mounted endpoint
-  time          ;
-  publish          ;
-  fire          ;
+  time;
 
-  history          ;
-  deleteMessages          ;
-  messageCounts          ;
-  fetchMessages          ;
+  publish;
+
+  fire;
+
+  history;
+
+  deleteMessages;
+
+  messageCounts;
+
+  fetchMessages;
 
   //
-  channelGroups        ;
+  channelGroups;
+
   //
-  push        ;
+  push;
+
   //
-  hereNow          ;
-  whereNow          ;
-  getState          ;
-  setState          ;
+  hereNow;
+
+  whereNow;
+
+  getState;
+
+  setState;
+
   //
-  grant          ;
-  grantToken          ;
-  audit          ;
-  revokeToken   
-                                  
-                                                                          
-                                 ;
+  grant;
+
+  grantToken;
+
+  audit;
+
+  revokeToken;
+
   //
-  subscribe          ;
-  signal          ;
-  presence          ;
-  unsubscribe          ;
-  unsubscribeAll          ;
+  subscribe;
+
+  signal;
+
+  presence;
+
+  unsubscribe;
+
+  unsubscribeAll;
 
   // Actions API
-  addMessageAction          ;
-  removeMessageAction          ;
-  getMessageActions          ;
+  addMessageAction;
+
+  removeMessageAction;
+
+  getMessageActions;
 
   // File Upload API v1
 
-  File           ;
-  encryptFile                                              ;
-  decryptFile                                              ;
+  File;
 
-  listFiles   
-                                                
-                                                                                        
-                                               ;
-  sendFile   
-                                               
-                                                                                       
-                                              ;
-  downloadFile   
-                                                   
-                                                                                           
-                                                  ;
-  getFileUrl                                                                                    ;
-  deleteFile   
-                                                 
-                                                                                         
-                                                ;
-  publishFile   
-                                                  
-                                                                                          
-                                                 ;
+  encryptFile;
+
+  decryptFile;
+
+  listFiles;
+
+  sendFile;
+
+  downloadFile;
+
+  getFileUrl;
+
+  deleteFile;
+
+  publishFile;
 
   // Objects API v2
 
-  objects   
-                         
-                                            
-                                                                             
-                                           
-                      
-                                         
-                                                                          
-                                        
-                      
-                                        
-                                                                          
-                                        
-                         
-                                            
-                                                                             
-                                           
-
-                            
-                                               
-                                                                                
-                                              
-                         
-                                           
-                                                                             
-                                           
-                         
-                                           
-                                                                             
-                                           
-                            
-                                              
-                                                                                
-                                              
-
-                     
-                                       
-                                                                         
-                                       
-                     
-                                                                     
-                                                                         
-                                       
-                        
-                                                                     
-                                                                         
-                                       
-
-                        
-                                   
-                                                                     
-                                   
-                        
-                                                                 
-                                                                     
-                                   
-                           
-                                                                 
-                                                                     
-                                   
-   ;
+  objects;
 
   // Objects API
 
-  createUser          ;
-  updateUser          ;
-  deleteUser          ;
-  getUser          ;
-  getUsers          ;
-  createSpace          ;
-  updateSpace          ;
-  deleteSpace          ;
-  getSpaces          ;
-  getSpace          ;
-  getMembers          ;
-  addMembers          ;
-  updateMembers          ;
-  removeMembers          ;
-  getMemberships          ;
-  joinSpaces          ;
-  updateMemberships          ;
-  leaveSpaces          ;
+  createUser;
 
-  disconnect          ;
-  reconnect          ;
+  updateUser;
 
-  destroy          ;
-  stop          ;
+  deleteUser;
 
-  getSubscribedChannels          ;
-  getSubscribedChannelGroups          ;
+  getUser;
 
-  addListener          ;
-  removeListener          ;
-  removeAllListeners          ;
+  getUsers;
 
-  parseToken          ;
-  setToken          ;
-  getToken          ;
+  createSpace;
 
-  getAuthKey          ;
-  setAuthKey          ;
+  updateSpace;
 
-  setCipherKey          ;
-  setUUID          ;
-  getUUID          ;
+  deleteSpace;
 
-  getFilterExpression          ;
-  setFilterExpression          ;
+  getSpaces;
 
-  setHeartbeatInterval          ;
+  getSpace;
 
-  setProxy          ;
+  getMembers;
 
-  encrypt          ;
-  decrypt          ;
+  addMembers;
+
+  updateMembers;
+
+  removeMembers;
+
+  getMemberships;
+
+  joinSpaces;
+
+  updateMemberships;
+
+  leaveSpaces;
+
+  disconnect;
+
+  reconnect;
+
+  destroy;
+
+  stop;
+
+  getSubscribedChannels;
+
+  getSubscribedChannelGroups;
+
+  addListener;
+
+  removeListener;
+
+  removeAllListeners;
+
+  parseToken;
+
+  setToken;
+
+  getToken;
+
+  getAuthKey;
+
+  setAuthKey;
+
+  setCipherKey;
+
+  setUUID;
+
+  getUUID;
+
+  getFilterExpression;
+
+  setFilterExpression;
+
+  setHeartbeatInterval;
+
+  setProxy;
+
+  encrypt;
+
+  decrypt;
 
   //
 
-  constructor(setup                     ) {
-    let { networking, cbor } = setup;
+  constructor(setup) {
+    const { networking, cbor } = setup;
 
-    const config = (this._config = new Config({ setup }));
+    const config = new Config({ setup });
+    this._config = config;
     const crypto = new Crypto({ config }); // LEGACY
 
-    const cryptography = setup.cryptography;
+    const { cryptography } = setup;
 
     networking.init(config);
 
-    const tokenManager = (this._tokenManager = new TokenManager(config, cbor));
-    const telemetryManager = (this._telemetryManager = new TelemetryManager({
-      maximumSamplesCount: 60000,
-    }));
+    const tokenManager = new TokenManager(config, cbor);
+    this._tokenManager = tokenManager;
 
-    let modules = {
+    const telemetryManager = new TelemetryManager({
+      maximumSamplesCount: 60000,
+    });
+
+    this._telemetryManager = telemetryManager;
+
+    const modules = {
       config,
       networking,
       crypto,
@@ -394,7 +334,8 @@ export default class {
     const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
 
     // managers
-    const listenerManager = (this._listenerManager = new ListenerManager());
+    const listenerManager = new ListenerManager();
+    this._listenerManager = listenerManager;
 
     const subscriptionManager = new SubscriptionManager({
       timeEndpoint,
@@ -498,7 +439,7 @@ export default class {
       removeChannelMetadata: endpointCreator.bind(this, modules, removeChannelMetadataEndpointConfig),
 
       getChannelMembers: endpointCreator.bind(this, modules, getMembersV2EndpointConfig),
-      setChannelMembers: (parameters                                                , ...rest) =>
+      setChannelMembers: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -507,9 +448,9 @@ export default class {
             type: 'set',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
-      removeChannelMembers: (parameters                                                , ...rest) =>
+      removeChannelMembers: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -518,11 +459,11 @@ export default class {
             type: 'delete',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
 
       getMemberships: endpointCreator.bind(this, modules, getMembershipsV2EndpointConfig),
-      setMemberships: (parameters                                                    , ...rest) =>
+      setMemberships: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -531,9 +472,9 @@ export default class {
             type: 'set',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
-      removeMemberships: (parameters                                                    , ...rest) =>
+      removeMemberships: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -542,7 +483,7 @@ export default class {
             type: 'delete',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
     };
 
@@ -593,7 +534,7 @@ export default class {
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
-    this.destroy = (isOffline         ) => {
+    this.destroy = (isOffline) => {
       subscriptionManager.unsubscribeAll(isOffline);
       subscriptionManager.disconnect();
     };
@@ -630,11 +571,11 @@ export default class {
     }
   }
 
-  getVersion()         {
+  getVersion() {
     return this._config.getVersion();
   }
 
-  _addPnsdkSuffix(name        , suffix        ) {
+  _addPnsdkSuffix(name, suffix) {
     this._config._addPnsdkSuffix(name, suffix);
   }
 
@@ -654,14 +595,15 @@ export default class {
     this.reconnect();
   }
 
-  static notificationPayload(title         , body         )                       {
+  static notificationPayload(title, body) {
     return new NotificationsPayload(title, body);
   }
 
-  static generateUUID()         {
+  static generateUUID() {
     return uuidGenerator.createUUID();
   }
 
   static OPERATIONS = OPERATIONS;
+
   static CATEGORIES = CATEGORIES;
 }

@@ -1,26 +1,18 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                           
+
 import utils from '../../../utils';
 
-                                         
-                
-   
-
-                                         
-              
-                     
-   
-
-const endpoint                                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNRemoveUUIDMetadataOperation,
 
-  // No required parameters.
-  validateParams: () => {},
+  validateParams: () => {
+    // No required parameters.
+  },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
   useDelete: () => true,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),

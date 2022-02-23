@@ -1,37 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                                      
+
 import utils from '../../../utils';
 
-                      
-                
-   
-
-                                        
-                 
-                                                        
-                   
-                        
-
-                                        
-              
-                                                      
-                   
-                        
-
-                                                                                     
-
-                                     
-              
-                   
-                      
-                
-                
-   
-
-const endpoint                                                             = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetMembershipsOperation,
 
   validateParams: (_, params) => {
@@ -55,12 +28,11 @@ const endpoint                                                             = {
             id: channel,
           },
         };
-      } else {
-        return {
-          channel: { id: channel.id },
-          custom: channel.custom,
-        };
       }
+      return {
+        channel: { id: channel.id },
+        custom: channel.custom,
+      };
     }),
   }),
 
@@ -113,9 +85,8 @@ const endpoint                                                             = {
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
         if (value === 'asc' || value === 'desc') {
           return `${key}:${value}`;
-        } else {
-          return key;
         }
+        return key;
       });
     }
 

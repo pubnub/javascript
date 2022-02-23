@@ -14,7 +14,7 @@ import { InternalSetupStruct } from '../core/flow_interfaces';
 import WebCryptography from '../crypto/modules/web';
 import PubNubFile from '../file/modules/web';
 
-function sendBeacon(url        ) {
+function sendBeacon(url) {
   if (navigator && navigator.sendBeacon) {
     navigator.sendBeacon(url);
   } else {
@@ -22,7 +22,7 @@ function sendBeacon(url        ) {
   }
 }
 
-function base64ToBinary(base64String        ) {
+function base64ToBinary(base64String) {
   const parsedWordArray = CryptoJS.enc.Base64.parse(base64String).words;
   const arrayBuffer = new ArrayBuffer(parsedWordArray.length * 4);
   const view = new Uint8Array(arrayBuffer);
@@ -65,13 +65,13 @@ function stringifyBufferKeys(obj) {
 
   const normalizedObject = {};
 
-  Object.keys(obj).forEach((key     ) => {
+  Object.keys(obj).forEach((key) => {
     const keyIsString = isString(key);
     let stringifiedKey = key;
-    let value = obj[key];
+    const value = obj[key];
 
     if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
-      const bytes             = keyIsString ? key.split(',') : key;
+      const bytes = keyIsString ? key.split(',') : key;
 
       stringifiedKey = bytes.reduce((string, byte) => {
         string += String.fromCharCode(byte);
@@ -88,13 +88,21 @@ function stringifyBufferKeys(obj) {
 }
 
 export default class extends PubNubCore {
-  constructor(setup                     ) {
+  constructor(setup) {
     // extract config.
     const { listenToBrowserNetworkEvents = true } = setup;
 
     setup.db = db;
     setup.sdkFamily = 'Web';
-    setup.networking = new Networking({ del, get, post, patch, sendBeacon, getfile, postfile });
+    setup.networking = new Networking({
+      del,
+      get,
+      post,
+      patch,
+      sendBeacon,
+      getfile,
+      postfile,
+    });
     setup.cbor = new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), base64ToBinary);
 
     setup.PubNubFile = PubNubFile;

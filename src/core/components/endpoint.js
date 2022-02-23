@@ -14,29 +14,30 @@ export class PubNubError extends Error {
   }
 }
 
-function createError(errorPayload        , type        )         {
+function createError(errorPayload, type) {
   errorPayload.type = type;
   errorPayload.error = true;
   return errorPayload;
 }
 
-export function createValidationError(message        )         {
+export function createValidationError(message) {
   return createError({ message }, 'validationError');
 }
 
 function decideURL(endpoint, modules, incomingParams) {
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     return endpoint.postURL(modules, incomingParams);
-  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
-    return endpoint.patchURL(modules, incomingParams);
-  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
-    return endpoint.getFileURL(modules, incomingParams);
-  } else {
-    return endpoint.getURL(modules, incomingParams);
   }
+  if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    return endpoint.patchURL(modules, incomingParams);
+  }
+  if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+    return endpoint.getFileURL(modules, incomingParams);
+  }
+  return endpoint.getURL(modules, incomingParams);
 }
 
-export function generatePNSDK(config        )         {
+export function generatePNSDK(config) {
   if (config.sdkName) {
     return config.sdkName;
   }
@@ -49,7 +50,7 @@ export function generatePNSDK(config        )         {
 
   base += `/${config.getVersion()}`;
 
-  let pnsdkSuffix = config._getPnsdkSuffix(' ');
+  const pnsdkSuffix = config._getPnsdkSuffix(' ');
 
   if (pnsdkSuffix.length > 0) {
     base += pnsdkSuffix;
@@ -61,26 +62,32 @@ export function generatePNSDK(config        )         {
 function getHttpMethod(modules, endpoint, incomingParams) {
   if (endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
     return 'POST';
-  } else if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
-    return 'PATCH';
-  } else if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
-    return 'DELETE';
-  } else if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
-    return 'GETFILE';
-  } else {
-    return 'GET';
   }
+  if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
+    return 'PATCH';
+  }
+  if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
+    return 'DELETE';
+  }
+  if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
+    return 'GETFILE';
+  }
+  return 'GET';
 }
 
 export function signRequest(modules, url, outgoingParams, incomingParams, endpoint) {
-  let { config, crypto } = modules;
+  const { config, crypto } = modules;
 
   let httpMethod = getHttpMethod(modules, endpoint, incomingParams);
 
   outgoingParams.timestamp = Math.floor(new Date().getTime() / 1000);
 
   // This is because of a server-side bug, old publish using post should be deprecated
-  if (endpoint.getOperation() === 'PNPublishOperation' && endpoint.usePost && endpoint.usePost(modules, incomingParams)) {
+  if (
+    endpoint.getOperation() === 'PNPublishOperation' &&
+    endpoint.usePost &&
+    endpoint.usePost(modules, incomingParams)
+  ) {
     httpMethod = 'GET';
   }
 
@@ -91,14 +98,14 @@ export function signRequest(modules, url, outgoingParams, incomingParams, endpoi
   let signInput = `${httpMethod}\n${config.publishKey}\n${url}\n${utils.signPamFromParams(outgoingParams)}\n`;
 
   if (httpMethod === 'POST') {
-    let payload = endpoint.postPayload(modules, incomingParams);
+    const payload = endpoint.postPayload(modules, incomingParams);
     if (typeof payload === 'string') {
       signInput += payload;
     } else {
       signInput += JSON.stringify(payload);
     }
   } else if (httpMethod === 'PATCH') {
-    let payload = endpoint.patchPayload(modules, incomingParams);
+    const payload = endpoint.patchPayload(modules, incomingParams);
     if (typeof payload === 'string') {
       signInput += payload;
     } else {
@@ -115,7 +122,7 @@ export function signRequest(modules, url, outgoingParams, incomingParams, endpoi
 }
 
 export default function (modules, endpoint, ...args) {
-  let { networking, config, telemetryManager, tokenManager } = modules;
+  const { networking, config, telemetryManager, tokenManager } = modules;
   const requestId = uuidGenerator.createUUID();
   let callback = null;
   let promiseComponent = null;
@@ -136,14 +143,15 @@ export default function (modules, endpoint, ...args) {
     promiseComponent = utils.createPromise();
   }
 
-  let validationResult = endpoint.validateParams(modules, incomingParams);
+  const validationResult = endpoint.validateParams(modules, incomingParams);
 
   if (validationResult) {
     if (callback) {
       return callback(createValidationError(validationResult));
-    } else if (promiseComponent) {
+    }
+    if (promiseComponent) {
       promiseComponent.reject(
-        new PubNubError('Validation failed, check status for details', createValidationError(validationResult))
+        new PubNubError('Validation failed, check status for details', createValidationError(validationResult)),
       );
       return promiseComponent.promise;
     }
@@ -151,9 +159,9 @@ export default function (modules, endpoint, ...args) {
   }
 
   let outgoingParams = endpoint.prepareParams(modules, incomingParams);
-  let url = decideURL(endpoint, modules, incomingParams);
+  const url = decideURL(endpoint, modules, incomingParams);
   let callInstance;
-  let networkingParams = {
+  const networkingParams = {
     url,
     operation: endpoint.getOperation(),
     timeout: endpoint.getRequestTimeout(modules),
@@ -181,7 +189,7 @@ export default function (modules, endpoint, ...args) {
   }
 
   if (endpoint.isAuthSupported()) {
-    let tokenOrKey = tokenManager.getToken() || config.getAuthKey();
+    const tokenOrKey = tokenManager.getToken() || config.getAuthKey();
 
     if (tokenOrKey) {
       outgoingParams.auth = tokenOrKey;
@@ -192,7 +200,7 @@ export default function (modules, endpoint, ...args) {
     signRequest(modules, url, outgoingParams, incomingParams, endpoint);
   }
 
-  let onResponse = (status                    , payload        ) => {
+  const onResponse = (status, payload) => {
     if (status.error) {
       if (endpoint.handleError) {
         endpoint.handleError(modules, incomingParams, status);
@@ -232,7 +240,7 @@ export default function (modules, endpoint, ...args) {
               error: true,
               operation: endpoint.getOperation(),
               errorData: e,
-              category: categoryConstants.PNUnknownCategory
+              category: categoryConstants.PNUnknownCategory,
             };
           }
 
@@ -247,10 +255,10 @@ export default function (modules, endpoint, ...args) {
   telemetryManager.startLatencyMeasure(endpoint.getOperation(), requestId);
 
   if (getHttpMethod(modules, endpoint, incomingParams) === 'POST') {
-    let payload = endpoint.postPayload(modules, incomingParams);
+    const payload = endpoint.postPayload(modules, incomingParams);
     callInstance = networking.POST(outgoingParams, payload, networkingParams, onResponse);
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'PATCH') {
-    let payload = endpoint.patchPayload(modules, incomingParams);
+    const payload = endpoint.patchPayload(modules, incomingParams);
     callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);

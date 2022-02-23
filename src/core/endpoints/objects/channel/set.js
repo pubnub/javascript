@@ -1,24 +1,10 @@
 /**       */
 
-                                                     
 import operationConstants from '../../../constants/operations';
-                                                 
+
 import utils from '../../../utils';
 
-                                         
-                  
-              
-                           
-     
-                                
-   
-
-                                         
-              
-                        
-   
-
-const endpoint                                                                     = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetChannelMetadataOperation,
 
   validateParams: (_, params) => {

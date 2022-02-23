@@ -1,11 +1,6 @@
-/**       */
-                                         
-                                                   
+/* global crypto */
 
-// This version of flow doesn't know about the Web Crypto API
-                        
-
-function concatArrayBuffer(ab1             , ab2             )              {
+function concatArrayBuffer(ab1, ab2) {
   const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
 
   tmp.set(new Uint8Array(ab1), 0);
@@ -14,38 +9,38 @@ function concatArrayBuffer(ab1             , ab2             )              {
   return tmp.buffer;
 }
 
-export default class WebCryptography                                                {
+export default class WebCryptography {
   static IV_LENGTH = 16;
 
   get algo() {
     return 'aes-256-cbc';
   }
 
-  async encrypt(key        , input                      )                                {
+  async encrypt(key, input) {
     const cKey = await this.getKey(key);
 
     if (input instanceof ArrayBuffer) {
       return this.encryptArrayBuffer(cKey, input);
-    } else if (typeof input === 'string') {
-      return this.encryptString(cKey, input);
-    } else {
-      throw new Error('Cannot encrypt this file. In browsers file encryption supports only string or ArrayBuffer');
     }
+    if (typeof input === 'string') {
+      return this.encryptString(cKey, input);
+    }
+    throw new Error('Cannot encrypt this file. In browsers file encryption supports only string or ArrayBuffer');
   }
 
-  async decrypt(key        , input                      )                                {
+  async decrypt(key, input) {
     const cKey = await this.getKey(key);
 
     if (input instanceof ArrayBuffer) {
       return this.decryptArrayBuffer(cKey, input);
-    } else if (typeof input === 'string') {
-      return this.decryptString(cKey, input);
-    } else {
-      throw new Error('Cannot decrypt this file. In browsers file decryption supports only string or ArrayBuffer');
     }
+    if (typeof input === 'string') {
+      return this.decryptString(cKey, input);
+    }
+    throw new Error('Cannot decrypt this file. In browsers file decryption supports only string or ArrayBuffer');
   }
 
-  async encryptFile(key        , file       , File           )                 {
+  async encryptFile(key, file, File) {
     const bKey = await this.getKey(key);
 
     const abPlaindata = await file.toArrayBuffer();
@@ -59,7 +54,7 @@ export default class WebCryptography                                            
     });
   }
 
-  async decryptFile(key        , file       , File           )                 {
+  async decryptFile(key, file, File) {
     const bKey = await this.getKey(key);
 
     const abCipherdata = await file.toArrayBuffer();
@@ -72,7 +67,7 @@ export default class WebCryptography                                            
     });
   }
 
-  async getKey(key        )               {
+  async getKey(key) {
     const bKey = Buffer.from(key);
     const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
 
@@ -81,19 +76,19 @@ export default class WebCryptography                                            
     return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
   }
 
-  async encryptArrayBuffer(key     , plaintext             ) {
+  async encryptArrayBuffer(key, plaintext) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
     return concatArrayBuffer(abIv.buffer, await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, plaintext));
   }
 
-  async decryptArrayBuffer(key     , ciphertext             ) {
+  async decryptArrayBuffer(key, ciphertext) {
     const abIv = ciphertext.slice(0, 16);
 
     return crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
   }
 
-  async encryptString(key     , plaintext        ) {
+  async encryptString(key, plaintext) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
     const abPlaintext = Buffer.from(plaintext).buffer;
@@ -104,7 +99,7 @@ export default class WebCryptography                                            
     return Buffer.from(ciphertext).toString('utf8');
   }
 
-  async decryptString(key     , ciphertext        ) {
+  async decryptString(key, ciphertext) {
     const abCiphertext = Buffer.from(ciphertext);
     const abIv = abCiphertext.slice(0, 16);
     const abPayload = abCiphertext.slice(16);

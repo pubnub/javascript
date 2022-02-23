@@ -4,38 +4,36 @@ import { Readable, PassThrough } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
 
-import { IFile, FileClass } from '../';
+import { IFile, FileClass } from '..';
 
-                                   
-                    
-                         
-                    
-                
-                    
-   
-
-                                                                   
-
-const PubNubFile            = class PubNubFile                  {
+const PubNubFile = class PubNubFile {
   static supportsBlob = false;
+
   static supportsFile = false;
+
   static supportsBuffer = typeof Buffer !== 'undefined';
+
   static supportsStream = true;
+
   static supportsString = true;
+
   static supportsArrayBuffer = false;
+
   static supportsEncryptFile = true;
+
   static supportsFileUri = false;
 
-  data                                  ;
+  data;
 
-  name        ;
-  mimeType        ;
+  name;
 
-  static create(config                           ) {
+  mimeType;
+
+  static create(config) {
     return new this(config);
   }
 
-  constructor({ stream, data, encoding, name, mimeType }                           ) {
+  constructor({ stream, data, encoding, name, mimeType }) {
     if (stream instanceof Readable) {
       this.data = stream;
 
@@ -67,7 +65,7 @@ const PubNubFile            = class PubNubFile                  {
     }
   }
 
-  toBuffer()                  {
+  toBuffer() {
     if (this.data instanceof Buffer) {
       return Promise.resolve(Buffer.from(this.data));
     }
@@ -96,7 +94,7 @@ const PubNubFile            = class PubNubFile                  {
     throw new Error('This feature is only supported in browser environments.');
   }
 
-  async toString(encoding                           = 'utf8') {
+  async toString(encoding = 'utf8') {
     const buffer = await this.toBuffer();
 
     return buffer.toString(encoding);

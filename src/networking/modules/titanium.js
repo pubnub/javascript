@@ -1,60 +1,46 @@
 /*       */
-/* global XMLHttpRequest */
+/* global XMLHttpRequest, Ti */
 
-import {
-  EndpointDefinition,
-  StatusAnnouncement,
-} from '../../core/flow_interfaces';
+import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
-                    
-
 function log(url, qs, res) {
-  let _pickLogger = () => {
+  const _pickLogger = () => {
     if (Ti && Ti.API && Ti.API.log) return Ti.API;
     return console;
   };
 
-  let start = new Date().getTime();
-  let timestamp = new Date().toISOString();
-  let logger = _pickLogger();
+  const start = new Date().getTime();
+  const timestamp = new Date().toISOString();
+  const logger = _pickLogger();
   logger.log('<<<<<'); // eslint-disable-line no-console
   logger.log(`[${timestamp}]`, '\n', url, '\n', qs); // eslint-disable-line no-console
   logger.log('-----'); // eslint-disable-line no-console
 
-  let now = new Date().getTime();
-  let elapsed = now - start;
-  let timestampDone = new Date().toISOString();
+  const now = new Date().getTime();
+  const elapsed = now - start;
+  const timestampDone = new Date().toISOString();
 
   logger.log('>>>>>>'); // eslint-disable-line no-console
   logger.log(`[${timestampDone} / ${elapsed}]`, '\n', url, '\n', qs, '\n', res); // eslint-disable-line no-console
   logger.log('-----');
 }
 
-function getHttpClient()      {
+function getHttpClient() {
   if (Ti.Platform.osname === 'mobileweb') {
     return new XMLHttpRequest();
-  } else {
-    return Ti.Network.createHTTPClient();
   }
+  return Ti.Network.createHTTPClient();
 }
 
-function keepAlive(xhr     )       {
+function keepAlive(xhr) {
   if (Ti.Platform.osname !== 'mobileweb' && this._config.keepAlive) {
     xhr.enableKeepAlive = true;
   }
 }
 
-function xdr(
-  xhr     ,
-  method        ,
-  url        ,
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-)       {
-  let status                     = {};
+function xdr(xhr, method, url, params, body, endpoint, callback) {
+  const status = {};
   status.operation = endpoint.operation;
 
   xhr.open(method, buildUrl(url, params), true);
@@ -68,7 +54,7 @@ function xdr(
       status.statusCode = xhr.status;
     }
 
-    let resp = JSON.parse(xhr.responseText);
+    const resp = JSON.parse(xhr.responseText);
 
     if (this._config.logVerbosity) {
       log(url, params, xhr.responseText);
@@ -89,61 +75,34 @@ function xdr(
   xhr.send(body);
 }
 
-export function get(
-  params        ,
-  endpoint                    ,
-  callback          
-) {
-  let xhr = getHttpClient();
+export function get(params, endpoint, callback) {
+  const xhr = getHttpClient();
 
-  let url = this.getStandardOrigin() + endpoint.url;
+  const url = this.getStandardOrigin() + endpoint.url;
 
   return xdr.call(this, xhr, 'GET', url, params, {}, endpoint, callback);
 }
 
-export function post(
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-) {
-  let xhr = getHttpClient();
+export function post(params, body, endpoint, callback) {
+  const xhr = getHttpClient();
 
-  let url = this.getStandardOrigin() + endpoint.url;
+  const url = this.getStandardOrigin() + endpoint.url;
 
-  return xdr.call(
-    this,
-    xhr,
-    'POST',
-    url,
-    params,
-    JSON.parse(body),
-    endpoint,
-    callback
-  );
+  return xdr.call(this, xhr, 'POST', url, params, JSON.parse(body), endpoint, callback);
 }
 
-export function patch(
-  params        ,
-  body        ,
-  endpoint                    ,
-  callback          
-) {
-  let xhr = getHttpClient();
+export function patch(params, body, endpoint, callback) {
+  const xhr = getHttpClient();
 
-  let url = this.getStandardOrigin() + endpoint.url;
+  const url = this.getStandardOrigin() + endpoint.url;
 
   return xdr.call(this, xhr, 'PATCH', url, params, JSON.parse(body), endpoint, callback);
 }
 
-export function del(
-  params        ,
-  endpoint                    ,
-  callback          
-) {
-  let xhr = getHttpClient();
+export function del(params, endpoint, callback) {
+  const xhr = getHttpClient();
 
-  let url = this.getStandardOrigin() + endpoint.url;
+  const url = this.getStandardOrigin() + endpoint.url;
 
   return xdr.call(this, xhr, 'DELETE', url, params, {}, endpoint, callback);
 }

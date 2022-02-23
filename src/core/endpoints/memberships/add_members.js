@@ -1,23 +1,18 @@
 /*       */
 
-import {
-  AddMembers,
-  MembersInput,
-  MembersListResponse,
-  ModulesInject,
-} from '../../flow_interfaces';
+import { AddMembers, MembersInput, MembersListResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 function prepareMessagePayload(modules, incomingParams) {
   const { users } = incomingParams;
-  let payload = {};
+  const payload = {};
 
   if (users && users.length > 0) {
     payload.add = [];
 
     users.forEach((addMember) => {
-      let currentAdd             = { id: addMember.id };
+      const currentAdd = { id: addMember.id };
 
       if (addMember.custom) {
         currentAdd.custom = addMember.custom;
@@ -30,34 +25,25 @@ function prepareMessagePayload(modules, incomingParams) {
   return payload;
 }
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNUpdateMembersOperation;
 }
 
-export function validateParams(
-  modules               ,
-  incomingParams              
-) {
-  let { spaceId, users } = incomingParams;
+export function validateParams(modules, incomingParams) {
+  const { spaceId, users } = incomingParams;
 
   if (!spaceId) return 'Missing spaceId';
   if (!users) return 'Missing users';
 }
 
-export function getURL(
-  modules               ,
-  incomingParams              
-)         {
-  let { config } = modules;
+export function getURL(modules, incomingParams) {
+  const { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
 }
 
-export function patchURL(
-  modules               ,
-  incomingParams              
-)         {
-  let { config } = modules;
+export function patchURL(modules, incomingParams) {
+  const { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
 }
@@ -66,7 +52,7 @@ export function usePatch() {
   return true;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -74,10 +60,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams              
-)         {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page } = incomingParams;
   const params = {};
 
@@ -86,7 +69,7 @@ export function prepareParams(
   }
 
   if (include) {
-    let includes = [];
+    const includes = [];
 
     if (include.totalCount) {
       params.count = true;
@@ -104,7 +87,7 @@ export function prepareParams(
       includes.push('space.custom');
     }
 
-    let includesString = includes.join(',');
+    const includesString = includes.join(',');
 
     if (includesString.length > 0) {
       params.include = includesString;
@@ -123,16 +106,10 @@ export function prepareParams(
   return params;
 }
 
-export function patchPayload(
-  modules               ,
-  incomingParams              
-)         {
+export function patchPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules               ,
-  membersResponse        
-)                      {
+export function handleResponse(modules, membersResponse) {
   return membersResponse;
 }

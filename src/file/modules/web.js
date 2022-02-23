@@ -1,46 +1,42 @@
-/**       */
+/* global File, FileReader */
 
-import { IFile, FileClass } from '../';
+import { IFile, FileClass } from '..';
 
-                               
-        
-      
-                   
-                   
-                       
-      
-      
-                        
-                   
-                       
-       
-
-const PubNubFile            = class PubNubFile                  {
+const PubNubFile = class PubNubFile {
   static supportsFile = typeof File !== 'undefined';
+
   static supportsBlob = typeof Blob !== 'undefined';
+
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
+
   static supportsBuffer = false;
+
   static supportsStream = false;
+
   static supportsString = true;
+
   static supportsEncryptFile = true;
+
   static supportsFileUri = false;
 
-  static create(config                          ) {
+  static create(config) {
     return new this(config);
   }
 
-  data     ;
-  name        ;
-  mimeType        ;
+  data;
 
-  constructor(config                          ) {
+  name;
+
+  mimeType;
+
+  constructor(config) {
     if (config instanceof File) {
       this.data = config;
 
       this.name = this.data.name;
       this.mimeType = this.data.type;
     } else if (config.data) {
-      let contents = config.data;
+      const contents = config.data;
 
       this.data = new File([contents], config.name, { type: config.mimeType });
 

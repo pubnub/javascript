@@ -5,11 +5,7 @@
 import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 import { postfile as postfilewebnode } from './web-node';
 
-async function postfileuri(
-  url        ,
-  fields                                                ,
-  fileInput     
-)               {
+async function postfileuri(url, fields, fileInput) {
   const formData = new FormData();
 
   fields.forEach(({ key, value }) => {
@@ -20,29 +16,24 @@ async function postfileuri(
 
   const result = await fetch(url, {
     method: 'POST',
-    body: formData
+    body: formData,
   });
 
   return result;
 }
 
-export async function postfile(
-  url        ,
-  fields                                                ,
-  fileInput     
-)               {
+export async function postfile(url, fields, fileInput) {
   if (!fileInput.uri) {
     return postfilewebnode(url, fields, fileInput);
-  } else {
-    return postfileuri(url, fields, fileInput);
   }
+  return postfileuri(url, fields, fileInput);
 }
 
-export function getfile(params        , endpoint                    , callback          )               {
+export function getfile(params, endpoint, callback) {
   let url = this.getStandardOrigin() + endpoint.url;
 
   if (params && Object.keys(params).length > 0) {
-    let searchParams = new URLSearchParams(params);
+    const searchParams = new URLSearchParams(params);
 
     if (endpoint.url.indexOf('?') > -1) {
       url += '&';
@@ -53,11 +44,11 @@ export function getfile(params        , endpoint                    , callback  
     url += searchParams.toString();
   }
 
-  let fetchResult = fetch(url, { method: 'GET', headers: endpoint.headers });
+  const fetchResult = fetch(url, { method: 'GET', headers: endpoint.headers });
 
   fetchResult.then(async (resp) => {
     let parsedResponse;
-    let status                     = {};
+    const status = {};
     status.error = false;
     status.operation = endpoint.operation;
 
@@ -93,7 +84,8 @@ export function getfile(params        , endpoint                    , callback  
       status.error = true;
       status.category = this._detectErrorCategory(status);
       return callback(status, null);
-    } else if (parsedResponse.error && parsedResponse.error.message) {
+    }
+    if (parsedResponse.error && parsedResponse.error.message) {
       status.errorData = parsedResponse.error;
     }
 
@@ -104,7 +96,7 @@ export function getfile(params        , endpoint                    , callback  
   });
 
   fetchResult.catch((err) => {
-    let status                     = {};
+    const status = {};
     status.error = true;
     status.operation = endpoint.operation;
 

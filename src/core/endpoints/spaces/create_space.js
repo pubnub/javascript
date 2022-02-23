@@ -1,25 +1,18 @@
 /*       */
 
-import {
-  SpacesObjectInput,
-  SpacesResponse,
-  ModulesInject,
-} from '../../flow_interfaces';
+import { SpacesObjectInput, SpacesResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
 function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
 }
 
-export function getOperation()         {
+export function getOperation() {
   return operationConstants.PNCreateSpaceOperation;
 }
 
-export function validateParams(
-  { config }               ,
-  incomingParams                   
-) {
-  let { id, name, custom } = incomingParams;
+export function validateParams({ config }, incomingParams) {
+  const { id, name, custom } = incomingParams;
 
   if (!id) return 'Missing Space.id';
   if (!name) return 'Missing Space.name';
@@ -28,9 +21,7 @@ export function validateParams(
   if (custom) {
     if (
       !Object.values(custom).every(
-        (value) => typeof value === 'string' ||
-                   typeof value === 'number' ||
-                   typeof value === 'boolean'
+        (value) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean',
       )
     ) {
       return 'Invalid custom type, only string, number and boolean values are allowed.';
@@ -42,17 +33,17 @@ export function usePost() {
   return true;
 }
 
-export function getURL(modules               )         {
-  let { config } = modules;
-  return `/v1/objects/${config.subscribeKey}/spaces`;
-}
-
-export function postURL(modules               )         {
+export function getURL(modules) {
   const { config } = modules;
   return `/v1/objects/${config.subscribeKey}/spaces`;
 }
 
-export function getRequestTimeout({ config }               ) {
+export function postURL(modules) {
+  const { config } = modules;
+  return `/v1/objects/${config.subscribeKey}/spaces`;
+}
+
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -60,30 +51,27 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules               ,
-  incomingParams                   
-)         {
+export function prepareParams(modules, incomingParams) {
   let { include } = incomingParams;
   const params = {};
 
   // default to include custom fields in response
   if (!include) {
     include = {
-      customFields: true
+      customFields: true,
     };
   } else if (include.customFields === undefined) {
     include.customFields = true;
   }
 
   if (include) {
-    let includes = [];
+    const includes = [];
 
     if (include.customFields) {
       includes.push('custom');
     }
 
-    let includesString = includes.join(',');
+    const includesString = includes.join(',');
 
     if (includesString.length > 0) {
       params.include = includesString;
@@ -93,16 +81,10 @@ export function prepareParams(
   return params;
 }
 
-export function postPayload(
-  modules               ,
-  incomingParams                   
-)         {
+export function postPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules               ,
-  spacesResponse        
-)                 {
+export function handleResponse(modules, spacesResponse) {
   return spacesResponse;
 }
