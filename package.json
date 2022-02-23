@@ -24,7 +24,7 @@
   "main": "./lib/node/index.js",
   "react-native": "./lib/react_native/index.js",
   "nativescript": "./lib/nativescript/index.js",
-  "browser": "./dist/pubnub.min.js",
+  "browser": "./dist/web/pubnub.min.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
@@ -81,6 +81,7 @@
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "rollup": "^2.68.0",
+    "rollup-plugin-terser": "^7.0.2",
     "sinon": "^7.5.0",
     "sinon-chai": "^3.3.0",
     "typescript": "^4.3.5",
