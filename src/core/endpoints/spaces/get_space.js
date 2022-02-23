@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SingleSpaceInput,
@@ -8,25 +8,25 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNGetSpaceOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: SingleSpaceInput) {
+export function validateParams(modules               , incomingParams                  ) {
   let { spaceId } = incomingParams;
 
   if (!spaceId) return 'Missing spaceId';
 }
 
 export function getURL(
-  modules: ModulesInject,
-  incomingParams: SingleSpaceInput
-): string {
+  modules               ,
+  incomingParams                  
+)         {
   let { config } = modules;
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -35,9 +35,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SingleSpaceInput
-): Object {
+  modules               ,
+  incomingParams                  
+)         {
   let { include } = incomingParams;
   const params = {};
 
@@ -68,8 +68,8 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  spacesResponse: Object
-): SpacesResponse {
+  modules               ,
+  spacesResponse        
+)                 {
   return spacesResponse;
 }

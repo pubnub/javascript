@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   GetMessageActionsInput,
@@ -9,13 +9,13 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNGetMessageActionsOperation;
 }
 
 export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: GetMessageActionsInput
+  { config }               ,
+  incomingParams                        
 ) {
   let { channel } = incomingParams;
 
@@ -25,15 +25,15 @@ export function validateParams(
 
 
 export function getURL(
-  { config }: ModulesInject,
-  incomingParams: GetMessageActionsInput
-): string {
+  { config }               ,
+  incomingParams                        
+)         {
   let { channel } = incomingParams;
 
   return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -42,11 +42,11 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: GetMessageActionsInput
-): Object {
+  modules               ,
+  incomingParams                        
+)         {
   const { limit, start, end } = incomingParams;
-  let outgoingParams: Object = {};
+  let outgoingParams         = {};
 
   if (limit) outgoingParams.limit = limit;
   if (start) outgoingParams.start = start;
@@ -56,9 +56,9 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  getMessageActionsResponse: Object
-): GetMessageActionsResponse {
+  modules               ,
+  getMessageActionsResponse        
+)                            {
   /** @type GetMessageActionsResponse */
   let response = { data: getMessageActionsResponse.data, start: null, end: null };
 

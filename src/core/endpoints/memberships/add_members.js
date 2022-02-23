@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   AddMembers,
@@ -17,7 +17,7 @@ function prepareMessagePayload(modules, incomingParams) {
     payload.add = [];
 
     users.forEach((addMember) => {
-      let currentAdd: AddMembers = { id: addMember.id };
+      let currentAdd             = { id: addMember.id };
 
       if (addMember.custom) {
         currentAdd.custom = addMember.custom;
@@ -30,13 +30,13 @@ function prepareMessagePayload(modules, incomingParams) {
   return payload;
 }
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNUpdateMembersOperation;
 }
 
 export function validateParams(
-  modules: ModulesInject,
-  incomingParams: MembersInput
+  modules               ,
+  incomingParams              
 ) {
   let { spaceId, users } = incomingParams;
 
@@ -45,18 +45,18 @@ export function validateParams(
 }
 
 export function getURL(
-  modules: ModulesInject,
-  incomingParams: MembersInput
-): string {
+  modules               ,
+  incomingParams              
+)         {
   let { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
 }
 
 export function patchURL(
-  modules: ModulesInject,
-  incomingParams: MembersInput
-): string {
+  modules               ,
+  incomingParams              
+)         {
   let { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(incomingParams.spaceId)}/users`;
@@ -66,7 +66,7 @@ export function usePatch() {
   return true;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -75,9 +75,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: MembersInput
-): Object {
+  modules               ,
+  incomingParams              
+)         {
   const { include, limit, page } = incomingParams;
   const params = {};
 
@@ -124,15 +124,15 @@ export function prepareParams(
 }
 
 export function patchPayload(
-  modules: ModulesInject,
-  incomingParams: MembersInput
-): Object {
+  modules               ,
+  incomingParams              
+)         {
   return prepareMessagePayload(modules, incomingParams);
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  membersResponse: Object
-): MembersListResponse {
+  modules               ,
+  membersResponse        
+)                      {
   return membersResponse;
 }

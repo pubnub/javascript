@@ -1,13 +1,13 @@
-/* @flow */
+/*       */
 
 import { GrantArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNAccessManagerGrant;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: GrantArguments) {
+export function validateParams(modules               , incomingParams                ) {
   let { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
@@ -17,20 +17,20 @@ export function validateParams(modules: ModulesInject, incomingParams: GrantArgu
   if (incomingParams.uuids != null && (incomingParams.channels != null || incomingParams.channelGroups != null)) { return 'Both channel/channelgroup and uuid cannot be used in the same request'; }
 }
 
-export function getURL(modules: ModulesInject): string {
+export function getURL(modules               )         {
   let { config } = modules;
   return `/v2/auth/grant/sub-key/${config.subscribeKey}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): number {
+export function getRequestTimeout({ config }               )         {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return false;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: GrantArguments): Object {
+export function prepareParams(modules               , incomingParams                )         {
   const { channels = [],
     channelGroups = [],
     uuids = [],
@@ -75,6 +75,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: GrantArgum
   return params;
 }
 
-export function handleResponse(): Object {
+export function handleResponse()         {
   return {};
 }

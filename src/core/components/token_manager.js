@@ -1,22 +1,22 @@
-/* @flow */
+/*       */
 import Config from './config';
 import {
   GrantTokenOutput,
 } from '../flow_interfaces';
 
 export default class {
-  _config: Config;
+  _config        ;
 
-  _cbor: any;
+  _cbor     ;
 
-  _token: any;
+  _token     ;
 
-  constructor(config: Config, cbor: any) {
+  constructor(config        , cbor     ) {
     this._config = config;
     this._cbor = cbor;
   }
 
-  setToken(token: string) {
+  setToken(token        ) {
     if (token && token.length > 0) {
       this._token = token;
     } else {
@@ -28,7 +28,7 @@ export default class {
     return this._token;
   }
 
-  extractPermissions(permissions: number) {
+  extractPermissions(permissions        ) {
     let permissionsResult = {
       read: false,
       write: false,
@@ -74,7 +74,7 @@ export default class {
     return permissionsResult;
   }
 
-  parseToken(tokenString: string): GrantTokenOutput {
+  parseToken(tokenString        )                   {
     let parsed = this._cbor.decodeToken(tokenString);
 
     if (parsed !== undefined) {
@@ -85,7 +85,7 @@ export default class {
       let channelPatternPermissions = Object.keys(parsed.pat.chan);
       let groupPatternPermissions = Object.keys(parsed.pat.grp);
 
-      let result: GrantTokenOutput  = {
+      let result                    = {
         version: parsed.v,
         timestamp: parsed.t,
         ttl: parsed.ttl,

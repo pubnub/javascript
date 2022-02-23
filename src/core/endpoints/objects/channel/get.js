@@ -1,23 +1,23 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
+                                                     
 import operationConstants from '../../../constants/operations';
-import type { ChannelMetadata } from './channel';
+                                                 
 import utils from '../../../utils';
 
-export type GetChannelMetadataParams = {|
-  channel: string,
-  include?: {|
-    customFields: ?boolean,
-  |},
-|};
+                                         
+                  
+              
+                           
+     
+   
 
-export type GetChannelMetadataResult = {|
-  status: 200,
-  data: ChannelMetadata,
-|};
+                                         
+              
+                        
+   
 
-const endpoint: EndpointConfig<GetChannelMetadataParams, GetChannelMetadataResult> = {
+const endpoint                                                                     = {
   getOperation: () => operationConstants.PNGetChannelMetadataOperation,
 
   validateParams: (_, params) => {

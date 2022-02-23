@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   FetchMessagesArguments,
@@ -10,7 +10,7 @@ import {
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
-function __processMessage(modules, message: Object): Object | null {
+function __processMessage(modules, message        )                {
   let { config, crypto } = modules;
   if (!config.cipherKey) return message;
 
@@ -21,13 +21,13 @@ function __processMessage(modules, message: Object): Object | null {
   }
 }
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNFetchMessagesOperation;
 }
 
 export function validateParams(
-  modules: ModulesInject,
-  incomingParams: FetchMessagesArguments
+  modules               ,
+  incomingParams                        
 ) {
   let { channels, includeMessageActions = false } = incomingParams;
   let { config } = modules;
@@ -41,9 +41,9 @@ export function validateParams(
 }
 
 export function getURL(
-  modules: ModulesInject,
-  incomingParams: FetchMessagesArguments
-): string {
+  modules               ,
+  incomingParams                        
+)         {
   let { channels = [], includeMessageActions = false } = incomingParams;
   let { config } = modules;
   const endpoint = !includeMessageActions ? 'history' : 'history-with-actions';
@@ -54,18 +54,18 @@ export function getURL(
   }/channel/${utils.encodeString(stringifiedChannels)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): boolean {
+export function getRequestTimeout({ config }               )          {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return true;
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: FetchMessagesArguments
-): Object {
+  modules               ,
+  incomingParams                        
+)         {
   const {
     channels,
     start,
@@ -78,7 +78,7 @@ export function prepareParams(
     includeUUID = true,
     includeMessageType = true
   } = incomingParams;
-  let outgoingParams: Object = {};
+  let outgoingParams         = {};
 
   if (count) {
     outgoingParams.max = count;
@@ -96,10 +96,10 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  serverResponse: HistoryV3Response
-): FetchMessagesResponse {
-  const response: FetchMessagesResponse = {
+  modules               ,
+  serverResponse                   
+)                        {
+  const response                        = {
     channels: {},
   };
 
@@ -107,7 +107,7 @@ export function handleResponse(
     response.channels[channelName] = [];
 
     (serverResponse.channels[channelName] || []).forEach((messageEnvelope) => {
-      let announce: MessageAnnouncement = {};
+      let announce                      = {};
       announce.channel = channelName;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);

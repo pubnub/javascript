@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 /* eslint no-bitwise: ["error", { "allow": ["~", "&", ">>"] }] */
 /* global navigator, window */
 
@@ -14,7 +14,7 @@ import { InternalSetupStruct } from '../core/flow_interfaces';
 import WebCryptography from '../crypto/modules/web';
 import PubNubFile from '../file/modules/web';
 
-function sendBeacon(url: string) {
+function sendBeacon(url        ) {
   if (navigator && navigator.sendBeacon) {
     navigator.sendBeacon(url);
   } else {
@@ -22,7 +22,7 @@ function sendBeacon(url: string) {
   }
 }
 
-function base64ToBinary(base64String: string) {
+function base64ToBinary(base64String        ) {
   const parsedWordArray = CryptoJS.enc.Base64.parse(base64String).words;
   const arrayBuffer = new ArrayBuffer(parsedWordArray.length * 4);
   const view = new Uint8Array(arrayBuffer);
@@ -65,13 +65,13 @@ function stringifyBufferKeys(obj) {
 
   const normalizedObject = {};
 
-  Object.keys(obj).forEach((key: any) => {
+  Object.keys(obj).forEach((key     ) => {
     const keyIsString = isString(key);
     let stringifiedKey = key;
     let value = obj[key];
 
     if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
-      const bytes: Array<any> = keyIsString ? key.split(',') : key;
+      const bytes             = keyIsString ? key.split(',') : key;
 
       stringifiedKey = bytes.reduce((string, byte) => {
         string += String.fromCharCode(byte);
@@ -88,7 +88,7 @@ function stringifyBufferKeys(obj) {
 }
 
 export default class extends PubNubCore {
-  constructor(setup: InternalSetupStruct) {
+  constructor(setup                     ) {
     // extract config.
     const { listenToBrowserNetworkEvents = true } = setup;
 

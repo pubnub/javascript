@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SpaceListInput,
@@ -7,7 +7,7 @@ import {
 } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNGetSpacesOperation;
 }
 
@@ -16,14 +16,14 @@ export function validateParams() {
 }
 
 export function getURL(
-  modules: ModulesInject
-): string {
+  modules               
+)         {
   let { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -32,9 +32,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SpaceListInput
-): Object {
+  modules               ,
+  incomingParams                
+)         {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -77,8 +77,8 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  spacesResponse: Object
-): SpacesListResponse {
+  modules               ,
+  spacesResponse        
+)                     {
   return spacesResponse;
 }

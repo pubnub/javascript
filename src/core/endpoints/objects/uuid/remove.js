@@ -1,20 +1,20 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
+                                                     
 import operationConstants from '../../../constants/operations';
-import type { UUIDMetadata } from './uuid';
+                                           
 import utils from '../../../utils';
 
-export type RemoveUUIDMetadataParams = {|
-  uuid?: string,
-|};
+                                         
+                
+   
 
-export type RemoveUUIDMetadataResult = {|
-  status: 200,
-  data: UUIDMetadata,
-|};
+                                         
+              
+                     
+   
 
-const endpoint: EndpointConfig<RemoveUUIDMetadataParams, RemoveUUIDMetadataResult> = {
+const endpoint                                                                     = {
   getOperation: () => operationConstants.PNRemoveUUIDMetadataOperation,
 
   // No required parameters.

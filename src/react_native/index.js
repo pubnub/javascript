@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import CborReader from 'cbor-sync';
 import { Buffer } from 'buffer';
@@ -15,7 +15,7 @@ import PubNubFile from '../file/modules/react-native';
 global.Buffer = global.Buffer ||  Buffer;
 
 export default class extends PubNubCore {
-  constructor(setup: InternalSetupStruct) {
+  constructor(setup                     ) {
     setup.db = new Database();
     setup.cbor = new Cbor(CborReader.decode, (base64String) => Buffer.from(base64String, 'base64'));
 

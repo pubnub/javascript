@@ -1,11 +1,11 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../endpoint';
+                                                  
 import operationConstants from '../../constants/operations';
-import type { DeleteFileParams, DeleteFileResult } from './types';
+                                                                  
 import utils from '../../utils';
 
-const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
+const endpoint                                                     = {
   getOperation: () => operationConstants.PNListFilesOperation,
 
   validateParams: (_, params) => {
@@ -31,7 +31,7 @@ const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
 
   prepareParams: () => ({}),
 
-  handleResponse: (_, response): DeleteFileResult => ({
+  handleResponse: (_, response)                   => ({
     status: response.status,
   }),
 };

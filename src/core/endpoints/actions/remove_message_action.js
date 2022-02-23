@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   RemoveMessageActionInput,
@@ -9,13 +9,13 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNRemoveMessageActionOperation;
 }
 
 export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: RemoveMessageActionInput
+  { config }               ,
+  incomingParams                          
 ) {
   let { channel, actionTimetoken, messageTimetoken } = incomingParams;
 
@@ -30,15 +30,15 @@ export function useDelete() {
 }
 
 export function getURL(
-  { config }: ModulesInject,
-  incomingParams: RemoveMessageActionInput
-): string {
+  { config }               ,
+  incomingParams                          
+)         {
   let { channel, actionTimetoken, messageTimetoken } = incomingParams;
 
   return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}/message/${messageTimetoken}/action/${actionTimetoken}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -46,13 +46,13 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams()         {
   return {};
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  removeMessageActionResponse: Object
-): RemoveMessageActionResponse {
+  modules               ,
+  removeMessageActionResponse        
+)                              {
   return { data: removeMessageActionResponse.data };
 }

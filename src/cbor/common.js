@@ -1,8 +1,8 @@
 export default class {
-  _base64ToBinary: (base64: string) => any;
-  _cborReader: { decode: (any) => Object };
+  _base64ToBinary                         ;
+  _cborReader                             ;
 
-  constructor(decode: (any) => any, base64ToBinary: (base64: string) => any) {
+  constructor(decode              , base64ToBinary                         ) {
     this._base64ToBinary = base64ToBinary;
     this._decode = decode;
   }

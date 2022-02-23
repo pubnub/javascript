@@ -14,13 +14,13 @@ export class PubNubError extends Error {
   }
 }
 
-function createError(errorPayload: Object, type: string): Object {
+function createError(errorPayload        , type        )         {
   errorPayload.type = type;
   errorPayload.error = true;
   return errorPayload;
 }
 
-export function createValidationError(message: string): Object {
+export function createValidationError(message        )         {
   return createError({ message }, 'validationError');
 }
 
@@ -36,7 +36,7 @@ function decideURL(endpoint, modules, incomingParams) {
   }
 }
 
-export function generatePNSDK(config: Config): string {
+export function generatePNSDK(config        )         {
   if (config.sdkName) {
     return config.sdkName;
   }
@@ -192,7 +192,7 @@ export default function (modules, endpoint, ...args) {
     signRequest(modules, url, outgoingParams, incomingParams, endpoint);
   }
 
-  let onResponse = (status: StatusAnnouncement, payload: Object) => {
+  let onResponse = (status                    , payload        ) => {
     if (status.error) {
       if (endpoint.handleError) {
         endpoint.handleError(modules, incomingParams, status);

@@ -1,40 +1,40 @@
-/* @flow */
+/*       */
 /* eslint max-classes-per-file: ["error", 5] */
 import { APNS2Configuration, APNS2Target } from '../flow_interfaces';
 
 class BaseNotificationPayload {
-  _subtitle: ?string;
-  _payload: Object;
-  _badge: ?number;
-  _sound: ?string;
-  _title: ?string;
-  _body: ?string;
+  _subtitle         ;
+  _payload        ;
+  _badge         ;
+  _sound         ;
+  _title         ;
+  _body         ;
 
   get payload() {
     return this._payload;
   }
 
-  set title(value: ?string) {
+  set title(value         ) {
     this._title = value;
   }
 
-  set subtitle(value: ?string) {
+  set subtitle(value         ) {
     this._subtitle = value;
   }
 
-  set body(value: ?string) {
+  set body(value         ) {
     this._body = value;
   }
 
-  set badge(value: ?number) {
+  set badge(value         ) {
     this._badge = value;
   }
 
-  set sound(value: ?string) {
+  set sound(value         ) {
     this._sound = value;
   }
 
-  constructor(payload: Object, title: ?string, body: ?string) {
+  constructor(payload        , title         , body         ) {
     this._payload = payload;
 
     this._setDefaultPayloadStructure();
@@ -51,11 +51,11 @@ class BaseNotificationPayload {
 }
 
 export class APNSNotificationPayload extends BaseNotificationPayload {
-  _configurations: Array<APNS2Configuration>;
-  _apnsPushType: ?string;
-  _isSilent: boolean;
+  _configurations                           ;
+  _apnsPushType         ;
+  _isSilent         ;
 
-  set configurations(value: Array<APNS2Configuration>) {
+  set configurations(value                           ) {
     if (!value || !value.length) return;
 
     this._configurations = value;
@@ -69,7 +69,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return this._title;
   }
 
-  set title(value: ?string) {
+  set title(value         ) {
     if (!value || !value.length) return;
 
     this._payload.aps.alert.title = value;
@@ -80,7 +80,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return this._subtitle;
   }
 
-  set subtitle(value: ?string) {
+  set subtitle(value         ) {
     if (!value || !value.length) return;
 
     this._payload.aps.alert.subtitle = value;
@@ -91,7 +91,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return this._body;
   }
 
-  set body(value: ?string) {
+  set body(value         ) {
     if (!value || !value.length) return;
 
     this._payload.aps.alert.body = value;
@@ -102,7 +102,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return this._badge;
   }
 
-  set badge(value: ?number) {
+  set badge(value         ) {
     if (value === undefined || value === null) return;
 
     this._payload.aps.badge = value;
@@ -113,14 +113,14 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return this._sound;
   }
 
-  set sound(value: ?string) {
+  set sound(value         ) {
     if (!value || !value.length) return;
 
     this._payload.aps.sound = value;
     this._sound = value;
   }
 
-  set silent(value: boolean) {
+  set silent(value         ) {
     this._isSilent = value;
   }
 
@@ -128,7 +128,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     this._payload.aps = { alert: {} };
   }
 
-  toObject(): ?Object {
+  toObject()          {
     let payload = { ...this._payload };
     /** @type {{alert: Object, badge: number, sound: string}} */
     let aps = payload.aps;
@@ -144,7 +144,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
       }
 
       let configurations = [];
-      this._configurations.forEach((configuration: APNS2Configuration) => {
+      this._configurations.forEach((configuration                    ) => {
         configurations.push(this._objectFromAPNS2Configuration(configuration));
       });
 
@@ -167,24 +167,24 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return this._isSilent || Object.keys(alert).length ? payload : null;
   }
 
-  _objectFromAPNS2Configuration(configuration: APNS2Configuration) {
+  _objectFromAPNS2Configuration(configuration                    ) {
     if (!configuration.targets || !configuration.targets.length) {
       throw new ReferenceError('At least one APNS2 target should be provided');
     }
 
     let targets = [];
-    configuration.targets.forEach((target: APNS2Target) => {
+    configuration.targets.forEach((target             ) => {
       targets.push(this._objectFromAPNSTarget(target));
     });
 
     const { collapseId, expirationDate } = configuration;
-    let objectifiedConfiguration: {
-      auth_method: string,
-      targets: Array<Object>,
-      version: string,
-      collapse_id?: string,
-      expiration?: string
-    } = { auth_method: 'token', targets, version: 'v2' };
+    let objectifiedConfiguration   
+                          
+                             
+                      
+                           
+                         
+      = { auth_method: 'token', targets, version: 'v2' };
 
     if (collapseId && collapseId.length) {
       objectifiedConfiguration.collapse_id = collapseId;
@@ -197,7 +197,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
     return objectifiedConfiguration;
   }
 
-  _objectFromAPNSTarget(target: APNS2Target) {
+  _objectFromAPNSTarget(target             ) {
     if (!target.topic || !target.topic.length) {
       throw new TypeError('Target \'topic\' undefined.');
     }
@@ -208,11 +208,11 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
       excludedDevices = []
     } = target;
 
-    let objectifiedTarget: {
-      topic: string,
-      environment: string,
-      excluded_devices?: Array<string>
-    } = { topic, environment };
+    let objectifiedTarget   
+                    
+                          
+                                      
+      = { topic, environment };
 
     if (excludedDevices.length) {
       objectifiedTarget.excluded_devices = excludedDevices;
@@ -223,16 +223,16 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
 }
 
 export class MPNSNotificationPayload extends BaseNotificationPayload  {
-  _backContent: ?string;
-  _backTitle: ?string;
-  _count: ?number;
-  _type: ?string;
+  _backContent         ;
+  _backTitle         ;
+  _count         ;
+  _type         ;
 
   get backContent() {
     return this._backContent;
   }
 
-  set backContent(value: ?string) {
+  set backContent(value         ) {
     if (!value || !value.length) return;
 
     this._payload.back_content = value;
@@ -243,7 +243,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this._backTitle;
   }
 
-  set backTitle(value: ?string) {
+  set backTitle(value         ) {
     if (!value || !value.length) return;
 
     this._payload.back_title = value;
@@ -254,7 +254,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this._count;
   }
 
-  set count(value: ?number) {
+  set count(value         ) {
     if (value === undefined || value === null) return;
 
     this._payload.count = value;
@@ -265,7 +265,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this._title;
   }
 
-  set title(value: ?string) {
+  set title(value         ) {
     if (!value || !value.length) return;
 
     this._payload.title = value;
@@ -276,7 +276,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this._type;
   }
 
-  set type(value: ?string) {
+  set type(value         ) {
     if (!value || !value.length) return;
 
     this._payload.type = value;
@@ -287,7 +287,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this.backTitle;
   }
 
-  set subtitle(value: ?string) {
+  set subtitle(value         ) {
     this.backTitle = value;
   }
 
@@ -295,7 +295,7 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this.backContent;
   }
 
-  set body(value: ?string) {
+  set body(value         ) {
     this.backContent = value;
   }
 
@@ -303,19 +303,19 @@ export class MPNSNotificationPayload extends BaseNotificationPayload  {
     return this.count;
   }
 
-  set badge(value: ?number) {
+  set badge(value         ) {
     this.count = value;
   }
 
-  toObject(): ?Object {
+  toObject()          {
     return Object.keys(this._payload).length ? { ...this._payload } : null;
   }
 }
 
 export class FCMNotificationPayload extends BaseNotificationPayload  {
-  _isSilent: boolean;
-  _icon: ?string;
-  _tag: ?string;
+  _isSilent         ;
+  _icon         ;
+  _tag         ;
 
   get notification() {
     return this._payload.notification;
@@ -329,7 +329,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     return this._title;
   }
 
-  set title(value: ?string) {
+  set title(value         ) {
     if (!value || !value.length) return;
 
     this._payload.notification.title = value;
@@ -340,7 +340,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     return this._body;
   }
 
-  set body(value: ?string) {
+  set body(value         ) {
     if (!value || !value.length) return;
 
     this._payload.notification.body = value;
@@ -351,7 +351,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     return this._sound;
   }
 
-  set sound(value: ?string) {
+  set sound(value         ) {
     if (!value || !value.length) return;
 
     this._payload.notification.sound = value;
@@ -362,7 +362,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     return this._icon;
   }
 
-  set icon(value: ?string) {
+  set icon(value         ) {
     if (!value || !value.length) return;
 
     this._payload.notification.icon = value;
@@ -373,14 +373,14 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     return this._tag;
   }
 
-  set tag(value: ?string) {
+  set tag(value         ) {
     if (!value || !value.length) return;
 
     this._payload.notification.tag = value;
     this._tag = value;
   }
 
-  set silent(value: boolean) {
+  set silent(value         ) {
     this._isSilent = value;
   }
 
@@ -389,7 +389,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
     this._payload.data = {};
   }
 
-  toObject(): ?Object {
+  toObject()          {
     let data = { ...this._payload.data };
     let notification = null;
     let payload = {};
@@ -423,18 +423,18 @@ export class FCMNotificationPayload extends BaseNotificationPayload  {
 }
 
 class NotificationsPayload {
-  _payload: {apns: Object, mpns: Object, fcm: Object};
-  _debugging: boolean;
-  _subtitle: ?string;
-  _badge: ?number;
-  _sound: ?string;
-  _title: ?string;
-  _body: ?string;
-  apns: APNSNotificationPayload;
-  mpns: MPNSNotificationPayload;
-  fcm: FCMNotificationPayload;
+  _payload                                           ;
+  _debugging         ;
+  _subtitle         ;
+  _badge         ;
+  _sound         ;
+  _title         ;
+  _body         ;
+  apns                         ;
+  mpns                         ;
+  fcm                        ;
 
-  set debugging(value: boolean) {
+  set debugging(value         ) {
     this._debugging = value;
   }
 
@@ -450,7 +450,7 @@ class NotificationsPayload {
     return this._subtitle;
   }
 
-  set subtitle(value: ?string) {
+  set subtitle(value         ) {
     this._subtitle = value;
     this.apns.subtitle = value;
     this.mpns.subtitle = value;
@@ -461,7 +461,7 @@ class NotificationsPayload {
     return this._badge;
   }
 
-  set badge(value: ?number) {
+  set badge(value         ) {
     this._badge = value;
     this.apns.badge = value;
     this.mpns.badge = value;
@@ -472,14 +472,14 @@ class NotificationsPayload {
     return this._sound;
   }
 
-  set sound(value: ?string) {
+  set sound(value         ) {
     this._sound = value;
     this.apns.sound = value;
     this.mpns.sound = value;
     this.fcm.sound = value;
   }
 
-  constructor(title: ?string, body: ?string) {
+  constructor(title         , body         ) {
     this._payload = { apns: {}, mpns: {}, fcm: {} };
     this._title = title;
     this._body = body;
@@ -499,7 +499,7 @@ class NotificationsPayload {
    * @returns {Object} Object with data, which can be sent with publish method
    * call and trigger remote notifications for specified platforms.
    */
-  buildPayload(platforms: Array<string>) {
+  buildPayload(platforms               ) {
     let payload = {};
 
     if (platforms.includes('apns') || platforms.includes('apns2')) {

@@ -1,11 +1,11 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig, Modules } from '../endpoint';
+                                                           
 import operationConstants from '../../constants/operations';
-import type { PublishFileParams, PublishFileResult } from './types';
+                                                                    
 import utils from '../../utils';
 
-const preparePayload = ({ crypto, config }: Modules, payload: any): string => {
+const preparePayload = ({ crypto, config }         , payload     )         => {
   let stringifiedPayload = JSON.stringify(payload);
 
   if (config.cipherKey) {
@@ -16,7 +16,7 @@ const preparePayload = ({ crypto, config }: Modules, payload: any): string => {
   return stringifiedPayload || '';
 };
 
-const endpoint: EndpointConfig<PublishFileParams, PublishFileResult> = {
+const endpoint                                                       = {
   getOperation: () => operationConstants.PNPublishFileOperation,
 
   validateParams: (_, params) => {
@@ -71,7 +71,7 @@ const endpoint: EndpointConfig<PublishFileParams, PublishFileResult> = {
     return outParams;
   },
 
-  handleResponse: (_, response): PublishFileResult => ({
+  handleResponse: (_, response)                    => ({
     timetoken: response['2'],
   }),
 };

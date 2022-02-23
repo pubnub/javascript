@@ -1,13 +1,13 @@
-/* @flow */
+/*       */
 
 import { ModifyDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNPushNotificationEnabledChannelsOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs) {
+export function validateParams(modules               , incomingParams                  ) {
   let { device, pushGateway, channels, topic } = incomingParams;
   let { config } = modules;
 
@@ -18,7 +18,7 @@ export function validateParams(modules: ModulesInject, incomingParams: ModifyDev
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: ModifyDeviceArgs): string {
+export function getURL(modules               , incomingParams                  )         {
   let { device, pushGateway } = incomingParams;
   let { config } = modules;
 
@@ -29,7 +29,7 @@ export function getURL(modules: ModulesInject, incomingParams: ModifyDeviceArgs)
   return `/v1/push/sub-key/${config.subscribeKey}/devices/${device}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -37,7 +37,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: ModifyDeviceArgs): Object {
+export function prepareParams(modules               , incomingParams                  )         {
   let { pushGateway, channels = [], environment = 'development', topic } = incomingParams;
   let parameters = { type: pushGateway, remove: channels.join(',') };
 
@@ -49,6 +49,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: ModifyDevi
   return parameters;
 }
 
-export function handleResponse(): Object {
+export function handleResponse()         {
   return {};
 }

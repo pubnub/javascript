@@ -1,11 +1,11 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../endpoint';
+                                                  
 import operationConstants from '../../constants/operations';
-import type { ListFilesParams, ListFilesResult } from './types';
+                                                                
 import utils from '../../utils';
 
-const endpoint: EndpointConfig<ListFilesParams, ListFilesResult> = {
+const endpoint                                                   = {
   getOperation: () => operationConstants.PNListFilesOperation,
 
   validateParams: (_, params) => {
@@ -34,7 +34,7 @@ const endpoint: EndpointConfig<ListFilesParams, ListFilesResult> = {
     return outParams;
   },
 
-  handleResponse: (_, response): ListFilesResult => ({
+  handleResponse: (_, response)                  => ({
     status: response.status,
     data: response.data,
     next: response.next,

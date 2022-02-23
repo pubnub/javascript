@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 /* global FormData */
 /* global fetch */
 
@@ -6,10 +6,10 @@ import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfac
 import { postfile as postfilewebnode } from './web-node';
 
 async function postfileuri(
-  url: string,
-  fields: $ReadOnlyArray<{ key: string, value: string }>,
-  fileInput: any
-): Promise<any> {
+  url        ,
+  fields                                                ,
+  fileInput     
+)               {
   const formData = new FormData();
 
   fields.forEach(({ key, value }) => {
@@ -27,10 +27,10 @@ async function postfileuri(
 }
 
 export async function postfile(
-  url: string,
-  fields: $ReadOnlyArray<{ key: string, value: string }>,
-  fileInput: any
-): Promise<any> {
+  url        ,
+  fields                                                ,
+  fileInput     
+)               {
   if (!fileInput.uri) {
     return postfilewebnode(url, fields, fileInput);
   } else {
@@ -38,7 +38,7 @@ export async function postfile(
   }
 }
 
-export function getfile(params: Object, endpoint: EndpointDefinition, callback: Function): Promise<any> {
+export function getfile(params        , endpoint                    , callback          )               {
   let url = this.getStandardOrigin() + endpoint.url;
 
   if (params && Object.keys(params).length > 0) {
@@ -57,7 +57,7 @@ export function getfile(params: Object, endpoint: EndpointDefinition, callback: 
 
   fetchResult.then(async (resp) => {
     let parsedResponse;
-    let status: StatusAnnouncement = {};
+    let status                     = {};
     status.error = false;
     status.operation = endpoint.operation;
 
@@ -104,7 +104,7 @@ export function getfile(params: Object, endpoint: EndpointDefinition, callback: 
   });
 
   fetchResult.catch((err) => {
-    let status: StatusAnnouncement = {};
+    let status                     = {};
     status.error = true;
     status.operation = endpoint.operation;
 

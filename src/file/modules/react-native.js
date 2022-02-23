@@ -1,26 +1,26 @@
-/** @flow */
+/**       */
 
 import { IFile, FileClass } from '../';
 
-type PubNubFileReactNativeConstructor =
-| File
-| {|
-    data: string,
-    name: string,
-    mimeType: string,
-  |}
-| {|
-    data: ArrayBuffer,
-    name: string,
-    mimeType: string,
-  |}
-| {|
-    uri: string,
-    name: string,
-    mimeType: string,
-  |};
+                                       
+      
+    
+                 
+                 
+                     
+    
+    
+                      
+                 
+                     
+    
+    
+                
+                 
+                     
+     
 
-const PubNubFile: FileClass = class PubNubFile implements IFile {
+const PubNubFile            = class PubNubFile                  {
   static supportsFile = typeof File !== 'undefined';
   static supportsBlob = typeof Blob !== 'undefined';
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
@@ -30,15 +30,15 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   static supportsEncryptFile = false;
   static supportsFileUri = true;
 
-  static create(config: PubNubFileReactNativeConstructor) {
+  static create(config                                  ) {
     return new this(config);
   }
 
-  data: any;
-  name: string;
-  mimeType: string;
+  data     ;
+  name        ;
+  mimeType        ;
 
-  constructor(config: PubNubFileReactNativeConstructor) {
+  constructor(config                                  ) {
     if (config instanceof File) {
       this.data = config;
 

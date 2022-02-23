@@ -1,4 +1,4 @@
-/** @flow */
+/**       */
 
 import nock from 'nock';
 import utils from '../../../utils';
@@ -12,8 +12,8 @@ describe('objects channel', () => {
   const UUID = 'myUUID';
   const AUTH_KEY = 'myAuthKey';
 
-  let pubnub: PubNub;
-  let PNSDK: string;
+  let pubnub        ;
+  let PNSDK        ;
 
   before(() => {
     nock.disableNetConnect();

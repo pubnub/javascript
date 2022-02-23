@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 export default {
   // SDK will announce when the network appears to be connected again.
   PNNetworkUpCategory: 'PNNetworkUpCategory',

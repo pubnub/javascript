@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SpacesObjectInput,
@@ -12,13 +12,13 @@ function prepareMessagePayload(modules, incomingParams) {
   return incomingParams;
 }
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNUpdateSpaceOperation;
 }
 
 export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: SpacesObjectInput
+  { config }               ,
+  incomingParams                   
 ) {
   let { id, name, custom } = incomingParams;
 
@@ -43,19 +43,19 @@ export function usePatch() {
   return true;
 }
 
-export function getURL(modules: ModulesInject, incomingParams: SpacesObjectInput): string {
+export function getURL(modules               , incomingParams                   )         {
   let { config } = modules;
   const { id } = incomingParams;
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(id)}`;
 }
 
-export function patchURL(modules: ModulesInject, incomingParams: SpacesObjectInput): string {
+export function patchURL(modules               , incomingParams                   )         {
   const { config } = modules;
   const { id } = incomingParams;
   return `/v1/objects/${config.subscribeKey}/spaces/${utils.encodeString(id)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -64,9 +64,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SpacesObjectInput
-): Object {
+  modules               ,
+  incomingParams                   
+)         {
   let { include } = incomingParams;
   const params = {};
 
@@ -97,15 +97,15 @@ export function prepareParams(
 }
 
 export function patchPayload(
-  modules: ModulesInject,
-  incomingParams: SpacesObjectInput
-): Object {
+  modules               ,
+  incomingParams                   
+)         {
   return prepareMessagePayload(modules, incomingParams);
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  spacesResponse: Object
-): SpacesResponse {
+  modules               ,
+  spacesResponse        
+)                 {
   return spacesResponse;
 }

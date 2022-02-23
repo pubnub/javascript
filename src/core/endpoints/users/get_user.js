@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   SingleUserInput,
@@ -8,26 +8,26 @@ import {
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNGetUserOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: SingleUserInput) {
+export function validateParams(modules               , incomingParams                 ) {
   let { userId } = incomingParams;
 
   if (!userId) return 'Missing userId';
 }
 
 export function getURL(
-  modules: ModulesInject,
-  incomingParams: SingleUserInput
-): string {
+  modules               ,
+  incomingParams                 
+)         {
   let { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }               ) {
   return config.getTransactionTimeout();
 }
 
@@ -36,9 +36,9 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SingleUserInput
-): Object {
+  modules               ,
+  incomingParams                 
+)         {
   let { include } = incomingParams;
   const params = {};
 
@@ -69,8 +69,8 @@ export function prepareParams(
 }
 
 export function handleResponse(
-  modules: ModulesInject,
-  usersResponse: Object
-): UsersResponse {
+  modules               ,
+  usersResponse        
+)                {
   return usersResponse;
 }

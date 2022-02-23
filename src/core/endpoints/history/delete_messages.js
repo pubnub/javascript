@@ -1,14 +1,14 @@
-/* @flow */
+/*       */
 
 import { FetchHistoryArguments, HistoryResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation()         {
   return operationConstants.PNDeleteMessagesOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: FetchHistoryArguments) {
+export function validateParams(modules               , incomingParams                       ) {
   let { channel } = incomingParams;
   let { config } = modules;
 
@@ -20,25 +20,25 @@ export function useDelete() {
   return true;
 }
 
-export function getURL(modules: ModulesInject, incomingParams: FetchHistoryArguments): string {
+export function getURL(modules               , incomingParams                       )         {
   let { channel } = incomingParams;
   let { config } = modules;
 
   return `/v3/history/sub-key/${config.subscribeKey}/channel/${utils.encodeString(channel)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): boolean {
+export function getRequestTimeout({ config }               )          {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported()          {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: FetchHistoryArguments): Object {
+export function prepareParams(modules               , incomingParams                       )         {
   const { start, end } = incomingParams;
 
-  let outgoingParams: Object = {};
+  let outgoingParams         = {};
 
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
@@ -46,6 +46,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: FetchHisto
   return outgoingParams;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object): HistoryResponse {
+export function handleResponse(modules               , serverResponse        )                  {
   return serverResponse.payload;
 }
