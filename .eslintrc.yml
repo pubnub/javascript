@@ -4,17 +4,11 @@ parser: babel-eslint
 
 plugins:
   - mocha
-  - flowtype
 
 ignorePatterns:
-  - 'flow-typed/**/*'
   - 'test/**/*'
 
 globals:
-  '$Shape': readonly
-  '$Diff': readonly
-  '$ReadOnlyArray': readonly
-  'buffer$NonBufferEncoding': readonly
   'File': readonly
   'FileReader': readonly
   'atob': readonly
