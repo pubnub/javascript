@@ -1,5 +1,3 @@
-/*       */
-
 import superagent from 'superagent';
 import superagentProxy from 'superagent-proxy';
 import AgentKeepAlive from 'agentkeepalive';

@@ -1,15 +1,6 @@
-require('@babel/register')({
-  presets: [['@babel/env', {
-    targets: {
-      node: true,
-    }
-  }]]
-});
-
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const chaiNock = require('chai-nock');
-
 
 chai.use(chaiAsPromised);
 chai.use(chaiNock);
