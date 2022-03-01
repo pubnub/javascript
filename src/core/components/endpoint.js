@@ -1,9 +1,7 @@
 /*       */
 
 import uuidGenerator from './uuid';
-import { StatusAnnouncement } from '../flow_interfaces';
 import utils from '../utils';
-import Config from './config';
 import operationConstants from '../constants/operations';
 import categoryConstants from '../constants/categories';
 
@@ -191,6 +189,10 @@ export default function (modules, endpoint, ...args) {
     forceBuffered:
       typeof endpoint.forceBuffered === 'function'
         ? endpoint.forceBuffered(modules, incomingParams)
+        : null,
+    abortSignal:
+      typeof endpoint.getAbortSignal === 'function'
+        ? endpoint.getAbortSignal(modules, incomingParams)
         : null,
   };
 

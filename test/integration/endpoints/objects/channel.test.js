@@ -6,10 +6,6 @@ import PubNub from '../../../../src/node/index';
 
 import { asResponse, allChannels, channel1 } from './fixtures';
 
-process.on('unhandledRejection', (r, p) => {
-  console.log(r, p);
-});
-
 describe('objects channel', () => {
   const SUBSCRIBE_KEY = 'mySubKey';
   const PUBLISH_KEY = 'myPublishKey';

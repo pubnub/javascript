@@ -9,7 +9,7 @@
     "build": "rollup -c",
     "lint": "eslint \"src/**/*\" --config .eslintrc.yml",
     "format": "prettier --write \"./**/*.{js,jsx,json}\"",
-    "test": "npm run test:node",
+    "test": "jest",
     "test:node": "mocha --config .mocharc.yml",
     "test:feature:objectsv2:node": "mocha --no-config --require test/setup.js --reporter spec test/dist/objectsv2.test.js",
     "test:feature:fileupload:node": "mocha --no-config --require test/setup.js --reporter spec test/feature/file_upload.node.test.js",
@@ -107,6 +107,7 @@
   "prettier": {
     "semi": true,
     "tabWidth": 2,
-    "singleQuote": true
+    "singleQuote": true,
+    "printWidth": 120
   }
 }

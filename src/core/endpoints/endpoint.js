@@ -1,3 +1,0 @@
-/**       */
-
-// endpoint definition structure
