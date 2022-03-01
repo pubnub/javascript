@@ -1,3 +1,9 @@
+## v5.0.1
+March 01 2022
+
+#### Fixed
+- Fixes and edge case where base64 parsing in web build removes too many null bytes from the string.
+
 ## v5.0.0
 January 12 2022
 

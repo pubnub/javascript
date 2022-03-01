@@ -1,4 +1,4 @@
-/*! 5.0.0 / Consumer  */
+/*! 5.0.1 / Consumer  */
 exports["PubNub"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -597,7 +597,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '5.0.0';
+      return '5.0.1';
     }
   }, {
     key: "_addPnsdkSuffix",

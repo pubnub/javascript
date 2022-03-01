@@ -1,4 +1,4 @@
-/*! 5.0.0 / Consumer  */
+/*! 5.0.1 / Consumer  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -607,7 +607,7 @@ var _default = function () {
   }, {
     key: "getVersion",
     value: function getVersion() {
-      return '5.0.0';
+      return '5.0.1';
     }
   }, {
     key: "_addPnsdkSuffix",
@@ -5053,7 +5053,7 @@ function base64ToBinary(base64String) {
   }
 
   for (var byteIdx = byteOffset + 3; byteIdx >= byteOffset; byteIdx -= 1) {
-    if (view[byteIdx] === 0) {
+    if (view[byteIdx] === 0 && zeroBytesCount < 3) {
       zeroBytesCount += 1;
     }
   }
