@@ -269,7 +269,7 @@ export default class {
         }
       }
       if (channelGroup in this._presenceChannelGroups) {
-        delete this._channelGroups[channelGroup];
+        delete this._presenceChannelGroups[channelGroup];
         actualChannelGroups.push(channelGroup);
       }
     });
