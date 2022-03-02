@@ -1,6 +1,9 @@
 ## v5.0.1
 March 02 2022
 
+#### Fixed
+- Unsubscribe fix unsubscribe from channel group presence.
+
 ## v5.0.0
 January 12 2022
 

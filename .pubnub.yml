@@ -3,7 +3,8 @@ changelog:
   - date: 2022-03-02
     version: v5.0.1
     changes:
-
+      - type: bug
+        text: "Unsubscribe fix unsubscribe from channel group presence"
   - date: 2022-01-12
     version: v5.0.0
     changes:
