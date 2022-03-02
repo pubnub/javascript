@@ -1,6 +1,10 @@
 ---
 changelog:
   - date: 2022-03-02
+    version: v5.0.1
+    changes:
+
+  - date: 2022-03-02
     version: 5.0.1
     changes:
 
@@ -1119,7 +1123,7 @@ sdks:
             distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/5.0.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v5.0.1.zip
             requires:
               -
                 name: "agentkeepalive"
@@ -1883,7 +1887,7 @@ sdks:
             distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/5.0.1/pubnub.5.0.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v5.0.1/pubnub.5.0.1.js
             requires:
               -
                 name: "agentkeepalive"
