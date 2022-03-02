@@ -24,6 +24,7 @@
   },
   "main": "./lib/node/index.js",
   "react-native": "./lib/react_native/index.js",
+  "metro": "./lib/react_native/index.js",
   "nativescript": "./lib/nativescript/index.js",
   "browser": "./dist/web/pubnub.min.js",
   "repository": {
