@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'mocha', 'prettier'],
-  extends: ['airbnb', 'plugin:@typescript-eslint/recommended'],
+  extends: ['plugin:@typescript-eslint/recommended'],
   rules: {
     'prettier/prettier': 'error',
     'no-underscore-dangle': 0,

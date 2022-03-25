@@ -9,7 +9,8 @@
     "allowJs": true,
     "noEmitOnError": true,
     "strict": true,
-    "outDir": "./lib"
+    "outDir": "./lib",
+    "downlevelIteration": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
