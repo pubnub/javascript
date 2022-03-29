@@ -13,7 +13,7 @@ module.exports = {
     'object-curly-newline': 0,
     'no-restricted-exports': 0,
     'operator-linebreak': 0,
-    'implicit-arrow-linebreak': 1,
+    'implicit-arrow-linebreak': 0,
     'class-methods-use-this': 0,
     'no-prototype-builtins': 1,
     'prefer-destructuring': 0,

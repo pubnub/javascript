@@ -49,11 +49,14 @@ export type MapOf<S extends (...args: any[]) => { type: string | number | symbol
 
 type EffectCreator<K, P, S extends any[]> = {
   (...args: S): Invocation<K, P>;
+
+  type: K;
 };
 
 type ManagedEffectCreator<K, P, S extends any[]> = {
   (...args: S): Invocation<K, P>;
 
+  type: K;
   cancel: Invocation<'CANCEL', K>;
 };
 
@@ -64,6 +67,8 @@ export function createEffect<K extends string | number | symbol, P, S extends an
   const creator: EffectCreator<K, P, S> = (...args: S) => {
     return { type, payload: fn(...args), managed: false };
   };
+
+  creator.type = type;
 
   return creator;
 }
@@ -76,6 +81,7 @@ export function createManagedEffect<K extends string | number | symbol, P, S ext
     return { type, payload: fn(...args), managed: true };
   };
 
+  creator.type = type;
   creator.cancel = { type: 'CANCEL', payload: type, managed: false };
 
   return creator;

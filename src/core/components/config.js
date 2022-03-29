@@ -2,7 +2,6 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
 const PRESENCE_TIMEOUT_MINIMUM = 20;
 const PRESENCE_TIMEOUT_DEFAULT = 300;
@@ -11,17 +10,11 @@ const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1
 
 export default class {
   subscribeKey;
-
   publishKey;
-
   secretKey;
-
   cipherKey;
-
   authKey;
-
   UUID;
-
   proxy;
 
   /*
@@ -149,6 +142,8 @@ export default class {
 
   useRandomIVs;
 
+  enableSubscribeBeta;
+
   constructor({ setup }) {
     this._PNSDKSuffix = {};
 
@@ -184,6 +179,8 @@ export default class {
 
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
     this.useRandomIVs = setup.useRandomIVs ?? true;
+
+    this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {

@@ -1,47 +1,47 @@
-import { asyncHandler, createEffect, createEvent, Dispatcher, Engine, MapOf } from './core';
+import { asyncHandler, Dispatcher, Engine } from './core';
+import { Effects, handshake } from './effects';
+import { Events, subscriptionChange } from './events';
 
-const toggle = createEvent('TOGGLE', () => undefined);
-const reset = createEvent('RESET', () => undefined);
+import { UnsubscribedState } from './states/unsubscribed';
 
-const notifyState = createEffect('NOTIFY', (amount: number) => amount);
+export class EventEngine {
+  private engine: Engine<Events, Effects> = new Engine();
 
-type Events = MapOf<typeof toggle | typeof reset>;
-type Effects = MapOf<typeof notifyState>;
+  constructor(private dispatcher: Dispatcher<Effects>) {
+    this.engine.subscribe(dispatcher.dispatch.bind(dispatcher));
+    this.engine.start(UnsubscribedState, undefined);
+  }
 
-const engine = new Engine<Events, Effects>();
+  subscribe({ channels, groups }: { channels?: string[]; groups?: string[] }) {
+    this.engine.transition(subscriptionChange(channels ?? [], groups ?? []));
+  }
+
+  unsubscribe() {
+    return;
+  }
+
+  unsubscribeAll() {
+    return;
+  }
+
+  reconnect() {
+    return;
+  }
+
+  disconnect() {
+    return;
+  }
+}
+
 const dispatcher = new Dispatcher<Effects>();
 
-const OffState = engine.describe<{ count: number }>('OFF');
-const OnState = engine.describe<{ count: number }>('ON');
-
-OffState.on('TOGGLE', (context) => {
-  return OnState.with({ count: context.count + 1 });
-}).on('RESET', () => {
-  return OnState.with({ count: 0 });
-});
-
-OnState.onEnter((context) => notifyState(context.count))
-  .on('TOGGLE', (context) => {
-    return OffState.with({ count: context.count });
-  })
-  .on('RESET', () => {
-    return OffState.with({ count: 0 });
-  });
-
-engine.subscribe(dispatcher.dispatch.bind(dispatcher));
-
-engine.start(OffState, { count: 0 });
-engine.transition(toggle());
-engine.transition(toggle());
-engine.transition(toggle());
-engine.transition(toggle());
-engine.transition(toggle());
-engine.transition(toggle());
-engine.transition(toggle());
-
 dispatcher.on(
-  'NOTIFY',
-  asyncHandler(async (payload) => {
-    console.log(`Lamp is on (#${payload})`);
+  handshake.type,
+  asyncHandler(async (event) => {
+    console.log(event);
   }),
 );
+
+const ee = new EventEngine(dispatcher);
+
+ee.subscribe({ channels: ['test'] });

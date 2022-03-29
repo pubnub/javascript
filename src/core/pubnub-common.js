@@ -38,10 +38,6 @@ import * as getMessageActionEndpointConfig from './endpoints/actions/get_message
 
 // File Upload API v1
 
-import { IFile, FileClass } from '../file';
-
-import * as fileUploadTypes from './endpoints/file_upload/types';
-
 import listFilesEndpointConfig from './endpoints/file_upload/list_files';
 import generateUploadUrlEndpointConfig from './endpoints/file_upload/generate_upload_url';
 import publishFileEndpointConfig from './endpoints/file_upload/publish_file';
@@ -113,8 +109,9 @@ import * as subscribeEndpointConfig from './endpoints/subscribe';
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
-import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
+import { EventEngine } from '../event-engine';
+import { createDispatcher } from '../event-engine/dispatcher';
 
 export default class {
   _config;
@@ -337,17 +334,41 @@ export default class {
     const listenerManager = new ListenerManager();
     this._listenerManager = listenerManager;
 
-    const subscriptionManager = new SubscriptionManager({
-      timeEndpoint,
-      leaveEndpoint,
-      heartbeatEndpoint,
-      setStateEndpoint,
-      subscribeEndpoint,
-      crypto: modules.crypto,
-      config: modules.config,
-      listenerManager,
-      getFileUrl: (params) => getFileUrlFunction(modules, params),
-    });
+    if (config.enableSubscribeBeta === true) {
+      const dispatcher = createDispatcher();
+      const eventEngine = new EventEngine(dispatcher);
+
+      this.subscribe = eventEngine.subscribe.bind(eventEngine);
+      this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
+    } else {
+      const subscriptionManager = new SubscriptionManager({
+        timeEndpoint,
+        leaveEndpoint,
+        heartbeatEndpoint,
+        setStateEndpoint,
+        subscribeEndpoint,
+        crypto: modules.crypto,
+        config: modules.config,
+        listenerManager,
+        getFileUrl: (params) => getFileUrlFunction(modules, params),
+      });
+
+      this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+      this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+      this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
+      this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
+      this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+      this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
+      this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+
+      this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+      this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
+
+      this.destroy = (isOffline) => {
+        subscriptionManager.unsubscribeAll(isOffline);
+        subscriptionManager.disconnect();
+      };
+    }
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
@@ -376,7 +397,6 @@ export default class {
     this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
     this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
-    this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
@@ -527,26 +547,9 @@ export default class {
 
     this.time = timeEndpoint;
 
-    // subscription related methods
-    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
-    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
-    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
-    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
-    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-
-    this.destroy = (isOffline) => {
-      subscriptionManager.unsubscribeAll(isOffline);
-      subscriptionManager.disconnect();
-    };
-
     // --- deprecated  ------------------
     this.stop = this.destroy; // --------
     // --- deprecated  ------------------
-
-    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
-
-    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
-    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
     // mount crypto
     this.encrypt = crypto.encrypt.bind(crypto);
