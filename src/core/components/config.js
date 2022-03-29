@@ -139,9 +139,7 @@ export default class {
 
   // How many times the publish-file should be retried before giving up
   fileUploadPublishRetryLimit;
-
   useRandomIVs;
-
   enableSubscribeBeta;
 
   constructor({ setup }) {
@@ -180,7 +178,12 @@ export default class {
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
     this.useRandomIVs = setup.useRandomIVs ?? true;
 
+    // flag for beta subscribe feature enablement
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
+
+    if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
+      throw new Error('not implemented');
+    }
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -315,7 +318,7 @@ export default class {
   }
 
   getVersion() {
-    return '5.0.0';
+    return '5.0.1';
   }
 
   _addPnsdkSuffix(name, suffix) {

@@ -106,6 +106,11 @@ import * as fetchMessagesEndpointConfig from './endpoints/fetch_messages';
 import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
 
+// subscription utilities
+import handshakeEndpointConfig from './endpoints/subscriptionUtils/handshake';
+import receiveMessagesConfig from './endpoints/subscriptionUtils/receiveMessages';
+import * as subscriptionTypes from './endpoints/subscriptionUtils/types';
+
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
@@ -151,6 +156,14 @@ export default class {
   getState;
 
   setState;
+  // presence utility methods
+  iAmHere;
+  iAmAway;
+  setPresenceState;
+
+  // subscription utility methods
+  handshake;
+  receiveMessages;
 
   //
   grant;
@@ -334,6 +347,12 @@ export default class {
     const listenerManager = new ListenerManager();
     this._listenerManager = listenerManager;
 
+    this.iAmHere = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    this.iAmAway = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
+    this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
+    this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
+
     if (config.enableSubscribeBeta === true) {
       const dispatcher = createDispatcher();
       const eventEngine = new EventEngine(dispatcher);
@@ -402,7 +421,6 @@ export default class {
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
     this.revokeToken = endpointCreator.bind(this, modules, revokeTokenEndpointConfig);
-    //
     this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);
 
     this.fire = (args, callback) => {
