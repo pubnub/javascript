@@ -1,7 +1,7 @@
 type Listener<T> = (event: T) => void;
 
 export class Subject<T> {
-  private listeners: Set<Listener<T>> = new Set();
+  protected listeners: Set<Listener<T>> = new Set();
 
   constructor(private sync: boolean = false) {}
 
@@ -13,13 +13,17 @@ export class Subject<T> {
     };
   }
 
-  protected notify(event: T) {
-    for (const listener of this.listeners.values()) {
-      if (this.sync) {
+  notify(event: T) {
+    const wrapper = () => {
+      this.listeners.forEach((listener) => {
         listener(event);
-      } else {
-        setTimeout(listener, 0, event);
-      }
+      });
+    };
+
+    if (this.sync) {
+      wrapper();
+    } else {
+      setTimeout(wrapper, 0);
     }
   }
 }

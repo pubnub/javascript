@@ -29,7 +29,7 @@ const endpoint = {
 
   prepareParams: (_, params) => {
     const outParams = {};
-    if (params.channelGroups) {
+    if (params.channelGroups && params.channelGroups.length > 0) {
       outParams['channel-group'] = params.channelGroups.join(',');
     }
     outParams.tt = params.timetoken;

@@ -8,10 +8,10 @@ export type TransitionFunction<
   Effects extends GenericMap,
   EventType extends Event<keyof Events, Events[keyof Events]>,
 > = {
-  (context: Context, event: EventType): Change<any, Events, Effects> | void;
+  (context: Context, event: EventType): Transition<any, Events, Effects> | void;
 };
 
-export type Change<Context, Events extends GenericMap, Effects extends GenericMap> = [
+export type Transition<Context, Events extends GenericMap, Effects extends GenericMap> = [
   State<Context, Events, Effects>,
   Context,
   InvocationTypeFromMap<Effects>[],
@@ -39,7 +39,7 @@ export class State<Context, Events extends GenericMap, Effects extends GenericMa
     return this;
   }
 
-  with(context: Context, effects?: InvocationTypeFromMap<Effects>[]): Change<Context, Events, Effects> {
+  with(context: Context, effects?: InvocationTypeFromMap<Effects>[]): Transition<Context, Events, Effects> {
     return [this, context, effects ?? []];
   }
 

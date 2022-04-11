@@ -3,16 +3,22 @@
 import { Handler } from './handler';
 import { GenericInvocation, GenericMap, InvocationTypeFromMap } from './types';
 
-type HandlerCreator<Payload> = (payload: Payload) => Handler<Payload>;
+type HandlerCreator<Payload, Dependencies> = (
+  payload: Payload,
+  dependencies: Dependencies,
+) => Handler<Payload, Dependencies>;
 
 export class Dispatcher<
   Effects extends GenericMap,
+  Dependencies,
   Invocation extends GenericInvocation = InvocationTypeFromMap<Effects>,
 > {
-  private instances: Map<string, Handler<Effects[any]>> = new Map();
-  private handlers: Map<string, HandlerCreator<Effects[any]>> = new Map();
+  constructor(private readonly dependencies: Dependencies) {}
 
-  on<K extends keyof Effects & string>(type: K, handlerCreator: HandlerCreator<Effects[K]>) {
+  private instances: Map<string, Handler<Effects[any], Dependencies>> = new Map();
+  private handlers: Map<string, HandlerCreator<Effects[any], Dependencies>> = new Map();
+
+  on<K extends keyof Effects & string>(type: K, handlerCreator: HandlerCreator<Effects[K], Dependencies>) {
     this.handlers.set(type, handlerCreator);
   }
 
@@ -35,7 +41,7 @@ export class Dispatcher<
       throw new Error(`Unhandled invocation '${invocation.type}'`);
     }
 
-    const instance = handlerCreator(invocation.payload);
+    const instance = handlerCreator(invocation.payload, this.dependencies);
 
     if (invocation.managed) {
       this.instances.set(invocation.type, instance);

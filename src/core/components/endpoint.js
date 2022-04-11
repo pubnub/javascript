@@ -11,6 +11,8 @@ export class PubNubError extends Error {
     this.name = this.constructor.name;
     this.status = status;
     this.message = message;
+
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -169,7 +171,8 @@ export default function (modules, endpoint, ...args) {
     ignoreBody: typeof endpoint.ignoreBody === 'function' ? endpoint.ignoreBody(modules) : false,
     forceBuffered:
       typeof endpoint.forceBuffered === 'function' ? endpoint.forceBuffered(modules, incomingParams) : null,
-    abortSignal: typeof endpoint.getAbortSignal === 'function' ? endpoint.getAbortSignal(modules, incomingParams) : null
+    abortSignal:
+      typeof endpoint.getAbortSignal === 'function' ? endpoint.getAbortSignal(modules, incomingParams) : null,
   };
 
   outgoingParams.uuid = config.UUID;

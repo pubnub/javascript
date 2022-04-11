@@ -1,3 +1,4 @@
+import { PubNubError } from '../core/components/endpoint';
 import { Cursor } from '../models/Cursor';
 import { createEvent, MapOf } from './core';
 
@@ -19,12 +20,31 @@ export const restore = createEvent(
 );
 
 export const handshakingSuccess = createEvent('HANDSHAKING_SUCCESS', (cursor: Cursor) => cursor);
-export const handshakingFailure = createEvent('HANDSHAKING_FAILURE', () => ({}));
-export const handshakingGiveup = createEvent('HANDSHAKING_GIVEUP', () => ({}));
-export const handshakingReconnect = createEvent('HANDSHAKNG_RECONNECT', () => ({}));
+export const handshakingFailure = createEvent('HANDSHAKING_FAILURE', (error: PubNubError) => error);
 
-export const receivingSuccess = createEvent('RECEIVING_SUCCESS', () => ({}));
-export const receivingFailure = createEvent('RECEIVING_FAILURE', () => ({}));
+export const handshakingReconnectingSuccess = createEvent('HANDSHAKING_RECONNECTING_SUCCESS', (cursor: Cursor) => ({
+  cursor,
+}));
+export const handshakingReconnectingFailure = createEvent(
+  'HANDSHAKING_RECONNECTING_FAILURE',
+  (error: PubNubError) => error,
+);
+export const handshakingReconnectingGiveup = createEvent('HANDSHAKING_RECONNECTING_GIVEUP', () => ({}));
+export const handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', () => ({}));
+
+export const receivingSuccess = createEvent('RECEIVING_SUCCESS', (cursor: Cursor, events: any[]) => ({
+  cursor,
+  events,
+}));
+export const receivingFailure = createEvent('RECEIVING_FAILURE', (error: PubNubError) => error);
+
+export const reconnectingSuccess = createEvent('RECONNECTING_SUCCESS', (cursor: Cursor, events: any[]) => ({
+  cursor,
+  events,
+}));
+export const reconnectingFailure = createEvent('RECONNECTING_FAILURE', (error: PubNubError) => error);
+export const reconnectingGiveup = createEvent('RECONNECTING_GIVEUP', () => ({}));
+export const reconnectingRetry = createEvent('RECONNECTING_RETRY', () => ({}));
 
 export type Events = MapOf<
   | typeof subscriptionChange
@@ -33,8 +53,14 @@ export type Events = MapOf<
   | typeof restore
   | typeof handshakingSuccess
   | typeof handshakingFailure
-  | typeof handshakingGiveup
-  | typeof handshakingReconnect
+  | typeof handshakingReconnectingSuccess
+  | typeof handshakingReconnectingGiveup
+  | typeof handshakingReconnectingFailure
+  | typeof handshakingReconnectingRetry
   | typeof receivingSuccess
-  | typeof receivingSuccess
+  | typeof receivingFailure
+  | typeof reconnectingSuccess
+  | typeof reconnectingFailure
+  | typeof reconnectingGiveup
+  | typeof reconnectingRetry
 >;

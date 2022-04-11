@@ -109,7 +109,6 @@ import * as subscribeEndpointConfig from './endpoints/subscribe';
 // subscription utilities
 import handshakeEndpointConfig from './endpoints/subscriptionUtils/handshake';
 import receiveMessagesConfig from './endpoints/subscriptionUtils/receiveMessages';
-import * as subscriptionTypes from './endpoints/subscriptionUtils/types';
 
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
@@ -354,11 +353,12 @@ export default class {
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
     if (config.enableSubscribeBeta === true) {
-      const dispatcher = createDispatcher();
-      const eventEngine = new EventEngine(dispatcher);
+      const eventEngine = new EventEngine({ handshake: this.handshake, receiveEvents: this.receiveMessages });
 
       this.subscribe = eventEngine.subscribe.bind(eventEngine);
       this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
+
+      this.eventEngine = eventEngine;
     } else {
       const subscriptionManager = new SubscriptionManager({
         timeEndpoint,

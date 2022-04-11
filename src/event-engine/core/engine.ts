@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Subject } from '../../core/event-emitter';
+import { Subject } from '../../core/components/subject';
 
+import { Change } from './change';
 import { State } from './state';
-import { GenericMap, InvocationTypeFromMap, Event } from './types';
+import { GenericMap, Event } from './types';
 
-export class Engine<Events extends GenericMap, Effects extends GenericMap> extends Subject<
-  InvocationTypeFromMap<Effects>
-> {
+export class Engine<Events extends GenericMap, Effects extends GenericMap> extends Subject<Change<Events, Effects>> {
   describe<Context>(label: string): State<Context, Events, Effects> {
     return new State<Context, Events, Effects>(label);
   }
@@ -19,6 +18,12 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
     this.currentState = initialState;
     this.currentContext = initialContext;
 
+    this.notify({
+      type: 'engineStarted',
+      state: initialState,
+      context: initialContext,
+    });
+
     return;
   }
 
@@ -27,24 +32,49 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
       throw new Error('Start the engine first');
     }
 
-    const change = this.currentState.transition(this.currentContext, event);
+    this.notify({
+      type: 'eventReceived',
+      event: event,
+    });
 
-    if (change) {
-      const [newState, newContext, effects] = change;
+    const transition = this.currentState.transition(this.currentContext, event);
+
+    if (transition) {
+      const [newState, newContext, effects] = transition;
 
       for (const effect of this.currentState.exitEffects) {
-        this.notify(effect(this.currentContext));
+        this.notify({
+          type: 'invocationDispatched',
+          invocation: effect(this.currentContext),
+        });
       }
 
+      const oldState = this.currentState;
       this.currentState = newState;
+      const oldContext = this.currentContext;
       this.currentContext = newContext;
 
+      this.notify({
+        type: 'transitionDone',
+        fromState: oldState,
+        fromContext: oldContext,
+        toState: newState,
+        toContext: newContext,
+        event: event,
+      });
+
       for (const effect of effects) {
-        this.notify(effect);
+        this.notify({
+          type: 'invocationDispatched',
+          invocation: effect,
+        });
       }
 
       for (const effect of this.currentState.enterEffects) {
-        this.notify(effect(this.currentContext));
+        this.notify({
+          type: 'invocationDispatched',
+          invocation: effect(this.currentContext),
+        });
       }
     }
   }

@@ -1,28 +1,39 @@
-export abstract class Handler<Payload> {
-  constructor(protected payload: Payload) {}
+import { AbortSignal } from '../../core/components/abort_signal';
+
+export abstract class Handler<Payload, Dependencies> {
+  constructor(protected payload: Payload, protected readonly dependencies: Dependencies) {}
 
   abstract start(): void;
   abstract cancel(): void;
 }
 
-type AsyncHandlerFunction<Payload> = (payload: Payload) => Promise<void>;
+type AsyncHandlerFunction<Payload, Dependencies> = (
+  payload: Payload,
+  abortSignal: AbortSignal,
+  dependencies: Dependencies,
+) => Promise<void>;
 
-class AsyncHandler<Payload> extends Handler<Payload> {
-  constructor(payload: Payload, private asyncFunction: AsyncHandlerFunction<Payload>) {
-    super(payload);
+class AsyncHandler<Payload, Dependencies> extends Handler<Payload, Dependencies> {
+  abortSignal = new AbortSignal();
+
+  constructor(
+    payload: Payload,
+    dependencies: Dependencies,
+    private asyncFunction: AsyncHandlerFunction<Payload, Dependencies>,
+  ) {
+    super(payload, dependencies);
   }
 
   start() {
-    this.asyncFunction(this.payload);
-
-    return;
+    this.asyncFunction(this.payload, this.abortSignal, this.dependencies);
   }
+
   cancel() {
-    return;
+    this.abortSignal.abort();
   }
 }
 
 export const asyncHandler =
-  <Payload>(handlerFunction: AsyncHandlerFunction<Payload>) =>
-  (payload: Payload) =>
-    new AsyncHandler(payload, handlerFunction);
+  <Payload, Dependencies>(handlerFunction: AsyncHandlerFunction<Payload, Dependencies>) =>
+  (payload: Payload, dependencies: Dependencies) =>
+    new AsyncHandler(payload, dependencies, handlerFunction);

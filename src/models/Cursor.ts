@@ -1,4 +1,4 @@
 export type Cursor = {
-  readonly t: string;
-  readonly r: number;
+  readonly timetoken: string;
+  readonly region: number;
 };
