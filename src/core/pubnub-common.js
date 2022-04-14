@@ -1,5 +1,3 @@
-/**       */
-
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
@@ -37,10 +35,6 @@ import * as removeMessageActionEndpointConfig from './endpoints/actions/remove_m
 import * as getMessageActionEndpointConfig from './endpoints/actions/get_message_actions';
 
 // File Upload API v1
-
-import { IFile, FileClass } from '../file';
-
-import * as fileUploadTypes from './endpoints/file_upload/types';
 
 import listFilesEndpointConfig from './endpoints/file_upload/list_files';
 import generateUploadUrlEndpointConfig from './endpoints/file_upload/generate_upload_url';
@@ -110,10 +104,13 @@ import * as fetchMessagesEndpointConfig from './endpoints/fetch_messages';
 import * as timeEndpointConfig from './endpoints/time';
 import * as subscribeEndpointConfig from './endpoints/subscribe';
 
+// subscription utilities
+import handshakeEndpointConfig from './endpoints/subscriptionUtils/handshake';
+import receiveMessagesConfig from './endpoints/subscriptionUtils/receiveMessages';
+
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
-import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
 
 export default class {
@@ -377,6 +374,12 @@ export default class {
     this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
     this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+
+    /* presence utilities */
+    this.iAmHere = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    this.iAmAway = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
+
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
@@ -424,6 +427,10 @@ export default class {
     this.downloadFile = endpointCreator.bind(this, modules, downloadFileEndpointConfig);
 
     this.deleteFile = endpointCreator.bind(this, modules, deleteFileEndpointConfig);
+
+    this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
+
+    this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
     // Objects API v2
 

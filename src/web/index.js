@@ -40,7 +40,7 @@ function base64ToBinary(base64String) {
   }
 
   for (let byteIdx = byteOffset + 3; byteIdx >= byteOffset; byteIdx -= 1) {
-    if (view[byteIdx] === 0) {
+    if (view[byteIdx] === 0 && zeroBytesCount < 3) {
       zeroBytesCount += 1;
     }
   }

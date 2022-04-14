@@ -2,7 +2,6 @@
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
 const PRESENCE_TIMEOUT_MINIMUM = 20;
 const PRESENCE_TIMEOUT_DEFAULT = 300;
@@ -149,6 +148,8 @@ export default class {
 
   useRandomIVs;
 
+  enableSubscribeBeta;
+
   constructor({ setup }) {
     this._PNSDKSuffix = {};
 
@@ -184,6 +185,9 @@ export default class {
 
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
     this.useRandomIVs = setup.useRandomIVs ?? true;
+
+    // flag for beta subscribe feature enablement
+    this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -318,7 +322,7 @@ export default class {
   }
 
   getVersion() {
-    return '5.0.0';
+    return '5.0.1';
   }
 
   _addPnsdkSuffix(name, suffix) {
