@@ -36,6 +36,6 @@ jobs:
       node_js: '16'
       script: npm run ci:web
     - stage: 'test pr branch'
-      name: 'NodeJS 12'
-      node_js: '12'
+      name: 'NodeJS 16'
+      node_js: '16'
       script: npm run ci
