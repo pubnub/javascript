@@ -2,9 +2,10 @@ import { PubNubError } from '../../core/components/endpoint';
 import { Cursor } from '../../models/Cursor';
 import { State } from '../core/state';
 import { Effects, emitEvents, reconnect } from '../effects';
-import { Events, reconnectingFailure, reconnectingGiveup, reconnectingSuccess } from '../events';
+import { disconnect, Events, reconnectingFailure, reconnectingGiveup, reconnectingSuccess } from '../events';
 import { ReceivingState } from './receiving';
 import { ReceiveFailureState } from './receive_failure';
+import { ReceiveStoppedState } from './receive_stopped';
 
 export type ReceiveReconnectingStateContext = {
   channels: string[];
@@ -43,5 +44,13 @@ ReceiveReconnectingState.on(reconnectingGiveup.type, (context) =>
     channels: context.channels,
     cursor: context.cursor,
     reason: context.reason,
+  }),
+);
+
+ReceiveReconnectingState.on(disconnect.type, (context) =>
+  ReceiveStoppedState.with({
+    channels: context.channels,
+    groups: context.groups,
+    cursor: context.cursor,
   }),
 );

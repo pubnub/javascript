@@ -1,9 +1,10 @@
 import { State } from '../core/state';
 import { Cursor } from '../../models/Cursor';
 import { Effects, emitEvents, receiveEvents } from '../effects';
-import { Events, receivingFailure, receivingSuccess, subscriptionChange } from '../events';
+import { disconnect, Events, receivingFailure, receivingSuccess, subscriptionChange } from '../events';
 import { UnsubscribedState } from './unsubscribed';
 import { ReceiveReconnectingState } from './receive_reconnecting';
+import { ReceiveStoppedState } from './receive_stopped';
 
 export type ReceivingStateContext = {
   channels: string[];
@@ -35,3 +36,11 @@ ReceivingState.on(receivingFailure.type, (context, event) => {
     reason: event.payload,
   });
 });
+
+ReceivingState.on(disconnect.type, (context) =>
+  ReceiveStoppedState.with({
+    channels: context.channels,
+    groups: context.groups,
+    cursor: context.cursor,
+  }),
+);

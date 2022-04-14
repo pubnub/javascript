@@ -43,14 +43,17 @@ export class EventEngine {
   }
 
   unsubscribeAll() {
-    return;
+    this.channels = [];
+    this.groups = [];
+
+    this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
   }
 
   reconnect() {
-    return;
+    this.engine.transition(events.reconnect());
   }
 
   disconnect() {
-    return;
+    this.engine.transition(events.disconnect());
   }
 }

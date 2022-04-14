@@ -1,9 +1,9 @@
 import { PubNubError } from '../../core/components/endpoint';
-import { Cursor } from '../../models/Cursor';
 import { State } from '../core/state';
 import { Effects, emitEvents, handshakeReconnect, reconnect } from '../effects';
-import { Events, reconnectingFailure, reconnectingGiveup, reconnectingSuccess } from '../events';
+import { disconnect, Events, reconnectingFailure, reconnectingGiveup, reconnectingSuccess } from '../events';
 import { HandshakeFailureState } from './handshake_failure';
+import { HandshakeStoppedState } from './handshake_stopped';
 import { ReceivingState } from './receiving';
 
 export type HandshakeReconnectingStateContext = {
@@ -41,5 +41,12 @@ HandshakeReconnectingState.on(reconnectingGiveup.type, (context) =>
     groups: context.groups,
     channels: context.channels,
     reason: context.reason,
+  }),
+);
+
+HandshakeReconnectingState.on(disconnect.type, (context) =>
+  HandshakeStoppedState.with({
+    channels: context.channels,
+    groups: context.groups,
   }),
 );

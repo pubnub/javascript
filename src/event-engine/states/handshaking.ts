@@ -1,7 +1,8 @@
 import { State } from '../core/state';
 import { Effects, handshake } from '../effects';
-import { Events, handshakingFailure, handshakingSuccess, subscriptionChange } from '../events';
+import { disconnect, Events, handshakingFailure, handshakingSuccess, subscriptionChange } from '../events';
 import { HandshakeReconnectingState } from './handshake_reconnecting';
+import { HandshakeStoppedState } from './handshake_stopped';
 import { ReceivingState } from './receiving';
 import { UnsubscribedState } from './unsubscribed';
 
@@ -36,5 +37,12 @@ HandshakingState.on(handshakingFailure.type, (context, event) =>
     ...context,
     attempts: 0,
     reason: event.payload,
+  }),
+);
+
+HandshakingState.on(disconnect.type, (context) =>
+  HandshakeStoppedState.with({
+    channels: context.channels,
+    groups: context.groups,
   }),
 );
