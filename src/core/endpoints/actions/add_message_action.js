@@ -1,23 +1,15 @@
-/* @flow */
+/*       */
 
-import {
-  AddMessageActionInput,
-  AddMessageActionResponse,
-  ModulesInject,
-} from '../../flow_interfaces';
+import { AddMessageActionInput, AddMessageActionResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNAddMessageActionOperation;
 }
 
-export function validateParams(
-  { config }: ModulesInject,
-  incomingParams: AddMessageActionInput
-) {
-  let { action, channel, messageTimetoken } = incomingParams;
+export function validateParams({ config }, incomingParams) {
+  const { action, channel, messageTimetoken } = incomingParams;
 
   if (!messageTimetoken) return 'Missing message timetoken';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
@@ -32,20 +24,19 @@ export function usePost() {
   return true;
 }
 
-export function postURL(
-  { config }: ModulesInject,
-  incomingParams: AddMessageActionInput
-): string {
-  let { channel, messageTimetoken } = incomingParams;
+export function postURL({ config }, incomingParams) {
+  const { channel, messageTimetoken } = incomingParams;
 
-  return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(channel)}/message/${messageTimetoken}`;
+  return `/v1/message-actions/${config.subscribeKey}/channel/${utils.encodeString(
+    channel,
+  )}/message/${messageTimetoken}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function getRequestHeaders(): Object {
+export function getRequestHeaders() {
   return { 'Content-Type': 'application/json' };
 }
 
@@ -53,20 +44,14 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   return {};
 }
 
-export function postPayload(
-  modules: ModulesInject,
-  incomingParams: AddMessageActionInput
-): string {
+export function postPayload(modules, incomingParams) {
   return incomingParams.action;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  addMessageActionResponse: Object
-): AddMessageActionResponse {
+export function handleResponse(modules, addMessageActionResponse) {
   return { data: addMessageActionResponse.data };
 }

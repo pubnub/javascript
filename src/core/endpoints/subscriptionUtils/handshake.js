@@ -1,11 +1,7 @@
-/** @flow */
-
-import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
-import type { HandshakeParams, HandshakeResult } from './types';
 import utils from '../../utils';
 
-const endpoint: EndpointConfig<HandshakeParams, HandshakeResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNHandshakeOperation,
 
   validateParams: (_, params) => {
@@ -15,7 +11,7 @@ const endpoint: EndpointConfig<HandshakeParams, HandshakeResult> = {
   },
 
   getURL: ({ config }, params) => {
-    let channelsString = params.channels ? params.channels.join(',') : ',';
+    const channelsString = params.channels ? params.channels.join(',') : ',';
     return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(channelsString)}/0`;
   },
 
@@ -32,10 +28,10 @@ const endpoint: EndpointConfig<HandshakeParams, HandshakeResult> = {
     return outParams;
   },
 
-  handleResponse: (_, response): HandshakeResult => ({
+  handleResponse: (_, response) => ({
     region: response.t.r,
-    timetoken: response.t.t
-  })
+    timetoken: response.t.t,
+  }),
 };
 
 export default endpoint;

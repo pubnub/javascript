@@ -1,31 +1,31 @@
-/* @flow */
+/*       */
 
 import { TimeResponse, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNTimeOperation;
 }
 
-export function getURL(): string {
+export function getURL() {
   return '/time/0';
 }
 
-export function getRequestTimeout({ config }: ModulesInject): number {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   return {};
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported() {
   return false;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object): TimeResponse {
+export function handleResponse(modules, serverResponse) {
   return {
-    timetoken: serverResponse[0]
+    timetoken: serverResponse[0],
   };
 }
 

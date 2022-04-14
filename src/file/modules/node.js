@@ -1,41 +1,39 @@
-/** @flow */
+/**       */
 
 import { Readable, PassThrough } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
 
-import { IFile, FileClass } from '../';
+import { IFile, FileClass } from '..';
 
-type PubNubFileNodeConstructor = {|
-  stream?: Readable,
-  data?: string | Buffer,
-  encoding?: string,
-  name?: string,
-  mimeType?: string,
-|};
-
-type PubNubFileNodeSupportedInputType = Readable | Buffer | string;
-
-const PubNubFile: FileClass = class PubNubFile implements IFile {
+const PubNubFile = class PubNubFile {
   static supportsBlob = false;
+
   static supportsFile = false;
+
   static supportsBuffer = typeof Buffer !== 'undefined';
+
   static supportsStream = true;
+
   static supportsString = true;
+
   static supportsArrayBuffer = false;
+
   static supportsEncryptFile = true;
+
   static supportsFileUri = false;
 
-  data: PubNubFileNodeSupportedInputType;
+  data;
 
-  name: string;
-  mimeType: string;
+  name;
 
-  static create(config: PubNubFileNodeConstructor) {
+  mimeType;
+
+  static create(config) {
     return new this(config);
   }
 
-  constructor({ stream, data, encoding, name, mimeType }: PubNubFileNodeConstructor) {
+  constructor({ stream, data, encoding, name, mimeType }) {
     if (stream instanceof Readable) {
       this.data = stream;
 
@@ -67,7 +65,7 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
     }
   }
 
-  toBuffer(): Promise<Buffer> {
+  toBuffer() {
     if (this.data instanceof Buffer) {
       return Promise.resolve(Buffer.from(this.data));
     }
@@ -96,7 +94,7 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
     throw new Error('This feature is only supported in browser environments.');
   }
 
-  async toString(encoding: buffer$NonBufferEncoding = 'utf8') {
+  async toString(encoding = 'utf8') {
     const buffer = await this.toBuffer();
 
     return buffer.toString(encoding);

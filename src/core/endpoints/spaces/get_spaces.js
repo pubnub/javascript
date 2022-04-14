@@ -1,13 +1,9 @@
-/* @flow */
+/*       */
 
-import {
-  SpaceListInput,
-  SpacesListResponse,
-  ModulesInject,
-} from '../../flow_interfaces';
+import { SpaceListInput, SpacesListResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNGetSpacesOperation;
 }
 
@@ -15,15 +11,13 @@ export function validateParams() {
   // no required parameters
 }
 
-export function getURL(
-  modules: ModulesInject
-): string {
-  let { config } = modules;
+export function getURL(modules) {
+  const { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/spaces`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -31,10 +25,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: SpaceListInput
-): Object {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page, filter } = incomingParams;
   const params = {};
 
@@ -43,7 +34,7 @@ export function prepareParams(
   }
 
   if (include) {
-    let includes = [];
+    const includes = [];
 
     if (include.totalCount) {
       params.count = true;
@@ -53,7 +44,7 @@ export function prepareParams(
       includes.push('custom');
     }
 
-    let includesString = includes.join(',');
+    const includesString = includes.join(',');
 
     if (includesString.length > 0) {
       params.include = includesString;
@@ -76,9 +67,6 @@ export function prepareParams(
   return params;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  spacesResponse: Object
-): SpacesListResponse {
+export function handleResponse(modules, spacesResponse) {
   return spacesResponse;
 }

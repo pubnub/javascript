@@ -1,11 +1,7 @@
-/** @flow */
-
-import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
-import type { ReceiveMessagesParams, ReceiveMessagesResult, Message } from './types';
 import utils from '../../utils';
 
-const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNReceiveMessagesOperation,
 
   validateParams: (_, params) => {
@@ -21,7 +17,7 @@ const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = 
   },
 
   getURL: ({ config }, params) => {
-    let channelsString = params.channels ? params.channels.join(',') : ',';
+    const channelsString = params.channels ? params.channels.join(',') : ',';
     return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(channelsString)}/0`;
   },
 
@@ -41,11 +37,11 @@ const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = 
     return outParams;
   },
 
-  handleResponse: (_, response): ReceiveMessagesResult => {
+  handleResponse: (_, response) => {
     const parsedMessages = [];
 
     response.m.forEach((envelope) => {
-      let parsedMessage: Message = {
+      const parsedMessage = {
         shard: parseInt(envelope.a, 10),
         subscriptionMatch: envelope.b,
         channel: envelope.c,
@@ -62,13 +58,14 @@ const endpoint : EndpointConfig<ReceiveMessagesParams, ReceiveMessagesResult> = 
       };
       parsedMessages.push(parsedMessage);
     });
-    return { messages: parsedMessages,
+    return {
+      messages: parsedMessages,
       metadata: {
         region: response.t.r,
-        timetoken: response.t.t
-      }
+        timetoken: response.t.t,
+      },
     };
-  }
+  },
 };
 
 export default endpoint;

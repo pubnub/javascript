@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import CborReader from 'cbor-sync';
 import { Buffer } from 'buffer';
@@ -12,16 +12,23 @@ import { InternalSetupStruct } from '../core/flow_interfaces';
 
 import PubNubFile from '../file/modules/react-native';
 
-global.Buffer = global.Buffer ||  Buffer;
+global.Buffer = global.Buffer || Buffer;
 
 export default class extends PubNubCore {
-  constructor(setup: InternalSetupStruct) {
+  constructor(setup) {
     setup.db = new Database();
     setup.cbor = new Cbor(CborReader.decode, (base64String) => Buffer.from(base64String, 'base64'));
 
     setup.PubNubFile = PubNubFile;
 
-    setup.networking = new Networking({ del, get, post, patch, getfile, postfile });
+    setup.networking = new Networking({
+      del,
+      get,
+      post,
+      patch,
+      getfile,
+      postfile,
+    });
     setup.sdkFamily = 'ReactNative';
     setup.ssl = true;
 

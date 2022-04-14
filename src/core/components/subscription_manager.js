@@ -1,9 +1,9 @@
-/* @flow */
-import Crypto from '../components/cryptography';
-import Config from '../components/config';
-import ListenerManager from '../components/listener_manager';
-import ReconnectionManager from '../components/reconnection_manager';
-import DedupingManager from '../components/deduping_manager';
+/*       */
+import Crypto from './cryptography';
+import Config from './config';
+import ListenerManager from './listener_manager';
+import ReconnectionManager from './reconnection_manager';
+import DedupingManager from './deduping_manager';
 import utils from '../utils';
 import {
   MessageActionAnnouncement,
@@ -17,84 +17,62 @@ import {
 } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 
-type SubscribeArgs = {
-  channels: Array<string>,
-  channelGroups: Array<string>,
-  withPresence: ?boolean,
-  timetoken: ?number,
-  withHeartbeats: ?boolean,
-};
-
-type PresenceArgs = {
-  channels: Array<string>,
-  channelGroups: Array<string>,
-  connected: boolean,
-};
-
-type UnsubscribeArgs = {
-  channels: Array<string>,
-  channelGroups: Array<string>,
-};
-
-type StateArgs = {
-  channels: Array<string>,
-  channelGroups: Array<string>,
-  state: Object,
-};
-
-type SubscriptionManagerConstruct = {
-  leaveEndpoint: Function,
-  subscribeEndpoint: Function,
-  timeEndpoint: Function,
-  heartbeatEndpoint: Function,
-  setStateEndpoint: Function,
-  getFileUrl: ({| id: string, name: string, channel: string |}) => string,
-  config: Config,
-  crypto: Crypto,
-  listenerManager: ListenerManager,
-};
-
 export default class {
-  _crypto: Crypto;
-  _config: Config;
-  _listenerManager: ListenerManager;
-  _reconnectionManager: ReconnectionManager;
+  _crypto;
 
-  _leaveEndpoint: Function;
-  _heartbeatEndpoint: Function;
-  _setStateEndpoint: Function;
-  _subscribeEndpoint: Function;
-  _getFileUrl: ({| id: string, name: string, channel: string |}) => string;
+  _config;
 
-  _channels: Object;
-  _presenceChannels: Object;
+  _listenerManager;
 
-  _heartbeatChannels: Object;
-  _heartbeatChannelGroups: Object;
+  _reconnectionManager;
 
-  _channelGroups: Object;
-  _presenceChannelGroups: Object;
+  _leaveEndpoint;
 
-  _currentTimetoken: number;
-  _lastTimetoken: number;
-  _storedTimetoken: ?number;
+  _heartbeatEndpoint;
 
-  _region: ?number;
+  _setStateEndpoint;
 
-  _subscribeCall: ?Object;
-  _heartbeatTimer: ?number;
+  _subscribeEndpoint;
 
-  _subscriptionStatusAnnounced: boolean;
+  _getFileUrl;
 
-  _autoNetworkDetection: boolean;
-  _isOnline: boolean;
+  _channels;
+
+  _presenceChannels;
+
+  _heartbeatChannels;
+
+  _heartbeatChannelGroups;
+
+  _channelGroups;
+
+  _presenceChannelGroups;
+
+  _currentTimetoken;
+
+  _lastTimetoken;
+
+  _storedTimetoken;
+
+  _region;
+
+  _subscribeCall;
+
+  _heartbeatTimer;
+
+  _subscriptionStatusAnnounced;
+
+  _autoNetworkDetection;
+
+  _isOnline;
 
   // store pending connection elements
-  _pendingChannelSubscriptions: Array<string>;
-  _pendingChannelGroupSubscriptions: Array<string>;
+  _pendingChannelSubscriptions;
+
+  _pendingChannelGroupSubscriptions;
   //
 
-  _dedupingManager: DedupingManager;
+  _dedupingManager;
 
   constructor({
     subscribeEndpoint,
@@ -106,7 +84,7 @@ export default class {
     config,
     crypto,
     listenerManager,
-  }: SubscriptionManagerConstruct) {
+  }) {
     this._listenerManager = listenerManager;
     this._config = config;
 
@@ -142,7 +120,7 @@ export default class {
     this._dedupingManager = new DedupingManager({ config });
   }
 
-  adaptStateChange(args: StateArgs, callback: Function) {
+  adaptStateChange(args, callback) {
     const { state, channels = [], channelGroups = [] } = args;
 
     channels.forEach((channel) => {
@@ -158,15 +136,15 @@ export default class {
     return this._setStateEndpoint({ state, channels, channelGroups }, callback);
   }
 
-  adaptPresenceChange(args: PresenceArgs) {
+  adaptPresenceChange(args) {
     const { connected, channels = [], channelGroups = [] } = args;
 
     if (connected) {
-      channels.forEach((channel: string) => {
+      channels.forEach((channel) => {
         this._heartbeatChannels[channel] = { state: {} };
       });
 
-      channelGroups.forEach((channelGroup: string) => {
+      channelGroups.forEach((channelGroup) => {
         this._heartbeatChannelGroups[channelGroup] = { state: {} };
       });
     } else {
@@ -192,7 +170,7 @@ export default class {
     this.reconnect();
   }
 
-  adaptSubscribeChange(args: SubscribeArgs) {
+  adaptSubscribeChange(args) {
     const { timetoken, channels = [], channelGroups = [], withPresence = false, withHeartbeats = false } = args;
 
     if (!this._config.subscribeKey || this._config.subscribeKey === '') {
@@ -215,7 +193,7 @@ export default class {
       this._currentTimetoken = 0;
     }
 
-    channels.forEach((channel: string) => {
+    channels.forEach((channel) => {
       this._channels[channel] = { state: {} };
       if (withPresence) this._presenceChannels[channel] = {};
       if (withHeartbeats || this._config.getHeartbeatInterval()) this._heartbeatChannels[channel] = {};
@@ -223,7 +201,7 @@ export default class {
       this._pendingChannelSubscriptions.push(channel);
     });
 
-    channelGroups.forEach((channelGroup: string) => {
+    channelGroups.forEach((channelGroup) => {
       this._channelGroups[channelGroup] = { state: {} };
       if (withPresence) this._presenceChannelGroups[channelGroup] = {};
       if (withHeartbeats || this._config.getHeartbeatInterval()) this._heartbeatChannelGroups[channelGroup] = {};
@@ -235,7 +213,7 @@ export default class {
     this.reconnect();
   }
 
-  adaptUnsubscribeChange(args: UnsubscribeArgs, isOffline: boolean) {
+  adaptUnsubscribeChange(args, isOffline) {
     const { channels = [], channelGroups = [] } = args;
 
     // keep track of which channels and channel groups
@@ -306,29 +284,29 @@ export default class {
     this.reconnect();
   }
 
-  unsubscribeAll(isOffline: boolean) {
+  unsubscribeAll(isOffline) {
     this.adaptUnsubscribeChange(
       {
         channels: this.getSubscribedChannels(),
         channelGroups: this.getSubscribedChannelGroups(),
       },
-      isOffline
+      isOffline,
     );
   }
 
-  getHeartbeatChannels(): Array<string> {
+  getHeartbeatChannels() {
     return Object.keys(this._heartbeatChannels);
   }
 
-  getHeartbeatChannelGroups(): Array<string> {
+  getHeartbeatChannelGroups() {
     return Object.keys(this._heartbeatChannelGroups);
   }
 
-  getSubscribedChannels(): Array<string> {
+  getSubscribedChannels() {
     return Object.keys(this._channels);
   }
 
-  getSubscribedChannelGroups(): Array<string> {
+  getSubscribedChannelGroups() {
     return Object.keys(this._channelGroups);
   }
 
@@ -355,7 +333,7 @@ export default class {
     // $FlowFixMe
     this._heartbeatTimer = setInterval(
       this._performHeartbeatLoop.bind(this),
-      this._config.getHeartbeatInterval() * 1000
+      this._config.getHeartbeatInterval() * 1000,
     );
   }
 
@@ -372,27 +350,27 @@ export default class {
 
     const heartbeatChannelGroups = this.getHeartbeatChannelGroups();
 
-    let presenceState = {};
+    const presenceState = {};
 
     if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0) {
       return;
     }
 
     this.getSubscribedChannels().forEach((channel) => {
-      let channelState = this._channels[channel].state;
+      const channelState = this._channels[channel].state;
       if (Object.keys(channelState).length) {
         presenceState[channel] = channelState;
       }
     });
 
     this.getSubscribedChannelGroups().forEach((channelGroup) => {
-      let channelGroupState = this._channelGroups[channelGroup].state;
+      const channelGroupState = this._channelGroups[channelGroup].state;
       if (Object.keys(channelGroupState).length) {
         presenceState[channelGroup] = channelGroupState;
       }
     });
 
-    let onHeartbeat = (status: StatusAnnouncement) => {
+    const onHeartbeat = (status) => {
       if (status.error && this._config.announceFailedHeartbeats) {
         this._listenerManager.announceStatus(status);
       }
@@ -415,18 +393,18 @@ export default class {
         channelGroups: heartbeatChannelGroups,
         state: presenceState,
       },
-      onHeartbeat.bind(this)
+      onHeartbeat.bind(this),
     );
   }
 
   _startSubscribeLoop() {
     this._stopSubscribeLoop();
-    let presenceState = {};
-    let channels = [];
-    let channelGroups = [];
+    const presenceState = {};
+    const channels = [];
+    const channelGroups = [];
 
     Object.keys(this._channels).forEach((channel) => {
-      let channelState = this._channels[channel].state;
+      const channelState = this._channels[channel].state;
 
       if (Object.keys(channelState).length) {
         presenceState[channel] = channelState;
@@ -439,7 +417,7 @@ export default class {
     });
 
     Object.keys(this._channelGroups).forEach((channelGroup) => {
-      let channelGroupState = this._channelGroups[channelGroup].state;
+      const channelGroupState = this._channelGroups[channelGroup].state;
 
       if (Object.keys(channelGroupState).length) {
         presenceState[channelGroup] = channelGroupState;
@@ -467,7 +445,7 @@ export default class {
     this._subscribeCall = this._subscribeEndpoint(subscribeArgs, this._processSubscribeResponse.bind(this));
   }
 
-  _processSubscribeResponse(status: StatusAnnouncement, payload: SubscribeEnvelope) {
+  _processSubscribeResponse(status, payload) {
     if (status.error) {
       // if we timeout from server, restart the loop.
       if (status.category === categoryConstants.PNTimeoutCategory) {
@@ -488,7 +466,7 @@ export default class {
           }
           this.reconnect();
           this._subscriptionStatusAnnounced = true;
-          let reconnectedAnnounce: StatusAnnouncement = {
+          const reconnectedAnnounce = {
             category: categoryConstants.PNReconnectedCategory,
             operation: status.operation,
             lastTimetoken: this._lastTimetoken,
@@ -518,7 +496,7 @@ export default class {
     }
 
     if (!this._subscriptionStatusAnnounced) {
-      let connectedAnnounce: StatusAnnouncement = {};
+      const connectedAnnounce = {};
       connectedAnnounce.category = categoryConstants.PNConnectedCategory;
       connectedAnnounce.operation = status.operation;
       connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
@@ -534,20 +512,20 @@ export default class {
       this._pendingChannelGroupSubscriptions = [];
     }
 
-    let messages = payload.messages || [];
-    let { requestMessageCountThreshold, dedupeOnSubscribe } = this._config;
+    const messages = payload.messages || [];
+    const { requestMessageCountThreshold, dedupeOnSubscribe } = this._config;
 
     if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
-      let countAnnouncement: StatusAnnouncement = {};
+      const countAnnouncement = {};
       countAnnouncement.category = categoryConstants.PNRequestMessageCountExceededCategory;
       countAnnouncement.operation = status.operation;
       this._listenerManager.announceStatus(countAnnouncement);
     }
 
     messages.forEach((message) => {
-      let channel = message.channel;
-      let subscriptionMatch = message.subscriptionMatch;
-      let publishMetaData = message.publishMetaData;
+      const { channel } = message;
+      let { subscriptionMatch } = message;
+      const { publishMetaData } = message;
 
       if (channel === subscriptionMatch) {
         subscriptionMatch = null;
@@ -556,13 +534,12 @@ export default class {
       if (dedupeOnSubscribe) {
         if (this._dedupingManager.isDuplicate(message)) {
           return;
-        } else {
-          this._dedupingManager.addEntry(message);
         }
+        this._dedupingManager.addEntry(message);
       }
 
       if (utils.endsWith(message.channel, '-pnpres')) {
-        let announce: PresenceAnnouncement = {};
+        const announce = {};
         announce.channel = null;
         announce.subscription = null;
 
@@ -601,7 +578,7 @@ export default class {
         this._listenerManager.announcePresence(announce);
       } else if (message.messageType === 1) {
         // this is a signal message
-        let announce: SignalAnnouncement = {};
+        const announce = {};
         announce.channel = null;
         announce.subscription = null;
 
@@ -620,7 +597,7 @@ export default class {
       } else if (message.messageType === 2) {
         // this is an object message
 
-        let announce: ObjectAnnouncement = {};
+        const announce = {};
 
         announce.channel = null;
         announce.subscription = null;
@@ -651,7 +628,7 @@ export default class {
         }
       } else if (message.messageType === 3) {
         // this is a message action
-        let announce: MessageActionAnnouncement = {};
+        const announce = {};
         announce.channel = channel;
         announce.subscription = subscriptionMatch;
         announce.timetoken = publishMetaData.publishTimetoken;
@@ -670,7 +647,7 @@ export default class {
         this._listenerManager.announceMessageAction(announce);
       } else if (message.messageType === 4) {
         // this is a file message
-        let announce: FileAnnouncement = {};
+        const announce = {};
         announce.channel = channel;
         announce.subscription = subscriptionMatch;
         announce.timetoken = publishMetaData.publishTimetoken;
@@ -704,7 +681,7 @@ export default class {
 
         this._listenerManager.announceFile(announce);
       } else {
-        let announce: MessageAnnouncement = {};
+        const announce = {};
         announce.channel = null;
         announce.subscription = null;
 

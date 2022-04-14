@@ -1,11 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
-import type { DownloadFileParams, DownloadFileResult } from './types';
+
 import utils from '../../utils';
 
-const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNDownloadFileOperation,
 
   validateParams: (_, params) => {
@@ -35,8 +34,8 @@ const endpoint: EndpointConfig<DownloadFileParams, DownloadFileResult> = {
 
   prepareParams: () => ({}),
 
-  handleResponse: async ({ PubNubFile, config, cryptography }, res, params): Promise<DownloadFileResult> => {
-    let body = res.response.body;
+  handleResponse: async ({ PubNubFile, config, cryptography }, res, params) => {
+    let { body } = res.response;
 
     if (PubNubFile.supportsEncryptFile && (params.cipherKey ?? config.cipherKey)) {
       body = await cryptography.decrypt(params.cipherKey ?? config.cipherKey, body);

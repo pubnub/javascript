@@ -1,23 +1,18 @@
-/* @flow */
+/*       */
 
-import {
-  AddMemberships,
-  MembershipsInput,
-  MembershipsListResponse,
-  ModulesInject,
-} from '../../flow_interfaces';
+import { AddMemberships, MembershipsInput, MembershipsListResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 function prepareMessagePayload(modules, incomingParams) {
   const { spaces } = incomingParams;
-  let payload = {};
+  const payload = {};
 
   if (spaces && spaces.length > 0) {
     payload.add = [];
 
     spaces.forEach((addMembership) => {
-      let currentAdd: AddMemberships = { id: addMembership.id };
+      const currentAdd = { id: addMembership.id };
 
       if (addMembership.custom) {
         currentAdd.custom = addMembership.custom;
@@ -30,34 +25,25 @@ function prepareMessagePayload(modules, incomingParams) {
   return payload;
 }
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNUpdateMembershipsOperation;
 }
 
-export function validateParams(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-) {
-  let { userId, spaces } = incomingParams;
+export function validateParams(modules, incomingParams) {
+  const { userId, spaces } = incomingParams;
 
   if (!userId) return 'Missing userId';
   if (!spaces) return 'Missing spaces';
 }
 
-export function getURL(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-): string {
-  let { config } = modules;
+export function getURL(modules, incomingParams) {
+  const { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
 }
 
-export function patchURL(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-): string {
-  let { config } = modules;
+export function patchURL(modules, incomingParams) {
+  const { config } = modules;
 
   return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(incomingParams.userId)}/spaces`;
 }
@@ -66,7 +52,7 @@ export function usePatch() {
   return true;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -74,10 +60,7 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-): Object {
+export function prepareParams(modules, incomingParams) {
   const { include, limit, page } = incomingParams;
   const params = {};
 
@@ -86,7 +69,7 @@ export function prepareParams(
   }
 
   if (include) {
-    let includes = [];
+    const includes = [];
 
     if (include.totalCount) {
       params.count = true;
@@ -104,7 +87,7 @@ export function prepareParams(
       includes.push('space.custom');
     }
 
-    let includesString = includes.join(',');
+    const includesString = includes.join(',');
 
     if (includesString.length > 0) {
       params.include = includesString;
@@ -123,16 +106,10 @@ export function prepareParams(
   return params;
 }
 
-export function patchPayload(
-  modules: ModulesInject,
-  incomingParams: MembershipsInput
-): Object {
+export function patchPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  membershipsResponse: Object
-): MembershipsListResponse {
+export function handleResponse(modules, membershipsResponse) {
   return membershipsResponse;
 }

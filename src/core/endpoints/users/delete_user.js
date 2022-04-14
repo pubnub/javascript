@@ -1,14 +1,14 @@
-/* @flow */
+/*       */
 
 import { UsersResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNDeleteUserOperation;
 }
 
-export function validateParams({ config }: ModulesInject, userId: string) {
+export function validateParams({ config }, userId) {
   if (!userId) return 'Missing UserId';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
@@ -17,12 +17,12 @@ export function useDelete() {
   return true;
 }
 
-export function getURL(modules: ModulesInject, userId: string): string {
-  let { config } = modules;
+export function getURL(modules, userId) {
+  const { config } = modules;
   return `/v1/objects/${config.subscribeKey}/users/${utils.encodeString(userId)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -30,13 +30,10 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   return {};
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  usersResponse: Object
-): UsersResponse {
+export function handleResponse(modules, usersResponse) {
   return usersResponse;
 }

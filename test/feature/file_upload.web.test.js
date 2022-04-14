@@ -1,4 +1,4 @@
-/** @flow */
+/**       */
 
 import PubNub from '../../src/web/index';
 
@@ -24,7 +24,7 @@ describe('test', () => {
 
   const FILE_1 = `${TEST_PREFIX}-file-1`;
 
-  let pubnub: PubNub;
+  let pubnub        ;
 
   after(() => {
     pubnub.unsubscribeAll();

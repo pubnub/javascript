@@ -1,5 +1,3 @@
-/** @flow */
-
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';
@@ -38,10 +36,6 @@ import * as getMessageActionEndpointConfig from './endpoints/actions/get_message
 
 // File Upload API v1
 
-import { IFile, FileClass } from '../file';
-
-import * as fileUploadTypes from './endpoints/file_upload/types';
-
 import listFilesEndpointConfig from './endpoints/file_upload/list_files';
 import generateUploadUrlEndpointConfig from './endpoints/file_upload/generate_upload_url';
 import publishFileEndpointConfig from './endpoints/file_upload/publish_file';
@@ -51,67 +45,29 @@ import downloadFileEndpointConfig from './endpoints/file_upload/download_file';
 import deleteFileEndpointConfig from './endpoints/file_upload/delete_file';
 
 // Object API v2
-import getAllUUIDMetadataEndpointConfig, {
-  type GetAllUUIDMetadataParams,
-  type GetAllUUIDMetadataResult,
-} from './endpoints/objects/uuid/get_all';
+import getAllUUIDMetadataEndpointConfig from './endpoints/objects/uuid/get_all';
 
-import getUUIDMetadataEndpointConfig, {
-  type GetUUIDMetadataParams,
-  type GetUUIDMetadataResult,
-} from './endpoints/objects/uuid/get';
+import getUUIDMetadataEndpointConfig from './endpoints/objects/uuid/get';
 
-import setUUIDMetadataEndpointConfig, {
-  type SetUUIDMetadataParams,
-  type SetUUIDMetadataResult,
-} from './endpoints/objects/uuid/set';
+import setUUIDMetadataEndpointConfig from './endpoints/objects/uuid/set';
 
-import removeUUIDMetadataEndpointConfig, {
-  type RemoveUUIDMetadataParams,
-  type RemoveUUIDMetadataResult,
-} from './endpoints/objects/uuid/remove';
+import removeUUIDMetadataEndpointConfig from './endpoints/objects/uuid/remove';
 
-import getAllChannelMetadataEndpointConfig, {
-  type GetAllChannelMetadataParams,
-  type GetAllChannelMetadataResult,
-} from './endpoints/objects/channel/get_all';
+import getAllChannelMetadataEndpointConfig from './endpoints/objects/channel/get_all';
 
-import getChannelMetadataEndpointConfig, {
-  type GetChannelMetadataParams,
-  type GetChannelMetadataResult,
-} from './endpoints/objects/channel/get';
+import getChannelMetadataEndpointConfig from './endpoints/objects/channel/get';
 
-import setChannelMetadataEndpointConfig, {
-  type SetChannelMetadataParams,
-  type SetChannelMetadataResult,
-} from './endpoints/objects/channel/set';
+import setChannelMetadataEndpointConfig from './endpoints/objects/channel/set';
 
-import removeChannelMetadataEndpointConfig, {
-  type RemoveChannelMetadataParams,
-  type RemoveChannelMetadataResult,
-} from './endpoints/objects/channel/remove';
+import removeChannelMetadataEndpointConfig from './endpoints/objects/channel/remove';
 
-import getMembersV2EndpointConfig, {
-  type GetMembersParams,
-  type GetMembersResult,
-} from './endpoints/objects/member/get';
+import getMembersV2EndpointConfig from './endpoints/objects/member/get';
 
-import setMembersV2EndpointConfig, {
-  type UpsertMembersParams,
-  type RemoveMembersParams,
-  type SetMembersResult,
-} from './endpoints/objects/member/set';
+import setMembersV2EndpointConfig from './endpoints/objects/member/set';
 
-import getMembershipsV2EndpointConfig, {
-  type GetMembershipsParams,
-  type GetMembershipsResult,
-} from './endpoints/objects/membership/get';
+import getMembershipsV2EndpointConfig from './endpoints/objects/membership/get';
 
-import setMembershipsV2EndpointConfig, {
-  type UpsertMembershipsParams,
-  type RemoveMembershipsParams,
-  type SetMembershipsResult,
-} from './endpoints/objects/membership/set';
+import setMembershipsV2EndpointConfig from './endpoints/objects/membership/set';
 
 // Objects API
 
@@ -137,10 +93,7 @@ import * as leaveSpacesEndpointConfig from './endpoints/memberships/leave_spaces
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
 import * as grantTokenEndpointConfig from './endpoints/access_manager/grant_token';
-import revokeTokenEndpointConfig, {
-  type RevokeTokenParams,
-  type RevokeTokenResult,
-} from './endpoints/access_manager/revoke_token';
+import revokeTokenEndpointConfig from './endpoints/access_manager/revoke_token';
 
 import * as publishEndpointConfig from './endpoints/publish';
 import * as signalEndpointConfig from './endpoints/signal';
@@ -154,245 +107,209 @@ import * as subscribeEndpointConfig from './endpoints/subscribe';
 // subscription utilities
 import handshakeEndpointConfig from './endpoints/subscriptionUtils/handshake';
 import receiveMessagesConfig from './endpoints/subscriptionUtils/receiveMessages';
-import * as subscriptionTypes from './endpoints/subscriptionUtils/types';
 
 import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
-import { InternalSetupStruct } from './flow_interfaces';
 import uuidGenerator from './components/uuid';
 
-type CallbackStatus = {|
-  error: boolean,
-  operation: string,
-  statusCode: number,
-|};
-
 export default class {
-  _config: Config;
-  _telemetryManager: TelemetryManager;
-  _listenerManager: ListenerManager;
-  _tokenManager: TokenManager;
+  _config;
+
+  _telemetryManager;
+
+  _listenerManager;
+
+  _tokenManager;
 
   // tell flow about the mounted endpoint
-  time: Function;
-  publish: Function;
-  fire: Function;
+  time;
 
-  history: Function;
-  deleteMessages: Function;
-  messageCounts: Function;
-  fetchMessages: Function;
+  publish;
 
-  //
-  channelGroups: Object;
-  //
-  push: Object;
-  //
-  hereNow: Function;
-  whereNow: Function;
-  getState: Function;
-  setState: Function;
-  // presence utility methods
-  iAmHere: Function;
-  iAmAway: Function;
-  setPresenceState: Function;
+  fire;
 
-  // subscription utility methods
-  handshake: (
-    parameters: subscriptionTypes.HandshakeParams,
-    callback?: (status: CallbackStatus, result: subscriptionTypes.HandshakeResult) => void
-  ) => Promise<subscriptionTypes.HandshakeResult>;
-  receiveMessages: (
-    parameters: subscriptionTypes.ReceiveMessagesParams,
-    callback?: (status: CallbackStatus, result: subscriptionTypes.ReceiveMessagesResult) => void
-  ) => Promise<subscriptionTypes.ReceiveMessagesResult>;
+  history;
+
+  deleteMessages;
+
+  messageCounts;
+
+  fetchMessages;
 
   //
-  grant: Function;
-  grantToken: Function;
-  audit: Function;
-  revokeToken: (
-    parameters: RevokeTokenParams,
-    callback?: (status: CallbackStatus, result: RevokeTokenResult) => void
-  ) => Promise<RevokeTokenResult>;
+  channelGroups;
+
   //
-  subscribe: Function;
-  signal: Function;
-  presence: Function;
-  unsubscribe: Function;
-  unsubscribeAll: Function;
+  push;
+
+  //
+  hereNow;
+
+  whereNow;
+
+  getState;
+
+  setState;
+
+  //
+  grant;
+
+  grantToken;
+
+  audit;
+
+  revokeToken;
+
+  //
+  subscribe;
+
+  signal;
+
+  presence;
+
+  unsubscribe;
+
+  unsubscribeAll;
 
   // Actions API
-  addMessageAction: Function;
-  removeMessageAction: Function;
-  getMessageActions: Function;
+  addMessageAction;
+
+  removeMessageAction;
+
+  getMessageActions;
 
   // File Upload API v1
 
-  File: FileClass;
-  encryptFile: (key: string, file: IFile) => Promise<IFile>;
-  decryptFile: (key: string, file: IFile) => Promise<IFile>;
+  File;
 
-  listFiles: (
-    parameters: fileUploadTypes.ListFilesParams,
-    callback?: (status: CallbackStatus, result: fileUploadTypes.ListFilesResult) => void
-  ) => Promise<fileUploadTypes.ListFilesResult>;
-  sendFile: (
-    parameters: fileUploadTypes.SendFileParams,
-    callback?: (status: CallbackStatus, result: fileUploadTypes.SendFileResult) => void
-  ) => Promise<fileUploadTypes.SendFileResult>;
-  downloadFile: (
-    parameters: fileUploadTypes.DownloadFileParams,
-    callback?: (status: CallbackStatus, result: fileUploadTypes.DownloadFileResult) => void
-  ) => Promise<fileUploadTypes.DownloadFileResult>;
-  getFileUrl: (parameters: fileUploadTypes.GetFileUrlParams) => fileUploadTypes.GetFileUrlResult;
-  deleteFile: (
-    parameters: fileUploadTypes.DeleteFileParams,
-    callback?: (status: CallbackStatus, result: fileUploadTypes.DeleteFileResult) => void
-  ) => Promise<fileUploadTypes.DeleteFileResult>;
-  publishFile: (
-    parameters: fileUploadTypes.PublishFileParams,
-    callback?: (status: CallbackStatus, result: fileUploadTypes.PublishFileResult) => void
-  ) => Promise<fileUploadTypes.PublishFileResult>;
+  encryptFile;
+
+  decryptFile;
+
+  listFiles;
+
+  sendFile;
+
+  downloadFile;
+
+  getFileUrl;
+
+  deleteFile;
+
+  publishFile;
 
   // Objects API v2
 
-  objects: {
-    getAllUUIDMetadata: (
-      parameters?: GetAllUUIDMetadataParams,
-      cb?: (status: CallbackStatus, result: GetAllUUIDMetadataResult) => void
-    ) => Promise<GetAllUUIDMetadataResult>,
-    getUUIDMetadata: (
-      parameters?: GetUUIDMetadataParams,
-      cb?: (status: CallbackStatus, result: GetUUIDMetadataResult) => void
-    ) => Promise<GetUUIDMetadataResult>,
-    setUUIDMetadata: (
-      parameters: SetUUIDMetadataParams,
-      cb?: (status: CallbackStatus, result: SetUUIDMetadataResult) => void
-    ) => Promise<SetUUIDMetadataResult>,
-    removeUUIDMetadata: (
-      parameters?: RemoveUUIDMetadataParams,
-      cb?: (status: CallbackStatus, result: RemoveUUIDMetadataResult) => void
-    ) => Promise<RemoveUUIDMetadataResult>,
-
-    getAllChannelMetadata: (
-      parameters?: GetAllChannelMetadataParams,
-      cb?: (status: CallbackStatus, result: GetAllChannelMetadataResult) => void
-    ) => Promise<GetAllChannelMetadataResult>,
-    getChannelMetadata: (
-      parameters: GetChannelMetadataParams,
-      cb?: (status: CallbackStatus, result: GetChannelMetadataResult) => void
-    ) => Promise<GetChannelMetadataResult>,
-    setChannelMetadata: (
-      parameters: SetChannelMetadataParams,
-      cb?: (status: CallbackStatus, result: SetChannelMetadataResult) => void
-    ) => Promise<SetChannelMetadataResult>,
-    removeChannelMetadata: (
-      parameters: RemoveChannelMetadataParams,
-      cb?: (status: CallbackStatus, result: RemoveChannelMetadataResult) => void
-    ) => Promise<RemoveChannelMetadataResult>,
-
-    getMemberships: (
-      parameters: GetMembershipsParams,
-      cb?: (status: CallbackStatus, result: GetMembershipsResult) => void
-    ) => Promise<GetMembershipsResult>,
-    setMemberships: (
-      parameters: $Diff<UpsertMembershipsParams, {| type: string |}>,
-      cb?: (status: CallbackStatus, result: SetMembershipsResult) => void
-    ) => Promise<SetMembershipsResult>,
-    removeMemberships: (
-      parameters: $Diff<RemoveMembershipsParams, {| type: string |}>,
-      cb?: (status: CallbackStatus, result: SetMembershipsResult) => void
-    ) => Promise<SetMembershipsResult>,
-
-    getChannelMembers: (
-      parameters: GetMembersParams,
-      cb?: (status: CallbackStatus, result: GetMembersResult) => void
-    ) => Promise<GetMembersResult>,
-    setChannelMembers: (
-      parameters: $Diff<UpsertMembersParams, {| type: string |}>,
-      cb?: (status: CallbackStatus, result: SetMembersResult) => void
-    ) => Promise<SetMembersResult>,
-    removeChannelMembers: (
-      parameters: $Diff<RemoveMembersParams, {| type: string |}>,
-      cb?: (status: CallbackStatus, result: SetMembersResult) => void
-    ) => Promise<SetMembersResult>,
-  };
+  objects;
 
   // Objects API
 
-  createUser: Function;
-  updateUser: Function;
-  deleteUser: Function;
-  getUser: Function;
-  getUsers: Function;
-  createSpace: Function;
-  updateSpace: Function;
-  deleteSpace: Function;
-  getSpaces: Function;
-  getSpace: Function;
-  getMembers: Function;
-  addMembers: Function;
-  updateMembers: Function;
-  removeMembers: Function;
-  getMemberships: Function;
-  joinSpaces: Function;
-  updateMemberships: Function;
-  leaveSpaces: Function;
+  createUser;
 
-  disconnect: Function;
-  reconnect: Function;
+  updateUser;
 
-  destroy: Function;
-  stop: Function;
+  deleteUser;
 
-  getSubscribedChannels: Function;
-  getSubscribedChannelGroups: Function;
+  getUser;
 
-  addListener: Function;
-  removeListener: Function;
-  removeAllListeners: Function;
+  getUsers;
 
-  parseToken: Function;
-  setToken: Function;
-  getToken: Function;
+  createSpace;
 
-  getAuthKey: Function;
-  setAuthKey: Function;
+  updateSpace;
 
-  setCipherKey: Function;
-  setUUID: Function;
-  getUUID: Function;
+  deleteSpace;
 
-  getFilterExpression: Function;
-  setFilterExpression: Function;
+  getSpaces;
 
-  setHeartbeatInterval: Function;
+  getSpace;
 
-  setProxy: Function;
+  getMembers;
 
-  encrypt: Function;
-  decrypt: Function;
+  addMembers;
+
+  updateMembers;
+
+  removeMembers;
+
+  getMemberships;
+
+  joinSpaces;
+
+  updateMemberships;
+
+  leaveSpaces;
+
+  disconnect;
+
+  reconnect;
+
+  destroy;
+
+  stop;
+
+  getSubscribedChannels;
+
+  getSubscribedChannelGroups;
+
+  addListener;
+
+  removeListener;
+
+  removeAllListeners;
+
+  parseToken;
+
+  setToken;
+
+  getToken;
+
+  getAuthKey;
+
+  setAuthKey;
+
+  setCipherKey;
+
+  setUUID;
+
+  getUUID;
+
+  getFilterExpression;
+
+  setFilterExpression;
+
+  setHeartbeatInterval;
+
+  setProxy;
+
+  encrypt;
+
+  decrypt;
 
   //
 
-  constructor(setup: InternalSetupStruct) {
-    let { networking, cbor } = setup;
+  constructor(setup) {
+    const { networking, cbor } = setup;
 
-    const config = (this._config = new Config({ setup }));
+    const config = new Config({ setup });
+    this._config = config;
     const crypto = new Crypto({ config }); // LEGACY
 
-    const cryptography = setup.cryptography;
+    const { cryptography } = setup;
 
     networking.init(config);
 
-    const tokenManager = (this._tokenManager = new TokenManager(config, cbor));
-    const telemetryManager = (this._telemetryManager = new TelemetryManager({
-      maximumSamplesCount: 60000,
-    }));
+    const tokenManager = new TokenManager(config, cbor);
+    this._tokenManager = tokenManager;
 
-    let modules = {
+    const telemetryManager = new TelemetryManager({
+      maximumSamplesCount: 60000,
+    });
+
+    this._telemetryManager = telemetryManager;
+
+    const modules = {
       config,
       networking,
       crypto,
@@ -414,7 +331,8 @@ export default class {
     const subscribeEndpoint = endpointCreator.bind(this, modules, subscribeEndpointConfig);
 
     // managers
-    const listenerManager = (this._listenerManager = new ListenerManager());
+    const listenerManager = new ListenerManager();
+    this._listenerManager = listenerManager;
 
     const subscriptionManager = new SubscriptionManager({
       timeEndpoint,
@@ -528,7 +446,7 @@ export default class {
       removeChannelMetadata: endpointCreator.bind(this, modules, removeChannelMetadataEndpointConfig),
 
       getChannelMembers: endpointCreator.bind(this, modules, getMembersV2EndpointConfig),
-      setChannelMembers: (parameters: $Diff<UpsertMembersParams, {| type: string |}>, ...rest) =>
+      setChannelMembers: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -537,9 +455,9 @@ export default class {
             type: 'set',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
-      removeChannelMembers: (parameters: $Diff<RemoveMembersParams, {| type: string |}>, ...rest) =>
+      removeChannelMembers: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -548,11 +466,11 @@ export default class {
             type: 'delete',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
 
       getMemberships: endpointCreator.bind(this, modules, getMembershipsV2EndpointConfig),
-      setMemberships: (parameters: $Diff<UpsertMembershipsParams, {| type: string |}>, ...rest) =>
+      setMemberships: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -561,9 +479,9 @@ export default class {
             type: 'set',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
-      removeMemberships: (parameters: $Diff<RemoveMembershipsParams, {| type: string |}>, ...rest) =>
+      removeMemberships: (parameters, ...rest) =>
         endpointCreator.call(
           this,
           modules,
@@ -572,7 +490,7 @@ export default class {
             type: 'delete',
             ...parameters,
           },
-          ...rest
+          ...rest,
         ),
     };
 
@@ -623,7 +541,7 @@ export default class {
     this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
     this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
 
-    this.destroy = (isOffline: boolean) => {
+    this.destroy = (isOffline) => {
       subscriptionManager.unsubscribeAll(isOffline);
       subscriptionManager.disconnect();
     };
@@ -660,11 +578,11 @@ export default class {
     }
   }
 
-  getVersion(): string {
+  getVersion() {
     return this._config.getVersion();
   }
 
-  _addPnsdkSuffix(name: string, suffix: string) {
+  _addPnsdkSuffix(name, suffix) {
     this._config._addPnsdkSuffix(name, suffix);
   }
 
@@ -684,14 +602,15 @@ export default class {
     this.reconnect();
   }
 
-  static notificationPayload(title: ?string, body: ?string): NotificationsPayload {
+  static notificationPayload(title, body) {
     return new NotificationsPayload(title, body);
   }
 
-  static generateUUID(): string {
+  static generateUUID() {
     return uuidGenerator.createUUID();
   }
 
   static OPERATIONS = OPERATIONS;
+
   static CATEGORIES = CATEGORIES;
 }

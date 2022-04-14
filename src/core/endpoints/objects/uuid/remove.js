@@ -1,26 +1,18 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { UUIDMetadata } from './uuid';
+
 import utils from '../../../utils';
 
-export type RemoveUUIDMetadataParams = {|
-  uuid?: string,
-|};
-
-export type RemoveUUIDMetadataResult = {|
-  status: 200,
-  data: UUIDMetadata,
-|};
-
-const endpoint: EndpointConfig<RemoveUUIDMetadataParams, RemoveUUIDMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNRemoveUUIDMetadataOperation,
 
-  // No required parameters.
-  validateParams: () => {},
+  validateParams: () => {
+    // No required parameters.
+  },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
   useDelete: () => true,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),

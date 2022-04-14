@@ -1,29 +1,18 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { UUIDMetadata } from './uuid';
+
 import utils from '../../../utils';
 
-export type GetUUIDMetadataParams = {|
-  uuid?: string,
-  include?: {|
-    customFields: ?boolean,
-  |},
-|};
-
-export type GetUUIDMetadataResult = {|
-  status: 200,
-  data: UUIDMetadata,
-|};
-
-const endpoint: EndpointConfig<GetUUIDMetadataParams, GetUUIDMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetUUIDMetadataOperation,
 
-  // No required parameters.
-  validateParams: () => {},
+  validateParams: () => {
+    // No required parameters.
+  },
 
-  getURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
+  getURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params?.uuid ?? config.getUUID())}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 

@@ -1,149 +1,156 @@
-/* @flow */
+/*       */
 /* global location */
 
 import uuidGenerator from './uuid';
-import { InternalSetupStruct, KeepAliveStruct, ProxyStruct } from '../flow_interfaces';
 
-const PRESENCE_TIMEOUT_MINIMUM: number = 20;
-const PRESENCE_TIMEOUT_DEFAULT: number = 300;
+const PRESENCE_TIMEOUT_MINIMUM = 20;
+const PRESENCE_TIMEOUT_DEFAULT = 300;
 
 const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
 
-type ConfigConstructArgs = {
-  setup: InternalSetupStruct
-};
-
 export default class {
-  subscribeKey: string;
-  publishKey: string;
-  secretKey: string;
-  cipherKey: string;
-  authKey: string;
-  UUID: string;
+  subscribeKey;
 
-  proxy: ProxyStruct;
+  publishKey;
+
+  secretKey;
+
+  cipherKey;
+
+  authKey;
+
+  UUID;
+
+  proxy;
 
   /*
     if _useInstanceId is true, this instanceId will be added to all requests
   */
-  instanceId: string;
+  instanceId;
 
   /*
     If the SDK is running as part of another SDK built atop of it, allow a custom pnsdk with name and version.
    */
-  sdkName: string;
+  sdkName;
 
   /*
     keep track of the SDK family for identifier generator
   */
-  sdkFamily: string;
+  sdkFamily;
 
   /*
     If the SDK is operated by a partner, allow a custom pnsdk item for them.
   */
-  partnerId: string;
+  partnerId;
 
   /*
     filter expression to pass along when subscribing.
   */
-  filterExpression: string;
+  filterExpression;
+
   /*
     configuration to supress leave events; when a presence leave is performed
     this configuration will disallow the leave event from happening
   */
-  suppressLeaveEvents: boolean;
+  suppressLeaveEvents;
 
   /*
     use SSL for http requests?
   */
-  secure: boolean;
+  secure;
 
   // Custom optional origin.
-  origin: string | string[];
+  origin;
 
   // log verbosity: true to output lots of info
-  logVerbosity: boolean;
+  logVerbosity;
 
   // if instanceId config is true, the SDK will pass the unique instance identifier to the server as instanceId=<UUID>
-  useInstanceId: boolean;
+  useInstanceId;
 
   // if requestId config is true, the SDK will pass a unique request identifier with each request as request_id=<UUID>
-  useRequestId: boolean;
+  useRequestId;
 
   // use connection keep-alive for http requests
-  keepAlive: ?boolean;
+  keepAlive;
 
-  keepAliveSettings: ?KeepAliveStruct;
+  keepAliveSettings;
 
-  // if autoNetworkDetection config is true, the SDK will emit NetworkUp and NetworkDown when there changes in the networking
-  autoNetworkDetection: ?boolean;
+  // if autoNetworkDetection config is true, the SDK will emit NetworkUp and NetworkDown
+  // when there changes in the networking
+  autoNetworkDetection;
 
   // alert when a heartbeat works out.
-  announceSuccessfulHeartbeats: boolean;
-  announceFailedHeartbeats: boolean;
+  announceSuccessfulHeartbeats;
+
+  announceFailedHeartbeats;
 
   /*
     how long the server will wait before declaring that the client is gone.
   */
-  _presenceTimeout: number;
+  _presenceTimeout;
 
   /*
     how often (in seconds) the client should announce its presence to server
   */
-  _heartbeatInterval: number;
+  _heartbeatInterval;
 
   /*
     how long to wait for the server when running the subscribe loop
   */
-  _subscribeRequestTimeout: number;
+  _subscribeRequestTimeout;
+
   /*
     how long to wait for the server when making transactional requests
   */
-  _transactionalRequestTimeout: number;
+  _transactionalRequestTimeout;
+
   /*
     use send beacon API when unsubscribing.
     https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
   */
-  _useSendBeacon: boolean;
+  _useSendBeacon;
 
   /*
     allow frameworks to append to the PNSDK parameter
     the key should be an identifier for the specific framework to prevent duplicates
   */
-  _PNSDKSuffix: { [key: string]: string };
+  _PNSDKSuffix;
 
   /*
     if set, the SDK will alert if more messages arrive in one subscribe than the theshold
   */
-  requestMessageCountThreshold: number;
+  requestMessageCountThreshold;
 
   /*
     Restore subscription list on disconnection.
    */
-  restore: boolean;
+  restore;
 
   /*
     support for client deduping
   */
-  dedupeOnSubscribe: boolean;
+  dedupeOnSubscribe;
 
-  maximumCacheSize: number;
+  maximumCacheSize;
 
   /*
     support customp encryption and decryption functions.
   */
-  customEncrypt: Function; // function to support custome encryption of messages
+  customEncrypt; // function to support custome encryption of messages
 
-  customDecrypt: Function; // function used to decrypt old version messages
+  customDecrypt; // function used to decrypt old version messages
 
   // File Upload
 
   // How many times the publish-file should be retried before giving up
-  fileUploadPublishRetryLimit: number;
-  useRandomIVs: boolean;
-  enableSubscribeBeta: boolean;
+  fileUploadPublishRetryLimit;
 
-  constructor({ setup }: ConfigConstructArgs) {
+  useRandomIVs;
+
+  enableSubscribeBeta;
+
+  constructor({ setup }) {
     this._PNSDKSuffix = {};
 
     this.instanceId = `pn-${uuidGenerator.createUUID()}`;
@@ -182,10 +189,6 @@ export default class {
     // flag for beta subscribe feature enablement
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
-    if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
-      throw new Error('not implemented');
-    }
-
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
       this.secure = true;
@@ -223,25 +226,25 @@ export default class {
   }
 
   // exposed setters
-  getAuthKey(): string {
+  getAuthKey() {
     return this.authKey;
   }
 
-  setAuthKey(val: string): this {
+  setAuthKey(val) {
     this.authKey = val;
     return this;
   }
 
-  setCipherKey(val: string): this {
+  setCipherKey(val) {
     this.cipherKey = val;
     return this;
   }
 
-  getUUID(): string {
+  getUUID() {
     return this.UUID;
   }
 
-  setUUID(val: string): this {
+  setUUID(val) {
     if (!val || typeof val !== 'string' || val.trim().length === 0) {
       throw new Error('Missing uuid parameter. Provide a valid string uuid');
     }
@@ -249,20 +252,20 @@ export default class {
     return this;
   }
 
-  getFilterExpression(): string {
+  getFilterExpression() {
     return this.filterExpression;
   }
 
-  setFilterExpression(val: string): this {
+  setFilterExpression(val) {
     this.filterExpression = val;
     return this;
   }
 
-  getPresenceTimeout(): number {
+  getPresenceTimeout() {
     return this._presenceTimeout;
   }
 
-  setPresenceTimeout(val: number): this {
+  setPresenceTimeout(val) {
     if (val >= PRESENCE_TIMEOUT_MINIMUM) {
       this._presenceTimeout = val;
     } else {
@@ -277,56 +280,56 @@ export default class {
     return this;
   }
 
-  setProxy(proxy: ProxyStruct) {
+  setProxy(proxy) {
     this.proxy = proxy;
   }
 
-  getHeartbeatInterval(): number {
+  getHeartbeatInterval() {
     return this._heartbeatInterval;
   }
 
-  setHeartbeatInterval(val: number): this {
+  setHeartbeatInterval(val) {
     this._heartbeatInterval = val;
     return this;
   }
 
   // deprecated setters.
-  getSubscribeTimeout(): number {
+  getSubscribeTimeout() {
     return this._subscribeRequestTimeout;
   }
 
-  setSubscribeTimeout(val: number): this {
+  setSubscribeTimeout(val) {
     this._subscribeRequestTimeout = val;
     return this;
   }
 
-  getTransactionTimeout(): number {
+  getTransactionTimeout() {
     return this._transactionalRequestTimeout;
   }
 
-  setTransactionTimeout(val: number): this {
+  setTransactionTimeout(val) {
     this._transactionalRequestTimeout = val;
     return this;
   }
 
-  isSendBeaconEnabled(): boolean {
+  isSendBeaconEnabled() {
     return this._useSendBeacon;
   }
 
-  setSendBeaconConfig(val: boolean): this {
+  setSendBeaconConfig(val) {
     this._useSendBeacon = val;
     return this;
   }
 
-  getVersion(): string {
+  getVersion() {
     return '5.0.1';
   }
 
-  _addPnsdkSuffix(name: string, suffix: string) {
+  _addPnsdkSuffix(name, suffix) {
     this._PNSDKSuffix[name] = suffix;
   }
 
-  _getPnsdkSuffix(separator: string): string {
+  _getPnsdkSuffix(separator) {
     return Object.keys(this._PNSDKSuffix).reduce((result, key) => result + separator + this._PNSDKSuffix[key], '');
   }
 }

@@ -1,14 +1,14 @@
-/* @flow */
+/*       */
 /* eslint camelcase: 0 */
 
 import { GrantTokenInput, GrantTokenObject, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNAccessManagerGrantToken;
 }
 
-export function extractPermissions(permissions: GrantTokenObject) {
+export function extractPermissions(permissions) {
   let permissionsResult = 0;
 
   /* eslint-disable */
@@ -48,7 +48,7 @@ export function extractPermissions(permissions: GrantTokenObject) {
 
 function prepareMessagePayload(modules, incomingParams) {
   const { ttl, resources, patterns, meta, authorized_uuid } = incomingParams;
-  const params: any = {
+  const params = {
     ttl: 0,
     permissions: {
       resources: {
@@ -56,17 +56,17 @@ function prepareMessagePayload(modules, incomingParams) {
         groups: {},
         uuids: {},
         users: {}, // not used, needed for api backward compatibility
-        spaces: {} // not used, needed for api backward compatibility
+        spaces: {}, // not used, needed for api backward compatibility
       },
       patterns: {
         channels: {},
         groups: {},
         uuids: {},
         users: {}, // not used, needed for api backward compatibility
-        spaces: {} // not used, needed for api backward compatibility
+        spaces: {}, // not used, needed for api backward compatibility
       },
-      meta: {}
-    }
+      meta: {},
+    },
   };
 
   if (resources) {
@@ -128,11 +128,8 @@ function prepareMessagePayload(modules, incomingParams) {
   return params;
 }
 
-export function validateParams(
-  modules: ModulesInject,
-  incomingParams: GrantTokenInput
-) {
-  let { config } = modules;
+export function validateParams(modules, incomingParams) {
+  const { config } = modules;
 
   if (!config.subscribeKey) return 'Missing Subscribe Key';
   if (!config.publishKey) return 'Missing Publish Key';
@@ -141,25 +138,21 @@ export function validateParams(
   if (!incomingParams.resources && !incomingParams.patterns) return 'Missing either Resources or Patterns.';
 
   if (
-    (
-      (incomingParams.resources) &&
+    (incomingParams.resources &&
       (!incomingParams.resources.uuids || Object.keys(incomingParams.resources.uuids).length === 0) &&
       (!incomingParams.resources.channels || Object.keys(incomingParams.resources.channels).length === 0) &&
-      (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0)
-    ) ||
-    (
-      (incomingParams.patterns) &&
+      (!incomingParams.resources.groups || Object.keys(incomingParams.resources.groups).length === 0)) ||
+    (incomingParams.patterns &&
       (!incomingParams.patterns.uuids || Object.keys(incomingParams.patterns.uuids).length === 0) &&
       (!incomingParams.patterns.channels || Object.keys(incomingParams.patterns.channels).length === 0) &&
-      (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0)
-    )
+      (!incomingParams.patterns.groups || Object.keys(incomingParams.patterns.groups).length === 0))
   ) {
     return 'Missing values for either Resources or Patterns.';
   }
 }
 
-export function postURL(modules: ModulesInject): string {
-  let { config } = modules;
+export function postURL(modules) {
+  const { config } = modules;
   return `/v3/pam/${config.subscribeKey}/grant`;
 }
 
@@ -167,30 +160,24 @@ export function usePost() {
   return true;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): number {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported() {
   return false;
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   return {};
 }
 
-export function postPayload(
-  modules: ModulesInject,
-  incomingParams: GrantTokenInput
-): Object {
+export function postPayload(modules, incomingParams) {
   return prepareMessagePayload(modules, incomingParams);
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  response: Object
-): string {
-  let token = response.data.token;
+export function handleResponse(modules, response) {
+  const { token } = response.data;
 
   return token;
 }

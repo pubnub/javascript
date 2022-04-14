@@ -1,4 +1,4 @@
-/** @flow */
+/**       */
 
 import assert from 'assert';
 import nock from 'nock';
@@ -9,7 +9,7 @@ module.exports = {
       filteringScope: () => true
     });
   },
-  runAPIWithResponseDelays(scope: any, statusCode: any, responseBody: any, delays: any, apiCall: any) {
+  runAPIWithResponseDelays(scope     , statusCode     , responseBody     , delays     , apiCall     ) {
     let lastRequest = null;
 
     const callAPIWithDelayedResponse = (previousDelay, delay) => new Promise(((resolve) => {
@@ -33,7 +33,7 @@ module.exports = {
 
     return promisesResult.then(() => lastRequest);
   },
-  verifyRequestTelemetry(requestPath: any, latencyKey: any, expectedLatency: any, leeway: any) {
+  verifyRequestTelemetry(requestPath     , latencyKey     , expectedLatency     , leeway     ) {
     const re = new RegExp(`${latencyKey}=(\\d+)`, 'i');
     const latencyString = (re.exec(requestPath) ?? [])[1];
     const latency = latencyString ? parseInt(latencyString, 10) : 0;

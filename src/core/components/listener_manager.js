@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 import {
   MessageAnnouncement,
   StatusAnnouncement,
@@ -7,23 +7,23 @@ import {
   ObjectAnnouncement,
   CallbackStruct,
   PresenceAnnouncement,
-  FileAnnouncement
+  FileAnnouncement,
 } from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 
 export default class {
-  _listeners: Array<CallbackStruct>;
+  _listeners;
 
   constructor() {
     this._listeners = [];
   }
 
-  addListener(newListeners: CallbackStruct) {
+  addListener(newListeners) {
     this._listeners.push(newListeners);
   }
 
-  removeListener(deprecatedListener: CallbackStruct) {
-    let newListeners = [];
+  removeListener(deprecatedListener) {
+    const newListeners = [];
 
     this._listeners.forEach((listener) => {
       if (listener !== deprecatedListener) newListeners.push(listener);
@@ -36,74 +36,74 @@ export default class {
     this._listeners = [];
   }
 
-  announcePresence(announce: PresenceAnnouncement) {
+  announcePresence(announce) {
     this._listeners.forEach((listener) => {
       if (listener.presence) listener.presence(announce);
     });
   }
 
-  announceStatus(announce: StatusAnnouncement) {
+  announceStatus(announce) {
     this._listeners.forEach((listener) => {
       if (listener.status) listener.status(announce);
     });
   }
 
-  announceMessage(announce: MessageAnnouncement) {
+  announceMessage(announce) {
     this._listeners.forEach((listener) => {
       if (listener.message) listener.message(announce);
     });
   }
 
-  announceSignal(announce: SignalAnnouncement) {
+  announceSignal(announce) {
     this._listeners.forEach((listener) => {
       if (listener.signal) listener.signal(announce);
     });
   }
 
-  announceMessageAction(announce: MessageActionAnnouncement) {
+  announceMessageAction(announce) {
     this._listeners.forEach((listener) => {
       if (listener.messageAction) listener.messageAction(announce);
     });
   }
 
-  announceFile(announce: FileAnnouncement) {
+  announceFile(announce) {
     this._listeners.forEach((listener) => {
       if (listener.file) listener.file(announce);
     });
   }
 
-  announceObjects(announce: ObjectAnnouncement) {
+  announceObjects(announce) {
     this._listeners.forEach((listener) => {
       if (listener.objects) listener.objects(announce);
     });
   }
 
-  announceUser(announce: ObjectAnnouncement) {
+  announceUser(announce) {
     this._listeners.forEach((listener) => {
       if (listener.user) listener.user(announce);
     });
   }
 
-  announceSpace(announce: ObjectAnnouncement) {
+  announceSpace(announce) {
     this._listeners.forEach((listener) => {
       if (listener.space) listener.space(announce);
     });
   }
 
-  announceMembership(announce: ObjectAnnouncement) {
+  announceMembership(announce) {
     this._listeners.forEach((listener) => {
       if (listener.membership) listener.membership(announce);
     });
   }
 
   announceNetworkUp() {
-    let networkStatus: StatusAnnouncement = {};
+    const networkStatus = {};
     networkStatus.category = categoryConstants.PNNetworkUpCategory;
     this.announceStatus(networkStatus);
   }
 
   announceNetworkDown() {
-    let networkStatus: StatusAnnouncement = {};
+    const networkStatus = {};
     networkStatus.category = categoryConstants.PNNetworkDownCategory;
     this.announceStatus(networkStatus);
   }

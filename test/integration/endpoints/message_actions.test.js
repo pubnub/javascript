@@ -7,7 +7,7 @@ import PubNub from '../../../src/node/index';
 import utils from '../../utils';
 
 
-function publishMessages(client: PubNub, count: Number, channel: String, completion: Function) {
+function publishMessages(client        , count        , channel        , completion          ) {
   let publishCompleted = 0;
   let timetokens = [];
 
@@ -37,7 +37,7 @@ function publishMessages(client: PubNub, count: Number, channel: String, complet
   publish(publishCompleted);
 }
 
-function addActions(client: PubNub, count: Number, messageTimetokens: Array<Number>, channel: String, completion: Function) {
+function addActions(client        , count        , messageTimetokens               , channel        , completion          ) {
   const types = ['reaction', 'receipt', 'custom'];
   const values = [
     PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(), PubNub.generateUUID(),

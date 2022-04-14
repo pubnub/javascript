@@ -1,22 +1,20 @@
-/* @flow */
+/*       */
 import Config from './config';
-import {
-  GrantTokenOutput,
-} from '../flow_interfaces';
+import { GrantTokenOutput } from '../flow_interfaces';
 
 export default class {
-  _config: Config;
+  _config;
 
-  _cbor: any;
+  _cbor;
 
-  _token: any;
+  _token;
 
-  constructor(config: Config, cbor: any) {
+  constructor(config, cbor) {
     this._config = config;
     this._cbor = cbor;
   }
 
-  setToken(token: string) {
+  setToken(token) {
     if (token && token.length > 0) {
       this._token = token;
     } else {
@@ -28,15 +26,15 @@ export default class {
     return this._token;
   }
 
-  extractPermissions(permissions: number) {
-    let permissionsResult = {
+  extractPermissions(permissions) {
+    const permissionsResult = {
       read: false,
       write: false,
       manage: false,
       delete: false,
       get: false,
       update: false,
-      join: false
+      join: false,
     };
 
     /* eslint-disable */
@@ -60,41 +58,41 @@ export default class {
     if ((permissions & 4) === 4) {
       permissionsResult.manage = true;
     }
-    
+
     if ((permissions & 2) === 2) {
       permissionsResult.write = true;
     }
-    
+
     if ((permissions & 1) === 1) {
       permissionsResult.read = true;
     }
-    
+
     /* eslint-enable */
 
     return permissionsResult;
   }
 
-  parseToken(tokenString: string): GrantTokenOutput {
-    let parsed = this._cbor.decodeToken(tokenString);
+  parseToken(tokenString) {
+    const parsed = this._cbor.decodeToken(tokenString);
 
     if (parsed !== undefined) {
-      let uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
-      let channelResourcePermissions = Object.keys(parsed.res.chan);
-      let groupResourcePermissions = Object.keys(parsed.res.grp);
-      let uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
-      let channelPatternPermissions = Object.keys(parsed.pat.chan);
-      let groupPatternPermissions = Object.keys(parsed.pat.grp);
+      const uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
+      const channelResourcePermissions = Object.keys(parsed.res.chan);
+      const groupResourcePermissions = Object.keys(parsed.res.grp);
+      const uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
+      const channelPatternPermissions = Object.keys(parsed.pat.chan);
+      const groupPatternPermissions = Object.keys(parsed.pat.grp);
 
-      let result: GrantTokenOutput  = {
+      const result = {
         version: parsed.v,
         timestamp: parsed.t,
         ttl: parsed.ttl,
-        authorized_uuid: parsed.uuid
+        authorized_uuid: parsed.uuid,
       };
 
-      let uuidResources = uuidResourcePermissions.length > 0;
-      let channelResources = channelResourcePermissions.length > 0;
-      let groupResources = groupResourcePermissions.length > 0;
+      const uuidResources = uuidResourcePermissions.length > 0;
+      const channelResources = channelResourcePermissions.length > 0;
+      const groupResources = groupResourcePermissions.length > 0;
 
       if (uuidResources || channelResources || groupResources) {
         result.resources = {};
@@ -121,9 +119,9 @@ export default class {
         }
       }
 
-      let uuidPatterns = uuidPatternPermissions.length > 0;
-      let channelPatterns = channelPatternPermissions.length > 0;
-      let groupPatterns = groupPatternPermissions.length > 0;
+      const uuidPatterns = uuidPatternPermissions.length > 0;
+      const channelPatterns = channelPatternPermissions.length > 0;
+      const groupPatterns = groupPatternPermissions.length > 0;
 
       if (uuidPatterns || channelPatterns || groupPatterns) {
         result.patterns = {};
@@ -157,8 +155,7 @@ export default class {
       result.signature = parsed.sig;
 
       return result;
-    } else {
-      return undefined;
     }
+    return undefined;
   }
 }
