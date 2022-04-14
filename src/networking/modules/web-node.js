@@ -2,6 +2,7 @@
 /* global window */
 
 import superagent from 'superagent';
+import categories from '../../core/constants/categories';
 
 function log(req) {
   const _pickLogger = () => {
@@ -66,6 +67,7 @@ function xdr(superagentConstruct, endpoint, callback) {
   sc.on('abort', () => {
     return callback(
       {
+        category: categories.PNUnknownCategory,
         error: true,
         operation: endpoint.operation,
         errorData: new Error('Aborted'),

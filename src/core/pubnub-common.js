@@ -113,7 +113,6 @@ import CATEGORIES from './constants/categories';
 
 import uuidGenerator from './components/uuid';
 import { EventEngine } from '../event-engine';
-import { createDispatcher } from '../event-engine/dispatcher';
 
 export default class {
   _config;

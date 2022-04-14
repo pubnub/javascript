@@ -118,6 +118,6 @@ describe('EventEngine', () => {
 
     pubnub.subscribe({ channels: ['test'] });
 
-    await forState('RECONNECTING', 1000);
+    await forState('RECEIVE_RECONNECTING', 1000);
   });
 });

@@ -1710,7 +1710,7 @@
     };
 
     /*       */
-    var categoryConstants = {
+    var categories = {
         // SDK will announce when the network appears to be connected again.
         PNNetworkUpCategory: 'PNNetworkUpCategory',
         // SDK will announce when the network appears to down.
@@ -2027,11 +2027,15 @@
         default_1.prototype._processSubscribeResponse = function (status, payload) {
             var _this = this;
             if (status.error) {
+                // if error comes from request abort, ignore
+                if (status.errorData && status.errorData.message === 'Aborted') {
+                    return;
+                }
                 // if we timeout from server, restart the loop.
-                if (status.category === categoryConstants.PNTimeoutCategory) {
+                if (status.category === categories.PNTimeoutCategory) {
                     this._startSubscribeLoop();
                 }
-                else if (status.category === categoryConstants.PNNetworkIssuesCategory) {
+                else if (status.category === categories.PNNetworkIssuesCategory) {
                     // we lost internet connection, alert the reconnection manager and terminate all loops
                     this.disconnect();
                     if (status.error && this._config.autoNetworkDetection && this._isOnline) {
@@ -2046,7 +2050,7 @@
                         _this.reconnect();
                         _this._subscriptionStatusAnnounced = true;
                         var reconnectedAnnounce = {
-                            category: categoryConstants.PNReconnectedCategory,
+                            category: categories.PNReconnectedCategory,
                             operation: status.operation,
                             lastTimetoken: _this._lastTimetoken,
                             currentTimetoken: _this._currentTimetoken,
@@ -2056,7 +2060,7 @@
                     this._reconnectionManager.startPolling();
                     this._listenerManager.announceStatus(status);
                 }
-                else if (status.category === categoryConstants.PNBadRequestCategory) {
+                else if (status.category === categories.PNBadRequestCategory) {
                     this._stopHeartbeatTimer();
                     this._listenerManager.announceStatus(status);
                 }
@@ -2075,7 +2079,7 @@
             }
             if (!this._subscriptionStatusAnnounced) {
                 var connectedAnnounce = {};
-                connectedAnnounce.category = categoryConstants.PNConnectedCategory;
+                connectedAnnounce.category = categories.PNConnectedCategory;
                 connectedAnnounce.operation = status.operation;
                 connectedAnnounce.affectedChannels = this._pendingChannelSubscriptions;
                 connectedAnnounce.subscribedChannels = this.getSubscribedChannels();
@@ -2092,7 +2096,7 @@
             var _a = this._config, requestMessageCountThreshold = _a.requestMessageCountThreshold, dedupeOnSubscribe = _a.dedupeOnSubscribe;
             if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
                 var countAnnouncement = {};
-                countAnnouncement.category = categoryConstants.PNRequestMessageCountExceededCategory;
+                countAnnouncement.category = categories.PNRequestMessageCountExceededCategory;
                 countAnnouncement.operation = status.operation;
                 this._listenerManager.announceStatus(countAnnouncement);
             }
@@ -3108,12 +3112,12 @@
         };
         default_1.prototype.announceNetworkUp = function () {
             var networkStatus = {};
-            networkStatus.category = categoryConstants.PNNetworkUpCategory;
+            networkStatus.category = categories.PNNetworkUpCategory;
             this.announceStatus(networkStatus);
         };
         default_1.prototype.announceNetworkDown = function () {
             var networkStatus = {};
-            networkStatus.category = categoryConstants.PNNetworkDownCategory;
+            networkStatus.category = categories.PNNetworkDownCategory;
             this.announceStatus(networkStatus);
         };
         return default_1;
@@ -3450,7 +3454,7 @@
                             error: true,
                             operation: endpoint.getOperation(),
                             errorData: e,
-                            category: categoryConstants.PNUnknownCategory,
+                            category: categories.PNUnknownCategory,
                         };
                     }
                     callback(errorData, null);
@@ -8872,7 +8876,7 @@
             return uuidGenerator.createUUID();
         };
         default_1.OPERATIONS = OPERATIONS;
-        default_1.CATEGORIES = categoryConstants;
+        default_1.CATEGORIES = categories;
         return default_1;
     }());
 
@@ -8940,34 +8944,34 @@
         };
         default_1.prototype._detectErrorCategory = function (err) {
             if (err.code === 'ENOTFOUND') {
-                return categoryConstants.PNNetworkIssuesCategory;
+                return categories.PNNetworkIssuesCategory;
             }
             if (err.code === 'ECONNREFUSED') {
-                return categoryConstants.PNNetworkIssuesCategory;
+                return categories.PNNetworkIssuesCategory;
             }
             if (err.code === 'ECONNRESET') {
-                return categoryConstants.PNNetworkIssuesCategory;
+                return categories.PNNetworkIssuesCategory;
             }
             if (err.code === 'EAI_AGAIN') {
-                return categoryConstants.PNNetworkIssuesCategory;
+                return categories.PNNetworkIssuesCategory;
             }
             if (err.status === 0 || (err.hasOwnProperty('status') && typeof err.status === 'undefined')) {
-                return categoryConstants.PNNetworkIssuesCategory;
+                return categories.PNNetworkIssuesCategory;
             }
             if (err.timeout)
-                return categoryConstants.PNTimeoutCategory;
+                return categories.PNTimeoutCategory;
             if (err.code === 'ETIMEDOUT') {
-                return categoryConstants.PNNetworkIssuesCategory;
+                return categories.PNNetworkIssuesCategory;
             }
             if (err.response) {
                 if (err.response.badRequest) {
-                    return categoryConstants.PNBadRequestCategory;
+                    return categories.PNBadRequestCategory;
                 }
                 if (err.response.forbidden) {
-                    return categoryConstants.PNAccessDeniedCategory;
+                    return categories.PNAccessDeniedCategory;
                 }
             }
-            return categoryConstants.PNUnknownCategory;
+            return categories.PNUnknownCategory;
         };
         return default_1;
     }());
@@ -12401,6 +12405,7 @@
         sc = sc.timeout(endpoint.timeout);
         sc.on('abort', function () {
             return callback({
+                category: categories.PNUnknownCategory,
                 error: true,
                 operation: endpoint.operation,
                 errorData: new Error('Aborted'),
