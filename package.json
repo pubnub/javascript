@@ -13,6 +13,8 @@
     "clean": "rimraf lib dist upload",
     "lint": "eslint \"src/**/*\" --config .eslintrc.js",
     "ci": "npm run clean && npm run build && npm run lint && npm run test",
+    "ci:web": "npm run clean && npm run build && npm run lint && npm run test:web",
+    "ci:node": "npm run clean && npm run build && npm run lint && npm run test:node",
     "test:feature:objectsv2:node": "ts-mocha -p tsconfig.mocha.json --no-config --require test/setup.js --reporter spec test/dist/objectsv2.test.js",
     "test:feature:fileupload:node": "ts-mocha -p tsconfig.mocha.json --no-config --require test/setup.js --reporter spec test/feature/file_upload.node.test.js",
     "contract:refresh": "rimraf dist/contract && git clone --branch master git@github.com:pubnub/service-contract-mock.git dist/contract && npm install --prefix dist/contract && npm run refresh-files --prefix dist/contract",

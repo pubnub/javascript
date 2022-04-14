@@ -25,13 +25,16 @@ jobs:
   include:
     - name: 'NodeJS 12'
       node_js: '12'
-      script: npm run ci
+      script: npm run ci:node
     - name: 'NodeJS 14'
       node_js: '14'
-      script: npm run ci
+      script: npm run ci:node
     - name: 'NodeJS 16'
       node_js: '16'
-      script: npm run ci
+      script: npm run ci:node
+    - name: 'Web'
+      node_js: '16'
+      script: npm run ci:web
     - stage: 'test pr branch'
       name: 'NodeJS 12'
       node_js: '12'
