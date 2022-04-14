@@ -11,7 +11,7 @@ const endpoint = {
   },
 
   getURL: ({ config }, params) => {
-    let channelsString = params.channels ? params.channels.join(',') : ',';
+    const channelsString = params.channels ? params.channels.join(',') : ',';
     return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(channelsString)}/0`;
   },
 

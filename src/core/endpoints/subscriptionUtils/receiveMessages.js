@@ -17,7 +17,7 @@ const endpoint = {
   },
 
   getURL: ({ config }, params) => {
-    let channelsString = params.channels ? params.channels.join(',') : ',';
+    const channelsString = params.channels ? params.channels.join(',') : ',';
     return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(channelsString)}/0`;
   },
 
@@ -41,7 +41,7 @@ const endpoint = {
     const parsedMessages = [];
 
     response.m.forEach((envelope) => {
-      let parsedMessage = {
+      const parsedMessage = {
         shard: parseInt(envelope.a, 10),
         subscriptionMatch: envelope.b,
         channel: envelope.c,

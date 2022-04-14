@@ -1,5 +1,3 @@
-/**       */
-
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
 import SubscriptionManager from './components/subscription_manager';

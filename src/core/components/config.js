@@ -181,10 +181,6 @@ export default class {
     // flag for beta subscribe feature enablement
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
-    // if (setup.enableSubscribeBeta && setup.enableSubscribeBeta === true) {
-    //   throw new Error('not implemented');
-    // }
-
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
       this.secure = true;

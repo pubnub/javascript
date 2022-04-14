@@ -1,7 +1,5 @@
 import uuidGenerator from './uuid';
-import { StatusAnnouncement } from '../flow_interfaces';
 import utils from '../utils';
-import Config from './config';
 import operationConstants from '../constants/operations';
 import categoryConstants from '../constants/categories';
 
