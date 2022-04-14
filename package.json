@@ -67,7 +67,6 @@
     "chai-nock": "^1.2.0",
     "es6-shim": "^0.35.6",
     "eslint": "^8.9.0",
-    "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-mocha": "^10.0.3",
     "eslint-plugin-prettier": "^4.0.0",
     "js-yaml": "^3.13.1",

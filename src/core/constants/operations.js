@@ -88,5 +88,5 @@ export default {
 
   // subscription utilities
   PNHandshakeOperation: 'PNHandshakeOperation',
-  PNReceiveMessagesOperation: 'PNReceiveMessagesOperation'
+  PNReceiveMessagesOperation: 'PNReceiveMessagesOperation',
 };
