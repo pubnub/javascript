@@ -1,14 +1,3 @@
-/*       */
-import {
-  MessageAnnouncement,
-  StatusAnnouncement,
-  SignalAnnouncement,
-  MessageActionAnnouncement,
-  ObjectAnnouncement,
-  CallbackStruct,
-  PresenceAnnouncement,
-  FileAnnouncement,
-} from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 
 export default class {

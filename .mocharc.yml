@@ -1,4 +1,4 @@
-spec: test/**/*.test.js
+spec: test/**/*.test.{ts,js}
 require: test/setup.js
 exclude:
   - test/dist/*.js

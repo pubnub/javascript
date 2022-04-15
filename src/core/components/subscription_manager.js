@@ -1,20 +1,6 @@
-/*       */
-import Crypto from './cryptography';
-import Config from './config';
-import ListenerManager from './listener_manager';
 import ReconnectionManager from './reconnection_manager';
 import DedupingManager from './deduping_manager';
 import utils from '../utils';
-import {
-  MessageActionAnnouncement,
-  MessageAnnouncement,
-  SignalAnnouncement,
-  ObjectAnnouncement,
-  SubscribeEnvelope,
-  StatusAnnouncement,
-  PresenceAnnouncement,
-  FileAnnouncement,
-} from '../flow_interfaces';
 import categoryConstants from '../constants/categories';
 
 export default class {
@@ -447,6 +433,11 @@ export default class {
 
   _processSubscribeResponse(status, payload) {
     if (status.error) {
+      // if error comes from request abort, ignore
+      if (status.errorData && status.errorData.message === 'Aborted') {
+        return;
+      }
+
       // if we timeout from server, restart the loop.
       if (status.category === categoryConstants.PNTimeoutCategory) {
         this._startSubscribeLoop();

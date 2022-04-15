@@ -9,6 +9,8 @@ export class PubNubError extends Error {
     this.name = this.constructor.name;
     this.status = status;
     this.message = message;
+
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 

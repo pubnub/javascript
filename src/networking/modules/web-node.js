@@ -2,7 +2,7 @@
 /* global window */
 
 import superagent from 'superagent';
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
+import categories from '../../core/constants/categories';
 
 function log(req) {
   const _pickLogger = () => {
@@ -46,8 +46,9 @@ function xdr(superagentConstruct, endpoint, callback) {
   let sc = superagentConstruct;
 
   if (endpoint.abortSignal) {
-    endpoint.abortSignal.on('abort', () => {
+    const unsubscribe = endpoint.abortSignal.subscribe(() => {
       sc.abort();
+      unsubscribe();
     });
   }
 
@@ -62,6 +63,18 @@ function xdr(superagentConstruct, endpoint, callback) {
   }
 
   sc = sc.timeout(endpoint.timeout);
+
+  sc.on('abort', () => {
+    return callback(
+      {
+        category: categories.PNUnknownCategory,
+        error: true,
+        operation: endpoint.operation,
+        errorData: new Error('Aborted'),
+      },
+      null,
+    );
+  });
 
   sc.end((err, resp) => {
     let parsedResponse;
