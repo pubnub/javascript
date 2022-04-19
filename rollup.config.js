@@ -1,4 +1,4 @@
-import { join, basename, dirname } from 'node:path';
+import { join, basename, dirname } from 'path';
 
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
