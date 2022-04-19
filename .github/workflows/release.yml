@@ -2,9 +2,8 @@ name: Automated product release
 
 on:
   pull_request:
-    branches: [ master ]
-    types: [ closed ]
-
+    branches: [master]
+    types: [closed]
 
 jobs:
   check-release:
@@ -53,7 +52,7 @@ jobs:
           content-type: application/javascript
           content-encoding: gzip
           acl: public-read
-          local-path: upload/gzip/*.js
+          local-path: upload/*.js
           remote-path: pubnub/sdk/javascript
       - name: Publish to NPM
         uses: ./.github/.release/actions/actions/services/npm

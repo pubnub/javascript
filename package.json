@@ -88,6 +88,7 @@
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "rollup": "^2.68.0",
+    "rollup-plugin-gzip": "^3.0.1",
     "rollup-plugin-terser": "^7.0.2",
     "sinon": "^7.5.0",
     "sinon-chai": "^3.3.0",

@@ -1,11 +1,14 @@
+import { join, basename, dirname } from 'node:path';
+
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
 
 import { terser } from 'rollup-plugin-terser';
+import gzipPlugin from 'rollup-plugin-gzip';
 
-import { browser } from './package.json';
+import { browser, version } from './package.json';
 import tsConfig from './tsconfig.rollup.json';
 
 export default [
@@ -21,10 +24,35 @@ export default [
   {
     input: 'src/web/index.js',
     output: {
-      file: 'dist/web/pubnub.js',
+      file: join(dirname(browser), basename(browser, '.min.js') + '.js'),
       format: 'umd',
       name: 'PubNub',
     },
     plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig)],
+  },
+  {
+    input: 'src/web/index.js',
+    output: {
+      file: `upload/pubnub.${version}.min.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [
+      json(),
+      resolve({ browser: true }),
+      commonjs(),
+      typescript(tsConfig),
+      terser(),
+      gzipPlugin({ fileName: '' }),
+    ],
+  },
+  {
+    input: 'src/web/index.js',
+    output: {
+      file: `upload/pubnub.${version}.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), gzipPlugin({ fileName: '' })],
   },
 ];
