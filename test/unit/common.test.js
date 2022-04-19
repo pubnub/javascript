@@ -54,10 +54,7 @@ describe('#core / mounting point', () => {
 
   it('supports encryption with static IV', () => {
     let pn = new PubNub({ cipherKey: 'customKey', useRandomIVs: false, uuid: 'myUUID' });
-    assert.equal(
-      pn.encrypt(JSON.stringify({ hi: 'there' })),
-      'TejX6F2JNqH/gIiGHWN4Cw=='
-    );
+    assert.equal(pn.encrypt(JSON.stringify({ hi: 'there' })), 'TejX6F2JNqH/gIiGHWN4Cw==');
   });
 
   it('supports encryption with random IV', () => {
@@ -65,19 +62,13 @@ describe('#core / mounting point', () => {
     const data1 = pn.encrypt(JSON.stringify({ hi: 'there' }));
     const data2 = pn.encrypt(JSON.stringify({ hi: 'there' }));
 
-    assert.notEqual(
-      pn.encrypt(JSON.stringify({ hi: 'there' })),
-      'TejX6F2JNqH/gIiGHWN4Cw=='
-    );
+    assert.notEqual(pn.encrypt(JSON.stringify({ hi: 'there' })), 'TejX6F2JNqH/gIiGHWN4Cw==');
     assert.notEqual(data1, data2);
   });
 
   it('supports encryption with custom key and static IV', () => {
     let pn = new PubNub({ useRandomIVs: false, uuid: 'myUUID' });
-    assert.equal(
-      pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'),
-      'TejX6F2JNqH/gIiGHWN4Cw=='
-    );
+    assert.equal(pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'), 'TejX6F2JNqH/gIiGHWN4Cw==');
   });
 
   it('supports encryption with custom key and random IV', () => {
@@ -85,10 +76,7 @@ describe('#core / mounting point', () => {
     const data1 = pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
     const data2 = pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
 
-    assert.notEqual(
-      pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'),
-      'TejX6F2JNqH/gIiGHWN4Cw=='
-    );
+    assert.notEqual(pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'), 'TejX6F2JNqH/gIiGHWN4Cw==');
     assert.notEqual(data1, data2);
   });
 
@@ -119,7 +107,7 @@ describe('#core / mounting point', () => {
     assert.notDeepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });
-    assert.deepEqual(pn.decrypt(data, 'customKey'), { hi: 'there2', });
+    assert.deepEqual(pn.decrypt(data, 'customKey'), { hi: 'there2' });
   });
 
   it('supports custom encryption/decryption', () => {

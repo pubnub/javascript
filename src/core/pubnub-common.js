@@ -112,6 +112,7 @@ import OPERATIONS from './constants/operations';
 import CATEGORIES from './constants/categories';
 
 import uuidGenerator from './components/uuid';
+import { EventEngine } from '../event-engine';
 
 export default class {
   _config;
@@ -151,6 +152,14 @@ export default class {
   getState;
 
   setState;
+  // presence utility methods
+  iAmHere;
+  iAmAway;
+  setPresenceState;
+
+  // subscription utility methods
+  handshake;
+  receiveMessages;
 
   //
   grant;
@@ -334,17 +343,48 @@ export default class {
     const listenerManager = new ListenerManager();
     this._listenerManager = listenerManager;
 
-    const subscriptionManager = new SubscriptionManager({
-      timeEndpoint,
-      leaveEndpoint,
-      heartbeatEndpoint,
-      setStateEndpoint,
-      subscribeEndpoint,
-      crypto: modules.crypto,
-      config: modules.config,
-      listenerManager,
-      getFileUrl: (params) => getFileUrlFunction(modules, params),
-    });
+    this.iAmHere = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
+    this.iAmAway = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
+    this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
+    this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
+    this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
+
+    if (config.enableSubscribeBeta === true) {
+      const eventEngine = new EventEngine({ handshake: this.handshake, receiveEvents: this.receiveMessages });
+
+      this.subscribe = eventEngine.subscribe.bind(eventEngine);
+      this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
+
+      this.eventEngine = eventEngine;
+    } else {
+      const subscriptionManager = new SubscriptionManager({
+        timeEndpoint,
+        leaveEndpoint,
+        heartbeatEndpoint,
+        setStateEndpoint,
+        subscribeEndpoint,
+        crypto: modules.crypto,
+        config: modules.config,
+        listenerManager,
+        getFileUrl: (params) => getFileUrlFunction(modules, params),
+      });
+
+      this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
+      this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
+      this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
+      this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
+      this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
+      this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
+      this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
+
+      this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
+      this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
+
+      this.destroy = (isOffline) => {
+        subscriptionManager.unsubscribeAll(isOffline);
+        subscriptionManager.disconnect();
+      };
+    }
 
     this.addListener = listenerManager.addListener.bind(listenerManager);
     this.removeListener = listenerManager.removeListener.bind(listenerManager);
@@ -373,19 +413,11 @@ export default class {
     this.hereNow = endpointCreator.bind(this, modules, presenceHereNowConfig);
     this.whereNow = endpointCreator.bind(this, modules, presenceWhereNowEndpointConfig);
     this.getState = endpointCreator.bind(this, modules, presenceGetStateConfig);
-    this.setState = subscriptionManager.adaptStateChange.bind(subscriptionManager);
-
-    /* presence utilities */
-    this.iAmHere = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
-    this.iAmAway = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
-    this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
-
     /* PAM */
     this.grant = endpointCreator.bind(this, modules, grantEndpointConfig);
     this.grantToken = endpointCreator.bind(this, modules, grantTokenEndpointConfig);
     this.audit = endpointCreator.bind(this, modules, auditEndpointConfig);
     this.revokeToken = endpointCreator.bind(this, modules, revokeTokenEndpointConfig);
-    //
     this.publish = endpointCreator.bind(this, modules, publishEndpointConfig);
 
     this.fire = (args, callback) => {
@@ -427,10 +459,6 @@ export default class {
     this.downloadFile = endpointCreator.bind(this, modules, downloadFileEndpointConfig);
 
     this.deleteFile = endpointCreator.bind(this, modules, deleteFileEndpointConfig);
-
-    this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
-
-    this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
     // Objects API v2
 
@@ -534,26 +562,9 @@ export default class {
 
     this.time = timeEndpoint;
 
-    // subscription related methods
-    this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
-    this.presence = subscriptionManager.adaptPresenceChange.bind(subscriptionManager);
-    this.unsubscribe = subscriptionManager.adaptUnsubscribeChange.bind(subscriptionManager);
-    this.disconnect = subscriptionManager.disconnect.bind(subscriptionManager);
-    this.reconnect = subscriptionManager.reconnect.bind(subscriptionManager);
-
-    this.destroy = (isOffline) => {
-      subscriptionManager.unsubscribeAll(isOffline);
-      subscriptionManager.disconnect();
-    };
-
     // --- deprecated  ------------------
     this.stop = this.destroy; // --------
     // --- deprecated  ------------------
-
-    this.unsubscribeAll = subscriptionManager.unsubscribeAll.bind(subscriptionManager);
-
-    this.getSubscribedChannels = subscriptionManager.getSubscribedChannels.bind(subscriptionManager);
-    this.getSubscribedChannelGroups = subscriptionManager.getSubscribedChannelGroups.bind(subscriptionManager);
 
     // mount crypto
     this.encrypt = crypto.encrypt.bind(crypto);

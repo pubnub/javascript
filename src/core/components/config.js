@@ -10,17 +10,11 @@ const makeDefaultOrigins = () => Array.from({ length: 20 }, (_, i) => `ps${i + 1
 
 export default class {
   subscribeKey;
-
   publishKey;
-
   secretKey;
-
   cipherKey;
-
   authKey;
-
   UUID;
-
   proxy;
 
   /*
@@ -145,9 +139,7 @@ export default class {
 
   // How many times the publish-file should be retried before giving up
   fileUploadPublishRetryLimit;
-
   useRandomIVs;
-
   enableSubscribeBeta;
 
   constructor({ setup }) {
@@ -322,7 +314,7 @@ export default class {
   }
 
   getVersion() {
-    return '5.0.1';
+    return '6.0.0';
   }
 
   _addPnsdkSuffix(name, suffix) {
