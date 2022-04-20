@@ -52,7 +52,7 @@ jobs:
           content-type: application/javascript
           content-encoding: gzip
           acl: public-read
-          local-path: upload/*.js
+          local-path: upload/gzip/*.js
           remote-path: pubnub/sdk/javascript
       - name: Publish to NPM
         uses: ./.github/.release/actions/actions/services/npm
