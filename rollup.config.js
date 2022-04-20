@@ -33,7 +33,7 @@ export default [
   {
     input: 'src/web/index.js',
     output: {
-      file: `upload/pubnub.${version}.min.js`,
+      file: `upload/gzip/pubnub.${version}.min.js`,
       format: 'umd',
       name: 'PubNub',
     },
@@ -49,10 +49,28 @@ export default [
   {
     input: 'src/web/index.js',
     output: {
-      file: `upload/pubnub.${version}.js`,
+      file: `upload/gzip/pubnub.${version}.js`,
       format: 'umd',
       name: 'PubNub',
     },
     plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), gzipPlugin({ fileName: '' })],
+  },
+  {
+    input: 'src/web/index.js',
+    output: {
+      file: `upload/normal/pubnub.${version}.min.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), terser()],
+  },
+  {
+    input: 'src/web/index.js',
+    output: {
+      file: `upload/normal/pubnub.${version}.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig)],
   },
 ];
