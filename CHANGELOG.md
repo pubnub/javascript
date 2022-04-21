@@ -5,13 +5,6 @@ April 21 2022
 - Added a TypeScript build chain and moved from webpack to rollup.
 - Added an initial implementation of Event Engine.
 
-## v6.0.0
-April 14 2022
-
-#### Added
-- Added a TypeScript build chain and moved from webpack to rollup.
-- Added an initial implementation of Event Engine.
-
 ## v5.0.1
 March 02 2022
 
