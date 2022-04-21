@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2022-04-21
+    version: v6.0.0
+    changes:
+      - type: feature
+        text: "Added a TypeScript build chain and moved from webpack to rollup."
+      - type: feature
+        text: "Added an initial implementation of Event Engine."
   - date: 2022-04-14
     version: v6.0.0
     changes:
