@@ -8,8 +8,6 @@ import TokenManager from './components/token_manager';
 
 import endpointCreator from './components/endpoint';
 
-import { deprecated } from './utils';
-
 import * as addChannelsChannelGroupConfig from './endpoints/channel_groups/add_channels';
 import * as removeChannelsChannelGroupConfig from './endpoints/channel_groups/remove_channels';
 import * as deleteChannelGroupConfig from './endpoints/channel_groups/delete_group';
@@ -68,27 +66,6 @@ import setMembersV2EndpointConfig from './endpoints/objects/member/set';
 import getMembershipsV2EndpointConfig from './endpoints/objects/membership/get';
 
 import setMembershipsV2EndpointConfig from './endpoints/objects/membership/set';
-
-// Objects API
-
-import * as createUserEndpointConfig from './endpoints/users/create_user';
-import * as updateUserEndpointConfig from './endpoints/users/update_user';
-import * as deleteUserEndpointConfig from './endpoints/users/delete_user';
-import * as getUserEndpointConfig from './endpoints/users/get_user';
-import * as getUsersEndpointConfig from './endpoints/users/get_users';
-import * as createSpaceEndpointConfig from './endpoints/spaces/create_space';
-import * as updateSpaceEndpointConfig from './endpoints/spaces/update_space';
-import * as deleteSpaceEndpointConfig from './endpoints/spaces/delete_space';
-import * as getSpacesEndpointConfig from './endpoints/spaces/get_spaces';
-import * as getSpaceEndpointConfig from './endpoints/spaces/get_space';
-import * as getMembersEndpointConfig from './endpoints/memberships/get_members';
-import * as addMembersEndpointConfig from './endpoints/memberships/add_members';
-import * as updateMembersEndpointConfig from './endpoints/memberships/update_members';
-import * as removeMembersEndpointConfig from './endpoints/memberships/remove_members';
-import * as getMembershipsEndpointConfig from './endpoints/memberships/get_memberships';
-import * as updateMembershipsEndpointConfig from './endpoints/memberships/update_memberships';
-import * as joinSpacesEndpointConfig from './endpoints/memberships/join_spaces';
-import * as leaveSpacesEndpointConfig from './endpoints/memberships/leave_spaces';
 
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
@@ -211,44 +188,6 @@ export default class {
   // Objects API v2
 
   objects;
-
-  // Objects API
-
-  createUser;
-
-  updateUser;
-
-  deleteUser;
-
-  getUser;
-
-  getUsers;
-
-  createSpace;
-
-  updateSpace;
-
-  deleteSpace;
-
-  getSpaces;
-
-  getSpace;
-
-  getMembers;
-
-  addMembers;
-
-  updateMembers;
-
-  removeMembers;
-
-  getMemberships;
-
-  joinSpaces;
-
-  updateMemberships;
-
-  leaveSpaces;
 
   disconnect;
 
@@ -521,44 +460,6 @@ export default class {
           ...rest,
         ),
     };
-
-    // Objects API
-
-    this.createUser = deprecated(endpointCreator.bind(this, modules, createUserEndpointConfig));
-
-    this.updateUser = deprecated(endpointCreator.bind(this, modules, updateUserEndpointConfig));
-
-    this.deleteUser = deprecated(endpointCreator.bind(this, modules, deleteUserEndpointConfig));
-
-    this.getUser = deprecated(endpointCreator.bind(this, modules, getUserEndpointConfig));
-
-    this.getUsers = deprecated(endpointCreator.bind(this, modules, getUsersEndpointConfig));
-
-    this.createSpace = deprecated(endpointCreator.bind(this, modules, createSpaceEndpointConfig));
-
-    this.updateSpace = deprecated(endpointCreator.bind(this, modules, updateSpaceEndpointConfig));
-
-    this.deleteSpace = deprecated(endpointCreator.bind(this, modules, deleteSpaceEndpointConfig));
-
-    this.getSpaces = deprecated(endpointCreator.bind(this, modules, getSpacesEndpointConfig));
-
-    this.getSpace = deprecated(endpointCreator.bind(this, modules, getSpaceEndpointConfig));
-
-    this.addMembers = deprecated(endpointCreator.bind(this, modules, addMembersEndpointConfig));
-
-    this.updateMembers = deprecated(endpointCreator.bind(this, modules, updateMembersEndpointConfig));
-
-    this.removeMembers = deprecated(endpointCreator.bind(this, modules, removeMembersEndpointConfig));
-
-    this.getMembers = deprecated(endpointCreator.bind(this, modules, getMembersEndpointConfig));
-
-    this.getMemberships = deprecated(endpointCreator.bind(this, modules, getMembershipsEndpointConfig));
-
-    this.joinSpaces = deprecated(endpointCreator.bind(this, modules, joinSpacesEndpointConfig));
-
-    this.updateMemberships = deprecated(endpointCreator.bind(this, modules, updateMembershipsEndpointConfig));
-
-    this.leaveSpaces = deprecated(endpointCreator.bind(this, modules, leaveSpacesEndpointConfig));
 
     this.time = timeEndpoint;
 
