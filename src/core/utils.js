@@ -36,5 +36,5 @@ module.exports = {
   signPamFromParams,
   endsWith,
   createPromise,
-  encodeString
+  encodeString,
 };
