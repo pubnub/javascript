@@ -1,4 +1,3 @@
-/*       */
 /* eslint no-bitwise: ["error", { "allow": ["~", "&", ">>"] }] */
 /* global navigator, window */
 
@@ -6,10 +5,8 @@ import CborReader from 'cbor-js';
 import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import CryptoJS from '../core/components/cryptography/hmac-sha256';
-import db from '../db/web';
 import Cbor from '../cbor/common';
 import { del, get, post, patch, getfile, postfile } from '../networking/modules/web-node';
-import { InternalSetupStruct } from '../core/flow_interfaces';
 
 import WebCryptography from '../crypto/modules/web';
 import PubNubFile from '../file/modules/web';
@@ -92,7 +89,6 @@ export default class extends PubNubCore {
     // extract config.
     const { listenToBrowserNetworkEvents = true } = setup;
 
-    setup.db = db;
     setup.sdkFamily = 'Web';
     setup.networking = new Networking({
       del,
