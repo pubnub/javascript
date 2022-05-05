@@ -461,6 +461,18 @@ export default class {
         ),
     };
 
+    // User entity
+    this.setUser = this.objects.setUUIDMetadata;
+    this.deleteUser = this.objects.removeUUIDMetadata;
+    this.getUser = this.objects.getUUIDMetadata;
+    this.getUsers = this.objects.getAllUUIDMetadata;
+
+    // Space entity
+    this.setSpace = this.objects.setChannelMetadata;
+    this.deleteSpace = this.objects.removeChannelMetadata;
+    this.getSpace = this.objects.getChannelMetadata;
+    this.getSpaces = this.objects.getAllChannelMetadata;
+
     this.time = timeEndpoint;
 
     // --- deprecated  ------------------
