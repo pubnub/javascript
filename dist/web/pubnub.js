@@ -7317,14 +7317,44 @@
                 },
             };
             // User entity
-            this.setUser = this.objects.setUUIDMetadata;
-            this.deleteUser = this.objects.removeUUIDMetadata;
-            this.getUser = this.objects.getUUIDMetadata;
+            this.setUser = function (args) {
+                return _this.objects.setUUIDMetadata({
+                    uuid: args.userId,
+                    data: args.data,
+                    include: args.include,
+                });
+            };
+            this.deleteUser = function (args) {
+                return _this.objects.removeUUIDMetadata({
+                    uuid: args.userId,
+                });
+            };
+            this.getUser = function (args) {
+                return _this.objects.getUUIDMetadata({
+                    uuid: args.userId,
+                    include: args.include,
+                });
+            };
             this.getUsers = this.objects.getAllUUIDMetadata;
             // Space entity
-            this.setSpace = this.objects.setChannelMetadata;
-            this.deleteSpace = this.objects.removeChannelMetadata;
-            this.getSpace = this.objects.getChannelMetadata;
+            this.setSpace = function (args) {
+                return _this.objects.setChannelMetadata({
+                    channel: args.spaceId,
+                    data: args.data,
+                    include: args.include,
+                });
+            };
+            this.deleteSpace = function (args) {
+                return _this.objects.removeChannelMetadata({
+                    channel: args.spaceId,
+                });
+            };
+            this.getSpace = function (args) {
+                return _this.objects.getChannelMetadata({
+                    channel: args.spaceId,
+                    include: args.include,
+                });
+            };
             this.getSpaces = this.objects.getAllChannelMetadata;
             this.time = timeEndpoint;
             // --- deprecated  ------------------
