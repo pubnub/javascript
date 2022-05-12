@@ -489,13 +489,13 @@ export default class {
 
     this.deleteUser = (args) =>
       this.objects.removeUUIDMetadata({
-        uuid: args.userId,
+        uuid: args?.userId,
       });
 
     this.getUser = (args) =>
       this.objects.getUUIDMetadata({
-        uuid: args.userId,
-        include: args.include,
+        uuid: args?.userId,
+        include: args?.include,
       });
 
     this.getUsers = this.objects.getAllUUIDMetadata;

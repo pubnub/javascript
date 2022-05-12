@@ -7326,13 +7326,13 @@
             };
             this.deleteUser = function (args) {
                 return _this.objects.removeUUIDMetadata({
-                    uuid: args.userId,
+                    uuid: args === null || args === void 0 ? void 0 : args.userId,
                 });
             };
             this.getUser = function (args) {
                 return _this.objects.getUUIDMetadata({
-                    uuid: args.userId,
-                    include: args.include,
+                    uuid: args === null || args === void 0 ? void 0 : args.userId,
+                    include: args === null || args === void 0 ? void 0 : args.include,
                 });
             };
             this.getUsers = this.objects.getAllUUIDMetadata;
