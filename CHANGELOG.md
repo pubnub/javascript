@@ -1,3 +1,9 @@
+## v7.0.0
+May 17 2022
+
+#### Modified
+- BREAKING CHANGES: Removed objects v1 source code.
+
 ## v6.0.0
 April 21 2022
 

@@ -479,7 +479,7 @@ export default class {
         ),
     };
 
-    // User entity
+    // User Apis
     this.setUser = (args) =>
       this.objects.setUUIDMetadata({
         uuid: args.userId,
@@ -500,7 +500,7 @@ export default class {
 
     this.getUsers = this.objects.getAllUUIDMetadata;
 
-    // Space entity
+    // Space apis
     this.setSpace = (args) =>
       this.objects.setChannelMetadata({
         channel: args.spaceId,
