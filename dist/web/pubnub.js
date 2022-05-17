@@ -747,7 +747,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '6.0.0';
+            return '7.0.0';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -7316,7 +7316,7 @@
                         endpoint$3, __assign({ type: 'delete' }, parameters)], __read(rest), false));
                 },
             };
-            // User entity
+            // User Apis
             this.setUser = function (args) {
                 return _this.objects.setUUIDMetadata({
                     uuid: args.userId,
@@ -7336,7 +7336,7 @@
                 });
             };
             this.getUsers = this.objects.getAllUUIDMetadata;
-            // Space entity
+            // Space apis
             this.setSpace = function (args) {
                 return _this.objects.setChannelMetadata({
                     channel: args.spaceId,
