@@ -7317,45 +7317,47 @@
                 },
             };
             // User Apis
-            this.setUser = function (args) {
+            this.createUser = function (args) {
                 return _this.objects.setUUIDMetadata({
                     uuid: args.userId,
                     data: args.data,
                     include: args.include,
                 });
             };
-            this.deleteUser = function (args) {
+            this.updateUser = this.createUser;
+            this.removeUser = function (args) {
                 return _this.objects.removeUUIDMetadata({
                     uuid: args === null || args === void 0 ? void 0 : args.userId,
                 });
             };
-            this.getUser = function (args) {
+            this.fetchUser = function (args) {
                 return _this.objects.getUUIDMetadata({
                     uuid: args === null || args === void 0 ? void 0 : args.userId,
                     include: args === null || args === void 0 ? void 0 : args.include,
                 });
             };
-            this.getUsers = this.objects.getAllUUIDMetadata;
+            this.fetchUsers = this.objects.getAllUUIDMetadata;
             // Space apis
-            this.setSpace = function (args) {
+            this.createSpace = function (args) {
                 return _this.objects.setChannelMetadata({
                     channel: args.spaceId,
                     data: args.data,
                     include: args.include,
                 });
             };
-            this.deleteSpace = function (args) {
+            this.updateSpace = this.createSpace;
+            this.removeSpace = function (args) {
                 return _this.objects.removeChannelMetadata({
                     channel: args.spaceId,
                 });
             };
-            this.getSpace = function (args) {
+            this.fetchSpace = function (args) {
                 return _this.objects.getChannelMetadata({
                     channel: args.spaceId,
                     include: args.include,
                 });
             };
-            this.getSpaces = this.objects.getAllChannelMetadata;
+            this.fetchSpaces = this.objects.getAllChannelMetadata;
             this.time = timeEndpoint;
             // --- deprecated  ------------------
             this.stop = this.destroy; // --------
