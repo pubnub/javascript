@@ -108,7 +108,7 @@
         throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
     }
 
-    function __read$1(o, n) {
+    function __read(o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
         if (!m) return o;
         var i = m.call(o), r, ar = [], e;
@@ -125,7 +125,7 @@
         return ar;
     }
 
-    function __spreadArray$1(to, from, pack) {
+    function __spreadArray(to, from, pack) {
         if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
             if (ar || !(i in from)) {
                 if (!ar) ar = Array.prototype.slice.call(from, 0, i);
@@ -747,7 +747,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '6.0.0';
+            return '7.0.0';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -1656,7 +1656,6 @@
         return default_1;
     }());
 
-    /*       */
     function objectToList(o) {
         var l = [];
         Object.keys(o).forEach(function (key) { return l.push(key); });
@@ -1684,29 +1683,11 @@
         });
         return { promise: promise, reject: failureResolve, fulfill: successResolve };
     }
-    var deprecationMessage = "The Objects v1 API has been deprecated.\nYou can learn more about Objects v2 API at https://www.pubnub.com/docs/web-javascript/api-reference-objects.\nIf you have questions about the Objects v2 API or require additional help with migrating to the new data model,\nplease contact PubNub Support at support@pubnub.com.";
-    function deprecated(fn) {
-        return function () {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            if (typeof process !== 'undefined') {
-                if (((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.NODE_ENV) !== 'test') {
-                    // eslint-disable-next-line no-console
-                    console.warn(deprecationMessage);
-                }
-            }
-            return fn.apply(void 0, __spreadArray([], __read(args), false));
-        };
-    }
     var utils$5 = {
         signPamFromParams: signPamFromParams,
         endsWith: endsWith,
         createPromise: createPromise,
         encodeString: encodeString,
-        deprecated: deprecated,
     };
 
     /*       */
@@ -3492,10 +3473,10 @@
     }
 
     /*       */
-    function getOperation$K() {
+    function getOperation$s() {
         return OPERATIONS.PNAddChannelsToGroupOperation;
     }
-    function validateParams$K(modules, incomingParams) {
+    function validateParams$s(modules, incomingParams) {
         var channels = incomingParams.channels, channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         if (!channelGroup)
@@ -3505,44 +3486,44 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$I(modules, incomingParams) {
+    function getURL$q(modules, incomingParams) {
         var channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(utils$5.encodeString(channelGroup));
     }
-    function getRequestTimeout$K(_a) {
+    function getRequestTimeout$s(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$K() {
+    function isAuthSupported$s() {
         return true;
     }
-    function prepareParams$K(modules, incomingParams) {
+    function prepareParams$s(modules, incomingParams) {
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a;
         return {
             add: channels.join(','),
         };
     }
-    function handleResponse$K() {
+    function handleResponse$s() {
         return {};
     }
 
     var addChannelsChannelGroupConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$K,
-        validateParams: validateParams$K,
-        getURL: getURL$I,
-        getRequestTimeout: getRequestTimeout$K,
-        isAuthSupported: isAuthSupported$K,
-        prepareParams: prepareParams$K,
-        handleResponse: handleResponse$K
+        getOperation: getOperation$s,
+        validateParams: validateParams$s,
+        getURL: getURL$q,
+        getRequestTimeout: getRequestTimeout$s,
+        isAuthSupported: isAuthSupported$s,
+        prepareParams: prepareParams$s,
+        handleResponse: handleResponse$s
     });
 
     /*       */
-    function getOperation$J() {
+    function getOperation$r() {
         return OPERATIONS.PNRemoveChannelsFromGroupOperation;
     }
-    function validateParams$J(modules, incomingParams) {
+    function validateParams$r(modules, incomingParams) {
         var channels = incomingParams.channels, channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         if (!channelGroup)
@@ -3552,44 +3533,44 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$H(modules, incomingParams) {
+    function getURL$p(modules, incomingParams) {
         var channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(utils$5.encodeString(channelGroup));
     }
-    function getRequestTimeout$J(_a) {
+    function getRequestTimeout$r(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$J() {
+    function isAuthSupported$r() {
         return true;
     }
-    function prepareParams$J(modules, incomingParams) {
+    function prepareParams$r(modules, incomingParams) {
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a;
         return {
             remove: channels.join(','),
         };
     }
-    function handleResponse$J() {
+    function handleResponse$r() {
         return {};
     }
 
     var removeChannelsChannelGroupConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$J,
-        validateParams: validateParams$J,
-        getURL: getURL$H,
-        getRequestTimeout: getRequestTimeout$J,
-        isAuthSupported: isAuthSupported$J,
-        prepareParams: prepareParams$J,
-        handleResponse: handleResponse$J
+        getOperation: getOperation$r,
+        validateParams: validateParams$r,
+        getURL: getURL$p,
+        getRequestTimeout: getRequestTimeout$r,
+        isAuthSupported: isAuthSupported$r,
+        prepareParams: prepareParams$r,
+        handleResponse: handleResponse$r
     });
 
     /*       */
-    function getOperation$I() {
+    function getOperation$q() {
         return OPERATIONS.PNRemoveGroupOperation;
     }
-    function validateParams$I(modules, incomingParams) {
+    function validateParams$q(modules, incomingParams) {
         var channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         if (!channelGroup)
@@ -3597,60 +3578,60 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$G(modules, incomingParams) {
+    function getURL$o(modules, incomingParams) {
         var channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(utils$5.encodeString(channelGroup), "/remove");
     }
-    function isAuthSupported$I() {
+    function isAuthSupported$q() {
         return true;
     }
-    function getRequestTimeout$I(_a) {
+    function getRequestTimeout$q(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function prepareParams$I() {
+    function prepareParams$q() {
         return {};
     }
-    function handleResponse$I() {
+    function handleResponse$q() {
         return {};
     }
 
     var deleteChannelGroupConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$I,
-        validateParams: validateParams$I,
-        getURL: getURL$G,
-        isAuthSupported: isAuthSupported$I,
-        getRequestTimeout: getRequestTimeout$I,
-        prepareParams: prepareParams$I,
-        handleResponse: handleResponse$I
+        getOperation: getOperation$q,
+        validateParams: validateParams$q,
+        getURL: getURL$o,
+        isAuthSupported: isAuthSupported$q,
+        getRequestTimeout: getRequestTimeout$q,
+        prepareParams: prepareParams$q,
+        handleResponse: handleResponse$q
     });
 
     /*       */
-    function getOperation$H() {
+    function getOperation$p() {
         return OPERATIONS.PNChannelGroupsOperation;
     }
-    function validateParams$H(modules) {
+    function validateParams$p(modules) {
         var config = modules.config;
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$F(modules) {
+    function getURL$n(modules) {
         var config = modules.config;
         return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group");
     }
-    function getRequestTimeout$H(_a) {
+    function getRequestTimeout$p(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$H() {
+    function isAuthSupported$p() {
         return true;
     }
-    function prepareParams$H() {
+    function prepareParams$p() {
         return {};
     }
-    function handleResponse$H(modules, serverResponse) {
+    function handleResponse$p(modules, serverResponse) {
         return {
             groups: serverResponse.payload.groups,
         };
@@ -3658,20 +3639,20 @@
 
     var listChannelGroupsConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$H,
-        validateParams: validateParams$H,
-        getURL: getURL$F,
-        getRequestTimeout: getRequestTimeout$H,
-        isAuthSupported: isAuthSupported$H,
-        prepareParams: prepareParams$H,
-        handleResponse: handleResponse$H
+        getOperation: getOperation$p,
+        validateParams: validateParams$p,
+        getURL: getURL$n,
+        getRequestTimeout: getRequestTimeout$p,
+        isAuthSupported: isAuthSupported$p,
+        prepareParams: prepareParams$p,
+        handleResponse: handleResponse$p
     });
 
     /*       */
-    function getOperation$G() {
+    function getOperation$o() {
         return OPERATIONS.PNChannelsForGroupOperation;
     }
-    function validateParams$G(modules, incomingParams) {
+    function validateParams$o(modules, incomingParams) {
         var channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         if (!channelGroup)
@@ -3679,22 +3660,22 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$E(modules, incomingParams) {
+    function getURL$m(modules, incomingParams) {
         var channelGroup = incomingParams.channelGroup;
         var config = modules.config;
         return "/v1/channel-registration/sub-key/".concat(config.subscribeKey, "/channel-group/").concat(utils$5.encodeString(channelGroup));
     }
-    function getRequestTimeout$G(_a) {
+    function getRequestTimeout$o(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$G() {
+    function isAuthSupported$o() {
         return true;
     }
-    function prepareParams$G() {
+    function prepareParams$o() {
         return {};
     }
-    function handleResponse$G(modules, serverResponse) {
+    function handleResponse$o(modules, serverResponse) {
         return {
             channels: serverResponse.payload.channels,
         };
@@ -3702,20 +3683,20 @@
 
     var listChannelsInChannelGroupConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$G,
-        validateParams: validateParams$G,
-        getURL: getURL$E,
-        getRequestTimeout: getRequestTimeout$G,
-        isAuthSupported: isAuthSupported$G,
-        prepareParams: prepareParams$G,
-        handleResponse: handleResponse$G
+        getOperation: getOperation$o,
+        validateParams: validateParams$o,
+        getURL: getURL$m,
+        getRequestTimeout: getRequestTimeout$o,
+        isAuthSupported: isAuthSupported$o,
+        prepareParams: prepareParams$o,
+        handleResponse: handleResponse$o
     });
 
     /*       */
-    function getOperation$F() {
+    function getOperation$n() {
         return OPERATIONS.PNPushNotificationEnabledChannelsOperation;
     }
-    function validateParams$F(modules, incomingParams) {
+    function validateParams$n(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway, channels = incomingParams.channels, topic = incomingParams.topic;
         var config = modules.config;
         if (!device)
@@ -3729,7 +3710,7 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$D(modules, incomingParams) {
+    function getURL$l(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway;
         var config = modules.config;
         if (pushGateway === 'apns2') {
@@ -3737,14 +3718,14 @@
         }
         return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
     }
-    function getRequestTimeout$F(_a) {
+    function getRequestTimeout$n(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$F() {
+    function isAuthSupported$n() {
         return true;
     }
-    function prepareParams$F(modules, incomingParams) {
+    function prepareParams$n(modules, incomingParams) {
         var pushGateway = incomingParams.pushGateway, _a = incomingParams.channels, channels = _a === void 0 ? [] : _a, _b = incomingParams.environment, environment = _b === void 0 ? 'development' : _b, topic = incomingParams.topic;
         var parameters = { type: pushGateway, add: channels.join(',') };
         if (pushGateway === 'apns2') {
@@ -3753,26 +3734,26 @@
         }
         return parameters;
     }
-    function handleResponse$F() {
+    function handleResponse$n() {
         return {};
     }
 
     var addPushChannelsConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$F,
-        validateParams: validateParams$F,
-        getURL: getURL$D,
-        getRequestTimeout: getRequestTimeout$F,
-        isAuthSupported: isAuthSupported$F,
-        prepareParams: prepareParams$F,
-        handleResponse: handleResponse$F
+        getOperation: getOperation$n,
+        validateParams: validateParams$n,
+        getURL: getURL$l,
+        getRequestTimeout: getRequestTimeout$n,
+        isAuthSupported: isAuthSupported$n,
+        prepareParams: prepareParams$n,
+        handleResponse: handleResponse$n
     });
 
     /*       */
-    function getOperation$E() {
+    function getOperation$m() {
         return OPERATIONS.PNPushNotificationEnabledChannelsOperation;
     }
-    function validateParams$E(modules, incomingParams) {
+    function validateParams$m(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway, channels = incomingParams.channels, topic = incomingParams.topic;
         var config = modules.config;
         if (!device)
@@ -3786,7 +3767,7 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$C(modules, incomingParams) {
+    function getURL$k(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway;
         var config = modules.config;
         if (pushGateway === 'apns2') {
@@ -3794,14 +3775,14 @@
         }
         return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
     }
-    function getRequestTimeout$E(_a) {
+    function getRequestTimeout$m(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$E() {
+    function isAuthSupported$m() {
         return true;
     }
-    function prepareParams$E(modules, incomingParams) {
+    function prepareParams$m(modules, incomingParams) {
         var pushGateway = incomingParams.pushGateway, _a = incomingParams.channels, channels = _a === void 0 ? [] : _a, _b = incomingParams.environment, environment = _b === void 0 ? 'development' : _b, topic = incomingParams.topic;
         var parameters = { type: pushGateway, remove: channels.join(',') };
         if (pushGateway === 'apns2') {
@@ -3810,26 +3791,26 @@
         }
         return parameters;
     }
-    function handleResponse$E() {
+    function handleResponse$m() {
         return {};
     }
 
     var removePushChannelsConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$E,
-        validateParams: validateParams$E,
-        getURL: getURL$C,
-        getRequestTimeout: getRequestTimeout$E,
-        isAuthSupported: isAuthSupported$E,
-        prepareParams: prepareParams$E,
-        handleResponse: handleResponse$E
+        getOperation: getOperation$m,
+        validateParams: validateParams$m,
+        getURL: getURL$k,
+        getRequestTimeout: getRequestTimeout$m,
+        isAuthSupported: isAuthSupported$m,
+        prepareParams: prepareParams$m,
+        handleResponse: handleResponse$m
     });
 
     /*       */
-    function getOperation$D() {
+    function getOperation$l() {
         return OPERATIONS.PNPushNotificationEnabledChannelsOperation;
     }
-    function validateParams$D(modules, incomingParams) {
+    function validateParams$l(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway, topic = incomingParams.topic;
         var config = modules.config;
         if (!device)
@@ -3841,7 +3822,7 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$B(modules, incomingParams) {
+    function getURL$j(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway;
         var config = modules.config;
         if (pushGateway === 'apns2') {
@@ -3849,14 +3830,14 @@
         }
         return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device);
     }
-    function getRequestTimeout$D(_a) {
+    function getRequestTimeout$l(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$D() {
+    function isAuthSupported$l() {
         return true;
     }
-    function prepareParams$D(modules, incomingParams) {
+    function prepareParams$l(modules, incomingParams) {
         var pushGateway = incomingParams.pushGateway, _a = incomingParams.environment, environment = _a === void 0 ? 'development' : _a, topic = incomingParams.topic;
         var parameters = { type: pushGateway };
         if (pushGateway === 'apns2') {
@@ -3865,26 +3846,26 @@
         }
         return parameters;
     }
-    function handleResponse$D(modules, serverResponse) {
+    function handleResponse$l(modules, serverResponse) {
         return { channels: serverResponse };
     }
 
     var listPushChannelsConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$D,
-        validateParams: validateParams$D,
-        getURL: getURL$B,
-        getRequestTimeout: getRequestTimeout$D,
-        isAuthSupported: isAuthSupported$D,
-        prepareParams: prepareParams$D,
-        handleResponse: handleResponse$D
+        getOperation: getOperation$l,
+        validateParams: validateParams$l,
+        getURL: getURL$j,
+        getRequestTimeout: getRequestTimeout$l,
+        isAuthSupported: isAuthSupported$l,
+        prepareParams: prepareParams$l,
+        handleResponse: handleResponse$l
     });
 
     /*       */
-    function getOperation$C() {
+    function getOperation$k() {
         return OPERATIONS.PNRemoveAllPushNotificationsOperation;
     }
-    function validateParams$C(modules, incomingParams) {
+    function validateParams$k(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway, topic = incomingParams.topic;
         var config = modules.config;
         if (!device)
@@ -3896,7 +3877,7 @@
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$A(modules, incomingParams) {
+    function getURL$i(modules, incomingParams) {
         var device = incomingParams.device, pushGateway = incomingParams.pushGateway;
         var config = modules.config;
         if (pushGateway === 'apns2') {
@@ -3904,14 +3885,14 @@
         }
         return "/v1/push/sub-key/".concat(config.subscribeKey, "/devices/").concat(device, "/remove");
     }
-    function getRequestTimeout$C(_a) {
+    function getRequestTimeout$k(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$C() {
+    function isAuthSupported$k() {
         return true;
     }
-    function prepareParams$C(modules, incomingParams) {
+    function prepareParams$k(modules, incomingParams) {
         var pushGateway = incomingParams.pushGateway, _a = incomingParams.environment, environment = _a === void 0 ? 'development' : _a, topic = incomingParams.topic;
         var parameters = { type: pushGateway };
         if (pushGateway === 'apns2') {
@@ -3920,44 +3901,44 @@
         }
         return parameters;
     }
-    function handleResponse$C() {
+    function handleResponse$k() {
         return {};
     }
 
     var removeDevicePushConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$C,
-        validateParams: validateParams$C,
-        getURL: getURL$A,
-        getRequestTimeout: getRequestTimeout$C,
-        isAuthSupported: isAuthSupported$C,
-        prepareParams: prepareParams$C,
-        handleResponse: handleResponse$C
+        getOperation: getOperation$k,
+        validateParams: validateParams$k,
+        getURL: getURL$i,
+        getRequestTimeout: getRequestTimeout$k,
+        isAuthSupported: isAuthSupported$k,
+        prepareParams: prepareParams$k,
+        handleResponse: handleResponse$k
     });
 
     /*       */
-    function getOperation$B() {
+    function getOperation$j() {
         return OPERATIONS.PNUnsubscribeOperation;
     }
-    function validateParams$B(modules) {
+    function validateParams$j(modules) {
         var config = modules.config;
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$z(modules, incomingParams) {
+    function getURL$h(modules, incomingParams) {
         var config = modules.config;
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a;
         var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
         return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(stringifiedChannels), "/leave");
     }
-    function getRequestTimeout$B(_a) {
+    function getRequestTimeout$j(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$B() {
+    function isAuthSupported$j() {
         return true;
     }
-    function prepareParams$B(modules, incomingParams) {
+    function prepareParams$j(modules, incomingParams) {
         var _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a;
         var params = {};
         if (channelGroups.length > 0) {
@@ -3965,46 +3946,46 @@
         }
         return params;
     }
-    function handleResponse$B() {
+    function handleResponse$j() {
         return {};
     }
 
     var presenceLeaveEndpointConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$B,
-        validateParams: validateParams$B,
-        getURL: getURL$z,
-        getRequestTimeout: getRequestTimeout$B,
-        isAuthSupported: isAuthSupported$B,
-        prepareParams: prepareParams$B,
-        handleResponse: handleResponse$B
+        getOperation: getOperation$j,
+        validateParams: validateParams$j,
+        getURL: getURL$h,
+        getRequestTimeout: getRequestTimeout$j,
+        isAuthSupported: isAuthSupported$j,
+        prepareParams: prepareParams$j,
+        handleResponse: handleResponse$j
     });
 
     /*       */
-    function getOperation$A() {
+    function getOperation$i() {
         return OPERATIONS.PNWhereNowOperation;
     }
-    function validateParams$A(modules) {
+    function validateParams$i(modules) {
         var config = modules.config;
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$y(modules, incomingParams) {
+    function getURL$g(modules, incomingParams) {
         var config = modules.config;
         var _a = incomingParams.uuid, uuid = _a === void 0 ? config.UUID : _a;
         return "/v2/presence/sub-key/".concat(config.subscribeKey, "/uuid/").concat(utils$5.encodeString(uuid));
     }
-    function getRequestTimeout$A(_a) {
+    function getRequestTimeout$i(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$A() {
+    function isAuthSupported$i() {
         return true;
     }
-    function prepareParams$A() {
+    function prepareParams$i() {
         return {};
     }
-    function handleResponse$A(modules, serverResponse) {
+    function handleResponse$i(modules, serverResponse) {
         // This is a quick fix for when the server does not include a payload
         // in where now responses
         if (!serverResponse.payload) {
@@ -4015,38 +3996,38 @@
 
     var presenceWhereNowEndpointConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$A,
-        validateParams: validateParams$A,
-        getURL: getURL$y,
-        getRequestTimeout: getRequestTimeout$A,
-        isAuthSupported: isAuthSupported$A,
-        prepareParams: prepareParams$A,
-        handleResponse: handleResponse$A
+        getOperation: getOperation$i,
+        validateParams: validateParams$i,
+        getURL: getURL$g,
+        getRequestTimeout: getRequestTimeout$i,
+        isAuthSupported: isAuthSupported$i,
+        prepareParams: prepareParams$i,
+        handleResponse: handleResponse$i
     });
 
     /*       */
-    function getOperation$z() {
+    function getOperation$h() {
         return OPERATIONS.PNHeartbeatOperation;
     }
-    function validateParams$z(modules) {
+    function validateParams$h(modules) {
         var config = modules.config;
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$x(modules, incomingParams) {
+    function getURL$f(modules, incomingParams) {
         var config = modules.config;
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a;
         var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
         return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(stringifiedChannels), "/heartbeat");
     }
-    function isAuthSupported$z() {
+    function isAuthSupported$h() {
         return true;
     }
-    function getRequestTimeout$z(_a) {
+    function getRequestTimeout$h(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function prepareParams$z(modules, incomingParams) {
+    function prepareParams$h(modules, incomingParams) {
         var _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a, _b = incomingParams.state, state = _b === void 0 ? {} : _b;
         var config = modules.config;
         var params = {};
@@ -4057,44 +4038,44 @@
         params.heartbeat = config.getPresenceTimeout();
         return params;
     }
-    function handleResponse$z() {
+    function handleResponse$h() {
         return {};
     }
 
     var presenceHeartbeatEndpointConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$z,
-        validateParams: validateParams$z,
-        getURL: getURL$x,
-        isAuthSupported: isAuthSupported$z,
-        getRequestTimeout: getRequestTimeout$z,
-        prepareParams: prepareParams$z,
-        handleResponse: handleResponse$z
+        getOperation: getOperation$h,
+        validateParams: validateParams$h,
+        getURL: getURL$f,
+        isAuthSupported: isAuthSupported$h,
+        getRequestTimeout: getRequestTimeout$h,
+        prepareParams: prepareParams$h,
+        handleResponse: handleResponse$h
     });
 
     /*       */
-    function getOperation$y() {
+    function getOperation$g() {
         return OPERATIONS.PNGetStateOperation;
     }
-    function validateParams$y(modules) {
+    function validateParams$g(modules) {
         var config = modules.config;
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$w(modules, incomingParams) {
+    function getURL$e(modules, incomingParams) {
         var config = modules.config;
         var _a = incomingParams.uuid, uuid = _a === void 0 ? config.UUID : _a, _b = incomingParams.channels, channels = _b === void 0 ? [] : _b;
         var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
         return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(stringifiedChannels), "/uuid/").concat(uuid);
     }
-    function getRequestTimeout$y(_a) {
+    function getRequestTimeout$g(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$y() {
+    function isAuthSupported$g() {
         return true;
     }
-    function prepareParams$y(modules, incomingParams) {
+    function prepareParams$g(modules, incomingParams) {
         var _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a;
         var params = {};
         if (channelGroups.length > 0) {
@@ -4102,7 +4083,7 @@
         }
         return params;
     }
-    function handleResponse$y(modules, serverResponse, incomingParams) {
+    function handleResponse$g(modules, serverResponse, incomingParams) {
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a, _b = incomingParams.channelGroups, channelGroups = _b === void 0 ? [] : _b;
         var channelsResponse = {};
         if (channels.length === 1 && channelGroups.length === 0) {
@@ -4116,20 +4097,20 @@
 
     var presenceGetStateConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$y,
-        validateParams: validateParams$y,
-        getURL: getURL$w,
-        getRequestTimeout: getRequestTimeout$y,
-        isAuthSupported: isAuthSupported$y,
-        prepareParams: prepareParams$y,
-        handleResponse: handleResponse$y
+        getOperation: getOperation$g,
+        validateParams: validateParams$g,
+        getURL: getURL$e,
+        getRequestTimeout: getRequestTimeout$g,
+        isAuthSupported: isAuthSupported$g,
+        prepareParams: prepareParams$g,
+        handleResponse: handleResponse$g
     });
 
     /*       */
-    function getOperation$x() {
+    function getOperation$f() {
         return OPERATIONS.PNSetStateOperation;
     }
-    function validateParams$x(modules, incomingParams) {
+    function validateParams$f(modules, incomingParams) {
         var config = modules.config;
         var state = incomingParams.state, _a = incomingParams.channels, channels = _a === void 0 ? [] : _a, _b = incomingParams.channelGroups, channelGroups = _b === void 0 ? [] : _b;
         if (!state)
@@ -4140,20 +4121,20 @@
             return 'Please provide a list of channels and/or channel-groups';
         }
     }
-    function getURL$v(modules, incomingParams) {
+    function getURL$d(modules, incomingParams) {
         var config = modules.config;
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a;
         var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
         return "/v2/presence/sub-key/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(stringifiedChannels), "/uuid/").concat(utils$5.encodeString(config.UUID), "/data");
     }
-    function getRequestTimeout$x(_a) {
+    function getRequestTimeout$f(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$x() {
+    function isAuthSupported$f() {
         return true;
     }
-    function prepareParams$x(modules, incomingParams) {
+    function prepareParams$f(modules, incomingParams) {
         var state = incomingParams.state, _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a;
         var params = {};
         params.state = JSON.stringify(state);
@@ -4162,31 +4143,31 @@
         }
         return params;
     }
-    function handleResponse$x(modules, serverResponse) {
+    function handleResponse$f(modules, serverResponse) {
         return { state: serverResponse.payload };
     }
 
     var presenceSetStateConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$x,
-        validateParams: validateParams$x,
-        getURL: getURL$v,
-        getRequestTimeout: getRequestTimeout$x,
-        isAuthSupported: isAuthSupported$x,
-        prepareParams: prepareParams$x,
-        handleResponse: handleResponse$x
+        getOperation: getOperation$f,
+        validateParams: validateParams$f,
+        getURL: getURL$d,
+        getRequestTimeout: getRequestTimeout$f,
+        isAuthSupported: isAuthSupported$f,
+        prepareParams: prepareParams$f,
+        handleResponse: handleResponse$f
     });
 
     /*       */
-    function getOperation$w() {
+    function getOperation$e() {
         return OPERATIONS.PNHereNowOperation;
     }
-    function validateParams$w(modules) {
+    function validateParams$e(modules) {
         var config = modules.config;
         if (!config.subscribeKey)
             return 'Missing Subscribe Key';
     }
-    function getURL$u(modules, incomingParams) {
+    function getURL$c(modules, incomingParams) {
         var config = modules.config;
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a, _b = incomingParams.channelGroups, channelGroups = _b === void 0 ? [] : _b;
         var baseURL = "/v2/presence/sub-key/".concat(config.subscribeKey);
@@ -4196,14 +4177,14 @@
         }
         return baseURL;
     }
-    function getRequestTimeout$w(_a) {
+    function getRequestTimeout$e(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$w() {
+    function isAuthSupported$e() {
         return true;
     }
-    function prepareParams$w(modules, incomingParams) {
+    function prepareParams$e(modules, incomingParams) {
         var _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a, _b = incomingParams.includeUUIDs, includeUUIDs = _b === void 0 ? true : _b, _c = incomingParams.includeState, includeState = _c === void 0 ? false : _c, _d = incomingParams.queryParameters, queryParameters = _d === void 0 ? {} : _d;
         var params = {};
         if (!includeUUIDs)
@@ -4216,7 +4197,7 @@
         params = __assign(__assign({}, params), queryParameters);
         return params;
     }
-    function handleResponse$w(modules, serverResponse, incomingParams) {
+    function handleResponse$e(modules, serverResponse, incomingParams) {
         var _a = incomingParams.channels, channels = _a === void 0 ? [] : _a, _b = incomingParams.channelGroups, channelGroups = _b === void 0 ? [] : _b, _c = incomingParams.includeUUIDs, includeUUIDs = _c === void 0 ? true : _c, _d = incomingParams.includeState, includeState = _d === void 0 ? false : _d;
         var prepareSingularChannel = function () {
             var response = {};
@@ -4293,21 +4274,21 @@
 
     var presenceHereNowConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$w,
-        validateParams: validateParams$w,
-        getURL: getURL$u,
-        getRequestTimeout: getRequestTimeout$w,
-        isAuthSupported: isAuthSupported$w,
-        prepareParams: prepareParams$w,
-        handleResponse: handleResponse$w,
+        getOperation: getOperation$e,
+        validateParams: validateParams$e,
+        getURL: getURL$c,
+        getRequestTimeout: getRequestTimeout$e,
+        isAuthSupported: isAuthSupported$e,
+        prepareParams: prepareParams$e,
+        handleResponse: handleResponse$e,
         handleError: handleError
     });
 
     /*       */
-    function getOperation$v() {
+    function getOperation$d() {
         return OPERATIONS.PNAddMessageActionOperation;
     }
-    function validateParams$v(_a, incomingParams) {
+    function validateParams$d(_a, incomingParams) {
         var config = _a.config;
         var action = incomingParams.action, channel = incomingParams.channel, messageTimetoken = incomingParams.messageTimetoken;
         if (!messageTimetoken)
@@ -4325,53 +4306,53 @@
         if (action.type.length > 15)
             return 'Action.type value exceed maximum length of 15';
     }
-    function usePost$4() {
+    function usePost$2() {
         return true;
     }
-    function postURL$4(_a, incomingParams) {
+    function postURL$2(_a, incomingParams) {
         var config = _a.config;
         var channel = incomingParams.channel, messageTimetoken = incomingParams.messageTimetoken;
         return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(channel), "/message/").concat(messageTimetoken);
     }
-    function getRequestTimeout$v(_a) {
+    function getRequestTimeout$d(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
     function getRequestHeaders() {
         return { 'Content-Type': 'application/json' };
     }
-    function isAuthSupported$v() {
+    function isAuthSupported$d() {
         return true;
     }
-    function prepareParams$v() {
+    function prepareParams$d() {
         return {};
     }
-    function postPayload$4(modules, incomingParams) {
+    function postPayload$2(modules, incomingParams) {
         return incomingParams.action;
     }
-    function handleResponse$v(modules, addMessageActionResponse) {
+    function handleResponse$d(modules, addMessageActionResponse) {
         return { data: addMessageActionResponse.data };
     }
 
     var addMessageActionEndpointConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$v,
-        validateParams: validateParams$v,
-        usePost: usePost$4,
-        postURL: postURL$4,
-        getRequestTimeout: getRequestTimeout$v,
+        getOperation: getOperation$d,
+        validateParams: validateParams$d,
+        usePost: usePost$2,
+        postURL: postURL$2,
+        getRequestTimeout: getRequestTimeout$d,
         getRequestHeaders: getRequestHeaders,
-        isAuthSupported: isAuthSupported$v,
-        prepareParams: prepareParams$v,
-        postPayload: postPayload$4,
-        handleResponse: handleResponse$v
+        isAuthSupported: isAuthSupported$d,
+        prepareParams: prepareParams$d,
+        postPayload: postPayload$2,
+        handleResponse: handleResponse$d
     });
 
     /*       */
-    function getOperation$u() {
+    function getOperation$c() {
         return OPERATIONS.PNRemoveMessageActionOperation;
     }
-    function validateParams$u(_a, incomingParams) {
+    function validateParams$c(_a, incomingParams) {
         var config = _a.config;
         var channel = incomingParams.channel, actionTimetoken = incomingParams.actionTimetoken, messageTimetoken = incomingParams.messageTimetoken;
         if (!messageTimetoken)
@@ -4383,45 +4364,45 @@
         if (!channel)
             return 'Missing message channel';
     }
-    function useDelete$3() {
+    function useDelete$1() {
         return true;
     }
-    function getURL$t(_a, incomingParams) {
+    function getURL$b(_a, incomingParams) {
         var config = _a.config;
         var channel = incomingParams.channel, actionTimetoken = incomingParams.actionTimetoken, messageTimetoken = incomingParams.messageTimetoken;
         return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(channel), "/message/").concat(messageTimetoken, "/action/").concat(actionTimetoken);
     }
-    function getRequestTimeout$u(_a) {
+    function getRequestTimeout$c(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$u() {
+    function isAuthSupported$c() {
         return true;
     }
-    function prepareParams$u() {
+    function prepareParams$c() {
         return {};
     }
-    function handleResponse$u(modules, removeMessageActionResponse) {
+    function handleResponse$c(modules, removeMessageActionResponse) {
         return { data: removeMessageActionResponse.data };
     }
 
     var removeMessageActionEndpointConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$u,
-        validateParams: validateParams$u,
-        useDelete: useDelete$3,
-        getURL: getURL$t,
-        getRequestTimeout: getRequestTimeout$u,
-        isAuthSupported: isAuthSupported$u,
-        prepareParams: prepareParams$u,
-        handleResponse: handleResponse$u
+        getOperation: getOperation$c,
+        validateParams: validateParams$c,
+        useDelete: useDelete$1,
+        getURL: getURL$b,
+        getRequestTimeout: getRequestTimeout$c,
+        isAuthSupported: isAuthSupported$c,
+        prepareParams: prepareParams$c,
+        handleResponse: handleResponse$c
     });
 
     /*       */
-    function getOperation$t() {
+    function getOperation$b() {
         return OPERATIONS.PNGetMessageActionsOperation;
     }
-    function validateParams$t(_a, incomingParams) {
+    function validateParams$b(_a, incomingParams) {
         var config = _a.config;
         var channel = incomingParams.channel;
         if (!config.subscribeKey)
@@ -4429,19 +4410,19 @@
         if (!channel)
             return 'Missing message channel';
     }
-    function getURL$s(_a, incomingParams) {
+    function getURL$a(_a, incomingParams) {
         var config = _a.config;
         var channel = incomingParams.channel;
         return "/v1/message-actions/".concat(config.subscribeKey, "/channel/").concat(utils$5.encodeString(channel));
     }
-    function getRequestTimeout$t(_a) {
+    function getRequestTimeout$b(_a) {
         var config = _a.config;
         return config.getTransactionTimeout();
     }
-    function isAuthSupported$t() {
+    function isAuthSupported$b() {
         return true;
     }
-    function prepareParams$t(modules, incomingParams) {
+    function prepareParams$b(modules, incomingParams) {
         var limit = incomingParams.limit, start = incomingParams.start, end = incomingParams.end;
         var outgoingParams = {};
         if (limit)
@@ -4452,7 +4433,7 @@
             outgoingParams.end = end;
         return outgoingParams;
     }
-    function handleResponse$t(modules, getMessageActionsResponse) {
+    function handleResponse$b(modules, getMessageActionsResponse) {
         /** @type GetMessageActionsResponse */
         var response = { data: getMessageActionsResponse.data, start: null, end: null };
         if (response.data.length) {
@@ -4464,13 +4445,13 @@
 
     var getMessageActionEndpointConfig = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        getOperation: getOperation$t,
-        validateParams: validateParams$t,
-        getURL: getURL$s,
-        getRequestTimeout: getRequestTimeout$t,
-        isAuthSupported: isAuthSupported$t,
-        prepareParams: prepareParams$t,
-        handleResponse: handleResponse$t
+        getOperation: getOperation$b,
+        validateParams: validateParams$b,
+        getURL: getURL$a,
+        getRequestTimeout: getRequestTimeout$b,
+        isAuthSupported: isAuthSupported$b,
+        prepareParams: prepareParams$b,
+        handleResponse: handleResponse$b
     });
 
     /**       */
@@ -4905,7 +4886,7 @@
             queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5053,7 +5034,7 @@
             queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5207,7 +5188,7 @@
             queryParams.limit = (_l = params === null || params === void 0 ? void 0 : params.limit) !== null && _l !== void 0 ? _l : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_m = params.sort) !== null && _m !== void 0 ? _m : {}).map(function (_a) {
-                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5300,7 +5281,7 @@
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5365,7 +5346,7 @@
             queryParams.limit = (_k = params === null || params === void 0 ? void 0 : params.limit) !== null && _k !== void 0 ? _k : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_l = params.sort) !== null && _l !== void 0 ? _l : {}).map(function (_a) {
-                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5456,7 +5437,7 @@
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5473,1478 +5454,6 @@
             next: response.next,
         }); },
     };
-
-    /*       */
-    function prepareMessagePayload$c(modules, incomingParams) {
-        return incomingParams;
-    }
-    function getOperation$s() {
-        return OPERATIONS.PNCreateUserOperation;
-    }
-    function validateParams$s(_a, incomingParams) {
-        var config = _a.config;
-        var id = incomingParams.id, name = incomingParams.name, custom = incomingParams.custom;
-        if (!id)
-            return 'Missing User.id';
-        if (!name)
-            return 'Missing User.name';
-        if (!config.subscribeKey)
-            return 'Missing Subscribe Key';
-        if (custom) {
-            if (!Object.values(custom).every(function (value) { return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'; })) {
-                return 'Invalid custom type, only string, number and boolean values are allowed.';
-            }
-        }
-    }
-    function usePost$3() {
-        return true;
-    }
-    function getURL$r(modules) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users");
-    }
-    function postURL$3(modules) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users");
-    }
-    function getRequestTimeout$s(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$s() {
-        return true;
-    }
-    function prepareParams$s(modules, incomingParams) {
-        var include = incomingParams.include;
-        var params = {};
-        // default to include custom fields in response
-        if (!include) {
-            include = {
-                customFields: true,
-            };
-        }
-        else if (include.customFields === undefined) {
-            include.customFields = true;
-        }
-        if (include) {
-            var includes = [];
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        return params;
-    }
-    function postPayload$3(modules, incomingParams) {
-        return prepareMessagePayload$c(modules, incomingParams);
-    }
-    function handleResponse$s(modules, usersResponse) {
-        return usersResponse;
-    }
-
-    var createUserEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$s,
-        validateParams: validateParams$s,
-        usePost: usePost$3,
-        getURL: getURL$r,
-        postURL: postURL$3,
-        getRequestTimeout: getRequestTimeout$s,
-        isAuthSupported: isAuthSupported$s,
-        prepareParams: prepareParams$s,
-        postPayload: postPayload$3,
-        handleResponse: handleResponse$s
-    });
-
-    /*       */
-    function prepareMessagePayload$b(modules, incomingParams) {
-        return incomingParams;
-    }
-    function getOperation$r() {
-        return OPERATIONS.PNUpdateUserOperation;
-    }
-    function validateParams$r(_a, incomingParams) {
-        var config = _a.config;
-        var id = incomingParams.id, name = incomingParams.name, custom = incomingParams.custom;
-        if (!id)
-            return 'Missing User.id';
-        if (!name)
-            return 'Missing User.name';
-        if (!config.subscribeKey)
-            return 'Missing Subscribe Key';
-        if (custom) {
-            if (!Object.values(custom).every(function (value) { return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'; })) {
-                return 'Invalid custom type, only string, number and boolean values are allowed.';
-            }
-        }
-    }
-    function usePatch$7() {
-        return true;
-    }
-    function getURL$q(modules, incomingParams) {
-        var config = modules.config;
-        var id = incomingParams.id;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(id));
-    }
-    function patchURL$7(modules, incomingParams) {
-        var config = modules.config;
-        var id = incomingParams.id;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(id));
-    }
-    function getRequestTimeout$r(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$r() {
-        return true;
-    }
-    function prepareParams$r(modules, incomingParams) {
-        var include = incomingParams.include;
-        var params = {};
-        // default to include custom fields in response
-        if (!include) {
-            include = {
-                customFields: true,
-            };
-        }
-        else if (include.customFields === undefined) {
-            include.customFields = true;
-        }
-        if (include) {
-            var includes = [];
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        return params;
-    }
-    function patchPayload$7(modules, incomingParams) {
-        return prepareMessagePayload$b(modules, incomingParams);
-    }
-    function handleResponse$r(modules, usersResponse) {
-        return usersResponse;
-    }
-
-    var updateUserEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$r,
-        validateParams: validateParams$r,
-        usePatch: usePatch$7,
-        getURL: getURL$q,
-        patchURL: patchURL$7,
-        getRequestTimeout: getRequestTimeout$r,
-        isAuthSupported: isAuthSupported$r,
-        prepareParams: prepareParams$r,
-        patchPayload: patchPayload$7,
-        handleResponse: handleResponse$r
-    });
-
-    /*       */
-    function getOperation$q() {
-        return OPERATIONS.PNDeleteUserOperation;
-    }
-    function validateParams$q(_a, userId) {
-        var config = _a.config;
-        if (!userId)
-            return 'Missing UserId';
-        if (!config.subscribeKey)
-            return 'Missing Subscribe Key';
-    }
-    function useDelete$2() {
-        return true;
-    }
-    function getURL$p(modules, userId) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(userId));
-    }
-    function getRequestTimeout$q(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$q() {
-        return true;
-    }
-    function prepareParams$q() {
-        return {};
-    }
-    function handleResponse$q(modules, usersResponse) {
-        return usersResponse;
-    }
-
-    var deleteUserEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$q,
-        validateParams: validateParams$q,
-        useDelete: useDelete$2,
-        getURL: getURL$p,
-        getRequestTimeout: getRequestTimeout$q,
-        isAuthSupported: isAuthSupported$q,
-        prepareParams: prepareParams$q,
-        handleResponse: handleResponse$q
-    });
-
-    /*       */
-    function getOperation$p() {
-        return OPERATIONS.PNGetUserOperation;
-    }
-    function validateParams$p(modules, incomingParams) {
-        var userId = incomingParams.userId;
-        if (!userId)
-            return 'Missing userId';
-    }
-    function getURL$o(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId));
-    }
-    function getRequestTimeout$p(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$p() {
-        return true;
-    }
-    function prepareParams$p(modules, incomingParams) {
-        var include = incomingParams.include;
-        var params = {};
-        // default to include custom fields in response
-        if (!include) {
-            include = {
-                customFields: true,
-            };
-        }
-        else if (include.customFields === undefined) {
-            include.customFields = true;
-        }
-        if (include) {
-            var includes = [];
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        return params;
-    }
-    function handleResponse$p(modules, usersResponse) {
-        return usersResponse;
-    }
-
-    var getUserEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$p,
-        validateParams: validateParams$p,
-        getURL: getURL$o,
-        getRequestTimeout: getRequestTimeout$p,
-        isAuthSupported: isAuthSupported$p,
-        prepareParams: prepareParams$p,
-        handleResponse: handleResponse$p
-    });
-
-    /*       */
-    function getOperation$o() {
-        return OPERATIONS.PNGetUsersOperation;
-    }
-    function validateParams$o() {
-        // no required parameters
-    }
-    function getURL$n(modules) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users");
-    }
-    function getRequestTimeout$o(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$o() {
-        return true;
-    }
-    function prepareParams$o(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page, filter = incomingParams.filter;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        if (filter) {
-            params.filter = filter;
-        }
-        return params;
-    }
-    function handleResponse$o(modules, usersResponse) {
-        return usersResponse;
-    }
-
-    var getUsersEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$o,
-        validateParams: validateParams$o,
-        getURL: getURL$n,
-        getRequestTimeout: getRequestTimeout$o,
-        isAuthSupported: isAuthSupported$o,
-        prepareParams: prepareParams$o,
-        handleResponse: handleResponse$o
-    });
-
-    /*       */
-    function prepareMessagePayload$a(modules, incomingParams) {
-        return incomingParams;
-    }
-    function getOperation$n() {
-        return OPERATIONS.PNCreateSpaceOperation;
-    }
-    function validateParams$n(_a, incomingParams) {
-        var config = _a.config;
-        var id = incomingParams.id, name = incomingParams.name, custom = incomingParams.custom;
-        if (!id)
-            return 'Missing Space.id';
-        if (!name)
-            return 'Missing Space.name';
-        if (!config.subscribeKey)
-            return 'Missing Subscribe Key';
-        if (custom) {
-            if (!Object.values(custom).every(function (value) { return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'; })) {
-                return 'Invalid custom type, only string, number and boolean values are allowed.';
-            }
-        }
-    }
-    function usePost$2() {
-        return true;
-    }
-    function getURL$m(modules) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces");
-    }
-    function postURL$2(modules) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces");
-    }
-    function getRequestTimeout$n(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$n() {
-        return true;
-    }
-    function prepareParams$n(modules, incomingParams) {
-        var include = incomingParams.include;
-        var params = {};
-        // default to include custom fields in response
-        if (!include) {
-            include = {
-                customFields: true,
-            };
-        }
-        else if (include.customFields === undefined) {
-            include.customFields = true;
-        }
-        if (include) {
-            var includes = [];
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        return params;
-    }
-    function postPayload$2(modules, incomingParams) {
-        return prepareMessagePayload$a(modules, incomingParams);
-    }
-    function handleResponse$n(modules, spacesResponse) {
-        return spacesResponse;
-    }
-
-    var createSpaceEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$n,
-        validateParams: validateParams$n,
-        usePost: usePost$2,
-        getURL: getURL$m,
-        postURL: postURL$2,
-        getRequestTimeout: getRequestTimeout$n,
-        isAuthSupported: isAuthSupported$n,
-        prepareParams: prepareParams$n,
-        postPayload: postPayload$2,
-        handleResponse: handleResponse$n
-    });
-
-    /*       */
-    function prepareMessagePayload$9(modules, incomingParams) {
-        return incomingParams;
-    }
-    function getOperation$m() {
-        return OPERATIONS.PNUpdateSpaceOperation;
-    }
-    function validateParams$m(_a, incomingParams) {
-        var config = _a.config;
-        var id = incomingParams.id, name = incomingParams.name, custom = incomingParams.custom;
-        if (!id)
-            return 'Missing Space.id';
-        if (!name)
-            return 'Missing Space.name';
-        if (!config.subscribeKey)
-            return 'Missing Subscribe Key';
-        if (custom) {
-            if (!Object.values(custom).every(function (value) { return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'; })) {
-                return 'Invalid custom type, only string, number and boolean values are allowed.';
-            }
-        }
-    }
-    function usePatch$6() {
-        return true;
-    }
-    function getURL$l(modules, incomingParams) {
-        var config = modules.config;
-        var id = incomingParams.id;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(id));
-    }
-    function patchURL$6(modules, incomingParams) {
-        var config = modules.config;
-        var id = incomingParams.id;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(id));
-    }
-    function getRequestTimeout$m(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$m() {
-        return true;
-    }
-    function prepareParams$m(modules, incomingParams) {
-        var include = incomingParams.include;
-        var params = {};
-        // default to include custom fields in response
-        if (!include) {
-            include = {
-                customFields: true,
-            };
-        }
-        else if (include.customFields === undefined) {
-            include.customFields = true;
-        }
-        if (include) {
-            var includes = [];
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        return params;
-    }
-    function patchPayload$6(modules, incomingParams) {
-        return prepareMessagePayload$9(modules, incomingParams);
-    }
-    function handleResponse$m(modules, spacesResponse) {
-        return spacesResponse;
-    }
-
-    var updateSpaceEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$m,
-        validateParams: validateParams$m,
-        usePatch: usePatch$6,
-        getURL: getURL$l,
-        patchURL: patchURL$6,
-        getRequestTimeout: getRequestTimeout$m,
-        isAuthSupported: isAuthSupported$m,
-        prepareParams: prepareParams$m,
-        patchPayload: patchPayload$6,
-        handleResponse: handleResponse$m
-    });
-
-    /*       */
-    function getOperation$l() {
-        return OPERATIONS.PNDeleteSpaceOperation;
-    }
-    function validateParams$l(_a, spaceId) {
-        var config = _a.config;
-        if (!spaceId)
-            return 'Missing SpaceId';
-        if (!config.subscribeKey)
-            return 'Missing Subscribe Key';
-    }
-    function useDelete$1() {
-        return true;
-    }
-    function getURL$k(modules, spaceId) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(spaceId));
-    }
-    function getRequestTimeout$l(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$l() {
-        return true;
-    }
-    function prepareParams$l() {
-        return {};
-    }
-    function handleResponse$l(modules, spacesResponse) {
-        return spacesResponse;
-    }
-
-    var deleteSpaceEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$l,
-        validateParams: validateParams$l,
-        useDelete: useDelete$1,
-        getURL: getURL$k,
-        getRequestTimeout: getRequestTimeout$l,
-        isAuthSupported: isAuthSupported$l,
-        prepareParams: prepareParams$l,
-        handleResponse: handleResponse$l
-    });
-
-    /*       */
-    function getOperation$k() {
-        return OPERATIONS.PNGetSpacesOperation;
-    }
-    function validateParams$k() {
-        // no required parameters
-    }
-    function getURL$j(modules) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces");
-    }
-    function getRequestTimeout$k(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$k() {
-        return true;
-    }
-    function prepareParams$k(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page, filter = incomingParams.filter;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        if (filter) {
-            params.filter = filter;
-        }
-        return params;
-    }
-    function handleResponse$k(modules, spacesResponse) {
-        return spacesResponse;
-    }
-
-    var getSpacesEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$k,
-        validateParams: validateParams$k,
-        getURL: getURL$j,
-        getRequestTimeout: getRequestTimeout$k,
-        isAuthSupported: isAuthSupported$k,
-        prepareParams: prepareParams$k,
-        handleResponse: handleResponse$k
-    });
-
-    /*       */
-    function getOperation$j() {
-        return OPERATIONS.PNGetSpaceOperation;
-    }
-    function validateParams$j(modules, incomingParams) {
-        var spaceId = incomingParams.spaceId;
-        if (!spaceId)
-            return 'Missing spaceId';
-    }
-    function getURL$i(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId));
-    }
-    function getRequestTimeout$j(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$j() {
-        return true;
-    }
-    function prepareParams$j(modules, incomingParams) {
-        var include = incomingParams.include;
-        var params = {};
-        // default to include custom fields in response
-        if (!include) {
-            include = {
-                customFields: true,
-            };
-        }
-        else if (include.customFields === undefined) {
-            include.customFields = true;
-        }
-        if (include) {
-            var includes = [];
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        return params;
-    }
-    function handleResponse$j(modules, spacesResponse) {
-        return spacesResponse;
-    }
-
-    var getSpaceEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$j,
-        validateParams: validateParams$j,
-        getURL: getURL$i,
-        getRequestTimeout: getRequestTimeout$j,
-        isAuthSupported: isAuthSupported$j,
-        prepareParams: prepareParams$j,
-        handleResponse: handleResponse$j
-    });
-
-    /*       */
-    function getOperation$i() {
-        return OPERATIONS.PNGetMembersOperation;
-    }
-    function validateParams$i(modules, incomingParams) {
-        var spaceId = incomingParams.spaceId;
-        if (!spaceId)
-            return 'Missing spaceId';
-    }
-    function getURL$h(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function getRequestTimeout$i(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$i() {
-        return true;
-    }
-    function prepareParams$i(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page, filter = incomingParams.filter;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.userFields) {
-                includes.push('user');
-            }
-            if (include.customUserFields) {
-                includes.push('user.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        if (filter) {
-            params.filter = filter;
-        }
-        return params;
-    }
-    function handleResponse$i(modules, membersResponse) {
-        return membersResponse;
-    }
-
-    var getMembersEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$i,
-        validateParams: validateParams$i,
-        getURL: getURL$h,
-        getRequestTimeout: getRequestTimeout$i,
-        isAuthSupported: isAuthSupported$i,
-        prepareParams: prepareParams$i,
-        handleResponse: handleResponse$i
-    });
-
-    /*       */
-    function prepareMessagePayload$8(modules, incomingParams) {
-        var users = incomingParams.users;
-        var payload = {};
-        if (users && users.length > 0) {
-            payload.add = [];
-            users.forEach(function (addMember) {
-                var currentAdd = { id: addMember.id };
-                if (addMember.custom) {
-                    currentAdd.custom = addMember.custom;
-                }
-                payload.add.push(currentAdd);
-            });
-        }
-        return payload;
-    }
-    function getOperation$h() {
-        return OPERATIONS.PNUpdateMembersOperation;
-    }
-    function validateParams$h(modules, incomingParams) {
-        var spaceId = incomingParams.spaceId, users = incomingParams.users;
-        if (!spaceId)
-            return 'Missing spaceId';
-        if (!users)
-            return 'Missing users';
-    }
-    function getURL$g(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function patchURL$5(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function usePatch$5() {
-        return true;
-    }
-    function getRequestTimeout$h(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$h() {
-        return true;
-    }
-    function prepareParams$h(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        return params;
-    }
-    function patchPayload$5(modules, incomingParams) {
-        return prepareMessagePayload$8(modules, incomingParams);
-    }
-    function handleResponse$h(modules, membersResponse) {
-        return membersResponse;
-    }
-
-    var addMembersEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$h,
-        validateParams: validateParams$h,
-        getURL: getURL$g,
-        patchURL: patchURL$5,
-        usePatch: usePatch$5,
-        getRequestTimeout: getRequestTimeout$h,
-        isAuthSupported: isAuthSupported$h,
-        prepareParams: prepareParams$h,
-        patchPayload: patchPayload$5,
-        handleResponse: handleResponse$h
-    });
-
-    /*       */
-    function prepareMessagePayload$7(modules, incomingParams) {
-        var addMembers = incomingParams.addMembers, updateMembers = incomingParams.updateMembers, removeMembers = incomingParams.removeMembers, users = incomingParams.users;
-        var payload = {};
-        if (addMembers && addMembers.length > 0) {
-            payload.add = [];
-            addMembers.forEach(function (addMember) {
-                var currentAdd = { id: addMember.id };
-                if (addMember.custom) {
-                    currentAdd.custom = addMember.custom;
-                }
-                payload.add.push(currentAdd);
-            });
-        }
-        if (updateMembers && updateMembers.length > 0) {
-            payload.update = [];
-            updateMembers.forEach(function (updateMember) {
-                var currentUpdate = { id: updateMember.id };
-                if (updateMember.custom) {
-                    currentUpdate.custom = updateMember.custom;
-                }
-                payload.update.push(currentUpdate);
-            });
-        }
-        // if users is present then it is an update
-        if (users && users.length > 0) {
-            payload.update = payload.update || [];
-            users.forEach(function (updateMember) {
-                var currentUpdate = { id: updateMember.id };
-                if (updateMember.custom) {
-                    currentUpdate.custom = updateMember.custom;
-                }
-                payload.update.push(currentUpdate);
-            });
-        }
-        if (removeMembers && removeMembers.length > 0) {
-            payload.remove = [];
-            removeMembers.forEach(function (removeMemberId) {
-                payload.remove.push({ id: removeMemberId });
-            });
-        }
-        return payload;
-    }
-    function getOperation$g() {
-        return OPERATIONS.PNUpdateMembersOperation;
-    }
-    function validateParams$g(modules, incomingParams) {
-        var spaceId = incomingParams.spaceId, users = incomingParams.users;
-        if (!spaceId)
-            return 'Missing spaceId';
-        if (!users)
-            return 'Missing users';
-    }
-    function getURL$f(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function patchURL$4(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function usePatch$4() {
-        return true;
-    }
-    function getRequestTimeout$g(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$g() {
-        return true;
-    }
-    function prepareParams$g(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        return params;
-    }
-    function patchPayload$4(modules, incomingParams) {
-        return prepareMessagePayload$7(modules, incomingParams);
-    }
-    function handleResponse$g(modules, membersResponse) {
-        return membersResponse;
-    }
-
-    var updateMembersEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$g,
-        validateParams: validateParams$g,
-        getURL: getURL$f,
-        patchURL: patchURL$4,
-        usePatch: usePatch$4,
-        getRequestTimeout: getRequestTimeout$g,
-        isAuthSupported: isAuthSupported$g,
-        prepareParams: prepareParams$g,
-        patchPayload: patchPayload$4,
-        handleResponse: handleResponse$g
-    });
-
-    /*       */
-    function prepareMessagePayload$6(modules, incomingParams) {
-        var users = incomingParams.users;
-        var payload = {};
-        if (users && users.length > 0) {
-            payload.remove = [];
-            users.forEach(function (removeMemberId) {
-                payload.remove.push({ id: removeMemberId });
-            });
-        }
-        return payload;
-    }
-    function getOperation$f() {
-        return OPERATIONS.PNUpdateMembersOperation;
-    }
-    function validateParams$f(modules, incomingParams) {
-        var spaceId = incomingParams.spaceId, users = incomingParams.users;
-        if (!spaceId)
-            return 'Missing spaceId';
-        if (!users)
-            return 'Missing users';
-    }
-    function getURL$e(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function patchURL$3(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(incomingParams.spaceId), "/users");
-    }
-    function usePatch$3() {
-        return true;
-    }
-    function getRequestTimeout$f(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$f() {
-        return true;
-    }
-    function prepareParams$f(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        return params;
-    }
-    function patchPayload$3(modules, incomingParams) {
-        return prepareMessagePayload$6(modules, incomingParams);
-    }
-    function handleResponse$f(modules, membersResponse) {
-        return membersResponse;
-    }
-
-    var removeMembersEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$f,
-        validateParams: validateParams$f,
-        getURL: getURL$e,
-        patchURL: patchURL$3,
-        usePatch: usePatch$3,
-        getRequestTimeout: getRequestTimeout$f,
-        isAuthSupported: isAuthSupported$f,
-        prepareParams: prepareParams$f,
-        patchPayload: patchPayload$3,
-        handleResponse: handleResponse$f
-    });
-
-    /*       */
-    function getOperation$e() {
-        return OPERATIONS.PNGetMembershipsOperation;
-    }
-    function validateParams$e(modules, incomingParams) {
-        var userId = incomingParams.userId;
-        if (!userId)
-            return 'Missing userId';
-    }
-    function getURL$d(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function getRequestTimeout$e(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$e() {
-        return true;
-    }
-    function prepareParams$e(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page, filter = incomingParams.filter;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        if (filter) {
-            params.filter = filter;
-        }
-        return params;
-    }
-    function handleResponse$e(modules, membershipsResponse) {
-        return membershipsResponse;
-    }
-
-    var getMembershipsEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$e,
-        validateParams: validateParams$e,
-        getURL: getURL$d,
-        getRequestTimeout: getRequestTimeout$e,
-        isAuthSupported: isAuthSupported$e,
-        prepareParams: prepareParams$e,
-        handleResponse: handleResponse$e
-    });
-
-    /*       */
-    function prepareMessagePayload$5(modules, incomingParams) {
-        var addMemberships = incomingParams.addMemberships, updateMemberships = incomingParams.updateMemberships, removeMemberships = incomingParams.removeMemberships, spaces = incomingParams.spaces;
-        var payload = {};
-        if (addMemberships && addMemberships.length > 0) {
-            payload.add = [];
-            addMemberships.forEach(function (addMembership) {
-                var currentAdd = { id: addMembership.id };
-                if (addMembership.custom) {
-                    currentAdd.custom = addMembership.custom;
-                }
-                payload.add.push(currentAdd);
-            });
-        }
-        if (updateMemberships && updateMemberships.length > 0) {
-            payload.update = [];
-            updateMemberships.forEach(function (updateMembership) {
-                var currentUpdate = { id: updateMembership.id };
-                if (updateMembership.custom) {
-                    currentUpdate.custom = updateMembership.custom;
-                }
-                payload.update.push(currentUpdate);
-            });
-        }
-        // if spaces is present then it is an update
-        if (spaces && spaces.length > 0) {
-            payload.update = payload.update || [];
-            spaces.forEach(function (updateMembership) {
-                var currentUpdate = { id: updateMembership.id };
-                if (updateMembership.custom) {
-                    currentUpdate.custom = updateMembership.custom;
-                }
-                payload.update.push(currentUpdate);
-            });
-        }
-        if (removeMemberships && removeMemberships.length > 0) {
-            payload.remove = [];
-            removeMemberships.forEach(function (removeMembershipId) {
-                payload.remove.push({ id: removeMembershipId });
-            });
-        }
-        return payload;
-    }
-    function getOperation$d() {
-        return OPERATIONS.PNUpdateMembershipsOperation;
-    }
-    function validateParams$d(modules, incomingParams) {
-        var userId = incomingParams.userId, spaces = incomingParams.spaces;
-        if (!userId)
-            return 'Missing userId';
-        if (!spaces)
-            return 'Missing spaces';
-    }
-    function getURL$c(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function patchURL$2(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function usePatch$2() {
-        return true;
-    }
-    function getRequestTimeout$d(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$d() {
-        return true;
-    }
-    function prepareParams$d(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        return params;
-    }
-    function patchPayload$2(modules, incomingParams) {
-        return prepareMessagePayload$5(modules, incomingParams);
-    }
-    function handleResponse$d(modules, membershipsResponse) {
-        return membershipsResponse;
-    }
-
-    var updateMembershipsEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$d,
-        validateParams: validateParams$d,
-        getURL: getURL$c,
-        patchURL: patchURL$2,
-        usePatch: usePatch$2,
-        getRequestTimeout: getRequestTimeout$d,
-        isAuthSupported: isAuthSupported$d,
-        prepareParams: prepareParams$d,
-        patchPayload: patchPayload$2,
-        handleResponse: handleResponse$d
-    });
-
-    /*       */
-    function prepareMessagePayload$4(modules, incomingParams) {
-        var spaces = incomingParams.spaces;
-        var payload = {};
-        if (spaces && spaces.length > 0) {
-            payload.add = [];
-            spaces.forEach(function (addMembership) {
-                var currentAdd = { id: addMembership.id };
-                if (addMembership.custom) {
-                    currentAdd.custom = addMembership.custom;
-                }
-                payload.add.push(currentAdd);
-            });
-        }
-        return payload;
-    }
-    function getOperation$c() {
-        return OPERATIONS.PNUpdateMembershipsOperation;
-    }
-    function validateParams$c(modules, incomingParams) {
-        var userId = incomingParams.userId, spaces = incomingParams.spaces;
-        if (!userId)
-            return 'Missing userId';
-        if (!spaces)
-            return 'Missing spaces';
-    }
-    function getURL$b(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function patchURL$1(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function usePatch$1() {
-        return true;
-    }
-    function getRequestTimeout$c(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$c() {
-        return true;
-    }
-    function prepareParams$c(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        return params;
-    }
-    function patchPayload$1(modules, incomingParams) {
-        return prepareMessagePayload$4(modules, incomingParams);
-    }
-    function handleResponse$c(modules, membershipsResponse) {
-        return membershipsResponse;
-    }
-
-    var joinSpacesEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$c,
-        validateParams: validateParams$c,
-        getURL: getURL$b,
-        patchURL: patchURL$1,
-        usePatch: usePatch$1,
-        getRequestTimeout: getRequestTimeout$c,
-        isAuthSupported: isAuthSupported$c,
-        prepareParams: prepareParams$c,
-        patchPayload: patchPayload$1,
-        handleResponse: handleResponse$c
-    });
-
-    /*       */
-    function prepareMessagePayload$3(modules, incomingParams) {
-        var spaces = incomingParams.spaces;
-        var payload = {};
-        if (spaces && spaces.length > 0) {
-            payload.remove = [];
-            spaces.forEach(function (removeMembershipId) {
-                payload.remove.push({ id: removeMembershipId });
-            });
-        }
-        return payload;
-    }
-    function getOperation$b() {
-        return OPERATIONS.PNUpdateMembershipsOperation;
-    }
-    function validateParams$b(modules, incomingParams) {
-        var userId = incomingParams.userId, spaces = incomingParams.spaces;
-        if (!userId)
-            return 'Missing userId';
-        if (!spaces)
-            return 'Missing spaces';
-    }
-    function getURL$a(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function patchURL(modules, incomingParams) {
-        var config = modules.config;
-        return "/v1/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString(incomingParams.userId), "/spaces");
-    }
-    function usePatch() {
-        return true;
-    }
-    function getRequestTimeout$b(_a) {
-        var config = _a.config;
-        return config.getTransactionTimeout();
-    }
-    function isAuthSupported$b() {
-        return true;
-    }
-    function prepareParams$b(modules, incomingParams) {
-        var include = incomingParams.include, limit = incomingParams.limit, page = incomingParams.page;
-        var params = {};
-        if (limit) {
-            params.limit = limit;
-        }
-        if (include) {
-            var includes = [];
-            if (include.totalCount) {
-                params.count = true;
-            }
-            if (include.customFields) {
-                includes.push('custom');
-            }
-            if (include.spaceFields) {
-                includes.push('space');
-            }
-            if (include.customSpaceFields) {
-                includes.push('space.custom');
-            }
-            var includesString = includes.join(',');
-            if (includesString.length > 0) {
-                params.include = includesString;
-            }
-        }
-        if (page) {
-            if (page.next) {
-                params.start = page.next;
-            }
-            if (page.prev) {
-                params.end = page.prev;
-            }
-        }
-        return params;
-    }
-    function patchPayload(modules, incomingParams) {
-        return prepareMessagePayload$3(modules, incomingParams);
-    }
-    function handleResponse$b(modules, membershipsResponse) {
-        return membershipsResponse;
-    }
-
-    var leaveSpacesEndpointConfig = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        getOperation: getOperation$b,
-        validateParams: validateParams$b,
-        getURL: getURL$a,
-        patchURL: patchURL,
-        usePatch: usePatch,
-        getRequestTimeout: getRequestTimeout$b,
-        isAuthSupported: isAuthSupported$b,
-        prepareParams: prepareParams$b,
-        patchPayload: patchPayload,
-        handleResponse: handleResponse$b
-    });
 
     /*       */
     function getOperation$a() {
@@ -7572,7 +6081,7 @@
         var timetoken = incomingParams.timetoken, channelTimetokens = incomingParams.channelTimetokens;
         var outgoingParams = {};
         if (channelTimetokens && channelTimetokens.length === 1) {
-            var _a = __read$1(channelTimetokens, 1), tt = _a[0];
+            var _a = __read(channelTimetokens, 1), tt = _a[0];
             outgoingParams.timetoken = tt;
         }
         else if (channelTimetokens) {
@@ -8012,7 +6521,7 @@
             });
             var transition = this.currentState.transition(this.currentContext, event);
             if (transition) {
-                var _d = __read$1(transition, 3), newState = _d[0], newContext = _d[1], effects = _d[2];
+                var _d = __read(transition, 3), newState = _d[0], newContext = _d[1], effects = _d[2];
                 try {
                     for (var _e = __values(this.currentState.exitEffects), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var effect = _f.value;
@@ -8119,7 +6628,7 @@
             }
             return {
                 type: type,
-                payload: fn === null || fn === void 0 ? void 0 : fn.apply(void 0, __spreadArray$1([], __read$1(args), false)),
+                payload: fn === null || fn === void 0 ? void 0 : fn.apply(void 0, __spreadArray([], __read(args), false)),
             };
         };
         creator.type = type;
@@ -8131,7 +6640,7 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            return { type: type, payload: fn.apply(void 0, __spreadArray$1([], __read$1(args), false)), managed: false };
+            return { type: type, payload: fn.apply(void 0, __spreadArray([], __read(args), false)), managed: false };
         };
         creator.type = type;
         return creator;
@@ -8142,7 +6651,7 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            return { type: type, payload: fn.apply(void 0, __spreadArray$1([], __read$1(args), false)), managed: true };
+            return { type: type, payload: fn.apply(void 0, __spreadArray([], __read(args), false)), managed: true };
         };
         creator.type = type;
         creator.cancel = { type: 'CANCEL', payload: type, managed: false };
@@ -8604,8 +7113,8 @@
         });
         EventEngine.prototype.subscribe = function (_a) {
             var channels = _a.channels, groups = _a.groups;
-            this.channels = __spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false);
-            this.groups = __spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((groups !== null && groups !== void 0 ? groups : [])), false);
+            this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
+            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((groups !== null && groups !== void 0 ? groups : [])), false);
             this.engine.transition(subscriptionChange(this.channels, this.groups));
         };
         EventEngine.prototype.unsubscribe = function (_a) {
@@ -8774,18 +7283,18 @@
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'set' }, parameters)], __read$1(rest), false));
+                        endpoint$5, __assign({ type: 'set' }, parameters)], __read(rest), false));
                 },
                 removeChannelMembers: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read$1(rest), false));
+                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read(rest), false));
                 },
                 getMemberships: endpointCreator.bind(this, modules, endpoint$4),
                 setMemberships: function (parameters) {
@@ -8793,39 +7302,62 @@
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'set' }, parameters)], __read$1(rest), false));
+                        endpoint$3, __assign({ type: 'set' }, parameters)], __read(rest), false));
                 },
                 removeMemberships: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read$1(rest), false));
+                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read(rest), false));
                 },
             };
-            // Objects API
-            this.createUser = utils$5.deprecated(endpointCreator.bind(this, modules, createUserEndpointConfig));
-            this.updateUser = utils$5.deprecated(endpointCreator.bind(this, modules, updateUserEndpointConfig));
-            this.deleteUser = utils$5.deprecated(endpointCreator.bind(this, modules, deleteUserEndpointConfig));
-            this.getUser = utils$5.deprecated(endpointCreator.bind(this, modules, getUserEndpointConfig));
-            this.getUsers = utils$5.deprecated(endpointCreator.bind(this, modules, getUsersEndpointConfig));
-            this.createSpace = utils$5.deprecated(endpointCreator.bind(this, modules, createSpaceEndpointConfig));
-            this.updateSpace = utils$5.deprecated(endpointCreator.bind(this, modules, updateSpaceEndpointConfig));
-            this.deleteSpace = utils$5.deprecated(endpointCreator.bind(this, modules, deleteSpaceEndpointConfig));
-            this.getSpaces = utils$5.deprecated(endpointCreator.bind(this, modules, getSpacesEndpointConfig));
-            this.getSpace = utils$5.deprecated(endpointCreator.bind(this, modules, getSpaceEndpointConfig));
-            this.addMembers = utils$5.deprecated(endpointCreator.bind(this, modules, addMembersEndpointConfig));
-            this.updateMembers = utils$5.deprecated(endpointCreator.bind(this, modules, updateMembersEndpointConfig));
-            this.removeMembers = utils$5.deprecated(endpointCreator.bind(this, modules, removeMembersEndpointConfig));
-            this.getMembers = utils$5.deprecated(endpointCreator.bind(this, modules, getMembersEndpointConfig));
-            this.getMemberships = utils$5.deprecated(endpointCreator.bind(this, modules, getMembershipsEndpointConfig));
-            this.joinSpaces = utils$5.deprecated(endpointCreator.bind(this, modules, joinSpacesEndpointConfig));
-            this.updateMemberships = utils$5.deprecated(endpointCreator.bind(this, modules, updateMembershipsEndpointConfig));
-            this.leaveSpaces = utils$5.deprecated(endpointCreator.bind(this, modules, leaveSpacesEndpointConfig));
+            // User Apis
+            this.createUser = function (args) {
+                return _this.objects.setUUIDMetadata({
+                    uuid: args.userId,
+                    data: args.data,
+                    include: args.include,
+                });
+            };
+            this.updateUser = this.createUser;
+            this.removeUser = function (args) {
+                return _this.objects.removeUUIDMetadata({
+                    uuid: args === null || args === void 0 ? void 0 : args.userId,
+                });
+            };
+            this.fetchUser = function (args) {
+                return _this.objects.getUUIDMetadata({
+                    uuid: args === null || args === void 0 ? void 0 : args.userId,
+                    include: args === null || args === void 0 ? void 0 : args.include,
+                });
+            };
+            this.fetchUsers = this.objects.getAllUUIDMetadata;
+            // Space apis
+            this.createSpace = function (args) {
+                return _this.objects.setChannelMetadata({
+                    channel: args.spaceId,
+                    data: args.data,
+                    include: args.include,
+                });
+            };
+            this.updateSpace = this.createSpace;
+            this.removeSpace = function (args) {
+                return _this.objects.removeChannelMetadata({
+                    channel: args.spaceId,
+                });
+            };
+            this.fetchSpace = function (args) {
+                return _this.objects.getChannelMetadata({
+                    channel: args.spaceId,
+                    include: args.include,
+                });
+            };
+            this.fetchSpaces = this.objects.getAllChannelMetadata;
             this.time = timeEndpoint;
             // --- deprecated  ------------------
             this.stop = this.destroy; // --------
@@ -8975,29 +7507,6 @@
         };
         return default_1;
     }());
-
-    /*       */
-    /* global localStorage */
-    var db = {
-        get: function (key) {
-            // try catch for operating within iframes which disable localStorage
-            try {
-                return localStorage.getItem(key);
-            }
-            catch (e) {
-                return null;
-            }
-        },
-        set: function (key, data) {
-            // try catch for operating within iframes which disable localStorage
-            try {
-                return localStorage.setItem(key, data);
-            }
-            catch (e) {
-                return null;
-            }
-        },
-    };
 
     var default_1$1 = /** @class */ (function () {
         function default_1(decode, base64ToBinary) {
@@ -12817,7 +11326,7 @@
         _a.supportsFileUri = false,
         _a);
 
-    /*       */
+    /* eslint no-bitwise: ["error", { "allow": ["~", "&", ">>"] }] */
     function sendBeacon(url) {
         if (navigator && navigator.sendBeacon) {
             navigator.sendBeacon(url);
@@ -12886,7 +11395,6 @@
             var _this = this;
             // extract config.
             var _a = setup.listenToBrowserNetworkEvents, listenToBrowserNetworkEvents = _a === void 0 ? true : _a;
-            setup.db = db;
             setup.sdkFamily = 'Web';
             setup.networking = new default_1$2({
                 del: del,
