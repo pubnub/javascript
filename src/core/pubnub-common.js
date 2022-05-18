@@ -190,22 +190,26 @@ export default class {
   objects;
 
   // User
-  setUser;
+  createUser;
 
-  getUser;
+  updateUser;
 
-  deleteUser;
+  fetchUser;
 
-  getUsers;
+  removeUser;
+
+  fetchUsers;
 
   // Space
-  setSpace;
+  createSpace;
 
-  getSpace;
+  updateSpace;
 
-  deleteSpace;
+  fetchSpace;
 
-  getSpaces;
+  removeSpace;
+
+  fetchSpaces;
 
   disconnect;
 
@@ -480,46 +484,50 @@ export default class {
     };
 
     // User Apis
-    this.setUser = (args) =>
+    this.createUser = (args) =>
       this.objects.setUUIDMetadata({
         uuid: args.userId,
         data: args.data,
         include: args.include,
       });
 
-    this.deleteUser = (args) =>
+    this.updateUser = this.createUser;
+
+    this.removeUser = (args) =>
       this.objects.removeUUIDMetadata({
         uuid: args?.userId,
       });
 
-    this.getUser = (args) =>
+    this.fetchUser = (args) =>
       this.objects.getUUIDMetadata({
         uuid: args?.userId,
         include: args?.include,
       });
 
-    this.getUsers = this.objects.getAllUUIDMetadata;
+    this.fetchUsers = this.objects.getAllUUIDMetadata;
 
     // Space apis
-    this.setSpace = (args) =>
+    this.createSpace = (args) =>
       this.objects.setChannelMetadata({
         channel: args.spaceId,
         data: args.data,
         include: args.include,
       });
 
-    this.deleteSpace = (args) =>
+    this.updateSpace = this.createSpace;
+
+    this.removeSpace = (args) =>
       this.objects.removeChannelMetadata({
         channel: args.spaceId,
       });
 
-    this.getSpace = (args) =>
+    this.fetchSpace = (args) =>
       this.objects.getChannelMetadata({
         channel: args.spaceId,
         include: args.include,
       });
 
-    this.getSpaces = this.objects.getAllChannelMetadata;
+    this.fetchSpaces = this.objects.getAllChannelMetadata;
 
     this.time = timeEndpoint;
 
