@@ -60,6 +60,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           npm-token: ${{ secrets.NPM_TOKEN }}
           check-ownership: false
+          build-command: npm run build
       - name: Create Release
         uses: ./.github/.release/actions/actions/services/github-release
         with:
