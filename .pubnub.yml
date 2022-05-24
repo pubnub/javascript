@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2022-05-24
+    version: v7.0.0
+    changes:
+      - type: improvement
+        text: "BREAKING CHANGES: Removed objects v1 methods support."
   - date: 2022-04-21
     version: v6.0.0
     changes:

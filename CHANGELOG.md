@@ -1,3 +1,9 @@
+## v7.0.0
+May 24 2022
+
+#### Modified
+- BREAKING CHANGES: Removed objects v1 methods support.
+
 ## v6.0.0
 
 April 21 2022
