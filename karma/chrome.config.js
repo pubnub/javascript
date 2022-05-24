@@ -9,7 +9,6 @@ module.exports = function (config) {
     frameworks: ['mocha', 'chai'],
 
     files: [
-      'node_modules/@babel/polyfill/dist/polyfill.js',
       '../src/web/index.js',
       '../' + process.argv[process.argv.length - 1],
     ],
