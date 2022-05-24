@@ -8,9 +8,9 @@ import { keepAlive, proxy } from '../networking/modules/node';
 import NodeCryptography from '../crypto/modules/node';
 import PubNubFile from '../file/modules/node';
 
-export default class extends PubNubCore {
-  constructor(setup) {
-    setup.cbor = new Cbor(CborReader.decode, (base64String) => Buffer.from(base64String, 'base64'));
+export = class extends PubNubCore {
+  constructor(setup: any) {
+    setup.cbor = new Cbor(CborReader.decode, (base64String: any) => Buffer.from(base64String, 'base64'));
     setup.networking = new Networking({
       keepAlive,
       del,
