@@ -10,7 +10,7 @@ import PubNubFile from '../file/modules/node';
 
 export = class extends PubNubCore {
   constructor(setup: any) {
-    setup.cbor = new Cbor(CborReader.decode, (base64String: any) => Buffer.from(base64String, 'base64'));
+    setup.cbor = new Cbor(CborReader.decode, (base64String: string) => Buffer.from(base64String, 'base64'));
     setup.networking = new Networking({
       keepAlive,
       del,
