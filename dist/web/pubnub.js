@@ -5226,7 +5226,7 @@
             var _a;
             return (_a = {
                     set: [],
-                    remove: []
+                    delete: []
                 },
                 _a[params.type] = params.uuids.map(function (uuid) {
                     if (typeof uuid === 'string') {
@@ -5276,7 +5276,7 @@
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            if (params === null || params === void 0 ? void 0 : params.limit) {
+            if (params.limit != null) {
                 queryParams.limit = params.limit;
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
@@ -5382,7 +5382,7 @@
             var _a;
             return (_a = {
                     set: [],
-                    remove: []
+                    delete: []
                 },
                 _a[params.type] = params.channels.map(function (channel) {
                     if (typeof channel === 'string') {
@@ -5407,6 +5407,7 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            console.log('PARAMS : ', params);
             if (params === null || params === void 0 ? void 0 : params.include) {
                 queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
@@ -5432,7 +5433,7 @@
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            if (params === null || params === void 0 ? void 0 : params.limit) {
+            if (params.limit != null) {
                 queryParams.limit = params.limit;
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
@@ -7358,6 +7359,56 @@
                 });
             };
             this.fetchSpaces = this.objects.getAllChannelMetadata;
+            this.addMemberships = function (parameters) {
+                var _a, _b;
+                if (typeof parameters.spaceId === 'string') {
+                    return _this.objects.setChannelMembers({
+                        channel: parameters.spaceId,
+                        uuids: (_a = parameters.users) === null || _a === void 0 ? void 0 : _a.map(function (user) {
+                            if (typeof user === 'string') {
+                                return user;
+                            }
+                            return {
+                                id: user.userId,
+                                custom: user.custom,
+                            };
+                        }),
+                        limit: 0,
+                    });
+                }
+                else {
+                    return _this.objects.setMemberships({
+                        uuid: parameters.userId,
+                        channels: (_b = parameters.spaces) === null || _b === void 0 ? void 0 : _b.map(function (space) {
+                            if (typeof space === 'string') {
+                                return space;
+                            }
+                            return {
+                                id: space.spaceId,
+                                custom: space.custom,
+                            };
+                        }),
+                        limit: 0,
+                    });
+                }
+            };
+            this.updateMemberships = this.addMemberships;
+            this.removeMemberships = function (parameters) {
+                if (typeof parameters.spaceId === 'string') {
+                    return _this.objects.removeChannelMembers({
+                        channel: parameters.spaceId,
+                        uuids: parameters.userIds,
+                        limit: 0,
+                    });
+                }
+                else if (typeof parameters.userId === 'string') {
+                    return _this.objects.removeMemberships({
+                        uuid: parameters.userId,
+                        channels: parameters.spaceIds,
+                        limit: 0,
+                    });
+                }
+            };
             this.time = timeEndpoint;
             // --- deprecated  ------------------
             this.stop = this.destroy; // --------
