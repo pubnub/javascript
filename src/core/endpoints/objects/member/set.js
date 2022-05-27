@@ -24,7 +24,7 @@ const endpoint = {
 
   patchPayload: (_, params) => ({
     set: [],
-    remove: [],
+    delete: [],
     [params.type]: params.uuids.map((uuid) => {
       if (typeof uuid === 'string') {
         return {
@@ -81,7 +81,7 @@ const endpoint = {
       queryParams.filter = params.filter;
     }
 
-    if (params?.limit) {
+    if (params.limit != null) {
       queryParams.limit = params.limit;
     }
 

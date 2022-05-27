@@ -529,6 +529,56 @@ export default class {
 
     this.fetchSpaces = this.objects.getAllChannelMetadata;
 
+    this.addMemberships = (parameters) => {
+      if (typeof parameters.spaceId === 'string') {
+        return this.objects.setChannelMembers({
+          channel: parameters.spaceId,
+          uuids: parameters.users?.map((user) => {
+            if (typeof user === 'string') {
+              return user;
+            }
+            return {
+              id: user.userId,
+              custom: user.custom,
+            };
+          }),
+          limit: 0,
+        });
+      } else {
+        return this.objects.setMemberships({
+          uuid: parameters.userId,
+          channels: parameters.spaces?.map((space) => {
+            if (typeof space === 'string') {
+              return space;
+            }
+            return {
+              id: space.spaceId,
+              custom: space.custom,
+            };
+          }),
+          limit: 0,
+        });
+      }
+    };
+
+    this.updateMemberships = this.addMemberships;
+
+    this.removeMemberships = (parameters) => {
+      if (typeof parameters.spaceId === 'string') {
+        return this.objects.removeChannelMembers({
+          channel: parameters.spaceId,
+          uuids: parameters.userIds,
+          limit: 0,
+        });
+      } else if (typeof parameters.userId === 'string') {
+        return this.objects.removeMemberships({
+          uuid: parameters.userId,
+          channels: parameters.spaceIds,
+          limit: 0,
+        });
+      }
+    };
+
     this.time = timeEndpoint;
 
     // --- deprecated  ------------------

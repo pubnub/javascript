@@ -20,7 +20,7 @@ const endpoint = {
 
   patchPayload: (_, params) => ({
     set: [],
-    remove: [],
+    delete: [],
     [params.type]: params.channels.map((channel) => {
       if (typeof channel === 'string') {
         return {
@@ -42,6 +42,8 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+
+    console.log('PARAMS : ', params);
 
     if (params?.include) {
       queryParams.include = [];
@@ -77,7 +79,7 @@ const endpoint = {
       queryParams.filter = params.filter;
     }
 
-    if (params?.limit) {
+    if (params.limit != null) {
       queryParams.limit = params.limit;
     }
 
