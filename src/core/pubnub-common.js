@@ -590,12 +590,17 @@ export default class {
             limit: params.limit,
             page: params.page,
           })
-          .then((response) =>
-            response.data?.map((m) => {
-              delete Object.assign(m, { space: m.channel })['channel'];
-              return m;
-            }),
-          );
+          .then((res) => {
+            res.data = res.data?.map((m) => {
+              return {
+                space: m.channel,
+                custom: m.custom,
+                updated: m.updated,
+                eTag: m.eTag,
+              };
+            });
+            return res;
+          });
       } else if (typeof params.spaceId === 'string') {
         return this.objects
           .getChannelMembers({
@@ -606,12 +611,17 @@ export default class {
             limit: params.limit,
             page: params.page,
           })
-          .then((response) =>
-            response.data?.map((m) => {
-              delete Object.assign(m, { user: m.uuid })['uuid'];
-              return m;
-            }),
-          );
+          .then((res) => {
+            res.data = res.data?.map((m) => {
+              return {
+                user: m.uuid,
+                custom: m.custom,
+                updated: m.updated,
+                eTag: m.eTag,
+              };
+            });
+            return res;
+          });
       }
     };
 
