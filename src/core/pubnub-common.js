@@ -579,6 +579,42 @@ export default class {
       }
     };
 
+    this.fetchMemberships = (params) => {
+      if (typeof params.userId === 'string') {
+        return this.objects
+          .getMemberships({
+            uuid: params.userId,
+            include: params.include,
+            filter: params.filter,
+            sort: params.sort,
+            limit: params.limit,
+            page: params.page,
+          })
+          .then((response) =>
+            response.data?.map((m) => {
+              delete Object.assign(m, { space: m.channel })['channel'];
+              return m;
+            }),
+          );
+      } else if (typeof params.spaceId === 'string') {
+        return this.objects
+          .getChannelMembers({
+            channel: params.spaceId,
+            include: params.include,
+            filter: params.filter,
+            sort: params.sort,
+            limit: params.limit,
+            page: params.page,
+          })
+          .then((response) =>
+            response.data?.map((m) => {
+              delete Object.assign(m, { user: m.uuid })['uuid'];
+              return m;
+            }),
+          );
+      }
+    };
+
     this.time = timeEndpoint;
 
     // --- deprecated  ------------------
