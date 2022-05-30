@@ -7360,6 +7360,7 @@
                 });
             };
             this.fetchSpaces = this.objects.getAllChannelMetadata;
+            // Membership apis
             this.addMemberships = function (parameters) {
                 var _a, _b;
                 if (typeof parameters.spaceId === 'string') {
@@ -7418,7 +7419,6 @@
                         .getMemberships({
                         uuid: params.userId,
                         filter: params.filter,
-                        sort: params.sort,
                         limit: params.limit,
                         page: params.page,
                         include: {
@@ -7427,6 +7427,12 @@
                             customChannelFields: params.include.customSpaceFields,
                             totalCount: params.include.totalCount,
                         },
+                        sort: params.sort != null
+                            ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
+                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                return [k.replace('space', 'channel'), v];
+                            }))
+                            : null,
                     })
                         .then(function (res) {
                         var _a;
@@ -7446,7 +7452,6 @@
                         .getChannelMembers({
                         channel: params.spaceId,
                         filter: params.filter,
-                        sort: params.sort,
                         limit: params.limit,
                         page: params.page,
                         include: {
@@ -7455,6 +7460,12 @@
                             customUUIDFields: params.include.customUserFields,
                             totalCount: params.include.totalCount,
                         },
+                        sort: params.sort != null
+                            ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
+                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                return [k.replace('user', 'uuid'), v];
+                            }))
+                            : null,
                     })
                         .then(function (res) {
                         var _a;
