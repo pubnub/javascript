@@ -540,6 +540,7 @@ export default class {
             return {
               id: user.userId,
               custom: user.custom,
+              status: user.status,
             };
           }),
           limit: 0,
@@ -554,6 +555,7 @@ export default class {
             return {
               id: space.spaceId,
               custom: space.custom,
+              status: space.status,
             };
           }),
           limit: 0,

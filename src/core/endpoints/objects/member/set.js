@@ -36,6 +36,7 @@ const endpoint = {
       return {
         uuid: { id: uuid.id },
         custom: uuid.custom,
+        status: uuid.status,
       };
     }),
   }),

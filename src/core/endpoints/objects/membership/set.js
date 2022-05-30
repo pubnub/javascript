@@ -32,6 +32,7 @@ const endpoint = {
       return {
         channel: { id: channel.id },
         custom: channel.custom,
+        status: channel.status,
       };
     }),
   }),
