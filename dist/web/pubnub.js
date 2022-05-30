@@ -5407,7 +5407,6 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
-            console.log('PARAMS : ', params);
             if (params === null || params === void 0 ? void 0 : params.include) {
                 queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
@@ -7414,11 +7413,16 @@
                     return _this.objects
                         .getMemberships({
                         uuid: params.userId,
-                        include: params.include,
                         filter: params.filter,
                         sort: params.sort,
                         limit: params.limit,
                         page: params.page,
+                        include: {
+                            customFields: params.include.customFields,
+                            channelFields: params.include.spaceFields,
+                            customChannelFields: params.include.customSpaceFields,
+                            totalCount: params.include.totalCount,
+                        },
                     })
                         .then(function (res) {
                         var _a;
@@ -7437,11 +7441,16 @@
                     return _this.objects
                         .getChannelMembers({
                         channel: params.spaceId,
-                        include: params.include,
                         filter: params.filter,
                         sort: params.sort,
                         limit: params.limit,
                         page: params.page,
+                        include: {
+                            customFields: params.include.customFields,
+                            UUIDFields: params.include.userFields,
+                            customUUIDFields: params.include.customUserFields,
+                            totalCount: params.include.totalCount,
+                        },
                     })
                         .then(function (res) {
                         var _a;
