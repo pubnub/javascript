@@ -211,6 +211,15 @@ export default class {
 
   fetchSpaces;
 
+  // Membership
+  addMemberships;
+
+  updateMemberships;
+
+  fetchMemberships;
+
+  removeMemberships;
+
   disconnect;
 
   reconnect;
@@ -529,6 +538,7 @@ export default class {
 
     this.fetchSpaces = this.objects.getAllChannelMetadata;
 
+    // Membership apis
     this.addMemberships = (parameters) => {
       if (typeof parameters.spaceId === 'string') {
         return this.objects.setChannelMembers({
@@ -587,7 +597,6 @@ export default class {
           .getMemberships({
             uuid: params.userId,
             filter: params.filter,
-            sort: params.sort,
             limit: params.limit,
             page: params.page,
             include: {
@@ -596,6 +605,10 @@ export default class {
               customChannelFields: params.include.customSpaceFields,
               totalCount: params.include.totalCount,
             },
+            sort:
+              params.sort != null
+                ? Object.fromEntries(Object.entries(params.sort).map(([k, v]) => [k.replace('space', 'channel'), v]))
+                : null,
           })
           .then((res) => {
             res.data = res.data?.map((m) => {
@@ -613,7 +626,6 @@ export default class {
           .getChannelMembers({
             channel: params.spaceId,
             filter: params.filter,
-            sort: params.sort,
             limit: params.limit,
             page: params.page,
             include: {
@@ -622,6 +634,10 @@ export default class {
               customUUIDFields: params.include.customUserFields,
               totalCount: params.include.totalCount,
             },
+            sort:
+              params.sort != null
+                ? Object.fromEntries(Object.entries(params.sort).map(([k, v]) => [k.replace('user', 'uuid'), v]))
+                : null,
           })
           .then((res) => {
             res.data = res.data?.map((m) => {
