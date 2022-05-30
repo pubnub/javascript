@@ -5239,6 +5239,7 @@
                     return {
                         uuid: { id: uuid.id },
                         custom: uuid.custom,
+                        status: uuid.status,
                     };
                 }),
                 _a);
@@ -5395,6 +5396,7 @@
                     return {
                         channel: { id: channel.id },
                         custom: channel.custom,
+                        status: channel.status,
                     };
                 }),
                 _a);
@@ -7370,6 +7372,7 @@
                             return {
                                 id: user.userId,
                                 custom: user.custom,
+                                status: user.status,
                             };
                         }),
                         limit: 0,
@@ -7385,6 +7388,7 @@
                             return {
                                 id: space.spaceId,
                                 custom: space.custom,
+                                status: space.status,
                             };
                         }),
                         limit: 0,
