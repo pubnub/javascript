@@ -3,7 +3,8 @@ changelog:
   - date: 2022-05-24
     version: v7.0.1
     changes:
-
+      - type: bug
+        text: "Fixes export issue for Node and update config for es module compatibility."
   - date: 2022-05-24
     version: v7.0.0
     changes:

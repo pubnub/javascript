@@ -43,8 +43,6 @@ const endpoint = {
   prepareParams: (_modules, params) => {
     const queryParams = {};
 
-    console.log('PARAMS : ', params);
-
     if (params?.include) {
       queryParams.include = [];
 

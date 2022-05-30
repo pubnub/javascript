@@ -584,11 +584,16 @@ export default class {
         return this.objects
           .getMemberships({
             uuid: params.userId,
-            include: params.include,
             filter: params.filter,
             sort: params.sort,
             limit: params.limit,
             page: params.page,
+            include: {
+              customFields: params.include.customFields,
+              channelFields: params.include.spaceFields,
+              customChannelFields: params.include.customSpaceFields,
+              totalCount: params.include.totalCount,
+            },
           })
           .then((res) => {
             res.data = res.data?.map((m) => {
@@ -605,11 +610,16 @@ export default class {
         return this.objects
           .getChannelMembers({
             channel: params.spaceId,
-            include: params.include,
             filter: params.filter,
             sort: params.sort,
             limit: params.limit,
             page: params.page,
+            include: {
+              customFields: params.include.customFields,
+              UUIDFields: params.include.userFields,
+              customUUIDFields: params.include.customUserFields,
+              totalCount: params.include.totalCount,
+            },
           })
           .then((res) => {
             res.data = res.data?.map((m) => {
