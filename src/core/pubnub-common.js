@@ -592,36 +592,7 @@ export default class {
     };
 
     this.fetchMemberships = (params) => {
-      if (typeof params.userId === 'string') {
-        return this.objects
-          .getMemberships({
-            uuid: params.userId,
-            filter: params.filter,
-            limit: params.limit,
-            page: params.page,
-            include: {
-              customFields: params.include.customFields,
-              channelFields: params.include.spaceFields,
-              customChannelFields: params.include.customSpaceFields,
-              totalCount: params.include.totalCount,
-            },
-            sort:
-              params.sort != null
-                ? Object.fromEntries(Object.entries(params.sort).map(([k, v]) => [k.replace('space', 'channel'), v]))
-                : null,
-          })
-          .then((res) => {
-            res.data = res.data?.map((m) => {
-              return {
-                space: m.channel,
-                custom: m.custom,
-                updated: m.updated,
-                eTag: m.eTag,
-              };
-            });
-            return res;
-          });
-      } else if (typeof params.spaceId === 'string') {
+      if (typeof params.spaceId === 'string') {
         return this.objects
           .getChannelMembers({
             channel: params.spaceId,
@@ -643,6 +614,35 @@ export default class {
             res.data = res.data?.map((m) => {
               return {
                 user: m.uuid,
+                custom: m.custom,
+                updated: m.updated,
+                eTag: m.eTag,
+              };
+            });
+            return res;
+          });
+      } else {
+        return this.objects
+          .getMemberships({
+            uuid: params.userId,
+            filter: params.filter,
+            limit: params.limit,
+            page: params.page,
+            include: {
+              customFields: params.include.customFields,
+              channelFields: params.include.spaceFields,
+              customChannelFields: params.include.customSpaceFields,
+              totalCount: params.include.totalCount,
+            },
+            sort:
+              params.sort != null
+                ? Object.fromEntries(Object.entries(params.sort).map(([k, v]) => [k.replace('space', 'channel'), v]))
+                : null,
+          })
+          .then((res) => {
+            res.data = res.data?.map((m) => {
+              return {
+                space: m.channel,
                 custom: m.custom,
                 updated: m.updated,
                 eTag: m.eTag,

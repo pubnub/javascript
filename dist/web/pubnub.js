@@ -7414,40 +7414,7 @@
                 }
             };
             this.fetchMemberships = function (params) {
-                if (typeof params.userId === 'string') {
-                    return _this.objects
-                        .getMemberships({
-                        uuid: params.userId,
-                        filter: params.filter,
-                        limit: params.limit,
-                        page: params.page,
-                        include: {
-                            customFields: params.include.customFields,
-                            channelFields: params.include.spaceFields,
-                            customChannelFields: params.include.customSpaceFields,
-                            totalCount: params.include.totalCount,
-                        },
-                        sort: params.sort != null
-                            ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
-                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
-                                return [k.replace('space', 'channel'), v];
-                            }))
-                            : null,
-                    })
-                        .then(function (res) {
-                        var _a;
-                        res.data = (_a = res.data) === null || _a === void 0 ? void 0 : _a.map(function (m) {
-                            return {
-                                space: m.channel,
-                                custom: m.custom,
-                                updated: m.updated,
-                                eTag: m.eTag,
-                            };
-                        });
-                        return res;
-                    });
-                }
-                else if (typeof params.spaceId === 'string') {
+                if (typeof params.spaceId === 'string') {
                     return _this.objects
                         .getChannelMembers({
                         channel: params.spaceId,
@@ -7472,6 +7439,39 @@
                         res.data = (_a = res.data) === null || _a === void 0 ? void 0 : _a.map(function (m) {
                             return {
                                 user: m.uuid,
+                                custom: m.custom,
+                                updated: m.updated,
+                                eTag: m.eTag,
+                            };
+                        });
+                        return res;
+                    });
+                }
+                else {
+                    return _this.objects
+                        .getMemberships({
+                        uuid: params.userId,
+                        filter: params.filter,
+                        limit: params.limit,
+                        page: params.page,
+                        include: {
+                            customFields: params.include.customFields,
+                            channelFields: params.include.spaceFields,
+                            customChannelFields: params.include.customSpaceFields,
+                            totalCount: params.include.totalCount,
+                        },
+                        sort: params.sort != null
+                            ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
+                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                return [k.replace('space', 'channel'), v];
+                            }))
+                            : null,
+                    })
+                        .then(function (res) {
+                        var _a;
+                        res.data = (_a = res.data) === null || _a === void 0 ? void 0 : _a.map(function (m) {
+                            return {
+                                space: m.channel,
                                 custom: m.custom,
                                 updated: m.updated,
                                 eTag: m.eTag,
