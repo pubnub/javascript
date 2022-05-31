@@ -582,7 +582,7 @@ export default class {
           uuids: parameters.userIds,
           limit: 0,
         });
-      } else if (typeof parameters.userId === 'string') {
+      } else {
         return this.objects.removeMemberships({
           uuid: parameters.userId,
           channels: parameters.spaceIds,

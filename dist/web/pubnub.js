@@ -7405,7 +7405,7 @@
                         limit: 0,
                     });
                 }
-                else if (typeof parameters.userId === 'string') {
+                else {
                     return _this.objects.removeMemberships({
                         uuid: parameters.userId,
                         channels: parameters.spaceIds,
