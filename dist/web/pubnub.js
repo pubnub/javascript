@@ -4937,7 +4937,7 @@
             queryParams.include = [];
             queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                if (!((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
+                if (((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
                     queryParams.include.pop();
                 }
                 if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.status) {
@@ -4984,7 +4984,7 @@
             queryParams.include = [];
             queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                if (!((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
+                if (((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
                     queryParams.include.pop();
                 }
                 if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.status) {
@@ -5119,7 +5119,7 @@
             queryParams.include = [];
             queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                if (!((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
+                if (((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
                     queryParams.include.pop();
                 }
                 if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
@@ -5166,7 +5166,7 @@
             queryParams.include = [];
             queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                if (!((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
+                if (((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
                     queryParams.include.pop();
                 }
                 if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {

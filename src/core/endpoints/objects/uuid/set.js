@@ -33,7 +33,7 @@ const endpoint = {
     queryParams.include.push('custom');
 
     if (params?.include) {
-      if (!params.include?.customFields === false) {
+      if (params.include?.customFields === false) {
         queryParams.include.pop();
       }
 
