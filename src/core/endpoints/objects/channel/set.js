@@ -30,11 +30,12 @@ const endpoint = {
   prepareParams: (_, params) => {
     const queryParams = {};
 
-    if (params?.include) {
-      queryParams.include = [];
+    queryParams.include = [];
+    queryParams.include.push('custom');
 
-      if (params.include?.customFields) {
-        queryParams.include.push('custom');
+    if (params?.include) {
+      if (!params.include?.customFields === false) {
+        queryParams.include.pop();
       }
 
       if (params?.include?.status) {

@@ -4934,10 +4934,11 @@
             var config = _a.config;
             var queryParams = {};
             queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID();
+            queryParams.include = [];
+            queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
-                if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) {
-                    queryParams.include.push('custom');
+                if (!((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
+                    queryParams.include.pop();
                 }
                 if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.status) {
                     queryParams.include.push('status');
@@ -4980,10 +4981,11 @@
             var config = _a.config;
             var queryParams = {};
             queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID();
+            queryParams.include = [];
+            queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
-                if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) {
-                    queryParams.include.push('custom');
+                if (!((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
+                    queryParams.include.pop();
                 }
                 if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.status) {
                     queryParams.include.push('status');
@@ -5114,10 +5116,11 @@
         prepareParams: function (_, params) {
             var _a, _b, _c;
             var queryParams = {};
+            queryParams.include = [];
+            queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
-                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
-                    queryParams.include.push('custom');
+                if (!((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
+                    queryParams.include.pop();
                 }
                 if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
                     queryParams.include.push('status');
@@ -5160,10 +5163,11 @@
         prepareParams: function (_, params) {
             var _a, _b, _c;
             var queryParams = {};
+            queryParams.include = [];
+            queryParams.include.push('custom');
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
-                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
-                    queryParams.include.push('custom');
+                if (!((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
+                    queryParams.include.pop();
                 }
                 if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
                     queryParams.include.push('status');
