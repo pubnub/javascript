@@ -63,6 +63,18 @@ const endpoint = {
         queryParams.include.push('uuid');
       }
 
+      if (params.include?.UUIDStatus) {
+        queryParams.include.push('uuid.status');
+      }
+
+      if (params.include?.UUIDType) {
+        queryParams.include.push('uuid.type');
+      }
+
+      if (params?.include?.status) {
+        queryParams.include.push('status');
+      }
+
       queryParams.include = queryParams.include.join(',');
     }
 

@@ -36,6 +36,18 @@ const endpoint = {
         queryParams.include.push('channel');
       }
 
+      if (params.include?.channelStatus) {
+        queryParams.include.push('channel.status');
+      }
+
+      if (params.include?.channelType) {
+        queryParams.include.push('channel.type');
+      }
+
+      if (params?.include?.status) {
+        queryParams.include.push('status');
+      }
+
       queryParams.include = queryParams.include.join(',');
     }
 

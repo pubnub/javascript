@@ -18,10 +18,31 @@ const endpoint = {
 
   isAuthSupported: () => true,
 
-  prepareParams: ({ config }, params) => ({
-    uuid: params?.uuid ?? config.getUUID(),
-    include: (params?.include?.customFields ?? true) && 'custom',
-  }),
+  prepareParams: ({ config }, params) => {
+    const queryParams = {};
+
+    queryParams.uuid = params?.uuid ?? config.getUUID();
+
+    if (params?.include) {
+      queryParams.include = [];
+
+      if (params.include?.customFields) {
+        queryParams.include.push('custom');
+      }
+
+      if (params?.include?.status) {
+        queryParams.include.push('status');
+      }
+
+      if (params?.include?.type) {
+        queryParams.include.push('type');
+      }
+
+      queryParams.include = queryParams.include.join(',');
+    }
+
+    return queryParams;
+  },
 
   handleResponse: (_, response) => ({
     status: response.status,
