@@ -29,26 +29,14 @@ const endpoint = {
 
   prepareParams: (_, params) => {
     const queryParams = {};
-
-    queryParams.include = [];
-    queryParams.include.push('custom');
+    queryParams.include = ['status', 'type', 'custom'];
 
     if (params?.include) {
       if (params.include?.customFields === false) {
         queryParams.include.pop();
       }
-
-      if (params?.include?.status) {
-        queryParams.include.push('status');
-      }
-
-      if (params?.include?.type) {
-        queryParams.include.push('type');
-      }
-
-      queryParams.include = queryParams.include.join(',');
     }
-
+    queryParams.include = queryParams.include.join(',');
     return queryParams;
   },
 

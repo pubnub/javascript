@@ -1,5 +1,3 @@
-/**       */
-
 import operationConstants from '../../../constants/operations';
 
 import utils from '../../../utils';
@@ -20,10 +18,9 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['channel.status', 'channel.type', 'status'];
 
     if (params?.include) {
-      queryParams.include = [];
-
       if (params.include?.customFields) {
         queryParams.include.push('custom');
       }
@@ -35,21 +32,9 @@ const endpoint = {
       if (params.include?.channelFields) {
         queryParams.include.push('channel');
       }
-
-      if (params.include?.channelStatus) {
-        queryParams.include.push('channel.status');
-      }
-
-      if (params.include?.channelType) {
-        queryParams.include.push('channel.type');
-      }
-
-      if (params?.include?.status) {
-        queryParams.include.push('status');
-      }
-
-      queryParams.include = queryParams.include.join(',');
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = params.include?.totalCount;

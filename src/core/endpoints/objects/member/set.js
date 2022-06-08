@@ -1,5 +1,3 @@
-/**       */
-
 import operationConstants from '../../../constants/operations';
 
 import utils from '../../../utils';
@@ -47,10 +45,9 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['uuid.status', 'uuid.type', 'type'];
 
     if (params?.include) {
-      queryParams.include = [];
-
       if (params.include?.customFields) {
         queryParams.include.push('custom');
       }
@@ -62,21 +59,9 @@ const endpoint = {
       if (params.include?.UUIDFields) {
         queryParams.include.push('uuid');
       }
-
-      if (params.include?.UUIDStatus) {
-        queryParams.include.push('uuid.status');
-      }
-
-      if (params.include?.UUIDType) {
-        queryParams.include.push('uuid.type');
-      }
-
-      if (params?.include?.status) {
-        queryParams.include.push('status');
-      }
-
-      queryParams.include = queryParams.include.join(',');
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = true;

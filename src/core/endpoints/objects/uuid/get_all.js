@@ -15,24 +15,15 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['status', 'type'];
 
     if (params?.include) {
-      queryParams.include = [];
-
       if (params.include?.customFields) {
         queryParams.include.push('custom');
       }
-
-      if (params?.include?.status) {
-        queryParams.include.push('status');
-      }
-
-      if (params?.include?.type) {
-        queryParams.include.push('type');
-      }
-
-      queryParams.include = queryParams.include.join(',');
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = params.include?.totalCount;

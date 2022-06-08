@@ -603,9 +603,6 @@ export default class {
               customFields: params.include.customFields,
               UUIDFields: params.include.userFields,
               customUUIDFields: params.include.customUserFields,
-              UUIDType: params.include.userType,
-              UUIDStatus: params.include.userStatus,
-              status: params.include.status,
               totalCount: params.include.totalCount,
             },
             sort:
@@ -635,9 +632,6 @@ export default class {
               customFields: params.include.customFields,
               channelFields: params.include.spaceFields,
               customChannelFields: params.include.customSpaceFields,
-              channelType: params.include.spaceType,
-              channelStatus: params.include.spaceStatus,
-              status: params.include.status,
               totalCount: params.include.totalCount,
             },
             sort:
