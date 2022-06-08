@@ -4865,36 +4865,30 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            queryParams.include = ['status', 'type'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
-                if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
-                    queryParams.include.push('status');
-                }
-                if ((_c = params === null || params === void 0 ? void 0 : params.include) === null || _c === void 0 ? void 0 : _c.type) {
-                    queryParams.include.push('type');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
-            if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
-                queryParams.count = (_e = params.include) === null || _e === void 0 ? void 0 : _e.totalCount;
+            queryParams.include = queryParams.include.join(',');
+            if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.totalCount) {
+                queryParams.count = (_c = params.include) === null || _c === void 0 ? void 0 : _c.totalCount;
             }
-            if ((_f = params === null || params === void 0 ? void 0 : params.page) === null || _f === void 0 ? void 0 : _f.next) {
-                queryParams.start = (_g = params.page) === null || _g === void 0 ? void 0 : _g.next;
+            if ((_d = params === null || params === void 0 ? void 0 : params.page) === null || _d === void 0 ? void 0 : _d.next) {
+                queryParams.start = (_e = params.page) === null || _e === void 0 ? void 0 : _e.next;
             }
-            if ((_h = params === null || params === void 0 ? void 0 : params.page) === null || _h === void 0 ? void 0 : _h.prev) {
-                queryParams.end = (_j = params.page) === null || _j === void 0 ? void 0 : _j.prev;
+            if ((_f = params === null || params === void 0 ? void 0 : params.page) === null || _f === void 0 ? void 0 : _f.prev) {
+                queryParams.end = (_g = params.page) === null || _g === void 0 ? void 0 : _g.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            queryParams.limit = (_k = params === null || params === void 0 ? void 0 : params.limit) !== null && _k !== void 0 ? _k : 100;
+            queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_l = params.sort) !== null && _l !== void 0 ? _l : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -4930,24 +4924,17 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_a, params) {
-            var _b, _c, _d, _e;
+            var _b, _c;
             var config = _a.config;
             var queryParams = {};
             queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID();
-            queryParams.include = [];
-            queryParams.include.push('custom');
+            queryParams.include = ['status', 'type', 'custom'];
             if (params === null || params === void 0 ? void 0 : params.include) {
                 if (((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
                     queryParams.include.pop();
                 }
-                if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.status) {
-                    queryParams.include.push('status');
-                }
-                if ((_e = params === null || params === void 0 ? void 0 : params.include) === null || _e === void 0 ? void 0 : _e.type) {
-                    queryParams.include.push('type');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             return queryParams;
         },
         handleResponse: function (_, response) { return ({
@@ -4977,24 +4964,17 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_a, params) {
-            var _b, _c, _d, _e;
+            var _b, _c;
             var config = _a.config;
             var queryParams = {};
             queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID();
-            queryParams.include = [];
-            queryParams.include.push('custom');
+            queryParams.include = ['status', 'type', 'custom'];
             if (params === null || params === void 0 ? void 0 : params.include) {
                 if (((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
                     queryParams.include.pop();
                 }
-                if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.status) {
-                    queryParams.include.push('status');
-                }
-                if ((_e = params === null || params === void 0 ? void 0 : params.include) === null || _e === void 0 ? void 0 : _e.type) {
-                    queryParams.include.push('type');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             return queryParams;
         },
         handleResponse: function (_, response) { return ({
@@ -5048,36 +5028,30 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            queryParams.include = ['status', 'type'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
-                if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
-                    queryParams.include.push('status');
-                }
-                if ((_c = params === null || params === void 0 ? void 0 : params.include) === null || _c === void 0 ? void 0 : _c.type) {
-                    queryParams.include.push('type');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
-            if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
-                queryParams.count = (_e = params.include) === null || _e === void 0 ? void 0 : _e.totalCount;
+            queryParams.include = queryParams.include.join(',');
+            if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.totalCount) {
+                queryParams.count = (_c = params.include) === null || _c === void 0 ? void 0 : _c.totalCount;
             }
-            if ((_f = params === null || params === void 0 ? void 0 : params.page) === null || _f === void 0 ? void 0 : _f.next) {
-                queryParams.start = (_g = params.page) === null || _g === void 0 ? void 0 : _g.next;
+            if ((_d = params === null || params === void 0 ? void 0 : params.page) === null || _d === void 0 ? void 0 : _d.next) {
+                queryParams.start = (_e = params.page) === null || _e === void 0 ? void 0 : _e.next;
             }
-            if ((_h = params === null || params === void 0 ? void 0 : params.page) === null || _h === void 0 ? void 0 : _h.prev) {
-                queryParams.end = (_j = params.page) === null || _j === void 0 ? void 0 : _j.prev;
+            if ((_f = params === null || params === void 0 ? void 0 : params.page) === null || _f === void 0 ? void 0 : _f.prev) {
+                queryParams.end = (_g = params.page) === null || _g === void 0 ? void 0 : _g.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            queryParams.limit = (_k = params === null || params === void 0 ? void 0 : params.limit) !== null && _k !== void 0 ? _k : 100;
+            queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_l = params.sort) !== null && _l !== void 0 ? _l : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -5096,7 +5070,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$9 = {
         getOperation: function () { return OPERATIONS.PNGetChannelMetadataOperation; },
         validateParams: function (_, params) {
@@ -5114,22 +5087,15 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_, params) {
-            var _a, _b, _c;
+            var _a;
             var queryParams = {};
-            queryParams.include = [];
-            queryParams.include.push('custom');
+            queryParams.include = ['status', 'type', 'custom'];
             if (params === null || params === void 0 ? void 0 : params.include) {
                 if (((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
                     queryParams.include.pop();
                 }
-                if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
-                    queryParams.include.push('status');
-                }
-                if ((_c = params === null || params === void 0 ? void 0 : params.include) === null || _c === void 0 ? void 0 : _c.type) {
-                    queryParams.include.push('type');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             return queryParams;
         },
         handleResponse: function (_, response) { return ({
@@ -5161,22 +5127,15 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_, params) {
-            var _a, _b, _c;
+            var _a;
             var queryParams = {};
-            queryParams.include = [];
-            queryParams.include.push('custom');
+            queryParams.include = ['status', 'type', 'custom'];
             if (params === null || params === void 0 ? void 0 : params.include) {
                 if (((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
                     queryParams.include.pop();
                 }
-                if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.status) {
-                    queryParams.include.push('status');
-                }
-                if ((_c = params === null || params === void 0 ? void 0 : params.include) === null || _c === void 0 ? void 0 : _c.type) {
-                    queryParams.include.push('type');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             return queryParams;
         },
         handleResponse: function (_, response) { return ({
@@ -5228,10 +5187,10 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
             var queryParams = {};
+            queryParams.include = ['uuid.status', 'uuid.type', 'type'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5241,32 +5200,23 @@
                 if ((_d = (_c = params.include) === null || _c === void 0 ? void 0 : _c.UUIDFields) !== null && _d !== void 0 ? _d : true) {
                     queryParams.include.push('uuid');
                 }
-                if ((_e = params.include) === null || _e === void 0 ? void 0 : _e.UUIDStatus) {
-                    queryParams.include.push('uuid.status');
-                }
-                if ((_f = params.include) === null || _f === void 0 ? void 0 : _f.UUIDType) {
-                    queryParams.include.push('uuid.type');
-                }
-                if ((_g = params === null || params === void 0 ? void 0 : params.include) === null || _g === void 0 ? void 0 : _g.status) {
-                    queryParams.include.push('status');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
-            if ((_h = params === null || params === void 0 ? void 0 : params.include) === null || _h === void 0 ? void 0 : _h.totalCount) {
-                queryParams.count = (_j = params.include) === null || _j === void 0 ? void 0 : _j.totalCount;
+            queryParams.include = queryParams.include.join(',');
+            if ((_e = params === null || params === void 0 ? void 0 : params.include) === null || _e === void 0 ? void 0 : _e.totalCount) {
+                queryParams.count = (_f = params.include) === null || _f === void 0 ? void 0 : _f.totalCount;
             }
-            if ((_k = params === null || params === void 0 ? void 0 : params.page) === null || _k === void 0 ? void 0 : _k.next) {
-                queryParams.start = (_l = params.page) === null || _l === void 0 ? void 0 : _l.next;
+            if ((_g = params === null || params === void 0 ? void 0 : params.page) === null || _g === void 0 ? void 0 : _g.next) {
+                queryParams.start = (_h = params.page) === null || _h === void 0 ? void 0 : _h.next;
             }
-            if ((_m = params === null || params === void 0 ? void 0 : params.page) === null || _m === void 0 ? void 0 : _m.prev) {
-                queryParams.end = (_o = params.page) === null || _o === void 0 ? void 0 : _o.prev;
+            if ((_j = params === null || params === void 0 ? void 0 : params.page) === null || _j === void 0 ? void 0 : _j.prev) {
+                queryParams.end = (_k = params.page) === null || _k === void 0 ? void 0 : _k.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            queryParams.limit = (_p = params === null || params === void 0 ? void 0 : params.limit) !== null && _p !== void 0 ? _p : 100;
+            queryParams.limit = (_l = params === null || params === void 0 ? void 0 : params.limit) !== null && _l !== void 0 ? _l : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_q = params.sort) !== null && _q !== void 0 ? _q : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_m = params.sort) !== null && _m !== void 0 ? _m : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -5285,7 +5235,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$5 = {
         getOperation: function () { return OPERATIONS.PNSetMembersOperation; },
         validateParams: function (_, params) {
@@ -5329,10 +5278,10 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            queryParams.include = ['uuid.status', 'uuid.type', 'type'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5342,25 +5291,16 @@
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.UUIDFields) {
                     queryParams.include.push('uuid');
                 }
-                if ((_d = params.include) === null || _d === void 0 ? void 0 : _d.UUIDStatus) {
-                    queryParams.include.push('uuid.status');
-                }
-                if ((_e = params.include) === null || _e === void 0 ? void 0 : _e.UUIDType) {
-                    queryParams.include.push('uuid.type');
-                }
-                if ((_f = params === null || params === void 0 ? void 0 : params.include) === null || _f === void 0 ? void 0 : _f.status) {
-                    queryParams.include.push('status');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
-            if ((_g = params === null || params === void 0 ? void 0 : params.include) === null || _g === void 0 ? void 0 : _g.totalCount) {
+            queryParams.include = queryParams.include.join(',');
+            if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
                 queryParams.count = true;
             }
-            if ((_h = params === null || params === void 0 ? void 0 : params.page) === null || _h === void 0 ? void 0 : _h.next) {
-                queryParams.start = (_j = params.page) === null || _j === void 0 ? void 0 : _j.next;
+            if ((_e = params === null || params === void 0 ? void 0 : params.page) === null || _e === void 0 ? void 0 : _e.next) {
+                queryParams.start = (_f = params.page) === null || _f === void 0 ? void 0 : _f.next;
             }
-            if ((_k = params === null || params === void 0 ? void 0 : params.page) === null || _k === void 0 ? void 0 : _k.prev) {
-                queryParams.end = (_l = params.page) === null || _l === void 0 ? void 0 : _l.prev;
+            if ((_g = params === null || params === void 0 ? void 0 : params.page) === null || _g === void 0 ? void 0 : _g.prev) {
+                queryParams.end = (_h = params.page) === null || _h === void 0 ? void 0 : _h.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
@@ -5369,7 +5309,7 @@
                 queryParams.limit = params.limit;
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_m = params.sort) !== null && _m !== void 0 ? _m : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -5388,7 +5328,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$4 = {
         getOperation: function () { return OPERATIONS.PNGetMembershipsOperation; },
         validateParams: function () {
@@ -5405,10 +5344,10 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
             var queryParams = {};
+            queryParams.include = ['channel.status', 'channel.type', 'status'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5418,32 +5357,23 @@
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.channelFields) {
                     queryParams.include.push('channel');
                 }
-                if ((_d = params.include) === null || _d === void 0 ? void 0 : _d.channelStatus) {
-                    queryParams.include.push('channel.status');
-                }
-                if ((_e = params.include) === null || _e === void 0 ? void 0 : _e.channelType) {
-                    queryParams.include.push('channel.type');
-                }
-                if ((_f = params === null || params === void 0 ? void 0 : params.include) === null || _f === void 0 ? void 0 : _f.status) {
-                    queryParams.include.push('status');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
-            if ((_g = params === null || params === void 0 ? void 0 : params.include) === null || _g === void 0 ? void 0 : _g.totalCount) {
-                queryParams.count = (_h = params.include) === null || _h === void 0 ? void 0 : _h.totalCount;
+            queryParams.include = queryParams.include.join(',');
+            if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
+                queryParams.count = (_e = params.include) === null || _e === void 0 ? void 0 : _e.totalCount;
             }
-            if ((_j = params === null || params === void 0 ? void 0 : params.page) === null || _j === void 0 ? void 0 : _j.next) {
-                queryParams.start = (_k = params.page) === null || _k === void 0 ? void 0 : _k.next;
+            if ((_f = params === null || params === void 0 ? void 0 : params.page) === null || _f === void 0 ? void 0 : _f.next) {
+                queryParams.start = (_g = params.page) === null || _g === void 0 ? void 0 : _g.next;
             }
-            if ((_l = params === null || params === void 0 ? void 0 : params.page) === null || _l === void 0 ? void 0 : _l.prev) {
-                queryParams.end = (_m = params.page) === null || _m === void 0 ? void 0 : _m.prev;
+            if ((_h = params === null || params === void 0 ? void 0 : params.page) === null || _h === void 0 ? void 0 : _h.prev) {
+                queryParams.end = (_j = params.page) === null || _j === void 0 ? void 0 : _j.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
+            queryParams.limit = (_k = params === null || params === void 0 ? void 0 : params.limit) !== null && _k !== void 0 ? _k : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_l = params.sort) !== null && _l !== void 0 ? _l : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -5504,10 +5434,10 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            queryParams.include = ['channel.status', 'channel.type', 'status'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5517,25 +5447,16 @@
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.channelFields) {
                     queryParams.include.push('channel');
                 }
-                if ((_d = params.include) === null || _d === void 0 ? void 0 : _d.channelStatus) {
-                    queryParams.include.push('channel.status');
-                }
-                if ((_e = params.include) === null || _e === void 0 ? void 0 : _e.channelType) {
-                    queryParams.include.push('channel.type');
-                }
-                if ((_f = params === null || params === void 0 ? void 0 : params.include) === null || _f === void 0 ? void 0 : _f.status) {
-                    queryParams.include.push('status');
-                }
-                queryParams.include = queryParams.include.join(',');
             }
-            if ((_g = params === null || params === void 0 ? void 0 : params.include) === null || _g === void 0 ? void 0 : _g.totalCount) {
+            queryParams.include = queryParams.include.join(',');
+            if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
                 queryParams.count = true;
             }
-            if ((_h = params === null || params === void 0 ? void 0 : params.page) === null || _h === void 0 ? void 0 : _h.next) {
-                queryParams.start = (_j = params.page) === null || _j === void 0 ? void 0 : _j.next;
+            if ((_e = params === null || params === void 0 ? void 0 : params.page) === null || _e === void 0 ? void 0 : _e.next) {
+                queryParams.start = (_f = params.page) === null || _f === void 0 ? void 0 : _f.next;
             }
-            if ((_k = params === null || params === void 0 ? void 0 : params.page) === null || _k === void 0 ? void 0 : _k.prev) {
-                queryParams.end = (_l = params.page) === null || _l === void 0 ? void 0 : _l.prev;
+            if ((_g = params === null || params === void 0 ? void 0 : params.page) === null || _g === void 0 ? void 0 : _g.prev) {
+                queryParams.end = (_h = params.page) === null || _h === void 0 ? void 0 : _h.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
@@ -5544,7 +5465,7 @@
                 queryParams.limit = params.limit;
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_m = params.sort) !== null && _m !== void 0 ? _m : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -7531,9 +7452,6 @@
                             customFields: params.include.customFields,
                             UUIDFields: params.include.userFields,
                             customUUIDFields: params.include.customUserFields,
-                            UUIDType: params.include.userType,
-                            UUIDStatus: params.include.userStatus,
-                            status: params.include.status,
                             totalCount: params.include.totalCount,
                         },
                         sort: params.sort != null
@@ -7567,9 +7485,6 @@
                             customFields: params.include.customFields,
                             channelFields: params.include.spaceFields,
                             customChannelFields: params.include.customSpaceFields,
-                            channelType: params.include.spaceType,
-                            channelStatus: params.include.spaceStatus,
-                            status: params.include.status,
                             totalCount: params.include.totalCount,
                         },
                         sort: params.sort != null
