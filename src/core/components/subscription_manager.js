@@ -610,12 +610,39 @@ export default class {
 
         this._listenerManager.announceObjects(announce);
 
-        if (message.payload.type === 'user') {
-          this._listenerManager.announceUser(announce);
-        } else if (message.payload.type === 'space') {
-          this._listenerManager.announceSpace(announce);
+        if (message.payload.type === 'uuid') {
+          const eventData = this._renameChannelField(announce);
+          this._listenerManager.announceUser({
+            ...eventData,
+            message: {
+              ...eventData.message,
+              event: this._renameEvent(eventData.message.event),
+              type: 'user',
+            },
+          });
+        } else if (message.payload.type === 'channel') {
+          const eventData = this._renameChannelField(announce);
+          this._listenerManager.announceSpace({
+            ...eventData,
+            message: {
+              ...eventData.message,
+              event: this._renameEvent(eventData.message.event),
+              type: 'space',
+            },
+          });
         } else if (message.payload.type === 'membership') {
-          this._listenerManager.announceMembership(announce);
+          const eventData = this._renameChannelField(announce);
+          const { uuid: user, channel: space, ...membershipData } = eventData.message.data;
+          membershipData.user = user;
+          membershipData.space = space;
+          this._listenerManager.announceMembership({
+            ...eventData,
+            message: {
+              ...eventData.message,
+              event: this._renameEvent(eventData.message.event),
+              data: membershipData,
+            },
+          });
         }
       } else if (message.messageType === 3) {
         // this is a message action
@@ -711,5 +738,15 @@ export default class {
       }
       this._subscribeCall = null;
     }
+  }
+
+  _renameEvent(e) {
+    return e === 'set' ? 'updated' : 'removed';
+  }
+
+  _renameChannelField(announce) {
+    const { channel, ...eventData } = announce;
+    eventData.spaceId = channel;
+    return eventData;
   }
 }

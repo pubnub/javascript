@@ -2158,14 +2158,20 @@
                         data: message.payload.data,
                     };
                     _this._listenerManager.announceObjects(announce);
-                    if (message.payload.type === 'user') {
-                        _this._listenerManager.announceUser(announce);
+                    if (message.payload.type === 'uuid') {
+                        var eventData = _this._renameChannelField(announce);
+                        _this._listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'user' }) }));
                     }
-                    else if (message.payload.type === 'space') {
-                        _this._listenerManager.announceSpace(announce);
+                    else if (message.payload.type === 'channel') {
+                        var eventData = _this._renameChannelField(announce);
+                        _this._listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'space' }) }));
                     }
                     else if (message.payload.type === 'membership') {
-                        _this._listenerManager.announceMembership(announce);
+                        var eventData = _this._renameChannelField(announce);
+                        var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
+                        membershipData.user = user;
+                        membershipData.space = space;
+                        _this._listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), data: membershipData }) }));
                     }
                 }
                 else if (message.messageType === 3) {
@@ -2248,6 +2254,14 @@
                 }
                 this._subscribeCall = null;
             }
+        };
+        default_1.prototype._renameEvent = function (e) {
+            return e === 'set' ? 'updated' : 'removed';
+        };
+        default_1.prototype._renameChannelField = function (announce) {
+            var channel = announce.channel, eventData = __rest(announce, ["channel"]);
+            eventData.spaceId = channel;
+            return eventData;
         };
         return default_1;
     }());
