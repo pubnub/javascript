@@ -24,10 +24,22 @@ const endpoint = {
 
   isAuthSupported: () => true,
 
-  prepareParams: ({ config }, params) => ({
-    uuid: params?.uuid ?? config.getUUID(),
-    include: (params?.include?.customFields ?? true) && 'custom',
-  }),
+  prepareParams: ({ config }, params) => {
+    const queryParams = {};
+
+    queryParams.uuid = params?.uuid ?? config.getUUID();
+    queryParams.include = ['status', 'type', 'custom'];
+
+    if (params?.include) {
+      if (params.include?.customFields === false) {
+        queryParams.include.pop();
+      }
+    }
+
+    queryParams.include = queryParams.include.join(',');
+
+    return queryParams;
+  },
 
   handleResponse: (_, response) => ({
     status: response.status,

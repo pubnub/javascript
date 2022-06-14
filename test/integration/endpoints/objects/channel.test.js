@@ -1,5 +1,3 @@
-/**       */
-
 import nock from 'nock';
 import utils from '../../../utils';
 import PubNub from '../../../../src/node/index';
@@ -12,8 +10,8 @@ describe('objects channel', () => {
   const UUID = 'myUUID';
   const AUTH_KEY = 'myAuthKey';
 
-  let pubnub        ;
-  let PNSDK        ;
+  let pubnub;
+  let PNSDK;
 
   before(() => {
     nock.disableNetConnect();
@@ -43,7 +41,7 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom',
+          include: 'status,type,custom',
           count: true,
           start: 'test-next',
           end: 'test-prev',
@@ -79,7 +77,7 @@ describe('objects channel', () => {
         data: allChannels.map(asResponse),
         next: undefined,
         prev: undefined,
-        totalCount: undefined
+        totalCount: undefined,
       });
     });
   });
@@ -94,7 +92,7 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'status,type,custom',
         })
         .reply(200, {
           status: 200,
@@ -120,7 +118,7 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'status,type,custom',
         })
         .reply(200, {
           status: 200,
@@ -154,7 +152,7 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'status,type,custom',
         })
         .reply(200, {
           status: 200,
@@ -180,7 +178,7 @@ describe('objects channel', () => {
           auth: AUTH_KEY,
           uuid: UUID,
           pnsdk: PNSDK,
-          include: 'custom'
+          include: 'status,type,custom',
         })
         .reply(200, {
           status: 200,

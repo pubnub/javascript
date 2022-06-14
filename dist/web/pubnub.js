@@ -747,7 +747,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.0.1';
+            return '7.1.1';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -2158,14 +2158,20 @@
                         data: message.payload.data,
                     };
                     _this._listenerManager.announceObjects(announce);
-                    if (message.payload.type === 'user') {
-                        _this._listenerManager.announceUser(announce);
+                    if (message.payload.type === 'uuid') {
+                        var eventData = _this._renameChannelField(announce);
+                        _this._listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'user' }) }));
                     }
-                    else if (message.payload.type === 'space') {
-                        _this._listenerManager.announceSpace(announce);
+                    else if (message.payload.type === 'channel') {
+                        var eventData = _this._renameChannelField(announce);
+                        _this._listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'space' }) }));
                     }
                     else if (message.payload.type === 'membership') {
-                        _this._listenerManager.announceMembership(announce);
+                        var eventData = _this._renameChannelField(announce);
+                        var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
+                        membershipData.user = user;
+                        membershipData.space = space;
+                        _this._listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), data: membershipData }) }));
                     }
                 }
                 else if (message.messageType === 3) {
@@ -2248,6 +2254,14 @@
                 }
                 this._subscribeCall = null;
             }
+        };
+        default_1.prototype._renameEvent = function (e) {
+            return e === 'set' ? 'updated' : 'removed';
+        };
+        default_1.prototype._renameChannelField = function (announce) {
+            var channel = announce.channel, eventData = __rest(announce, ["channel"]);
+            eventData.spaceId = channel;
+            return eventData;
         };
         return default_1;
     }());
@@ -4850,7 +4864,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$e = {
         getOperation: function () { return OPERATIONS.PNGetAllUUIDMetadataOperation; },
         validateParams: function () {
@@ -4868,9 +4881,13 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
-            if ((_a = params === null || params === void 0 ? void 0 : params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
-                queryParams.include = 'custom';
+            queryParams.include = ['status', 'type'];
+            if (params === null || params === void 0 ? void 0 : params.include) {
+                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
+                    queryParams.include.push('custom');
+                }
             }
+            queryParams.include = queryParams.include.join(',');
             if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.totalCount) {
                 queryParams.count = (_c = params.include) === null || _c === void 0 ? void 0 : _c.totalCount;
             }
@@ -4921,12 +4938,18 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_a, params) {
-            var _b, _c, _d;
+            var _b, _c;
             var config = _a.config;
-            return ({
-                uuid: (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID(),
-                include: ((_d = (_c = params === null || params === void 0 ? void 0 : params.include) === null || _c === void 0 ? void 0 : _c.customFields) !== null && _d !== void 0 ? _d : true) && 'custom',
-            });
+            var queryParams = {};
+            queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID();
+            queryParams.include = ['status', 'type', 'custom'];
+            if (params === null || params === void 0 ? void 0 : params.include) {
+                if (((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
+                    queryParams.include.pop();
+                }
+            }
+            queryParams.include = queryParams.include.join(',');
+            return queryParams;
         },
         handleResponse: function (_, response) { return ({
             status: response.status,
@@ -4955,12 +4978,18 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_a, params) {
-            var _b, _c, _d;
+            var _b, _c;
             var config = _a.config;
-            return ({
-                uuid: (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID(),
-                include: ((_d = (_c = params === null || params === void 0 ? void 0 : params.include) === null || _c === void 0 ? void 0 : _c.customFields) !== null && _d !== void 0 ? _d : true) && 'custom',
-            });
+            var queryParams = {};
+            queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID();
+            queryParams.include = ['status', 'type', 'custom'];
+            if (params === null || params === void 0 ? void 0 : params.include) {
+                if (((_c = params.include) === null || _c === void 0 ? void 0 : _c.customFields) === false) {
+                    queryParams.include.pop();
+                }
+            }
+            queryParams.include = queryParams.include.join(',');
+            return queryParams;
         },
         handleResponse: function (_, response) { return ({
             status: response.status,
@@ -4998,7 +5027,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$a = {
         getOperation: function () { return OPERATIONS.PNGetAllChannelMetadataOperation; },
         validateParams: function () {
@@ -5016,9 +5044,13 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
-            if ((_a = params === null || params === void 0 ? void 0 : params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
-                queryParams.include = 'custom';
+            queryParams.include = ['status', 'type'];
+            if (params === null || params === void 0 ? void 0 : params.include) {
+                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
+                    queryParams.include.push('custom');
+                }
             }
+            queryParams.include = queryParams.include.join(',');
             if ((_b = params === null || params === void 0 ? void 0 : params.include) === null || _b === void 0 ? void 0 : _b.totalCount) {
                 queryParams.count = (_c = params.include) === null || _c === void 0 ? void 0 : _c.totalCount;
             }
@@ -5052,7 +5084,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$9 = {
         getOperation: function () { return OPERATIONS.PNGetChannelMetadataOperation; },
         validateParams: function (_, params) {
@@ -5070,10 +5101,16 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_, params) {
-            var _a, _b;
-            return ({
-                include: ((_b = (_a = params === null || params === void 0 ? void 0 : params.include) === null || _a === void 0 ? void 0 : _a.customFields) !== null && _b !== void 0 ? _b : true) && 'custom',
-            });
+            var _a;
+            var queryParams = {};
+            queryParams.include = ['status', 'type', 'custom'];
+            if (params === null || params === void 0 ? void 0 : params.include) {
+                if (((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
+                    queryParams.include.pop();
+                }
+            }
+            queryParams.include = queryParams.include.join(',');
+            return queryParams;
         },
         handleResponse: function (_, response) { return ({
             status: response.status,
@@ -5104,10 +5141,16 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_, params) {
-            var _a, _b;
-            return ({
-                include: ((_b = (_a = params === null || params === void 0 ? void 0 : params.include) === null || _a === void 0 ? void 0 : _a.customFields) !== null && _b !== void 0 ? _b : true) && 'custom',
-            });
+            var _a;
+            var queryParams = {};
+            queryParams.include = ['status', 'type', 'custom'];
+            if (params === null || params === void 0 ? void 0 : params.include) {
+                if (((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) === false) {
+                    queryParams.include.pop();
+                }
+            }
+            queryParams.include = queryParams.include.join(',');
+            return queryParams;
         },
         handleResponse: function (_, response) { return ({
             status: response.status,
@@ -5160,8 +5203,8 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
             var queryParams = {};
+            queryParams.include = ['uuid.status', 'uuid.type', 'type'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5171,8 +5214,8 @@
                 if ((_d = (_c = params.include) === null || _c === void 0 ? void 0 : _c.UUIDFields) !== null && _d !== void 0 ? _d : true) {
                     queryParams.include.push('uuid');
                 }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             if ((_e = params === null || params === void 0 ? void 0 : params.include) === null || _e === void 0 ? void 0 : _e.totalCount) {
                 queryParams.count = (_f = params.include) === null || _f === void 0 ? void 0 : _f.totalCount;
             }
@@ -5206,7 +5249,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$5 = {
         getOperation: function () { return OPERATIONS.PNSetMembersOperation; },
         validateParams: function (_, params) {
@@ -5226,7 +5268,7 @@
             var _a;
             return (_a = {
                     set: [],
-                    remove: []
+                    delete: []
                 },
                 _a[params.type] = params.uuids.map(function (uuid) {
                     if (typeof uuid === 'string') {
@@ -5239,6 +5281,7 @@
                     return {
                         uuid: { id: uuid.id },
                         custom: uuid.custom,
+                        status: uuid.status,
                     };
                 }),
                 _a);
@@ -5251,8 +5294,8 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            queryParams.include = ['uuid.status', 'uuid.type', 'type'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5262,8 +5305,8 @@
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.UUIDFields) {
                     queryParams.include.push('uuid');
                 }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
                 queryParams.count = true;
             }
@@ -5276,7 +5319,7 @@
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            if (params === null || params === void 0 ? void 0 : params.limit) {
+            if (params.limit != null) {
                 queryParams.limit = params.limit;
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
@@ -5299,7 +5342,6 @@
         }); },
     };
 
-    /**       */
     var endpoint$4 = {
         getOperation: function () { return OPERATIONS.PNGetMembershipsOperation; },
         validateParams: function () {
@@ -5318,8 +5360,8 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
             var queryParams = {};
+            queryParams.include = ['channel.status', 'channel.type', 'status'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5329,8 +5371,8 @@
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.channelFields) {
                     queryParams.include.push('channel');
                 }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
                 queryParams.count = (_e = params.include) === null || _e === void 0 ? void 0 : _e.totalCount;
             }
@@ -5382,7 +5424,7 @@
             var _a;
             return (_a = {
                     set: [],
-                    remove: []
+                    delete: []
                 },
                 _a[params.type] = params.channels.map(function (channel) {
                     if (typeof channel === 'string') {
@@ -5395,6 +5437,7 @@
                     return {
                         channel: { id: channel.id },
                         custom: channel.custom,
+                        status: channel.status,
                     };
                 }),
                 _a);
@@ -5407,8 +5450,8 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             var queryParams = {};
+            queryParams.include = ['channel.status', 'channel.type', 'status'];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                queryParams.include = [];
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
                 }
@@ -5418,8 +5461,8 @@
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.channelFields) {
                     queryParams.include.push('channel');
                 }
-                queryParams.include = queryParams.include.join(',');
             }
+            queryParams.include = queryParams.include.join(',');
             if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
                 queryParams.count = true;
             }
@@ -5432,7 +5475,7 @@
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            if (params === null || params === void 0 ? void 0 : params.limit) {
+            if (params.limit != null) {
                 queryParams.limit = params.limit;
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
@@ -7358,6 +7401,127 @@
                 });
             };
             this.fetchSpaces = this.objects.getAllChannelMetadata;
+            // Membership apis
+            this.addMemberships = function (parameters) {
+                var _a, _b;
+                if (typeof parameters.spaceId === 'string') {
+                    return _this.objects.setChannelMembers({
+                        channel: parameters.spaceId,
+                        uuids: (_a = parameters.users) === null || _a === void 0 ? void 0 : _a.map(function (user) {
+                            if (typeof user === 'string') {
+                                return user;
+                            }
+                            return {
+                                id: user.userId,
+                                custom: user.custom,
+                                status: user.status,
+                            };
+                        }),
+                        limit: 0,
+                    });
+                }
+                else {
+                    return _this.objects.setMemberships({
+                        uuid: parameters.userId,
+                        channels: (_b = parameters.spaces) === null || _b === void 0 ? void 0 : _b.map(function (space) {
+                            if (typeof space === 'string') {
+                                return space;
+                            }
+                            return {
+                                id: space.spaceId,
+                                custom: space.custom,
+                                status: space.status,
+                            };
+                        }),
+                        limit: 0,
+                    });
+                }
+            };
+            this.updateMemberships = this.addMemberships;
+            this.removeMemberships = function (parameters) {
+                if (typeof parameters.spaceId === 'string') {
+                    return _this.objects.removeChannelMembers({
+                        channel: parameters.spaceId,
+                        uuids: parameters.userIds,
+                        limit: 0,
+                    });
+                }
+                else {
+                    return _this.objects.removeMemberships({
+                        uuid: parameters.userId,
+                        channels: parameters.spaceIds,
+                        limit: 0,
+                    });
+                }
+            };
+            this.fetchMemberships = function (params) {
+                if (typeof params.spaceId === 'string') {
+                    return _this.objects
+                        .getChannelMembers({
+                        channel: params.spaceId,
+                        filter: params.filter,
+                        limit: params.limit,
+                        page: params.page,
+                        include: {
+                            customFields: params.include.customFields,
+                            UUIDFields: params.include.userFields,
+                            customUUIDFields: params.include.customUserFields,
+                            totalCount: params.include.totalCount,
+                        },
+                        sort: params.sort != null
+                            ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
+                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                return [k.replace('user', 'uuid'), v];
+                            }))
+                            : null,
+                    })
+                        .then(function (res) {
+                        var _a;
+                        res.data = (_a = res.data) === null || _a === void 0 ? void 0 : _a.map(function (m) {
+                            return {
+                                user: m.uuid,
+                                custom: m.custom,
+                                updated: m.updated,
+                                eTag: m.eTag,
+                            };
+                        });
+                        return res;
+                    });
+                }
+                else {
+                    return _this.objects
+                        .getMemberships({
+                        uuid: params.userId,
+                        filter: params.filter,
+                        limit: params.limit,
+                        page: params.page,
+                        include: {
+                            customFields: params.include.customFields,
+                            channelFields: params.include.spaceFields,
+                            customChannelFields: params.include.customSpaceFields,
+                            totalCount: params.include.totalCount,
+                        },
+                        sort: params.sort != null
+                            ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
+                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                return [k.replace('space', 'channel'), v];
+                            }))
+                            : null,
+                    })
+                        .then(function (res) {
+                        var _a;
+                        res.data = (_a = res.data) === null || _a === void 0 ? void 0 : _a.map(function (m) {
+                            return {
+                                space: m.channel,
+                                custom: m.custom,
+                                updated: m.updated,
+                                eTag: m.eTag,
+                            };
+                        });
+                        return res;
+                    });
+                }
+            };
             this.time = timeEndpoint;
             // --- deprecated  ------------------
             this.stop = this.destroy; // --------

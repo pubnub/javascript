@@ -1,5 +1,3 @@
-/**       */
-
 import operationConstants from '../../../constants/operations';
 
 const endpoint = {
@@ -17,10 +15,15 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['status', 'type'];
 
-    if (params?.include?.customFields) {
-      queryParams.include = 'custom';
+    if (params?.include) {
+      if (params.include?.customFields) {
+        queryParams.include.push('custom');
+      }
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = params.include?.totalCount;

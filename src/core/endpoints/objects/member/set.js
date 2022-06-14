@@ -1,5 +1,3 @@
-/**       */
-
 import operationConstants from '../../../constants/operations';
 
 import utils from '../../../utils';
@@ -24,7 +22,7 @@ const endpoint = {
 
   patchPayload: (_, params) => ({
     set: [],
-    remove: [],
+    delete: [],
     [params.type]: params.uuids.map((uuid) => {
       if (typeof uuid === 'string') {
         return {
@@ -36,6 +34,7 @@ const endpoint = {
       return {
         uuid: { id: uuid.id },
         custom: uuid.custom,
+        status: uuid.status,
       };
     }),
   }),
@@ -46,10 +45,9 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['uuid.status', 'uuid.type', 'type'];
 
     if (params?.include) {
-      queryParams.include = [];
-
       if (params.include?.customFields) {
         queryParams.include.push('custom');
       }
@@ -61,9 +59,9 @@ const endpoint = {
       if (params.include?.UUIDFields) {
         queryParams.include.push('uuid');
       }
-
-      queryParams.include = queryParams.include.join(',');
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = true;
@@ -81,7 +79,7 @@ const endpoint = {
       queryParams.filter = params.filter;
     }
 
-    if (params?.limit) {
+    if (params.limit != null) {
       queryParams.limit = params.limit;
     }
 

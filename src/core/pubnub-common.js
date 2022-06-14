@@ -211,6 +211,15 @@ export default class {
 
   fetchSpaces;
 
+  // Membership
+  addMemberships;
+
+  updateMemberships;
+
+  fetchMemberships;
+
+  removeMemberships;
+
   disconnect;
 
   reconnect;
@@ -528,6 +537,121 @@ export default class {
       });
 
     this.fetchSpaces = this.objects.getAllChannelMetadata;
+
+    // Membership apis
+    this.addMemberships = (parameters) => {
+      if (typeof parameters.spaceId === 'string') {
+        return this.objects.setChannelMembers({
+          channel: parameters.spaceId,
+          uuids: parameters.users?.map((user) => {
+            if (typeof user === 'string') {
+              return user;
+            }
+            return {
+              id: user.userId,
+              custom: user.custom,
+              status: user.status,
+            };
+          }),
+          limit: 0,
+        });
+      } else {
+        return this.objects.setMemberships({
+          uuid: parameters.userId,
+          channels: parameters.spaces?.map((space) => {
+            if (typeof space === 'string') {
+              return space;
+            }
+            return {
+              id: space.spaceId,
+              custom: space.custom,
+              status: space.status,
+            };
+          }),
+          limit: 0,
+        });
+      }
+    };
+
+    this.updateMemberships = this.addMemberships;
+
+    this.removeMemberships = (parameters) => {
+      if (typeof parameters.spaceId === 'string') {
+        return this.objects.removeChannelMembers({
+          channel: parameters.spaceId,
+          uuids: parameters.userIds,
+          limit: 0,
+        });
+      } else {
+        return this.objects.removeMemberships({
+          uuid: parameters.userId,
+          channels: parameters.spaceIds,
+          limit: 0,
+        });
+      }
+    };
+
+    this.fetchMemberships = (params) => {
+      if (typeof params.spaceId === 'string') {
+        return this.objects
+          .getChannelMembers({
+            channel: params.spaceId,
+            filter: params.filter,
+            limit: params.limit,
+            page: params.page,
+            include: {
+              customFields: params.include.customFields,
+              UUIDFields: params.include.userFields,
+              customUUIDFields: params.include.customUserFields,
+              totalCount: params.include.totalCount,
+            },
+            sort:
+              params.sort != null
+                ? Object.fromEntries(Object.entries(params.sort).map(([k, v]) => [k.replace('user', 'uuid'), v]))
+                : null,
+          })
+          .then((res) => {
+            res.data = res.data?.map((m) => {
+              return {
+                user: m.uuid,
+                custom: m.custom,
+                updated: m.updated,
+                eTag: m.eTag,
+              };
+            });
+            return res;
+          });
+      } else {
+        return this.objects
+          .getMemberships({
+            uuid: params.userId,
+            filter: params.filter,
+            limit: params.limit,
+            page: params.page,
+            include: {
+              customFields: params.include.customFields,
+              channelFields: params.include.spaceFields,
+              customChannelFields: params.include.customSpaceFields,
+              totalCount: params.include.totalCount,
+            },
+            sort:
+              params.sort != null
+                ? Object.fromEntries(Object.entries(params.sort).map(([k, v]) => [k.replace('space', 'channel'), v]))
+                : null,
+          })
+          .then((res) => {
+            res.data = res.data?.map((m) => {
+              return {
+                space: m.channel,
+                custom: m.custom,
+                updated: m.updated,
+                eTag: m.eTag,
+              };
+            });
+            return res;
+          });
+      }
+    };
 
     this.time = timeEndpoint;
 
