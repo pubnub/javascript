@@ -1,3 +1,10 @@
+## v7.1.1
+June 14 2022
+
+#### Added
+- Added user and space memberships related methods.
+- Added `type` and `status` fields in `User` and `Space`. `status` field in memberships.
+
 ## v7.0.1
 May 24 2022
 

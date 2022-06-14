@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2022-06-14
+    version: v7.1.1
+    changes:
+      - type: feature
+        text: "Added user and space memberships related methods."
+      - type: feature
+        text: "Added `type` and `status` fields in `User` and `Space`. `status` field in memberships."
   - date: 2022-05-24
     version: v7.0.1
     changes:
@@ -1117,7 +1124,7 @@ supported-platforms:
       - "Ubuntu 14.04 and up"
       - "Windows 7 and up"
     version: "Pubnub Javascript for Node"
-version: "7.0.1"
+version: "7.1.1"
 sdks:
   -
     full-name: PubNub Javascript SDK
@@ -1136,7 +1143,7 @@ sdks:
             distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.0.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.1.1.zip
             requires:
               -
                 name: "agentkeepalive"
@@ -1900,7 +1907,7 @@ sdks:
             distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v7.0.1/pubnub.7.0.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v7.1.1/pubnub.7.1.1.js
             requires:
               -
                 name: "agentkeepalive"
