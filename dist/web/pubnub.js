@@ -1,8 +1,8 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.PubNub = factory());
-})(this, (function () { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.PubNub = {}));
+})(this, (function (exports) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation.
@@ -11587,6 +11587,10 @@
         return default_1;
     }(default_1$3));
 
-    return default_1;
+    exports.base64ToBinary = base64ToBinary;
+    exports["default"] = default_1;
+    exports.stringifyBufferKeys = stringifyBufferKeys;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
 
 }));

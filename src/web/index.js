@@ -19,7 +19,7 @@ function sendBeacon(url) {
   }
 }
 
-function stringifyBufferKeys(obj) {
+export function stringifyBufferKeys(obj) {
   const isObject = (value) => value && typeof value === 'object' && value.constructor === Object;
   const isString = (value) => typeof value === 'string' || value instanceof String;
   const isNumber = (value) => typeof value === 'number' && isFinite(value);
