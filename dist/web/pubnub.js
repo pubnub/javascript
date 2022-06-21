@@ -1,8 +1,8 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.PubNub = {}));
-})(this, (function (exports) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.PubNub = factory());
+})(this, (function () { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation.
@@ -7719,6 +7719,33 @@
         return data;
     }
 
+    function stringifyBufferKeys(obj) {
+        var isObject = function (value) { return value && typeof value === 'object' && value.constructor === Object; };
+        var isString = function (value) { return typeof value === 'string' || value instanceof String; };
+        var isNumber = function (value) { return typeof value === 'number' && isFinite(value); };
+        if (!isObject(obj)) {
+            return obj;
+        }
+        var normalizedObject = {};
+        Object.keys(obj).forEach(function (key) {
+            var keyIsString = isString(key);
+            var stringifiedKey = key;
+            var value = obj[key];
+            if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
+                var bytes = keyIsString ? key.split(',') : key;
+                stringifiedKey = bytes.reduce(function (string, byte) {
+                    string += String.fromCharCode(byte);
+                    return string;
+                }, '');
+            }
+            else if (isNumber(key) || (keyIsString && !isNaN(key))) {
+                stringifiedKey = String.fromCharCode(keyIsString ? parseInt(key, 10) : 10);
+            }
+            normalizedObject[stringifiedKey] = isObject(value) ? stringifyBufferKeys(value) : value;
+        });
+        return normalizedObject;
+    }
+
     var default_1$1 = /** @class */ (function () {
         function default_1(decode, base64ToBinary) {
             this._base64ToBinary = base64ToBinary;
@@ -11546,32 +11573,6 @@
             return false;
         }
     }
-    function stringifyBufferKeys(obj) {
-        var isObject = function (value) { return value && typeof value === 'object' && value.constructor === Object; };
-        var isString = function (value) { return typeof value === 'string' || value instanceof String; };
-        var isNumber = function (value) { return typeof value === 'number' && isFinite(value); };
-        if (!isObject(obj)) {
-            return obj;
-        }
-        var normalizedObject = {};
-        Object.keys(obj).forEach(function (key) {
-            var keyIsString = isString(key);
-            var stringifiedKey = key;
-            var value = obj[key];
-            if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
-                var bytes = keyIsString ? key.split(',') : key;
-                stringifiedKey = bytes.reduce(function (string, byte) {
-                    string += String.fromCharCode(byte);
-                    return string;
-                }, '');
-            }
-            else if (isNumber(key) || (keyIsString && !isNaN(key))) {
-                stringifiedKey = String.fromCharCode(keyIsString ? parseInt(key, 10) : 10);
-            }
-            normalizedObject[stringifiedKey] = isObject(value) ? stringifyBufferKeys(value) : value;
-        });
-        return normalizedObject;
-    }
     var default_1 = /** @class */ (function (_super) {
         __extends(default_1, _super);
         function default_1(setup) {
@@ -11606,9 +11607,6 @@
         return default_1;
     }(default_1$3));
 
-    exports["default"] = default_1;
-    exports.stringifyBufferKeys = stringifyBufferKeys;
-
-    Object.defineProperty(exports, '__esModule', { value: true });
+    return default_1;
 
 }));
