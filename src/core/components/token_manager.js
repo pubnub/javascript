@@ -1,7 +1,3 @@
-/*       */
-import Config from './config';
-import { GrantTokenOutput } from '../flow_interfaces';
-
 export default class {
   _config;
 
