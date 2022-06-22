@@ -747,7 +747,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.1.1';
+            return '7.1.2';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -7672,6 +7672,80 @@
         return default_1;
     }());
 
+    var BASE64_CHARMAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    /**
+     * Decode a Base64 encoded string.
+     *
+     * @param paddedInput Base64 string with padding
+     * @returns ArrayBuffer with decoded data
+     */
+    function decode$1(paddedInput) {
+        // Remove up to last two equal signs.
+        var input = paddedInput.replace(/==?$/, '');
+        var outputLength = Math.floor((input.length / 4) * 3);
+        // Prepare output buffer.
+        var data = new ArrayBuffer(outputLength);
+        var view = new Uint8Array(data);
+        var cursor = 0;
+        /**
+         * Returns the next integer representation of a sixtet of bytes from the input
+         * @returns sixtet of bytes
+         */
+        function nextSixtet() {
+            var char = input.charAt(cursor++);
+            var index = BASE64_CHARMAP.indexOf(char);
+            if (index === -1) {
+                throw new Error("Illegal character at ".concat(cursor, ": ").concat(input.charAt(cursor - 1)));
+            }
+            return index;
+        }
+        for (var i = 0; i < outputLength; i += 3) {
+            // Obtain four sixtets
+            var sx1 = nextSixtet();
+            var sx2 = nextSixtet();
+            var sx3 = nextSixtet();
+            var sx4 = nextSixtet();
+            // Encode them as three octets
+            var oc1 = ((sx1 & 63) << 2) | (sx2 >> 4);
+            var oc2 = ((sx2 & 15) << 4) | (sx3 >> 2);
+            var oc3 = ((sx3 & 3) << 6) | (sx4 >> 0);
+            view[i] = oc1;
+            // Skip padding bytes.
+            if (sx3 != 64)
+                view[i + 1] = oc2;
+            if (sx4 != 64)
+                view[i + 2] = oc3;
+        }
+        return data;
+    }
+
+    function stringifyBufferKeys(obj) {
+        var isObject = function (value) { return value && typeof value === 'object' && value.constructor === Object; };
+        var isString = function (value) { return typeof value === 'string' || value instanceof String; };
+        var isNumber = function (value) { return typeof value === 'number' && isFinite(value); };
+        if (!isObject(obj)) {
+            return obj;
+        }
+        var normalizedObject = {};
+        Object.keys(obj).forEach(function (key) {
+            var keyIsString = isString(key);
+            var stringifiedKey = key;
+            var value = obj[key];
+            if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
+                var bytes = keyIsString ? key.split(',') : key;
+                stringifiedKey = bytes.reduce(function (string, byte) {
+                    string += String.fromCharCode(byte);
+                    return string;
+                }, '');
+            }
+            else if (isNumber(key) || (keyIsString && !isNaN(key))) {
+                stringifiedKey = String.fromCharCode(keyIsString ? parseInt(key, 10) : 10);
+            }
+            normalizedObject[stringifiedKey] = isObject(value) ? stringifyBufferKeys(value) : value;
+        });
+        return normalizedObject;
+    }
+
     var default_1$1 = /** @class */ (function () {
         function default_1(decode, base64ToBinary) {
             this._base64ToBinary = base64ToBinary;
@@ -11499,60 +11573,6 @@
             return false;
         }
     }
-    function base64ToBinary(base64String) {
-        var parsedWordArray = hmacSha256.enc.Base64.parse(base64String).words;
-        var arrayBuffer = new ArrayBuffer(parsedWordArray.length * 4);
-        var view = new Uint8Array(arrayBuffer);
-        var filledArrayBuffer = null;
-        var zeroBytesCount = 0;
-        var byteOffset = 0;
-        for (var wordIdx = 0; wordIdx < parsedWordArray.length; wordIdx += 1) {
-            var word = parsedWordArray[wordIdx];
-            byteOffset = wordIdx * 4;
-            view[byteOffset] = (word & 0xff000000) >> 24;
-            view[byteOffset + 1] = (word & 0x00ff0000) >> 16;
-            view[byteOffset + 2] = (word & 0x0000ff00) >> 8;
-            view[byteOffset + 3] = word & 0x000000ff;
-        }
-        for (var byteIdx = byteOffset + 3; byteIdx >= byteOffset; byteIdx -= 1) {
-            if (view[byteIdx] === 0 && zeroBytesCount < 3) {
-                zeroBytesCount += 1;
-            }
-        }
-        if (zeroBytesCount > 0) {
-            filledArrayBuffer = view.buffer.slice(0, view.byteLength - zeroBytesCount);
-        }
-        else {
-            filledArrayBuffer = view.buffer;
-        }
-        return filledArrayBuffer;
-    }
-    function stringifyBufferKeys(obj) {
-        var isObject = function (value) { return value && typeof value === 'object' && value.constructor === Object; };
-        var isString = function (value) { return typeof value === 'string' || value instanceof String; };
-        var isNumber = function (value) { return typeof value === 'number' && isFinite(value); };
-        if (!isObject(obj)) {
-            return obj;
-        }
-        var normalizedObject = {};
-        Object.keys(obj).forEach(function (key) {
-            var keyIsString = isString(key);
-            var stringifiedKey = key;
-            var value = obj[key];
-            if (Array.isArray(key) || (keyIsString && key.indexOf(',') >= 0)) {
-                var bytes = keyIsString ? key.split(',') : key;
-                stringifiedKey = bytes.reduce(function (string, byte) {
-                    string += String.fromCharCode(byte);
-                    return string;
-                }, '');
-            }
-            else if (isNumber(key) || (keyIsString && !isNaN(key))) {
-                stringifiedKey = String.fromCharCode(keyIsString ? parseInt(key, 10) : 10);
-            }
-            normalizedObject[stringifiedKey] = isObject(value) ? stringifyBufferKeys(value) : value;
-        });
-        return normalizedObject;
-    }
     var default_1 = /** @class */ (function (_super) {
         __extends(default_1, _super);
         function default_1(setup) {
@@ -11569,7 +11589,7 @@
                 getfile: getfile,
                 postfile: postfile,
             });
-            setup.cbor = new default_1$1(function (arrayBuffer) { return stringifyBufferKeys(CborReader.decode(arrayBuffer)); }, base64ToBinary);
+            setup.cbor = new default_1$1(function (arrayBuffer) { return stringifyBufferKeys(CborReader.decode(arrayBuffer)); }, decode$1);
             setup.PubNubFile = PubNubFile;
             setup.cryptography = new WebCryptography();
             _this = _super.call(this, setup) || this;
