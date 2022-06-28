@@ -214,7 +214,19 @@ export default class {
       this.setHeartbeatInterval(setup.heartbeatInterval);
     }
 
-    this.setUUID(setup.uuid);
+    if (typeof setup.userId === 'string') {
+      if (typeof setup.uuid === 'string') {
+        throw new Error('Only one of the following configuration options has to be provided: `uuid` or `userId`');
+      }
+
+      this.setUserId(setup.userId);
+    } else {
+      if (typeof setup.uuid !== 'string') {
+        throw new Error('One of the following configuration options has to be provided: `uuid` or `userId`');
+      }
+
+      this.setUUID(setup.uuid);
+    }
   }
 
   // exposed setters
@@ -241,6 +253,19 @@ export default class {
       throw new Error('Missing uuid parameter. Provide a valid string uuid');
     }
     this.UUID = val;
+    return this;
+  }
+
+  getUserId() {
+    return this.UUID;
+  }
+
+  setUserId(value) {
+    if (!value || typeof value !== 'string' || value.trim().length === 0) {
+      throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
+    }
+
+    this.UUID = value;
     return this;
   }
 

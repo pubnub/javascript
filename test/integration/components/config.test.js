@@ -7,15 +7,15 @@ import PubNub from '../../../src/node/index';
 describe('components/config', () => {
   describe('AuthKey parameter', () => {
     it('get/set', () => {
-    let pubnub = new PubNub({
-      subscribeKey: 'mySubKey',
-      publishKey: 'myPublishKey',
-      authKey: 'authKey1',
-      uuid: 'myUUID'
-    });
-    assert.equal(pubnub.getAuthKey(), 'authKey1');
-    pubnub.setAuthKey('authKey2');
-    assert.equal(pubnub.getAuthKey(), 'authKey2');
+      let pubnub = new PubNub({
+        subscribeKey: 'mySubKey',
+        publishKey: 'myPublishKey',
+        authKey: 'authKey1',
+        uuid: 'myUUID',
+      });
+      assert.equal(pubnub.getAuthKey(), 'authKey1');
+      pubnub.setAuthKey('authKey2');
+      assert.equal(pubnub.getAuthKey(), 'authKey2');
     });
   });
 
@@ -24,7 +24,7 @@ describe('components/config', () => {
       let config = {
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
-        authKey: 'authKey1'
+        authKey: 'authKey1',
       };
       assert.throws(() => {
         new PubNub(config);
@@ -35,18 +35,26 @@ describe('components/config', () => {
       let pubnub = new PubNub({
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
-        uuid: 'uuid1'
+        uuid: 'uuid1',
       });
       assert.equal(pubnub.getUUID(), 'uuid1');
       pubnub.setUUID('uuid2');
       assert.equal(pubnub.getUUID(), 'uuid2');
     });
 
+    it('throws when both userId and uuid are provided', () => {
+      let config = { subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUuid', userId: 'myUserId' };
+
+      assert.throws(() => {
+        new PubNub(config);
+      });
+    });
+
     it('throws when invalid value provided', () => {
       let config = {
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
-        uuid: ' '
+        uuid: ' ',
       };
       assert.throws(() => {
         new PubNub(config);
@@ -57,7 +65,7 @@ describe('components/config', () => {
       let pubnub = new PubNub({
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
-        uuid: 'myUUID'
+        uuid: 'myUUID',
       });
       assert.throws(() => {
         pubnub.setUUID(' ');
