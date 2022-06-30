@@ -1,6 +1,9 @@
 ## v7.1.2
 June 22 2022
 
+#### Fixed
+- Fixes parseToken issues on Web and React Native.
+
 ## v7.1.1
 June 14 2022
 
