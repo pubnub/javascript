@@ -164,7 +164,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.ivyURdy5SwMfT5I6MfkRsq9XTdXjtr7U9XVKsei305I',
+            signature: 'v2.IN5r_r8FO6LMAIOYQnk6Y13Tqfa9BsPC8QWDmqaR16w',
           })
           .reply(200, {
             message: 'Success',
