@@ -3,7 +3,7 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 const endpoint = {
-  getOperation: () => operationConstants.PNSetChannelMetadataOperation,
+  getOperation: () => operationConstants.PNUpdateSpaceOperation,
 
   validateParams: (_, params) => {
     if (!params?.spaceId) {

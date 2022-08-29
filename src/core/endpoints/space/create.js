@@ -3,7 +3,7 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 const endpoint = {
-  getOperation: () => operationConstants.PNSetChannelMetadataOperation,
+  getOperation: () => operationConstants.PNCreateSpaceOperation,
 
   validateParams: (_, params) => {
     if (!params?.spaceId) {
@@ -17,7 +17,7 @@ const endpoint = {
 
   usePost: () => true,
 
-  posthURL: ({ config }, params) => `/v3/objects/${config.subscribeKey}/spaces/${utils.encodeString(params.spaceId)}`,
+  postURL: ({ config }, params) => `/v3/objects/${config.subscribeKey}/spaces/${utils.encodeString(params.spaceId)}`,
 
   postPayload: (_, params) => params.data,
 

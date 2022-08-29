@@ -2306,13 +2306,13 @@
         // Objects API
         PNCreateUserOperation: 'PNCreateUserOperation',
         PNUpdateUserOperation: 'PNUpdateUserOperation',
-        PNDeleteUserOperation: 'PNDeleteUserOperation',
-        PNGetUserOperation: 'PNGetUsersOperation',
+        PNRemoveUserOperation: 'PNRemoveUserOperation',
+        PNFetchUserOperation: 'PNFetchUserOperation',
         PNGetUsersOperation: 'PNGetUsersOperation',
         PNCreateSpaceOperation: 'PNCreateSpaceOperation',
         PNUpdateSpaceOperation: 'PNUpdateSpaceOperation',
-        PNDeleteSpaceOperation: 'PNDeleteSpaceOperation',
-        PNGetSpaceOperation: 'PNGetSpacesOperation',
+        PNRemoveSpaceOperation: 'PNRemoveSpaceOperation',
+        PNFetchSpaceOperation: 'PNFetchSpaceOperation',
         PNGetSpacesOperation: 'PNGetSpacesOperation',
         PNGetMembersOperation: 'PNGetMembersOperation',
         PNUpdateMembersOperation: 'PNUpdateMembersOperation',
@@ -5538,7 +5538,7 @@
     };
 
     var endpoint$a = {
-        getOperation: function () { return OPERATIONS.PNSetChannelMetadataOperation; },
+        getOperation: function () { return OPERATIONS.PNCreateSpaceOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
                 return 'spaceId cannot be empty';
@@ -5548,7 +5548,7 @@
             }
         },
         usePost: function () { return true; },
-        posthURL: function (_a, params) {
+        postURL: function (_a, params) {
             var config = _a.config;
             return "/v3/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(params.spaceId));
         },
@@ -5566,7 +5566,7 @@
     };
 
     var endpoint$9 = {
-        getOperation: function () { return OPERATIONS.PNGetChannelMetadataOperation; },
+        getOperation: function () { return OPERATIONS.PNFetchSpaceOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
                 return 'spaceId cannot be empty';
@@ -5589,7 +5589,7 @@
     };
 
     var endpoint$8 = {
-        getOperation: function () { return OPERATIONS.PNRemoveChannelMetadataOperation; },
+        getOperation: function () { return OPERATIONS.PNRemoveSpaceOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
                 return 'spaceId cannot be empty';
@@ -5613,7 +5613,7 @@
     };
 
     var endpoint$7 = {
-        getOperation: function () { return OPERATIONS.PNSetChannelMetadataOperation; },
+        getOperation: function () { return OPERATIONS.PNUpdateSpaceOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
                 return 'SpaceId cannot be empty';
@@ -5673,7 +5673,7 @@
     };
 
     var endpoint$5 = {
-        getOperation: function () { return OPERATIONS.PNGetUserOperation; },
+        getOperation: function () { return OPERATIONS.PNFetchUserOperation; },
         validateParams: function () {
             // No required parameters.
         },
@@ -5701,7 +5701,7 @@
     };
 
     var endpoint$4 = {
-        getOperation: function () { return OPERATIONS.PNDeleteUserOperation; },
+        getOperation: function () { return OPERATIONS.PNRemoveUserOperation; },
         validateParams: function () {
             // No required parameters.
         },
@@ -5720,7 +5720,7 @@
             var _b;
             var config = _a.config;
             return ({
-                uuid: (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID(),
+                uuid: (_b = params === null || params === void 0 ? void 0 : params.userId) !== null && _b !== void 0 ? _b : config.getUserId(),
             });
         },
         handleResponse: function (_, response) { return ({

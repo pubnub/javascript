@@ -3,7 +3,7 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 const endpoint = {
-  getOperation: () => operationConstants.PNGetUserOperation,
+  getOperation: () => operationConstants.PNFetchUserOperation,
 
   validateParams: () => {
     // No required parameters.

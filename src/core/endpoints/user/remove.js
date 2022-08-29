@@ -3,7 +3,7 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 const endpoint = {
-  getOperation: () => operationConstants.PNDeleteUserOperation,
+  getOperation: () => operationConstants.PNRemoveUserOperation,
 
   validateParams: () => {
     // No required parameters.
@@ -19,7 +19,7 @@ const endpoint = {
   isAuthSupported: () => true,
 
   prepareParams: ({ config }, params) => ({
-    uuid: params?.uuid ?? config.getUUID(),
+    uuid: params?.userId ?? config.getUserId(),
   }),
 
   handleResponse: (_, response) => ({
