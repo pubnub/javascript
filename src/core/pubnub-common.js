@@ -67,6 +67,24 @@ import getMembershipsV2EndpointConfig from './endpoints/objects/membership/get';
 
 import setMembershipsV2EndpointConfig from './endpoints/objects/membership/set';
 
+// Space endpoint
+import createSpaceEndpointConfig from './endpoints/space/create';
+
+import fetchSpaceEndpointConfig from './endpoints/space/fetch';
+
+import removeSpaceEndpointConfig from './endpoints/space/remove';
+
+import updateSpaceEndpointConfig from './endpoints/space/update';
+
+// User endpoint
+import createUserEndpointConfig from './endpoints/user/create';
+
+import fetchUserEndpointConfig from './endpoints/user/fetch';
+
+import removeUserEndpointConfig from './endpoints/user/remove';
+
+import updateUserEndpointConfig from './endpoints/user/update';
+
 import * as auditEndpointConfig from './endpoints/access_manager/audit';
 import * as grantEndpointConfig from './endpoints/access_manager/grant';
 import * as grantTokenEndpointConfig from './endpoints/access_manager/grant_token';
@@ -493,48 +511,24 @@ export default class {
     };
 
     // User Apis
-    this.createUser = (args) =>
-      this.objects.setUUIDMetadata({
-        uuid: args.userId,
-        data: args.data,
-        include: args.include,
-      });
+    this.createUser = endpointCreator.bind(this, modules, createUserEndpointConfig);
 
-    this.updateUser = this.createUser;
+    this.updateUser = endpointCreator.bind(this, modules, updateUserEndpointConfig);
 
-    this.removeUser = (args) =>
-      this.objects.removeUUIDMetadata({
-        uuid: args?.userId,
-      });
+    this.removeUser = endpointCreator.bind(this, modules, removeUserEndpointConfig);
 
-    this.fetchUser = (args) =>
-      this.objects.getUUIDMetadata({
-        uuid: args?.userId,
-        include: args?.include,
-      });
+    this.fetchUser = endpointCreator.bind(this, modules, fetchUserEndpointConfig);
 
     this.fetchUsers = this.objects.getAllUUIDMetadata;
 
     // Space apis
-    this.createSpace = (args) =>
-      this.objects.setChannelMetadata({
-        channel: args.spaceId,
-        data: args.data,
-        include: args.include,
-      });
+    this.createSpace = endpointCreator.bind(this, modules, createSpaceEndpointConfig);
 
-    this.updateSpace = this.createSpace;
+    this.updateSpace = endpointCreator.bind(this, modules, updateSpaceEndpointConfig);
 
-    this.removeSpace = (args) =>
-      this.objects.removeChannelMetadata({
-        channel: args.spaceId,
-      });
+    this.removeSpace = endpointCreator.bind(this, modules, removeSpaceEndpointConfig);
 
-    this.fetchSpace = (args) =>
-      this.objects.getChannelMetadata({
-        channel: args.spaceId,
-        include: args.include,
-      });
+    this.fetchSpace = endpointCreator.bind(this, modules, fetchSpaceEndpointConfig);
 
     this.fetchSpaces = this.objects.getAllChannelMetadata;
 

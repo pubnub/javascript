@@ -31,6 +31,9 @@ function decideURL(endpoint, modules, incomingParams) {
   if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
     return endpoint.patchURL(modules, incomingParams);
   }
+  if (endpoint.usePut && endpoint.usePut(modules, incomingParams)) {
+    return endpoint.putURL(modules, incomingParams);
+  }
   if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
     return endpoint.getFileURL(modules, incomingParams);
   }
@@ -65,6 +68,9 @@ function getHttpMethod(modules, endpoint, incomingParams) {
   }
   if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
     return 'PATCH';
+  }
+  if (endpoint.usePut && endpoint.usePut(modules, incomingParams)) {
+    return 'PUT';
   }
   if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
     return 'DELETE';
@@ -106,6 +112,13 @@ export function signRequest(modules, url, outgoingParams, incomingParams, endpoi
     }
   } else if (httpMethod === 'PATCH') {
     const payload = endpoint.patchPayload(modules, incomingParams);
+    if (typeof payload === 'string') {
+      signInput += payload;
+    } else {
+      signInput += JSON.stringify(payload);
+    }
+  } else if (httpMethod === 'PUT') {
+    const payload = endpoint.putPayload(modules, incomingParams);
     if (typeof payload === 'string') {
       signInput += payload;
     } else {
@@ -262,6 +275,9 @@ export default function (modules, endpoint, ...args) {
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'PATCH') {
     const payload = endpoint.patchPayload(modules, incomingParams);
     callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
+  } else if (getHttpMethod(modules, endpoint, incomingParams) === 'PUT') {
+    const payload = endpoint.putPayload(modules, incomingParams);
+    callInstance = networking.PUT(outgoingParams, payload, networkingParams, onResponse);
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
     callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
   } else if (getHttpMethod(modules, endpoint, incomingParams) === 'GETFILE') {

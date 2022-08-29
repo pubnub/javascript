@@ -3293,6 +3293,9 @@
         if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
             return endpoint.patchURL(modules, incomingParams);
         }
+        if (endpoint.usePut && endpoint.usePut(modules, incomingParams)) {
+            return endpoint.putURL(modules, incomingParams);
+        }
         if (endpoint.useGetFile && endpoint.useGetFile(modules, incomingParams)) {
             return endpoint.getFileURL(modules, incomingParams);
         }
@@ -3319,6 +3322,9 @@
         }
         if (endpoint.usePatch && endpoint.usePatch(modules, incomingParams)) {
             return 'PATCH';
+        }
+        if (endpoint.usePut && endpoint.usePut(modules, incomingParams)) {
+            return 'PUT';
         }
         if (endpoint.useDelete && endpoint.useDelete(modules, incomingParams)) {
             return 'DELETE';
@@ -3353,6 +3359,15 @@
         }
         else if (httpMethod === 'PATCH') {
             var payload = endpoint.patchPayload(modules, incomingParams);
+            if (typeof payload === 'string') {
+                signInput += payload;
+            }
+            else {
+                signInput += JSON.stringify(payload);
+            }
+        }
+        else if (httpMethod === 'PUT') {
+            var payload = endpoint.putPayload(modules, incomingParams);
             if (typeof payload === 'string') {
                 signInput += payload;
             }
@@ -3489,6 +3504,10 @@
         else if (getHttpMethod(modules, endpoint, incomingParams) === 'PATCH') {
             var payload = endpoint.patchPayload(modules, incomingParams);
             callInstance = networking.PATCH(outgoingParams, payload, networkingParams, onResponse);
+        }
+        else if (getHttpMethod(modules, endpoint, incomingParams) === 'PUT') {
+            var payload = endpoint.putPayload(modules, incomingParams);
+            callInstance = networking.PUT(outgoingParams, payload, networkingParams, onResponse);
         }
         else if (getHttpMethod(modules, endpoint, incomingParams) === 'DELETE') {
             callInstance = networking.DELETE(outgoingParams, networkingParams, onResponse);
@@ -4490,7 +4509,7 @@
     });
 
     /**       */
-    var endpoint$j = {
+    var endpoint$r = {
         getOperation: function () { return OPERATIONS.PNListFilesOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -4525,7 +4544,7 @@
     };
 
     /**       */
-    var endpoint$i = {
+    var endpoint$q = {
         getOperation: function () { return OPERATIONS.PNGenerateUploadUrlOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -4566,7 +4585,7 @@
         }
         return stringifiedPayload || '';
     };
-    var endpoint$h = {
+    var endpoint$p = {
         getOperation: function () { return OPERATIONS.PNPublishFileOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -4804,7 +4823,7 @@
     });
 
     /**       */
-    var endpoint$g = {
+    var endpoint$o = {
         getOperation: function () { return OPERATIONS.PNDownloadFileOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -4856,7 +4875,7 @@
     };
 
     /**       */
-    var endpoint$f = {
+    var endpoint$n = {
         getOperation: function () { return OPERATIONS.PNListFilesOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -4885,7 +4904,7 @@
         }); },
     };
 
-    var endpoint$e = {
+    var endpoint$m = {
         getOperation: function () { return OPERATIONS.PNGetAllUUIDMetadataOperation; },
         validateParams: function () {
             // No required parameters.
@@ -4943,7 +4962,7 @@
     };
 
     /**       */
-    var endpoint$d = {
+    var endpoint$l = {
         getOperation: function () { return OPERATIONS.PNGetUUIDMetadataOperation; },
         validateParams: function () {
             // No required parameters.
@@ -4978,8 +4997,7 @@
         }); },
     };
 
-    /**       */
-    var endpoint$c = {
+    var endpoint$k = {
         getOperation: function () { return OPERATIONS.PNSetUUIDMetadataOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.data)) {
@@ -5019,7 +5037,7 @@
     };
 
     /**       */
-    var endpoint$b = {
+    var endpoint$j = {
         getOperation: function () { return OPERATIONS.PNRemoveUUIDMetadataOperation; },
         validateParams: function () {
             // No required parameters.
@@ -5048,7 +5066,7 @@
         }); },
     };
 
-    var endpoint$a = {
+    var endpoint$i = {
         getOperation: function () { return OPERATIONS.PNGetAllChannelMetadataOperation; },
         validateParams: function () {
             // No required parameters.
@@ -5105,7 +5123,7 @@
         }); },
     };
 
-    var endpoint$9 = {
+    var endpoint$h = {
         getOperation: function () { return OPERATIONS.PNGetChannelMetadataOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -5140,7 +5158,7 @@
     };
 
     /**       */
-    var endpoint$8 = {
+    var endpoint$g = {
         getOperation: function () { return OPERATIONS.PNSetChannelMetadataOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -5180,7 +5198,7 @@
     };
 
     /**       */
-    var endpoint$7 = {
+    var endpoint$f = {
         getOperation: function () { return OPERATIONS.PNRemoveChannelMetadataOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -5205,7 +5223,7 @@
     };
 
     /**       */
-    var endpoint$6 = {
+    var endpoint$e = {
         getOperation: function () { return OPERATIONS.PNGetMembersOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -5270,7 +5288,7 @@
         }); },
     };
 
-    var endpoint$5 = {
+    var endpoint$d = {
         getOperation: function () { return OPERATIONS.PNSetMembersOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
@@ -5363,7 +5381,7 @@
         }); },
     };
 
-    var endpoint$4 = {
+    var endpoint$c = {
         getOperation: function () { return OPERATIONS.PNGetMembershipsOperation; },
         validateParams: function () {
             // No required parameters.
@@ -5428,7 +5446,7 @@
     };
 
     /**       */
-    var endpoint$3 = {
+    var endpoint$b = {
         getOperation: function () { return OPERATIONS.PNSetMembershipsOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channels) || (params === null || params === void 0 ? void 0 : params.channels.length) === 0) {
@@ -5516,6 +5534,230 @@
             totalCount: response.totalCount,
             prev: response.prev,
             next: response.next,
+        }); },
+    };
+
+    var endpoint$a = {
+        getOperation: function () { return OPERATIONS.PNSetChannelMetadataOperation; },
+        validateParams: function (_, params) {
+            if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
+                return 'spaceId cannot be empty';
+            }
+            if (!(params === null || params === void 0 ? void 0 : params.data)) {
+                return 'Space data cannot be empty';
+            }
+        },
+        usePost: function () { return true; },
+        posthURL: function (_a, params) {
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(params.spaceId));
+        },
+        postPayload: function (_, params) { return params.data; },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function () { return ({}); },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$9 = {
+        getOperation: function () { return OPERATIONS.PNGetChannelMetadataOperation; },
+        validateParams: function (_, params) {
+            if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
+                return 'spaceId cannot be empty';
+            }
+        },
+        getURL: function (_a, params) {
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(params.spaceId));
+        },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function () { return ({}); },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$8 = {
+        getOperation: function () { return OPERATIONS.PNRemoveChannelMetadataOperation; },
+        validateParams: function (_, params) {
+            if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
+                return 'spaceId cannot be empty';
+            }
+        },
+        getURL: function (_a, params) {
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(params.spaceId));
+        },
+        useDelete: function () { return true; },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function () { return ({}); },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$7 = {
+        getOperation: function () { return OPERATIONS.PNSetChannelMetadataOperation; },
+        validateParams: function (_, params) {
+            if (!(params === null || params === void 0 ? void 0 : params.spaceId)) {
+                return 'SpaceId cannot be empty';
+            }
+            if (!(params === null || params === void 0 ? void 0 : params.data)) {
+                return 'Data cannot be empty';
+            }
+        },
+        usePatch: function () { return true; },
+        patchURL: function (_a, params) {
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/spaces/").concat(utils$5.encodeString(params.spaceId));
+        },
+        patchPayload: function (_, params) { return params.data; },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function () { return ({}); },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$6 = {
+        getOperation: function () { return OPERATIONS.PNCreateUserOperation; },
+        validateParams: function (_, params) {
+            if (!(params === null || params === void 0 ? void 0 : params.data)) {
+                return 'Data cannot be empty';
+            }
+        },
+        usePost: function () { return true; },
+        postURL: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString((_b = params.userId) !== null && _b !== void 0 ? _b : config.getUserId()));
+        },
+        postPayload: function (_, params) { return params.data; },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            var queryParams = {};
+            queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.userId) !== null && _b !== void 0 ? _b : config.getUserId();
+            return queryParams;
+        },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$5 = {
+        getOperation: function () { return OPERATIONS.PNGetUserOperation; },
+        validateParams: function () {
+            // No required parameters.
+        },
+        getURL: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString((_b = params === null || params === void 0 ? void 0 : params.userId) !== null && _b !== void 0 ? _b : config.getUserId()));
+        },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            var queryParams = {};
+            queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.userId) !== null && _b !== void 0 ? _b : config.getUserId();
+            return queryParams;
+        },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$4 = {
+        getOperation: function () { return OPERATIONS.PNDeleteUserOperation; },
+        validateParams: function () {
+            // No required parameters.
+        },
+        getURL: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/uuids/").concat(utils$5.encodeString((_b = params === null || params === void 0 ? void 0 : params.userId) !== null && _b !== void 0 ? _b : config.getUserId()));
+        },
+        useDelete: function () { return true; },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            return ({
+                uuid: (_b = params === null || params === void 0 ? void 0 : params.uuid) !== null && _b !== void 0 ? _b : config.getUUID(),
+            });
+        },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
+        }); },
+    };
+
+    var endpoint$3 = {
+        getOperation: function () { return OPERATIONS.PNUpdateUserOperation; },
+        validateParams: function (_, params) {
+            if (!(params === null || params === void 0 ? void 0 : params.data)) {
+                return 'Data cannot be empty';
+            }
+        },
+        usePatch: function () { return true; },
+        patchURL: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            return "/v3/objects/".concat(config.subscribeKey, "/users/").concat(utils$5.encodeString((_b = params.userId) !== null && _b !== void 0 ? _b : config.getUserId()));
+        },
+        patchPayload: function (_, params) { return params.data; },
+        getRequestTimeout: function (_a) {
+            var config = _a.config;
+            return config.getTransactionTimeout();
+        },
+        isAuthSupported: function () { return true; },
+        prepareParams: function (_a, params) {
+            var _b;
+            var config = _a.config;
+            var queryParams = {};
+            queryParams.uuid = (_b = params === null || params === void 0 ? void 0 : params.userId) !== null && _b !== void 0 ? _b : config.getUserId();
+            return queryParams;
+        },
+        handleResponse: function (_, response) { return ({
+            status: response.status,
+            data: response.data,
         }); },
     };
 
@@ -7421,28 +7663,28 @@
             this.removeMessageAction = endpointCreator.bind(this, modules, removeMessageActionEndpointConfig);
             this.getMessageActions = endpointCreator.bind(this, modules, getMessageActionEndpointConfig);
             // File Upload API v1
-            this.listFiles = endpointCreator.bind(this, modules, endpoint$j);
-            var generateUploadUrl = endpointCreator.bind(this, modules, endpoint$i);
-            this.publishFile = endpointCreator.bind(this, modules, endpoint$h);
+            this.listFiles = endpointCreator.bind(this, modules, endpoint$r);
+            var generateUploadUrl = endpointCreator.bind(this, modules, endpoint$q);
+            this.publishFile = endpointCreator.bind(this, modules, endpoint$p);
             this.sendFile = sendFileFunction({
                 generateUploadUrl: generateUploadUrl,
                 publishFile: this.publishFile,
                 modules: modules,
             });
             this.getFileUrl = function (params) { return getFileUrlFunction(modules, params); };
-            this.downloadFile = endpointCreator.bind(this, modules, endpoint$g);
-            this.deleteFile = endpointCreator.bind(this, modules, endpoint$f);
+            this.downloadFile = endpointCreator.bind(this, modules, endpoint$o);
+            this.deleteFile = endpointCreator.bind(this, modules, endpoint$n);
             // Objects API v2
             this.objects = {
-                getAllUUIDMetadata: endpointCreator.bind(this, modules, endpoint$e),
-                getUUIDMetadata: endpointCreator.bind(this, modules, endpoint$d),
-                setUUIDMetadata: endpointCreator.bind(this, modules, endpoint$c),
-                removeUUIDMetadata: endpointCreator.bind(this, modules, endpoint$b),
-                getAllChannelMetadata: endpointCreator.bind(this, modules, endpoint$a),
-                getChannelMetadata: endpointCreator.bind(this, modules, endpoint$9),
-                setChannelMetadata: endpointCreator.bind(this, modules, endpoint$8),
-                removeChannelMetadata: endpointCreator.bind(this, modules, endpoint$7),
-                getChannelMembers: endpointCreator.bind(this, modules, endpoint$6),
+                getAllUUIDMetadata: endpointCreator.bind(this, modules, endpoint$m),
+                getUUIDMetadata: endpointCreator.bind(this, modules, endpoint$l),
+                setUUIDMetadata: endpointCreator.bind(this, modules, endpoint$k),
+                removeUUIDMetadata: endpointCreator.bind(this, modules, endpoint$j),
+                getAllChannelMetadata: endpointCreator.bind(this, modules, endpoint$i),
+                getChannelMetadata: endpointCreator.bind(this, modules, endpoint$h),
+                setChannelMetadata: endpointCreator.bind(this, modules, endpoint$g),
+                removeChannelMetadata: endpointCreator.bind(this, modules, endpoint$f),
+                getChannelMembers: endpointCreator.bind(this, modules, endpoint$e),
                 setChannelMembers: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
@@ -7450,7 +7692,7 @@
                     }
                     return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'set' }, parameters)], __read(rest), false));
+                        endpoint$d, __assign({ type: 'set' }, parameters)], __read(rest), false));
                 },
                 removeChannelMembers: function (parameters) {
                     var rest = [];
@@ -7459,9 +7701,9 @@
                     }
                     return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read(rest), false));
+                        endpoint$d, __assign({ type: 'delete' }, parameters)], __read(rest), false));
                 },
-                getMemberships: endpointCreator.bind(this, modules, endpoint$4),
+                getMemberships: endpointCreator.bind(this, modules, endpoint$c),
                 setMemberships: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
@@ -7469,7 +7711,7 @@
                     }
                     return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'set' }, parameters)], __read(rest), false));
+                        endpoint$b, __assign({ type: 'set' }, parameters)], __read(rest), false));
                 },
                 removeMemberships: function (parameters) {
                     var rest = [];
@@ -7478,50 +7720,20 @@
                     }
                     return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read(rest), false));
+                        endpoint$b, __assign({ type: 'delete' }, parameters)], __read(rest), false));
                 },
             };
             // User Apis
-            this.createUser = function (args) {
-                return _this.objects.setUUIDMetadata({
-                    uuid: args.userId,
-                    data: args.data,
-                    include: args.include,
-                });
-            };
-            this.updateUser = this.createUser;
-            this.removeUser = function (args) {
-                return _this.objects.removeUUIDMetadata({
-                    uuid: args === null || args === void 0 ? void 0 : args.userId,
-                });
-            };
-            this.fetchUser = function (args) {
-                return _this.objects.getUUIDMetadata({
-                    uuid: args === null || args === void 0 ? void 0 : args.userId,
-                    include: args === null || args === void 0 ? void 0 : args.include,
-                });
-            };
+            this.createUser = endpointCreator.bind(this, modules, endpoint$6);
+            this.updateUser = endpointCreator.bind(this, modules, endpoint$3);
+            this.removeUser = endpointCreator.bind(this, modules, endpoint$4);
+            this.fetchUser = endpointCreator.bind(this, modules, endpoint$5);
             this.fetchUsers = this.objects.getAllUUIDMetadata;
             // Space apis
-            this.createSpace = function (args) {
-                return _this.objects.setChannelMetadata({
-                    channel: args.spaceId,
-                    data: args.data,
-                    include: args.include,
-                });
-            };
-            this.updateSpace = this.createSpace;
-            this.removeSpace = function (args) {
-                return _this.objects.removeChannelMetadata({
-                    channel: args.spaceId,
-                });
-            };
-            this.fetchSpace = function (args) {
-                return _this.objects.getChannelMetadata({
-                    channel: args.spaceId,
-                    include: args.include,
-                });
-            };
+            this.createSpace = endpointCreator.bind(this, modules, endpoint$a);
+            this.updateSpace = endpointCreator.bind(this, modules, endpoint$7);
+            this.removeSpace = endpointCreator.bind(this, modules, endpoint$8);
+            this.fetchSpace = endpointCreator.bind(this, modules, endpoint$9);
             this.fetchSpaces = this.objects.getAllChannelMetadata;
             // Membership apis
             this.addMemberships = function (parameters) {
@@ -7753,6 +7965,9 @@
         };
         default_1.prototype.PATCH = function (params, body, endpoint, callback) {
             return this._modules.patch(params, body, endpoint, callback);
+        };
+        default_1.prototype.PUT = function (params, body, endpoint, callback) {
+            return this._modules.put(params, body, endpoint, callback);
         };
         default_1.prototype.GET = function (params, endpoint, callback) {
             return this._modules.get(params, endpoint, callback);

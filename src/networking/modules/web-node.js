@@ -187,6 +187,15 @@ export function patch(params, body, endpoint, callback) {
   return xdr.call(this, superagentConstruct, endpoint, callback);
 }
 
+export function put(params, body, endpoint, callback) {
+  const superagentConstruct = superagent
+    .put(this.getStandardOrigin() + endpoint.url)
+    .query(params)
+    .set(endpoint.headers)
+    .send(body);
+  return xdr.call(this, superagentConstruct, endpoint, callback);
+}
+
 export function del(params, endpoint, callback) {
   const superagentConstruct = superagent
     .delete(this.getStandardOrigin() + endpoint.url)

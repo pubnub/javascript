@@ -1,5 +1,3 @@
-/**       */
-
 import operationConstants from '../../../constants/operations';
 
 import utils from '../../../utils';

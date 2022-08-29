@@ -92,6 +92,10 @@ export default class {
     return this._modules.patch(params, body, endpoint, callback);
   }
 
+  PUT(params, body, endpoint, callback) {
+    return this._modules.put(params, body, endpoint, callback);
+  }
+
   GET(params, endpoint, callback) {
     return this._modules.get(params, endpoint, callback);
   }

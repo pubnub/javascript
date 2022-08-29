@@ -80,6 +80,11 @@ export function patch(params, body, endpoint, callback) {
   return xdr.call(this, 'PATCH', url, params, body, endpoint, callback);
 }
 
+export function put(params, body, endpoint, callback) {
+  const url = this.getStandardOrigin() + endpoint.url;
+  return xdr.call(this, 'PUT', url, params, body, endpoint, callback);
+}
+
 export function del(params, endpoint, callback) {
   const url = this.getStandardOrigin() + endpoint.url;
   return xdr.call(this, 'DELETE', url, params, '', endpoint, callback);
