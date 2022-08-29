@@ -4,9 +4,9 @@ changelog:
     version: v7.2.0
     changes:
       - type: feature
-        text: "Allows to specify users and spaces in grantToken method."
+        text: 'Allows to specify users and spaces in grantToken method.'
       - type: feature
-        text: "Allows to use userId instead of uuid in configuration."
+        text: 'Allows to use userId instead of uuid in configuration.'
   - date: 2022-06-22
     version: v7.1.2
     changes:
