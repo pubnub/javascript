@@ -2,7 +2,6 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from 'chai';
 
 Given('the user ID {string}, name {string}', async function(userId, userName) {
-  // remember the channel we subscribed to
   this.userId = userId;
   this.userName = userName;
 });

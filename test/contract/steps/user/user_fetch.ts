@@ -2,7 +2,6 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from 'chai';
 
 Given('there is a user with ID {string}, name {string}', async function(userId, userName) {
-  // remember the channel we subscribed to
   this.userId = userId;
   this.userName = userName;
 });
@@ -44,10 +43,10 @@ Then('I get a user object with', async function() {
   expect(this.user).to.not.be.undefined;
 });
 
-Then('ID equal to {string}', async function(userId) {
+Then('User ID equal to {string}', async function(userId) {
   expect(userId).to.equal(this.user.id);
 });
 
-Then('Name equal to {string}', async function(userName) {
+Then('User name equal to {string}', async function(userName) {
   expect(userName).to.equal(this.user.name);
 });

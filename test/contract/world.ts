@@ -34,7 +34,7 @@ class PubnubWorld extends World{
       origin: 'localhost:8090',
       ssl: false,
       suppressLeaveEvents: true,
-      logVerbosity: false,
+      logVerbosity: true,
       uuid: 'myUUID'
     },
     demoKeyset: {
