@@ -25,7 +25,7 @@ When('I get the channel members including custom and UUID custom information', a
   });
 });
 
-When('I set a channel member for Chat channel', async function () {
+When('I set a channel member', async function () {
   const pubnub = await this.getPubnub({
     publishKey: this.keyset.publishKey,
     subscribeKey: this.keyset.subscribeKey,
@@ -33,7 +33,7 @@ When('I set a channel member for Chat channel', async function () {
   this.response = await pubnub.objects.setChannelMembers(this.parameter);
 });
 
-When('I set a channel member including custom and UUID with custom for Chat channel', async function () {
+When('I set a channel member including custom and UUID with custom', async function () {
   const pubnub = await this.getPubnub({
     publishKey: this.keyset.publishKey,
     subscribeKey: this.keyset.subscribeKey,
@@ -58,13 +58,10 @@ Then('the response contains list with {string} member', function (member) {
   expect(actual).to.deep.include(memberData);
 });
 
-When('I remove a channel member for Chat channel', async function () {
+When('I remove a channel member', async function () {
   const pubnub = await this.getPubnub({
     publishKey: this.keyset.publishKey,
     subscribeKey: this.keyset.subscribeKey,
   });
-  this.response = await pubnub.objects.removeChannelMembers({
-    channel: this.parameter.channel,
-    uuids: [this.parameter.uuid],
-  });
+  this.response = await pubnub.objects.removeChannelMembers(this.parameter);
 });
