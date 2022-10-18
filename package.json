@@ -23,6 +23,7 @@
     "contract:test": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags 'not @na=js and not @beta'",
     "contract:test-beta": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags 'not @na=js and @beta'",
     "contract:test-access": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags '@featureSet=access and not @na=js and not @beta'",
+    "contract:test-objectsV2": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags '@featureSet=objectsV2 and not @na=js and not @beta'",
     "contract:test-access-beta": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags '@featureSet=access and not @na=js and @beta'"
   },
   "main": "./lib/node/index.js",
