@@ -4,6 +4,7 @@ import {
   World
 } from '@cucumber/cucumber';
 import PubNub from '../../lib/node/index.js';
+import { loadFixtureFile } from './utils';
 import * as http from 'http';
 
 interface State {
@@ -20,7 +21,7 @@ class PubnubWorld extends World{
     checkContractExpectations: true,
     contractServer: 'localhost:8090',
   };
-
+  fileFixtures = {};
   fixtures = {
     // bronze config
     // defaultConfig: {
@@ -126,6 +127,13 @@ class PubnubWorld extends World{
     return this.cleanup(300);
   }
 
+  getFixture(name) {
+    if (!this.fileFixtures[name]) {
+      const persona = loadFixtureFile(name);
+      this.fileFixtures[name] = persona;
+    }
+    return this.fileFixtures[name];
+  }
 }
 
 setWorldConstructor(PubnubWorld);
