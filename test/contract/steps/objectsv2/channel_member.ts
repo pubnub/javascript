@@ -58,6 +58,11 @@ Then('the response contains list with {string} member', function (member) {
   expect(actual).to.deep.include(memberData);
 });
 
+Given('the data for {string} member that we want to remove', function (member) {
+  const memberData = this.getFixture(member);
+  this.parameter = { ...this.parameter, uuids: [{ id: memberData.uuid.id }] };
+});
+
 When('I remove a channel member', async function () {
   const pubnub = await this.getPubnub({
     publishKey: this.keyset.publishKey,

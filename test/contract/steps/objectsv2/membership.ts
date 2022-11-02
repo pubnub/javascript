@@ -51,6 +51,11 @@ When('I set the membership for current user', async function () {
   this.response = await pubnub.objects.setMemberships(this.parameter);
 });
 
+Given('the data for {string} membership that we want to remove', function (membership) {
+  const membershipData = this.getFixture(membership);
+  this.parameter = { ...this.parameter, channels: [{ id: membershipData.channel.id }] };
+});
+
 When('I remove the membership', async function () {
   const pubnub = await this.getPubnub({
     publishKey: this.keyset.publishKey,
