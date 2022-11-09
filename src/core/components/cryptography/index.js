@@ -1,13 +1,10 @@
-/*       */
-
-import Config from '../config';
+import { decode } from '../base64_codec';
 import CryptoJS from './hmac-sha256';
 
 function bufferToWordArray(b) {
   const wa = [];
   let i;
   for (i = 0; i < b.length; i += 1) {
-    // eslint-disable-next-line no-bitwise
     wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
   }
 
@@ -148,7 +145,7 @@ export default class {
     const mode = this._getMode(options);
     const cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
     if (this._config.useRandomIVs) {
-      const ciphertext = Buffer.from(data, 'base64');
+      const ciphertext = new Uint8ClampedArray(decode(data));
 
       const iv = bufferToWordArray(ciphertext.slice(0, 16));
       const payload = bufferToWordArray(ciphertext.slice(16));
