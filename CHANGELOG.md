@@ -1,3 +1,9 @@
+## v7.2.1
+November 10 2022
+
+#### Fixed
+- Removes remains of Buffer from the crypto module.
+
 ## v7.2.0
 July 01 2022
 
