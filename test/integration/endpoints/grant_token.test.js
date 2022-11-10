@@ -30,6 +30,8 @@ describe('grant token endpoint', () => {
       autoNetworkDetection: false,
     });
 
+    pubnub._config.getVersion = () => 'testVersion';
+
     if (originalVersionFunction === null) {
       originalVersionFunction = pubnub._config.getVersion;
       pubnub._config.getVersion = () => 'testVersion';
@@ -164,7 +166,7 @@ describe('grant token endpoint', () => {
             uuid: 'myUUID',
             pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
             timestamp: 1571360790,
-            signature: 'v2.IN5r_r8FO6LMAIOYQnk6Y13Tqfa9BsPC8QWDmqaR16w',
+            signature: 'v2.A1ldFjcfAiD0rw7-kFKKwY5j0Mpq1R5u8JDeej7P3jo',
           })
           .reply(200, {
             message: 'Success',
