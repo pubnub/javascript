@@ -768,7 +768,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.2.0';
+            return '7.2.1';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -779,6 +779,53 @@
         };
         return default_1;
     }());
+
+    var BASE64_CHARMAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    /**
+     * Decode a Base64 encoded string.
+     *
+     * @param paddedInput Base64 string with padding
+     * @returns ArrayBuffer with decoded data
+     */
+    function decode$1(paddedInput) {
+        // Remove up to last two equal signs.
+        var input = paddedInput.replace(/==?$/, '');
+        var outputLength = Math.floor((input.length / 4) * 3);
+        // Prepare output buffer.
+        var data = new ArrayBuffer(outputLength);
+        var view = new Uint8Array(data);
+        var cursor = 0;
+        /**
+         * Returns the next integer representation of a sixtet of bytes from the input
+         * @returns sixtet of bytes
+         */
+        function nextSixtet() {
+            var char = input.charAt(cursor++);
+            var index = BASE64_CHARMAP.indexOf(char);
+            if (index === -1) {
+                throw new Error("Illegal character at ".concat(cursor, ": ").concat(input.charAt(cursor - 1)));
+            }
+            return index;
+        }
+        for (var i = 0; i < outputLength; i += 3) {
+            // Obtain four sixtets
+            var sx1 = nextSixtet();
+            var sx2 = nextSixtet();
+            var sx3 = nextSixtet();
+            var sx4 = nextSixtet();
+            // Encode them as three octets
+            var oc1 = ((sx1 & 63) << 2) | (sx2 >> 4);
+            var oc2 = ((sx2 & 15) << 4) | (sx3 >> 2);
+            var oc3 = ((sx3 & 3) << 6) | (sx4 >> 0);
+            view[i] = oc1;
+            // Skip padding bytes.
+            if (sx3 != 64)
+                view[i + 1] = oc2;
+            if (sx4 != 64)
+                view[i + 2] = oc3;
+        }
+        return data;
+    }
 
     /*eslint-disable */
     /*
@@ -1467,12 +1514,10 @@
     })();
     var hmacSha256 = CryptoJS;
 
-    /*       */
     function bufferToWordArray(b) {
         var wa = [];
         var i;
         for (i = 0; i < b.length; i += 1) {
-            // eslint-disable-next-line no-bitwise
             wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
         }
         return hmacSha256.lib.WordArray.create(wa, b.length);
@@ -1585,7 +1630,7 @@
             var mode = this._getMode(options);
             var cipherKey = this._getPaddedKey(customCipherKey || this._config.cipherKey, options);
             if (this._config.useRandomIVs) {
-                var ciphertext = Buffer.from(data, 'base64');
+                var ciphertext = new Uint8ClampedArray(decode$1(data));
                 var iv = bufferToWordArray(ciphertext.slice(0, 16));
                 var payload = bufferToWordArray(ciphertext.slice(16));
                 try {
@@ -7793,53 +7838,6 @@
         };
         return default_1;
     }());
-
-    var BASE64_CHARMAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-    /**
-     * Decode a Base64 encoded string.
-     *
-     * @param paddedInput Base64 string with padding
-     * @returns ArrayBuffer with decoded data
-     */
-    function decode$1(paddedInput) {
-        // Remove up to last two equal signs.
-        var input = paddedInput.replace(/==?$/, '');
-        var outputLength = Math.floor((input.length / 4) * 3);
-        // Prepare output buffer.
-        var data = new ArrayBuffer(outputLength);
-        var view = new Uint8Array(data);
-        var cursor = 0;
-        /**
-         * Returns the next integer representation of a sixtet of bytes from the input
-         * @returns sixtet of bytes
-         */
-        function nextSixtet() {
-            var char = input.charAt(cursor++);
-            var index = BASE64_CHARMAP.indexOf(char);
-            if (index === -1) {
-                throw new Error("Illegal character at ".concat(cursor, ": ").concat(input.charAt(cursor - 1)));
-            }
-            return index;
-        }
-        for (var i = 0; i < outputLength; i += 3) {
-            // Obtain four sixtets
-            var sx1 = nextSixtet();
-            var sx2 = nextSixtet();
-            var sx3 = nextSixtet();
-            var sx4 = nextSixtet();
-            // Encode them as three octets
-            var oc1 = ((sx1 & 63) << 2) | (sx2 >> 4);
-            var oc2 = ((sx2 & 15) << 4) | (sx3 >> 2);
-            var oc3 = ((sx3 & 3) << 6) | (sx4 >> 0);
-            view[i] = oc1;
-            // Skip padding bytes.
-            if (sx3 != 64)
-                view[i + 1] = oc2;
-            if (sx4 != 64)
-                view[i + 2] = oc3;
-        }
-        return data;
-    }
 
     function stringifyBufferKeys(obj) {
         var isObject = function (value) { return value && typeof value === 'object' && value.constructor === Object; };
