@@ -36,7 +36,7 @@ export default (modules, { channel, id, name }) => {
 
   const tokenOrKey = tokenManager.getToken() || config.getAuthKey();
   if (tokenOrKey) {
-      params.auth = tokenOrKey;
+    params.auth = tokenOrKey;
   }
 
   if (config.secretKey) {
