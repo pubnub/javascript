@@ -6,6 +6,7 @@
     "experimentalDecorators": true,
     "target": "es5",
     "sourceMap": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true
   }
 }

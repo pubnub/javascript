@@ -3,10 +3,15 @@ import { expect } from 'chai';
 
 import { AccessManagerKeyset } from '../shared/keysets';
 import { PubNub, PubNubManager } from '../shared/pubnub';
-import { tokenWithUUIDPatternPermissions } from '../shared/fixtures';
+import {
+  tokenWithKnownAuthorizedUUID,
+  tokenWithUUIDPatternPermissions,
+  tokenWithUUIDResourcePermissions,
+} from '../shared/fixtures';
 import { ResourceType, AccessPermission } from '../shared/enums';
 
 import { ParsedGrantToken } from 'pubnub';
+import { exists } from '../shared/helpers';
 
 @binding([PubNubManager, AccessManagerKeyset])
 class GrantTokenSteps {
@@ -22,13 +27,15 @@ class GrantTokenSteps {
     this.pubnub = this.manager.getInstance(this.keyset);
   }
 
-  // Given('I have a known token containing an authorized UUID', function () {
-  //   this.token = this.fixtures.tokenWithKnownAuthorizedUUID;
-  // });
+  @given('I have a known token containing an authorized UUID')
+  public useTokenWithKnownAuthorizedUUID() {
+    this.token = tokenWithKnownAuthorizedUUID;
+  }
 
-  // Given('I have a known token containing UUID resource permissions', function () {
-  //   this.token = this.fixtures.tokenWithUUIDResourcePermissions;
-  // });
+  @given('I have a known token containing UUID resource permissions')
+  public useTokenWithUUIDResourcePermissions() {
+    this.token = tokenWithUUIDResourcePermissions;
+  }
 
   @given('I have a known token containing UUID pattern Permissions')
   public useTokenWithUUIDPatternPermissions() {
@@ -37,10 +44,10 @@ class GrantTokenSteps {
 
   @when('I parse the token')
   public parseToken() {
-    expect(this.token).to.exist;
-    expect(this.pubnub).to.exist;
+    exists(this.token);
+    exists(this.pubnub);
 
-    this.parsedToken = this.pubnub!.parseToken(this.token!);
+    this.parsedToken = this.pubnub.parseToken(this.token);
 
     expect(this.parsedToken).to.not.be.undefined;
   }
@@ -53,16 +60,16 @@ class GrantTokenSteps {
     this.resourceName = name;
     this.resourceType = type;
 
-    expect(this.parsedToken?.patterns?.[type]).to.exist;
-    expect(this.parsedToken?.patterns?.[type]?.[name]).to.exist;
+    exists(this.parsedToken?.patterns?.[type]);
+    exists(this.parsedToken?.patterns?.[type]?.[name]);
   }
 
   @then('token pattern permission {access_permission}')
   public hasAccessPermission(permission: AccessPermission) {
-    expect(this.resourceType).to.exist;
-    expect(this.resourceName).to.exist;
+    exists(this.resourceType);
+    exists(this.resourceName);
 
-    expect(this.parsedToken?.patterns?.[this.resourceType!]?.[this.resourceName!]?.[permission]).to.be.true;
+    expect(this.parsedToken?.patterns?.[this.resourceType]?.[this.resourceName]?.[permission]).to.be.true;
   }
 }
 
