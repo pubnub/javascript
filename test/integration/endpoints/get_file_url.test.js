@@ -2,8 +2,6 @@
 /* eslint no-console: 0 */
 
 import assert from 'assert';
-import nock from 'nock';
-import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
 describe('getFileUrl', () => {
@@ -34,5 +32,24 @@ describe('getFileUrl', () => {
     
     assert(url === `https://test1.example.com/v1/files/demo/channels/channel/files/id/name?uuid=myUUID&pnsdk=${pnsdk}`
         || url === `https://test2.example.com/v1/files/demo/channels/channel/files/id/name?uuid=myUUID&pnsdk=${pnsdk}`);
+  });
+
+  it('constructs proper url when token is set', () => {
+    const pubnub = new PubNub({
+      subscribeKey: 'demo',
+      publishKey: 'demo',
+      uuid: 'myUUID',
+      origin: 'example.com',
+    });
+
+    pubnub.setToken('tokenString');
+
+    const url = pubnub.getFileUrl({ channel: 'channel', id: 'id', name: 'name' });
+    const pnsdk = `PubNub-JS-${pubnub._config.sdkFamily}%2F${pubnub._config.getVersion()}`;
+
+    assert.equal(
+      url,
+      `https://example.com/v1/files/demo/channels/channel/files/id/name?uuid=myUUID&pnsdk=${pnsdk}&auth=tokenString`,
+    );
   });
 });
