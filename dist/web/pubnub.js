@@ -768,7 +768,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.2.1';
+            return '7.2.2';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -4817,7 +4817,7 @@
     /**       */
     var getFileUrlFunction = (function (modules, _a) {
         var channel = _a.channel, id = _a.id, name = _a.name;
-        var config = modules.config, networking = modules.networking;
+        var config = modules.config, networking = modules.networking, tokenManager = modules.tokenManager;
         if (!channel) {
             throw new PubNubError('Validation failed, check status for details', createValidationError("channel can't be empty"));
         }
@@ -4831,8 +4831,9 @@
         var params = {};
         params.uuid = config.getUUID();
         params.pnsdk = generatePNSDK(config);
-        if (config.getAuthKey()) {
-            params.auth = config.getAuthKey();
+        var tokenOrKey = tokenManager.getToken() || config.getAuthKey();
+        if (tokenOrKey) {
+            params.auth = tokenOrKey;
         }
         if (config.secretKey) {
             signRequest(modules, url, params, {}, {

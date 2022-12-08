@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2022-12-08
+    version: v7.2.2
+    changes:
+      - type: bug
+        text: "Fixes issue of getFileUrl not setting auth value as token string when token is set."
   - date: 2022-11-10
     version: v7.2.1
     changes:
@@ -879,7 +884,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.2.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.2.2.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1550,7 +1555,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v7.2.1/pubnub.7.2.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v7.2.2/pubnub.7.2.2.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

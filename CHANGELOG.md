@@ -1,3 +1,9 @@
+## v7.2.2
+December 08 2022
+
+#### Fixed
+- Fixes issue of getFileUrl not setting auth value as token string when token is set. Fixed the following issues reported by [@abdalla-nayer](https://github.com/abdalla-nayer): [#302](https://github.com/pubnub/javascript/issues/302).
+
 ## v7.2.1
 November 10 2022
 
