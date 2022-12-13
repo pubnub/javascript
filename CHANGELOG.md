@@ -1,3 +1,10 @@
+## v7.2.2
+December 12 2022
+
+#### Fixed
+- Fixes a case in React Native with using an error interface in superagent.
+- Fixes issue of getFileUrl not setting auth value as token string when token is set. Fixed the following issues reported by [@abdalla-nayer](https://github.com/abdalla-nayer): [#302](https://github.com/pubnub/javascript/issues/302).
+
 ## v7.2.1
 November 10 2022
 

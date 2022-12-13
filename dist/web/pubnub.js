@@ -768,7 +768,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.2.1';
+            return '7.2.2';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -4706,7 +4706,7 @@
                             }
                             _s.label = 4;
                         case 4:
-                            _s.trys.push([4, 18, , 20]);
+                            _s.trys.push([4, 18, , 22]);
                             if (!(PubNubFile.supportsFileUri && input.uri)) return [3 /*break*/, 7];
                             _f = (_e = networking).POSTFILE;
                             _g = [url, formFieldsWithMimeType];
@@ -4743,24 +4743,27 @@
                             result = _s.sent();
                             return [3 /*break*/, 17];
                         case 16: throw new Error('Unsupported environment');
-                        case 17: return [3 /*break*/, 20];
+                        case 17: return [3 /*break*/, 22];
                         case 18:
                             e_1 = _s.sent();
+                            if (!e_1.response) return [3 /*break*/, 20];
                             return [4 /*yield*/, getErrorFromResponse(e_1.response)];
                         case 19:
                             errorBody = _s.sent();
                             reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
                             throw new PubNubError(reason ? "Upload to bucket failed: ".concat(reason[1]) : 'Upload to bucket failed.', e_1);
-                        case 20:
+                        case 20: throw new PubNubError('Upload to bucket failed.', e_1);
+                        case 21: return [3 /*break*/, 22];
+                        case 22:
                             if (result.status !== 204) {
                                 throw new PubNubError('Upload to bucket was unsuccessful', result);
                             }
                             retries = config.fileUploadPublishRetryLimit;
                             wasSuccessful = false;
                             publishResult = { timetoken: '0' };
-                            _s.label = 21;
-                        case 21:
-                            _s.trys.push([21, 23, , 24]);
+                            _s.label = 23;
+                        case 23:
+                            _s.trys.push([23, 25, , 26]);
                             return [4 /*yield*/, publishFile({
                                     channel: channel,
                                     message: message,
@@ -4770,19 +4773,19 @@
                                     storeInHistory: storeInHistory,
                                     ttl: ttl,
                                 })];
-                        case 22:
+                        case 24:
                             /* eslint-disable-next-line no-await-in-loop */
                             publishResult = _s.sent();
                             wasSuccessful = true;
-                            return [3 /*break*/, 24];
-                        case 23:
+                            return [3 /*break*/, 26];
+                        case 25:
                             _s.sent();
                             retries -= 1;
-                            return [3 /*break*/, 24];
-                        case 24:
-                            if (!wasSuccessful && retries > 0) return [3 /*break*/, 21];
-                            _s.label = 25;
-                        case 25:
+                            return [3 /*break*/, 26];
+                        case 26:
+                            if (!wasSuccessful && retries > 0) return [3 /*break*/, 23];
+                            _s.label = 27;
+                        case 27:
                             if (!wasSuccessful) {
                                 throw new PubNubError('Publish failed. You may want to execute that operation manually using pubnub.publishFile', {
                                     channel: channel,
@@ -4817,7 +4820,7 @@
     /**       */
     var getFileUrlFunction = (function (modules, _a) {
         var channel = _a.channel, id = _a.id, name = _a.name;
-        var config = modules.config, networking = modules.networking;
+        var config = modules.config, networking = modules.networking, tokenManager = modules.tokenManager;
         if (!channel) {
             throw new PubNubError('Validation failed, check status for details', createValidationError("channel can't be empty"));
         }
@@ -4831,8 +4834,9 @@
         var params = {};
         params.uuid = config.getUUID();
         params.pnsdk = generatePNSDK(config);
-        if (config.getAuthKey()) {
-            params.auth = config.getAuthKey();
+        var tokenOrKey = tokenManager.getToken() || config.getAuthKey();
+        if (tokenOrKey) {
+            params.auth = tokenOrKey;
         }
         if (config.secretKey) {
             signRequest(modules, url, params, {}, {
