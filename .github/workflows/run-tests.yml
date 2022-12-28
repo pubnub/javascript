@@ -3,37 +3,50 @@ name: Tests
 on:
   push:
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+env:
+  CXX: 'g++-4.8'
 
 jobs:
+  tests-matrix:
+    name: Integration and Unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        node: [8.10.0, 10.13.0, 12]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Checkout actions
+        uses: actions/checkout@v3
+        with:
+          repository: pubnub/client-engineering-deployment-tools
+          ref: v1
+          token: ${{ secrets.GH_TOKEN }}
+          path: .github/.release/actions
+      - name: Setup NodeJS ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Build and run tests for NodeJS ${{ matrix.node }}
+        run: |
+          npm install
+          gulp test
+      - name: Cancel workflow runs for commit on error
+        if: failure()
+        uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   tests:
     name: Integration and Unit tests
     runs-on: ubuntu-latest
-    env:
-      CXX: 'g++-4.8'
+    needs: tests-matrix
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Setup NodeJS 8.10.0
-        uses: actions/setup-node@v2
-        with:
-          node-version: 8.10.0
-      - name: Build and run tests for NodeJS 8.10.0
-        run: |
-          npm install
-          gulp test
-      - name: Setup NodeJS 10.13.0
-        uses: actions/setup-node@v2
-        with:
-          node-version: 10.13.0
-      - name: Build and run tests for NodeJS 10.13.0
-        run: |
-          npm install
-          gulp test
-      - name: Setup NodeJS 12
-        uses: actions/setup-node@v2
-        with:
-          node-version: 12
-      - name: Build and run tests for NodeJS 12
-        run: |
-          npm install
-          gulp test
+      - name: Tests summary
+        run: echo -e "\033[38;2;95;215;0m\033[1mTest successful"
