@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import {
   FetchMessagesArguments,
@@ -10,8 +10,8 @@ import {
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
-function __processMessage(modules, message: Object): Object | null {
-  let { config, crypto } = modules;
+function __processMessage(modules, message) {
+  const { config, crypto } = modules;
   if (!config.cipherKey) return message;
 
   try {
@@ -21,51 +21,43 @@ function __processMessage(modules, message: Object): Object | null {
   }
 }
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNFetchMessagesOperation;
 }
 
-export function validateParams(
-  modules: ModulesInject,
-  incomingParams: FetchMessagesArguments
-) {
-  let { channels, includeMessageActions = false } = incomingParams;
-  let { config } = modules;
+export function validateParams(modules, incomingParams) {
+  const { channels, includeMessageActions = false } = incomingParams;
+  const { config } = modules;
 
   if (!channels || channels.length === 0) return 'Missing channels';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 
   if (includeMessageActions && channels.length > 1) {
-    throw new TypeError('History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.');
+    throw new TypeError(
+      'History can return actions data for a single channel only. ' +
+        'Either pass a single channel or disable the includeMessageActions flag.',
+    );
   }
 }
 
-export function getURL(
-  modules: ModulesInject,
-  incomingParams: FetchMessagesArguments
-): string {
-  let { channels = [], includeMessageActions = false } = incomingParams;
-  let { config } = modules;
+export function getURL(modules, incomingParams) {
+  const { channels = [], includeMessageActions = false } = incomingParams;
+  const { config } = modules;
   const endpoint = !includeMessageActions ? 'history' : 'history-with-actions';
 
-  let stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
-  return `/v3/${endpoint}/sub-key/${
-    config.subscribeKey
-  }/channel/${utils.encodeString(stringifiedChannels)}`;
+  const stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+  return `/v3/${endpoint}/sub-key/${config.subscribeKey}/channel/${utils.encodeString(stringifiedChannels)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): boolean {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(
-  modules: ModulesInject,
-  incomingParams: FetchMessagesArguments
-): Object {
+export function prepareParams(modules, incomingParams) {
   const {
     channels,
     start,
@@ -76,14 +68,14 @@ export function prepareParams(
     includeMeta = false,
     includeUuid,
     includeUUID = true,
-    includeMessageType = true
+    includeMessageType = true,
   } = incomingParams;
-  let outgoingParams: Object = {};
+  const outgoingParams = {};
 
   if (count) {
     outgoingParams.max = count;
   } else {
-    outgoingParams.max = (channels.length > 1 || includeMessageActions === true) ? 25 : 100;
+    outgoingParams.max = channels.length > 1 || includeMessageActions === true ? 25 : 100;
   }
   if (start) outgoingParams.start = start;
   if (end) outgoingParams.end = end;
@@ -95,11 +87,8 @@ export function prepareParams(
   return outgoingParams;
 }
 
-export function handleResponse(
-  modules: ModulesInject,
-  serverResponse: HistoryV3Response
-): FetchMessagesResponse {
-  const response: FetchMessagesResponse = {
+export function handleResponse(modules, serverResponse) {
+  const response = {
     channels: {},
   };
 
@@ -107,7 +96,7 @@ export function handleResponse(
     response.channels[channelName] = [];
 
     (serverResponse.channels[channelName] || []).forEach((messageEnvelope) => {
-      let announce: MessageAnnouncement = {};
+      const announce = {};
       announce.channel = channelName;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);
@@ -128,7 +117,7 @@ export function handleResponse(
     });
   });
   if (serverResponse.more) {
-    response.more  = serverResponse.more;
+    response.more = serverResponse.more;
   }
 
   return response;

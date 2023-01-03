@@ -4,5 +4,5 @@ set -e
 # Check whether previous builds already generated artifacts or not.
 if ! [[ -d "$(pwd)/upload" ]]; then
   npm ci
-  gulp compile
+  npm run build
 fi

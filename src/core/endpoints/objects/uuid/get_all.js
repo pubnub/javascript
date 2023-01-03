@@ -1,36 +1,11 @@
-/** @flow */
-
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { UUIDMetadata } from './uuid';
 
-export type GetAllUUIDMetadataParams = {|
-  filter?: string,
-  sort?: { [key: string]: 'asc' | 'desc' | null },
-  limit?: number,
-  page?: {|
-    next?: string,
-    prev?: string,
-  |},
-  include?: {|
-    totalCount?: boolean,
-    customFields?: boolean,
-  |},
-|};
-
-export type GetAllUUIDMetadataResult = {|
-  status: 200,
-  data: UUIDMetadata[],
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
-
-const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetAllUUIDMetadataOperation,
 
-  // No required parameters.
-  validateParams: () => {},
+  validateParams: () => {
+    // No required parameters.
+  },
 
   getURL: ({ config }) => `/v2/objects/${config.subscribeKey}/uuids`,
 
@@ -40,10 +15,15 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['status', 'type'];
 
-    if (params?.include?.customFields) {
-      queryParams.include = 'custom';
+    if (params?.include) {
+      if (params.include?.customFields) {
+        queryParams.include.push('custom');
+      }
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = params.include?.totalCount;
@@ -67,16 +47,15 @@ const endpoint: EndpointConfig<GetAllUUIDMetadataParams, GetAllUUIDMetadataResul
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
         if (value === 'asc' || value === 'desc') {
           return `${key}:${value}`;
-        } else {
-          return key;
         }
+        return key;
       });
     }
 
     return queryParams;
   },
 
-  handleResponse: (_, response): GetAllUUIDMetadataResult => ({
+  handleResponse: (_, response) => ({
     status: response.status,
     data: response.data,
     totalCount: response.totalCount,

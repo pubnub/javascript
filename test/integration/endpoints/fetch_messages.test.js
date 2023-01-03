@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(client: PubNub, count: Number, channel: String, completion: Function) {
+function publishMessagesToChannel(client        , count        , channel        , completion          ) {
   let publishCompleted = 0;
   let messages = [];
 
@@ -39,11 +39,11 @@ function publishMessagesToChannel(client: PubNub, count: Number, channel: String
 }
 
 function addActionsInChannel(
-  client: PubNub,
-  count: Number,
-  messageTimetokens: Array<Number>,
-  channel: String,
-  completion: Function
+  client        ,
+  count        ,
+  messageTimetokens               ,
+  channel        ,
+  completion          
 ) {
   const types = ['reaction', 'receipt', 'custom'];
   const values = [

@@ -1,6 +1,6 @@
-/** @flow */
+/**       */
 
-export const asResponse = (fixture: any) => ({
+export const asResponse = (fixture     ) => ({
   ...fixture.data,
   update: fixture.updated,
   eTag: fixture.eTag,

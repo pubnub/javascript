@@ -1,16 +1,14 @@
-/* @flow */
+/*       */
 import operationConstants from '../constants/operations';
 
-type TelemetryManagerConstruct = {
-  maximumSamplesCount: number,
-};
-
 export default class {
-  _maximumSamplesCount: number = 100;
+  _maximumSamplesCount = 100;
+
   _trackedLatencies = {};
+
   _latencies = {};
 
-  constructor(configuration: TelemetryManagerConstruct) {
+  constructor(configuration) {
     this._maximumSamplesCount = configuration.maximumSamplesCount || this._maximumSamplesCount;
   }
 
@@ -19,8 +17,8 @@ export default class {
    *
    * @return {Object} Object with request query key/value pairs.
    */
-  operationsLatencyForRequest(): Object {
-    let latencies = {};
+  operationsLatencyForRequest() {
+    const latencies = {};
 
     Object.keys(this._latencies).forEach((endpointName) => {
       const operationLatencies = this._latencies[endpointName];
@@ -34,7 +32,7 @@ export default class {
     return latencies;
   }
 
-  startLatencyMeasure(operationType: String, identifier: string) {
+  startLatencyMeasure(operationType, identifier) {
     if (operationType === operationConstants.PNSubscribeOperation || !identifier) {
       return;
     }
@@ -42,7 +40,7 @@ export default class {
     this._trackedLatencies[identifier] = Date.now();
   }
 
-  stopLatencyMeasure(operationType: String, identifier: string) {
+  stopLatencyMeasure(operationType, identifier) {
     if (operationType === operationConstants.PNSubscribeOperation || !identifier) {
       return;
     }
@@ -53,26 +51,27 @@ export default class {
     const startDate = this._trackedLatencies[identifier];
 
     if (!endpointLatencies) {
-      endpointLatencies = (this._latencies[endpointName] = []);
+      this._latencies[endpointName] = [];
+      endpointLatencies = this._latencies[endpointName];
     }
 
-    endpointLatencies.push((Date.now() - startDate));
+    endpointLatencies.push(Date.now() - startDate);
 
     // Truncate samples count if there is more then configured.
     if (endpointLatencies.length > this._maximumSamplesCount) {
-      endpointLatencies.splice(0, (endpointLatencies.length - this._maximumSamplesCount));
+      endpointLatencies.splice(0, endpointLatencies.length - this._maximumSamplesCount);
     }
 
     delete this._trackedLatencies[identifier];
   }
 
-  _averageLatency(latencies: Array<number>) {
-    const arrayReduce = (accumulatedLatency: number, latency: number) => accumulatedLatency + latency;
+  _averageLatency(latencies) {
+    const arrayReduce = (accumulatedLatency, latency) => accumulatedLatency + latency;
 
     return Math.floor(latencies.reduce(arrayReduce, 0) / latencies.length);
   }
 
-  _endpointName(operationType: String) {
+  _endpointName(operationType) {
     let operation = null;
 
     switch (operationType) {

@@ -1,28 +1,28 @@
-/* @flow */
+/*       */
 
 import { ListChannelsParams, ListChannelsResponse, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNChannelsForGroupOperation;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: ListChannelsParams) {
-  let { channelGroup } = incomingParams;
-  let { config } = modules;
+export function validateParams(modules, incomingParams) {
+  const { channelGroup } = incomingParams;
+  const { config } = modules;
 
   if (!channelGroup) return 'Missing Channel Group';
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: ListChannelsParams): string {
-  let { channelGroup } = incomingParams;
-  let { config } = modules;
+export function getURL(modules, incomingParams) {
+  const { channelGroup } = incomingParams;
+  const { config } = modules;
   return `/v1/channel-registration/sub-key/${config.subscribeKey}/channel-group/${utils.encodeString(channelGroup)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject) {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
@@ -30,12 +30,12 @@ export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(): Object {
+export function prepareParams() {
   return {};
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: Object): ListChannelsResponse {
+export function handleResponse(modules, serverResponse) {
   return {
-    channels: serverResponse.payload.channels
+    channels: serverResponse.payload.channels,
   };
 }

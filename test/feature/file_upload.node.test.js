@@ -1,4 +1,4 @@
-/** @flow */
+/**       */
 
 import util from 'util';
 import { Readable } from 'stream';

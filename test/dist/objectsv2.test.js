@@ -1,4 +1,4 @@
-/** @flow */
+/**       */
 
 import util from 'util'
 import PubNub from '../../src/node'
@@ -13,7 +13,7 @@ describe('Objects V2 system tests', () => {
 
   const CHANNEL_1 = `${TEST_PREFIX}-channel-1`;
 
-  let pubnub: PubNub;
+  let pubnub        ;
 
   const events = [];
   const listener = {

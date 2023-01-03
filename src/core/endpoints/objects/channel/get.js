@@ -1,23 +1,8 @@
-/** @flow */
-
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { ChannelMetadata } from './channel';
+
 import utils from '../../../utils';
 
-export type GetChannelMetadataParams = {|
-  channel: string,
-  include?: {|
-    customFields: ?boolean,
-  |},
-|};
-
-export type GetChannelMetadataResult = {|
-  status: 200,
-  data: ChannelMetadata,
-|};
-
-const endpoint: EndpointConfig<GetChannelMetadataParams, GetChannelMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNGetChannelMetadataOperation,
 
   validateParams: (_, params) => {
@@ -32,9 +17,19 @@ const endpoint: EndpointConfig<GetChannelMetadataParams, GetChannelMetadataResul
 
   isAuthSupported: () => true,
 
-  prepareParams: (_, params) => ({
-    include: (params?.include?.customFields ?? true) && 'custom',
-  }),
+  prepareParams: (_, params) => {
+    const queryParams = {};
+    queryParams.include = ['status', 'type', 'custom'];
+
+    if (params?.include) {
+      if (params.include?.customFields === false) {
+        queryParams.include.pop();
+      }
+    }
+    queryParams.include = queryParams.include.join(',');
+
+    return queryParams;
+  },
 
   handleResponse: (_, response) => ({
     status: response.status,

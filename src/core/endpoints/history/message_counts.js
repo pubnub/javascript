@@ -1,51 +1,47 @@
-/* @flow */
+/*       */
 
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
-import type {
-  MessageCounterArguments,
-  MessageCountersResponse,
-  ModulesInject
-} from '../../flow_interfaces';
 
-
-export function getOperation(): string {
+export function getOperation() {
   return operationConstants.PNMessageCounts;
 }
 
-export function validateParams(modules: ModulesInject, incomingParams: MessageCounterArguments) {
-  let { channels, timetoken, channelTimetokens } = incomingParams;
-  let { config } = modules;
+export function validateParams(modules, incomingParams) {
+  const { channels, timetoken, channelTimetokens } = incomingParams;
+  const { config } = modules;
 
   if (!channels) return 'Missing channel';
   if (timetoken && channelTimetokens) return 'timetoken and channelTimetokens are incompatible together';
-  if ((timetoken && channelTimetokens) && (channelTimetokens.length > 1) && (channels.length !== channelTimetokens.length)) return 'Length of channelTimetokens and channels do not match';
+  if (timetoken && channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) {
+    return 'Length of channelTimetokens and channels do not match';
+  }
   if (!config.subscribeKey) return 'Missing Subscribe Key';
 }
 
-export function getURL(modules: ModulesInject, incomingParams: MessageCounterArguments): string {
-  let { channels } = incomingParams;
-  let { config } = modules;
+export function getURL(modules, incomingParams) {
+  const { channels } = incomingParams;
+  const { config } = modules;
 
-  let stringifiedChannels = channels.join(',');
+  const stringifiedChannels = channels.join(',');
 
   return `/v3/history/sub-key/${config.subscribeKey}/message-counts/${utils.encodeString(stringifiedChannels)}`;
 }
 
-export function getRequestTimeout({ config }: ModulesInject): boolean {
+export function getRequestTimeout({ config }) {
   return config.getTransactionTimeout();
 }
 
-export function isAuthSupported(): boolean {
+export function isAuthSupported() {
   return true;
 }
 
-export function prepareParams(modules: ModulesInject, incomingParams: MessageCounterArguments): Object {
+export function prepareParams(modules, incomingParams) {
   const { timetoken, channelTimetokens } = incomingParams;
-  let outgoingParams: Object = {};
+  const outgoingParams = {};
 
-  if ((channelTimetokens) && (channelTimetokens.length === 1)) {
-    let [tt] = channelTimetokens;
+  if (channelTimetokens && channelTimetokens.length === 1) {
+    const [tt] = channelTimetokens;
     outgoingParams.timetoken = tt;
   } else if (channelTimetokens) {
     outgoingParams.channelsTimetoken = channelTimetokens.join(',');
@@ -56,6 +52,6 @@ export function prepareParams(modules: ModulesInject, incomingParams: MessageCou
   return outgoingParams;
 }
 
-export function handleResponse(modules: ModulesInject, serverResponse: MessageCounterArguments): MessageCountersResponse {
+export function handleResponse(modules, serverResponse) {
   return { channels: serverResponse.channels };
 }

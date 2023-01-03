@@ -1,44 +1,35 @@
-/** @flow */
+/* global File, FileReader */
 
-import { IFile, FileClass } from '../';
+import { IFile, FileClass } from '..';
 
-type PubNubFileReactNativeConstructor =
-| File
-| {|
-    data: string,
-    name: string,
-    mimeType: string,
-  |}
-| {|
-    data: ArrayBuffer,
-    name: string,
-    mimeType: string,
-  |}
-| {|
-    uri: string,
-    name: string,
-    mimeType: string,
-  |};
-
-const PubNubFile: FileClass = class PubNubFile implements IFile {
+const PubNubFile = class PubNubFile {
   static supportsFile = typeof File !== 'undefined';
+
   static supportsBlob = typeof Blob !== 'undefined';
+
   static supportsArrayBuffer = typeof ArrayBuffer !== 'undefined';
+
   static supportsBuffer = false;
+
   static supportsStream = false;
+
   static supportsString = true;
+
   static supportsEncryptFile = false;
+
   static supportsFileUri = true;
 
-  static create(config: PubNubFileReactNativeConstructor) {
+  static create(config) {
     return new this(config);
   }
 
-  data: any;
-  name: string;
-  mimeType: string;
+  data;
 
-  constructor(config: PubNubFileReactNativeConstructor) {
+  name;
+
+  mimeType;
+
+  constructor(config) {
     if (config instanceof File) {
       this.data = config;
 
@@ -49,7 +40,7 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
       this.data = {
         uri: config.uri,
         name: config.name,
-        type: config.mimeType
+        type: config.mimeType,
       };
 
       this.name = config.name;
@@ -132,7 +123,8 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   async toString() {
     if (this.data && this.data.uri) {
       return JSON.stringify(this.data);
-    } else if (this.data instanceof File) {
+    }
+    if (this.data instanceof File) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -148,10 +140,9 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
 
         reader.readAsBinaryString(this.data);
       });
-    } else {
-      // data must be a fetch response
-      return this.data.text();
     }
+    // data must be a fetch response
+    return this.data.text();
   }
 
   async toFile() {
@@ -168,9 +159,8 @@ const PubNubFile: FileClass = class PubNubFile implements IFile {
   async toFileUri() {
     if (this.data && this.data.uri) {
       return this.data;
-    } else {
-      throw new Error('This file does not contain a file URI');
     }
+    throw new Error('This file does not contain a file URI');
   }
 };
 

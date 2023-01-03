@@ -1,11 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
-import type { DeleteFileParams, DeleteFileResult } from './types';
+
 import utils from '../../utils';
 
-const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNListFilesOperation,
 
   validateParams: (_, params) => {
@@ -23,7 +22,8 @@ const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
   },
 
   useDelete: () => true,
-  getURL: ({ config }, params) => `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files/${params.id}/${params.name}`,
+  getURL: ({ config }, params) =>
+    `/v1/files/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/files/${params.id}/${params.name}`,
 
   getRequestTimeout: ({ config }) => config.getTransactionTimeout(),
 
@@ -31,7 +31,7 @@ const endpoint: EndpointConfig<DeleteFileParams, DeleteFileResult> = {
 
   prepareParams: () => ({}),
 
-  handleResponse: (_, response): DeleteFileResult => ({
+  handleResponse: (_, response) => ({
     status: response.status,
   }),
 };

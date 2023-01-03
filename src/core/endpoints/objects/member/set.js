@@ -1,37 +1,8 @@
-/** @flow */
-
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { Member, PaginatedResultParams } from './member';
+
 import utils from '../../../utils';
 
-type CommonParams = {
-  channel: string,
-};
-
-export type RemoveMembersParams = {
-  type: 'delete',
-  uuids: (string | { id: string, custom?: empty })[],
-} & CommonParams &
-  PaginatedResultParams;
-
-export type UpsertMembersParams = {
-  type: 'set',
-  uuids: (string | { id: string, custom?: any })[],
-} & CommonParams &
-  PaginatedResultParams;
-
-export type SetMembersParams = RemoveMembersParams | UpsertMembersParams;
-
-export type SetMembersResult = {|
-  status: 200,
-  data: Member,
-  totalCount?: number,
-  prev?: string,
-  next?: string,
-|};
-
-const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetMembersOperation,
 
   validateParams: (_, params) => {
@@ -46,11 +17,12 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/channels/${utils.encodeString(params.channel)}/uuids`,
 
   patchPayload: (_, params) => ({
     set: [],
-    remove: [],
+    delete: [],
     [params.type]: params.uuids.map((uuid) => {
       if (typeof uuid === 'string') {
         return {
@@ -58,12 +30,12 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
             id: uuid,
           },
         };
-      } else {
-        return {
-          uuid: { id: uuid.id },
-          custom: uuid.custom,
-        };
       }
+      return {
+        uuid: { id: uuid.id },
+        custom: uuid.custom,
+        status: uuid.status,
+      };
     }),
   }),
 
@@ -73,10 +45,9 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
+    queryParams.include = ['uuid.status', 'uuid.type', 'type'];
 
     if (params?.include) {
-      queryParams.include = [];
-
       if (params.include?.customFields) {
         queryParams.include.push('custom');
       }
@@ -88,9 +59,9 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
       if (params.include?.UUIDFields) {
         queryParams.include.push('uuid');
       }
-
-      queryParams.include = queryParams.include.join(',');
     }
+
+    queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {
       queryParams.count = true;
@@ -108,7 +79,7 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
       queryParams.filter = params.filter;
     }
 
-    if (params?.limit) {
+    if (params.limit != null) {
       queryParams.limit = params.limit;
     }
 
@@ -116,9 +87,8 @@ const endpoint: EndpointConfig<SetMembersParams, SetMembersResult> = {
       queryParams.sort = Object.entries(params.sort ?? {}).map(([key, value]) => {
         if (value === 'asc' || value === 'desc') {
           return `${key}:${value}`;
-        } else {
-          return key;
         }
+        return key;
       });
     }
 

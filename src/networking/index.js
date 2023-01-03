@@ -1,4 +1,4 @@
-/* @flow */
+/*       */
 
 import Config from '../core/components/config';
 import categoryConstants from '../core/constants/categories';
@@ -6,19 +6,21 @@ import categoryConstants from '../core/constants/categories';
 import { EndpointDefinition, NetworkingModules } from '../core/flow_interfaces';
 
 export default class {
-  _modules: NetworkingModules;
-  _config: Config;
+  _modules;
 
-  _currentSubDomain: number;
+  _config;
 
-  _standardOrigin: string;
-  _subscribeOrigin: string;
+  _currentSubDomain;
 
-  _requestTimeout: number;
+  _standardOrigin;
 
-  _coreParams: Object; /* items that must be passed with each request. */
+  _subscribeOrigin;
 
-  constructor(modules: NetworkingModules) {
+  _requestTimeout;
+
+  _coreParams; /* items that must be passed with each request. */
+
+  constructor(modules) {
     this._modules = {};
 
     Object.keys(modules).forEach((key) => {
@@ -26,7 +28,7 @@ export default class {
     });
   }
 
-  init(config: Config) {
+  init(config) {
     this._config = config;
 
     if (Array.isArray(this._config.origin)) {
@@ -41,7 +43,7 @@ export default class {
     this.shiftStandardOrigin();
   }
 
-  nextOrigin(): string {
+  nextOrigin() {
     const protocol = this._config.secure ? 'https://' : 'http://';
 
     if (typeof this._config.origin === 'string') {
@@ -59,46 +61,46 @@ export default class {
     return `${protocol}${origin}`;
   }
 
-  hasModule(name: string) {
+  hasModule(name) {
     return name in this._modules;
   }
 
   // origin operations
-  shiftStandardOrigin(): string {
+  shiftStandardOrigin() {
     this._standardOrigin = this.nextOrigin();
 
     return this._standardOrigin;
   }
 
-  getStandardOrigin(): string {
+  getStandardOrigin() {
     return this._standardOrigin;
   }
 
-  POSTFILE(url: string, fields: $ReadOnlyArray<{ key: string, value: string }>, file: any) {
+  POSTFILE(url, fields, file) {
     return this._modules.postfile(url, fields, file);
   }
 
-  GETFILE(params: Object, endpoint: EndpointDefinition, callback: Function) {
+  GETFILE(params, endpoint, callback) {
     return this._modules.getfile(params, endpoint, callback);
   }
 
-  POST(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
+  POST(params, body, endpoint, callback) {
     return this._modules.post(params, body, endpoint, callback);
   }
 
-  PATCH(params: Object, body: string, endpoint: EndpointDefinition, callback: Function) {
+  PATCH(params, body, endpoint, callback) {
     return this._modules.patch(params, body, endpoint, callback);
   }
 
-  GET(params: Object, endpoint: EndpointDefinition, callback: Function) {
+  GET(params, endpoint, callback) {
     return this._modules.get(params, endpoint, callback);
   }
 
-  DELETE(params: Object, endpoint: EndpointDefinition, callback: Function) {
+  DELETE(params, endpoint, callback) {
     return this._modules.del(params, endpoint, callback);
   }
 
-  _detectErrorCategory(err: Object): string {
+  _detectErrorCategory(err) {
     if (err.code === 'ENOTFOUND') {
       return categoryConstants.PNNetworkIssuesCategory;
     }

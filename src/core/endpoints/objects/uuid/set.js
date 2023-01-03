@@ -1,24 +1,10 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../../endpoint';
 import operationConstants from '../../../constants/operations';
-import type { UUIDMetadata } from './uuid';
+
 import utils from '../../../utils';
 
-export type SetUUIDMetadataParams = {|
-  uuid?: string,
-  include?: {|
-    customFields: ?boolean,
-  |},
-  data: $Shape<UUIDMetadata>,
-|};
-
-export type SetUUIDMetadataResult = {|
-  status: 200,
-  data: UUIDMetadata,
-|};
-
-const endpoint: EndpointConfig<SetUUIDMetadataParams, SetUUIDMetadataResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNSetUUIDMetadataOperation,
 
   validateParams: (_, params) => {
@@ -29,7 +15,8 @@ const endpoint: EndpointConfig<SetUUIDMetadataParams, SetUUIDMetadataResult> = {
 
   usePatch: () => true,
 
-  patchURL: ({ config }, params) => `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}`,
+  patchURL: ({ config }, params) =>
+    `/v2/objects/${config.subscribeKey}/uuids/${utils.encodeString(params.uuid ?? config.getUUID())}`,
 
   patchPayload: (_, params) => params.data,
 
@@ -37,10 +24,22 @@ const endpoint: EndpointConfig<SetUUIDMetadataParams, SetUUIDMetadataResult> = {
 
   isAuthSupported: () => true,
 
-  prepareParams: ({ config }, params) => ({
-    uuid: params?.uuid ?? config.getUUID(),
-    include: (params?.include?.customFields ?? true) && 'custom',
-  }),
+  prepareParams: ({ config }, params) => {
+    const queryParams = {};
+
+    queryParams.uuid = params?.uuid ?? config.getUUID();
+    queryParams.include = ['status', 'type', 'custom'];
+
+    if (params?.include) {
+      if (params.include?.customFields === false) {
+        queryParams.include.pop();
+      }
+    }
+
+    queryParams.include = queryParams.include.join(',');
+
+    return queryParams;
+  },
 
   handleResponse: (_, response) => ({
     status: response.status,

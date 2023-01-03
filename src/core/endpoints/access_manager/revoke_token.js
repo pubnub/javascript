@@ -1,17 +1,9 @@
-/** @flow */
+/**       */
 
-import type { EndpointConfig } from '../endpoint';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
-export type RevokeTokenParams = string;
-
-export type RevokeTokenResult = {|
-  status: 200,
-  data: string
-|}
-
-const endpoint: EndpointConfig<RevokeTokenParams, RevokeTokenResult> = {
+const endpoint = {
   getOperation: () => operationConstants.PNAccessManagerRevokeToken,
 
   validateParams: (modules, token) => {

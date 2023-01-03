@@ -2,4 +2,4 @@
 set -e
 
 npm ci
-gulp compile
+npm run build

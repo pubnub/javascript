@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+
+    "allowJs": true,
+    "noEmitOnError": true,
+    "strict": true,
+    "outDir": "./lib"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "src/node/**/*"]
+}

@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(client: PubNub, count: Number, channel: String, completion: Function) {
+function publishMessagesToChannel(client        , count        , channel        , completion          ) {
   let publishCompleted = 0;
   let messages = [];
 
