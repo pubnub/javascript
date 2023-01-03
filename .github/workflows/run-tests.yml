@@ -19,7 +19,11 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node: [8.10.0, 10.13.0, 12]
+        node: [12, 14, 16]
+        env: ["ci:node"]
+        include:
+          - node: 16
+            env: "ci:web"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -39,8 +43,7 @@ jobs:
       - name: Build and run tests for NodeJS ${{ matrix.node }}
         run: |
           npm install
-          npm install gulp --no-save 
-          gulp test
+          npm run ${{ matrix.env }}
       - name: Cancel workflow runs for commit on error
         if: failure()
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
