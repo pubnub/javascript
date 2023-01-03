@@ -25,7 +25,7 @@ jobs:
         if: steps.user-check.outputs.expected-user == 'true'
         uses: actions/checkout@v3
         with:
-           token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
       - name: Checkout release actions
         if: steps.user-check.outputs.expected-user == 'true'
         uses: actions/checkout@v3
