@@ -39,6 +39,7 @@ jobs:
       - name: Build and run tests for NodeJS ${{ matrix.node }}
         run: |
           npm install
+          npm install gulp --no-save 
           gulp test
       - name: Cancel workflow runs for commit on error
         if: failure()
