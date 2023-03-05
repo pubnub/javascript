@@ -1,12 +1,3 @@
-/*       */
-
-import {
-  FetchMessagesArguments,
-  FetchMessagesResponse,
-  MessageAnnouncement,
-  HistoryV3Response,
-  ModulesInject,
-} from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
@@ -18,6 +9,21 @@ function __processMessage(modules, message) {
     return crypto.decrypt(message);
   } catch (e) {
     return message;
+  }
+}
+
+function __getPNMessageTypeString(messageTypeInt) {
+  switch (messageTypeInt) {
+    case 0:
+      return 'pn_message';
+    case 3:
+      return 'pn_messageAction';
+    case 4:
+      return 'pn_file';
+    case null:
+      return 'pn_message';
+    default:
+      return `${messageTypeInt}`;
   }
 }
 
@@ -69,9 +75,11 @@ export function prepareParams(modules, incomingParams) {
     includeUuid,
     includeUUID = true,
     includeMessageType = true,
+    includeSpaceId = false,
   } = incomingParams;
   const outgoingParams = {};
-
+  outgoingParams.include_message_type = 'true';
+  outgoingParams.include_type = 'true';
   if (count) {
     outgoingParams.max = count;
   } else {
@@ -82,7 +90,11 @@ export function prepareParams(modules, incomingParams) {
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (includeMeta) outgoingParams.include_meta = 'true';
   if (includeUUID && includeUuid !== false) outgoingParams.include_uuid = 'true';
-  if (includeMessageType) outgoingParams.include_message_type = 'true';
+  if (!includeMessageType) {
+    outgoingParams.include_message_type = 'false';
+    outgoingParams.include_type = 'false';
+  }
+  if (includeSpaceId) outgoingParams.include_space_id = 'true';
 
   return outgoingParams;
 }
@@ -100,7 +112,6 @@ export function handleResponse(modules, serverResponse) {
       announce.channel = channelName;
       announce.timetoken = messageEnvelope.timetoken;
       announce.message = __processMessage(modules, messageEnvelope.message);
-      announce.messageType = messageEnvelope.message_type;
       announce.uuid = messageEnvelope.uuid;
 
       if (messageEnvelope.actions) {
@@ -111,6 +122,13 @@ export function handleResponse(modules, serverResponse) {
       }
       if (messageEnvelope.meta) {
         announce.meta = messageEnvelope.meta;
+      }
+      if (typeof messageEnvelope.message_type != 'undefined' || messageEnvelope.type) {
+        announce.messageType = messageEnvelope.type || __getPNMessageTypeString(messageEnvelope.message_type);
+      }
+
+      if (messageEnvelope.space_id) {
+        announce.spaceId = messageEnvelope.space_id;
       }
 
       response.channels[channelName].push(announce);
