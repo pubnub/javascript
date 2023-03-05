@@ -581,6 +581,15 @@ export default class {
         if (message.userMetadata) {
           announce.userMetadata = message.userMetadata;
         }
+        if (message.type) {
+          announce.messageType = message.type;
+        } else {
+          announce.messageType = 'pn_signal';
+        }
+
+        if (message.spaceId) {
+          announce.spaceId = message.spaceId;
+        }
 
         announce.message = message.payload;
 
@@ -607,6 +616,8 @@ export default class {
           type: message.payload.type,
           data: message.payload.data,
         };
+
+        announce.messageType = 'pn_object';
 
         this._listenerManager.announceObjects(announce);
 
@@ -662,6 +673,8 @@ export default class {
 
         announce.event = message.payload.event;
 
+        announce.messageType = 'pn_messageAction';
+
         this._listenerManager.announceMessageAction(announce);
       } else if (message.messageType === 4) {
         // this is a file message
@@ -697,6 +710,16 @@ export default class {
           }),
         };
 
+        if (message.type) {
+          announce.messageType = message.type;
+        } else {
+          announce.messageType = 'pn_file';
+        }
+
+        if (message.spaceId) {
+          announce.spaceId = message.spaceId;
+        }
+
         this._listenerManager.announceFile(announce);
       } else {
         const announce = {};
@@ -721,6 +744,16 @@ export default class {
           announce.message = this._crypto.decrypt(message.payload);
         } else {
           announce.message = message.payload;
+        }
+
+        if (message.type) {
+          announce.messageType = message.type;
+        } else {
+          announce.messageType = 'pn_message';
+        }
+
+        if (message.spaceId) {
+          announce.spaceId = message.spaceId;
         }
 
         this._listenerManager.announceMessage(announce);
