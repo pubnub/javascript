@@ -18,7 +18,7 @@ const sendFile = function ({
   publishFile,
   modules: { PubNubFile, config, cryptography, networking },
 }) {
-  return async ({ channel, file: input, message, cipherKey, meta, ttl, storeInHistory }) => {
+  return async ({ channel, file: input, message, cipherKey, meta, ttl, storeInHistory, messageType, spaceId }) => {
     if (!channel) {
       throw new PubNubError(
         'Validation failed, check status for details',
@@ -99,6 +99,8 @@ const sendFile = function ({
           meta,
           storeInHistory,
           ttl,
+          messageType: messageType,
+          spaceId: spaceId,
         });
 
         wasSuccessful = true;
