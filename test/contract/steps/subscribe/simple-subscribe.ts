@@ -3,6 +3,7 @@ import { When, Then } from '@cucumber/cucumber';
 When('I subscribe to {string} channel', async function (channel) {
   // remember the channel we subscribed to
   this.channel = channel;
+  // this.messageCount = 0;
   this.events = [];
   const pubnub = this.getPubnub({
     publishKey: this.keyset.publishKey,

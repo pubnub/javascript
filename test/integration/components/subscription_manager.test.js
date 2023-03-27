@@ -119,7 +119,6 @@ describe('#components/subscription_manager', () => {
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
               publisher: 'client1',
-              messageType: 'pn_message',
             },
             {
               actualChannel: 'coolChannel',
@@ -131,7 +130,6 @@ describe('#components/subscription_manager', () => {
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
               publisher: 'client2',
-              messageType: 'pn_message',
             },
             {
               actualChannel: 'coolChannel',
@@ -146,7 +144,6 @@ describe('#components/subscription_manager', () => {
               subscription: 'coolChan-bnel',
               timetoken: '14607577960925503',
               publisher: 'client3',
-              messageType: 'pn_message',
             },
           ]);
           done();

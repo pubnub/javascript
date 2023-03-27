@@ -582,9 +582,7 @@ export default class {
           announce.userMetadata = message.userMetadata;
         }
         if (message.type) {
-          announce.messageType = message.type;
-        } else {
-          announce.messageType = 'pn_signal';
+          announce.type = message.type;
         }
 
         if (message.spaceId) {
@@ -616,8 +614,6 @@ export default class {
           type: message.payload.type,
           data: message.payload.data,
         };
-
-        announce.messageType = 'pn_object';
 
         this._listenerManager.announceObjects(announce);
 
@@ -673,8 +669,6 @@ export default class {
 
         announce.event = message.payload.event;
 
-        announce.messageType = 'pn_messageAction';
-
         this._listenerManager.announceMessageAction(announce);
       } else if (message.messageType === 4) {
         // this is a file message
@@ -711,9 +705,7 @@ export default class {
         };
 
         if (message.type) {
-          announce.messageType = message.type;
-        } else {
-          announce.messageType = 'pn_file';
+          announce.type = message.type;
         }
 
         if (message.spaceId) {
@@ -747,9 +739,7 @@ export default class {
         }
 
         if (message.type) {
-          announce.messageType = message.type;
-        } else {
-          announce.messageType = 'pn_message';
+          announce.type = message.type;
         }
 
         if (message.spaceId) {
