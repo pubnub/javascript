@@ -1,6 +1,6 @@
 import { When } from '@cucumber/cucumber';
 
-When('I send a file with {string} space id and {string} message type', async function (testSpaceId, testMessageType) {
+When('I send a file with {string} space id and {string} type', async function (testSpaceId, testType) {
   const pubnub = this.getPubnub({
     publishKey: this.keyset.publishKey,
     subscribeKey: this.keyset.subscribeKey,
@@ -13,7 +13,7 @@ When('I send a file with {string} space id and {string} message type', async fun
       file: { data: Buffer.from(testContent), name: 'myFile.txt', mimeType: 'text/plain' },
       message: { text: 'fileMessage' },
       spaceId: testSpaceId,
-      messageType: testMessageType,
+      type: testType,
     });
     this.isSucceed = response.timetoken === '1';
   } catch (e) {

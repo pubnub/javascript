@@ -40,11 +40,11 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(_, incomingParams) {
-  const { spaceId, messageType } = incomingParams;
+  const { spaceId, type } = incomingParams;
   const params = {};
 
-  if (messageType) {
-    params.type = messageType;
+  if (type) {
+    params.type = type;
   }
 
   if (spaceId) {

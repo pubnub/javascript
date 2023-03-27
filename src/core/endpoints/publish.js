@@ -62,7 +62,7 @@ export function postPayload(modules, incomingParams) {
 }
 
 export function prepareParams(modules, incomingParams) {
-  const { meta, replicate = true, storeInHistory, ttl, spaceId, messageType } = incomingParams;
+  const { meta, replicate = true, storeInHistory, ttl, spaceId, type } = incomingParams;
   const params = {};
 
   if (storeInHistory != null) {
@@ -85,8 +85,8 @@ export function prepareParams(modules, incomingParams) {
     params.meta = JSON.stringify(meta);
   }
 
-  if (messageType) {
-    params.type = messageType;
+  if (type) {
+    params.type = type;
   }
 
   if (spaceId) {

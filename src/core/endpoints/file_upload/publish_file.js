@@ -71,8 +71,8 @@ const endpoint = {
       outParams['space-id'] = params.spaceId;
     }
 
-    if (params.messageType) {
-      outParams.type = params.messageType;
+    if (params.type) {
+      outParams.type = params.type;
     }
 
     return outParams;
