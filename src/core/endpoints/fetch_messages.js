@@ -1,12 +1,3 @@
-/*       */
-
-import {
-  FetchMessagesArguments,
-  FetchMessagesResponse,
-  MessageAnnouncement,
-  HistoryV3Response,
-  ModulesInject,
-} from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
@@ -69,9 +60,12 @@ export function prepareParams(modules, incomingParams) {
     includeUuid,
     includeUUID = true,
     includeMessageType = true,
+    includeType = true,
+    includeSpaceId = false,
   } = incomingParams;
   const outgoingParams = {};
-
+  outgoingParams.include_message_type = 'true';
+  outgoingParams.include_type = 'true';
   if (count) {
     outgoingParams.max = count;
   } else {
@@ -82,7 +76,13 @@ export function prepareParams(modules, incomingParams) {
   if (stringifiedTimeToken) outgoingParams.string_message_token = 'true';
   if (includeMeta) outgoingParams.include_meta = 'true';
   if (includeUUID && includeUuid !== false) outgoingParams.include_uuid = 'true';
-  if (includeMessageType) outgoingParams.include_message_type = 'true';
+  if (!includeMessageType) {
+    outgoingParams.include_message_type = 'false';
+  }
+  if (!includeType) {
+    outgoingParams.include_type = 'false';
+  }
+  if (includeSpaceId) outgoingParams.include_space_id = 'true';
 
   return outgoingParams;
 }
@@ -111,6 +111,13 @@ export function handleResponse(modules, serverResponse) {
       }
       if (messageEnvelope.meta) {
         announce.meta = messageEnvelope.meta;
+      }
+      if (messageEnvelope.type) {
+        announce.type = messageEnvelope.type;
+      }
+
+      if (messageEnvelope.space_id) {
+        announce.spaceId = messageEnvelope.space_id;
       }
 
       response.channels[channelName].push(announce);

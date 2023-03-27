@@ -1,13 +1,3 @@
-/*       */
-
-import {
-  SubscribeArguments,
-  PublishMetaData,
-  SubscribeMetadata,
-  SubscribeMessage,
-  SubscribeEnvelope,
-  ModulesInject,
-} from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 
@@ -84,6 +74,8 @@ export function handleResponse(modules, serverResponse) {
       subscribeKey: rawMessage.k,
       originationTimetoken: rawMessage.o,
       userMetadata: rawMessage.u,
+      type: rawMessage.mt,
+      spaceId: rawMessage.si,
       publishMetaData,
     };
     messages.push(parsedMessage);

@@ -581,6 +581,13 @@ export default class {
         if (message.userMetadata) {
           announce.userMetadata = message.userMetadata;
         }
+        if (message.type) {
+          announce.type = message.type;
+        }
+
+        if (message.spaceId) {
+          announce.spaceId = message.spaceId;
+        }
 
         announce.message = message.payload;
 
@@ -697,6 +704,14 @@ export default class {
           }),
         };
 
+        if (message.type) {
+          announce.type = message.type;
+        }
+
+        if (message.spaceId) {
+          announce.spaceId = message.spaceId;
+        }
+
         this._listenerManager.announceFile(announce);
       } else {
         const announce = {};
@@ -721,6 +736,14 @@ export default class {
           announce.message = this._crypto.decrypt(message.payload);
         } else {
           announce.message = message.payload;
+        }
+
+        if (message.type) {
+          announce.type = message.type;
+        }
+
+        if (message.spaceId) {
+          announce.spaceId = message.spaceId;
         }
 
         this._listenerManager.announceMessage(announce);

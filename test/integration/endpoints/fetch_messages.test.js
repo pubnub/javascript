@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(client        , count        , channel        , completion          ) {
+function publishMessagesToChannel(client, count, channel, completion) {
   let publishCompleted = 0;
   let messages = [];
 
@@ -39,11 +39,11 @@ function publishMessagesToChannel(client        , count        , channel        
 }
 
 function addActionsInChannel(
-  client        ,
-  count        ,
-  messageTimetokens               ,
-  channel        ,
-  completion          
+  client,
+  count,
+  messageTimetokens,
+  channel,
+  completion
 ) {
   const types = ['reaction', 'receipt', 'custom'];
   const values = [
@@ -119,7 +119,7 @@ describe('fetch messages endpoints', () => {
       subscribeKey,
       publishKey,
       uuid: 'myUUID',
-      useRandomIVs: false
+      useRandomIVs: false,
     });
   });
 
@@ -134,10 +134,11 @@ describe('fetch messages endpoints', () => {
         uuid: 'myUUID',
         include_uuid: 'true',
         include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
-        '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }'
+        '{ "channels": { "ch1": [{"message":{"text":"hey1"},"timetoken":"11"}, {"message":{"text":"hey2"},"timetoken":"12"}], "ch2": [{"message":{"text":"hey3"},"timetoken":"21"}, {"message":{"text":"hey2"},"timetoken":"22"}] } }',
       );
 
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
@@ -202,6 +203,7 @@ describe('fetch messages endpoints', () => {
         uuid: 'myUUID',
         include_uuid: 'true',
         include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
@@ -279,7 +281,7 @@ describe('fetch messages endpoints', () => {
     let errorCatched = false;
 
     try {
-      pubnub.fetchMessages({ channels: ['channelA', 'channelB'], includeMessageActions: true }, () => {});
+      pubnub.fetchMessages({ channels: ['channelA', 'channelB'], includeMessageActions: true }, () => { });
     } catch (error) {
       assert.equal(
         error.message,
@@ -417,19 +419,20 @@ describe('fetch messages endpoints', () => {
         uuid: 'myUUID',
         max: '25',
         include_uuid: 'true',
-        include_message_type: 'true'
+        include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{"status":200,"error":false,"error_message":"","channels":{"demo-channel":[{"message":"Hi","timetoken":15610547826970040,"actions":{"receipt":{"read":[{"uuid":"user-7","actionTimetoken":15610547826970044}]}}},{"message":"Hello","timetoken":15610547826970000,"actions":{"reaction":{"smiley_face":[{"uuid":"user-456","actionTimetoken":15610547826970050}]}}}]},"more":{"url":"/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98","start":"15610547826970000","max":98}}'
       );
-      pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true}, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true }, (status, response) => {
       assert.equal(status.error, false);
       assert.equal(response.more.url, '/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98');
       assert.equal(response.more.start, '15610547826970000');
       assert.equal(response.more.max, 98);
       done();
-      });
+    });
   });
   it('should request 100 messages when count not provided with single channel', (done) => {
     nock.disableNetConnect();
@@ -442,15 +445,16 @@ describe('fetch messages endpoints', () => {
         uuid: 'myUUID',
         include_uuid: 'true',
         include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
       );
-      pubnub.fetchMessages({ channels: ['ch1'] }, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1'] }, (status, response) => {
       assert.equal(status.error, false);
       done();
-      });
+    });
   });
 
   it('should request 25 messages when count not provided with multiple channels', (done) => {
@@ -464,15 +468,16 @@ describe('fetch messages endpoints', () => {
         uuid: 'myUUID',
         include_uuid: 'true',
         include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
       );
-      pubnub.fetchMessages({ channels: ['ch1', 'ch2'] }, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1', 'ch2'] }, (status, response) => {
       assert.equal(status.error, false);
       done();
-      });
+    });
   });
 
   it('should request 25 messages when count not provided for history-with-actions', (done) => {
@@ -485,16 +490,17 @@ describe('fetch messages endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         include_uuid: 'true',
-        include_message_type: 'true'
+        include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
       );
-      pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true}, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true }, (status, response) => {
       assert.equal(status.error, false);
       done();
-      });
+    });
   });
 
   it('should request provided number of messages when count is specified for history-with-actions', (done) => {
@@ -507,16 +513,17 @@ describe('fetch messages endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         include_uuid: 'true',
-        include_message_type: 'true'
+        include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
       );
-      pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true, count: 10}, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true, count: 10 }, (status, response) => {
       assert.equal(status.error, false);
       done();
-      });
+    });
   });
 
   it('should request provided number of messages when count is specified for batch history with single channel', (done) => {
@@ -529,16 +536,17 @@ describe('fetch messages endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         include_uuid: 'true',
-        include_message_type: 'true'
+        include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
       );
-      pubnub.fetchMessages({ channels: ['ch1'], count: 10}, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1'], count: 10 }, (status, response) => {
       assert.equal(status.error, false);
       done();
-      });
+    });
   });
 
   it('should request provided number of messages when count is specified for batch history with multiple channels', (done) => {
@@ -551,15 +559,16 @@ describe('fetch messages endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         include_uuid: 'true',
-        include_message_type: 'true'
+        include_message_type: 'true',
+        include_type: 'true',
       })
       .reply(
         200,
         '{ "error": false, "error_message": "", "channels": { "ch1": [ { "message_type": null, "message": "hello world", "timetoken": "16048329933709932", "uuid": "test-uuid"} ] } }'
       );
-      pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10}, (status, response) => {
+    pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
       assert.equal(status.error, false);
       done();
-      });
+    });
   });
 });

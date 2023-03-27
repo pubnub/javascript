@@ -2203,6 +2203,12 @@
                     if (message.userMetadata) {
                         announce.userMetadata = message.userMetadata;
                     }
+                    if (message.type) {
+                        announce.type = message.type;
+                    }
+                    if (message.spaceId) {
+                        announce.spaceId = message.spaceId;
+                    }
                     announce.message = message.payload;
                     _this._listenerManager.announceSignal(announce);
                 }
@@ -2284,6 +2290,12 @@
                             channel: channel,
                         }),
                     };
+                    if (message.type) {
+                        announce.type = message.type;
+                    }
+                    if (message.spaceId) {
+                        announce.spaceId = message.spaceId;
+                    }
                     _this._listenerManager.announceFile(announce);
                 }
                 else {
@@ -2306,6 +2318,12 @@
                     }
                     else {
                         announce.message = message.payload;
+                    }
+                    if (message.type) {
+                        announce.type = message.type;
+                    }
+                    if (message.spaceId) {
+                        announce.spaceId = message.spaceId;
                     }
                     _this._listenerManager.announceMessage(announce);
                 }
@@ -4601,7 +4619,6 @@
         }); },
     };
 
-    /**       */
     var preparePayload = function (_a, payload) {
         var crypto = _a.crypto, config = _a.config;
         var stringifiedPayload = JSON.stringify(payload);
@@ -4652,6 +4669,12 @@
             if (params.meta && typeof params.meta === 'object') {
                 outParams.meta = JSON.stringify(params.meta);
             }
+            if (params.spaceId) {
+                outParams['space-id'] = params.spaceId;
+            }
+            if (params.type) {
+                outParams.type = params.type;
+            }
             return outParams;
         },
         handleResponse: function (_, response) { return ({
@@ -4674,7 +4697,7 @@
         var _this = this;
         var generateUploadUrl = _a.generateUploadUrl, publishFile = _a.publishFile, _b = _a.modules, PubNubFile = _b.PubNubFile, config = _b.config, cryptography = _b.cryptography, networking = _b.networking;
         return function (_a) {
-            var channel = _a.channel, input = _a.file, message = _a.message, cipherKey = _a.cipherKey, meta = _a.meta, ttl = _a.ttl, storeInHistory = _a.storeInHistory;
+            var channel = _a.channel, input = _a.file, message = _a.message, cipherKey = _a.cipherKey, meta = _a.meta, ttl = _a.ttl, storeInHistory = _a.storeInHistory, type = _a.type, spaceId = _a.spaceId;
             return __awaiter(_this, void 0, void 0, function () {
                 var file, _b, _c, url, formFields, _d, id, name, formFieldsWithMimeType, result, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, e_1, errorBody, reason, retries, wasSuccessful, publishResult;
                 return __generator(this, function (_s) {
@@ -4772,6 +4795,8 @@
                                     meta: meta,
                                     storeInHistory: storeInHistory,
                                     ttl: ttl,
+                                    type: type,
+                                    spaceId: spaceId,
                                 })];
                         case 24:
                             /* eslint-disable-next-line no-await-in-loop */
@@ -6035,7 +6060,7 @@
         return prepareMessagePayload$1(modules, message);
     }
     function prepareParams$7(modules, incomingParams) {
-        var meta = incomingParams.meta, _a = incomingParams.replicate, replicate = _a === void 0 ? true : _a, storeInHistory = incomingParams.storeInHistory, ttl = incomingParams.ttl;
+        var meta = incomingParams.meta, _a = incomingParams.replicate, replicate = _a === void 0 ? true : _a, storeInHistory = incomingParams.storeInHistory, ttl = incomingParams.ttl, spaceId = incomingParams.spaceId, type = incomingParams.type;
         var params = {};
         if (storeInHistory != null) {
             if (storeInHistory) {
@@ -6053,6 +6078,12 @@
         }
         if (meta && typeof meta === 'object') {
             params.meta = JSON.stringify(meta);
+        }
+        if (type) {
+            params.type = type;
+        }
+        if (spaceId) {
+            params['space-id'] = spaceId;
         }
         return params;
     }
@@ -6105,8 +6136,15 @@
     function isAuthSupported$6() {
         return true;
     }
-    function prepareParams$6() {
+    function prepareParams$6(_, incomingParams) {
+        var spaceId = incomingParams.spaceId, type = incomingParams.type;
         var params = {};
+        if (type) {
+            params.type = type;
+        }
+        if (spaceId) {
+            params['space-id'] = spaceId;
+        }
         return params;
     }
     function handleResponse$6(modules, serverResponse) {
@@ -6321,7 +6359,6 @@
         handleResponse: handleResponse$3
     });
 
-    /*       */
     function __processMessage(modules, message) {
         var config = modules.config, crypto = modules.crypto;
         if (!config.cipherKey)
@@ -6363,8 +6400,10 @@
         return true;
     }
     function prepareParams$2(modules, incomingParams) {
-        var channels = incomingParams.channels, start = incomingParams.start, end = incomingParams.end, includeMessageActions = incomingParams.includeMessageActions, count = incomingParams.count, _a = incomingParams.stringifiedTimeToken, stringifiedTimeToken = _a === void 0 ? false : _a, _b = incomingParams.includeMeta, includeMeta = _b === void 0 ? false : _b, includeUuid = incomingParams.includeUuid, _c = incomingParams.includeUUID, includeUUID = _c === void 0 ? true : _c, _d = incomingParams.includeMessageType, includeMessageType = _d === void 0 ? true : _d;
+        var channels = incomingParams.channels, start = incomingParams.start, end = incomingParams.end, includeMessageActions = incomingParams.includeMessageActions, count = incomingParams.count, _a = incomingParams.stringifiedTimeToken, stringifiedTimeToken = _a === void 0 ? false : _a, _b = incomingParams.includeMeta, includeMeta = _b === void 0 ? false : _b, includeUuid = incomingParams.includeUuid, _c = incomingParams.includeUUID, includeUUID = _c === void 0 ? true : _c, _d = incomingParams.includeMessageType, includeMessageType = _d === void 0 ? true : _d, _e = incomingParams.includeType, includeType = _e === void 0 ? true : _e, _f = incomingParams.includeSpaceId, includeSpaceId = _f === void 0 ? false : _f;
         var outgoingParams = {};
+        outgoingParams.include_message_type = 'true';
+        outgoingParams.include_type = 'true';
         if (count) {
             outgoingParams.max = count;
         }
@@ -6381,8 +6420,14 @@
             outgoingParams.include_meta = 'true';
         if (includeUUID && includeUuid !== false)
             outgoingParams.include_uuid = 'true';
-        if (includeMessageType)
-            outgoingParams.include_message_type = 'true';
+        if (!includeMessageType) {
+            outgoingParams.include_message_type = 'false';
+        }
+        if (!includeType) {
+            outgoingParams.include_type = 'false';
+        }
+        if (includeSpaceId)
+            outgoingParams.include_space_id = 'true';
         return outgoingParams;
     }
     function handleResponse$2(modules, serverResponse) {
@@ -6405,6 +6450,12 @@
                 }
                 if (messageEnvelope.meta) {
                     announce.meta = messageEnvelope.meta;
+                }
+                if (messageEnvelope.type) {
+                    announce.type = messageEnvelope.type;
+                }
+                if (messageEnvelope.space_id) {
+                    announce.spaceId = messageEnvelope.space_id;
                 }
                 response.channels[channelName].push(announce);
             });
@@ -6463,7 +6514,6 @@
         validateParams: validateParams$1
     });
 
-    /*       */
     function getOperation() {
         return OPERATIONS.PNSubscribeOperation;
     }
@@ -6526,6 +6576,8 @@
                 subscribeKey: rawMessage.k,
                 originationTimetoken: rawMessage.o,
                 userMetadata: rawMessage.u,
+                type: rawMessage.mt,
+                spaceId: rawMessage.si,
                 publishMetaData: publishMetaData,
             };
             messages.push(parsedMessage);

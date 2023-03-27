@@ -90,6 +90,7 @@ When('I get all UUID metadata with custom', async function () {
   });
 
   this.response = await pubnub.objects.getAllUUIDMetadata({ include: { customFields: true } });
+  this.isSucceed = this.response.status === 200;
 });
 
 Then('the UUID metadata for {string} persona', async function (persona) {
@@ -105,7 +106,7 @@ Then('the UUID metadata for {string} persona contains updated', async function (
 });
 
 Then('I receive a successful response', function () {
-  expect(this.response.status).to.equal(200);
+  expect(this.isSucceed).to.be.true;
 });
 
 Then('the response contains list with {string} and {string} UUID metadata', function (firstPersona, secondPersona) {
