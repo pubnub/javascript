@@ -120,7 +120,6 @@ describe('fetch messages endpoints', () => {
       publishKey,
       uuid: 'myUUID',
       useRandomIVs: false,
-      logVerbosity: true,
     });
   });
 
