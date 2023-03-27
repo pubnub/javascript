@@ -39,13 +39,15 @@ When(
   },
 );
 
-Then(
-  'history response contains messages with {string} and {string} message types',
-  function (firstMessageType, secondMessageType) {
-    expect(this.historyMessages.filter((m) => m.messageType === firstMessageType)).to.have.lengthOf(1);
-    expect(this.historyMessages.filter((m) => m.messageType === secondMessageType)).to.have.lengthOf(1);
-  },
-);
+Then('history response contains messages with {string} and {string} message types', function (firstType, secondType) {
+  expect(this.historyMessages.filter((m) => m.messageType === firstType)).to.have.lengthOf(1);
+  expect(this.historyMessages.filter((m) => m.messageType === secondType)).to.have.lengthOf(1);
+});
+
+Then('history response contains messages with {string} and {string} types', function (firstType, secondType) {
+  expect(this.historyMessages.filter((m) => m.type === firstType)).to.have.lengthOf(1);
+  expect(this.historyMessages.filter((m) => m.type === secondType)).to.have.lengthOf(1);
+});
 
 Then('history response contains messages without space ids', function () {
   this.historyMessages.forEach((m) => expect(m).to.not.have.property('spaceId'));
@@ -55,10 +57,10 @@ Then('history response contains messages with space ids', function () {
   this.historyMessages.forEach((m) => expect(m).to.have.property('spaceId'));
 });
 
-Then('history response contains messages with message types', function () {
-  this.historyMessages.forEach((m) => expect(m).to.have.property('messageType'));
+Then('history response contains messages with types', function () {
+  this.historyMessages.forEach((m) => expect(m).to.have.property('type'));
 });
 
-Then('history response contains messages without message types', function () {
-  this.historyMessages.forEach((m) => expect(m).to.not.have.property('messageType'));
+Then('history response contains messages without types', function () {
+  this.historyMessages.forEach((m) => expect(m).to.not.have.property('type'));
 });
