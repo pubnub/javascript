@@ -68,11 +68,15 @@ const sendFile = function ({
         throw new Error('Unsupported environment');
       }
     } catch (e) {
-      const errorBody = await getErrorFromResponse(e.response);
+      if (e.response) {
+        const errorBody = await getErrorFromResponse(e.response);
 
-      const reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
+        const reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
 
-      throw new PubNubError(reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.', e);
+        throw new PubNubError(reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.', e);
+      } else {
+        throw new PubNubError('Upload to bucket failed.', e);
+      }
     }
 
     if (result.status !== 204) {
