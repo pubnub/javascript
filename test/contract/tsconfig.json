@@ -1,10 +1,15 @@
 {
-    "extends": "@tsconfig/node12/tsconfig.json",
-    "compilerOptions": {
-      "preserveConstEnums": true,
-      "noImplicitAny": false,
-      "outDir": "../../dist/cucumber/"
-    },
-    "include": ["**/*"],
-    "exclude": ["node_modules"]
-  }
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "target": "es5",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "allowJs": true,
+    "noEmit": true
+  },
+  "exclude": ["../../lib"]
+}

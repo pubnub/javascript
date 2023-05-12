@@ -17,5 +17,7 @@ module.exports = {
     'class-methods-use-this': 0,
     'no-prototype-builtins': 1,
     'prefer-destructuring': 0,
+    'no-unused-vars': 0,
+    '@typescript-eslint/no-unused-vars': 0,
   },
 };

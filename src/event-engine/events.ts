@@ -38,13 +38,13 @@ export const receivingSuccess = createEvent('RECEIVING_SUCCESS', (cursor: Cursor
 }));
 export const receivingFailure = createEvent('RECEIVING_FAILURE', (error: PubNubError) => error);
 
-export const reconnectingSuccess = createEvent('RECONNECTING_SUCCESS', (cursor: Cursor, events: any[]) => ({
+export const reconnectingSuccess = createEvent('RECEIVING_RECONNECTING_SUCCESS', (cursor: Cursor, events: any[]) => ({
   cursor,
   events,
 }));
-export const reconnectingFailure = createEvent('RECONNECTING_FAILURE', (error: PubNubError) => error);
-export const reconnectingGiveup = createEvent('RECONNECTING_GIVEUP', () => ({}));
-export const reconnectingRetry = createEvent('RECONNECTING_RETRY', () => ({}));
+export const reconnectingFailure = createEvent('RECEIVING_RECONNECTING_FAILURE', (error: PubNubError) => error);
+export const reconnectingGiveup = createEvent('RECEIVING_RECONNECTING_GIVEUP', () => ({}));
+export const reconnectingRetry = createEvent('RECEIVING_RECONNECTING_RETRY', () => ({}));
 
 export type Events = MapOf<
   | typeof subscriptionChange

@@ -1,5 +1,5 @@
 import { State } from '../core/state';
-import { Effects } from '../effects';
+import { Effects, emitStatus } from '../effects';
 import { disconnect, Events, handshakingReconnectingRetry } from '../events';
 import { PubNubError } from '../../core/components/endpoint';
 import { HandshakeReconnectingState } from './handshake_reconnecting';
@@ -13,6 +13,8 @@ export type HandshakeFailureStateContext = {
 };
 
 export const HandshakeFailureState = new State<HandshakeFailureStateContext, Events, Effects>('HANDSHAKE_FAILURE');
+
+HandshakeFailureState.onEnter((context) => emitStatus({ category: 'PNNetworkIssuesCategory' }));
 
 HandshakeFailureState.on(handshakingReconnectingRetry.type, (context) =>
   HandshakeReconnectingState.with({

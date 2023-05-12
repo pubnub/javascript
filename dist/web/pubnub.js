@@ -2332,7 +2332,68 @@
         return default_1;
     }());
 
-    /*       */
+    var Operation;
+    (function (Operation) {
+        Operation["Time"] = "PNTimeOperation";
+        Operation["History"] = "PNHistoryOperation";
+        Operation["DeleteMessages"] = "PNDeleteMessagesOperation";
+        Operation["FetchMessages"] = "PNFetchMessagesOperation";
+        Operation["MessageCounts"] = "PNMessageCountsOperation";
+        Operation["Subscribe"] = "PNSubscribeOperation";
+        Operation["Unsubscribe"] = "PNUnsubscribeOperation";
+        Operation["Publish"] = "PNPublishOperation";
+        Operation["Signal"] = "PNSignalOperation";
+        Operation["AddMessageAction"] = "PNAddActionOperation";
+        Operation["RemoveMessageAction"] = "PNRemoveMessageActionOperation";
+        Operation["GetMessageActions"] = "PNGetMessageActionsOperation";
+        Operation["CreateUser"] = "PNCreateUserOperation";
+        Operation["UpdateUser"] = "PNUpdateUserOperation";
+        Operation["RemoveUser"] = "PNRemoveUserOperation";
+        Operation["FetchUser"] = "PNFetchUserOperation";
+        Operation["GetUsers"] = "PNGetUsersOperation";
+        Operation["CreateSpace"] = "PNCreateSpaceOperation";
+        Operation["UpdateSpace"] = "PNUpdateSpaceOperation";
+        Operation["RemoveSpace"] = "PNRemoveSpaceOperation";
+        Operation["FetchSpace"] = "PNFetchSpaceOperation";
+        Operation["GetSpaces"] = "PNGetSpacesOperation";
+        Operation["GetMembers"] = "PNGetMembersOperation";
+        Operation["UpdateMembers"] = "PNUpdateMembersOperation";
+        Operation["GetMemberships"] = "PNGetMembershipsOperation";
+        Operation["UpdateMemberships"] = "PNUpdateMembershipsOperation";
+        Operation["ListFiles"] = "PNListFilesOperation";
+        Operation["GenerateUploadUrl"] = "PNGenerateUploadUrlOperation";
+        Operation["PublishFile"] = "PNPublishFileOperation";
+        Operation["GetFileUrl"] = "PNGetFileUrlOperation";
+        Operation["DownloadFile"] = "PNDownloadFileOperation";
+        Operation["GetAllUUIDMetadata"] = "PNGetAllUUIDMetadataOperation";
+        Operation["GetUUIDMetadata"] = "PNGetUUIDMetadataOperation";
+        Operation["SetUUIDMetadata"] = "PNSetUUIDMetadataOperation";
+        Operation["RemoveUUIDMetadata"] = "PNRemoveUUIDMetadataOperation";
+        Operation["GetAllChannelMetadata"] = "PNGetAllChannelMetadataOperation";
+        Operation["GetChannelMetadata"] = "PNGetChannelMetadataOperation";
+        Operation["SetChannelMetadata"] = "PNSetChannelMetadataOperation";
+        Operation["RemoveChannelMetadata"] = "PNRemoveChannelMetadataOperation";
+        Operation["SetMembers"] = "PNSetMembersOperation";
+        Operation["SetMemberships"] = "PNSetMembershipsOperation";
+        Operation["PushNotificationEnabledChannels"] = "PNPushNotificationEnabledChannelsOperation";
+        Operation["RemoveAllPushNotifications"] = "PNRemoveAllPushNotificationsOperation";
+        Operation["WhereNow"] = "PNWhereNowOperation";
+        Operation["SetState"] = "PNSetStateOperation";
+        Operation["HereNow"] = "PNHereNowOperation";
+        Operation["GetState"] = "PNGetStateOperation";
+        Operation["Heartbeat"] = "PNHeartbeatOperation";
+        Operation["ChannelGroups"] = "PNChannelGroupsOperation";
+        Operation["RemoveGroup"] = "PNRemoveGroupOperation";
+        Operation["ChannelsForGroup"] = "PNChannelsForGroupOperation";
+        Operation["AddChannelsToGroup"] = "PNAddChannelsToGroupOperation";
+        Operation["RemoveChannelsFromGroup"] = "PNRemoveChannelsFromGroupOperation";
+        Operation["AccessManagerGrant"] = "PNAccessManagerGrant";
+        Operation["AccessManagerGrantToken"] = "PNAccessManagerGrantToken";
+        Operation["AccessManagerAudit"] = "PNAccessManagerAudit";
+        Operation["AccessManagerRevokeToken"] = "PNAccessManagerRevokeToken";
+        Operation["Handshake"] = "PNHandshakeOperation";
+        Operation["ReceiveMessages"] = "PNReceiveMessagesOperation";
+    })(Operation || (Operation = {}));
     var OPERATIONS = {
         PNTimeOperation: 'PNTimeOperation',
         PNHistoryOperation: 'PNHistoryOperation',
@@ -2351,13 +2412,13 @@
         // Objects API
         PNCreateUserOperation: 'PNCreateUserOperation',
         PNUpdateUserOperation: 'PNUpdateUserOperation',
-        PNDeleteUserOperation: 'PNDeleteUserOperation',
-        PNGetUserOperation: 'PNGetUsersOperation',
+        PNRemoveUserOperation: 'PNRemoveUserOperation',
+        PNFetchUserOperation: 'PNFetchUserOperation',
         PNGetUsersOperation: 'PNGetUsersOperation',
         PNCreateSpaceOperation: 'PNCreateSpaceOperation',
         PNUpdateSpaceOperation: 'PNUpdateSpaceOperation',
-        PNDeleteSpaceOperation: 'PNDeleteSpaceOperation',
-        PNGetSpaceOperation: 'PNGetSpacesOperation',
+        PNRemoveSpaceOperation: 'PNRemoveSpaceOperation',
+        PNFetchSpaceOperation: 'PNFetchSpaceOperation',
         PNGetSpacesOperation: 'PNGetSpacesOperation',
         PNGetMembersOperation: 'PNGetMembersOperation',
         PNUpdateMembersOperation: 'PNUpdateMembersOperation',
@@ -6830,6 +6891,23 @@
             }
             instance.start();
         };
+        Dispatcher.prototype.dispose = function () {
+            var e_1, _a;
+            try {
+                for (var _b = __values(this.instances.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var _d = __read(_c.value, 2), key = _d[0], instance = _d[1];
+                    instance.cancel();
+                    this.instances.delete(key);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        };
         return Dispatcher;
     }());
 
@@ -6925,7 +7003,9 @@
             return _this;
         }
         AsyncHandler.prototype.start = function () {
-            this.asyncFunction(this.payload, this.abortSignal, this.dependencies);
+            this.asyncFunction(this.payload, this.abortSignal, this.dependencies).catch(function () {
+                // swallow the error
+            });
         };
         AsyncHandler.prototype.cancel = function () {
             this.abortSignal.abort();
@@ -6944,6 +7024,7 @@
     }); });
     var receiveEvents = createManagedEffect('RECEIVE_EVENTS', function (channels, groups, cursor) { return ({ channels: channels, groups: groups, cursor: cursor }); });
     var emitEvents = createEffect('EMIT_EVENTS', function (events) { return events; });
+    var emitStatus = createEffect('EMIT_STATUS', function (status) { return status; });
     var reconnect$1 = createManagedEffect('RECONNECT', function (context) { return context; });
     var handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', function (context) { return context; });
 
@@ -7055,12 +7136,21 @@
                 });
             }));
             _this.on(emitEvents.type, asyncHandler(function (payload, abortSignal, _a) {
-                _a.receiveEvents;
+                var emitEvents = _a.emitEvents;
                 return __awaiter(_this, void 0, void 0, function () {
                     return __generator(this, function (_b) {
                         if (payload.length > 0) {
-                            console.log(payload);
+                            emitEvents(payload);
                         }
+                        return [2 /*return*/];
+                    });
+                });
+            }));
+            _this.on(emitStatus.type, asyncHandler(function (payload, abortSignal, _a) {
+                var emitStatus = _a.emitStatus;
+                return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_b) {
+                        emitStatus(payload);
                         return [2 /*return*/];
                     });
                 });
@@ -7225,6 +7315,7 @@
 
     var ReceivingState = new State('RECEIVING');
     ReceivingState.onEnter(function (context) { return receiveEvents(context.channels, context.groups, context.cursor); });
+    ReceivingState.onEnter(function (context) { return emitStatus({ category: 'PNConnectedCategory' }); });
     ReceivingState.onExit(function () { return receiveEvents.cancel; });
     ReceivingState.on(receivingSuccess.type, function (context, event) {
         return ReceivingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor }), [emitEvents(event.payload.events)]);
@@ -7249,17 +7340,17 @@
     var HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
     HandshakeReconnectingState.onEnter(function (context) { return handshakeReconnect(context); });
     HandshakeReconnectingState.onExit(function () { return reconnect$1.cancel; });
-    HandshakeReconnectingState.on(reconnectingSuccess.type, function (context, event) {
+    HandshakeReconnectingState.on(handshakingReconnectingSuccess.type, function (context, event) {
         return ReceivingState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: event.payload.cursor,
-        }, [emitEvents(event.payload.events)]);
+        });
     });
-    HandshakeReconnectingState.on(reconnectingFailure.type, function (context, event) {
+    HandshakeReconnectingState.on(handshakingReconnectingFailure.type, function (context, event) {
         return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: context.attempts + 1, reason: event.payload }));
     });
-    HandshakeReconnectingState.on(reconnectingGiveup.type, function (context) {
+    HandshakeReconnectingState.on(handshakingReconnectingGiveup.type, function (context) {
         return HandshakeFailureState.with({
             groups: context.groups,
             channels: context.channels,
@@ -7311,7 +7402,7 @@
             this.channels = [];
             this.groups = [];
             this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
-            this.engine.subscribe(function (change) {
+            this._unsubscribeEngine = this.engine.subscribe(function (change) {
                 if (change.type === 'invocationDispatched') {
                     _this.dispatcher.dispatch(change.invocation);
                 }
@@ -7347,6 +7438,11 @@
         };
         EventEngine.prototype.disconnect = function () {
             this.engine.transition(disconnect());
+        };
+        EventEngine.prototype.dispose = function () {
+            this.disconnect();
+            this._unsubscribeEngine();
+            this.dispatcher.dispose();
         };
         return EventEngine;
     }());
@@ -7393,7 +7489,32 @@
             this.handshake = endpointCreator.bind(this, modules, endpoint$1);
             this.receiveMessages = endpointCreator.bind(this, modules, endpoint);
             if (config.enableSubscribeBeta === true) {
-                var eventEngine = new EventEngine({ handshake: this.handshake, receiveEvents: this.receiveMessages });
+                var eventEngine = new EventEngine({
+                    handshake: this.handshake,
+                    receiveEvents: this.receiveMessages,
+                    getRetryDelay: function (attempts) { return attempts * 25; },
+                    delay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
+                    shouldRetry: function (error, attempts) { return attempts < 3; },
+                    emitEvents: function (events) {
+                        var e_1, _a;
+                        try {
+                            for (var events_1 = __values(events), events_1_1 = events_1.next(); !events_1_1.done; events_1_1 = events_1.next()) {
+                                var event_1 = events_1_1.value;
+                                listenerManager.announceMessage(event_1);
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (events_1_1 && !events_1_1.done && (_a = events_1.return)) _a.call(events_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
+                        }
+                    },
+                    emitStatus: function (status) {
+                        listenerManager.announceStatus(status);
+                    },
+                });
                 this.subscribe = eventEngine.subscribe.bind(eventEngine);
                 this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
                 this.eventEngine = eventEngine;

@@ -15,7 +15,12 @@ export const receiveEvents = createManagedEffect(
 
 export const emitEvents = createEffect('EMIT_EVENTS', (events: any[]) => events);
 
-export const reconnect = createManagedEffect('RECONNECT', (context: ReceiveReconnectingStateContext) => context);
+export const emitStatus = createEffect('EMIT_STATUS', (status: any) => status);
+
+export const reconnect = createManagedEffect(
+  'RECEIVE_RECONNECT',
+  (context: ReceiveReconnectingStateContext) => context,
+);
 
 export const handshakeReconnect = createManagedEffect(
   'HANDSHAKE_RECONNECT',
@@ -23,5 +28,10 @@ export const handshakeReconnect = createManagedEffect(
 );
 
 export type Effects = MapOf<
-  typeof receiveEvents | typeof handshake | typeof emitEvents | typeof reconnect | typeof handshakeReconnect
+  | typeof receiveEvents
+  | typeof handshake
+  | typeof emitEvents
+  | typeof reconnect
+  | typeof handshakeReconnect
+  | typeof emitStatus
 >;

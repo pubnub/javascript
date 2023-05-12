@@ -15,6 +15,7 @@ dist/titanium/stats.json
 dist/contract
 dist/cucumber
 upload
+test/specs
 
 # GitHub Actions #
 ##################
