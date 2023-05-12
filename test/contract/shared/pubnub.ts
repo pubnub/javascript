@@ -12,6 +12,7 @@ export interface Config extends Keyset {
   suppressLeaveEvents?: boolean;
   logVerbosity?: boolean;
   uuid?: string;
+  enableSubscribeBeta?: boolean;
 }
 
 const defaultConfig: Config = {

@@ -1,7 +1,13 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { State } from '../core/state';
 import { Effects, emitEvents, handshakeReconnect, reconnect } from '../effects';
-import { disconnect, Events, reconnectingFailure, reconnectingGiveup, reconnectingSuccess } from '../events';
+import {
+  disconnect,
+  Events,
+  handshakingReconnectingFailure,
+  handshakingReconnectingGiveup,
+  handshakingReconnectingSuccess,
+} from '../events';
 import { HandshakeFailureState } from './handshake_failure';
 import { HandshakeStoppedState } from './handshake_stopped';
 import { ReceivingState } from './receiving';
@@ -19,24 +25,21 @@ export const HandshakeReconnectingState = new State<HandshakeReconnectingStateCo
 );
 
 HandshakeReconnectingState.onEnter((context) => handshakeReconnect(context));
-HandshakeReconnectingState.onExit(() => reconnect.cancel);
+HandshakeReconnectingState.onExit(() => handshakeReconnect.cancel);
 
-HandshakeReconnectingState.on(reconnectingSuccess.type, (context, event) =>
-  ReceivingState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-      cursor: event.payload.cursor,
-    },
-    [emitEvents(event.payload.events)],
-  ),
+HandshakeReconnectingState.on(handshakingReconnectingSuccess.type, (context, event) =>
+  ReceivingState.with({
+    channels: context.channels,
+    groups: context.groups,
+    cursor: event.payload.cursor,
+  }),
 );
 
-HandshakeReconnectingState.on(reconnectingFailure.type, (context, event) =>
+HandshakeReconnectingState.on(handshakingReconnectingFailure.type, (context, event) =>
   HandshakeReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }),
 );
 
-HandshakeReconnectingState.on(reconnectingGiveup.type, (context) =>
+HandshakeReconnectingState.on(handshakingReconnectingGiveup.type, (context) =>
   HandshakeFailureState.with({
     groups: context.groups,
     channels: context.channels,

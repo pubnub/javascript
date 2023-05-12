@@ -7,6 +7,9 @@
     "target": "es5",
     "sourceMap": true,
     "esModuleInterop": true,
-    "strict": true
-  }
+    "strict": true,
+    "allowJs": true,
+    "noEmit": true
+  },
+  "exclude": ["../../lib"]
 }

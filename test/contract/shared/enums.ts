@@ -22,7 +22,7 @@ defineParameterType({
 
 export enum ResourceType {
   channel = 'channels',
-  channelGroup = 'groups',
+  channel_group = 'groups',
   uuid = 'uuids',
 }
 

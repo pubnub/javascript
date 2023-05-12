@@ -13,10 +13,12 @@ export class EventEngine {
     return this.engine;
   }
 
+  private _unsubscribeEngine!: () => void;
+
   constructor(dependencies: Dependencies) {
     this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
 
-    this.engine.subscribe((change) => {
+    this._unsubscribeEngine = this.engine.subscribe((change) => {
       if (change.type === 'invocationDispatched') {
         this.dispatcher.dispatch(change.invocation);
       }
@@ -55,5 +57,11 @@ export class EventEngine {
 
   disconnect() {
     this.engine.transition(events.disconnect());
+  }
+
+  dispose() {
+    this.disconnect();
+    this._unsubscribeEngine();
+    this.dispatcher.dispose();
   }
 }

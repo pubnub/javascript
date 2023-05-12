@@ -1,6 +1,6 @@
 import { State } from '../core/state';
 import { Cursor } from '../../models/Cursor';
-import { Effects, emitEvents, receiveEvents } from '../effects';
+import { Effects, emitEvents, emitStatus, receiveEvents } from '../effects';
 import { disconnect, Events, receivingFailure, receivingSuccess, subscriptionChange } from '../events';
 import { UnsubscribedState } from './unsubscribed';
 import { ReceiveReconnectingState } from './receive_reconnecting';
@@ -15,6 +15,7 @@ export type ReceivingStateContext = {
 export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');
 
 ReceivingState.onEnter((context) => receiveEvents(context.channels, context.groups, context.cursor));
+ReceivingState.onEnter((context) => emitStatus({ category: 'PNConnectedCategory' }));
 ReceivingState.onExit(() => receiveEvents.cancel);
 
 ReceivingState.on(receivingSuccess.type, (context, event) => {
