@@ -49,4 +49,11 @@ export class Dispatcher<
 
     instance.start();
   }
+
+  dispose() {
+    for (const [key, instance] of this.instances.entries()) {
+      instance.cancel();
+      this.instances.delete(key);
+    }
+  }
 }

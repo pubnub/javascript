@@ -10,6 +10,9 @@ export type Dependencies = {
   getRetryDelay: (attempts: number) => number;
   shouldRetry: (error: Error, attempts: number) => boolean;
   delay: (milliseconds: number) => Promise<void>;
+
+  emitEvents: (events: any[]) => void;
+  emitStatus: (status: any) => void;
 };
 
 export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
@@ -61,7 +64,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             return;
           }
 
-          if (error instanceof PubNubError) {
+          if (error instanceof PubNubError && !abortSignal.aborted) {
             return engine.transition(events.receivingFailure(error));
           }
         }
@@ -70,10 +73,17 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.emitEvents.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents }) => {
+      asyncHandler(async (payload, abortSignal, { emitEvents }) => {
         if (payload.length > 0) {
-          console.log(payload);
+          emitEvents(payload);
         }
+      }),
+    );
+
+    this.on(
+      effects.emitStatus.type,
+      asyncHandler(async (payload, abortSignal, { emitStatus }) => {
+        emitStatus(payload);
       }),
     );
 
@@ -132,7 +142,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             channelGroups: payload.groups,
           });
 
-          return engine.transition(events.handshakingReconnectingSuccess(result.metadata));
+          return engine.transition(events.handshakingReconnectingSuccess(result));
         } catch (error) {
           if (error instanceof Error && error.message === 'Aborted') {
             return;

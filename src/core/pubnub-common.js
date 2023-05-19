@@ -320,7 +320,21 @@ export default class {
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
     if (config.enableSubscribeBeta === true) {
-      const eventEngine = new EventEngine({ handshake: this.handshake, receiveEvents: this.receiveMessages });
+      const eventEngine = new EventEngine({
+        handshake: this.handshake,
+        receiveEvents: this.receiveMessages,
+        getRetryDelay: (attempts) => attempts * 25,
+        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+        shouldRetry: (error, attempts) => attempts < 3,
+        emitEvents: (events) => {
+          for (const event of events) {
+            listenerManager.announceMessage(event);
+          }
+        },
+        emitStatus: (status) => {
+          listenerManager.announceStatus(status);
+        },
+      });
 
       this.subscribe = eventEngine.subscribe.bind(eventEngine);
       this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
