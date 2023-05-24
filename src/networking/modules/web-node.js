@@ -6,6 +6,9 @@ import categories from '../../core/constants/categories';
 
 function log(req) {
   const _pickLogger = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     if (console && console.log) return console; // eslint-disable-line no-console
     if (window && window.console && window.console.log) return window.console;
     return console;
@@ -14,19 +17,23 @@ function log(req) {
   const start = new Date().getTime();
   const timestamp = new Date().toISOString();
   const logger = _pickLogger();
-  logger.log('<<<<<');
-  logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs);
-  logger.log('-----');
+  
+  if (logger) {
+    logger.log('<<<<<');
+    logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs);
+    logger.log('-----');
+  }
 
   req.on('response', (res) => {
     const now = new Date().getTime();
     const elapsed = now - start;
     const timestampDone = new Date().toISOString();
 
-    logger.log('>>>>>>');
-
-    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text);
-    logger.log('-----');
+    if (logger) {
+      logger.log('>>>>>>');
+      logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text);
+      logger.log('-----');
+    }
   });
 }
 

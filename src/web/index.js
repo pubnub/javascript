@@ -42,7 +42,7 @@ export default class extends PubNubCore {
 
     super(setup);
 
-    if (listenToBrowserNetworkEvents) {
+    if (listenToBrowserNetworkEvents && typeof window !== 'undefined') {
       // mount network events.
       window.addEventListener('offline', () => {
         this.networkDownDetected();

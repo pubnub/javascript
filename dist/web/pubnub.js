@@ -11223,6 +11223,9 @@
     /*       */
     function log(req) {
         var _pickLogger = function () {
+            if (typeof window === 'undefined') {
+                return;
+            }
             if (console && console.log)
                 return console; // eslint-disable-line no-console
             if (window && window.console && window.console.log)
@@ -11232,16 +11235,20 @@
         var start = new Date().getTime();
         var timestamp = new Date().toISOString();
         var logger = _pickLogger();
-        logger.log('<<<<<');
-        logger.log("[".concat(timestamp, "]"), '\n', req.url, '\n', req.qs);
-        logger.log('-----');
+        if (logger) {
+            logger.log('<<<<<');
+            logger.log("[".concat(timestamp, "]"), '\n', req.url, '\n', req.qs);
+            logger.log('-----');
+        }
         req.on('response', function (res) {
             var now = new Date().getTime();
             var elapsed = now - start;
             var timestampDone = new Date().toISOString();
-            logger.log('>>>>>>');
-            logger.log("[".concat(timestampDone, " / ").concat(elapsed, "]"), '\n', req.url, '\n', req.qs, '\n', res.text);
-            logger.log('-----');
+            if (logger) {
+                logger.log('>>>>>>');
+                logger.log("[".concat(timestampDone, " / ").concat(elapsed, "]"), '\n', req.url, '\n', req.qs, '\n', res.text);
+                logger.log('-----');
+            }
         });
     }
     function xdr(superagentConstruct, endpoint, callback) {
@@ -11717,7 +11724,7 @@
             setup.PubNubFile = PubNubFile;
             setup.cryptography = new WebCryptography();
             _this = _super.call(this, setup) || this;
-            if (listenToBrowserNetworkEvents) {
+            if (listenToBrowserNetworkEvents && typeof window !== 'undefined') {
                 // mount network events.
                 window.addEventListener('offline', function () {
                     _this.networkDownDetected();
