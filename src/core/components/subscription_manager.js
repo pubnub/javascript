@@ -107,7 +107,7 @@ export default class {
   }
 
   adaptStateChange(args, callback) {
-    const { state, channels = [], channelGroups = [] } = args;
+    const { state, channels = [], channelGroups = [], withHeartbeat = false } = args;
 
     channels.forEach((channel) => {
       if (channel in this._channels) this._channels[channel].state = state;
@@ -119,7 +119,7 @@ export default class {
       }
     });
 
-    return this._setStateEndpoint({ state, channels, channelGroups }, callback);
+    return withHeartbeat ? this._heartbeatEndpoint({ state, channels, channelGroups }, callback) : this._setStateEndpoint({ state, channels, channelGroups }, callback);
   }
 
   adaptPresenceChange(args) {
