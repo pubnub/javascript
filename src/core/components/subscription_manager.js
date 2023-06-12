@@ -119,9 +119,17 @@ export default class {
       }
     });
 
-    return withHeartbeat
-      ? this._heartbeatEndpoint({ state, channels, channelGroups }, callback)
-      : this._setStateEndpoint({ state, channels, channelGroups }, callback);
+    if (withHeartbeat) {
+      let presenceState = {};
+      channels.forEach((channel) => (presenceState[channel] = state));
+      channelGroups.forEach((group) => (presenceState[group] = state));
+      return this._heartbeatEndpoint(
+        { channels: channels, channelGroups: channelGroups, state: presenceState },
+        callback,
+      );
+    }
+
+    return this._setStateEndpoint({ state, channels, channelGroups }, callback);
   }
 
   adaptPresenceChange(args) {

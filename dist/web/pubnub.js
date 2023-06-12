@@ -1817,7 +1817,13 @@
                     _this._channelGroups[channelGroup].state = state;
                 }
             });
-            return withHeartbeat ? this._heartbeatEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback) : this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
+            if (withHeartbeat) {
+                var presenceState_1 = {};
+                channels.forEach(function (channel) { return (presenceState_1[channel] = state); });
+                channelGroups.forEach(function (group) { return (presenceState_1[group] = state); });
+                return this._heartbeatEndpoint({ channels: channels, channelGroups: channelGroups, state: presenceState_1 }, callback);
+            }
+            return this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
         };
         default_1.prototype.adaptPresenceChange = function (args) {
             var _this = this;
