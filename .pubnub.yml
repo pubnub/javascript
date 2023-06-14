@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2023-06-14
+    version: v7.2.3
+    changes:
+      - type: feature
+        text: "Added optional param withHeartbeat to set state through heartbeat endpoint."
   - date: 2022-12-12
     version: v7.2.2
     changes:
@@ -886,7 +891,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.2.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.2.3.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1557,7 +1562,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v7.2.2/pubnub.7.2.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v7.2.3/pubnub.7.2.3.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
