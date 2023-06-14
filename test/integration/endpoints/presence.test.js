@@ -253,6 +253,7 @@ describe('presence endpoints', () => {
         {
           channels: ['ch1', 'ch2'],
           state: { new: 'state' },
+          withHeartbeat: true
         },
         (status, response) => {
           assert.equal(status.error, false);
