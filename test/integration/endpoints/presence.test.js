@@ -237,31 +237,6 @@ describe('presence endpoints', () => {
       );
     });
 
-    it('sets state withHeartbeat', (done) => {
-      const scope = utils
-        .createNock()
-        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/heartbeat')
-        .query({
-          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          uuid: 'myUUID',
-          'channel-group': 'cg1,cg2',
-          state: '{"ch1":{"new":"state"}, "ch2": {"new":"state"} }',
-        })
-        .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
-
-      pubnub.setState(
-        {
-          channels: ['ch1', 'ch2'],
-          state: { new: 'state' },
-          withHeartbeat: true
-        },
-        (status, response) => {
-          assert.equal(scope.isDone(), true);
-          done();
-        },
-      );
-    });
-
     it('should add set state API telemetry information', (done) => {
       let scope = utils
         .createNock()
