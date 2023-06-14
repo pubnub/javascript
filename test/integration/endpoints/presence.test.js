@@ -35,10 +35,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
         })
-        .reply(
-          200,
-          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}'
-        );
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}');
 
       pubnub.whereNow({}, (status, response) => {
         assert.equal(status.error, false);
@@ -56,10 +53,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID#1',
         })
-        .reply(
-          200,
-          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}'
-        );
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}');
 
       const pubnubClient = new PubNub({
         subscribeKey: 'mySubscribeKey',
@@ -83,10 +77,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
         })
-        .reply(
-          200,
-          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}'
-        );
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}');
 
       pubnub.whereNow({ uuid: 'otherUUID' }, (status, response) => {
         assert.equal(status.error, false);
@@ -121,16 +112,18 @@ describe('presence endpoints', () => {
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.whereNow(
-            {},
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.whereNow({}, () => {
+              completion();
+            });
+          },
+        )
         .then((lastRequest) => {
           utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
           done();
@@ -142,9 +135,7 @@ describe('presence endpoints', () => {
     it('sets presence data for user UUID', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
@@ -152,26 +143,21 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
         );
 
-      pubnub.setState(
-        { channels: ['testChannel'], state: { new: 'state' } },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.state, { age: 20, status: 'online' });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.setState({ channels: ['testChannel'], state: { new: 'state' } }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.state, { age: 20, status: 'online' });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('sets presence data for user encoded UUID and encoded channel', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel%231/uuid/myUUID%231/data'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel%231/uuid/myUUID%231/data')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID#1',
@@ -179,7 +165,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
         );
 
       const pubnubClient = new PubNub({
@@ -188,23 +174,18 @@ describe('presence endpoints', () => {
         uuid: 'myUUID#1',
       });
 
-      pubnubClient.setState(
-        { channels: ['testChannel#1'], state: { new: 'state' } },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.state, { age: 20, status: 'online' });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnubClient.setState({ channels: ['testChannel#1'], state: { new: 'state' } }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.state, { age: 20, status: 'online' });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('sets presence data for multiple channels', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/data'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/data')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
@@ -212,29 +193,24 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
         );
 
-      pubnub.setState(
-        { channels: ['ch1', 'ch2'], state: { new: 'state' } },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.state, {
-            ch1: { age: 20, status: 'online' },
-            ch2: { age: 100, status: 'offline' },
-          });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.setState({ channels: ['ch1', 'ch2'], state: { new: 'state' } }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.state, {
+          ch1: { age: 20, status: 'online' },
+          ch2: { age: 100, status: 'offline' },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('sets state for multiple channels / channel groups', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/data'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/data')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
@@ -243,7 +219,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
         );
 
       pubnub.setState(
@@ -257,27 +233,57 @@ describe('presence endpoints', () => {
           assert.deepEqual(response.state, { age: 20, status: 'online' });
           assert.equal(scope.isDone(), true);
           done();
-        }
+        },
+      );
+    });
+
+    it('sets state withHeartbeat', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID/heartbeat')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+          'channel-group': 'cg1,cg2',
+          state: '{"ch1":{"new":"state"}, "ch2": {"new":"state"} }',
+        })
+        .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}');
+
+      pubnub.setState(
+        {
+          channels: ['ch1', 'ch2'],
+          state: { new: 'state' },
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        },
       );
     });
 
     it('should add set state API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.setState(
-            { channels: ['testChannel'], state: { new: 'state' } },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.setState({ channels: ['testChannel'], state: { new: 'state' } }, () => {
+              completion();
+            });
+          },
+        )
         .then((lastRequest) => {
           utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
           done();
@@ -289,16 +295,14 @@ describe('presence endpoints', () => {
     it('returns the requested data for user UUID', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
         );
 
       pubnub.getState({ channels: ['testChannel'] }, (status, response) => {
@@ -314,44 +318,37 @@ describe('presence endpoints', () => {
     it('returns the requested data for another UUID', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/otherUUID'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/otherUUID')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
         );
 
-      pubnub.getState(
-        { uuid: 'otherUUID', channels: ['testChannel'] },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.channels, {
-            testChannel: { age: 20, status: 'online' },
-          });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.getState({ uuid: 'otherUUID', channels: ['testChannel'] }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          testChannel: { age: 20, status: 'online' },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('returns the requested for multiple channels', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
         );
 
       pubnub.getState({ channels: ['ch1', 'ch2'] }, (status, response) => {
@@ -368,9 +365,7 @@ describe('presence endpoints', () => {
     it('returns the requested for multiple channels', (done) => {
       const scope = utils
         .createNock()
-        .get(
-          '/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID'
-        )
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1%2Cch2/uuid/myUUID')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
@@ -378,40 +373,42 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}'
+          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
         );
 
-      pubnub.getState(
-        { channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.channels, {
-            ch1: { age: 20, status: 'online' },
-            ch2: { age: 100, status: 'offline' },
-          });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.getState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          ch1: { age: 20, status: 'online' },
+          ch2: { age: 100, status: 'offline' },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('should add get state API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID').query(true);
+      let scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID')
+        .query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.getState(
-            { channels: ['testChannel'] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.getState({ channels: ['testChannel'] }, () => {
+              completion();
+            });
+          },
+        )
         .then((lastRequest) => {
           utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
           done();
@@ -430,7 +427,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}'
+          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
         );
 
       pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
@@ -460,10 +457,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
         })
-        .reply(
-          200,
-          '{"status": 200, "message": "OK", "occupancy": 1, "service": "Presence"}'
-        );
+        .reply(200, '{"status": 200, "message": "OK", "occupancy": 1, "service": "Presence"}');
 
       pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
         assert.equal(status.error, false);
@@ -489,7 +483,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "payload": {"channels": {"game1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}'
+          '{"status": 200, "message": "OK", "payload": {"channels": {"game1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}',
         );
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'] }, (status, response) => {
@@ -522,43 +516,40 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}'
+          '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}',
         );
 
-      pubnub.hereNow(
-        { channels: ['ch1', 'ch2'], includeState: true },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.channels, {
-            ch1: {
-              name: 'ch1',
-              occupancy: 1,
-              occupants: [
-                {
-                  state: undefined,
-                  uuid: 'user1',
-                },
-              ],
-            },
-            ch2: {
-              name: 'ch2',
-              occupancy: 2,
-              occupants: [
-                {
-                  state: undefined,
-                  uuid: 'user1',
-                },
-                {
-                  state: undefined,
-                  uuid: 'user3',
-                },
-              ],
-            },
-          });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.hereNow({ channels: ['ch1', 'ch2'], includeState: true }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          ch1: {
+            name: 'ch1',
+            occupancy: 1,
+            occupants: [
+              {
+                state: undefined,
+                uuid: 'user1',
+              },
+            ],
+          },
+          ch2: {
+            name: 'ch2',
+            occupancy: 2,
+            occupants: [
+              {
+                state: undefined,
+                uuid: 'user1',
+              },
+              {
+                state: undefined,
+                uuid: 'user3',
+              },
+            ],
+          },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('returns response for multiple channel here now without UUIDS', (done) => {
@@ -572,29 +563,26 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}'
+          '{"status":200,"message":"OK","payload":{"total_occupancy":3,"total_channels":2,"channels":{"ch1":{"occupancy":1,"uuids":[{"uuid":"user1"}]},"ch2":{"occupancy":2,"uuids":[{"uuid":"user1"},{"uuid":"user3"}]}}},"service":"Presence"}',
         );
 
-      pubnub.hereNow(
-        { channels: ['ch1', 'ch2'], includeUUIDs: false },
-        (status, response) => {
-          assert.equal(status.error, false);
-          assert.deepEqual(response.channels, {
-            ch1: {
-              name: 'ch1',
-              occupancy: 1,
-              occupants: [],
-            },
-            ch2: {
-              name: 'ch2',
-              occupancy: 2,
-              occupants: [],
-            },
-          });
-          assert.equal(scope.isDone(), true);
-          done();
-        }
-      );
+      pubnub.hereNow({ channels: ['ch1', 'ch2'], includeUUIDs: false }, (status, response) => {
+        assert.equal(status.error, false);
+        assert.deepEqual(response.channels, {
+          ch1: {
+            name: 'ch1',
+            occupancy: 1,
+            occupants: [],
+          },
+          ch2: {
+            name: 'ch2',
+            occupancy: 2,
+            occupants: [],
+          },
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      });
     });
 
     it('returns response for channel group', (done) => {
@@ -608,7 +596,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}'
+          ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}',
         );
 
       pubnub.hereNow({ channelGroups: ['cg1'] }, (status, response) => {
@@ -640,7 +628,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "payload": {"channels": {"ch10": {"uuids": ["2c3b136e-dc9e-4e97-939c-752dbb47acbd"], "occupancy": 1}, "bot_object": {"uuids": ["fb49e109-756f-483e-92dc-d966d73a119d"], "occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}'
+          '{"status": 200, "message": "OK", "payload": {"channels": {"ch10": {"uuids": ["2c3b136e-dc9e-4e97-939c-752dbb47acbd"], "occupancy": 1}, "bot_object": {"uuids": ["fb49e109-756f-483e-92dc-d966d73a119d"], "occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}',
         );
 
       pubnub.hereNow({}, (status, response) => {
@@ -683,7 +671,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "payload": {"channels": {"ch10": {"occupancy": 1}, "bot_object": {"occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}'
+          '{"status": 200, "message": "OK", "payload": {"channels": {"ch10": {"occupancy": 1}, "bot_object": {"occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}',
         );
 
       pubnub.hereNow({ includeUUIDs: false }, (status, response) => {
@@ -714,10 +702,7 @@ describe('presence endpoints', () => {
           uuid: 'myUUID',
           disable_uuids: 1,
         })
-        .reply(
-          200,
-          '{"status": 503, "message": "Service Unavailable", "error": 1, "service": "Presence"}'
-        );
+        .reply(200, '{"status": 503, "message": "Service Unavailable", "error": 1, "service": "Presence"}');
 
       pubnub.hereNow({ includeUUIDs: false }, (status) => {
         assert.equal(status.error, true);
@@ -736,10 +721,11 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status": 402, "error": 1, "message": "This feature is not turned on for this account. Contact support@pubnub.com to activate this feature.", "service": "Presence"}'
+          '{"status": 402, "error": 1, "message": "This feature is not turned on for this account. Contact support@pubnub.com to activate this feature.", "service": "Presence"}',
         );
-      let expected = 'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
-      pubnub.hereNow({channles: []}, (status) => {
+      let expected =
+        'You have tried to perform a Global Here Now operation, your keyset configuration does not support that. Please provide a channel, or enable the Global Here Now feature from the Portal.';
+      pubnub.hereNow({ channles: [] }, (status) => {
         assert.equal(status.error, true);
         assert.equal(status.errorData.message, expected);
         assert.equal(scope.isDone(), true);
@@ -754,11 +740,11 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
-          test: 'param'
+          test: 'param',
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}'
+          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
         );
 
       pubnub.hereNow({ channels: ['game1'], queryParameters: { test: 'param' } }, (status, response) => {
@@ -787,16 +773,18 @@ describe('presence endpoints', () => {
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
       const leeway = 50;
 
-      utils.runAPIWithResponseDelays(scope,
-        200,
-        '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
-        delays,
-        (completion) => {
-          pubnub.hereNow(
-            { channels: ['game1'] },
-            () => { completion(); }
-          );
-        })
+      utils
+        .runAPIWithResponseDelays(
+          scope,
+          200,
+          '{"status": 200, "message": "OK", "uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1, "service": "Presence"}',
+          delays,
+          (completion) => {
+            pubnub.hereNow({ channels: ['game1'] }, () => {
+              completion();
+            });
+          },
+        )
         .then((lastRequest) => {
           utils.verifyRequestTelemetry(lastRequest.path, 'l_pres', average, leeway);
           done();
