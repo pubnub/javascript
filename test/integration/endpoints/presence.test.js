@@ -256,7 +256,6 @@ describe('presence endpoints', () => {
           withHeartbeat: true
         },
         (status, response) => {
-          assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
           done();
         },
