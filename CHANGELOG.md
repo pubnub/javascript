@@ -1,3 +1,9 @@
+## v7.2.3
+June 14 2023
+
+#### Added
+- Added optional param withHeartbeat to set state through heartbeat endpoint.
+
 ## v7.2.2
 December 12 2022
 
