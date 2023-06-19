@@ -4192,7 +4192,6 @@
         handleResponse: handleResponse$g
     });
 
-    /*       */
     function getOperation$f() {
         return OPERATIONS.PNSetStateOperation;
     }
