@@ -875,7 +875,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '7.1.2'
+version: '7.2.3'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
