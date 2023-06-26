@@ -1,7 +1,7 @@
 {
   ".pubnub.yml": [
     {
-      "pattern": "^version: \"(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\"$",
+      "pattern": "^version: '(v?(\\d+\\.?){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)'$",
       "clearedPrefix": true,
       "clearedSuffix": false
     },
