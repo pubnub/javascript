@@ -13,7 +13,7 @@ type ReceiveStoppedStateContext = {
 export const ReceiveStoppedState = new State<ReceiveStoppedStateContext, Events, Effects>('STOPPED');
 
 ReceiveStoppedState.on(subscriptionChange.type, (context, event) =>
-  ReceiveStoppedState.with({
+  ReceivingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: context.cursor,

@@ -10,8 +10,8 @@ type HandshakeStoppedStateContext = {
 
 export const HandshakeStoppedState = new State<HandshakeStoppedStateContext, Events, Effects>('STOPPED');
 
-HandshakeStoppedState.on(subscriptionChange.type, (_context, event) =>
-  HandshakeStoppedState.with({
+HandshakeStoppedState.on(subscriptionChange.type, (_, event) =>
+  HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
   }),

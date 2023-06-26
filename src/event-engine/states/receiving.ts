@@ -15,7 +15,7 @@ export type ReceivingStateContext = {
 export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');
 
 ReceivingState.onEnter((context) => receiveEvents(context.channels, context.groups, context.cursor));
-ReceivingState.onEnter((context) => emitStatus({ category: 'PNConnectedCategory' }));
+ReceivingState.onEnter((_) => emitStatus({ category: 'PNConnectedCategory' }));
 ReceivingState.onExit(() => receiveEvents.cancel);
 
 ReceivingState.on(receivingSuccess.type, (context, event) => {
@@ -38,10 +38,13 @@ ReceivingState.on(receivingFailure.type, (context, event) => {
   });
 });
 
-ReceivingState.on(disconnect.type, (context) =>
-  ReceiveStoppedState.with({
-    channels: context.channels,
-    groups: context.groups,
-    cursor: context.cursor,
-  }),
-);
+ReceivingState.on(disconnect.type, (context) => {
+  return ReceiveStoppedState.with(
+    {
+      channels: context.channels,
+      groups: context.groups,
+      cursor: context.cursor,
+    },
+    [emitStatus({ category: 'PNDisconnectedCategory' })],
+  );
+});

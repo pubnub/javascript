@@ -1,7 +1,7 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { Cursor } from '../../models/Cursor';
 import { State } from '../core/state';
-import { Effects, emitEvents, reconnect } from '../effects';
+import { Effects, emitEvents, reconnect, emitStatus } from '../effects';
 import {
   disconnect,
   Events,
@@ -47,20 +47,26 @@ ReceiveReconnectingState.on(reconnectingFailure.type, (context, event) =>
 );
 
 ReceiveReconnectingState.on(reconnectingGiveup.type, (context) =>
-  ReceiveFailureState.with({
-    groups: context.groups,
-    channels: context.channels,
-    cursor: context.cursor,
-    reason: context.reason,
-  }),
+  ReceiveFailureState.with(
+    {
+      groups: context.groups,
+      channels: context.channels,
+      cursor: context.cursor,
+      reason: context.reason,
+    },
+    [emitStatus({ category: 'PNDisconnectedCategory' })],
+  ),
 );
 
 ReceiveReconnectingState.on(disconnect.type, (context) =>
-  ReceiveStoppedState.with({
-    channels: context.channels,
-    groups: context.groups,
-    cursor: context.cursor,
-  }),
+  ReceiveStoppedState.with(
+    {
+      channels: context.channels,
+      groups: context.groups,
+      cursor: context.cursor,
+    },
+    [emitStatus({ category: 'PNDisconnectedCategory' })],
+  ),
 );
 
 ReceiveReconnectingState.on(restore.type, (context) =>
