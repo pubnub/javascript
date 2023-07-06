@@ -56,7 +56,6 @@ HandshakeReconnectingState.on(disconnect.type, (context) =>
   }),
 );
 
-
 HandshakeReconnectingState.on(subscriptionChange.type, (_, event) =>
   HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups }),
 );
