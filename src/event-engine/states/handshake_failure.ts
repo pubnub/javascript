@@ -1,9 +1,10 @@
 import { State } from '../core/state';
 import { Effects, emitStatus } from '../effects';
-import { disconnect, Events, handshakingReconnectingRetry } from '../events';
+import { disconnect, Events, handshakingReconnectingRetry, reconnect } from '../events';
 import { PubNubError } from '../../core/components/endpoint';
 import { HandshakeReconnectingState } from './handshake_reconnecting';
 import { HandshakeStoppedState } from './handshake_stopped';
+import { HandshakingState } from './handshaking';
 
 export type HandshakeFailureStateContext = {
   channels: string[];
@@ -29,3 +30,5 @@ HandshakeFailureState.on(disconnect.type, (context) =>
     groups: context.groups,
   }),
 );
+
+HandshakeFailureState.on(reconnect.type, (context) => HandshakingState.with({ ...context }));

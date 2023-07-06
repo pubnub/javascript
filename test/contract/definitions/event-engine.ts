@@ -79,7 +79,7 @@ class EventEngineSteps {
     const timetoken = await this.pubnub?.publish({ channel: 'test', message: { content: 'Hello world!' } });
   }
 
-  @then('I receive an error')
+  @then('I receive an error in my subscribe response')
   async thenIReceiveError() {
     const status = await this.statusPromise;
 

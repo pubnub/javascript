@@ -1776,6 +1776,7 @@
         PNReconnectedCategory: 'PNReconnectedCategory',
         PNConnectedCategory: 'PNConnectedCategory',
         PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory',
+        PNDisconnectedCategory: 'PNDisconnectedCategory',
     };
 
     var default_1$7 = /** @class */ (function () {
@@ -2332,68 +2333,7 @@
         return default_1;
     }());
 
-    var Operation;
-    (function (Operation) {
-        Operation["Time"] = "PNTimeOperation";
-        Operation["History"] = "PNHistoryOperation";
-        Operation["DeleteMessages"] = "PNDeleteMessagesOperation";
-        Operation["FetchMessages"] = "PNFetchMessagesOperation";
-        Operation["MessageCounts"] = "PNMessageCountsOperation";
-        Operation["Subscribe"] = "PNSubscribeOperation";
-        Operation["Unsubscribe"] = "PNUnsubscribeOperation";
-        Operation["Publish"] = "PNPublishOperation";
-        Operation["Signal"] = "PNSignalOperation";
-        Operation["AddMessageAction"] = "PNAddActionOperation";
-        Operation["RemoveMessageAction"] = "PNRemoveMessageActionOperation";
-        Operation["GetMessageActions"] = "PNGetMessageActionsOperation";
-        Operation["CreateUser"] = "PNCreateUserOperation";
-        Operation["UpdateUser"] = "PNUpdateUserOperation";
-        Operation["RemoveUser"] = "PNRemoveUserOperation";
-        Operation["FetchUser"] = "PNFetchUserOperation";
-        Operation["GetUsers"] = "PNGetUsersOperation";
-        Operation["CreateSpace"] = "PNCreateSpaceOperation";
-        Operation["UpdateSpace"] = "PNUpdateSpaceOperation";
-        Operation["RemoveSpace"] = "PNRemoveSpaceOperation";
-        Operation["FetchSpace"] = "PNFetchSpaceOperation";
-        Operation["GetSpaces"] = "PNGetSpacesOperation";
-        Operation["GetMembers"] = "PNGetMembersOperation";
-        Operation["UpdateMembers"] = "PNUpdateMembersOperation";
-        Operation["GetMemberships"] = "PNGetMembershipsOperation";
-        Operation["UpdateMemberships"] = "PNUpdateMembershipsOperation";
-        Operation["ListFiles"] = "PNListFilesOperation";
-        Operation["GenerateUploadUrl"] = "PNGenerateUploadUrlOperation";
-        Operation["PublishFile"] = "PNPublishFileOperation";
-        Operation["GetFileUrl"] = "PNGetFileUrlOperation";
-        Operation["DownloadFile"] = "PNDownloadFileOperation";
-        Operation["GetAllUUIDMetadata"] = "PNGetAllUUIDMetadataOperation";
-        Operation["GetUUIDMetadata"] = "PNGetUUIDMetadataOperation";
-        Operation["SetUUIDMetadata"] = "PNSetUUIDMetadataOperation";
-        Operation["RemoveUUIDMetadata"] = "PNRemoveUUIDMetadataOperation";
-        Operation["GetAllChannelMetadata"] = "PNGetAllChannelMetadataOperation";
-        Operation["GetChannelMetadata"] = "PNGetChannelMetadataOperation";
-        Operation["SetChannelMetadata"] = "PNSetChannelMetadataOperation";
-        Operation["RemoveChannelMetadata"] = "PNRemoveChannelMetadataOperation";
-        Operation["SetMembers"] = "PNSetMembersOperation";
-        Operation["SetMemberships"] = "PNSetMembershipsOperation";
-        Operation["PushNotificationEnabledChannels"] = "PNPushNotificationEnabledChannelsOperation";
-        Operation["RemoveAllPushNotifications"] = "PNRemoveAllPushNotificationsOperation";
-        Operation["WhereNow"] = "PNWhereNowOperation";
-        Operation["SetState"] = "PNSetStateOperation";
-        Operation["HereNow"] = "PNHereNowOperation";
-        Operation["GetState"] = "PNGetStateOperation";
-        Operation["Heartbeat"] = "PNHeartbeatOperation";
-        Operation["ChannelGroups"] = "PNChannelGroupsOperation";
-        Operation["RemoveGroup"] = "PNRemoveGroupOperation";
-        Operation["ChannelsForGroup"] = "PNChannelsForGroupOperation";
-        Operation["AddChannelsToGroup"] = "PNAddChannelsToGroupOperation";
-        Operation["RemoveChannelsFromGroup"] = "PNRemoveChannelsFromGroupOperation";
-        Operation["AccessManagerGrant"] = "PNAccessManagerGrant";
-        Operation["AccessManagerGrantToken"] = "PNAccessManagerGrantToken";
-        Operation["AccessManagerAudit"] = "PNAccessManagerAudit";
-        Operation["AccessManagerRevokeToken"] = "PNAccessManagerRevokeToken";
-        Operation["Handshake"] = "PNHandshakeOperation";
-        Operation["ReceiveMessages"] = "PNReceiveMessagesOperation";
-    })(Operation || (Operation = {}));
+    /*       */
     var OPERATIONS = {
         PNTimeOperation: 'PNTimeOperation',
         PNHistoryOperation: 'PNHistoryOperation',
@@ -2412,13 +2352,13 @@
         // Objects API
         PNCreateUserOperation: 'PNCreateUserOperation',
         PNUpdateUserOperation: 'PNUpdateUserOperation',
-        PNRemoveUserOperation: 'PNRemoveUserOperation',
-        PNFetchUserOperation: 'PNFetchUserOperation',
+        PNDeleteUserOperation: 'PNDeleteUserOperation',
+        PNGetUserOperation: 'PNGetUsersOperation',
         PNGetUsersOperation: 'PNGetUsersOperation',
         PNCreateSpaceOperation: 'PNCreateSpaceOperation',
         PNUpdateSpaceOperation: 'PNUpdateSpaceOperation',
-        PNRemoveSpaceOperation: 'PNRemoveSpaceOperation',
-        PNFetchSpaceOperation: 'PNFetchSpaceOperation',
+        PNDeleteSpaceOperation: 'PNDeleteSpaceOperation',
+        PNGetSpaceOperation: 'PNGetSpacesOperation',
         PNGetSpacesOperation: 'PNGetSpacesOperation',
         PNGetMembersOperation: 'PNGetMembersOperation',
         PNUpdateMembersOperation: 'PNUpdateMembersOperation',
@@ -7003,7 +6943,8 @@
             return _this;
         }
         AsyncHandler.prototype.start = function () {
-            this.asyncFunction(this.payload, this.abortSignal, this.dependencies).catch(function () {
+            this.asyncFunction(this.payload, this.abortSignal, this.dependencies).catch(function (error) {
+                // console.log('Unhandled error:', error);
                 // swallow the error
             });
         };
@@ -7022,44 +6963,44 @@
         channels: channels,
         groups: groups,
     }); });
-    var receiveEvents = createManagedEffect('RECEIVE_EVENTS', function (channels, groups, cursor) { return ({ channels: channels, groups: groups, cursor: cursor }); });
-    var emitEvents = createEffect('EMIT_EVENTS', function (events) { return events; });
+    var receiveEvents = createManagedEffect('RECEIVE_MESSAGES', function (channels, groups, cursor) { return ({ channels: channels, groups: groups, cursor: cursor }); });
+    var emitEvents = createEffect('EMIT_MESSAGES', function (events) { return events; });
     var emitStatus = createEffect('EMIT_STATUS', function (status) { return status; });
-    var reconnect$1 = createManagedEffect('RECONNECT', function (context) { return context; });
+    var reconnect$1 = createManagedEffect('RECEIVE_RECONNECT', function (context) { return context; });
     var handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', function (context) { return context; });
 
-    var subscriptionChange = createEvent('SUBSCRIPTION_CHANGE', function (channels, groups) { return ({
+    var subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', function (channels, groups) { return ({
         channels: channels,
         groups: groups,
     }); });
     var disconnect = createEvent('DISCONNECT', function () { return ({}); });
     var reconnect = createEvent('RECONNECT', function () { return ({}); });
-    createEvent('RESTORE', function (channels, groups, timetoken, region) { return ({
+    var restore = createEvent('RESTORE', function (channels, groups, timetoken, region) { return ({
         channels: channels,
         groups: groups,
         timetoken: timetoken,
         region: region,
     }); });
-    var handshakingSuccess = createEvent('HANDSHAKING_SUCCESS', function (cursor) { return cursor; });
-    var handshakingFailure = createEvent('HANDSHAKING_FAILURE', function (error) { return error; });
+    var handshakingSuccess = createEvent('HANDSHAKE_SUCCESS', function (cursor) { return cursor; });
+    var handshakingFailure = createEvent('HANDSHAKE_FAILURE', function (error) { return error; });
     var handshakingReconnectingSuccess = createEvent('HANDSHAKING_RECONNECTING_SUCCESS', function (cursor) { return ({
         cursor: cursor,
     }); });
-    var handshakingReconnectingFailure = createEvent('HANDSHAKING_RECONNECTING_FAILURE', function (error) { return error; });
+    var handshakingReconnectingFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', function (error) { return error; });
     var handshakingReconnectingGiveup = createEvent('HANDSHAKING_RECONNECTING_GIVEUP', function () { return ({}); });
     var handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', function () { return ({}); });
-    var receivingSuccess = createEvent('RECEIVING_SUCCESS', function (cursor, events) { return ({
+    var receivingSuccess = createEvent('RECEIVE_SUCCESS', function (cursor, events) { return ({
         cursor: cursor,
         events: events,
     }); });
-    var receivingFailure = createEvent('RECEIVING_FAILURE', function (error) { return error; });
-    var reconnectingSuccess = createEvent('RECONNECTING_SUCCESS', function (cursor, events) { return ({
+    var receivingFailure = createEvent('RECEIVE_FAILURE', function (error) { return error; });
+    var reconnectingSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', function (cursor, events) { return ({
         cursor: cursor,
         events: events,
     }); });
-    var reconnectingFailure = createEvent('RECONNECTING_FAILURE', function (error) { return error; });
-    var reconnectingGiveup = createEvent('RECONNECTING_GIVEUP', function () { return ({}); });
-    var reconnectingRetry = createEvent('RECONNECTING_RETRY', function () { return ({}); });
+    var reconnectingFailure = createEvent('RECEIVING_RECONNECTING_FAILURE', function (error) { return error; });
+    var reconnectingGiveup = createEvent('RECEIVING_RECONNECTING_GIVEUP', function () { return ({}); });
+    var reconnectingRetry = createEvent('RECEIVING_RECONNECTING_RETRY', function () { return ({}); });
 
     var EventEngineDispatcher = /** @class */ (function (_super) {
         __extends(EventEngineDispatcher, _super);
@@ -7126,7 +7067,7 @@
                                 if (error_1 instanceof Error && error_1.message === 'Aborted') {
                                     return [2 /*return*/];
                                 }
-                                if (error_1 instanceof PubNubError) {
+                                if (error_1 instanceof PubNubError && !abortSignal.aborted) {
                                     return [2 /*return*/, engine.transition(receivingFailure(error_1))];
                                 }
                                 return [3 /*break*/, 4];
@@ -7222,7 +7163,7 @@
                                     })];
                             case 3:
                                 result = _b.sent();
-                                return [2 /*return*/, engine.transition(handshakingReconnectingSuccess(result.metadata))];
+                                return [2 /*return*/, engine.transition(handshakingReconnectingSuccess(result))];
                             case 4:
                                 error_3 = _b.sent();
                                 if (error_3 instanceof Error && error_3.message === 'Aborted') {
@@ -7243,8 +7184,8 @@
     }(Dispatcher));
 
     var HandshakeStoppedState = new State('STOPPED');
-    HandshakeStoppedState.on(subscriptionChange.type, function (_context, event) {
-        return HandshakeStoppedState.with({
+    HandshakeStoppedState.on(subscriptionChange.type, function (_, event) {
+        return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
         });
@@ -7252,6 +7193,7 @@
     HandshakeStoppedState.on(reconnect.type, function (context) { return HandshakingState.with(__assign({}, context)); });
 
     var HandshakeFailureState = new State('HANDSHAKE_FAILURE');
+    HandshakeFailureState.onEnter(function (context) { return emitStatus({ category: 'PNNetworkIssuesCategory' }); });
     HandshakeFailureState.on(handshakingReconnectingRetry.type, function (context) {
         return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: 0 }));
     });
@@ -7261,10 +7203,11 @@
             groups: context.groups,
         });
     });
+    HandshakeFailureState.on(reconnect.type, function (context) { return HandshakingState.with(__assign({}, context)); });
 
     var ReceiveStoppedState = new State('STOPPED');
     ReceiveStoppedState.on(subscriptionChange.type, function (context, event) {
-        return ReceiveStoppedState.with({
+        return ReceivingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: context.cursor,
@@ -7303,19 +7246,33 @@
             channels: context.channels,
             cursor: context.cursor,
             reason: context.reason,
-        });
+        }, [emitStatus({ category: 'PNDisconnectedCategory' })]);
     });
     ReceiveReconnectingState.on(disconnect.type, function (context) {
         return ReceiveStoppedState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: context.cursor,
+        }, [emitStatus({ category: 'PNDisconnectedCategory' })]);
+    });
+    ReceiveReconnectingState.on(restore.type, function (context) {
+        return ReceivingState.with({
+            channels: context.channels,
+            groups: context.groups,
+            cursor: context.cursor,
+        });
+    });
+    ReceiveReconnectingState.on(subscriptionChange.type, function (context, event) {
+        return ReceivingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
         });
     });
 
     var ReceivingState = new State('RECEIVING');
+    ReceivingState.onEnter(function (_) { return emitStatus({ category: 'PNConnectedCategory' }); });
     ReceivingState.onEnter(function (context) { return receiveEvents(context.channels, context.groups, context.cursor); });
-    ReceivingState.onEnter(function (context) { return emitStatus({ category: 'PNConnectedCategory' }); });
     ReceivingState.onExit(function () { return receiveEvents.cancel; });
     ReceivingState.on(receivingSuccess.type, function (context, event) {
         return ReceivingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor }), [emitEvents(event.payload.events)]);
@@ -7334,12 +7291,12 @@
             channels: context.channels,
             groups: context.groups,
             cursor: context.cursor,
-        });
+        }, [emitStatus({ category: 'PNDisconnectedCategory' })]);
     });
 
     var HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
     HandshakeReconnectingState.onEnter(function (context) { return handshakeReconnect(context); });
-    HandshakeReconnectingState.onExit(function () { return reconnect$1.cancel; });
+    HandshakeReconnectingState.onExit(function () { return handshakeReconnect.cancel; });
     HandshakeReconnectingState.on(handshakingReconnectingSuccess.type, function (context, event) {
         return ReceivingState.with({
             channels: context.channels,
@@ -7362,6 +7319,9 @@
             channels: context.channels,
             groups: context.groups,
         });
+    });
+    HandshakeReconnectingState.on(subscriptionChange.type, function (_, event) {
+        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
     });
 
     var HandshakingState = new State('HANDSHAKING');
@@ -7492,9 +7452,9 @@
                 var eventEngine = new EventEngine({
                     handshake: this.handshake,
                     receiveEvents: this.receiveMessages,
-                    getRetryDelay: function (attempts) { return attempts * 25; },
+                    getRetryDelay: function (attempts) { return attempts * 2; },
                     delay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
-                    shouldRetry: function (error, attempts) { return attempts < 3; },
+                    shouldRetry: function (error, attempts) { return attempts < 2; },
                     emitEvents: function (events) {
                         var e_1, _a;
                         try {

@@ -2,7 +2,7 @@ import { PubNubError } from '../core/components/endpoint';
 import { Cursor } from '../models/Cursor';
 import { createEvent, MapOf } from './core';
 
-export const subscriptionChange = createEvent('SUBSCRIPTION_CHANGE', (channels: string[], groups: string[]) => ({
+export const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels: string[], groups: string[]) => ({
   channels,
   groups,
 }));
@@ -19,26 +19,23 @@ export const restore = createEvent(
   }),
 );
 
-export const handshakingSuccess = createEvent('HANDSHAKING_SUCCESS', (cursor: Cursor) => cursor);
-export const handshakingFailure = createEvent('HANDSHAKING_FAILURE', (error: PubNubError) => error);
+export const handshakingSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor: Cursor) => cursor);
+export const handshakingFailure = createEvent('HANDSHAKE_FAILURE', (error: PubNubError) => error);
 
 export const handshakingReconnectingSuccess = createEvent('HANDSHAKING_RECONNECTING_SUCCESS', (cursor: Cursor) => ({
   cursor,
 }));
-export const handshakingReconnectingFailure = createEvent(
-  'HANDSHAKING_RECONNECTING_FAILURE',
-  (error: PubNubError) => error,
-);
+export const handshakingReconnectingFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error: PubNubError) => error);
 export const handshakingReconnectingGiveup = createEvent('HANDSHAKING_RECONNECTING_GIVEUP', () => ({}));
 export const handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', () => ({}));
 
-export const receivingSuccess = createEvent('RECEIVING_SUCCESS', (cursor: Cursor, events: any[]) => ({
+export const receivingSuccess = createEvent('RECEIVE_SUCCESS', (cursor: Cursor, events: any[]) => ({
   cursor,
   events,
 }));
-export const receivingFailure = createEvent('RECEIVING_FAILURE', (error: PubNubError) => error);
+export const receivingFailure = createEvent('RECEIVE_FAILURE', (error: PubNubError) => error);
 
-export const reconnectingSuccess = createEvent('RECEIVING_RECONNECTING_SUCCESS', (cursor: Cursor, events: any[]) => ({
+export const reconnectingSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', (cursor: Cursor, events: any[]) => ({
   cursor,
   events,
 }));

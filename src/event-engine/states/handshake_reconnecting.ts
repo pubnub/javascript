@@ -7,9 +7,11 @@ import {
   handshakingReconnectingFailure,
   handshakingReconnectingGiveup,
   handshakingReconnectingSuccess,
+  subscriptionChange,
 } from '../events';
 import { HandshakeFailureState } from './handshake_failure';
 import { HandshakeStoppedState } from './handshake_stopped';
+import { HandshakingState } from './handshaking';
 import { ReceivingState } from './receiving';
 
 export type HandshakeReconnectingStateContext = {
@@ -52,4 +54,9 @@ HandshakeReconnectingState.on(disconnect.type, (context) =>
     channels: context.channels,
     groups: context.groups,
   }),
+);
+
+
+HandshakeReconnectingState.on(subscriptionChange.type, (_, event) =>
+  HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups }),
 );
