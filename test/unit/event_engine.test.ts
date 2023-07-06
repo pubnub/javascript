@@ -105,7 +105,7 @@ describe('EventEngine', () => {
 
     pubnub.subscribe({ channels: ['test'] });
 
-    await forEvent('HANDSHAKING_SUCCESS', 1000);
+    await forEvent('HANDSHAKE_SUCCESS', 1000);
 
     pubnub.unsubscribe({ channels: ['test'] });
 
