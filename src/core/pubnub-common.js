@@ -90,6 +90,7 @@ import CATEGORIES from './constants/categories';
 
 import uuidGenerator from './components/uuid';
 import { EventEngine } from '../event-engine';
+import { ReconnectionDelay } from '../event-engine/core/reconnectionDelay';
 
 export default class {
   _config;
@@ -320,12 +321,14 @@ export default class {
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
     if (config.enableSubscribeBeta === true) {
+      let policy = modules.config.reconnectionConfiguration.reconnectionPolicy;
+      let maxRetries = modules.config.reconnectionConfiguration.maximumReconnectionRetries ?? 0;
       const eventEngine = new EventEngine({
         handshake: this.handshake,
         receiveEvents: this.receiveMessages,
-        getRetryDelay: (attempts) => attempts * 2,
+        getRetryDelay: (attempts) => ReconnectionDelay.getDelay(policy, maxRetries),
         delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-        shouldRetry: (error, attempts) => attempts < 2,
+        shouldRetry: (_, attempts) => maxRetries >= attempts && policy && policy != 'None',
         emitEvents: (events) => {
           for (const event of events) {
             listenerManager.announceMessage(event);
@@ -338,6 +341,9 @@ export default class {
 
       this.subscribe = eventEngine.subscribe.bind(eventEngine);
       this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
+      this.unsubscribeAll = eventEngine.unsubscribeAll.bind(eventEngine);
+      this.reconnect = eventEngine.reconnect.bind(eventEngine);
+      this.disconnect = eventEngine.disconnect.bind(eventEngine);
 
       this.eventEngine = eventEngine;
     } else {

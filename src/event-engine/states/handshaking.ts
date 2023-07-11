@@ -9,6 +9,7 @@ import { UnsubscribedState } from './unsubscribed';
 export type HandshakingStateContext = {
   channels: string[];
   groups: string[];
+  timetoken?: string;
 };
 
 export const HandshakingState = new State<HandshakingStateContext, Events, Effects>('HANDSHAKING');
@@ -28,7 +29,10 @@ HandshakingState.on(handshakingSuccess.type, (context, event) =>
   ReceivingState.with({
     channels: context.channels,
     groups: context.groups,
-    cursor: event.payload,
+    cursor: {
+      timetoken: context.timetoken && context.timetoken !== '0' ? context.timetoken : event.payload.timetoken,
+      region: event.payload.region,
+    },
   }),
 );
 

@@ -34,6 +34,7 @@ describe('EventEngine', () => {
 
   afterEach(() => {
     unsub();
+    pubnub.destroy();
   });
 
   function forEvent(eventLabel: string, timeout?: number) {

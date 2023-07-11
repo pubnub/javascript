@@ -30,11 +30,11 @@ export class EventEngine {
   channels: string[] = [];
   groups: string[] = [];
 
-  subscribe({ channels, groups }: { channels?: string[]; groups?: string[] }) {
+  subscribe({ channels, groups, timetoken }: { channels?: string[]; groups?: string[]; timetoken?: string }) {
     this.channels = [...this.channels, ...(channels ?? [])];
     this.groups = [...this.groups, ...(groups ?? [])];
 
-    this.engine.transition(events.subscriptionChange(this.channels, this.groups));
+    this.engine.transition(events.subscriptionChange(this.channels, this.groups, timetoken?? '0'));
   }
 
   unsubscribe({ channels, groups }: { channels?: string[]; groups?: string[] }) {

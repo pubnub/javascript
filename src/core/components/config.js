@@ -74,6 +74,10 @@ export default class {
   // when there changes in the networking
   autoNetworkDetection;
 
+  // to configure reconnection policy and maximumReconnectionRetry values
+  // default reconnection policy is PNReconnectionPolicy.NONE and maximumReconnectionRetry value is 0
+  reconnectionConfiguration;
+
   // alert when a heartbeat works out.
   announceSuccessfulHeartbeats;
 
@@ -180,6 +184,9 @@ export default class {
 
     // flag for beta subscribe feature enablement
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
+
+    // reconnection configuration settings to apply reconnection settings in subscription
+    this.reconnectionConfiguration = setup.reconnectionConfiguration || { reconnectionPolicy : 'None'};
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -340,6 +347,14 @@ export default class {
 
   getVersion() {
     return '7.2.3';
+  }
+
+  setReconnectionConfiguration(reconnectionPolicy, maximumReconnectionRetries) {
+    this.reconnectionConfiguration = {
+      ...config.reconnectionConfiguration,
+      reconnectionPolicy: reconnectionPolicy,
+      maximumReconnectionRetries: maximumReconnectionRetries,
+    };
   }
 
   _addPnsdkSuffix(name, suffix) {

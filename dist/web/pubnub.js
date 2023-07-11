@@ -641,6 +641,8 @@
             this.useRandomIVs = (_c = setup.useRandomIVs) !== null && _c !== void 0 ? _c : true;
             // flag for beta subscribe feature enablement
             this.enableSubscribeBeta = (_d = setup.enableSubscribeBeta) !== null && _d !== void 0 ? _d : false;
+            // reconnection configuration settings to apply reconnection settings in subscription
+            this.reconnectionConfiguration = setup.reconnectionConfiguration || { reconnectionPolicy: 'None' };
             // if location config exist and we are in https, force secure to true.
             if (typeof location !== 'undefined' && location.protocol === 'https:') {
                 this.secure = true;
@@ -768,7 +770,10 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.2.2';
+            return '7.2.3';
+        };
+        default_1.prototype.setReconnectionConfiguration = function (reconnectionPolicy, maximumReconnectionRetries) {
+            this.reconnectionConfiguration = __assign(__assign({}, config.reconnectionConfiguration), { reconnectionPolicy: reconnectionPolicy, maximumReconnectionRetries: maximumReconnectionRetries });
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -6969,9 +6974,10 @@
     var reconnect$1 = createManagedEffect('RECEIVE_RECONNECT', function (context) { return context; });
     var handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', function (context) { return context; });
 
-    var subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', function (channels, groups) { return ({
+    var subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', function (channels, groups, timetoken) { return ({
         channels: channels,
         groups: groups,
+        timetoken: timetoken
     }); });
     var disconnect = createEvent('DISCONNECT', function () { return ({}); });
     var reconnect = createEvent('RECONNECT', function () { return ({}); });
@@ -7337,7 +7343,10 @@
         return ReceivingState.with({
             channels: context.channels,
             groups: context.groups,
-            cursor: event.payload,
+            cursor: {
+                timetoken: context.timetoken && context.timetoken !== '0' ? context.timetoken : event.payload.timetoken,
+                region: event.payload.region,
+            },
         });
     });
     HandshakingState.on(handshakingFailure.type, function (context, event) {
@@ -7352,7 +7361,7 @@
 
     var UnsubscribedState = new State('UNSUBSCRIBED');
     UnsubscribedState.on(subscriptionChange.type, function (_, event) {
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups, timetoken: event.payload.timetoken });
     });
 
     var EventEngine = /** @class */ (function () {
@@ -7377,10 +7386,10 @@
             configurable: true
         });
         EventEngine.prototype.subscribe = function (_a) {
-            var channels = _a.channels, groups = _a.groups;
+            var channels = _a.channels, groups = _a.groups, timetoken = _a.timetoken;
             this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
             this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((groups !== null && groups !== void 0 ? groups : [])), false);
-            this.engine.transition(subscriptionChange(this.channels, this.groups));
+            this.engine.transition(subscriptionChange(this.channels, this.groups, timetoken !== null && timetoken !== void 0 ? timetoken : '0'));
         };
         EventEngine.prototype.unsubscribe = function (_a) {
             var channels = _a.channels, groups = _a.groups;
@@ -7407,10 +7416,28 @@
         return EventEngine;
     }());
 
+    var ReconnectionDelay = /** @class */ (function () {
+        function ReconnectionDelay() {
+        }
+        ReconnectionDelay.getDelay = function (policy, attempts, backoff) {
+            var backoffValue = backoff !== null && backoff !== void 0 ? backoff : 5;
+            switch (policy.toUpperCase()) {
+                case 'LINEAR':
+                    return attempts * backoffValue + Math.random() * 1000;
+                case 'EXPONENTIAL':
+                    return Math.trunc(Math.pow(2, attempts - 1)) * 1000 + Math.random() * 1000;
+                default:
+                    throw new Error('invalid policy');
+            }
+        };
+        return ReconnectionDelay;
+    }());
+
     var default_1$3 = /** @class */ (function () {
         //
         function default_1(setup) {
             var _this = this;
+            var _a;
             var networking = setup.networking, cbor = setup.cbor;
             var config = new default_1$b({ setup: setup });
             this._config = config;
@@ -7449,12 +7476,14 @@
             this.handshake = endpointCreator.bind(this, modules, endpoint$1);
             this.receiveMessages = endpointCreator.bind(this, modules, endpoint);
             if (config.enableSubscribeBeta === true) {
+                var policy_1 = modules.config.reconnectionConfiguration.reconnectionPolicy;
+                var maxRetries_1 = (_a = modules.config.reconnectionConfiguration.maximumReconnectionRetries) !== null && _a !== void 0 ? _a : 0;
                 var eventEngine = new EventEngine({
                     handshake: this.handshake,
                     receiveEvents: this.receiveMessages,
-                    getRetryDelay: function (attempts) { return attempts * 2; },
+                    getRetryDelay: function (attempts) { return ReconnectionDelay.getDelay(policy_1, maxRetries_1); },
                     delay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
-                    shouldRetry: function (error, attempts) { return attempts < 2; },
+                    shouldRetry: function (_, attempts) { return maxRetries_1 >= attempts && policy_1 && policy_1 != 'None'; },
                     emitEvents: function (events) {
                         var e_1, _a;
                         try {
@@ -7477,6 +7506,9 @@
                 });
                 this.subscribe = eventEngine.subscribe.bind(eventEngine);
                 this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
+                this.unsubscribeAll = eventEngine.unsubscribeAll.bind(eventEngine);
+                this.reconnect = eventEngine.reconnect.bind(eventEngine);
+                this.disconnect = eventEngine.disconnect.bind(eventEngine);
                 this.eventEngine = eventEngine;
             }
             else {
