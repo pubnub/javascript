@@ -26,11 +26,11 @@ export const restore = createEvent(
 export const handshakingSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor: Cursor) => cursor);
 export const handshakingFailure = createEvent('HANDSHAKE_FAILURE', (error: PubNubError) => error);
 
-export const handshakingReconnectingSuccess = createEvent('HANDSHAKING_RECONNECTING_SUCCESS', (cursor: Cursor) => ({
+export const handshakingReconnectingSuccess = createEvent('HANDSHAKE_RECONNECT_SUCCESS', (cursor: Cursor) => ({
   cursor,
 }));
 export const handshakingReconnectingFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error: PubNubError) => error);
-export const handshakingReconnectingGiveup = createEvent('HANDSHAKING_RECONNECTING_GIVEUP', () => ({}));
+export const handshakingReconnectingGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', () => ({}));
 export const handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', () => ({}));
 
 export const receivingSuccess = createEvent('RECEIVE_SUCCESS', (cursor: Cursor, events: any[]) => ({

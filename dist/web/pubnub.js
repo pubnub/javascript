@@ -6982,7 +6982,7 @@
     var subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', function (channels, groups, timetoken) { return ({
         channels: channels,
         groups: groups,
-        timetoken: timetoken
+        timetoken: timetoken,
     }); });
     var disconnect = createEvent('DISCONNECT', function () { return ({}); });
     var reconnect = createEvent('RECONNECT', function () { return ({}); });
@@ -6994,11 +6994,11 @@
     }); });
     var handshakingSuccess = createEvent('HANDSHAKE_SUCCESS', function (cursor) { return cursor; });
     var handshakingFailure = createEvent('HANDSHAKE_FAILURE', function (error) { return error; });
-    var handshakingReconnectingSuccess = createEvent('HANDSHAKING_RECONNECTING_SUCCESS', function (cursor) { return ({
+    var handshakingReconnectingSuccess = createEvent('HANDSHAKE_RECONNECT_SUCCESS', function (cursor) { return ({
         cursor: cursor,
     }); });
     var handshakingReconnectingFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', function (error) { return error; });
-    var handshakingReconnectingGiveup = createEvent('HANDSHAKING_RECONNECTING_GIVEUP', function () { return ({}); });
+    var handshakingReconnectingGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', function () { return ({}); });
     var handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', function () { return ({}); });
     var receivingSuccess = createEvent('RECEIVE_SUCCESS', function (cursor, events) { return ({
         cursor: cursor,
@@ -7366,7 +7366,11 @@
 
     var UnsubscribedState = new State('UNSUBSCRIBED');
     UnsubscribedState.on(subscriptionChange.type, function (_, event) {
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups, timetoken: event.payload.timetoken });
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            timetoken: event.payload.timetoken,
+        });
     });
 
     var EventEngine = /** @class */ (function () {
@@ -7486,9 +7490,9 @@
                 var eventEngine = new EventEngine({
                     handshake: this.handshake,
                     receiveEvents: this.receiveMessages,
-                    getRetryDelay: function (attempts) { return ReconnectionDelay.getDelay(policy_1, maxRetries_1); },
+                    getRetryDelay: function (attempts) { return ReconnectionDelay.getDelay(policy_1, attempts); },
                     delay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
-                    shouldRetry: function (_, attempts) { return maxRetries_1 >= attempts && policy_1 && policy_1 != 'None'; },
+                    shouldRetry: function (_, attempts) { return maxRetries_1 > attempts && policy_1 && policy_1 != 'None'; },
                     emitEvents: function (events) {
                         var e_1, _a;
                         try {

@@ -326,9 +326,9 @@ export default class {
       const eventEngine = new EventEngine({
         handshake: this.handshake,
         receiveEvents: this.receiveMessages,
-        getRetryDelay: (attempts) => ReconnectionDelay.getDelay(policy, maxRetries),
+        getRetryDelay: (attempts) => ReconnectionDelay.getDelay(policy, attempts),
         delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-        shouldRetry: (_, attempts) => maxRetries >= attempts && policy && policy != 'None',
+        shouldRetry: (_, attempts) => maxRetries > attempts && policy && policy != 'None',
         emitEvents: (events) => {
           for (const event of events) {
             listenerManager.announceMessage(event);
