@@ -2,11 +2,14 @@ import { PubNubError } from '../core/components/endpoint';
 import { Cursor } from '../models/Cursor';
 import { createEvent, MapOf } from './core';
 
-export const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels: string[], groups: string[], timetoken?: string) => ({
-  channels,
-  groups,
-  timetoken
-}));
+export const subscriptionChange = createEvent(
+  'SUBSCRIPTION_CHANGED',
+  (channels: string[], groups: string[], timetoken?: string) => ({
+    channels,
+    groups,
+    timetoken,
+  }),
+);
 
 export const disconnect = createEvent('DISCONNECT', () => ({}));
 export const reconnect = createEvent('RECONNECT', () => ({}));

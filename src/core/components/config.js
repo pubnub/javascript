@@ -186,7 +186,7 @@ export default class {
     this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
 
     // reconnection configuration settings to apply reconnection settings in subscription
-    this.reconnectionConfiguration = setup.reconnectionConfiguration || { reconnectionPolicy : 'None'};
+    this.reconnectionConfiguration = setup.reconnectionConfiguration || { reconnectionPolicy: 'None' };
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {

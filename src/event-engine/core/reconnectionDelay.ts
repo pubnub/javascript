@@ -1,6 +1,6 @@
 export class ReconnectionDelay {
   static getDelay(policy: string, attempts: number, backoff?: number): number {
-    let backoffValue = backoff ?? 5;
+    const backoffValue = backoff ?? 5;
     switch (policy.toUpperCase()) {
       case 'LINEAR':
         return attempts * backoffValue + Math.random() * 1000;
