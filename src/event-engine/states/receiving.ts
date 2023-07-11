@@ -16,6 +16,7 @@ export const ReceivingState = new State<ReceivingStateContext, Events, Effects>(
 
 ReceivingState.onEnter((_) => emitStatus({ category: 'PNConnectedCategory' }));
 ReceivingState.onEnter((context) => receiveEvents(context.channels, context.groups, context.cursor));
+ReceivingState.onEnter((_) => emitStatus({ category: 'PNConnectedCategory' }));
 ReceivingState.onExit(() => receiveEvents.cancel);
 
 ReceivingState.on(receivingSuccess.type, (context, event) => {

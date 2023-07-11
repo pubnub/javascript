@@ -1813,7 +1813,7 @@
         }
         default_1.prototype.adaptStateChange = function (args, callback) {
             var _this = this;
-            var state = args.state, _a = args.channels, channels = _a === void 0 ? [] : _a, _b = args.channelGroups, channelGroups = _b === void 0 ? [] : _b;
+            var state = args.state, _a = args.channels, channels = _a === void 0 ? [] : _a, _b = args.channelGroups, channelGroups = _b === void 0 ? [] : _b, _c = args.withHeartbeat, withHeartbeat = _c === void 0 ? false : _c;
             channels.forEach(function (channel) {
                 if (channel in _this._channels)
                     _this._channels[channel].state = state;
@@ -1823,6 +1823,12 @@
                     _this._channelGroups[channelGroup].state = state;
                 }
             });
+            if (withHeartbeat) {
+                var presenceState_1 = {};
+                channels.forEach(function (channel) { return (presenceState_1[channel] = state); });
+                channelGroups.forEach(function (group) { return (presenceState_1[group] = state); });
+                return this._heartbeatEndpoint({ channels: channels, channelGroups: channelGroups, state: presenceState_1 }, callback);
+            }
             return this._setStateEndpoint({ state: state, channels: channels, channelGroups: channelGroups }, callback);
         };
         default_1.prototype.adaptPresenceChange = function (args) {
@@ -4192,7 +4198,6 @@
         handleResponse: handleResponse$g
     });
 
-    /*       */
     function getOperation$f() {
         return OPERATIONS.PNSetStateOperation;
     }
