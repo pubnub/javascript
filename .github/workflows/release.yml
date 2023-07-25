@@ -47,16 +47,13 @@ jobs:
           ref: v1
           token: ${{ secrets.GH_TOKEN }}
           path: .github/.release/actions
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-session-name: javascript-sdk-s3-upload
-          aws-region: us-east-1
       - name: Publish to S3
         uses: ./.github/.release/actions/actions/services/aws
         with:
           token: ${{ secrets.GH_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          auth-method: access-key
           content-type: application/javascript
           content-encoding: gzip
           acl: public-read
