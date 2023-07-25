@@ -1,3 +1,9 @@
+## v7.3.3
+July 25 2023
+
+#### Fixed
+- Fixes issue of severe vulnerability warnings for vm2 usage.
+
 ## v7.2.3
 June 19 2023
 
