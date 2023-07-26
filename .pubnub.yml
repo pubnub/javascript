@@ -4,7 +4,8 @@ changelog:
     version: v7.3.0
     changes:
       - type: bug
-        text: "Fixes issue of severe vulnerability warnings for vm2 usage."  - date: 2023-06-19
+        text: "Fixes issue of severe vulnerability warnings for vm2 usage."
+  - date: 2023-06-19
     version: v7.2.3
     changes:
       - type: feature
