@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "7.2.3",
+  "version": "7.3.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -53,7 +53,7 @@
     "cbor-sync": "^1.0.4",
     "lil-uuid": "^0.1.1",
     "superagent": "^6.1.0",
-    "superagent-proxy": "^3.0.0"
+    "proxy-agent": "^6.3.0"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^7.3.1",

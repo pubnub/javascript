@@ -768,7 +768,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.2.3';
+            return '7.3.0';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -6266,7 +6266,6 @@
         handleResponse: handleResponse$4
     });
 
-    /*       */
     function getOperation$3() {
         return OPERATIONS.PNMessageCounts;
     }
@@ -6277,7 +6276,7 @@
             return 'Missing channel';
         if (timetoken && channelTimetokens)
             return 'timetoken and channelTimetokens are incompatible together';
-        if (timetoken && channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) {
+        if (channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) {
             return 'Length of channelTimetokens and channels do not match';
         }
         if (!config.subscribeKey)

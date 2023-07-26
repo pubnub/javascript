@@ -1,5 +1,3 @@
-/*       */
-
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
@@ -13,7 +11,7 @@ export function validateParams(modules, incomingParams) {
 
   if (!channels) return 'Missing channel';
   if (timetoken && channelTimetokens) return 'timetoken and channelTimetokens are incompatible together';
-  if (timetoken && channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) {
+  if (channelTimetokens && channelTimetokens.length > 1 && channels.length !== channelTimetokens.length) {
     return 'Length of channelTimetokens and channels do not match';
   }
   if (!config.subscribeKey) return 'Missing Subscribe Key';
