@@ -1,6 +1,3 @@
-import TimeEndpoint from '../endpoints/time';
-import { StatusAnnouncement } from '../flow_interfaces';
-
 export default class {
   _reconnectionCallback;
 

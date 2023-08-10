@@ -1,6 +1,3 @@
-/*       */
-
-import { ModifyDeviceArgs, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 
 export function getOperation() {
