@@ -1,5 +1,3 @@
-/*       */
-
 export function encodedKeyValuePair(pairs, key, value) {
   if (value != null) {
     if (Array.isArray(value)) {

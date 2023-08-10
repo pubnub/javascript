@@ -1,8 +1,6 @@
-/*       */
 /* global FormData */
 /* global fetch */
 
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 import { postfile as postfilewebnode } from './web-node';
 
 async function postfileuri(url, fields, fileInput) {

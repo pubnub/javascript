@@ -1,7 +1,5 @@
-/*       */
 /* global XMLHttpRequest, Ti */
 
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
 function log(url, qs, res) {
