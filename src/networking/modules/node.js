@@ -1,6 +1,6 @@
 import superagent from 'superagent';
-import superagentProxy from 'superagent-proxy';
 import AgentKeepAlive from 'agentkeepalive';
+import superagentProxy from '../proxyAgent';
 
 let keepAliveAgent = null;
 let keepAliveSecureAgent = null;

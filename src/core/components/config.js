@@ -346,7 +346,7 @@ export default class {
   }
 
   getVersion() {
-    return '7.2.3';
+    return '7.3.0';
   }
 
   setReconnectionConfiguration(reconnectionPolicy, maximumReconnectionRetries) {

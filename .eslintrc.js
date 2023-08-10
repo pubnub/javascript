@@ -19,5 +19,6 @@ module.exports = {
     'prefer-destructuring': 0,
     'no-unused-vars': 0,
     '@typescript-eslint/no-unused-vars': 0,
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
   },
 };
