@@ -1,6 +1,6 @@
 import { State } from '../core/state';
-import { Effects } from '../presence_effects';
-import { Events, joined } from '../presence_events';
+import { Effects } from '../effects';
+import { Events, joined } from '../events';
 import { HeartbeatingState } from './heartbeating';
 
 export const HeartbeatInactiveState = new State<void, Events, Effects>('HEARTBEAT_INACTIVE');

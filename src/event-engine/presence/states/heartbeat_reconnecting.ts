@@ -1,6 +1,6 @@
 import { State } from '../../core/state';
-import { Events } from '../presence_events';
-import { Effects } from '../presence_effects';
+import { Events } from '../events';
+import { Effects } from '../effects';
 
 export type HeartbeatReconnectingStateContext = {
   channels: string[];

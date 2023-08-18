@@ -1,5 +1,5 @@
-import { PubNubError } from "../core/components/endpoint";
-import { createEvent, MapOf } from "./core";
+import { PubNubError } from "../../core/components/endpoint";
+import { createEvent, MapOf } from "../core";
 
 export const disconnect = createEvent('DISCONNECT', () => ({}));
 

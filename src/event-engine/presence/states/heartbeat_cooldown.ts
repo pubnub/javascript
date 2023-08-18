@@ -1,6 +1,6 @@
 import { State } from '../../core/state';
-import { Events, timesUp } from '../presence_events';
-import { Effects } from '../presence_effects';
+import { Events, timesUp } from '../events';
+import { Effects } from '../effects';
 import { HeartbeatingState } from './heartbeating';
 
 export type HeartbeatCooldownStateContext = {

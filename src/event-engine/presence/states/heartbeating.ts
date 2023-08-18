@@ -1,6 +1,6 @@
 import { State } from '../../core/state';
-import { Events, heartbeatFailure, heartbeatSuccess, joined, left } from '../presence_events';
-import { Effects, heartbeat, leave } from '../presence_effects';
+import { Events, heartbeatFailure, heartbeatSuccess, joined, left } from '../events';
+import { Effects, heartbeat, leave } from '../effects';
 import { HeartbeatCooldownState } from './heartbeat_cooldown';
 import { HearbeatReconnectingState } from './heartbeat_reconnecting';
 

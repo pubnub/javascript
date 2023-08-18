@@ -1,7 +1,7 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { asyncHandler, Dispatcher, Engine } from '../core';
-import * as effects from './presence_effects'
-import * as events from './presence_events'
+import * as effects from './effects'
+import * as events from './events'
 
 
 export type Dependencies = {

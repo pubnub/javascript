@@ -1,7 +1,7 @@
 import { Dispatcher, Engine } from "../core"
-import * as events from "./presence_events"
-import * as effects from "./presence_effects"
-import { Dependencies, PresenceEventEngineDispatcher } from "./presence_dispatcher";
+import * as events from "./events"
+import * as effects from "./effects"
+import { Dependencies, PresenceEventEngineDispatcher } from "./dispatcher";
 
 export class PresenceEventEngine {
   private engine: Engine<events.Events, effects.Effects> = new Engine();
