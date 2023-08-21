@@ -768,7 +768,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.3.0';
+            return '7.3.1';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -7710,6 +7710,8 @@
             this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
             this.getUUID = modules.config.getUUID.bind(modules.config);
             this.setUUID = modules.config.setUUID.bind(modules.config);
+            this.getUserId = modules.config.getUserId.bind(modules.config);
+            this.setUserId = modules.config.setUserId.bind(modules.config);
             this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
             this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
             this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);

@@ -1,3 +1,9 @@
+## v7.3.1
+August 21 2023
+
+#### Fixed
+- Fixes issue of missing get and set methods for userId field of PubNub configuration.
+
 ## v7.3.0
 July 26 2023
 
