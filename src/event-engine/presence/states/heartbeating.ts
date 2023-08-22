@@ -9,7 +9,7 @@ export type HeartbeatingStateContext = {
   groups: string[];
 };
 
-export const HeartbeatingState = new State<HeartbeatingStateContext, Events, Effects > ('HEARTBEATING');
+export const HeartbeatingState = new State<HeartbeatingStateContext, Events, Effects>('HEARTBEATING');
 
 HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));
 // HeartbeatingState.onExit(() => heartbeat.cancel);
@@ -17,14 +17,15 @@ HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.group
 HeartbeatingState.on(heartbeatSuccess.type, (context, _) => {
   return HeartbeatCooldownState.with({
     channels: context.channels,
-    groups: context.groups
+    groups: context.groups,
   });
 });
 
-HeartbeatingState.on(joined.type, (context, event) => HeartbeatingState.with({
-  channels: [...context.channels, ...event.payload.channels],
-  groups: [...context.groups, ...event.payload.groups]
-  })
+HeartbeatingState.on(joined.type, (context, event) =>
+  HeartbeatingState.with({
+    channels: [...context.channels, ...event.payload.channels],
+    groups: [...context.groups, ...event.payload.groups],
+  }),
 );
 
 HeartbeatingState.on(left.type, (context, event) =>

@@ -5,9 +5,9 @@ import { HeartbeatingState } from './heartbeating';
 
 export const HeartbeatInactiveState = new State<void, Events, Effects>('HEARTBEAT_INACTIVE');
 
-HeartbeatInactiveState.on(joined.type, (context, event) => 
+HeartbeatInactiveState.on(joined.type, (context, event) =>
   HeartbeatingState.with({
     channels: event.payload.channels,
-    groups: event.payload.groups
+    groups: event.payload.groups,
   }),
 );

@@ -7,6 +7,6 @@ export type HeartbeatReconnectingStateContext = {
   groups: string[];
 };
 
-
-export const HearbeatReconnectingState = new State<HeartbeatReconnectingStateContext, Events, Effects>('HEARBEAT_RECONNECTING');
-
+export const HearbeatReconnectingState = new State<HeartbeatReconnectingStateContext, Events, Effects>(
+  'HEARBEAT_RECONNECTING',
+);

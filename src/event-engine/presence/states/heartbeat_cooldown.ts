@@ -10,9 +10,9 @@ export type HeartbeatCooldownStateContext = {
 
 export const HeartbeatCooldownState = new State<HeartbeatCooldownStateContext, Events, Effects>('HEARTBEATCOOLDOWN');
 
-HeartbeatCooldownState.on(timesUp.type, (context, event) => 
+HeartbeatCooldownState.on(timesUp.type, (context, event) =>
   HeartbeatingState.with({
     channels: context.channels,
-    groups: context.groups
-  })
+    groups: context.groups,
+  }),
 );
