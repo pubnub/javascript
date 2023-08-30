@@ -52,7 +52,7 @@
     "cbor-js": "^0.1.0",
     "cbor-sync": "^1.0.4",
     "lil-uuid": "^0.1.1",
-    "superagent": "^6.1.0",
+    "superagent": "^8.1.2",
     "proxy-agent": "^6.3.0"
   },
   "devDependencies": {
