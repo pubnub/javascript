@@ -1,3 +1,9 @@
+## v7.3.2
+August 31 2023
+
+#### Fixed
+- Fixes issue of having deprecated superagent version. Fixed the following issues reported by [@wimZ](https://github.com/wimZ): [#317](https://github.com/pubnub/javascript/issues/317).
+
 ## v7.3.1
 August 21 2023
 
