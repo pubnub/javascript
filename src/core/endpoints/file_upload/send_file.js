@@ -1,18 +1,5 @@
 import { PubNubError, createValidationError } from '../../components/endpoint';
 
-const getErrorFromResponse = (response) =>
-  new Promise((resolve) => {
-    let result = '';
-
-    response.on('data', (data) => {
-      result += data.toString('utf8');
-    });
-
-    response.on('end', () => {
-      resolve(result);
-    });
-  });
-
 const sendFile = function ({
   generateUploadUrl,
   publishFile,
@@ -68,11 +55,9 @@ const sendFile = function ({
         throw new Error('Unsupported environment');
       }
     } catch (e) {
-      if (e.response) {
-        const errorBody = await getErrorFromResponse(e.response);
-
+      if (e.response && typeof e.response.text === 'string') {
+        const errorBody = e.response.text;
         const reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
-
         throw new PubNubError(reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.', e);
       } else {
         throw new PubNubError('Upload to bucket failed.', e);
