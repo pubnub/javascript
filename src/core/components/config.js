@@ -129,11 +129,14 @@ export default class {
   maximumCacheSize;
 
   /*
-    support customp encryption and decryption functions.
+    support custom encryption and decryption functions.
   */
   customEncrypt; // function to support custome encryption of messages
 
   customDecrypt; // function used to decrypt old version messages
+
+  // registered cryptors for encryption and decryption of messages.
+  cryptors;
 
   // File Upload
 
@@ -174,6 +177,8 @@ export default class {
 
     this.customEncrypt = setup.customEncrypt;
     this.customDecrypt = setup.customDecrypt;
+
+    this.cryptors = setup.cryptors || [];
 
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
     this.useRandomIVs = setup.useRandomIVs ?? true;

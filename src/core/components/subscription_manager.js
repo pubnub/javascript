@@ -70,6 +70,7 @@ export default class {
     config,
     crypto,
     listenerManager,
+    cryptors,
   }) {
     this._listenerManager = listenerManager;
     this._config = config;
@@ -729,6 +730,7 @@ export default class {
 
         if (this._config.cipherKey) {
           announce.message = this._crypto.decrypt(message.payload);
+          //TODO: select one of the cryptors and decrypt.
         } else {
           announce.message = message.payload;
         }

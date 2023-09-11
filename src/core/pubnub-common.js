@@ -278,8 +278,9 @@ export default class {
     const config = new Config({ setup });
     this._config = config;
     const crypto = new Crypto({ config }); // LEGACY
-
+    
     const { cryptography } = setup;
+    const cryptors = [crypto, cryptography, ...config.cryptors];
 
     networking.init(config);
 
@@ -297,6 +298,7 @@ export default class {
       networking,
       crypto,
       cryptography,
+      cryptors,
       tokenManager,
       telemetryManager,
       PubNubFile: setup.PubNubFile,
@@ -341,6 +343,7 @@ export default class {
         config: modules.config,
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
+        cryptors: modules.cryptors,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
