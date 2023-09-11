@@ -1,3 +1,9 @@
+## v7.3.3
+September 11 2023
+
+#### Fixed
+- Fixes issue of getting misleading error message when sendFile fails.
+
 ## v7.3.2
 August 31 2023
 
