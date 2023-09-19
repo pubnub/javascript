@@ -124,16 +124,23 @@ export default class NodeCryptography {
     return Buffer.concat([aes.update(bCiphertext), aes.final()]);
   }
 
-  encryptStream(key, stream) {
-    const output = new PassThrough();
+  async encryptStream(key, stream) {
     const bIv = this.getIv();
-
-    const aes = createCipheriv(this.algo, key, bIv);
-
-    output.write(bIv);
-    stream.pipe(aes).pipe(output);
-
-    return output;
+    const aes = createCipheriv('aes-256-cbc', key, bIv).setAutoPadding(true);
+    let inited = false;
+    return stream.pipe(aes).pipe(
+      new Transform({
+        transform(chunk, _, cb) {
+          if (!inited) {
+            inited = true;
+            this.push(Buffer.concat([bIv, chunk]));
+          } else {
+            this.push(chunk);
+          }
+          cb();
+        },
+      }),
+    );
   }
 
   decryptStream(key, stream) {
