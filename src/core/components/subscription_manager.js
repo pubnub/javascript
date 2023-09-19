@@ -69,8 +69,7 @@ export default class {
     getFileUrl,
     config,
     crypto,
-    listenerManager,
-    cryptors,
+    listenerManager
   }) {
     this._listenerManager = listenerManager;
     this._config = config;
@@ -730,7 +729,6 @@ export default class {
 
         if (this._config.cipherKey) {
           announce.message = this._crypto.decrypt(message.payload);
-          //TODO: select one of the cryptors and decrypt.
         } else {
           announce.message = message.payload;
         }

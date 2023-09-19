@@ -135,9 +135,6 @@ export default class {
 
   customDecrypt; // function used to decrypt old version messages
 
-  // registered cryptors for encryption and decryption of messages.
-  cryptors;
-
   // File Upload
 
   // How many times the publish-file should be retried before giving up
@@ -177,8 +174,6 @@ export default class {
 
     this.customEncrypt = setup.customEncrypt;
     this.customDecrypt = setup.customDecrypt;
-
-    this.cryptors = setup.cryptors || [];
 
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
     this.useRandomIVs = setup.useRandomIVs ?? true;
