@@ -10,7 +10,7 @@ export default class LegacyCryptor {
   fileCryptor;
 
   constructor({ pnConfig }) {
-    this.config = pnConfig
+    this.config = pnConfig;
     this.cryptor = new Crypto({ pnConfig });
     this.fileCryptor = new FileCryptor();
   }

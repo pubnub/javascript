@@ -7,23 +7,23 @@ export default class CryptoModule {
   defaultCryptor;
   cryptors = [];
 
-  constructor({cryptoModuleConfiguration}) {
+  constructor({ cryptoModuleConfiguration }) {
     this.defaultCryptor = cryptoModuleConfiguration.default;
     this.cryptors = [...this.defaultCryptor, ...cryptoModuleConfiguration.cryptors];
   }
 
-  static legacyCryptoModule({config}) {
+  static legacyCryptoModule({ config }) {
     return new this({
-      default: new LegacyCryptor({config}),
-      cryptors: [new AesCbcCryptor(config.cipherKey)]
-    })
+      default: new LegacyCryptor({ config }),
+      cryptors: [new AesCbcCryptor(config.cipherKey)],
+    });
   }
 
-  static aesCbcCryptoModule({config}) {
+  static aesCbcCryptoModule({ config }) {
     return new this({
       default: new AesCbcCryptor(config.cipherKey),
-      cryptors: [new LegacyCryptor({config})]
-    })
+      cryptors: [new LegacyCryptor({ config })],
+    });
   }
 
   async encrypt(data, encoding) {
@@ -65,8 +65,7 @@ export default class CryptoModule {
   }
 
   async encryptFile(file, File) {
-    if (this.defaultCryptor instanceof LegacyCryptor) 
-      return this.defaultCryptor.encryptFile(file, File) ;
+    if (this.defaultCryptor instanceof LegacyCryptor) return this.defaultCryptor.encryptFile(file, File);
     if (file.data instanceof Buffer) {
       return File.create({
         name: file.name,
@@ -98,7 +97,7 @@ export default class CryptoModule {
   }
 
   async decryptFile(file, File) {
-    if (file.data instanceof Buffer){
+    if (file.data instanceof Buffer) {
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
@@ -106,10 +105,10 @@ export default class CryptoModule {
       });
     }
 
-    if (file.data instanceof Readable){
+    if (file.data instanceof Readable) {
       let stream = file.data;
       return new Promise((resolve, _) => {
-        stream.on('readable', () => resolve(this._decryptStream(stream,file, File)));
+        stream.on('readable', () => resolve(this._decryptStream(stream, file, File)));
       });
     }
   }
@@ -128,7 +127,8 @@ export default class CryptoModule {
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
-        data: await cryptor.decryptStream({ stream: stream, metadataLength: headerSize })});
+        data: await cryptor.decryptStream({ stream: stream, metadataLength: headerSize }),
+      });
     }
   }
 
