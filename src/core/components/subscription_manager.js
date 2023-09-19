@@ -69,7 +69,7 @@ export default class {
     getFileUrl,
     config,
     crypto,
-    listenerManager
+    listenerManager,
   }) {
     this._listenerManager = listenerManager;
     this._config = config;

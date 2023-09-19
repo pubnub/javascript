@@ -278,7 +278,7 @@ export default class {
     const config = new Config({ setup });
     this._config = config;
     const crypto = new Crypto({ config }); // LEGACY
-    
+
     const { cryptography } = setup;
 
     networking.init(config);
