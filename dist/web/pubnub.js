@@ -12481,6 +12481,14 @@
         tmp.set(new Uint8Array(ab2), ab1.byteLength);
         return tmp.buffer;
     }
+    function ab2hex(ab) {
+        return __spreadArray([], __read(new Uint8Array(ab)), false).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+    }
+    function hex2ab(hex) {
+        return new Uint8Array(hex.match(/[\da-f]{2}/gi).map(function (h) {
+            return parseInt(h, 16);
+        }));
+    }
     var WebCryptography = /** @class */ (function () {
         function WebCryptography() {
         }
@@ -12580,11 +12588,11 @@
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            bKey = Buffer.from(key);
+                            bKey = WebCryptography.encoder.encode(key);
                             return [4 /*yield*/, crypto.subtle.digest('SHA-256', bKey.buffer)];
                         case 1:
                             abHash = _a.sent();
-                            abKey = Buffer.from(Buffer.from(abHash).toString('hex').slice(0, 32), 'utf8').buffer;
+                            abKey = hex2ab(ab2hex(abHash).slice(0, 32)).buffer;
                             return [2 /*return*/, crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt'])];
                     }
                 });
@@ -12607,10 +12615,16 @@
         };
         WebCryptography.prototype.decryptArrayBuffer = function (key, ciphertext) {
             return __awaiter(this, void 0, void 0, function () {
-                var abIv;
+                var abIv, data;
                 return __generator(this, function (_a) {
-                    abIv = ciphertext.slice(0, 16);
-                    return [2 /*return*/, crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16))];
+                    switch (_a.label) {
+                        case 0:
+                            abIv = ciphertext.slice(0, 16);
+                            return [4 /*yield*/, crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16))];
+                        case 1:
+                            data = _a.sent();
+                            return [2 /*return*/, data];
+                    }
                 });
             });
         };
@@ -12621,12 +12635,12 @@
                     switch (_a.label) {
                         case 0:
                             abIv = crypto.getRandomValues(new Uint8Array(16));
-                            abPlaintext = Buffer.from(plaintext).buffer;
+                            abPlaintext = WebCryptography.encoder.encode(plaintext).buffer;
                             return [4 /*yield*/, crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, abPlaintext)];
                         case 1:
                             abPayload = _a.sent();
                             ciphertext = concatArrayBuffer(abIv.buffer, abPayload);
-                            return [2 /*return*/, Buffer.from(ciphertext).toString('utf8')];
+                            return [2 /*return*/, WebCryptography.decoder.decode(ciphertext)];
                     }
                 });
             });
@@ -12637,18 +12651,20 @@
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            abCiphertext = Buffer.from(ciphertext);
+                            abCiphertext = WebCryptography.encoder.encode(ciphertext).buffer;
                             abIv = abCiphertext.slice(0, 16);
                             abPayload = abCiphertext.slice(16);
                             return [4 /*yield*/, crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, abPayload)];
                         case 1:
                             abPlaintext = _a.sent();
-                            return [2 /*return*/, Buffer.from(abPlaintext).toString('utf8')];
+                            return [2 /*return*/, WebCryptography.decoder.decode(abPlaintext)];
                     }
                 });
             });
         };
         WebCryptography.IV_LENGTH = 16;
+        WebCryptography.encoder = new TextEncoder();
+        WebCryptography.decoder = new TextDecoder();
         return WebCryptography;
     }());
 
