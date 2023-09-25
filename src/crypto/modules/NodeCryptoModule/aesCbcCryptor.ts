@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypt
 import { ICryptor, EncryptedDataType, EncryptedStream } from './ICryptor';
 
 export default class AesCbcCryptor implements ICryptor {
-  static BLOCK_SIZE: number = 16;
+  static BLOCK_SIZE = 16;
 
   cipherKey: string;
   constructor(configuration: { cipherKey: string }) {
