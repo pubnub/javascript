@@ -43,11 +43,11 @@ export default class CryptoModule {
     return new this({ default: defaultCryptor });
   }
 
-  getAllCryptors() {
+  private getAllCryptors() {
     return [this.defaultCryptor, ...this.cryptors];
   }
 
-  getLegacyCryptor() {
+  private getLegacyCryptor() {
     return this.getAllCryptors().find((c) => c.identifier === '');
   }
 
@@ -154,7 +154,7 @@ export default class CryptoModule {
     }
   }
 
-  async onStreamReadable(stream: NodeJS.ReadableStream, file: PubnubFile, File: PubnubFile) {
+  private async onStreamReadable(stream: NodeJS.ReadableStream, file: PubnubFile, File: PubnubFile) {
     stream.removeAllListeners('readable');
 
     const magicBytes = stream.read(4);
@@ -175,7 +175,7 @@ export default class CryptoModule {
     });
   }
 
-  async decryptLegacyFileStream(stream: NodeJS.ReadableStream, file: PubnubFile, File: PubnubFile) {
+  private async decryptLegacyFileStream(stream: NodeJS.ReadableStream, file: PubnubFile, File: PubnubFile) {
     const cryptor = this.getLegacyCryptor();
     if (cryptor) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -192,7 +192,7 @@ export default class CryptoModule {
     }
   }
 
-  getCryptor(header: CryptorHeader) {
+  private getCryptor(header: CryptorHeader) {
     if (header === '') {
       const cryptor = this.getAllCryptors().find((c) => c.identifier === '');
       if (cryptor) return cryptor;
@@ -202,7 +202,7 @@ export default class CryptoModule {
     }
   }
 
-  getCryptorFromId(id: string) {
+  private getCryptorFromId(id: string) {
     const cryptor = this.getAllCryptors().find((c) => id === c.identifier);
     if (cryptor) {
       return cryptor;

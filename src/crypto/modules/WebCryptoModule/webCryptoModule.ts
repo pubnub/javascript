@@ -41,7 +41,7 @@ export default class CryptoModule {
     return new this({ default: defaultCryptor });
   }
 
-  getAllCryptors() {
+  private getAllCryptors() {
     return [this.defaultCryptor, ...this.cryptors];
   }
 
@@ -122,7 +122,7 @@ export default class CryptoModule {
     }
   }
 
-  getCryptor(header: string | CryptorHeaderV1) {
+  private getCryptor(header: string | CryptorHeaderV1) {
     if (header === '') {
       const cryptor = this.getAllCryptors().find((c) => c.identifier === '');
       if (cryptor) return cryptor;
@@ -132,7 +132,7 @@ export default class CryptoModule {
     }
   }
 
-  getCryptorFromId(id: string) {
+  private getCryptorFromId(id: string) {
     const cryptor = this.getAllCryptors().find((c) => id === c.identifier);
     if (cryptor) {
       return cryptor;
@@ -140,7 +140,7 @@ export default class CryptoModule {
     throw Error('unknown cryptor');
   }
 
-  concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer) {
+  private concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer) {
     const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
 
     tmp.set(new Uint8Array(ab1), 0);
