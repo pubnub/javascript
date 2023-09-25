@@ -33,11 +33,13 @@ export default class LegacyCryptor implements ILegacyCryptor<PubnubFile> {
   }
 
   async encryptFile(file: PubnubFile, File: PubnubFile) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore: can not detect cipherKey from old Config
     return this.fileCryptor.encryptFile(this.config?.cipherKey, file, File);
   }
 
   async decryptFile(file: PubnubFile, File: PubnubFile) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore: can not detect cipherKey from old Config
     return this.fileCryptor.decryptFile(this.config.cipherKey, file, File);
   }

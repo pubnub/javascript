@@ -98,9 +98,8 @@ export default class WebCryptography {
 
   async decryptArrayBuffer(key, ciphertext) {
     const abIv = ciphertext.slice(0, 16);
-
-   const data = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
-   return data;
+    const data = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
+    return data;
   }
 
   async encryptString(key, plaintext) {

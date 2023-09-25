@@ -21,6 +21,7 @@ export default class CryptoModule {
     this.cryptors = cryptoModuleConfiguration.cryptors ?? [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore: type detection issue with old Config type assignment
   static legacyCryptoModule({ config }) {
     return new this({
@@ -45,12 +46,12 @@ export default class CryptoModule {
   }
 
   async encrypt(data: ArrayBuffer) {
-    let encrypted = await this.defaultCryptor.encrypt(data);
+    const encrypted = await this.defaultCryptor.encrypt(data);
     if (!encrypted.metadata) return encrypted.data;
 
-    let header = CryptorHeader.from(this.defaultCryptor.identifier, encrypted.metadata);
+    const header = CryptorHeader.from(this.defaultCryptor.identifier, encrypted.metadata);
 
-    let headerData = new Uint8Array((header as CryptorHeaderV1).length);
+    const headerData = new Uint8Array((header as CryptorHeaderV1).length);
     let pos = 0;
     headerData.set((header as CryptorHeaderV1).data, pos);
     pos += (header as CryptorHeaderV1).length;
@@ -62,12 +63,13 @@ export default class CryptoModule {
   }
 
   async decrypt(encryptedData: ArrayBuffer) {
-    let header = CryptorHeader.tryParse(encryptedData);
-    let cryptor = this.getCryptor(header);
-    let metadata =
+    const header = CryptorHeader.tryParse(encryptedData);
+    const cryptor = this.getCryptor(header);
+    const metadata =
       header.length > 0
         ? encryptedData.slice(header.length - (header as CryptorHeaderV1).metadataLength, header.length)
         : null;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore: cryptor will be there or unreachable due to exception
     return cryptor.decrypt({
       data: encryptedData.slice(header.length),
@@ -80,13 +82,16 @@ export default class CryptoModule {
      * Files handled differently in case of Legacy cryptor.
      * (as long as we support legacy need to check on default cryptor)
      */
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore: default cryptor will be there. As long as legacy cryptor supported.
     if (this.defaultCryptor.identifier === '') return this.defaultCryptor.encryptFile(file, File);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore: can not infer that PubNubFile has data field
     if (file.data instanceof Buffer) {
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore: can not infer that PubNubFile has data field
         data: await this.encrypt(file.data),
       });
@@ -94,19 +99,23 @@ export default class CryptoModule {
   }
 
   async decryptFile(file: PubnubFile, File: PubnubFile) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore: can not infer that PubNubFile has data field
     if (file.data instanceof Buffer) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore: can not infer that PubNubFile has data field
-      let header = CryptorHeader.tryParse(file.data);
-      let cryptor = this.getCryptor(header);
+      const header = CryptorHeader.tryParse(file.data);
+      const cryptor = this.getCryptor(header);
       /**
        * If It's legacyone then redirect it.
        * (as long as we support legacy need to check on instance type)
        */
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore: cryptor will be there or unreachable due to exception
       if (cryptor.identifier === CryptoModule.LEGACY_IDENTIFIER) return cryptor.decryptFile(file, File);
       return File.create({
         name: file.name,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore: can not infer that PubNubFile has data field
         data: await this.decrypt(file.data),
       });
@@ -243,11 +252,11 @@ class CryptorHeaderV1 {
     pos++;
     if (this.identifier) header.set(encoder.encode(this.identifier), pos);
     pos += CryptorHeaderV1.IDENTIFIER_LENGTH;
-    let metadata_size = this.metadataLength;
-    if (metadata_size < 255) {
-      header[pos] = metadata_size;
+    const metadataSize = this.metadataLength;
+    if (metadataSize < 255) {
+      header[pos] = metadataSize;
     } else {
-      header.set([255, metadata_size >> 8, metadata_size & 0xff], pos);
+      header.set([255, metadataSize >> 8, metadataSize & 0xff], pos);
     }
     return header;
   }
