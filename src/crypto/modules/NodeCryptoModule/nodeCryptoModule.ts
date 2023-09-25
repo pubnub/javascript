@@ -147,7 +147,7 @@ export default class CryptoModule {
     }
 
     if (file.data instanceof Readable) {
-      let stream = file.data;
+      const stream = file.data;
       return new Promise((resolve) => {
         stream.on('readable', () => resolve(this.onStreamReadable(stream, file, File)));
       });
@@ -243,12 +243,12 @@ class CryptorHeader {
   }
 
   static tryGetMetadataSizeFromStream(stream: NodeJS.ReadableStream) {
-    let sizeBuf = stream.read(1);
+    const sizeBuf = stream.read(1);
     if (sizeBuf && (sizeBuf[0] as number) < 255) {
       return sizeBuf[0] as number;
     }
     if ((sizeBuf[0] as number) === 255) {
-      let nextBuf = stream.read(2);
+      const nextBuf = stream.read(2);
       if (nextBuf.length >= 2) {
         return new Uint16Array([nextBuf[0] as number, nextBuf[1] as number]).reduce((acc, val) => (acc << 8) + val, 0);
       }
