@@ -9,8 +9,22 @@ function concatArrayBuffer(ab1, ab2) {
   return tmp.buffer;
 }
 
+function ab2hex(ab) {
+  return [...new Uint8Array(ab)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
+function hex2ab(hex) {
+  return new Uint8Array(
+    hex.match(/[\da-f]{2}/gi).map(function (h) {
+      return parseInt(h, 16);
+    }),
+  );
+}
+
 export default class WebCryptography {
   static IV_LENGTH = 16;
+  static encoder = new TextEncoder();
+  static decoder = new TextDecoder();
 
   get algo() {
     return 'aes-256-cbc';
@@ -68,10 +82,10 @@ export default class WebCryptography {
   }
 
   async getKey(key) {
-    const bKey = Buffer.from(key);
+    const bKey = WebCryptography.encoder.encode(key);
     const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
 
-    const abKey = Buffer.from(Buffer.from(abHash).toString('hex').slice(0, 32), 'utf8').buffer;
+    const abKey = hex2ab(ab2hex(abHash).slice(0, 32)).buffer;
 
     return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
   }
@@ -85,27 +99,28 @@ export default class WebCryptography {
   async decryptArrayBuffer(key, ciphertext) {
     const abIv = ciphertext.slice(0, 16);
 
-    return crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
+   const data = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
+   return data;
   }
 
   async encryptString(key, plaintext) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
-    const abPlaintext = Buffer.from(plaintext).buffer;
+    const abPlaintext = WebCryptography.encoder.encode(plaintext).buffer;
     const abPayload = await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, abPlaintext);
 
     const ciphertext = concatArrayBuffer(abIv.buffer, abPayload);
 
-    return Buffer.from(ciphertext).toString('utf8');
+    return WebCryptography.decoder.decode(ciphertext);
   }
 
   async decryptString(key, ciphertext) {
-    const abCiphertext = Buffer.from(ciphertext);
+    const abCiphertext = WebCryptography.encoder.encode(ciphertext).buffer;
     const abIv = abCiphertext.slice(0, 16);
     const abPayload = abCiphertext.slice(16);
 
     const abPlaintext = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, abPayload);
 
-    return Buffer.from(abPlaintext).toString('utf8');
+    return WebCryptography.decoder.decode(abPlaintext);
   }
 }

@@ -1,5 +1,5 @@
 /**       */
-import { Readable, PassThrough } from 'stream';
+import { Readable, PassThrough, Transform } from 'stream';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
 
 export default class NodeCryptography {
