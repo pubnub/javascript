@@ -277,16 +277,18 @@ class CryptorHeader {
     } else {
       throw new PubNubError('decryption error');
     }
-    let headerSize = null;
-    if (encryptedData.length > pos + 1) {
-      headerSize = encryptedData[pos];
+    let metadataLength = null;
+    if (encryptedData.length >= pos + 1) {
+      metadataLength = encryptedData[pos];
+    } else {
+      throw new PubNubError('decryption error');
     }
     pos += 1;
-    if (headerSize === 255 && encryptedData.length >= pos + 2) {
-      headerSize = new Uint16Array(encryptedData.slice(pos, pos + 3)).reduce((acc, val) => (acc << 8) + val, 0);
+    if (metadataLength === 255 && encryptedData.length >= pos + 2) {
+      metadataLength = new Uint16Array(encryptedData.slice(pos, pos + 2)).reduce((acc, val) => (acc << 8) + val, 0);
       pos += 2;
     }
-    return new CryptorHeaderV1(identifier.toString('utf8'), headerSize!);
+    return new CryptorHeaderV1(identifier.toString('utf8'), metadataLength);
   }
 }
 
