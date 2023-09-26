@@ -9,7 +9,6 @@ import {
 } from '../../../../lib/crypto/modules/NodeCryptoModule/nodeCryptoModule.js';
 
 Before(function () {
-  this.grantPayload = {};
   this.useRandomIVs = true;
 });
 

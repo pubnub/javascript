@@ -204,7 +204,6 @@ class CryptorHeaderV1 {
 
   static SENTINEL = 'PNED';
 
-
   _identifier;
   _metadataLength;
 
