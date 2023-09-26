@@ -30,7 +30,7 @@ export default class CryptoModule {
     });
   }
 
-  static aesCbcCryptoModule(config: { cipherKey: { cipherKey: any } }) {
+  static aesCbcCryptoModule(config: any) {
     return new this({
       default: new AesCbcCryptor(config.cipherKey),
       cryptors: [new LegacyCryptor({ config })],
@@ -155,6 +155,7 @@ class CryptorHeader {
   static SENTINEL = 'PNED';
   static LEGACY_IDENTIFIER = '';
   static IDENTIFIER_LENGTH = 4;
+  static VERSION = 1;
   static MAX_VERSION = 1;
 
   static from(id: string, metadata: ArrayBuffer) {
@@ -202,7 +203,7 @@ class CryptorHeaderV1 {
   static IDENTIFIER_LENGTH = 4;
 
   static SENTINEL = 'PNED';
-  static VERSION = 1;
+
 
   _identifier;
   _metadataLength;
@@ -229,14 +230,14 @@ class CryptorHeaderV1 {
   }
 
   get version() {
-    return CryptorHeaderV1.VERSION;
+    return CryptorHeader.VERSION;
   }
 
   get length() {
     return (
-      CryptorHeaderV1.SENTINEL.length +
+      CryptorHeader.SENTINEL.length +
       1 +
-      CryptorHeaderV1.IDENTIFIER_LENGTH +
+      CryptorHeader.IDENTIFIER_LENGTH +
       (this.metadataLength < 255 ? 1 : 3) +
       this.metadataLength
     );
@@ -246,17 +247,17 @@ class CryptorHeaderV1 {
     let pos = 0;
     const header = new Uint8Array(this.length);
     const encoder = new TextEncoder();
-    header.set(encoder.encode(CryptorHeaderV1.SENTINEL));
-    pos += CryptorHeaderV1.SENTINEL.length;
+    header.set(encoder.encode(CryptorHeader.SENTINEL));
+    pos += CryptorHeader.SENTINEL.length;
     header[pos] = this.version;
     pos++;
     if (this.identifier) header.set(encoder.encode(this.identifier), pos);
-    pos += CryptorHeaderV1.IDENTIFIER_LENGTH;
-    const metadataSize = this.metadataLength;
-    if (metadataSize < 255) {
-      header[pos] = metadataSize;
+    pos += CryptorHeader.IDENTIFIER_LENGTH;
+    const metadataLength = this.metadataLength;
+    if (metadataLength < 255) {
+      header[pos] = metadataLength;
     } else {
-      header.set([255, metadataSize >> 8, metadataSize & 0xff], pos);
+      header.set([255, metadataLength >> 8, metadataLength & 0xff], pos);
     }
     return header;
   }

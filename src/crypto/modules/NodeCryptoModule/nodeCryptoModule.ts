@@ -5,6 +5,8 @@ import AesCbcCryptor from './aesCbcCryptor';
 import { ICryptor } from './ICryptor';
 import { ILegacyCryptor, PubnubFile } from './ILegacyCryptor';
 
+export { LegacyCryptor, AesCbcCryptor };
+
 type CryptorType = ICryptor | ILegacyCryptor<PubnubFile>;
 
 type CryptoModuleConfiguration = {
@@ -12,7 +14,7 @@ type CryptoModuleConfiguration = {
   cryptors?: Array<CryptorType>;
 };
 
-export default class CryptoModule {
+export class CryptoModule {
   static LEGACY_IDENTIFIER = '';
 
   defaultCryptor: CryptorType;
@@ -32,7 +34,7 @@ export default class CryptoModule {
     });
   }
 
-  static aesCbcCryptoModule(config: { cipherKey: { cipherKey: string } }) {
+  static aesCbcCryptoModule(config: any) {
     return new this({
       default: new AesCbcCryptor(config.cipherKey),
       cryptors: [new LegacyCryptor({ config })],
@@ -51,8 +53,8 @@ export default class CryptoModule {
     return this.getAllCryptors().find((c) => c.identifier === '');
   }
 
-  async encrypt(data: Buffer) {
-    const encrypted = await this.defaultCryptor.encrypt(data);
+  async encrypt(data: ArrayBuffer) {
+    const encrypted = await this.defaultCryptor.encrypt(Buffer.from(data));
     if (!encrypted.metadata) return encrypted.data;
 
     const header = CryptorHeader.from(this.defaultCryptor.identifier, encrypted.metadata);
@@ -68,10 +70,8 @@ export default class CryptoModule {
     return Buffer.concat([headerData, encrypted.data]);
   }
 
-  async decrypt(data: Buffer) {
-    let encryptedData = null;
-    encryptedData = Buffer.from(data);
-
+  async decrypt(data: ArrayBuffer) {
+    const encryptedData = Buffer.from(data);
     const header = CryptorHeader.tryParse(encryptedData);
     const cryptor = this.getCryptor(header);
     const metadata =
@@ -216,6 +216,7 @@ class CryptorHeader {
   static SENTINEL = 'PNED';
   static LEGACY_IDENTIFIER = '';
   static IDENTIFIER_LENGTH = 4;
+  static VERSION = 1;
   static MAX_VERSION = 1;
 
   static from(id: string, metadata: Buffer) {
@@ -291,11 +292,6 @@ class CryptorHeader {
 
 // v1 CryptorHeader
 class CryptorHeaderV1 {
-  static IDENTIFIER_LENGTH = 4;
-
-  static SENTINEL = 'PNED';
-  static VERSION = 1;
-
   _identifier;
   _metadataLength;
 
@@ -321,14 +317,14 @@ class CryptorHeaderV1 {
   }
 
   get version() {
-    return CryptorHeaderV1.VERSION;
+    return CryptorHeader.VERSION;
   }
 
   get length() {
     return (
-      CryptorHeaderV1.SENTINEL.length +
+      CryptorHeader.SENTINEL.length +
       1 +
-      CryptorHeaderV1.IDENTIFIER_LENGTH +
+      CryptorHeader.IDENTIFIER_LENGTH +
       (this.metadataLength < 255 ? 1 : 3) +
       this.metadataLength
     );
@@ -337,17 +333,17 @@ class CryptorHeaderV1 {
   get data() {
     let pos = 0;
     const header = new Uint8Array(this.length);
-    header.set(Buffer.from(CryptorHeaderV1.SENTINEL));
-    pos += CryptorHeaderV1.SENTINEL.length;
+    header.set(Buffer.from(CryptorHeader.SENTINEL));
+    pos += CryptorHeader.SENTINEL.length;
     header[pos] = this.version;
     pos++;
     if (this.identifier) header.set(Buffer.from(this.identifier), pos);
-    pos += CryptorHeaderV1.IDENTIFIER_LENGTH;
-    const metadataSize = this.metadataLength;
-    if (metadataSize < 255) {
-      header[pos] = metadataSize;
+    pos += CryptorHeader.IDENTIFIER_LENGTH;
+    const metadataLength = this.metadataLength;
+    if (metadataLength < 255) {
+      header[pos] = metadataLength;
     } else {
-      header.set([255, metadataSize >> 8, metadataSize & 0xff], pos);
+      header.set([255, metadataLength >> 8, metadataLength & 0xff], pos);
     }
     return header;
   }

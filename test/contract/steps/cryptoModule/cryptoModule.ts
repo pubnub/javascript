@@ -1,11 +1,12 @@
-import { Given, When, Then, Before, After } from '@cucumber/cucumber';
+import { Given, When, Then, Before } from '@cucumber/cucumber';
 import { expect } from 'chai';
-import { Blob } from 'buffer';
 import fs from 'fs';
 
-import CryptoModule from '../../../../lib/crypto/modules/NodeCryptoModule/nodeCryptoModule.js';
-import AesCbcCryptor from '../../../../lib/crypto/modules/NodeCryptoModule/aesCbcCryptor.js';
-import LegacyCryptor from '../../../../lib/crypto/modules/NodeCryptoModule/legacyCryptor.js';
+import {
+  CryptoModule,
+  AesCbcCryptor,
+  LegacyCryptor,
+} from '../../../../lib/crypto/modules/NodeCryptoModule/nodeCryptoModule.js';
 
 Before(function () {
   this.grantPayload = {};

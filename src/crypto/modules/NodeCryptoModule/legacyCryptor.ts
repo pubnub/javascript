@@ -1,7 +1,7 @@
 import Crypto from '../../../core/components/cryptography/index';
 import FileCryptor from '../node';
 import { EncryptedDataType } from './ICryptor';
-import { ILegacyCryptor, ArrayBufferLike, PubnubFile } from './ILegacyCryptor';
+import { ILegacyCryptor, PubnubFile } from './ILegacyCryptor';
 
 export default class LegacyCryptor implements ILegacyCryptor<PubnubFile> {
   config;
@@ -18,7 +18,7 @@ export default class LegacyCryptor implements ILegacyCryptor<PubnubFile> {
   get identifier() {
     return '';
   }
-  async encrypt(data: ArrayBufferLike) {
+  async encrypt(data: ArrayBuffer) {
     return {
       data: this.cryptor.encrypt(data),
       metadata: null,
