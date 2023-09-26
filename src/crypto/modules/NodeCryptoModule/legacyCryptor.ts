@@ -1,9 +1,9 @@
 import Crypto from '../../../core/components/cryptography/index';
 import FileCryptor from '../node';
 import { EncryptedDataType } from './ICryptor';
-import { ILegacyCryptor, PubnubFile } from './ILegacyCryptor';
+import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
 
-export default class LegacyCryptor implements ILegacyCryptor<PubnubFile> {
+export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
   config;
 
   cryptor;
@@ -29,11 +29,11 @@ export default class LegacyCryptor implements ILegacyCryptor<PubnubFile> {
     return this.cryptor.decrypt(encryptedData.data.toString());
   }
 
-  async encryptFile(file: PubnubFile, File: PubnubFile) {
+  async encryptFile(file: PubNubFileType, File: PubNubFileType) {
     return this.fileCryptor.encryptFile(this.config.cipherKey, file, File);
   }
 
-  async decryptFile(file: PubnubFile, File: PubnubFile) {
+  async decryptFile(file: PubNubFileType, File: PubNubFileType) {
     return this.fileCryptor.decryptFile(this.config.cipherKey, file, File);
   }
 }

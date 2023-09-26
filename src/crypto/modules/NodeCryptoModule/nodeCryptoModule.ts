@@ -3,11 +3,11 @@ import { PubNubError } from '../../../core/components/endpoint';
 import LegacyCryptor from './legacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
 import { ICryptor } from './ICryptor';
-import { ILegacyCryptor, PubnubFile } from './ILegacyCryptor';
+import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
 
 export { LegacyCryptor, AesCbcCryptor };
 
-type CryptorType = ICryptor | ILegacyCryptor<PubnubFile>;
+type CryptorType = ICryptor | ILegacyCryptor<PubNubFileType>;
 
 type CryptoModuleConfiguration = {
   default: CryptorType;
@@ -84,28 +84,20 @@ export class CryptoModule {
     });
   }
 
-  async encryptFile(file: PubnubFile, File: PubnubFile) {
+  async encryptFile(file: PubNubFileType, File: PubNubFileType) {
     /**
      * Files handled differently in case of Legacy cryptor.
      * (as long as we support legacy need to check on intsance type)
      */
     if (this.defaultCryptor instanceof LegacyCryptor) return this.defaultCryptor.encryptFile(file, File);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore: can not infer that PubNubFile has data field
     if (file.data instanceof Buffer) {
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore: can not infer that PubNubFile has data field
         data: await this.encrypt(file.data!),
       });
     }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore: can not infer that PubNubFile has data field
     if (file.data instanceof Readable) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore: PubNubFile as value.
       const encryptedStream = await (this.defaultCryptor as ICryptor).encryptStream(file.data);
       const header = CryptorHeader.from(this.defaultCryptor.identifier, encryptedStream.metadata!);
 
@@ -129,7 +121,7 @@ export class CryptoModule {
     }
   }
 
-  async decryptFile(file: any, File: PubnubFile) {
+  async decryptFile(file: PubNubFileType, File: PubNubFileType) {
     if (file?.data instanceof Buffer) {
       const header = CryptorHeader.tryParse(file.data);
       const cryptor = this.getCryptor(header);
@@ -137,9 +129,8 @@ export class CryptoModule {
        * If It's legacyone then redirect it.
        * (as long as we support legacy need to check on instance type)
        */
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore: cryptor will be there or unreachable due to exception
-      if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER) return cryptor.decryptFile(file, File);
+      if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER)
+        return (cryptor as ILegacyCryptor<PubNubFileType>).decryptFile(file, File);
       return File.create({
         name: file.name,
         data: await this.decrypt(file?.data),
@@ -154,7 +145,7 @@ export class CryptoModule {
     }
   }
 
-  private async onStreamReadable(stream: NodeJS.ReadableStream, file: PubnubFile, File: PubnubFile) {
+  private async onStreamReadable(stream: NodeJS.ReadableStream, file: PubNubFileType, File: PubNubFileType) {
     stream.removeAllListeners('readable');
 
     const magicBytes = stream.read(4);
@@ -175,12 +166,10 @@ export class CryptoModule {
     });
   }
 
-  private async decryptLegacyFileStream(stream: NodeJS.ReadableStream, file: PubnubFile, File: PubnubFile) {
+  private async decryptLegacyFileStream(stream: NodeJS.ReadableStream, file: PubNubFileType, File: PubNubFileType) {
     const cryptor = this.getLegacyCryptor();
     if (cryptor) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore: cryptor will be there or unreachable due to exception
-      return cryptor.decryptFile(
+      return (cryptor as ILegacyCryptor<PubNubFileType>).decryptFile(
         File.create({
           name: file.name,
           stream: stream,

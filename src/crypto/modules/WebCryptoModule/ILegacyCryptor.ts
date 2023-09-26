@@ -1,12 +1,22 @@
 import { EncryptedDataType } from './ICryptor';
-import PubNubFile from '../../../file/modules/web';
 
-export type PubnubFile = typeof PubNubFile;
+export type PubNubFileType = {
+  data: Buffer;
+  name: string;
+  mimeType: string;
 
-export interface ILegacyCryptor<T extends PubnubFile> {
+  create(config: any): PubNubFileType;
+
+  toArrayBuffer(): ArrayBuffer;
+  toBlob(): Blob;
+  toString(): string;
+  toFile(): File;
+};
+
+export interface ILegacyCryptor<T extends PubNubFileType> {
   get identifier(): string;
 
-  encrypt(data: ArrayBufferLike): Promise<EncryptedDataType>;
+  encrypt(data: ArrayBuffer): Promise<EncryptedDataType>;
   decrypt(data: EncryptedDataType): Promise<BufferSource>;
 
   encryptFile(file: T, File: T): Promise<T>;

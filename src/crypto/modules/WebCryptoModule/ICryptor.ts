@@ -1,10 +1,10 @@
 export type EncryptedDataType = {
-  data: ArrayBufferLike;
-  metadata: ArrayBufferLike | null;
+  data: ArrayBuffer;
+  metadata: ArrayBuffer | null;
 };
 
 export interface ICryptor {
   get identifier(): string;
-  encrypt(data: BufferSource): Promise<EncryptedDataType>;
-  decrypt(data: EncryptedDataType): Promise<ArrayBufferLike>;
+  encrypt(data: ArrayBuffer): Promise<EncryptedDataType>;
+  decrypt(data: EncryptedDataType): Promise<ArrayBuffer>;
 }

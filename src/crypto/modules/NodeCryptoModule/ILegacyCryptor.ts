@@ -1,13 +1,22 @@
 import { EncryptedDataType } from './ICryptor';
-import PubNubFile from '../../../file/modules/node';
 
-export type PubnubFile = typeof PubNubFile;
-export type ArrayBufferLike = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | DataView | BufferSource;
+export type PubNubFileType = {
+  stream: NodeJS.ReadStream;
+  data: NodeJS.ReadStream | Buffer;
+  name: string;
+  mimeType: string;
 
-export interface ILegacyCryptor<T extends PubnubFile> {
+  create(config: any): PubNubFileType;
+
+  toBuffer(): Buffer;
+  toArrayBuffer(): ArrayBuffer;
+  toString(): string;
+};
+
+export interface ILegacyCryptor<T extends PubNubFileType> {
   get identifier(): string;
 
-  encrypt(data: ArrayBufferLike): Promise<EncryptedDataType>;
+  encrypt(data: ArrayBuffer): Promise<EncryptedDataType>;
   decrypt(data: EncryptedDataType): Promise<BufferSource>;
 
   encryptFile(file: T, File: T): Promise<T>;
