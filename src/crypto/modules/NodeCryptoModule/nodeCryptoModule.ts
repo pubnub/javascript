@@ -105,8 +105,8 @@ export class CryptoModule {
     //@ts-ignore: can not infer that PubNubFile has data field
     if (file.data instanceof Readable) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore: default cryptor will be there. As long as legacy cryptor supported.
-      const encryptedStream = await(this.defaultCryptor as ICryptor).encryptStream(file.data);
+      //@ts-ignore: PubNubFile as value.
+      const encryptedStream = await (this.defaultCryptor as ICryptor).encryptStream(file.data);
       const header = CryptorHeader.from(this.defaultCryptor.identifier, encryptedStream.metadata!);
 
       const payload = new Uint8Array(header!.length);
