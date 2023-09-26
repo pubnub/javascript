@@ -106,8 +106,8 @@ export class CryptoModule {
     if (file.data instanceof Readable) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore: default cryptor will be there. As long as legacy cryptor supported.
-      const encryptedStream = this.defaultCryptor.encryptStream(file.data);
-      const header = CryptorHeader.from(this.defaultCryptor.identifier, encryptedStream.metadata);
+      const encryptedStream = await(this.defaultCryptor as ICryptor).encryptStream(file.data);
+      const header = CryptorHeader.from(this.defaultCryptor.identifier, encryptedStream.metadata!);
 
       const payload = new Uint8Array(header!.length);
       let pos = 0;
@@ -120,7 +120,7 @@ export class CryptoModule {
 
       const output = new PassThrough();
       output.write(payload);
-      encryptedStream.data.pipe(output);
+      encryptedStream.stream.pipe(output);
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
