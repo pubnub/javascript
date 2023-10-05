@@ -28,15 +28,13 @@ export = class extends PubNubCore {
     setup.cryptography = new NodeCryptography();
 
     setup.initCryptoModule = (cryptoConfiguration: any) => {
-      if (cryptoConfiguration.cipherKey) {
-        return new CryptoModule({
-          default: new LegacyCryptor({
-            cipherKey: cryptoConfiguration.cipherKey,
-            useRandomIVs: cryptoConfiguration.useRandomIVs,
-          }),
-          cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
-        });
-      }
+      return new CryptoModule({
+        default: new LegacyCryptor({
+          cipherKey: cryptoConfiguration.cipherKey,
+          useRandomIVs: cryptoConfiguration.useRandomIVs,
+        }),
+        cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+      });
     };
 
     if (!('ssl' in setup)) {

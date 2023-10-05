@@ -156,7 +156,6 @@ export default class {
     this.partnerId = setup.partnerId;
     this.setAuthKey(setup.authKey);
     this.cryptoModule = setup.cryptoModule;
-    this.setCipherKey(setup.cipherKey, setup);
 
     this.setFilterExpression(setup.filterExpression);
 
@@ -230,6 +229,7 @@ export default class {
 
       this.setUUID(setup.uuid);
     }
+    this.setCipherKey(setup.cipherKey, setup);
   }
 
   // exposed setters
@@ -244,8 +244,10 @@ export default class {
 
   setCipherKey(val, setup, modules) {
     this.cipherKey = val;
-    this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs ?? true });
-    if (modules) modules.cryptoModule = this.cryptoModule;
+    if (this.cipherKey) {
+      this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs });
+      if (modules) modules.cryptoModule = this.cryptoModule;
+    }
     return this;
   }
 
