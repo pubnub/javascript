@@ -28,8 +28,8 @@ export = class extends PubNubCore {
     setup.cryptography = new NodeCryptography();
 
     setup.initCryptoModule = (cryptoConfiguration: any) => {
-      if (setup.cipherKey) {
-        setup.cryptoModule = new CryptoModule({
+      if (cryptoConfiguration.cipherKey) {
+        return new CryptoModule({
           default: new LegacyCryptor({
             cipherKey: cryptoConfiguration.cipherKey,
             useRandomIVs: cryptoConfiguration.useRandomIVs,

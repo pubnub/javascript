@@ -42,8 +42,8 @@ export default class extends PubNubCore {
     setup.cryptography = new WebCryptography();
 
     setup.initCryptoModule = (cryptoConfiguration) => {
-      if (setup.cipherKey) {
-        setup.cryptoModule = new CryptoModule({
+      if (cryptoConfiguration.cipherKey) {
+        return new CryptoModule({
           default: new LegacyCryptor({
             cipherKey: cryptoConfiguration.cipherKey,
             useRandomIVs: cryptoConfiguration.useRandomIVs,

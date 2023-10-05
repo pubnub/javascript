@@ -242,9 +242,10 @@ export default class {
     return this;
   }
 
-  setCipherKey(val, setup) {
+  setCipherKey(val, setup, modules) {
     this.cipherKey = val;
     this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs ?? true });
+    if (modules) modules.cryptoModule = this.cryptoModule;
     return this;
   }
 

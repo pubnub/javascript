@@ -292,7 +292,7 @@ export default class {
     });
 
     this._telemetryManager = telemetryManager;
-    const cryptoModule = config.cryptoModule;
+    const cryptoModule = this._config.cryptoModule;
 
     const modules = {
       config,
@@ -707,7 +707,7 @@ export default class {
     this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
     // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
-    this.setCipherKey = (key) => modules.config.setCipherKey(key, setup);
+    this.setCipherKey = (key) => modules.config.setCipherKey(key, setup, modules);
     this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 
     if (networking.hasModule('proxy')) {
