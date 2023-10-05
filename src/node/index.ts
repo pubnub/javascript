@@ -8,7 +8,7 @@ import { keepAlive, proxy } from '../networking/modules/node';
 
 import NodeCryptography from '../crypto/modules/node';
 import PubNubFile from '../file/modules/node';
-
+import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 export = class extends PubNubCore {
   constructor(setup: any) {
     setup.cbor = new Cbor((buffer: ArrayBuffer) => CborReader.decode(Buffer.from(buffer)), decode);
@@ -26,6 +26,13 @@ export = class extends PubNubCore {
 
     setup.PubNubFile = PubNubFile;
     setup.cryptography = new NodeCryptography();
+
+    if (setup.cipherKey) {
+      setup.cryptoModule = new CryptoModule({
+        default: new LegacyCryptor({ cipherKey: setup.cipherKey, useRandomIVs: setup.useRandomIVs }),
+        cryptors: [new AesCbcCryptor({ cipherKey: setup.cipherKey })],
+      });
+    }
 
     if (!('ssl' in setup)) {
       setup.ssl = true;

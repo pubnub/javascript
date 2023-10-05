@@ -18,14 +18,15 @@ export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
   get identifier() {
     return '';
   }
-  async encrypt(data: ArrayBuffer) {
+  encrypt(data: ArrayBuffer | string) {
+    const stringData = typeof data === 'string' ? data : new TextDecoder().decode(data);
     return {
-      data: this.cryptor.encrypt(data) as ArrayBuffer,
+      data: this.cryptor.encrypt(stringData),
       metadata: null,
     };
   }
 
-  async decrypt(encryptedData: EncryptedDataType) {
+  decrypt(encryptedData: EncryptedDataType) {
     return this.cryptor.decrypt(encryptedData.data);
   }
 

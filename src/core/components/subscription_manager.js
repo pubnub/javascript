@@ -58,6 +58,10 @@ export default class {
   _pendingChannelGroupSubscriptions;
   //
 
+  _cryptoModule;
+
+  _decoder;
+
   _dedupingManager;
 
   constructor({
@@ -70,6 +74,7 @@ export default class {
     config,
     crypto,
     listenerManager,
+    cryptoModule,
   }) {
     this._listenerManager = listenerManager;
     this._config = config;
@@ -81,6 +86,7 @@ export default class {
     this._getFileUrl = getFileUrl;
 
     this._crypto = crypto;
+    this._cryptoModule = cryptoModule;
 
     this._channels = {};
     this._presenceChannels = {};
@@ -104,6 +110,8 @@ export default class {
 
     this._reconnectionManager = new ReconnectionManager({ timeEndpoint });
     this._dedupingManager = new DedupingManager({ config });
+
+    if (this._cryptoModule) this._decoder = new TextDecoder();
   }
 
   adaptStateChange(args, callback) {
@@ -683,10 +691,19 @@ export default class {
 
         let msgPayload = message.payload;
 
-        if (this._config.cipherKey) {
-          const decryptedPayload = this._crypto.decrypt(message.payload);
-
-          if (typeof decryptedPayload === 'object' && decryptedPayload !== null) {
+        if (this._cryptoModule) {
+          let decryptedPayload;
+          try {
+            const decryptedData = this._cryptoModule.decrypt(message.payload);
+            decryptedPayload =
+              decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
+          } catch (e) {
+            decryptedPayload = null;
+            if (console && console.log) {
+              console.log('decryption error', e.message);
+            }
+          }
+          if (decryptedPayload !== null) {
             msgPayload = decryptedPayload;
           }
         }
@@ -727,8 +744,24 @@ export default class {
           announce.userMetadata = message.userMetadata;
         }
 
-        if (this._config.cipherKey) {
-          announce.message = this._crypto.decrypt(message.payload);
+        if (this._cryptoModule) {
+          let decryptedPayload;
+          try {
+            const decryptedData = this._cryptoModule.decrypt(message.payload);
+            decryptedPayload =
+              decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
+          } catch (e) {
+            decryptedPayload = null;
+            // eslint-disable-next-line
+            if (console && console.log) {
+              console.log('decryption error', e.message); //eslint-disable-line
+            }
+          }
+          if (decryptedPayload != null) {
+            announce.message = decryptedPayload;
+          } else {
+            announce.message = message.payload;
+          }
         } else {
           announce.message = message.payload;
         }

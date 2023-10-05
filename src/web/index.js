@@ -11,6 +11,7 @@ import { del, get, post, patch, getfile, postfile } from '../networking/modules/
 
 import WebCryptography from '../crypto/modules/web';
 import PubNubFile from '../file/modules/web';
+import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
 
 function sendBeacon(url) {
   if (navigator && navigator.sendBeacon) {
@@ -39,6 +40,13 @@ export default class extends PubNubCore {
 
     setup.PubNubFile = PubNubFile;
     setup.cryptography = new WebCryptography();
+
+    if (setup.cipherKey) {
+      setup.cryptoModule = new CryptoModule({
+        default: new LegacyCryptor({ cipherKey: setup.cipherKey, useRandomIVs: setup.useRandomIVs }),
+        cryptors: [new AesCbcCryptor({ cipherKey: setup.cipherKey })],
+      });
+    }
 
     super(setup);
 

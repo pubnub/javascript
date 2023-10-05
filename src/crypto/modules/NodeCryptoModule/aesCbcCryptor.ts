@@ -28,11 +28,12 @@ export default class AesCbcCryptor implements ICryptor {
     return Buffer.from(sha.digest());
   }
 
-  async encrypt(data: Buffer) {
+  encrypt(data: ArrayBuffer | string) {
     const iv = this.getIv();
     const key = this.getKey();
-
-    const bPlain = Buffer.from(data);
+    const plainData = data instanceof ArrayBuffer ? data : new TextEncoder().encode(data);
+    const bPlain = Buffer.from(plainData);
+    if (bPlain.byteLength === 0) throw new Error('encryption error. empty content');
     const aes = createCipheriv(this.algo, key, iv);
 
     return {
@@ -41,14 +42,18 @@ export default class AesCbcCryptor implements ICryptor {
     };
   }
 
-  async decrypt(encryptedData: EncryptedDataType) {
+  decrypt(encryptedData: EncryptedDataType) {
+    const data =
+      typeof encryptedData.data === 'string' ? new TextEncoder().encode(encryptedData.data) : encryptedData.data;
+    if (data.byteLength <= 0) throw new Error('decryption error: empty content');
     const aes = createDecipheriv(this.algo, this.getKey(), encryptedData.metadata);
-    return Buffer.concat([aes.update(encryptedData.data), aes.final()]);
+    return Uint8Array.from(Buffer.concat([aes.update(data), aes.final()]));
   }
 
   async encryptStream(stream: NodeJS.ReadableStream) {
     const output = new PassThrough();
     const bIv = this.getIv();
+    if (stream.readable === false) throw new Error('encryption error. empty stream');
     const aes = createCipheriv(this.algo, this.getKey(), bIv);
     stream.pipe(aes).pipe(output);
     return {

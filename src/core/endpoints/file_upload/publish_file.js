@@ -8,7 +8,8 @@ const preparePayload = ({ crypto, config }, payload) => {
   let stringifiedPayload = JSON.stringify(payload);
 
   if (config.cipherKey) {
-    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+    const encrypted = modules.cryptoModule.encrypt(stringifiedPayload);
+    stringifiedPayload = typeof encrypted === 'string' ? encrypted : encode(encrypted);
     stringifiedPayload = JSON.stringify(stringifiedPayload);
   }
 

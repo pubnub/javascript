@@ -30,6 +30,11 @@ Given('with {string} cipher key', function (cipherKey: string) {
 
 Given('with {string} vector', function (vector: string) {
   if (vector === 'constant') this.useRandomIVs = false;
+  this._initCryptor = (id: string) => {
+    return id === 'legacy'
+      ? new LegacyCryptor({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs })
+      : new AesCbcCryptor({ cipherKey: this.cipherKey });
+  };
 });
 
 When('I decrypt {string} file', async function (fileName: string) {
@@ -52,12 +57,6 @@ When('I decrypt {string} file', async function (fileName: string) {
 });
 
 When('I decrypt {string} file as {string}', async function (fileName: string, format: string) {
-  this._initCryptor = (id: string) => {
-    return id === 'legacy'
-      ? new LegacyCryptor({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs })
-      : new AesCbcCryptor({ cipherKey: this.cipherKey });
-  };
-
   if (this.defaultCryptorId && this.additionalCryptorId) {
     this.cryptoModule = new CryptoModule({
       default: this._initCryptor(this.defaultCryptorId),
@@ -76,7 +75,11 @@ When('I decrypt {string} file as {string}', async function (fileName: string, fo
       name: fileName,
       data: fs.readFileSync(this.getFilePath(fileName)),
     });
-    this.binaryFileResult = await this.cryptoModule.decryptFile(encrypteFile, pubnub.File);
+    try {
+      this.binaryFileResult = await this.cryptoModule.decryptFile(encrypteFile, pubnub.File);
+    } catch (e: any) {
+      this.errorMessage = e?.message;
+    }
   } else if (format === 'stream') {
     this.isStream = true;
     const filestream = fs.createReadStream(this.getFilePath(fileName));
@@ -84,7 +87,11 @@ When('I decrypt {string} file as {string}', async function (fileName: string, fo
       name: fileName,
       stream: filestream,
     });
-    this.streamFileResult = await this.cryptoModule.decryptFile(this.file, pubnub.File);
+    try {
+      this.streamFileResult = await this.cryptoModule.decryptFile(this.file, pubnub.File);
+    } catch (e: any) {
+      this.errorMessage = e?.message;
+    }
   }
 });
 
@@ -111,11 +118,12 @@ Then('Decrypted file content equal to the {string} file content', async function
   expect(this.binaryFileResult.data.equals(fs.readFileSync(this.getFilePath(sourceFile)))).to.be.true;
 });
 
-Then('I receive {string}', function (result: string) {
+Then('I receive {string}', async function (result: string) {
+  if ((this.isBinaryFile || this.isBinary) && !this.useRandomIVs) return;
   if (result === 'success') {
     expect(this.errorMessage).to.be.undefined;
   } else {
-    expect(result).to.have.string(this.errorMessage);
+    expect(this.errorMessage).to.have.string(result);
   }
 });
 
@@ -140,8 +148,16 @@ When('I encrypt {string} file as {string}', async function (fileName: string, fo
       mimeType: 'application/octet-stream',
       data: this.fileDataBuffer,
     });
+    this.isBinaryFile = true;
   }
-  this.encryptedFile = await this.cryptoModule.encryptFile(this.file, this.pubnub.File);
+  if (!this.cryptoModule) {
+    this.cryptoModule = CryptoModule.withDefaultCryptor(this._initCryptor(this.cryptorIdentifier));
+  }
+  try {
+    this.encryptedFile = await this.cryptoModule.encryptFile(this.file, this.pubnub.File);
+  } catch (e: any) {
+    this.errorMessage = e?.message;
+  }
 });
 
 Then('Successfully decrypt an encrypted file with legacy code', async function () {

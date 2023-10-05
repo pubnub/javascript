@@ -41,6 +41,7 @@ export default class NodeCryptography {
     const bKey = this.getKey(key);
 
     if (file.data instanceof Buffer) {
+      if (file.data.byteLength <= 0) throw new Error('encryption error. empty content');
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
@@ -48,6 +49,7 @@ export default class NodeCryptography {
       });
     }
     if (file.data instanceof Readable) {
+      if (file.contentLength === 0) throw new Error('encryption error. empty content');
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
@@ -118,7 +120,7 @@ export default class NodeCryptography {
   decryptBuffer(key, ciphertext) {
     const bIv = ciphertext.slice(0, NodeCryptography.IV_LENGTH);
     const bCiphertext = ciphertext.slice(NodeCryptography.IV_LENGTH);
-
+    if (bCiphertext.byteLength <= 0) throw new Error('decryption error: empty content');
     const aes = createDecipheriv(this.algo, key, bIv);
 
     return Buffer.concat([aes.update(bCiphertext), aes.final()]);

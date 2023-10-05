@@ -55,6 +55,7 @@ export default class WebCryptography {
   }
 
   async encryptFile(key, file, File) {
+    if (file.data.byteLength <= 0) throw new Error('encryption error. empty content');
     const bKey = await this.getKey(key);
 
     const abPlaindata = await file.toArrayBuffer();
@@ -98,7 +99,12 @@ export default class WebCryptography {
 
   async decryptArrayBuffer(key, ciphertext) {
     const abIv = ciphertext.slice(0, 16);
-    const data = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
+    if (ciphertext.slice(WebCryptography.IV_LENGTH).byteLength <= 0) throw new Error('decryption error: empty content');
+    const data = await crypto.subtle.decrypt(
+      { name: 'AES-CBC', iv: abIv },
+      key,
+      ciphertext.slice(WebCryptography.IV_LENGTH),
+    );
     return data;
   }
 

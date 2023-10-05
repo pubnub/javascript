@@ -1,5 +1,5 @@
 export type EncryptedDataType = {
-  data: Buffer;
+  data: Buffer | string;
   metadata: Buffer | null;
 };
 
@@ -11,8 +11,8 @@ export type EncryptedStream = {
 
 export interface ICryptor {
   get identifier(): string;
-  encrypt(data: BufferSource): Promise<EncryptedDataType>;
-  decrypt(data: EncryptedDataType): Promise<Buffer>;
+  encrypt(data: BufferSource | string): EncryptedDataType;
+  decrypt(data: EncryptedDataType): ArrayBuffer;
 
   encryptStream(stream: NodeJS.ReadableStream): Promise<EncryptedStream>;
   decryptStream(encryptedStream: EncryptedStream): Promise<NodeJS.ReadableStream>;

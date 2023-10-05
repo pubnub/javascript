@@ -1,7 +1,7 @@
 import { EncryptedDataType } from './ICryptor';
 
 export type PubNubFileType = {
-  data: Buffer;
+  data: ArrayBuffer;
   name: string;
   mimeType: string;
 
@@ -16,8 +16,8 @@ export type PubNubFileType = {
 export interface ILegacyCryptor<T extends PubNubFileType> {
   get identifier(): string;
 
-  encrypt(data: ArrayBuffer): Promise<EncryptedDataType>;
-  decrypt(data: EncryptedDataType): Promise<BufferSource>;
+  encrypt(data: ArrayBuffer | string): EncryptedDataType;
+  decrypt(data: EncryptedDataType): ArrayBuffer | string;
 
   encryptFile(file: T, File: T): Promise<T>;
   decryptFile(file: T, File: T): Promise<T>;

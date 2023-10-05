@@ -29,13 +29,14 @@ export default class AesCbcCryptor implements ICryptor {
     return crypto.subtle.importKey('raw', abHash, 'AES-CBC', true, ['encrypt', 'decrypt']);
   }
 
-  async encrypt(data: BufferSource) {
+  async encrypt(data: ArrayBuffer | string) {
+    const dataBytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+    if (dataBytes.byteLength === 0) throw new Error('encryption error. empty content');
     const abIv = this._getIv();
     const key = await this._getKey();
-
     return {
       metadata: abIv,
-      data: await crypto.subtle.encrypt({ name: this.algo, iv: abIv }, key, data),
+      data: await crypto.subtle.encrypt({ name: this.algo, iv: abIv }, key, dataBytes),
     };
   }
 

@@ -1,5 +1,6 @@
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
+import { encode } from './components/base64_codec';
 import SubscriptionManager from './components/subscription_manager';
 import TelemetryManager from './components/telemetry_manager';
 import NotificationsPayload from './components/push_payload';
@@ -279,7 +280,7 @@ export default class {
     this._config = config;
     const crypto = new Crypto({ config }); // LEGACY
 
-    const { cryptography } = setup;
+    const { cryptography, cryptoModule } = setup;
 
     networking.init(config);
 
@@ -300,12 +301,25 @@ export default class {
       tokenManager,
       telemetryManager,
       PubNubFile: setup.PubNubFile,
+      cryptoModule: setup.cryptoModule,
     };
 
     this.File = setup.PubNubFile;
 
-    this.encryptFile = (key, file) => cryptography.encryptFile(key, file, this.File);
-    this.decryptFile = (key, file) => cryptography.decryptFile(key, file, this.File);
+    this.encryptFile = function (key, file) {
+      if (arguments.length == 1 && typeof key != 'string' && cryptoModule) {
+        file = key;
+        return cryptoModule.encryptFile(file, this.File);
+      }
+      return cryptography.encryptFile(key, file, this.File);
+    };
+    this.decryptFile = function (key, file) {
+      if (arguments.length == 1 && typeof key != 'string' && cryptoModule) {
+        file = key;
+        return cryptoModule.decryptFile(file, this.File);
+      }
+      return cryptography.decryptFile(key, file, this.File);
+    };
 
     const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
     const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
@@ -341,6 +355,7 @@ export default class {
         config: modules.config,
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
+        cryptoModule: setup.cryptoModule,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
@@ -664,8 +679,22 @@ export default class {
     // --- deprecated  ------------------
 
     // mount crypto
-    this.encrypt = crypto.encrypt.bind(crypto);
-    this.decrypt = crypto.decrypt.bind(crypto);
+    this.encrypt = function (data, key) {
+      if (typeof key === 'undefined' && cryptoModule) {
+        const encrypted = cryptoModule.encrypt(data);
+        return typeof encrypted === 'string' ? encrypted : encode(encrypted);
+      } else {
+        return crypto.encrypt(data, key);
+      }
+    };
+    this.decrypt = function (data, key) {
+      if (typeof key === 'undefined' && cryptoModule) {
+        const decrypted = cryptoModule.decrypt(data);
+        return decrypted instanceof ArrayBuffer ? encode(decrypted) : decrypted;
+      } else {
+        return crypto.decrypt(data, key);
+      }
+    };
 
     /* config */
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);

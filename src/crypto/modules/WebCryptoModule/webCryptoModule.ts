@@ -4,6 +4,8 @@ import AesCbcCryptor from './aesCbcCryptor';
 import { ICryptor } from './ICryptor';
 import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
 
+export { LegacyCryptor, AesCbcCryptor };
+
 type CryptorType = ICryptor | ILegacyCryptor<PubNubFileType>;
 
 type CryptoModuleConfiguration = {
@@ -11,7 +13,7 @@ type CryptoModuleConfiguration = {
   cryptors?: Array<CryptorType>;
 };
 
-export default class CryptoModule {
+export class CryptoModule {
   static LEGACY_IDENTIFIER = '';
   defaultCryptor: CryptorType;
   cryptors: Array<CryptorType>;
@@ -45,31 +47,30 @@ export default class CryptoModule {
     return [this.defaultCryptor, ...this.cryptors];
   }
 
-  async encrypt(data: ArrayBuffer) {
+  async encrypt(data: ArrayBuffer | string) {
     const encrypted = await this.defaultCryptor.encrypt(data);
     if (!encrypted.metadata) return encrypted.data;
 
     const header = CryptorHeader.from(this.defaultCryptor.identifier, encrypted.metadata);
 
-    const headerData = new Uint8Array((header as CryptorHeaderV1).length);
+    const headerData = new Uint8Array(header!.length);
     let pos = 0;
-    headerData.set((header as CryptorHeaderV1).data, pos);
-    pos += (header as CryptorHeaderV1).length;
-    if (encrypted.metadata) {
-      pos -= encrypted.metadata.byteLength;
-      headerData.set(new Uint8Array(encrypted.metadata), pos);
-    }
+    headerData.set(header!.data, pos);
+    pos += header!.length - encrypted.metadata.byteLength;
+    headerData.set(new Uint8Array(encrypted.metadata), pos);
     return this.concatArrayBuffer(headerData.buffer, encrypted.data);
   }
 
-  async decrypt(encryptedData: ArrayBuffer) {
+  async decrypt(data: ArrayBuffer | string) {
+    const encryptedData = typeof data === 'string' ? new TextEncoder().encode(data) : data;
     const header = CryptorHeader.tryParse(encryptedData);
     const cryptor = this.getCryptor(header);
     const metadata =
       header.length > 0
         ? encryptedData.slice(header.length - (header as CryptorHeaderV1).metadataLength, header.length)
         : null;
-    return cryptor?.decrypt({
+    if (encryptedData.slice(header.length).byteLength <= 0) throw new Error('decryption error. empty content');
+    return cryptor!.decrypt({
       data: encryptedData.slice(header.length),
       metadata: metadata,
     });
@@ -80,7 +81,7 @@ export default class CryptoModule {
      * Files handled differently in case of Legacy cryptor.
      * (as long as we support legacy need to check on default cryptor)
      */
-    if (this.defaultCryptor.identifier === '')
+    if (this.defaultCryptor.identifier === CryptorHeader.LEGACY_IDENTIFIER)
       return (this.defaultCryptor as ILegacyCryptor<PubNubFileType>).encryptFile(file, File);
     if (file.data instanceof ArrayBuffer) {
       return File.create({
@@ -123,7 +124,7 @@ export default class CryptoModule {
     if (cryptor) {
       return cryptor;
     }
-    throw Error('unknown cryptor');
+    throw Error('unknown cryptor error');
   }
 
   private concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer) {
@@ -160,22 +161,22 @@ class CryptorHeader {
     if (encryptedData.byteLength >= 5) {
       version = (encryptedData as Uint8Array)[4] as number;
     } else {
-      throw new PubNubError('decryption error');
+      throw new Error('decryption error. invalid header version');
     }
-    if (version > CryptorHeader.MAX_VERSION) throw new PubNubError('unknown cryptor');
+    if (version > CryptorHeader.MAX_VERSION) throw new PubNubError('unknown cryptor error');
 
     let identifier: any = '';
     let pos = 5 + CryptorHeader.IDENTIFIER_LENGTH;
     if (encryptedData.byteLength >= pos) {
       identifier = encryptedData.slice(5, pos);
     } else {
-      throw new PubNubError('decryption error');
+      throw new Error('decryption error. invalid crypto identifier');
     }
     let metadataLength = null;
     if (encryptedData.byteLength >= pos + 1) {
       metadataLength = (encryptedData as Uint8Array)[pos];
     } else {
-      throw new PubNubError('decryption error');
+      throw new Error('decryption error. invalid metadata length');
     }
     pos += 1;
     if (metadataLength === 255 && encryptedData.byteLength >= pos + 2) {

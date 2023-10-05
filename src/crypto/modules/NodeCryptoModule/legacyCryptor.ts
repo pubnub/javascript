@@ -1,4 +1,5 @@
 import Crypto from '../../../core/components/cryptography/index';
+import { encode } from '../../../core/components/base64_codec';
 import FileCryptor from '../node';
 import { EncryptedDataType } from './ICryptor';
 import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
@@ -14,19 +15,20 @@ export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
     this.cryptor = new Crypto({ config });
     this.fileCryptor = new FileCryptor();
   }
-
   get identifier() {
     return '';
   }
-  async encrypt(data: ArrayBuffer) {
+  encrypt(data: string) {
+    if (data.length === 0) throw new Error('encryption error. empty content');
     return {
       data: this.cryptor.encrypt(data),
       metadata: null,
     };
   }
 
-  async decrypt(encryptedData: EncryptedDataType) {
-    return this.cryptor.decrypt(encryptedData.data.toString());
+  decrypt(encryptedData: EncryptedDataType) {
+    const data = typeof encryptedData.data === 'string' ? encryptedData.data : encode(encryptedData.data);
+    return this.cryptor.decrypt(data);
   }
 
   async encryptFile(file: PubNubFileType, File: PubNubFileType) {
