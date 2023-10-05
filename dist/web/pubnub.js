@@ -841,6 +841,45 @@
         }
         return data;
     }
+    function encode$2(input) {
+        var base64 = '';
+        var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        var bytes = new Uint8Array(input);
+        var byteLength = bytes.byteLength;
+        var byteRemainder = byteLength % 3;
+        var mainLength = byteLength - byteRemainder;
+        var a, b, c, d;
+        var chunk;
+        // Main loop deals with bytes in chunks of 3
+        for (var i = 0; i < mainLength; i = i + 3) {
+            // Combine the three bytes into a single integer
+            chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+            // Use bitmasks to extract 6-bit segments from the triplet
+            a = (chunk & 16515072) >> 18; // 16515072 = (2^6 - 1) << 18
+            b = (chunk & 258048) >> 12; // 258048   = (2^6 - 1) << 12
+            c = (chunk & 4032) >> 6; // 4032     = (2^6 - 1) << 6
+            d = chunk & 63; // 63       = 2^6 - 1
+            // Convert the raw binary segments to the appropriate ASCII encoding
+            base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+        }
+        // Deal with the remaining bytes and padding
+        if (byteRemainder == 1) {
+            chunk = bytes[mainLength];
+            a = (chunk & 252) >> 2; // 252 = (2^6 - 1) << 2
+            // Set the 4 least significant bits to zero
+            b = (chunk & 3) << 4; // 3   = 2^2 - 1
+            base64 += encodings[a] + encodings[b] + '==';
+        }
+        else if (byteRemainder == 2) {
+            chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1];
+            a = (chunk & 64512) >> 10; // 64512 = (2^6 - 1) << 10
+            b = (chunk & 1008) >> 4; // 1008  = (2^6 - 1) << 4
+            // Set the 2 least significant bits to zero
+            c = (chunk & 15) << 2; // 15    = 2^4 - 1
+            base64 += encodings[a] + encodings[b] + encodings[c] + '=';
+        }
+        return base64;
+    }
 
     /*eslint-disable */
     /*
@@ -1764,11 +1803,20 @@
         });
         return { promise: promise, reject: failureResolve, fulfill: successResolve };
     }
+    function stringToArrayBuffer(str) {
+        var buf = new ArrayBuffer(str.length * 2);
+        var bufView = new Uint16Array(buf);
+        for (var i = 0, strLen = str.length; i < strLen; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+        return buf;
+    }
     var utils$5 = {
         signPamFromParams: signPamFromParams,
         endsWith: endsWith,
         createPromise: createPromise,
         encodeString: encodeString,
+        stringToArrayBuffer: stringToArrayBuffer,
     };
 
     /*       */
@@ -1795,7 +1843,7 @@
 
     var default_1$7 = /** @class */ (function () {
         function default_1(_a) {
-            var subscribeEndpoint = _a.subscribeEndpoint, leaveEndpoint = _a.leaveEndpoint, heartbeatEndpoint = _a.heartbeatEndpoint, setStateEndpoint = _a.setStateEndpoint, timeEndpoint = _a.timeEndpoint, getFileUrl = _a.getFileUrl, config = _a.config, crypto = _a.crypto, listenerManager = _a.listenerManager;
+            var subscribeEndpoint = _a.subscribeEndpoint, leaveEndpoint = _a.leaveEndpoint, heartbeatEndpoint = _a.heartbeatEndpoint, setStateEndpoint = _a.setStateEndpoint, timeEndpoint = _a.timeEndpoint, getFileUrl = _a.getFileUrl, config = _a.config, crypto = _a.crypto, listenerManager = _a.listenerManager, cryptoModule = _a.cryptoModule;
             this._listenerManager = listenerManager;
             this._config = config;
             this._leaveEndpoint = leaveEndpoint;
@@ -1804,6 +1852,7 @@
             this._subscribeEndpoint = subscribeEndpoint;
             this._getFileUrl = getFileUrl;
             this._crypto = crypto;
+            this._cryptoModule = cryptoModule;
             this._channels = {};
             this._presenceChannels = {};
             this._heartbeatChannels = {};
@@ -1819,6 +1868,8 @@
             this._isOnline = true;
             this._reconnectionManager = new default_1$9({ timeEndpoint: timeEndpoint });
             this._dedupingManager = new default_1$8({ config: config });
+            if (this._cryptoModule)
+                this._decoder = new TextDecoder();
         }
         default_1.prototype.adaptStateChange = function (args, callback) {
             var _this = this;
@@ -2286,9 +2337,20 @@
                     announce.timetoken = publishMetaData.publishTimetoken;
                     announce.publisher = message.issuingClientId;
                     var msgPayload = message.payload;
-                    if (_this._config.cipherKey) {
-                        var decryptedPayload = _this._crypto.decrypt(message.payload);
-                        if (typeof decryptedPayload === 'object' && decryptedPayload !== null) {
+                    if (_this._cryptoModule) {
+                        var decryptedPayload = void 0;
+                        try {
+                            var decryptedData = _this._cryptoModule.decrypt(message.payload);
+                            decryptedPayload =
+                                decryptedData instanceof ArrayBuffer ? JSON.parse(_this._decoder.decode(decryptedData)) : decryptedData;
+                        }
+                        catch (e) {
+                            decryptedPayload = null;
+                            if (console && console.log) {
+                                console.log('decryption error', e.message);
+                            }
+                        }
+                        if (decryptedPayload !== null) {
                             msgPayload = decryptedPayload;
                         }
                     }
@@ -2322,8 +2384,26 @@
                     if (message.userMetadata) {
                         announce.userMetadata = message.userMetadata;
                     }
-                    if (_this._config.cipherKey) {
-                        announce.message = _this._crypto.decrypt(message.payload);
+                    if (_this._cryptoModule) {
+                        var decryptedPayload = void 0;
+                        try {
+                            var decryptedData = _this._cryptoModule.decrypt(message.payload);
+                            decryptedPayload =
+                                decryptedData instanceof ArrayBuffer ? JSON.parse(_this._decoder.decode(decryptedData)) : decryptedData;
+                        }
+                        catch (e) {
+                            decryptedPayload = null;
+                            // eslint-disable-next-line
+                            if (console && console.log) {
+                                console.log('decryption error', e.message); //eslint-disable-line
+                            }
+                        }
+                        if (decryptedPayload != null) {
+                            announce.message = decryptedPayload;
+                        }
+                        else {
+                            announce.message = message.payload;
+                        }
                     }
                     else {
                         announce.message = message.payload;
@@ -4623,10 +4703,11 @@
 
     /**       */
     var preparePayload = function (_a, payload) {
-        var crypto = _a.crypto, config = _a.config;
+        _a.crypto; var config = _a.config;
         var stringifiedPayload = JSON.stringify(payload);
         if (config.cipherKey) {
-            stringifiedPayload = crypto.encrypt(stringifiedPayload);
+            var encrypted = modules.cryptoModule.encrypt(stringifiedPayload);
+            stringifiedPayload = typeof encrypted === 'string' ? encrypted : encode(encrypted);
             stringifiedPayload = JSON.stringify(stringifiedPayload);
         }
         return stringifiedPayload || '';
@@ -5996,10 +6077,10 @@
 
     /*       */
     function prepareMessagePayload$1(modules, messagePayload) {
-        var crypto = modules.crypto, config = modules.config;
         var stringifiedPayload = JSON.stringify(messagePayload);
-        if (config.cipherKey) {
-            stringifiedPayload = crypto.encrypt(stringifiedPayload);
+        if (modules.cryptoModule) {
+            var encrypted = modules.cryptoModule.encrypt(stringifiedPayload);
+            stringifiedPayload = typeof encrypted === 'string' ? encrypted : encode$2(encrypted);
             stringifiedPayload = JSON.stringify(stringifiedPayload);
         }
         return stringifiedPayload;
@@ -6135,13 +6216,16 @@
 
     /*       */
     function __processMessage$1(modules, message) {
-        var config = modules.config, crypto = modules.crypto;
-        if (!config.cipherKey)
+        if (!modules.cryptoModule)
             return message;
         try {
-            return crypto.decrypt(message);
+            var decryptedData = modules.cryptoModule.decrypt(message);
+            var decryptedPayload = decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
+            return decryptedPayload;
         }
         catch (e) {
+            if (console && console.log)
+                console.log('decryption error', e.message);
             return message;
         }
     }
@@ -6331,13 +6415,16 @@
 
     /*       */
     function __processMessage(modules, message) {
-        var config = modules.config, crypto = modules.crypto;
-        if (!config.cipherKey)
+        if (!modules.cryptoModule)
             return message;
         try {
-            return crypto.decrypt(message);
+            var decryptedData = modules.cryptoModule.decrypt(message);
+            var decryptedPayload = decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
+            return decryptedPayload;
         }
         catch (e) {
+            if (console && console.log)
+                console.log('decryption error', e.message);
             return message;
         }
     }
@@ -7367,7 +7454,7 @@
             var config = new default_1$b({ setup: setup });
             this._config = config;
             var crypto = new default_1$a({ config: config }); // LEGACY
-            var cryptography = setup.cryptography;
+            var cryptography = setup.cryptography, cryptoModule = setup.cryptoModule;
             networking.init(config);
             var tokenManager = new default_1$4(config, cbor);
             this._tokenManager = tokenManager;
@@ -7383,10 +7470,23 @@
                 tokenManager: tokenManager,
                 telemetryManager: telemetryManager,
                 PubNubFile: setup.PubNubFile,
+                cryptoModule: setup.cryptoModule,
             };
             this.File = setup.PubNubFile;
-            this.encryptFile = function (key, file) { return cryptography.encryptFile(key, file, _this.File); };
-            this.decryptFile = function (key, file) { return cryptography.decryptFile(key, file, _this.File); };
+            this.encryptFile = function (key, file) {
+                if (arguments.length == 1 && typeof key != 'string' && cryptoModule) {
+                    file = key;
+                    return cryptoModule.encryptFile(file, this.File);
+                }
+                return cryptography.encryptFile(key, file, this.File);
+            };
+            this.decryptFile = function (key, file) {
+                if (arguments.length == 1 && typeof key != 'string' && cryptoModule) {
+                    file = key;
+                    return cryptoModule.decryptFile(file, this.File);
+                }
+                return cryptography.decryptFile(key, file, this.File);
+            };
             var timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
             var leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
             var heartbeatEndpoint = endpointCreator.bind(this, modules, presenceHeartbeatEndpointConfig);
@@ -7417,6 +7517,7 @@
                     config: modules.config,
                     listenerManager: listenerManager,
                     getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
+                    cryptoModule: setup.cryptoModule,
                 });
                 this.subscribe = subscriptionManager_1.adaptSubscribeChange.bind(subscriptionManager_1);
                 this.unsubscribe = subscriptionManager_1.adaptUnsubscribeChange.bind(subscriptionManager_1);
@@ -7706,8 +7807,24 @@
             this.stop = this.destroy; // --------
             // --- deprecated  ------------------
             // mount crypto
-            this.encrypt = crypto.encrypt.bind(crypto);
-            this.decrypt = crypto.decrypt.bind(crypto);
+            this.encrypt = function (data, key) {
+                if (typeof key === 'undefined' && cryptoModule) {
+                    var encrypted = cryptoModule.encrypt(data);
+                    return typeof encrypted === 'string' ? encrypted : encode$2(encrypted);
+                }
+                else {
+                    return crypto.encrypt(data, key);
+                }
+            };
+            this.decrypt = function (data, key) {
+                if (typeof key === 'undefined' && cryptoModule) {
+                    var decrypted = cryptoModule.decrypt(data);
+                    return decrypted instanceof ArrayBuffer ? encode$2(decrypted) : decrypted;
+                }
+                else {
+                    return crypto.decrypt(data, key);
+                }
+            };
             /* config */
             this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
             this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
@@ -9612,7 +9729,7 @@
         }
     };
 
-    var encode = function encode(str, defaultEncoder, charset, kind, format) {
+    var encode$1 = function encode(str, defaultEncoder, charset, kind, format) {
         // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
         // It has been adapted here for stricter adherence to RFC 3986
         if (str.length === 0) {
@@ -9734,7 +9851,7 @@
         combine: combine,
         compact: compact,
         decode: decode,
-        encode: encode,
+        encode: encode$1,
         isBuffer: isBuffer,
         isRegExp: isRegExp,
         maybeMap: maybeMap,
@@ -12542,7 +12659,10 @@
                 var bKey, abPlaindata, abCipherdata;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: return [4 /*yield*/, this.getKey(key)];
+                        case 0:
+                            if (file.data.byteLength <= 0)
+                                throw new Error('encryption error. empty content');
+                            return [4 /*yield*/, this.getKey(key)];
                         case 1:
                             bKey = _a.sent();
                             return [4 /*yield*/, file.toArrayBuffer()];
@@ -12620,7 +12740,9 @@
                     switch (_a.label) {
                         case 0:
                             abIv = ciphertext.slice(0, 16);
-                            return [4 /*yield*/, crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16))];
+                            if (ciphertext.slice(WebCryptography.IV_LENGTH).byteLength <= 0)
+                                throw new Error('decryption error: empty content');
+                            return [4 /*yield*/, crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(WebCryptography.IV_LENGTH))];
                         case 1:
                             data = _a.sent();
                             return [2 /*return*/, data];
@@ -12780,6 +12902,409 @@
         _a.supportsFileUri = false,
         _a);
 
+    var LegacyCryptor = /** @class */ (function () {
+        function LegacyCryptor(config) {
+            this.config = config;
+            this.cryptor = new default_1$a({ config: config });
+            this.fileCryptor = new WebCryptography();
+        }
+        Object.defineProperty(LegacyCryptor.prototype, "identifier", {
+            get: function () {
+                return '';
+            },
+            enumerable: false,
+            configurable: true
+        });
+        LegacyCryptor.prototype.encrypt = function (data) {
+            var stringData = typeof data === 'string' ? data : new TextDecoder().decode(data);
+            return {
+                data: this.cryptor.encrypt(stringData),
+                metadata: null,
+            };
+        };
+        LegacyCryptor.prototype.decrypt = function (encryptedData) {
+            return this.cryptor.decrypt(encryptedData.data);
+        };
+        LegacyCryptor.prototype.encryptFile = function (file, File) {
+            var _a;
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_b) {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    //@ts-ignore: can not detect cipherKey from old Config
+                    return [2 /*return*/, this.fileCryptor.encryptFile((_a = this.config) === null || _a === void 0 ? void 0 : _a.cipherKey, file, File)];
+                });
+            });
+        };
+        LegacyCryptor.prototype.decryptFile = function (file, File) {
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    //@ts-ignore: can not detect cipherKey from old Config
+                    return [2 /*return*/, this.fileCryptor.decryptFile(this.config.cipherKey, file, File)];
+                });
+            });
+        };
+        return LegacyCryptor;
+    }());
+
+    var AesCbcCryptor = /** @class */ (function () {
+        function AesCbcCryptor(configuration) {
+            this.cipherKey = configuration.cipherKey;
+        }
+        Object.defineProperty(AesCbcCryptor.prototype, "algo", {
+            get: function () {
+                return 'AES-CBC';
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(AesCbcCryptor.prototype, "identifier", {
+            get: function () {
+                return 'ACRH';
+            },
+            enumerable: false,
+            configurable: true
+        });
+        AesCbcCryptor.prototype._getIv = function () {
+            return crypto.getRandomValues(new Uint8Array(AesCbcCryptor.BLOCK_SIZE));
+        };
+        AesCbcCryptor.prototype._getKey = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var bKey, abHash;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            bKey = AesCbcCryptor.encoder.encode(this.cipherKey);
+                            return [4 /*yield*/, crypto.subtle.digest('SHA-256', bKey.buffer)];
+                        case 1:
+                            abHash = _a.sent();
+                            return [2 /*return*/, crypto.subtle.importKey('raw', abHash, 'AES-CBC', true, ['encrypt', 'decrypt'])];
+                    }
+                });
+            });
+        };
+        AesCbcCryptor.prototype.encrypt = function (data) {
+            return __awaiter(this, void 0, void 0, function () {
+                var dataBytes, abIv, key;
+                var _a;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            dataBytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+                            if (dataBytes.byteLength === 0)
+                                throw new Error('encryption error. empty content');
+                            abIv = this._getIv();
+                            return [4 /*yield*/, this._getKey()];
+                        case 1:
+                            key = _b.sent();
+                            _a = {
+                                metadata: abIv
+                            };
+                            return [4 /*yield*/, crypto.subtle.encrypt({ name: this.algo, iv: abIv }, key, dataBytes)];
+                        case 2: return [2 /*return*/, (_a.data = _b.sent(),
+                                _a)];
+                    }
+                });
+            });
+        };
+        AesCbcCryptor.prototype.decrypt = function (encryptedData) {
+            return __awaiter(this, void 0, void 0, function () {
+                var key, decryptedData;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this._getKey()];
+                        case 1:
+                            key = _a.sent();
+                            return [4 /*yield*/, crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata }, key, encryptedData.data)];
+                        case 2:
+                            decryptedData = _a.sent();
+                            return [2 /*return*/, decryptedData];
+                    }
+                });
+            });
+        };
+        AesCbcCryptor.BLOCK_SIZE = 16;
+        AesCbcCryptor.encoder = new TextEncoder();
+        AesCbcCryptor.decoder = new TextDecoder();
+        return AesCbcCryptor;
+    }());
+
+    var CryptoModule = /** @class */ (function () {
+        function CryptoModule(cryptoModuleConfiguration) {
+            var _a;
+            this.defaultCryptor = cryptoModuleConfiguration.default;
+            this.cryptors = (_a = cryptoModuleConfiguration.cryptors) !== null && _a !== void 0 ? _a : [];
+        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore: type detection issue with old Config type assignment
+        CryptoModule.legacyCryptoModule = function (_a) {
+            var config = _a.config;
+            return new this({
+                default: new LegacyCryptor({ config: config }),
+                cryptors: [new AesCbcCryptor(config.cipherKey)],
+            });
+        };
+        CryptoModule.aesCbcCryptoModule = function (config) {
+            return new this({
+                default: new AesCbcCryptor(config.cipherKey),
+                cryptors: [new LegacyCryptor({ config: config })],
+            });
+        };
+        CryptoModule.withDefaultCryptor = function (defaultCryptor) {
+            return new this({ default: defaultCryptor });
+        };
+        CryptoModule.prototype.getAllCryptors = function () {
+            return __spreadArray([this.defaultCryptor], __read(this.cryptors), false);
+        };
+        CryptoModule.prototype.encrypt = function (data) {
+            return __awaiter(this, void 0, void 0, function () {
+                var encrypted, header, headerData, pos;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.defaultCryptor.encrypt(data)];
+                        case 1:
+                            encrypted = _a.sent();
+                            if (!encrypted.metadata)
+                                return [2 /*return*/, encrypted.data];
+                            header = CryptorHeader.from(this.defaultCryptor.identifier, encrypted.metadata);
+                            headerData = new Uint8Array(header.length);
+                            pos = 0;
+                            headerData.set(header.data, pos);
+                            pos += header.length - encrypted.metadata.byteLength;
+                            headerData.set(new Uint8Array(encrypted.metadata), pos);
+                            return [2 /*return*/, this.concatArrayBuffer(headerData.buffer, encrypted.data)];
+                    }
+                });
+            });
+        };
+        CryptoModule.prototype.decrypt = function (data) {
+            return __awaiter(this, void 0, void 0, function () {
+                var encryptedData, header, cryptor, metadata;
+                return __generator(this, function (_a) {
+                    encryptedData = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+                    header = CryptorHeader.tryParse(encryptedData);
+                    cryptor = this.getCryptor(header);
+                    metadata = header.length > 0
+                        ? encryptedData.slice(header.length - header.metadataLength, header.length)
+                        : null;
+                    if (encryptedData.slice(header.length).byteLength <= 0)
+                        throw new Error('decryption error. empty content');
+                    return [2 /*return*/, cryptor.decrypt({
+                            data: encryptedData.slice(header.length),
+                            metadata: metadata,
+                        })];
+                });
+            });
+        };
+        CryptoModule.prototype.encryptFile = function (file, File) {
+            return __awaiter(this, void 0, void 0, function () {
+                var _a, _b;
+                var _c;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
+                        case 0:
+                            /**
+                             * Files handled differently in case of Legacy cryptor.
+                             * (as long as we support legacy need to check on default cryptor)
+                             */
+                            if (this.defaultCryptor.identifier === CryptorHeader.LEGACY_IDENTIFIER)
+                                return [2 /*return*/, this.defaultCryptor.encryptFile(file, File)];
+                            if (!(file.data instanceof ArrayBuffer)) return [3 /*break*/, 2];
+                            _b = (_a = File).create;
+                            _c = {
+                                name: file.name,
+                                mimeType: 'application/octet-stream'
+                            };
+                            return [4 /*yield*/, this.encrypt(file.data)];
+                        case 1: return [2 /*return*/, _b.apply(_a, [(_c.data = _d.sent(),
+                                    _c)])];
+                        case 2: return [2 /*return*/];
+                    }
+                });
+            });
+        };
+        CryptoModule.prototype.decryptFile = function (file, File) {
+            return __awaiter(this, void 0, void 0, function () {
+                var header, cryptor, _a, _b;
+                var _c;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
+                        case 0:
+                            if (!(file.data instanceof ArrayBuffer)) return [3 /*break*/, 2];
+                            header = CryptorHeader.tryParse(file.data);
+                            cryptor = this.getCryptor(header);
+                            /**
+                             * If It's legacyone then redirect it.
+                             * (as long as we support legacy need to check on instance type)
+                             */
+                            if ((cryptor === null || cryptor === void 0 ? void 0 : cryptor.identifier) === CryptoModule.LEGACY_IDENTIFIER)
+                                return [2 /*return*/, cryptor.decryptFile(file, File)];
+                            _b = (_a = File).create;
+                            _c = {
+                                name: file.name
+                            };
+                            return [4 /*yield*/, this.decrypt(file.data)];
+                        case 1: return [2 /*return*/, _b.apply(_a, [(_c.data = _d.sent(),
+                                    _c)])];
+                        case 2: return [2 /*return*/];
+                    }
+                });
+            });
+        };
+        CryptoModule.prototype.getCryptor = function (header) {
+            if (header === '') {
+                var cryptor = this.getAllCryptors().find(function (c) { return c.identifier === ''; });
+                if (cryptor)
+                    return cryptor;
+                throw new Error('unknown cryptor');
+            }
+            else if (header instanceof CryptorHeaderV1) {
+                return this.getCryptorFromId(header.identifier);
+            }
+        };
+        CryptoModule.prototype.getCryptorFromId = function (id) {
+            var cryptor = this.getAllCryptors().find(function (c) { return id === c.identifier; });
+            if (cryptor) {
+                return cryptor;
+            }
+            throw Error('unknown cryptor error');
+        };
+        CryptoModule.prototype.concatArrayBuffer = function (ab1, ab2) {
+            var tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
+            tmp.set(new Uint8Array(ab1), 0);
+            tmp.set(new Uint8Array(ab2), ab1.byteLength);
+            return tmp.buffer;
+        };
+        CryptoModule.LEGACY_IDENTIFIER = '';
+        return CryptoModule;
+    }());
+    // CryptorHeader Utility
+    var CryptorHeader = /** @class */ (function () {
+        function CryptorHeader() {
+        }
+        CryptorHeader.from = function (id, metadata) {
+            if (id === CryptorHeader.LEGACY_IDENTIFIER)
+                return;
+            return new CryptorHeaderV1(id, metadata.byteLength);
+        };
+        CryptorHeader.tryParse = function (encryptedData) {
+            var sentinel = '';
+            var version = null;
+            if (encryptedData.byteLength >= 4) {
+                sentinel = encryptedData.slice(0, 4);
+                if (sentinel.toString('utf8') !== CryptorHeader.SENTINEL)
+                    return '';
+            }
+            if (encryptedData.byteLength >= 5) {
+                version = encryptedData[4];
+            }
+            else {
+                throw new Error('decryption error. invalid header version');
+            }
+            if (version > CryptorHeader.MAX_VERSION)
+                throw new PubNubError('unknown cryptor error');
+            var identifier = '';
+            var pos = 5 + CryptorHeader.IDENTIFIER_LENGTH;
+            if (encryptedData.byteLength >= pos) {
+                identifier = encryptedData.slice(5, pos);
+            }
+            else {
+                throw new Error('decryption error. invalid crypto identifier');
+            }
+            var metadataLength = null;
+            if (encryptedData.byteLength >= pos + 1) {
+                metadataLength = encryptedData[pos];
+            }
+            else {
+                throw new Error('decryption error. invalid metadata length');
+            }
+            pos += 1;
+            if (metadataLength === 255 && encryptedData.byteLength >= pos + 2) {
+                metadataLength = new Uint16Array(encryptedData.slice(pos, pos + 2)).reduce(function (acc, val) { return (acc << 8) + val; }, 0);
+                pos += 2;
+            }
+            return new CryptorHeaderV1(identifier.toString('utf8'), metadataLength);
+        };
+        CryptorHeader.SENTINEL = 'PNED';
+        CryptorHeader.LEGACY_IDENTIFIER = '';
+        CryptorHeader.IDENTIFIER_LENGTH = 4;
+        CryptorHeader.VERSION = 1;
+        CryptorHeader.MAX_VERSION = 1;
+        return CryptorHeader;
+    }());
+    // v1 CryptorHeader
+    var CryptorHeaderV1 = /** @class */ (function () {
+        function CryptorHeaderV1(id, metadataLength) {
+            this._identifier = id;
+            this._metadataLength = metadataLength;
+        }
+        Object.defineProperty(CryptorHeaderV1.prototype, "identifier", {
+            get: function () {
+                return this._identifier;
+            },
+            set: function (value) {
+                this._identifier = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(CryptorHeaderV1.prototype, "metadataLength", {
+            get: function () {
+                return this._metadataLength;
+            },
+            set: function (value) {
+                this._metadataLength = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(CryptorHeaderV1.prototype, "version", {
+            get: function () {
+                return CryptorHeader.VERSION;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(CryptorHeaderV1.prototype, "length", {
+            get: function () {
+                return (CryptorHeader.SENTINEL.length +
+                    1 +
+                    CryptorHeader.IDENTIFIER_LENGTH +
+                    (this.metadataLength < 255 ? 1 : 3) +
+                    this.metadataLength);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(CryptorHeaderV1.prototype, "data", {
+            get: function () {
+                var pos = 0;
+                var header = new Uint8Array(this.length);
+                var encoder = new TextEncoder();
+                header.set(encoder.encode(CryptorHeader.SENTINEL));
+                pos += CryptorHeader.SENTINEL.length;
+                header[pos] = this.version;
+                pos++;
+                if (this.identifier)
+                    header.set(encoder.encode(this.identifier), pos);
+                pos += CryptorHeader.IDENTIFIER_LENGTH;
+                var metadataLength = this.metadataLength;
+                if (metadataLength < 255) {
+                    header[pos] = metadataLength;
+                }
+                else {
+                    header.set([255, metadataLength >> 8, metadataLength & 0xff], pos);
+                }
+                return header;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        CryptorHeaderV1.IDENTIFIER_LENGTH = 4;
+        CryptorHeaderV1.SENTINEL = 'PNED';
+        return CryptorHeaderV1;
+    }());
+
     /* eslint no-bitwise: ["error", { "allow": ["~", "&", ">>"] }] */
     function sendBeacon(url) {
         if (navigator && navigator.sendBeacon) {
@@ -12808,6 +13333,12 @@
             setup.cbor = new default_1$1(function (arrayBuffer) { return stringifyBufferKeys(CborReader.decode(arrayBuffer)); }, decode$1);
             setup.PubNubFile = PubNubFile;
             setup.cryptography = new WebCryptography();
+            if (setup.cipherKey) {
+                setup.cryptoModule = new CryptoModule({
+                    default: new LegacyCryptor({ cipherKey: setup.cipherKey, useRandomIVs: setup.useRandomIVs }),
+                    cryptors: [new AesCbcCryptor({ cipherKey: setup.cipherKey })],
+                });
+            }
             _this = _super.call(this, setup) || this;
             if (listenToBrowserNetworkEvents) {
                 // mount network events.
