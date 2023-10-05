@@ -705,10 +705,12 @@
             this.authKey = val;
             return this;
         };
-        default_1.prototype.setCipherKey = function (val, setup) {
+        default_1.prototype.setCipherKey = function (val, setup, modules) {
             var _a;
             this.cipherKey = val;
             this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: (_a = this.useRandomIVs) !== null && _a !== void 0 ? _a : true });
+            if (modules)
+                modules.cryptoModule = this.cryptoModule;
             return this;
         };
         default_1.prototype.getUUID = function () {
@@ -7465,7 +7467,7 @@
                 maximumSamplesCount: 60000,
             });
             this._telemetryManager = telemetryManager;
-            var cryptoModule = config.cryptoModule;
+            var cryptoModule = this._config.cryptoModule;
             var modules = {
                 config: config,
                 networking: networking,
@@ -7839,7 +7841,7 @@
             this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
             this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
             // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
-            this.setCipherKey = function (key) { return modules.config.setCipherKey(key, setup); };
+            this.setCipherKey = function (key) { return modules.config.setCipherKey(key, setup, modules); };
             this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
             if (networking.hasModule('proxy')) {
                 this.setProxy = function (proxy) {
@@ -13339,8 +13341,8 @@
             setup.PubNubFile = PubNubFile;
             setup.cryptography = new WebCryptography();
             setup.initCryptoModule = function (cryptoConfiguration) {
-                if (setup.cipherKey) {
-                    setup.cryptoModule = new CryptoModule({
+                if (cryptoConfiguration.cipherKey) {
+                    return new CryptoModule({
                         default: new LegacyCryptor({
                             cipherKey: cryptoConfiguration.cipherKey,
                             useRandomIVs: cryptoConfiguration.useRandomIVs,
