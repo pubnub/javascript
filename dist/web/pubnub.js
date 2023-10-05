@@ -637,7 +637,6 @@
             this.partnerId = setup.partnerId;
             this.setAuthKey(setup.authKey);
             this.cryptoModule = setup.cryptoModule;
-            this.setCipherKey(setup.cipherKey, setup);
             this.setFilterExpression(setup.filterExpression);
             if (typeof setup.origin !== 'string' && !Array.isArray(setup.origin) && setup.origin !== undefined) {
                 throw new Error('Origin must be either undefined, a string or a list of strings.');
@@ -696,6 +695,7 @@
                 }
                 this.setUUID(setup.uuid);
             }
+            this.setCipherKey(setup.cipherKey, setup);
         }
         // exposed setters
         default_1.prototype.getAuthKey = function () {
@@ -706,11 +706,12 @@
             return this;
         };
         default_1.prototype.setCipherKey = function (val, setup, modules) {
-            var _a;
             this.cipherKey = val;
-            this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: (_a = this.useRandomIVs) !== null && _a !== void 0 ? _a : true });
-            if (modules)
-                modules.cryptoModule = this.cryptoModule;
+            if (this.cipherKey) {
+                this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs });
+                if (modules)
+                    modules.cryptoModule = this.cryptoModule;
+            }
             return this;
         };
         default_1.prototype.getUUID = function () {
@@ -13341,15 +13342,13 @@
             setup.PubNubFile = PubNubFile;
             setup.cryptography = new WebCryptography();
             setup.initCryptoModule = function (cryptoConfiguration) {
-                if (cryptoConfiguration.cipherKey) {
-                    return new CryptoModule({
-                        default: new LegacyCryptor({
-                            cipherKey: cryptoConfiguration.cipherKey,
-                            useRandomIVs: cryptoConfiguration.useRandomIVs,
-                        }),
-                        cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
-                    });
-                }
+                return new CryptoModule({
+                    default: new LegacyCryptor({
+                        cipherKey: cryptoConfiguration.cipherKey,
+                        useRandomIVs: cryptoConfiguration.useRandomIVs,
+                    }),
+                    cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+                });
             };
             _this = _super.call(this, setup) || this;
             if (listenToBrowserNetworkEvents) {
