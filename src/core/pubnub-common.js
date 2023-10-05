@@ -280,7 +280,7 @@ export default class {
     this._config = config;
     const crypto = new Crypto({ config }); // LEGACY
 
-    const { cryptography, cryptoModule } = setup;
+    const { cryptography } = setup;
 
     networking.init(config);
 
@@ -292,6 +292,7 @@ export default class {
     });
 
     this._telemetryManager = telemetryManager;
+    const cryptoModule = config.cryptoModule;
 
     const modules = {
       config,
@@ -301,7 +302,7 @@ export default class {
       tokenManager,
       telemetryManager,
       PubNubFile: setup.PubNubFile,
-      cryptoModule: setup.cryptoModule,
+      cryptoModule: cryptoModule,
     };
 
     this.File = setup.PubNubFile;
@@ -355,7 +356,7 @@ export default class {
         config: modules.config,
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
-        cryptoModule: setup.cryptoModule,
+        cryptoModule: cryptoModule,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
@@ -699,14 +700,14 @@ export default class {
     /* config */
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
     this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
-    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
     this.getUUID = modules.config.getUUID.bind(modules.config);
     this.setUUID = modules.config.setUUID.bind(modules.config);
     this.getUserId = modules.config.getUserId.bind(modules.config);
     this.setUserId = modules.config.setUserId.bind(modules.config);
     this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
-
+    // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
+    this.setCipherKey = (key) => modules.config.setCipherKey(key, setup);
     this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 
     if (networking.hasModule('proxy')) {

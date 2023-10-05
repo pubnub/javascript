@@ -636,7 +636,8 @@
             this.sdkFamily = setup.sdkFamily;
             this.partnerId = setup.partnerId;
             this.setAuthKey(setup.authKey);
-            this.setCipherKey(setup.cipherKey);
+            this.cryptoModule = setup.cryptoModule;
+            this.setCipherKey(setup.cipherKey, setup);
             this.setFilterExpression(setup.filterExpression);
             if (typeof setup.origin !== 'string' && !Array.isArray(setup.origin) && setup.origin !== undefined) {
                 throw new Error('Origin must be either undefined, a string or a list of strings.');
@@ -704,8 +705,10 @@
             this.authKey = val;
             return this;
         };
-        default_1.prototype.setCipherKey = function (val) {
+        default_1.prototype.setCipherKey = function (val, setup) {
+            var _a;
             this.cipherKey = val;
+            this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: (_a = this.useRandomIVs) !== null && _a !== void 0 ? _a : true });
             return this;
         };
         default_1.prototype.getUUID = function () {
@@ -7454,7 +7457,7 @@
             var config = new default_1$b({ setup: setup });
             this._config = config;
             var crypto = new default_1$a({ config: config }); // LEGACY
-            var cryptography = setup.cryptography, cryptoModule = setup.cryptoModule;
+            var cryptography = setup.cryptography;
             networking.init(config);
             var tokenManager = new default_1$4(config, cbor);
             this._tokenManager = tokenManager;
@@ -7462,6 +7465,7 @@
                 maximumSamplesCount: 60000,
             });
             this._telemetryManager = telemetryManager;
+            var cryptoModule = config.cryptoModule;
             var modules = {
                 config: config,
                 networking: networking,
@@ -7470,7 +7474,7 @@
                 tokenManager: tokenManager,
                 telemetryManager: telemetryManager,
                 PubNubFile: setup.PubNubFile,
-                cryptoModule: setup.cryptoModule,
+                cryptoModule: cryptoModule,
             };
             this.File = setup.PubNubFile;
             this.encryptFile = function (key, file) {
@@ -7517,7 +7521,7 @@
                     config: modules.config,
                     listenerManager: listenerManager,
                     getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
-                    cryptoModule: setup.cryptoModule,
+                    cryptoModule: cryptoModule,
                 });
                 this.subscribe = subscriptionManager_1.adaptSubscribeChange.bind(subscriptionManager_1);
                 this.unsubscribe = subscriptionManager_1.adaptUnsubscribeChange.bind(subscriptionManager_1);
@@ -7828,13 +7832,14 @@
             /* config */
             this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
             this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
-            this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
             this.getUUID = modules.config.getUUID.bind(modules.config);
             this.setUUID = modules.config.setUUID.bind(modules.config);
             this.getUserId = modules.config.getUserId.bind(modules.config);
             this.setUserId = modules.config.setUserId.bind(modules.config);
             this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
             this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
+            // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
+            this.setCipherKey = function (key) { return modules.config.setCipherKey(key, setup); };
             this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
             if (networking.hasModule('proxy')) {
                 this.setProxy = function (proxy) {
@@ -13333,12 +13338,17 @@
             setup.cbor = new default_1$1(function (arrayBuffer) { return stringifyBufferKeys(CborReader.decode(arrayBuffer)); }, decode$1);
             setup.PubNubFile = PubNubFile;
             setup.cryptography = new WebCryptography();
-            if (setup.cipherKey) {
-                setup.cryptoModule = new CryptoModule({
-                    default: new LegacyCryptor({ cipherKey: setup.cipherKey, useRandomIVs: setup.useRandomIVs }),
-                    cryptors: [new AesCbcCryptor({ cipherKey: setup.cipherKey })],
-                });
-            }
+            setup.initCryptoModule = function (cryptoConfiguration) {
+                if (setup.cipherKey) {
+                    setup.cryptoModule = new CryptoModule({
+                        default: new LegacyCryptor({
+                            cipherKey: cryptoConfiguration.cipherKey,
+                            useRandomIVs: cryptoConfiguration.useRandomIVs,
+                        }),
+                        cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+                    });
+                }
+            };
             _this = _super.call(this, setup) || this;
             if (listenToBrowserNetworkEvents) {
                 // mount network events.

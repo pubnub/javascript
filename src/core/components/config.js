@@ -142,6 +142,8 @@ export default class {
   useRandomIVs;
   enableSubscribeBeta;
 
+  cryptoModule;
+
   constructor({ setup }) {
     this._PNSDKSuffix = {};
 
@@ -153,7 +155,8 @@ export default class {
     this.sdkFamily = setup.sdkFamily;
     this.partnerId = setup.partnerId;
     this.setAuthKey(setup.authKey);
-    this.setCipherKey(setup.cipherKey);
+    this.cryptoModule = setup.cryptoModule;
+    this.setCipherKey(setup.cipherKey, setup);
 
     this.setFilterExpression(setup.filterExpression);
 
@@ -239,8 +242,9 @@ export default class {
     return this;
   }
 
-  setCipherKey(val) {
+  setCipherKey(val, setup) {
     this.cipherKey = val;
+    this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs ?? true });
     return this;
   }
 
