@@ -13,7 +13,7 @@ function prepareMessagePayload(modules, messagePayload) {
     stringifiedPayload = typeof encrypted === 'string' ? encrypted : encode(encrypted);
     stringifiedPayload = JSON.stringify(stringifiedPayload);
   }
-  return stringifiedPayload;
+  return stringifiedPayload || '';
 }
 
 export function getOperation() {

@@ -142,6 +142,9 @@ export default class {
   useRandomIVs;
   enableSubscribeBeta;
 
+  /*
+    set cryptoModule to encrypt/decrypt messages and files.
+  */
   cryptoModule;
 
   constructor({ setup }) {
@@ -245,7 +248,8 @@ export default class {
   setCipherKey(val, setup, modules) {
     this.cipherKey = val;
     if (this.cipherKey) {
-      this.cryptoModule = setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs });
+      this.cryptoModule =
+        setup.cryptoModule ?? setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs });
       if (modules) modules.cryptoModule = this.cryptoModule;
     }
     return this;

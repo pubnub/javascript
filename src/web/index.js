@@ -22,10 +22,10 @@ function sendBeacon(url) {
 }
 
 export default class extends PubNubCore {
+  static CryptoModule = CryptoModule;
   constructor(setup) {
     // extract config.
     const { listenToBrowserNetworkEvents = true } = setup;
-
     setup.sdkFamily = 'Web';
     setup.networking = new Networking({
       del,

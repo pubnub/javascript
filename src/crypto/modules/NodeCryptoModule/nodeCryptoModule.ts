@@ -27,16 +27,16 @@ export class CryptoModule {
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore: type detection issue with old Config type assignment
-  static legacyCryptoModule({ config }) {
+  static legacyCryptoModule(config) {
     return new this({
       default: new LegacyCryptor({ config }),
-      cryptors: [new AesCbcCryptor(config.cipherKey)],
+      cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
     });
   }
 
   static aesCbcCryptoModule(config: any) {
     return new this({
-      default: new AesCbcCryptor(config.cipherKey),
+      default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
       cryptors: [new LegacyCryptor({ config })],
     });
   }

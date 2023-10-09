@@ -5,6 +5,9 @@ export type EncryptedDataType = {
 
 export interface ICryptor {
   get identifier(): string;
-  encrypt(data: ArrayBuffer | string): Promise<EncryptedDataType>;
-  decrypt(data: EncryptedDataType): Promise<ArrayBuffer>;
+  encrypt(data: ArrayBuffer | string): EncryptedDataType;
+  decrypt(data: EncryptedDataType): ArrayBuffer;
+
+  encryptFileData(data: ArrayBuffer): Promise<EncryptedDataType>;
+  decryptFileData(data: EncryptedDataType): Promise<ArrayBuffer>;
 }

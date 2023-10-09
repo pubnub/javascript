@@ -2,6 +2,7 @@ import Crypto from '../../../core/components/cryptography/index';
 import FileCryptor from '../web';
 import { EncryptedDataType } from './ICryptor';
 import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
+import { encode } from '../../../core/components/base64_codec';
 
 export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
   config;
@@ -9,9 +10,9 @@ export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
   cryptor;
   fileCryptor;
 
-  constructor(config: { config: any }) {
+  constructor(config: any) {
     this.config = config;
-    this.cryptor = new Crypto({ config });
+    this.cryptor = new Crypto(config);
     this.fileCryptor = new FileCryptor();
   }
 
@@ -27,7 +28,8 @@ export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
   }
 
   decrypt(encryptedData: EncryptedDataType) {
-    return this.cryptor.decrypt(encryptedData.data);
+    const data = typeof encryptedData.data === 'string' ? encryptedData.data : encode(encryptedData.data);
+    return this.cryptor.decrypt(data);
   }
 
   async encryptFile(file: PubNubFileType, File: PubNubFileType) {

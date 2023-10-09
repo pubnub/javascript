@@ -9,7 +9,9 @@ import { keepAlive, proxy } from '../networking/modules/node';
 import NodeCryptography from '../crypto/modules/node';
 import PubNubFile from '../file/modules/node';
 import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+
 export = class extends PubNubCore {
+  static CryptoModule = CryptoModule;
   constructor(setup: any) {
     setup.cbor = new Cbor((buffer: ArrayBuffer) => CborReader.decode(Buffer.from(buffer)), decode);
     setup.networking = new Networking({

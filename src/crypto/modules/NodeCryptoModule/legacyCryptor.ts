@@ -12,7 +12,7 @@ export default class LegacyCryptor implements ILegacyCryptor<PubNubFileType> {
 
   constructor(config: any) {
     this.config = config;
-    this.cryptor = new Crypto({ config });
+    this.cryptor = new Crypto(config);
     this.fileCryptor = new FileCryptor();
   }
   get identifier() {

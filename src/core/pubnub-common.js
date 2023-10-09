@@ -308,16 +308,16 @@ export default class {
     this.File = setup.PubNubFile;
 
     this.encryptFile = function (key, file) {
-      if (arguments.length == 1 && typeof key != 'string' && cryptoModule) {
+      if (arguments.length == 1 && typeof key != 'string' && modules.cryptoModule) {
         file = key;
-        return cryptoModule.encryptFile(file, this.File);
+        return modules.cryptoModule.encryptFile(file, this.File);
       }
       return cryptography.encryptFile(key, file, this.File);
     };
     this.decryptFile = function (key, file) {
-      if (arguments.length == 1 && typeof key != 'string' && cryptoModule) {
+      if (arguments.length == 1 && typeof key != 'string' && modules.cryptoModule) {
         file = key;
-        return cryptoModule.decryptFile(file, this.File);
+        return modules.cryptoModule.decryptFile(file, this.File);
       }
       return cryptography.decryptFile(key, file, this.File);
     };
@@ -356,7 +356,7 @@ export default class {
         config: modules.config,
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
-        cryptoModule: cryptoModule,
+        cryptoModule: modules.cryptoModule,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
@@ -681,8 +681,8 @@ export default class {
 
     // mount crypto
     this.encrypt = function (data, key) {
-      if (typeof key === 'undefined' && cryptoModule) {
-        const encrypted = cryptoModule.encrypt(data);
+      if (typeof key === 'undefined' && modules.cryptoModule) {
+        const encrypted = modules.cryptoModule.encrypt(data);
         return typeof encrypted === 'string' ? encrypted : encode(encrypted);
       } else {
         return crypto.encrypt(data, key);
@@ -690,7 +690,7 @@ export default class {
     };
     this.decrypt = function (data, key) {
       if (typeof key === 'undefined' && cryptoModule) {
-        const decrypted = cryptoModule.decrypt(data);
+        const decrypted = modules.cryptoModule.decrypt(data);
         return decrypted instanceof ArrayBuffer ? encode(decrypted) : decrypted;
       } else {
         return crypto.decrypt(data, key);
