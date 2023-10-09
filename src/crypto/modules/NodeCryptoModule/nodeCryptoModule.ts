@@ -29,7 +29,7 @@ export class CryptoModule {
   // @ts-ignore: type detection issue with old Config type assignment
   static legacyCryptoModule(config) {
     return new this({
-      default: new LegacyCryptor({ config }),
+      default: new LegacyCryptor(config),
       cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
     });
   }
@@ -37,7 +37,7 @@ export class CryptoModule {
   static aesCbcCryptoModule(config: any) {
     return new this({
       default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
-      cryptors: [new LegacyCryptor({ config })],
+      cryptors: [new LegacyCryptor(config)],
     });
   }
   static withDefaultCryptor(defaultCryptor: CryptorType) {

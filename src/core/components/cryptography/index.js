@@ -26,7 +26,6 @@ export default class {
 
   constructor({ config }) {
     this._config = config;
-
     this._iv = '0123456789012345';
 
     this._allowedKeyEncodings = ['hex', 'utf8', 'base64', 'binary'];
@@ -108,14 +107,14 @@ export default class {
   }
 
   encrypt(data, customCipherKey, options) {
-    if (typeof this._config.customEncrypt != 'undefined' && this._config.customEncrypt) {
+    if (this._config.customEncrypt) {
       return this._config.customEncrypt(data);
     }
     return this.pnEncrypt(data, customCipherKey, options);
   }
 
   decrypt(data, customCipherKey, options) {
-    if (typeof this._config.customDecrypt != 'undefined' && this._config.customDecrypt) {
+    if (this._config.customDecrypt) {
       return this._config.customDecrypt(data);
     }
     return this.pnDecrypt(data, customCipherKey, options);

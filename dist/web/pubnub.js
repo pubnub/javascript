@@ -1658,13 +1658,13 @@
             return hmacSha256.lib.WordArray.random(16);
         };
         default_1.prototype.encrypt = function (data, customCipherKey, options) {
-            if (typeof this._config.customEncrypt != 'undefined' && this._config.customEncrypt) {
+            if (this._config.customEncrypt) {
                 return this._config.customEncrypt(data);
             }
             return this.pnEncrypt(data, customCipherKey, options);
         };
         default_1.prototype.decrypt = function (data, customCipherKey, options) {
-            if (typeof this._config.customDecrypt != 'undefined' && this._config.customDecrypt) {
+            if (this._config.customDecrypt) {
                 return this._config.customDecrypt(data);
             }
             return this.pnDecrypt(data, customCipherKey, options);
@@ -12914,7 +12914,7 @@
     var LegacyCryptor = /** @class */ (function () {
         function LegacyCryptor(config) {
             this.config = config;
-            this.cryptor = new default_1$a(config);
+            this.cryptor = new default_1$a({ config: config });
             this.fileCryptor = new WebCryptography();
         }
         Object.defineProperty(LegacyCryptor.prototype, "identifier", {
@@ -13073,14 +13073,14 @@
         //@ts-ignore: type detection issue with old Config type assignment
         CryptoModule.legacyCryptoModule = function (config) {
             return new this({
-                default: new LegacyCryptor({ config: config }),
+                default: new LegacyCryptor(config),
                 cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
             });
         };
         CryptoModule.aesCbcCryptoModule = function (config) {
             return new this({
                 default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
-                cryptors: [new LegacyCryptor({ config: config })],
+                cryptors: [new LegacyCryptor(config)],
             });
         };
         CryptoModule.withDefaultCryptor = function (defaultCryptor) {
