@@ -1658,13 +1658,13 @@
             return hmacSha256.lib.WordArray.random(16);
         };
         default_1.prototype.encrypt = function (data, customCipherKey, options) {
-            if (this._config.customEncrypt) {
+            if (typeof this._config.customEncrypt != 'undefined' && this._config.customEncrypt) {
                 return this._config.customEncrypt(data);
             }
             return this.pnEncrypt(data, customCipherKey, options);
         };
         default_1.prototype.decrypt = function (data, customCipherKey, options) {
-            if (this._config.customDecrypt) {
+            if (typeof this._config.customDecrypt != 'undefined' && this._config.customDecrypt) {
                 return this._config.customDecrypt(data);
             }
             return this.pnDecrypt(data, customCipherKey, options);

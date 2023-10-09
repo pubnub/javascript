@@ -108,14 +108,14 @@ export default class {
   }
 
   encrypt(data, customCipherKey, options) {
-    if (this._config.customEncrypt) {
+    if (typeof this._config.customEncrypt != 'undefined' && this._config.customEncrypt) {
       return this._config.customEncrypt(data);
     }
     return this.pnEncrypt(data, customCipherKey, options);
   }
 
   decrypt(data, customCipherKey, options) {
-    if (this._config.customDecrypt) {
+    if (typeof this._config.customDecrypt != 'undefined' && this._config.customDecrypt) {
       return this._config.customDecrypt(data);
     }
     return this.pnDecrypt(data, customCipherKey, options);
