@@ -31,7 +31,7 @@ export default class AesCbcCryptor implements ICryptor {
   encrypt(data: ArrayBuffer | string) {
     const iv = this.getIv();
     const key = this.getKey();
-    const plainData = data instanceof ArrayBuffer ? data : new TextEncoder().encode(data);
+    const plainData = typeof data === 'string' ? new TextEncoder().encode(data) : data;
     const bPlain = Buffer.from(plainData);
     if (bPlain.byteLength === 0) throw new Error('encryption error. empty content');
     const aes = createCipheriv(this.algo, key, iv);
