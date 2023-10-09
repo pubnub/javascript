@@ -15,7 +15,6 @@
     "src/**/*"
   ],
   "exclude": [
-    "node_modules",
-    "./src/crypto/modules/WebCryptoModule/aesCbcCryptor.ts"
+    "node_modules"
   ]
 }

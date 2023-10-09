@@ -1,5 +1,5 @@
 import { ICryptor, EncryptedDataType } from './ICryptor';
-import CryptoJS from '../../../core/components/cryptography/hmac-sha256';
+import cryptoJS from '../../../core/components/cryptography/hmac-sha256';
 import { decode } from '../../../core/components/base64_codec';
 
 // ts check disabled: CryptoJs does not have types specified
@@ -10,10 +10,12 @@ export default class AesCbcCryptor implements ICryptor {
 
   cipherKey: string;
   encryptedKey: any;
+  CryptoJS: any;
 
   constructor(configuration: { cipherKey: string }) {
     this.cipherKey = configuration.cipherKey;
-    this.encryptedKey = CryptoJS.SHA256(this.cipherKey);
+    this.CryptoJS = cryptoJS;
+    this.encryptedKey = this.CryptoJS.SHA256(this.cipherKey);
   }
 
   get algo() {
@@ -41,22 +43,22 @@ export default class AesCbcCryptor implements ICryptor {
     return {
       metadata: abIv,
       data: decode(
-        CryptoJS.AES.encrypt(data, this.encryptedKey, {
+        this.CryptoJS.AES.encrypt(data, this.encryptedKey, {
           iv: this.bufferToWordArray(abIv),
-          mode: CryptoJS.mode.CBC,
-        }).ciphertext.toString(CryptoJS.enc.Base64),
+          mode: this.CryptoJS.mode.CBC,
+        }).ciphertext.toString(this.CryptoJS.enc.Base64),
       ),
     };
   }
 
   decrypt(encryptedData: EncryptedDataType) {
-    const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata));
+    const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata!));
     const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
     return AesCbcCryptor.encoder.encode(
-      CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
+      this.CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
         iv,
-        mode: CryptoJS.mode.CBC,
-      }).toString(CryptoJS.enc.Utf8),
+        mode: this.CryptoJS.mode.CBC,
+      }).toString(this.CryptoJS.enc.Utf8),
     ).buffer;
   }
 
@@ -71,15 +73,15 @@ export default class AesCbcCryptor implements ICryptor {
 
   async decryptFileData(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {
     const key = await this.getKey();
-    return crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata }, key, encryptedData.data);
+    return crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata! }, key, encryptedData.data);
   }
 
-  private bufferToWordArray(b) {
-    const wa = [];
+  private bufferToWordArray(b: any) {
+    const wa: any[] = [];
     let i;
     for (i = 0; i < b.length; i += 1) {
       wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
     }
-    return CryptoJS.lib.WordArray.create(wa, b.length);
+    return this.CryptoJS.lib.WordArray.create(wa, b.length);
   }
 }
