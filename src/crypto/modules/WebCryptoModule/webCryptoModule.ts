@@ -84,16 +84,18 @@ export class CryptoModule {
   }
 
   async decryptFile(file: PubNubFileType, File: PubNubFileType) {
-    const header = CryptorHeader.tryParse(file.data);
+    const data = await file.data.arrayBuffer();
+    const header = CryptorHeader.tryParse(data);
     const cryptor = this.getCryptor(header);
-    if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER)
+    if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER) {
       return (cryptor as ILegacyCryptor<PubNubFileType>).decryptFile(file, File);
-    const fileData = this.getFileData(file.data);
+    }
+    const fileData = this.getFileData(data);
     const metadata = fileData.slice(header.length - (header as CryptorHeaderV1).metadataLength, header.length);
     return File.create({
       name: file.name,
       data: await (this.defaultCryptor as ICryptor).decryptFileData({
-        data: file.data.slice(header.length),
+        data: data.slice(header.length),
         metadata: metadata,
       }),
     });

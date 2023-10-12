@@ -9,18 +9,6 @@ function concatArrayBuffer(ab1, ab2) {
   return tmp.buffer;
 }
 
-function ab2hex(ab) {
-  return [...new Uint8Array(ab)].map((x) => x.toString(16).padStart(2, '0')).join('');
-}
-
-function hex2ab(hex) {
-  return new Uint8Array(
-    hex.match(/[\da-f]{2}/gi).map(function (h) {
-      return parseInt(h, 16);
-    }),
-  );
-}
-
 export default class WebCryptography {
   static IV_LENGTH = 16;
   static encoder = new TextEncoder();
@@ -44,7 +32,6 @@ export default class WebCryptography {
 
   async decrypt(key, input) {
     const cKey = await this.getKey(key);
-
     if (input instanceof ArrayBuffer) {
       return this.decryptArrayBuffer(cKey, input);
     }
@@ -58,7 +45,7 @@ export default class WebCryptography {
     if (file.data.byteLength <= 0) throw new Error('encryption error. empty content');
     const bKey = await this.getKey(key);
 
-    const abPlaindata = await file.toArrayBuffer();
+    const abPlaindata = await file.data.arrayBuffer();
 
     const abCipherdata = await this.encryptArrayBuffer(bKey, abPlaindata);
 
@@ -72,8 +59,7 @@ export default class WebCryptography {
   async decryptFile(key, file, File) {
     const bKey = await this.getKey(key);
 
-    const abCipherdata = await file.toArrayBuffer();
-
+    const abCipherdata = await file.data.arrayBuffer();
     const abPlaindata = await this.decryptArrayBuffer(bKey, abCipherdata);
 
     return File.create({
@@ -83,11 +69,11 @@ export default class WebCryptography {
   }
 
   async getKey(key) {
-    const bKey = WebCryptography.encoder.encode(key);
-    const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
-
-    const abKey = hex2ab(ab2hex(abHash).slice(0, 32)).buffer;
-
+    const digest = await crypto.subtle.digest('SHA-256', WebCryptography.encoder.encode(key));
+    const hashHex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const abKey = WebCryptography.encoder.encode(hashHex.slice(0, 32)).buffer;
     return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
   }
 

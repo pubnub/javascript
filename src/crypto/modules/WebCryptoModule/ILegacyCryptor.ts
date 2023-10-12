@@ -1,7 +1,7 @@
 import { EncryptedDataType } from './ICryptor';
 
 export type PubNubFileType = {
-  data: ArrayBuffer;
+  data: File | Blob;
   name: string;
   mimeType: string;
 

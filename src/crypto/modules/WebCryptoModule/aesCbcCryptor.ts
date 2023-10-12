@@ -2,7 +2,6 @@ import { ICryptor, EncryptedDataType } from './ICryptor';
 import cryptoJS from '../../../core/components/cryptography/hmac-sha256';
 import { decode } from '../../../core/components/base64_codec';
 
-// ts check disabled: CryptoJs does not have types specified
 export default class AesCbcCryptor implements ICryptor {
   static BLOCK_SIZE = 16;
   static encoder = new TextEncoder();
