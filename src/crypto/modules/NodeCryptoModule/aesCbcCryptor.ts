@@ -47,7 +47,7 @@ export default class AesCbcCryptor implements ICryptor {
       typeof encryptedData.data === 'string' ? new TextEncoder().encode(encryptedData.data) : encryptedData.data;
     if (data.byteLength <= 0) throw new Error('decryption error: empty content');
     const aes = createDecipheriv(this.algo, this.getKey(), encryptedData.metadata);
-    return Uint8Array.from(Buffer.concat([aes.update(data), aes.final()]));
+    return Uint8Array.from(Buffer.concat([aes.update(data), aes.final()])).buffer;
   }
 
   async encryptStream(stream: NodeJS.ReadableStream) {

@@ -13080,15 +13080,25 @@
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore: type detection issue with old Config type assignment
         CryptoModule.legacyCryptoModule = function (config) {
+            var _a;
             return new this({
-                default: new LegacyCryptor(config),
+                default: new LegacyCryptor({
+                    cipherKey: config.cipherKey,
+                    useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true,
+                }),
                 cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
             });
         };
         CryptoModule.aesCbcCryptoModule = function (config) {
+            var _a;
             return new this({
                 default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
-                cryptors: [new LegacyCryptor(config)],
+                cryptors: [
+                    new LegacyCryptor({
+                        cipherKey: config.cipherKey,
+                        useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true,
+                    }),
+                ],
             });
         };
         CryptoModule.withDefaultCryptor = function (defaultCryptor) {
