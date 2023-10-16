@@ -11,12 +11,14 @@ import operationConstants from '../constants/operations';
 import utils from '../utils';
 
 function __processMessage(modules, message) {
-  const { config, crypto } = modules;
-  if (!config.cipherKey) return message;
-
+  if (!modules.cryptoModule) return message;
   try {
-    return crypto.decrypt(message);
+    const decryptedData = modules.cryptoModule.decrypt(message);
+    const decryptedPayload =
+      decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
+    return decryptedPayload;
   } catch (e) {
+    if (console && console.log) console.log('decryption error', e.message);
     return message;
   }
 }

@@ -11,6 +11,8 @@ function concatArrayBuffer(ab1, ab2) {
 
 export default class WebCryptography {
   static IV_LENGTH = 16;
+  static encoder = new TextEncoder();
+  static decoder = new TextDecoder();
 
   get algo() {
     return 'aes-256-cbc';
@@ -30,7 +32,6 @@ export default class WebCryptography {
 
   async decrypt(key, input) {
     const cKey = await this.getKey(key);
-
     if (input instanceof ArrayBuffer) {
       return this.decryptArrayBuffer(cKey, input);
     }
@@ -41,9 +42,10 @@ export default class WebCryptography {
   }
 
   async encryptFile(key, file, File) {
+    if (file.data.byteLength <= 0) throw new Error('encryption error. empty content');
     const bKey = await this.getKey(key);
 
-    const abPlaindata = await file.toArrayBuffer();
+    const abPlaindata = await file.data.arrayBuffer();
 
     const abCipherdata = await this.encryptArrayBuffer(bKey, abPlaindata);
 
@@ -57,8 +59,7 @@ export default class WebCryptography {
   async decryptFile(key, file, File) {
     const bKey = await this.getKey(key);
 
-    const abCipherdata = await file.toArrayBuffer();
-
+    const abCipherdata = await file.data.arrayBuffer();
     const abPlaindata = await this.decryptArrayBuffer(bKey, abCipherdata);
 
     return File.create({
@@ -68,11 +69,11 @@ export default class WebCryptography {
   }
 
   async getKey(key) {
-    const bKey = Buffer.from(key);
-    const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
-
-    const abKey = Buffer.from(Buffer.from(abHash).toString('hex').slice(0, 32), 'utf8').buffer;
-
+    const digest = await crypto.subtle.digest('SHA-256', WebCryptography.encoder.encode(key));
+    const hashHex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const abKey = WebCryptography.encoder.encode(hashHex.slice(0, 32)).buffer;
     return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
   }
 
@@ -84,28 +85,33 @@ export default class WebCryptography {
 
   async decryptArrayBuffer(key, ciphertext) {
     const abIv = ciphertext.slice(0, 16);
-
-    return crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, ciphertext.slice(16));
+    if (ciphertext.slice(WebCryptography.IV_LENGTH).byteLength <= 0) throw new Error('decryption error: empty content');
+    const data = await crypto.subtle.decrypt(
+      { name: 'AES-CBC', iv: abIv },
+      key,
+      ciphertext.slice(WebCryptography.IV_LENGTH),
+    );
+    return data;
   }
 
   async encryptString(key, plaintext) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
-    const abPlaintext = Buffer.from(plaintext).buffer;
+    const abPlaintext = WebCryptography.encoder.encode(plaintext).buffer;
     const abPayload = await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, abPlaintext);
 
     const ciphertext = concatArrayBuffer(abIv.buffer, abPayload);
 
-    return Buffer.from(ciphertext).toString('utf8');
+    return WebCryptography.decoder.decode(ciphertext);
   }
 
   async decryptString(key, ciphertext) {
-    const abCiphertext = Buffer.from(ciphertext);
+    const abCiphertext = WebCryptography.encoder.encode(ciphertext).buffer;
     const abIv = abCiphertext.slice(0, 16);
     const abPayload = abCiphertext.slice(16);
 
     const abPlaintext = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: abIv }, key, abPayload);
 
-    return Buffer.from(abPlaintext).toString('utf8');
+    return WebCryptography.decoder.decode(abPlaintext);
   }
 }

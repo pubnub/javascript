@@ -1,3 +1,5 @@
+// Download_file.js
+
 /**       */
 
 import operationConstants from '../../constants/operations';
@@ -34,11 +36,13 @@ const endpoint = {
 
   prepareParams: () => ({}),
 
-  handleResponse: async ({ PubNubFile, config, cryptography }, res, params) => {
+  handleResponse: async ({ PubNubFile, config, cryptography, cryptoModule }, res, params) => {
     let { body } = res.response;
-
-    if (PubNubFile.supportsEncryptFile && (params.cipherKey ?? config.cipherKey)) {
-      body = await cryptography.decrypt(params.cipherKey ?? config.cipherKey, body);
+    if (PubNubFile.supportsEncryptFile && (params.cipherKey || cryptoModule)) {
+      body =
+        params.cipherKey == null
+          ? (await cryptoModule.decryptFile(PubNubFile.create({ data: body, name: params.name }), PubNubFile)).data
+          : await cryptography.decrypt(params.cipherKey ?? config.cipherKey, body);
     }
 
     return PubNubFile.create({

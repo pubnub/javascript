@@ -3,7 +3,7 @@ import { PubNubError, createValidationError } from '../../components/endpoint';
 const sendFile = function ({
   generateUploadUrl,
   publishFile,
-  modules: { PubNubFile, config, cryptography, networking },
+  modules: { PubNubFile, config, cryptography, cryptoModule, networking },
 }) {
   return async ({ channel, file: input, message, cipherKey, meta, ttl, storeInHistory }) => {
     if (!channel) {
@@ -27,8 +27,11 @@ const sendFile = function ({
       data: { id, name },
     } = await generateUploadUrl({ channel, name: file.name });
 
-    if (PubNubFile.supportsEncryptFile && (cipherKey ?? config.cipherKey)) {
-      file = await cryptography.encryptFile(cipherKey ?? config.cipherKey, file, PubNubFile);
+    if (PubNubFile.supportsEncryptFile && (cipherKey || cryptoModule)) {
+      file =
+        cipherKey == null
+          ? await cryptoModule.encryptFile(file, PubNubFile)
+          : await cryptography.encryptFile(cipherKey, file, PubNubFile);
     }
 
     let formFieldsWithMimeType = formFields;

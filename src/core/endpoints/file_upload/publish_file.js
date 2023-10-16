@@ -1,17 +1,16 @@
 /**       */
 
 import operationConstants from '../../constants/operations';
-
 import utils from '../../utils';
+import { encode } from '../../components/base64_codec';
 
-const preparePayload = ({ crypto, config }, payload) => {
+const preparePayload = (modules, payload) => {
   let stringifiedPayload = JSON.stringify(payload);
-
-  if (config.cipherKey) {
-    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+  if (modules.cryptoModule) {
+    const encrypted = modules.cryptoModule.encrypt(stringifiedPayload);
+    stringifiedPayload = typeof encrypted === 'string' ? encrypted : encode(encrypted);
     stringifiedPayload = JSON.stringify(stringifiedPayload);
   }
-
   return stringifiedPayload || '';
 };
 

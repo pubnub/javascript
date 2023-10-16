@@ -129,7 +129,7 @@ export default class {
   maximumCacheSize;
 
   /*
-    support customp encryption and decryption functions.
+    support custom encryption and decryption functions.
   */
   customEncrypt; // function to support custome encryption of messages
 
@@ -142,6 +142,11 @@ export default class {
   useRandomIVs;
   enableSubscribeBeta;
 
+  /*
+    set cryptoModule to encrypt/decrypt messages and files.
+  */
+  cryptoModule;
+
   constructor({ setup }) {
     this._PNSDKSuffix = {};
 
@@ -153,7 +158,7 @@ export default class {
     this.sdkFamily = setup.sdkFamily;
     this.partnerId = setup.partnerId;
     this.setAuthKey(setup.authKey);
-    this.setCipherKey(setup.cipherKey);
+    this.cryptoModule = setup.cryptoModule;
 
     this.setFilterExpression(setup.filterExpression);
 
@@ -227,6 +232,7 @@ export default class {
 
       this.setUUID(setup.uuid);
     }
+    this.setCipherKey(setup.cipherKey, setup);
   }
 
   // exposed setters
@@ -239,8 +245,13 @@ export default class {
     return this;
   }
 
-  setCipherKey(val) {
+  setCipherKey(val, setup, modules) {
     this.cipherKey = val;
+    if (this.cipherKey) {
+      this.cryptoModule =
+        setup.cryptoModule ?? setup.initCryptoModule({ cipherKey: this.cipherKey, useRandomIVs: this.useRandomIVs });
+      if (modules) modules.cryptoModule = this.cryptoModule;
+    }
     return this;
   }
 
@@ -339,7 +350,7 @@ export default class {
   }
 
   getVersion() {
-    return '7.3.3';
+    return '7.4.0';
   }
 
   _addPnsdkSuffix(name, suffix) {

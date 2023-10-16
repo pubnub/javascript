@@ -1,5 +1,5 @@
 /**       */
-import { Readable, PassThrough } from 'stream';
+import { Readable, PassThrough, Transform } from 'stream';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
 
 export default class NodeCryptography {
@@ -41,6 +41,7 @@ export default class NodeCryptography {
     const bKey = this.getKey(key);
 
     if (file.data instanceof Buffer) {
+      if (file.data.byteLength <= 0) throw new Error('encryption error. empty content');
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
@@ -48,6 +49,7 @@ export default class NodeCryptography {
       });
     }
     if (file.data instanceof Readable) {
+      if (file.contentLength === 0) throw new Error('encryption error. empty content');
       return File.create({
         name: file.name,
         mimeType: 'application/octet-stream',
@@ -118,22 +120,29 @@ export default class NodeCryptography {
   decryptBuffer(key, ciphertext) {
     const bIv = ciphertext.slice(0, NodeCryptography.IV_LENGTH);
     const bCiphertext = ciphertext.slice(NodeCryptography.IV_LENGTH);
-
+    if (bCiphertext.byteLength <= 0) throw new Error('decryption error: empty content');
     const aes = createDecipheriv(this.algo, key, bIv);
 
     return Buffer.concat([aes.update(bCiphertext), aes.final()]);
   }
 
-  encryptStream(key, stream) {
-    const output = new PassThrough();
+  async encryptStream(key, stream) {
     const bIv = this.getIv();
-
-    const aes = createCipheriv(this.algo, key, bIv);
-
-    output.write(bIv);
-    stream.pipe(aes).pipe(output);
-
-    return output;
+    const aes = createCipheriv('aes-256-cbc', key, bIv).setAutoPadding(true);
+    let inited = false;
+    return stream.pipe(aes).pipe(
+      new Transform({
+        transform(chunk, _, cb) {
+          if (!inited) {
+            inited = true;
+            this.push(Buffer.concat([bIv, chunk]));
+          } else {
+            this.push(chunk);
+          }
+          cb();
+        },
+      }),
+    );
   }
 
   decryptStream(key, stream) {
