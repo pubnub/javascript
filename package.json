@@ -20,6 +20,7 @@
     "contract:refresh": "rimraf dist/contract && git clone --branch master git@github.com:pubnub/service-contract-mock.git dist/contract && npm install --prefix dist/contract && npm run refresh-files --prefix dist/contract",
     "contract:server": "npm start --prefix dist/contract consumer",
     "contract:build": "cd test/contract && tsc",
+    "crypto:test": "cucumber-js --require dist/cucumber dist/contract/contract/features/encryption",
     "contract:test": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags 'not @na=js and not @beta'",
     "contract:test-beta": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags 'not @na=js and @beta'",
     "contract:test-access": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags '@featureSet=access and not @na=js and not @beta'",
