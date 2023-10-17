@@ -350,7 +350,7 @@ export default class {
   }
 
   getVersion() {
-    return '7.4.0';
+    return '7.4.1';
   }
 
   _addPnsdkSuffix(name, suffix) {
