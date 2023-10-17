@@ -791,7 +791,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.4.0';
+            return '7.4.1';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -7843,7 +7843,7 @@
             this.decrypt = function (data, key) {
                 if (typeof key === 'undefined' && cryptoModule) {
                     var decrypted = modules.cryptoModule.decrypt(data);
-                    return decrypted instanceof ArrayBuffer ? encode$1(decrypted) : decrypted;
+                    return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
                 }
                 else {
                     return crypto.decrypt(data, key);

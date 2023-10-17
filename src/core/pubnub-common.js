@@ -691,7 +691,7 @@ export default class {
     this.decrypt = function (data, key) {
       if (typeof key === 'undefined' && cryptoModule) {
         const decrypted = modules.cryptoModule.decrypt(data);
-        return decrypted instanceof ArrayBuffer ? encode(decrypted) : decrypted;
+        return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
       } else {
         return crypto.decrypt(data, key);
       }

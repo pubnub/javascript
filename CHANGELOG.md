@@ -1,3 +1,9 @@
+## v7.4.1
+October 17 2023
+
+#### Fixed
+- Fixes issue of `pubnub.decrypt()` returning wrong data format.
+
 ## v7.4.0
 October 16 2023
 
