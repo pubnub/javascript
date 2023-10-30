@@ -15,17 +15,15 @@ env:
 jobs:
   tests:
     name: Integration and Unit tests
-    runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         node: [14, 16]
-        env: ["ci:node"]
+        env: ['ci:node']
         include:
           - node: 16
-            env: "ci:web"
+            env: 'ci:web'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -51,9 +49,7 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   all-tests:
     name: Tests
-    runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+    runs-on: ubuntu-latest
     needs: [tests]
     steps:
       - name: Tests summary
