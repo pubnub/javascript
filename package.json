@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "7.4.1",
+  "version": "7.4.2",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -98,7 +98,7 @@
     "typescript": "^4.3.5",
     "underscore": "^1.9.2"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "engine": {
     "node": ">=0.8"
   }

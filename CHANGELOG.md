@@ -1,3 +1,9 @@
+## v7.4.2
+October 30 2023
+
+#### Modified
+- Changed license type from MIT to PubNub Software Development Kit License.
+
 ## v7.4.1
 October 17 2023
 
