@@ -82,7 +82,7 @@ export class CryptoModule {
   async encryptFile(file: PubNubFileType, File: PubNubFileType) {
     if (this.defaultCryptor.identifier === CryptorHeader.LEGACY_IDENTIFIER)
       return (this.defaultCryptor as ILegacyCryptor<PubNubFileType>).encryptFile(file, File);
-    const fileData = this.getFileData(file.data);
+    const fileData = await this.getFileData(file.data);
     const encrypted = await (this.defaultCryptor as ICryptor).encryptFileData(fileData);
     return File.create({
       name: file.name,
@@ -98,7 +98,7 @@ export class CryptoModule {
     if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER) {
       return (cryptor as ILegacyCryptor<PubNubFileType>).decryptFile(file, File);
     }
-    const fileData = this.getFileData(data);
+    const fileData = await this.getFileData(data);
     const metadata = fileData.slice(header.length - (header as CryptorHeaderV1).metadataLength, header.length);
     return File.create({
       name: file.name,
@@ -147,14 +147,20 @@ export class CryptoModule {
     return headerData.buffer;
   }
 
-  private getFileData(input: any) {
+  private async getFileData(input: any) {
+    if (input instanceof Blob) {
+      const fileData = await input.arrayBuffer();
+      return fileData;
+    }
     if (input instanceof ArrayBuffer) {
       return input;
     }
     if (typeof input === 'string') {
       return CryptoModule.encoder.encode(input);
     }
-    throw new Error('Cannot decrypt/encrypt file. In browsers file decryption supports only string or ArrayBuffer');
+    throw new Error(
+      'Cannot decrypt/encrypt file. In browsers file encrypt/decrypt supported for string, ArrayBuffer or Blob',
+    );
   }
 }
 
