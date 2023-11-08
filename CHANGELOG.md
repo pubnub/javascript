@@ -1,3 +1,9 @@
+## v7.4.3
+November 08 2023
+
+#### Fixed
+- Fixes issue of not able to encrypt Blob file content in web.
+
 ## v7.4.2
 October 30 2023
 
