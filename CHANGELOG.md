@@ -1,3 +1,9 @@
+## v7.4.4
+November 14 2023
+
+#### Fixed
+- Fixes issue of getChannelMembers call not returning status field.
+
 ## v7.4.3
 November 08 2023
 
