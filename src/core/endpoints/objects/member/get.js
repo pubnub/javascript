@@ -22,7 +22,7 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
-    queryParams.include = ['uuid.status', 'uuid.type', 'type'];
+    queryParams.include = ['uuid.status', 'uuid.type', 'status'];
 
     if (params?.include) {
       if (params.include?.customFields) {

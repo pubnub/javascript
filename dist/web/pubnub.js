@@ -791,7 +791,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.4.3';
+            return '7.4.4';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -5386,7 +5386,7 @@
         prepareParams: function (_modules, params) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
             var queryParams = {};
-            queryParams.include = ['uuid.status', 'uuid.type', 'type'];
+            queryParams.include = ['uuid.status', 'uuid.type', 'status'];
             if (params === null || params === void 0 ? void 0 : params.include) {
                 if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
                     queryParams.include.push('custom');
