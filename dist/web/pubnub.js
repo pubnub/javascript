@@ -2354,9 +2354,7 @@
                         }
                         catch (e) {
                             decryptedPayload = null;
-                            if (console && console.log) {
-                                console.log('decryption error', e.message);
-                            }
+                            announce.error = "Error while decrypting message content: ".concat(e.message);
                         }
                         if (decryptedPayload !== null) {
                             msgPayload = decryptedPayload;
@@ -2401,10 +2399,7 @@
                         }
                         catch (e) {
                             decryptedPayload = null;
-                            // eslint-disable-next-line
-                            if (console && console.log) {
-                                console.log('decryption error', e.message); //eslint-disable-line
-                            }
+                            announce.error = "Error while decrypting message content: ".concat(e.message);
                         }
                         if (decryptedPayload != null) {
                             announce.message = decryptedPayload;
@@ -6239,18 +6234,24 @@
 
     /*       */
     function __processMessage$1(modules, message) {
-        if (!modules.cryptoModule)
-            return message;
+        var result = {};
+        if (!modules.cryptoModule) {
+            result.payload = message;
+            return result;
+        }
         try {
             var decryptedData = modules.cryptoModule.decrypt(message);
             var decryptedPayload = decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
-            return decryptedPayload;
+            result.payload = decryptedPayload;
+            return result;
         }
         catch (e) {
-            if (console && console.log)
+            if (modules.config.logVerbosity && console && console.log)
                 console.log('decryption error', e.message);
-            return message;
+            result.payload = message;
+            result.error = "Error while decrypting message content: ".concat(e.message);
         }
+        return result;
     }
     function getOperation$5() {
         return OPERATIONS.PNHistoryOperation;
@@ -6301,13 +6302,16 @@
         };
         if (Array.isArray(serverResponse[0])) {
             serverResponse[0].forEach(function (serverHistoryItem) {
+                var processedMessgeResult = __processMessage$1(modules, serverHistoryItem.message);
                 var item = {
                     timetoken: serverHistoryItem.timetoken,
-                    entry: __processMessage$1(modules, serverHistoryItem.message),
+                    entry: processedMessgeResult.payload,
                 };
                 if (serverHistoryItem.meta) {
                     item.meta = serverHistoryItem.meta;
                 }
+                if (processedMessgeResult.error)
+                    item.error = processedMessgeResult.error;
                 response.messages.push(item);
             });
         }
@@ -6438,18 +6442,24 @@
 
     /*       */
     function __processMessage(modules, message) {
-        if (!modules.cryptoModule)
-            return message;
+        var result = {};
+        if (!modules.cryptoModule) {
+            result.payload = message;
+            return result;
+        }
         try {
             var decryptedData = modules.cryptoModule.decrypt(message);
             var decryptedPayload = decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
-            return decryptedPayload;
+            result.payload = decryptedPayload;
+            return result;
         }
         catch (e) {
-            if (console && console.log)
+            if (modules.config.logVerbosity && console && console.log)
                 console.log('decryption error', e.message);
-            return message;
+            result.payload = message;
+            result.error = "Error while decrypting message content: ".concat(e.message);
         }
+        return result;
     }
     function getOperation$2() {
         return OPERATIONS.PNFetchMessagesOperation;
@@ -6511,9 +6521,10 @@
             response.channels[channelName] = [];
             (serverResponse.channels[channelName] || []).forEach(function (messageEnvelope) {
                 var announce = {};
+                var processedMessgeResult = __processMessage(modules, messageEnvelope.message);
                 announce.channel = channelName;
                 announce.timetoken = messageEnvelope.timetoken;
-                announce.message = __processMessage(modules, messageEnvelope.message);
+                announce.message = processedMessgeResult.payload;
                 announce.messageType = messageEnvelope.message_type;
                 announce.uuid = messageEnvelope.uuid;
                 if (messageEnvelope.actions) {
@@ -6524,6 +6535,8 @@
                 if (messageEnvelope.meta) {
                     announce.meta = messageEnvelope.meta;
                 }
+                if (processedMessgeResult.error)
+                    announce.error = processedMessgeResult.error;
                 response.channels[channelName].push(announce);
             });
         });
