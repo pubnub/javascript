@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(client        , count        , channel        , completion          ) {
+function publishMessagesToChannel(client, count, channel, completion) {
   let publishCompleted = 0;
   let messages = [];
 
@@ -38,7 +38,6 @@ function publishMessagesToChannel(client        , count        , channel        
   publish(publishCompleted);
 }
 
-
 describe('history endpoints', () => {
   const subscribeKey = process.env.SUBSCRIBE_KEY || 'demo';
   const publishKey = process.env.PUBLISH_KEY || 'demo';
@@ -61,7 +60,7 @@ describe('history endpoints', () => {
       subscribeKey,
       publishKey,
       uuid: 'myUUID',
-      useRandomIVs: false
+      useRandomIVs: false,
     });
   });
 
@@ -79,23 +78,20 @@ describe('history endpoints', () => {
       })
       .reply(
         200,
-        '[[{"message":{"text":"hey"},"timetoken":"14648503433058358"},{"message":{"text2":"hey2"},"timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]'
+        '[[{"message":{"text":"hey"},"timetoken":"14648503433058358"},{"message":{"text2":"hey2"},"timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]',
       );
 
-    pubnub.history(
-      { channel: 'ch1', stringifiedTimeToken: true },
-      (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response.startTimeToken, '14648503433058358');
-        assert.deepEqual(response.endTimeToken, '14649346364851578');
-        assert.deepEqual(response.messages, [
-          { timetoken: '14648503433058358', entry: { text: 'hey' } },
-          { timetoken: '14648503433058359', entry: { text2: 'hey2' } },
-        ]);
-        assert.equal(scope.isDone(), true);
-        done();
-      }
-    );
+    pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.startTimeToken, '14648503433058358');
+      assert.deepEqual(response.endTimeToken, '14649346364851578');
+      assert.deepEqual(response.messages, [
+        { timetoken: '14648503433058358', entry: { text: 'hey' } },
+        { timetoken: '14648503433058359', entry: { text2: 'hey2' } },
+      ]);
+      assert.equal(scope.isDone(), true);
+      done();
+    });
   });
 
   it('supports encrypted payload with timetoken', (done) => {
@@ -112,24 +108,21 @@ describe('history endpoints', () => {
       })
       .reply(
         200,
-        '[[{"message":"zFJeF9BVABL80GUiQEBjLg==","timetoken":"14649369736959785"},{"message":"HIq4MTi9nk/KEYlHOKpMCaH78ZXppGynDHrgY9nAd3s=","timetoken":"14649369766426772"}],"14649369736959785","14649369766426772"]'
+        '[[{"message":"zFJeF9BVABL80GUiQEBjLg==","timetoken":"14649369736959785"},{"message":"HIq4MTi9nk/KEYlHOKpMCaH78ZXppGynDHrgY9nAd3s=","timetoken":"14649369766426772"}],"14649369736959785","14649369766426772"]',
       );
 
     pubnub.setCipherKey('cipherKey');
-    pubnub.history(
-      { channel: 'ch1', stringifiedTimeToken: true },
-      (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response.startTimeToken, '14649369736959785');
-        assert.deepEqual(response.endTimeToken, '14649369766426772');
-        assert.deepEqual(response.messages, [
-          { timetoken: '14649369736959785', entry: { text: 'hey' } },
-          { timetoken: '14649369766426772', entry: { text2: 'hey2' } },
-        ]);
-        assert.equal(scope.isDone(), true);
-        done();
-      }
-    );
+    pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.startTimeToken, '14649369736959785');
+      assert.deepEqual(response.endTimeToken, '14649369766426772');
+      assert.deepEqual(response.messages, [
+        { timetoken: '14649369736959785', entry: { text: 'hey' } },
+        { timetoken: '14649369766426772', entry: { text2: 'hey2' } },
+      ]);
+      assert.equal(scope.isDone(), true);
+      done();
+    });
   });
 
   it('supports metadata', (done) => {
@@ -153,19 +146,55 @@ describe('history endpoints', () => {
     const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
     const leeway = 50;
 
-    utils.runAPIWithResponseDelays(scope,
-      200,
-      '[[{"message":{"text":"hey"},"timetoken":"14648503433058358"},{"message":{"text2":"hey2"},"timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]',
-      delays,
-      (completion) => {
-        pubnub.history(
-          { channel: 'ch1', stringifiedTimeToken: true },
-          () => { completion(); }
-        );
-      })
+    utils
+      .runAPIWithResponseDelays(
+        scope,
+        200,
+        '[[{"message":{"text":"hey"},"timetoken":"14648503433058358"},{"message":{"text2":"hey2"},"timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]',
+        delays,
+        (completion) => {
+          pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, () => {
+            completion();
+          });
+        },
+      )
       .then((lastRequest) => {
         utils.verifyRequestTelemetry(lastRequest.path, 'l_hist', average, leeway);
         done();
       });
   }).timeout(60000);
+
+  it('handles unencrypted payload with cryptoModule', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v2/history/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        count: '100',
+        include_token: 'true',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        string_message_token: true,
+      })
+      .reply(
+        200,
+        '[[{"message":"zFJeF9BVABL80GUiQEBjLg==","timetoken":"14648503433058358"},{"message":"hello","timetoken":"14648503433058359"}],"14648503433058358","14649346364851578"]',
+      );
+    pubnub.setCipherKey('cipherKey');
+    pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response.startTimeToken, '14648503433058358');
+      assert.deepEqual(response.endTimeToken, '14649346364851578');
+      assert.deepEqual(response.messages, [
+        { timetoken: '14648503433058358', entry: { text: 'hey' } },
+        {
+          timetoken: '14648503433058359',
+          entry: 'hello',
+          error: 'Error while decrypting message content: decryption error. invalid header version',
+        },
+      ]);
+      assert.equal(scope.isDone(), true);
+      done();
+    });
+  });
 });
