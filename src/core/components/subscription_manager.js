@@ -699,9 +699,7 @@ export default class {
               decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
           } catch (e) {
             decryptedPayload = null;
-            if (console && console.log) {
-              console.log('decryption error', e.message);
-            }
+            announce.error = `Error while decrypting message content: ${e.message}`;
           }
           if (decryptedPayload !== null) {
             msgPayload = decryptedPayload;
@@ -752,10 +750,7 @@ export default class {
               decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
           } catch (e) {
             decryptedPayload = null;
-            // eslint-disable-next-line
-            if (console && console.log) {
-              console.log('decryption error', e.message); //eslint-disable-line
-            }
+            announce.error = `Error while decrypting message content: ${e.message}`;
           }
           if (decryptedPayload != null) {
             announce.message = decryptedPayload;
