@@ -11,16 +11,23 @@ import operationConstants from '../constants/operations';
 import utils from '../utils';
 
 function __processMessage(modules, message) {
-  if (!modules.cryptoModule) return message;
+  const result = {};
+  if (!modules.cryptoModule) {
+    result.payload = message;
+    return result;
+  }
   try {
     const decryptedData = modules.cryptoModule.decrypt(message);
     const decryptedPayload =
       decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
-    return decryptedPayload;
+    result.payload = decryptedPayload;
+    return result;
   } catch (e) {
-    if (console && console.log) console.log('decryption error', e.message);
-    return message;
+    if (modules.config.logVerbosity && console && console.log) console.log('decryption error', e.message);
+    result.payload = message;
+    result.error = `Error while decrypting message content: ${e.message}`;
   }
+  return result;
 }
 
 export function getOperation() {
@@ -99,9 +106,10 @@ export function handleResponse(modules, serverResponse) {
 
     (serverResponse.channels[channelName] || []).forEach((messageEnvelope) => {
       const announce = {};
+      const processedMessgeResult = __processMessage(modules, messageEnvelope.message);
       announce.channel = channelName;
       announce.timetoken = messageEnvelope.timetoken;
-      announce.message = __processMessage(modules, messageEnvelope.message);
+      announce.message = processedMessgeResult.payload;
       announce.messageType = messageEnvelope.message_type;
       announce.uuid = messageEnvelope.uuid;
 
@@ -114,6 +122,7 @@ export function handleResponse(modules, serverResponse) {
       if (messageEnvelope.meta) {
         announce.meta = messageEnvelope.meta;
       }
+      if (processedMessgeResult.error) announce.error = processedMessgeResult.error;
 
       response.channels[channelName].push(announce);
     });

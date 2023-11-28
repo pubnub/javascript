@@ -9,7 +9,7 @@ const endpoint = {
 
   validateParams: (_, params) => {
     if (!params?.channel) {
-      return 'UUID cannot be empty';
+      return 'channel cannot be empty';
     }
   },
 
@@ -22,22 +22,33 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
-    queryParams.include = ['uuid.status', 'uuid.type', 'status'];
+    queryParams.include = [];
 
     if (params?.include) {
+      if (params.include?.statusField) {
+        queryParams.include.push('status');
+      }
+
       if (params.include?.customFields) {
         queryParams.include.push('custom');
+      }
+
+      if (params.include?.UUIDFields) {
+        queryParams.include.push('uuid');
       }
 
       if (params.include?.customUUIDFields) {
         queryParams.include.push('uuid.custom');
       }
 
-      if (params.include?.UUIDFields ?? true) {
-        queryParams.include.push('uuid');
+      if (params.include?.UUIDStatusField) {
+        queryParams.include.push('uuid.status');
+      }
+
+      if (params.include?.UUIDTypeField) {
+        queryParams.include.push('uuid.type');
       }
     }
-
     queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {

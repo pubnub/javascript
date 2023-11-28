@@ -5,16 +5,23 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 function __processMessage(modules, message) {
-  if (!modules.cryptoModule) return message;
+  const result = {};
+  if (!modules.cryptoModule) {
+    result.payload = message;
+    return result;
+  }
   try {
     const decryptedData = modules.cryptoModule.decrypt(message);
     const decryptedPayload =
       decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
-    return decryptedPayload;
+    result.payload = decryptedPayload;
+    return result;
   } catch (e) {
-    if (console && console.log) console.log('decryption error', e.message);
-    return message;
+    if (modules.config.logVerbosity && console && console.log) console.log('decryption error', e.message);
+    result.payload = message;
+    result.error = `Error while decrypting message content: ${e.message}`;
   }
+  return result;
 }
 
 export function getOperation() {
@@ -68,14 +75,16 @@ export function handleResponse(modules, serverResponse) {
 
   if (Array.isArray(serverResponse[0])) {
     serverResponse[0].forEach((serverHistoryItem) => {
+      const processedMessgeResult = __processMessage(modules, serverHistoryItem.message);
       const item = {
         timetoken: serverHistoryItem.timetoken,
-        entry: __processMessage(modules, serverHistoryItem.message),
+        entry: processedMessgeResult.payload,
       };
 
       if (serverHistoryItem.meta) {
         item.meta = serverHistoryItem.meta;
       }
+      if (processedMessgeResult.error) item.error = processedMessgeResult.error;
 
       response.messages.push(item);
     });

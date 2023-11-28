@@ -791,7 +791,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.4.4';
+            return '7.4.5';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -2354,9 +2354,7 @@
                         }
                         catch (e) {
                             decryptedPayload = null;
-                            if (console && console.log) {
-                                console.log('decryption error', e.message);
-                            }
+                            announce.error = "Error while decrypting message content: ".concat(e.message);
                         }
                         if (decryptedPayload !== null) {
                             msgPayload = decryptedPayload;
@@ -2401,10 +2399,7 @@
                         }
                         catch (e) {
                             decryptedPayload = null;
-                            // eslint-disable-next-line
-                            if (console && console.log) {
-                                console.log('decryption error', e.message); //eslint-disable-line
-                            }
+                            announce.error = "Error while decrypting message content: ".concat(e.message);
                         }
                         if (decryptedPayload != null) {
                             announce.message = decryptedPayload;
@@ -5371,7 +5366,7 @@
         getOperation: function () { return OPERATIONS.PNGetMembersOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channel)) {
-                return 'UUID cannot be empty';
+                return 'channel cannot be empty';
             }
         },
         getURL: function (_a, params) {
@@ -5384,36 +5379,45 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
             var queryParams = {};
-            queryParams.include = ['uuid.status', 'uuid.type', 'status'];
+            queryParams.include = [];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
+                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.statusField) {
+                    queryParams.include.push('status');
+                }
+                if ((_b = params.include) === null || _b === void 0 ? void 0 : _b.customFields) {
                     queryParams.include.push('custom');
                 }
-                if ((_b = params.include) === null || _b === void 0 ? void 0 : _b.customUUIDFields) {
+                if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.UUIDFields) {
+                    queryParams.include.push('uuid');
+                }
+                if ((_d = params.include) === null || _d === void 0 ? void 0 : _d.customUUIDFields) {
                     queryParams.include.push('uuid.custom');
                 }
-                if ((_d = (_c = params.include) === null || _c === void 0 ? void 0 : _c.UUIDFields) !== null && _d !== void 0 ? _d : true) {
-                    queryParams.include.push('uuid');
+                if ((_e = params.include) === null || _e === void 0 ? void 0 : _e.UUIDStatusField) {
+                    queryParams.include.push('uuid.status');
+                }
+                if ((_f = params.include) === null || _f === void 0 ? void 0 : _f.UUIDTypeField) {
+                    queryParams.include.push('uuid.type');
                 }
             }
             queryParams.include = queryParams.include.join(',');
-            if ((_e = params === null || params === void 0 ? void 0 : params.include) === null || _e === void 0 ? void 0 : _e.totalCount) {
-                queryParams.count = (_f = params.include) === null || _f === void 0 ? void 0 : _f.totalCount;
+            if ((_g = params === null || params === void 0 ? void 0 : params.include) === null || _g === void 0 ? void 0 : _g.totalCount) {
+                queryParams.count = (_h = params.include) === null || _h === void 0 ? void 0 : _h.totalCount;
             }
-            if ((_g = params === null || params === void 0 ? void 0 : params.page) === null || _g === void 0 ? void 0 : _g.next) {
-                queryParams.start = (_h = params.page) === null || _h === void 0 ? void 0 : _h.next;
+            if ((_j = params === null || params === void 0 ? void 0 : params.page) === null || _j === void 0 ? void 0 : _j.next) {
+                queryParams.start = (_k = params.page) === null || _k === void 0 ? void 0 : _k.next;
             }
-            if ((_j = params === null || params === void 0 ? void 0 : params.page) === null || _j === void 0 ? void 0 : _j.prev) {
-                queryParams.end = (_k = params.page) === null || _k === void 0 ? void 0 : _k.prev;
+            if ((_l = params === null || params === void 0 ? void 0 : params.page) === null || _l === void 0 ? void 0 : _l.prev) {
+                queryParams.end = (_m = params.page) === null || _m === void 0 ? void 0 : _m.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            queryParams.limit = (_l = params === null || params === void 0 ? void 0 : params.limit) !== null && _l !== void 0 ? _l : 100;
+            queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_m = params.sort) !== null && _m !== void 0 ? _m : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -5541,36 +5545,45 @@
         },
         isAuthSupported: function () { return true; },
         prepareParams: function (_modules, params) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
             var queryParams = {};
-            queryParams.include = ['channel.status', 'channel.type', 'status'];
+            queryParams.include = [];
             if (params === null || params === void 0 ? void 0 : params.include) {
-                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.customFields) {
-                    queryParams.include.push('custom');
+                if ((_a = params.include) === null || _a === void 0 ? void 0 : _a.statusField) {
+                    queryParams.include.push('status');
                 }
-                if ((_b = params.include) === null || _b === void 0 ? void 0 : _b.customChannelFields) {
-                    queryParams.include.push('channel.custom');
+                if ((_b = params.include) === null || _b === void 0 ? void 0 : _b.customFields) {
+                    queryParams.include.push('custom');
                 }
                 if ((_c = params.include) === null || _c === void 0 ? void 0 : _c.channelFields) {
                     queryParams.include.push('channel');
                 }
+                if ((_d = params.include) === null || _d === void 0 ? void 0 : _d.customChannelFields) {
+                    queryParams.include.push('channel.custom');
+                }
+                if ((_e = params.include) === null || _e === void 0 ? void 0 : _e.channelStatusField) {
+                    queryParams.include.push('channel.status');
+                }
+                if ((_f = params.include) === null || _f === void 0 ? void 0 : _f.channelTypeField) {
+                    queryParams.include.push('channel.type');
+                }
             }
             queryParams.include = queryParams.include.join(',');
-            if ((_d = params === null || params === void 0 ? void 0 : params.include) === null || _d === void 0 ? void 0 : _d.totalCount) {
-                queryParams.count = (_e = params.include) === null || _e === void 0 ? void 0 : _e.totalCount;
+            if ((_g = params === null || params === void 0 ? void 0 : params.include) === null || _g === void 0 ? void 0 : _g.totalCount) {
+                queryParams.count = (_h = params.include) === null || _h === void 0 ? void 0 : _h.totalCount;
             }
-            if ((_f = params === null || params === void 0 ? void 0 : params.page) === null || _f === void 0 ? void 0 : _f.next) {
-                queryParams.start = (_g = params.page) === null || _g === void 0 ? void 0 : _g.next;
+            if ((_j = params === null || params === void 0 ? void 0 : params.page) === null || _j === void 0 ? void 0 : _j.next) {
+                queryParams.start = (_k = params.page) === null || _k === void 0 ? void 0 : _k.next;
             }
-            if ((_h = params === null || params === void 0 ? void 0 : params.page) === null || _h === void 0 ? void 0 : _h.prev) {
-                queryParams.end = (_j = params.page) === null || _j === void 0 ? void 0 : _j.prev;
+            if ((_l = params === null || params === void 0 ? void 0 : params.page) === null || _l === void 0 ? void 0 : _l.prev) {
+                queryParams.end = (_m = params.page) === null || _m === void 0 ? void 0 : _m.prev;
             }
             if (params === null || params === void 0 ? void 0 : params.filter) {
                 queryParams.filter = params.filter;
             }
-            queryParams.limit = (_k = params === null || params === void 0 ? void 0 : params.limit) !== null && _k !== void 0 ? _k : 100;
+            queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
-                queryParams.sort = Object.entries((_l = params.sort) !== null && _l !== void 0 ? _l : {}).map(function (_a) {
+                queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
                     var _b = __read(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
@@ -6239,18 +6252,24 @@
 
     /*       */
     function __processMessage$1(modules, message) {
-        if (!modules.cryptoModule)
-            return message;
+        var result = {};
+        if (!modules.cryptoModule) {
+            result.payload = message;
+            return result;
+        }
         try {
             var decryptedData = modules.cryptoModule.decrypt(message);
             var decryptedPayload = decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
-            return decryptedPayload;
+            result.payload = decryptedPayload;
+            return result;
         }
         catch (e) {
-            if (console && console.log)
+            if (modules.config.logVerbosity && console && console.log)
                 console.log('decryption error', e.message);
-            return message;
+            result.payload = message;
+            result.error = "Error while decrypting message content: ".concat(e.message);
         }
+        return result;
     }
     function getOperation$5() {
         return OPERATIONS.PNHistoryOperation;
@@ -6301,13 +6320,16 @@
         };
         if (Array.isArray(serverResponse[0])) {
             serverResponse[0].forEach(function (serverHistoryItem) {
+                var processedMessgeResult = __processMessage$1(modules, serverHistoryItem.message);
                 var item = {
                     timetoken: serverHistoryItem.timetoken,
-                    entry: __processMessage$1(modules, serverHistoryItem.message),
+                    entry: processedMessgeResult.payload,
                 };
                 if (serverHistoryItem.meta) {
                     item.meta = serverHistoryItem.meta;
                 }
+                if (processedMessgeResult.error)
+                    item.error = processedMessgeResult.error;
                 response.messages.push(item);
             });
         }
@@ -6438,18 +6460,24 @@
 
     /*       */
     function __processMessage(modules, message) {
-        if (!modules.cryptoModule)
-            return message;
+        var result = {};
+        if (!modules.cryptoModule) {
+            result.payload = message;
+            return result;
+        }
         try {
             var decryptedData = modules.cryptoModule.decrypt(message);
             var decryptedPayload = decryptedData instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decryptedData)) : decryptedData;
-            return decryptedPayload;
+            result.payload = decryptedPayload;
+            return result;
         }
         catch (e) {
-            if (console && console.log)
+            if (modules.config.logVerbosity && console && console.log)
                 console.log('decryption error', e.message);
-            return message;
+            result.payload = message;
+            result.error = "Error while decrypting message content: ".concat(e.message);
         }
+        return result;
     }
     function getOperation$2() {
         return OPERATIONS.PNFetchMessagesOperation;
@@ -6511,9 +6539,10 @@
             response.channels[channelName] = [];
             (serverResponse.channels[channelName] || []).forEach(function (messageEnvelope) {
                 var announce = {};
+                var processedMessgeResult = __processMessage(modules, messageEnvelope.message);
                 announce.channel = channelName;
                 announce.timetoken = messageEnvelope.timetoken;
-                announce.message = __processMessage(modules, messageEnvelope.message);
+                announce.message = processedMessgeResult.payload;
                 announce.messageType = messageEnvelope.message_type;
                 announce.uuid = messageEnvelope.uuid;
                 if (messageEnvelope.actions) {
@@ -6524,6 +6553,8 @@
                 if (messageEnvelope.meta) {
                     announce.meta = messageEnvelope.meta;
                 }
+                if (processedMessgeResult.error)
+                    announce.error = processedMessgeResult.error;
                 response.channels[channelName].push(announce);
             });
         });
@@ -7770,6 +7801,9 @@
                             customFields: params.include.customFields,
                             UUIDFields: params.include.userFields,
                             customUUIDFields: params.include.customUserFields,
+                            statusField: params.include.statusField,
+                            UUIDStatusField: params.include.userStatusField,
+                            UUIDTypeField: params.include.userTypeField,
                             totalCount: params.include.totalCount,
                         },
                         sort: params.sort != null
@@ -7803,6 +7837,9 @@
                             customFields: params.include.customFields,
                             channelFields: params.include.spaceFields,
                             customChannelFields: params.include.customSpaceFields,
+                            statusField: params.include.statusField,
+                            channelStatusField: params.include.spaceStatusField,
+                            channelTypeField: params.include.spaceTypeField,
                             totalCount: params.include.totalCount,
                         },
                         sort: params.sort != null
