@@ -1,3 +1,10 @@
+## v7.4.5
+November 28 2023
+
+#### Fixed
+- Handle unencrypted messages in subscribe with cryptoModule configured.
+- Fixe for missing parameters to request or filter optional fields for App Context memberships api.
+
 ## v7.4.4
 November 14 2023
 

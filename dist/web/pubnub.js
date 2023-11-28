@@ -791,7 +791,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.4.4';
+            return '7.4.5';
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
