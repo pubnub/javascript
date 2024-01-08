@@ -4,7 +4,7 @@ import PubNub from '../../src/node/index';
 
 describe('EventEngine', () => {
   let pubnub: PubNub;
-  let engine: PubNub['eventEngine']['engine'];
+  let engine: PubNub['presenceEventEngine']['engine'];
 
   before(() => {
     nock.disableNetConnect();
@@ -23,9 +23,11 @@ describe('EventEngine', () => {
       publishKey: 'demo',
       uuid: 'test-js',
       enableEventEngine: true,
+      heartbeatInterval: 1,
+      logVerbosity: true,
     });
 
-    engine = pubnub.eventEngine._engine;
+    engine = pubnub.presenceEventEngine._engine;
 
     unsub = engine.subscribe((change) => {
       console.log(change);
@@ -51,7 +53,7 @@ describe('EventEngine', () => {
       if (timeout) {
         timeoutId = setTimeout(() => {
           unsubscribe();
-          reject(new Error(`Timeout occured while waiting for state ${eventLabel}`));
+          reject(new Error(`Timeout occured while waiting for event ${eventLabel}`));
         }, timeout);
       }
     });
@@ -99,26 +101,27 @@ describe('EventEngine', () => {
     });
   }
 
-  it('should work correctly', async () => {
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
+  it(' presence event_engine should work correctly', async () => {
+    utils
+      .createNock()
+      .get('/v2/presence/sub-key/demo/channel/test/heartbeat')
+      .query(true)
+      .reply(200, '{"message":"OK", "service":"Presence"}');
 
-    pubnub.subscribe({ channels: ['test'] });
+    pubnub.join({ channels: ['test'] });
 
-    await forEvent('HANDSHAKE_SUCCESS', 1000);
+    await forEvent('JOINED', 1000);
 
-    pubnub.unsubscribe({ channels: ['test'] });
+    await forState('HEARTBEATING', 1000);
 
-    await forState('UNSUBSCRIBED', 1000);
+    await forEvent('HEARTBEAT_SUCCESS', 1000);
+
+    await forState('HEARTBEATCOOLDOWN', 1000);
+
+    pubnub.leaveAll();
+
+    await forEvent('LEFT_ALL', 2000);
+
   });
 
-  // TODO: retry with configuration
-  // it('should retry correctly', async () => {
-  //   utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
-  //   utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(500, '{"error": true}');
-
-  //   pubnub.subscribe({ channels: ['test'] });
-
-  //   await forState('RECEIVE_RECONNECTING', 1000);
-  // });
 });

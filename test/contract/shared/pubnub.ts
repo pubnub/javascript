@@ -6,19 +6,29 @@ export interface Keyset {
   publishKey?: string;
 }
 
+export interface RetryConfiguration {
+  delay?: number;
+  maximumRetry?: number;
+  shouldRetry: any;
+  getDelay: any;
+}
+
 export interface Config extends Keyset {
   origin?: string;
   ssl?: boolean;
   suppressLeaveEvents?: boolean;
   logVerbosity?: boolean;
   uuid?: string;
-  enableSubscribeBeta?: boolean;
+  enableEventEngine?: boolean;
+  retryConfiguration?: RetryConfiguration;
+  heartbeatInterval?: number;
+  presenceTimeout?: number;
 }
 
 const defaultConfig: Config = {
   origin: 'localhost:8090',
   ssl: false,
-  suppressLeaveEvents: true,
+  suppressLeaveEvents: false,
   logVerbosity: false,
   uuid: 'myUUID',
 };
