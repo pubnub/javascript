@@ -42,7 +42,6 @@ export function prepareParams(modules, incomingParams) {
   if (channelGroups.length > 0) {
     params['channel-group'] = channelGroups.join(',');
   }
-
   return params;
 }
 

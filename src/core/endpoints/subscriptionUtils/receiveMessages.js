@@ -32,8 +32,12 @@ const endpoint = {
     if (params.channelGroups && params.channelGroups.length > 0) {
       outParams['channel-group'] = params.channelGroups.join(',');
     }
+    if (params.filterExpression && params.filterExpression.length > 0) {
+      outParams['filter-expr'] = params.filterExpression;
+    }
     outParams.tt = params.timetoken;
     outParams.tr = params.region;
+    outParams.ee='';
     return outParams;
   },
 

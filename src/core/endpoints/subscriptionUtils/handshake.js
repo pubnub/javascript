@@ -25,6 +25,13 @@ const endpoint = {
       outParams['channel-group'] = params.channelGroups.join(',');
     }
     outParams.tt = 0;
+    if (params.state) {
+      outParams.state = JSON.stringify(params.state);
+    }
+    if (params.filterExpression && params.filterExpression.length > 0) {
+      outParams['filter-expr'] = params.filterExpression;
+    }
+    outParams.ee = '';
     return outParams;
   },
 
