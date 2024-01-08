@@ -10,10 +10,13 @@ import {
   reconnectingSuccess,
   restore,
   subscriptionChange,
+  unsubscribeAll,
 } from '../events';
 import { ReceivingState } from './receiving';
 import { ReceiveFailureState } from './receive_failure';
 import { ReceiveStoppedState } from './receive_stopped';
+import { UnsubscribedState } from './unsubscribed';
+import categoryConstants from '../../core/constants/categories';
 
 export type ReceiveReconnectingStateContext = {
   channels: string[];
@@ -54,7 +57,7 @@ ReceiveReconnectingState.on(reconnectingGiveup.type, (context) =>
       cursor: context.cursor,
       reason: context.reason,
     },
-    [emitStatus({ category: 'PNDisconnectedCategory' })],
+    [emitStatus({ category: categoryConstants.PNDisconnectedUnexpectedlyCategory })],
   ),
 );
 
@@ -65,15 +68,18 @@ ReceiveReconnectingState.on(disconnect.type, (context) =>
       groups: context.groups,
       cursor: context.cursor,
     },
-    [emitStatus({ category: 'PNDisconnectedCategory' })],
+    [emitStatus({ category: categoryConstants.PNDisconnectedCategory })],
   ),
 );
 
-ReceiveReconnectingState.on(restore.type, (context) =>
+ReceiveReconnectingState.on(restore.type, (context, event) =>
   ReceivingState.with({
-    channels: context.channels,
-    groups: context.groups,
-    cursor: context.cursor,
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: {
+      timetoken: event.payload.timetoken ?? context.cursor.timetoken,
+      region: event.payload.region ?? context.cursor.region,
+    },
   }),
 );
 
@@ -83,4 +89,8 @@ ReceiveReconnectingState.on(subscriptionChange.type, (context, event) =>
     groups: event.payload.groups,
     cursor: context.cursor,
   }),
+);
+
+ReceiveReconnectingState.on(unsubscribeAll.type, (_) =>
+  UnsubscribedState.with(undefined, [emitStatus({ category: categoryConstants.PNDisconnectedCategory })]),
 );

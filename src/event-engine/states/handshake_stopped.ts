@@ -8,7 +8,7 @@ type HandshakeStoppedStateContext = {
   groups: string[];
 };
 
-export const HandshakeStoppedState = new State<HandshakeStoppedStateContext, Events, Effects>('STOPPED');
+export const HandshakeStoppedState = new State<HandshakeStoppedStateContext, Events, Effects>('HANDSHAKE_STOPPED');
 
 HandshakeStoppedState.on(subscriptionChange.type, (_, event) =>
   HandshakingState.with({

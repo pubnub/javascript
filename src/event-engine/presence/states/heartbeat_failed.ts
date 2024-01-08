@@ -1,25 +1,26 @@
 import { State } from '../../core/state';
-import { Effects, leave } from '../effects';
-import { Events, joined, left, reconnect, leftAll, disconnect } from '../events';
-import { HeartbeatInactiveState } from './heartbeat_inactive';
+import { Events, disconnect, heartbeatFailure, heartbeatSuccess, joined, left, leftAll, reconnect } from '../events';
+import { Effects, heartbeat, leave } from '../effects';
 import { HeartbeatingState } from './heartbeating';
+import { HeartbeatStoppedState } from './heartbeat_stopped';
+import { HeartbeatInactiveState } from './heartbeat_inactive';
 
-export type HeartbeatStoppedStateContext = {
+export type HeartbeatFailedStateContext = {
   channels: string[];
   groups: string[];
 };
 
-export const HeartbeatStoppedState = new State<HeartbeatStoppedStateContext, Events, Effects>('HEARTBEAT_STOPPED');
+export const HeartbeatFailedState = new State<HeartbeatFailedStateContext, Events, Effects>('HEARTBEAT_FAILED');
 
-HeartbeatStoppedState.on(joined.type, (context, event) =>
-  HeartbeatStoppedState.with({
+HeartbeatFailedState.on(joined.type, (context, event) =>
+  HeartbeatingState.with({
     channels: [...context.channels, ...event.payload.channels],
     groups: [...context.groups, ...event.payload.groups],
   }),
 );
 
-HeartbeatStoppedState.on(left.type, (context, event) =>
-  HeartbeatStoppedState.with(
+HeartbeatFailedState.on(left.type, (context, event) =>
+  HeartbeatingState.with(
     {
       channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
       groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
@@ -28,14 +29,14 @@ HeartbeatStoppedState.on(left.type, (context, event) =>
   ),
 );
 
-HeartbeatStoppedState.on(reconnect.type, (context, _) =>
+HeartbeatFailedState.on(reconnect.type, (context, _) =>
   HeartbeatingState.with({
     channels: context.channels,
     groups: context.groups,
   }),
 );
 
-HeartbeatStoppedState.on(disconnect.type, (context, _) =>
+HeartbeatFailedState.on(disconnect.type, (context, _) =>
   HeartbeatStoppedState.with(
     {
       channels: context.channels,
@@ -45,6 +46,6 @@ HeartbeatStoppedState.on(disconnect.type, (context, _) =>
   ),
 );
 
-HeartbeatStoppedState.on(leftAll.type, (context, _) =>
+HeartbeatFailedState.on(leftAll.type, (context,_) =>
   HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]),
 );
