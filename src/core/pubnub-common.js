@@ -90,7 +90,8 @@ import CATEGORIES from './constants/categories';
 
 import uuidGenerator from './components/uuid';
 import { EventEngine } from '../event-engine';
-import { ReconnectionDelay } from '../event-engine/core/reconnectionDelay';
+import { PresenceEventEngine } from '../event-engine/presence/presence';
+import { RetryPolicy } from '../event-engine/core/retryPolicy';
 
 export default class {
   _config;
@@ -320,15 +321,44 @@ export default class {
     this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
-    if (config.enableSubscribeBeta === true) {
-      let policy = modules.config.reconnectionConfiguration.reconnectionPolicy;
-      let maxRetries = modules.config.reconnectionConfiguration.maximumReconnectionRetries ?? 0;
+    if (config.enableEventEngine === true) {
+      if (config.maintainPresenceState) {
+        this.presenceState = {};
+        this.setState = (args) => {
+          args.channels?.forEach((channel) => (this.presenceState[channel] = args.state));
+          args.channelGroups?.forEach((group) => (this.presenceState[group] = args.state));
+          return this.setPresenceState({
+            channels: args.channels,
+            channelGroups: args.channelGroups,
+            state: this.presenceState,
+          });
+        };
+      }
+
+      if (config.getHeartbeatInterval()) {
+        const presenceEventEngine = new PresenceEventEngine({
+          heartbeat: this.iAmHere,
+          leave: this.iAmAway,
+          heartbeatDelay: () =>
+            new Promise((resolve) => setTimeout(resolve, modules.config.getHeartbeatInterval() * 1000)),
+          retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+          config: modules.config,
+          presenceState: this.presenceState,
+        });
+        this.presenceEventEngine = presenceEventEngine;
+        this.join = this.presenceEventEngine.join.bind(presenceEventEngine);
+        this.leave = this.presenceEventEngine.leave.bind(presenceEventEngine);
+        this.leaveAll = this.presenceEventEngine.leaveAll.bind(presenceEventEngine);
+      }
       const eventEngine = new EventEngine({
         handshake: this.handshake,
         receiveEvents: this.receiveMessages,
-        getRetryDelay: (attempts) => ReconnectionDelay.getDelay(policy, attempts),
         delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-        shouldRetry: (_, attempts) => maxRetries > attempts && policy && policy != 'None',
+        join: this.join,
+        leave: this.leave,
+        leaveAll: this.leaveAll,
+        presenceState: this.presenceState,
+        config: modules.config,
         emitEvents: (events) => {
           for (const event of events) {
             listenerManager.announceMessage(event);
@@ -344,7 +374,6 @@ export default class {
       this.unsubscribeAll = eventEngine.unsubscribeAll.bind(eventEngine);
       this.reconnect = eventEngine.reconnect.bind(eventEngine);
       this.disconnect = eventEngine.disconnect.bind(eventEngine);
-
       this.eventEngine = eventEngine;
     } else {
       const subscriptionManager = new SubscriptionManager({
@@ -737,4 +766,7 @@ export default class {
   static OPERATIONS = OPERATIONS;
 
   static CATEGORIES = CATEGORIES;
+
+  static LinearRetryPolicy = RetryPolicy.LinearRetryPolicy;
+  static ExponentialRetryPolicy = RetryPolicy.ExponentialRetryPolicy;
 }
