@@ -22,9 +22,9 @@ export class RetryPolicy {
       maximumRetry: configuration.maximumRetry,
 
       shouldRetry(error: any, attempt: number) {
-         if (error?.status?.statusCode === 403) {
-           return false;
-         }
+        if (error?.status?.statusCode === 403) {
+          return false;
+        }
         return this.maximumRetry > attempt;
       },
 

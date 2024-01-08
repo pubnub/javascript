@@ -46,6 +46,6 @@ HeartbeatFailedState.on(disconnect.type, (context, _) =>
   ),
 );
 
-HeartbeatFailedState.on(leftAll.type, (context,_) =>
+HeartbeatFailedState.on(leftAll.type, (context, _) =>
   HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]),
 );

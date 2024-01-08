@@ -37,7 +37,7 @@ const endpoint = {
     }
     outParams.tt = params.timetoken;
     outParams.tr = params.region;
-    outParams.ee='';
+    outParams.ee = '';
     return outParams;
   },
 

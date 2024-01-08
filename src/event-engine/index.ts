@@ -63,11 +63,11 @@ export class EventEngine {
   }
 
   unsubscribe({ channels, groups }: { channels?: string[]; groups?: string[] }) {
-    let channlesWithPres: any = channels?.slice(0);
+    const channlesWithPres: any = channels?.slice(0);
     channels?.map((c) => channlesWithPres.push(`${c}-pnpres`));
     this.channels = this.channels.filter((channel) => !channlesWithPres?.includes(channel));
 
-    let groupsWithPres: any = groups?.slice(0);
+    const groupsWithPres: any = groups?.slice(0);
     groups?.map((g) => groupsWithPres.push(`${g}-pnpres`));
     this.groups = this.groups.filter((group) => !groupsWithPres?.includes(group));
 

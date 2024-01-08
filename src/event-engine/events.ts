@@ -45,7 +45,7 @@ export const reconnectingSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', (cur
 export const reconnectingFailure = createEvent('RECEIVE_RECONNECT_FAILURE', (error: PubNubError) => error);
 export const reconnectingGiveup = createEvent('RECEIVING_RECONNECTING_GIVEUP', () => ({}));
 export const reconnectingRetry = createEvent('RECONNECT', () => ({}));
-export const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => {});
+export const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => ({}));
 
 export type Events = MapOf<
   | typeof subscriptionChange

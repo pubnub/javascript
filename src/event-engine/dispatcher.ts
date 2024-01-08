@@ -130,39 +130,37 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.handshakeReconnect.type,
-      asyncHandler(
-        async (payload, abortSignal, { handshake, delay, presenceState, config }) => {
-          if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-            abortSignal.throwIfAborted();
+      asyncHandler(async (payload, abortSignal, { handshake, delay, presenceState, config }) => {
+        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
+          abortSignal.throwIfAborted();
 
-            await delay(config.retryConfiguration.getDelay(payload.attempts));
+          await delay(config.retryConfiguration.getDelay(payload.attempts));
 
-            abortSignal.throwIfAborted();
+          abortSignal.throwIfAborted();
 
-            try {
-              const result = await handshake({
-                abortSignal: abortSignal,
-                channels: payload.channels,
-                channelGroups: payload.groups,
-                filterExpression: config.filterExpression,
-                state: presenceState,
-              });
+          try {
+            const result = await handshake({
+              abortSignal: abortSignal,
+              channels: payload.channels,
+              channelGroups: payload.groups,
+              filterExpression: config.filterExpression,
+              state: presenceState,
+            });
 
-              return engine.transition(events.handshakingReconnectingSuccess(result));
-            } catch (error) {
-              if (error instanceof Error && error.message === 'Aborted') {
-                return;
-              }
-
-              if (error instanceof PubNubError) {
-                return engine.transition(events.handshakingReconnectingFailure(error));
-              }
+            return engine.transition(events.handshakingReconnectingSuccess(result));
+          } catch (error) {
+            if (error instanceof Error && error.message === 'Aborted') {
+              return;
             }
-          } else {
-            return engine.transition(events.handshakingReconnectingGiveup());
+
+            if (error instanceof PubNubError) {
+              return engine.transition(events.handshakingReconnectingFailure(error));
+            }
           }
-        },
-      ),
+        } else {
+          return engine.transition(events.handshakingReconnectingGiveup());
+        }
+      }),
     );
   }
 }
