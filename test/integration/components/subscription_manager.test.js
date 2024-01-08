@@ -12,6 +12,7 @@ describe('#components/subscription_manager', () => {
   let pubnub;
   let pubnubWithPassingHeartbeats;
   let pubnubWithLimitedQueue;
+  let pubnubWithCrypto;
 
   before(() => {
     nock.disableNetConnect();
@@ -45,6 +46,12 @@ describe('#components/subscription_manager', () => {
       requestMessageCountThreshold: 1,
       autoNetworkDetection: false,
       heartbeatInterval: 149,
+    });
+    pubnubWithCrypto = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      uuid: 'myUUID',
+      cryptoModule: PubNub.CryptoModule.aesCbcCryptoModule({ cipherKey: 'cipherKey' }),
     });
   });
 
@@ -652,5 +659,129 @@ describe('#components/subscription_manager', () => {
         done();
       }
     }, 250);
+  });
+  
+  it('handles unencrypted message when cryptoModule is configured', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
+      );
+
+    let incomingPayloads = [];
+
+    pubnubWithCrypto.addListener({
+      message(messagePayload) {
+        incomingPayloads.push(messagePayload);
+        if (incomingPayloads.length === 1) {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(incomingPayloads, [
+            {
+              actualChannel: 'coolChannel',
+              message: 'hello',
+              subscribedChannel: 'coolChan-bnel',
+              channel: 'coolChannel',
+              subscription: 'coolChan-bnel',
+              timetoken: '14607577960925503',
+              publisher: 'client1',
+              error: 'Error while decrypting message content: decryption error. invalid header version',
+            },
+          ]);
+          done();
+        }
+      },
+    });
+
+    pubnubWithCrypto.subscribe({ channels: ['ch1'] });
+  });
+
+  it('handles unencrypted message when `setCipherKey()` is used', (done) => {
+    pubnub.setCipherKey('hello');
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
+      );
+
+    let incomingPayloads = [];
+
+    pubnubWithCrypto.addListener({
+      message(messagePayload) {
+        incomingPayloads.push(messagePayload);
+        console.log('\n\n\n incomingpayload = ', JSON.stringify(incomingPayloads));
+        if (incomingPayloads.length === 1) {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(incomingPayloads, [
+            {
+              actualChannel: 'coolChannel',
+              message: 'hello',
+              subscribedChannel: 'coolChan-bnel',
+              channel: 'coolChannel',
+              subscription: 'coolChan-bnel',
+              timetoken: '14607577960925503',
+              publisher: 'client1',
+              error: 'Error while decrypting message content: decryption error. invalid header version',
+            },
+          ]);
+          done();
+        }
+      },
+    });
+
+    pubnubWithCrypto.subscribe({ channels: ['ch1'] });
+  });
+
+  it('handles encryped messages when cryptoModule is configured', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":"UE5FRAFBQ1JIEIocqA6BfaybN/3U0WJRam0v3bPwfAXezgeCeGp+MztQ","b":"coolChan-bnel"}]}',
+      );
+
+    let incomingPayloads = [];
+
+    pubnubWithCrypto.addListener({
+      message(messagePayload) {
+        incomingPayloads.push(messagePayload);
+        if (incomingPayloads.length === 1) {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(incomingPayloads, [
+            {
+              actualChannel: 'coolChannel',
+              message: 'hello',
+              subscribedChannel: 'coolChan-bnel',
+              channel: 'coolChannel',
+              subscription: 'coolChan-bnel',
+              timetoken: '14607577960925503',
+              publisher: 'client1',
+            },
+          ]);
+          done();
+        }
+      },
+    });
+
+    pubnubWithCrypto.subscribe({ channels: ['ch1'] });
   });
 });

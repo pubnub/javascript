@@ -18,22 +18,33 @@ const endpoint = {
 
   prepareParams: (_modules, params) => {
     const queryParams = {};
-    queryParams.include = ['channel.status', 'channel.type', 'status'];
+    queryParams.include = [];
 
     if (params?.include) {
+      if (params.include?.statusField) {
+        queryParams.include.push('status');
+      }
+
       if (params.include?.customFields) {
         queryParams.include.push('custom');
+      }
+
+      if (params.include?.channelFields) {
+        queryParams.include.push('channel');
       }
 
       if (params.include?.customChannelFields) {
         queryParams.include.push('channel.custom');
       }
 
-      if (params.include?.channelFields) {
-        queryParams.include.push('channel');
+      if (params.include?.channelStatusField) {
+        queryParams.include.push('channel.status');
+      }
+
+      if (params.include?.channelTypeField) {
+        queryParams.include.push('channel.type');
       }
     }
-
     queryParams.include = queryParams.include.join(',');
 
     if (params?.include?.totalCount) {

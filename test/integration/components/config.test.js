@@ -42,6 +42,17 @@ describe('components/config', () => {
       assert.equal(pubnub.getUUID(), 'uuid2');
     });
 
+    it('get/set userId', () => {
+      let pubnub = new PubNub({
+        subscribeKey: 'mySubKey',
+        publishKey: 'myPublishKey',
+        userId: 'userId1',
+      });
+      assert.equal(pubnub.getUserId(), 'userId1');
+      pubnub.setUserId('userId2');
+      assert.equal(pubnub.getUserId(), 'userId2');
+    });
+
     it('throws when both userId and uuid are provided', () => {
       let config = { subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUuid', userId: 'myUserId' };
 

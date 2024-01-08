@@ -1,6 +1,6 @@
 import { setWorldConstructor, setDefaultTimeout, World } from '@cucumber/cucumber';
 import PubNub from '../../lib/node/index.js';
-import { loadFixtureFile } from './utils';
+import { loadFixtureFile, getFilePath } from './utils';
 import * as http from 'http';
 
 interface State {
@@ -129,6 +129,9 @@ class PubnubWorld extends World {
       this.fileFixtures[name] = persona;
     }
     return this.fileFixtures[name];
+  }
+  getFilePath(filename) {
+    return getFilePath(filename);
   }
 }
 

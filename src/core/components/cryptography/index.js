@@ -26,7 +26,6 @@ export default class {
 
   constructor({ config }) {
     this._config = config;
-
     this._iv = '0123456789012345';
 
     this._allowedKeyEncodings = ['hex', 'utf8', 'base64', 'binary'];

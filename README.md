@@ -14,6 +14,12 @@ PubNub takes care of the infrastructure and APIs needed for the realtime communi
 
 You will need the publish and subscribe keys to authenticate your app. Get your keys from the [Admin Portal](https://dashboard.pubnub.com/login).
 
+## Tutorial Video
+
+[![Getting Started with PubNub JS SDK](https://replayable-api-production.herokuapp.com/replay/64ee0d2ca4bc310061f566ca/gif?shareKey=8YQoHC40jdzYpYGpcJhQ)](https://app.dashcam.io/replay/64ee0d2ca4bc310061f566ca?share=8YQoHC40jdzYpYGpcJhQ) 
+
+Watch [Getting Started with PubNub JS SDK](https://app.dashcam.io/replay/64ee0d2ca4bc310061f566ca?share=8YQoHC40jdzYpYGpcJhQ) on Dashcam
+
 ## Configure PubNub
 
 1. Integrate the JavaScript SDK into your project:
@@ -22,8 +28,8 @@ You will need the publish and subscribe keys to authenticate your app. Get your 
      npm install pubnub
      ```
    * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.3.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.3.min.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.4.5.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.4.5.min.js
 
 2. Configure your keys:
 

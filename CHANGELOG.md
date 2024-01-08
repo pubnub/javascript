@@ -1,3 +1,69 @@
+## v7.4.5
+November 28 2023
+
+#### Fixed
+- Handle unencrypted messages in subscribe with cryptoModule configured.
+- Fixe for missing parameters to request or filter optional fields for App Context memberships api.
+
+## v7.4.4
+November 14 2023
+
+#### Fixed
+- Fixes issue of getChannelMembers call not returning status field.
+
+## v7.4.3
+November 08 2023
+
+#### Fixed
+- Fixes issue of not able to encrypt Blob file content in web.
+
+## v7.4.2
+October 30 2023
+
+#### Modified
+- Changed license type from MIT to PubNub Software Development Kit License.
+
+## v7.4.1
+October 17 2023
+
+#### Fixed
+- Fixes issue of `pubnub.decrypt()` returning wrong data format.
+
+## v7.4.0
+October 16 2023
+
+#### Added
+- Add crypto module that allows configure SDK to encrypt and decrypt messages.
+
+#### Fixed
+- Improved security of crypto implementation by adding enhanced AES-CBC cryptor.
+
+## v7.3.3
+September 11 2023
+
+#### Fixed
+- Fixes issue of getting misleading error message when sendFile fails.
+
+## v7.3.2
+August 31 2023
+
+#### Fixed
+- Fixes issue of having deprecated superagent version. Fixed the following issues reported by [@wimZ](https://github.com/wimZ): [#317](https://github.com/pubnub/javascript/issues/317).
+
+## v7.3.1
+August 21 2023
+
+#### Fixed
+- Fixes issue of missing get and set methods for userId field of PubNub configuration.
+
+## v7.3.0
+July 26 2023
+
+#### Fixed
+- Fixes issue of severe vulnerability warnings for vm2 usage.
+
+
+
 ## v7.2.3
 June 19 2023
 

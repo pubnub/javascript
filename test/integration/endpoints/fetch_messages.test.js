@@ -6,7 +6,7 @@ import nock from 'nock';
 import utils from '../../utils';
 import PubNub from '../../../src/node/index';
 
-function publishMessagesToChannel(client        , count        , channel        , completion          ) {
+function publishMessagesToChannel(client, count, channel, completion) {
   let publishCompleted = 0;
   let messages = [];
 
@@ -38,13 +38,7 @@ function publishMessagesToChannel(client        , count        , channel        
   publish(publishCompleted);
 }
 
-function addActionsInChannel(
-  client        ,
-  count        ,
-  messageTimetokens               ,
-  channel        ,
-  completion          
-) {
+function addActionsInChannel(client, count, messageTimetokens, channel, completion) {
   const types = ['reaction', 'receipt', 'custom'];
   const values = [
     PubNub.generateUUID(),
@@ -561,5 +555,52 @@ describe('fetch messages endpoints', () => {
       assert.equal(status.error, false);
       done();
       });
+  });
+
+  it('handles unencrypted payload when cryptomodule configured', (done) => {
+    nock.disableNetConnect();
+    const scope = utils
+      .createNock()
+      .get(`/v3/history/sub-key/${subscribeKey}/channel/ch1`)
+      .query({
+        max: '10',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        include_uuid: 'true',
+        include_message_type: 'true',
+      })
+      .reply(
+        200,
+        '{ "channels": { "ch1": [{"message":"hello","timetoken":"11"}, {"message":"hey","timetoken":"12"}] } }',
+      );
+
+    pubnub.setCipherKey('cipherKey');
+    pubnub.fetchMessages({ channels: ['ch1'], count: 10 }, (status, response) => {
+      assert.equal(status.error, false);
+      assert.deepEqual(response, {
+        channels: {
+          ch1: [
+            {
+              channel: 'ch1',
+              message: 'hello',
+              timetoken: '11',
+              messageType: undefined,
+              uuid: undefined,
+              error: 'Error while decrypting message content: decryption error. invalid header version',
+            },
+            {
+              channel: 'ch1',
+              message: 'hey',
+              timetoken: '12',
+              messageType: undefined,
+              uuid: undefined,
+              error: 'Error while decrypting message content: decryption error. invalid header version',
+            },
+          ],
+        },
+      });
+      assert.equal(scope.isDone(), true);
+      done();
+    });
   });
 });

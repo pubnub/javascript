@@ -1,10 +1,6 @@
-/**       */
-
 import { Readable, PassThrough } from 'stream';
-import { ReadStream } from 'fs';
+import fs from 'fs';
 import { basename } from 'path';
-
-import { IFile, FileClass } from '..';
 
 const PubNubFile = class PubNubFile {
   static supportsBlob = false;
@@ -29,6 +25,8 @@ const PubNubFile = class PubNubFile {
 
   mimeType;
 
+  contentLength;
+
   static create(config) {
     return new this(config);
   }
@@ -37,9 +35,10 @@ const PubNubFile = class PubNubFile {
     if (stream instanceof Readable) {
       this.data = stream;
 
-      if (stream instanceof ReadStream) {
+      if (stream instanceof fs.ReadStream) {
         // $FlowFixMe: incomplete flow node definitions
         this.name = basename(stream.path);
+        this.contentLength = fs.statSync(stream.path).size;
       }
     } else if (data instanceof Buffer) {
       this.data = Buffer.from(data);

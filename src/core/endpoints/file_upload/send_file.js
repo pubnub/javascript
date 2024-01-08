@@ -1,22 +1,9 @@
 import { PubNubError, createValidationError } from '../../components/endpoint';
 
-const getErrorFromResponse = (response) =>
-  new Promise((resolve) => {
-    let result = '';
-
-    response.on('data', (data) => {
-      result += data.toString('utf8');
-    });
-
-    response.on('end', () => {
-      resolve(result);
-    });
-  });
-
 const sendFile = function ({
   generateUploadUrl,
   publishFile,
-  modules: { PubNubFile, config, cryptography, networking },
+  modules: { PubNubFile, config, cryptography, cryptoModule, networking },
 }) {
   return async ({ channel, file: input, message, cipherKey, meta, ttl, storeInHistory }) => {
     if (!channel) {
@@ -40,8 +27,11 @@ const sendFile = function ({
       data: { id, name },
     } = await generateUploadUrl({ channel, name: file.name });
 
-    if (PubNubFile.supportsEncryptFile && (cipherKey ?? config.cipherKey)) {
-      file = await cryptography.encryptFile(cipherKey ?? config.cipherKey, file, PubNubFile);
+    if (PubNubFile.supportsEncryptFile && (cipherKey || cryptoModule)) {
+      file =
+        cipherKey == null
+          ? await cryptoModule.encryptFile(file, PubNubFile)
+          : await cryptography.encryptFile(cipherKey, file, PubNubFile);
     }
 
     let formFieldsWithMimeType = formFields;
@@ -68,11 +58,9 @@ const sendFile = function ({
         throw new Error('Unsupported environment');
       }
     } catch (e) {
-      if (e.response) {
-        const errorBody = await getErrorFromResponse(e.response);
-
+      if (e.response && typeof e.response.text === 'string') {
+        const errorBody = e.response.text;
         const reason = /<Message>(.*)<\/Message>/gi.exec(errorBody);
-
         throw new PubNubError(reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.', e);
       } else {
         throw new PubNubError('Upload to bucket failed.', e);

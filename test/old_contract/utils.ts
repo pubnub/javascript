@@ -7,3 +7,7 @@ export function loadFixtureFile(persona: string) {
   );
   return JSON.parse(fileData);
 }
+
+export function getFilePath(filename) {
+  return `${process.cwd()}/dist/contract/contract/features/encryption/assets/${filename}`;
+}

@@ -1,5 +1,6 @@
 import Config from './components/config';
 import Crypto from './components/cryptography/index';
+import { encode } from './components/base64_codec';
 import SubscriptionManager from './components/subscription_manager';
 import TelemetryManager from './components/telemetry_manager';
 import NotificationsPayload from './components/push_payload';
@@ -256,6 +257,10 @@ export default class {
 
   getUUID;
 
+  setUserId;
+
+  getUserId;
+
   getFilterExpression;
 
   setFilterExpression;
@@ -289,6 +294,7 @@ export default class {
     });
 
     this._telemetryManager = telemetryManager;
+    const cryptoModule = this._config.cryptoModule;
 
     const modules = {
       config,
@@ -298,12 +304,25 @@ export default class {
       tokenManager,
       telemetryManager,
       PubNubFile: setup.PubNubFile,
+      cryptoModule: cryptoModule,
     };
 
     this.File = setup.PubNubFile;
 
-    this.encryptFile = (key, file) => cryptography.encryptFile(key, file, this.File);
-    this.decryptFile = (key, file) => cryptography.decryptFile(key, file, this.File);
+    this.encryptFile = function (key, file) {
+      if (arguments.length == 1 && typeof key != 'string' && modules.cryptoModule) {
+        file = key;
+        return modules.cryptoModule.encryptFile(file, this.File);
+      }
+      return cryptography.encryptFile(key, file, this.File);
+    };
+    this.decryptFile = function (key, file) {
+      if (arguments.length == 1 && typeof key != 'string' && modules.cryptoModule) {
+        file = key;
+        return modules.cryptoModule.decryptFile(file, this.File);
+      }
+      return cryptography.decryptFile(key, file, this.File);
+    };
 
     const timeEndpoint = endpointCreator.bind(this, modules, timeEndpointConfig);
     const leaveEndpoint = endpointCreator.bind(this, modules, presenceLeaveEndpointConfig);
@@ -386,6 +405,7 @@ export default class {
         config: modules.config,
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
+        cryptoModule: modules.cryptoModule,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
@@ -652,6 +672,9 @@ export default class {
               customFields: params.include.customFields,
               UUIDFields: params.include.userFields,
               customUUIDFields: params.include.customUserFields,
+              statusField: params.include.statusField,
+              UUIDStatusField: params.include.userStatusField,
+              UUIDTypeField: params.include.userTypeField,
               totalCount: params.include.totalCount,
             },
             sort:
@@ -681,6 +704,9 @@ export default class {
               customFields: params.include.customFields,
               channelFields: params.include.spaceFields,
               customChannelFields: params.include.customSpaceFields,
+              statusField: params.include.statusField,
+              channelStatusField: params.include.spaceStatusField,
+              channelTypeField: params.include.spaceTypeField,
               totalCount: params.include.totalCount,
             },
             sort:
@@ -709,18 +735,34 @@ export default class {
     // --- deprecated  ------------------
 
     // mount crypto
-    this.encrypt = crypto.encrypt.bind(crypto);
-    this.decrypt = crypto.decrypt.bind(crypto);
+    this.encrypt = function (data, key) {
+      if (typeof key === 'undefined' && modules.cryptoModule) {
+        const encrypted = modules.cryptoModule.encrypt(data);
+        return typeof encrypted === 'string' ? encrypted : encode(encrypted);
+      } else {
+        return crypto.encrypt(data, key);
+      }
+    };
+    this.decrypt = function (data, key) {
+      if (typeof key === 'undefined' && cryptoModule) {
+        const decrypted = modules.cryptoModule.decrypt(data);
+        return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
+      } else {
+        return crypto.decrypt(data, key);
+      }
+    };
 
     /* config */
     this.getAuthKey = modules.config.getAuthKey.bind(modules.config);
     this.setAuthKey = modules.config.setAuthKey.bind(modules.config);
-    this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
     this.getUUID = modules.config.getUUID.bind(modules.config);
     this.setUUID = modules.config.setUUID.bind(modules.config);
+    this.getUserId = modules.config.getUserId.bind(modules.config);
+    this.setUserId = modules.config.setUserId.bind(modules.config);
     this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
-
+    // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
+    this.setCipherKey = (key) => modules.config.setCipherKey(key, setup, modules);
     this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 
     if (networking.hasModule('proxy')) {

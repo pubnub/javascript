@@ -12,7 +12,7 @@ defaults:
 
 jobs:
   pubnub-yml:
-    name: "Validate .pubnub.yml"
+    name: 'Validate .pubnub.yml'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project

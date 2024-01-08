@@ -3,17 +3,17 @@
 import { PublishResponse, PublishArguments, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
+import { encode } from '../components/base64_codec';
 
 function prepareMessagePayload(modules, messagePayload) {
-  const { crypto, config } = modules;
   let stringifiedPayload = JSON.stringify(messagePayload);
 
-  if (config.cipherKey) {
-    stringifiedPayload = crypto.encrypt(stringifiedPayload);
+  if (modules.cryptoModule) {
+    const encrypted = modules.cryptoModule.encrypt(stringifiedPayload);
+    stringifiedPayload = typeof encrypted === 'string' ? encrypted : encode(encrypted);
     stringifiedPayload = JSON.stringify(stringifiedPayload);
   }
-
-  return stringifiedPayload;
+  return stringifiedPayload || '';
 }
 
 export function getOperation() {
