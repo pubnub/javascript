@@ -1,6 +1,7 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { createEvent, MapOf } from '../core';
 
+export const reconnect = createEvent('RECONNECT', () => ({}));
 export const disconnect = createEvent('DISCONNECT', () => ({}));
 
 export const joined = createEvent('JOINED', (channels: string[], groups: string[]) => ({
@@ -19,19 +20,17 @@ export const heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', () => ({}));
 
 export const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error: PubNubError) => error);
 
-export const leaveSuccess = createEvent('LEAVE_SUCCESS', () => ({}));
-
-export const leaveFailure = createEvent('LEAVE_FAILURE', (error: PubNubError) => error);
+export const heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', () => ({}));
 
 export const timesUp = createEvent('TIMES_UP', () => ({}));
 
 export type Events = MapOf<
+  | typeof reconnect
   | typeof disconnect
   | typeof leftAll
   | typeof heartbeatSuccess
   | typeof heartbeatFailure
-  | typeof leaveSuccess
-  | typeof leaveFailure
+  | typeof heartbeatGiveup
   | typeof joined
   | typeof left
   | typeof timesUp

@@ -6,9 +6,12 @@ import * as events from './events';
 export type Dependencies = {
   handshake: any;
   receiveEvents: any;
+  join: any;
+  leave: any;
+  leaveAll: any;
+  presenceState: any;
+  config: any;
 
-  getRetryDelay: (attempts: number) => number;
-  shouldRetry: (error: Error, attempts: number) => boolean;
   delay: (milliseconds: number) => Promise<void>;
 
   emitEvents: (events: any[]) => void;
@@ -21,7 +24,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.handshake.type,
-      asyncHandler(async (payload, abortSignal, { handshake }) => {
+      asyncHandler(async (payload, abortSignal, { handshake, presenceState, config }) => {
         abortSignal.throwIfAborted();
 
         try {
@@ -29,9 +32,11 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
+            filterExpression: config.filterExpression,
+            state: presenceState,
           });
 
-          engine.transition(events.handshakingSuccess(result));
+          return engine.transition(events.handshakingSuccess(result));
         } catch (e) {
           if (e instanceof Error && e.message === 'Aborted') {
             return;
@@ -46,9 +51,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.receiveEvents.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents }) => {
+      asyncHandler(async (payload, abortSignal, { receiveEvents, config }) => {
         abortSignal.throwIfAborted();
-
         try {
           const result = await receiveEvents({
             abortSignal: abortSignal,
@@ -56,6 +60,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             channelGroups: payload.groups,
             timetoken: payload.cursor.timetoken,
             region: payload.cursor.region,
+            filterExpression: config.filterExpression,
           });
 
           engine.transition(events.receivingSuccess(result.metadata, result.messages));
@@ -73,7 +78,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.emitEvents.type,
-      asyncHandler(async (payload, abortSignal, { emitEvents }) => {
+      asyncHandler(async (payload, _, { emitEvents }) => {
         if (payload.length > 0) {
           emitEvents(payload);
         }
@@ -82,77 +87,82 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.emitStatus.type,
-      asyncHandler(async (payload, abortSignal, { emitStatus }) => {
+      asyncHandler(async (payload, _, { emitStatus }) => {
         emitStatus(payload);
       }),
     );
 
     this.on(
       effects.reconnect.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents, shouldRetry, getRetryDelay, delay }) => {
-        if (!shouldRetry(payload.reason, payload.attempts)) {
+      asyncHandler(async (payload, abortSignal, { receiveEvents, delay, config }) => {
+        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
+          abortSignal.throwIfAborted();
+
+          await delay(config.retryConfiguration.getDelay(payload.attempts));
+
+          abortSignal.throwIfAborted();
+
+          try {
+            const result = await receiveEvents({
+              abortSignal: abortSignal,
+              channels: payload.channels,
+              channelGroups: payload.groups,
+              timetoken: payload.cursor.timetoken,
+              region: payload.cursor.region,
+              filterExpression: config.filterExpression,
+            });
+
+            return engine.transition(events.reconnectingSuccess(result.metadata, result.messages));
+          } catch (error) {
+            if (error instanceof Error && error.message === 'Aborted') {
+              return;
+            }
+
+            if (error instanceof PubNubError) {
+              return engine.transition(events.reconnectingFailure(error));
+            }
+          }
+        } else {
           return engine.transition(events.reconnectingGiveup());
-        }
-
-        abortSignal.throwIfAborted();
-
-        await delay(getRetryDelay(payload.attempts));
-
-        abortSignal.throwIfAborted();
-
-        try {
-          const result = await receiveEvents({
-            abortSignal: abortSignal,
-            channels: payload.channels,
-            channelGroups: payload.groups,
-            timetoken: payload.cursor.timetoken,
-            region: payload.cursor.region,
-          });
-
-          return engine.transition(events.reconnectingSuccess(result.metadata, result.messages));
-        } catch (error) {
-          if (error instanceof Error && error.message === 'Aborted') {
-            return;
-          }
-
-          if (error instanceof PubNubError) {
-            return engine.transition(events.reconnectingFailure(error));
-          }
         }
       }),
     );
 
     this.on(
       effects.handshakeReconnect.type,
-      asyncHandler(async (payload, abortSignal, { handshake, shouldRetry, getRetryDelay, delay }) => {
-        if (!shouldRetry(payload.reason, payload.attempts)) {
-          return engine.transition(events.handshakingReconnectingGiveup());
-        }
+      asyncHandler(
+        async (payload, abortSignal, { handshake, delay, presenceState, config }) => {
+          if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
+            abortSignal.throwIfAborted();
 
-        abortSignal.throwIfAborted();
+            await delay(config.retryConfiguration.getDelay(payload.attempts));
 
-        await delay(getRetryDelay(payload.attempts));
+            abortSignal.throwIfAborted();
 
-        abortSignal.throwIfAborted();
+            try {
+              const result = await handshake({
+                abortSignal: abortSignal,
+                channels: payload.channels,
+                channelGroups: payload.groups,
+                filterExpression: config.filterExpression,
+                state: presenceState,
+              });
 
-        try {
-          const result = await handshake({
-            abortSignal: abortSignal,
-            channels: payload.channels,
-            channelGroups: payload.groups,
-          });
+              return engine.transition(events.handshakingReconnectingSuccess(result));
+            } catch (error) {
+              if (error instanceof Error && error.message === 'Aborted') {
+                return;
+              }
 
-          return engine.transition(events.handshakingReconnectingSuccess(result));
-        } catch (error) {
-          if (error instanceof Error && error.message === 'Aborted') {
-            return;
+              if (error instanceof PubNubError) {
+                return engine.transition(events.handshakingReconnectingFailure(error));
+              }
+            }
+          } else {
+            return engine.transition(events.handshakingReconnectingGiveup());
           }
-
-          if (error instanceof PubNubError) {
-            return engine.transition(events.handshakingReconnectingFailure(error));
-          }
-        }
-      }),
+        },
+      ),
     );
   }
 }

@@ -6,24 +6,25 @@ import * as events from './events';
 export type Dependencies = {
   heartbeat: any;
   leave: any;
-  heartbeatDelay: (millisecond: number) => Promise<void>;
-  getDelayTime: () => number; // gets value from configuration
+  heartbeatDelay: () => Promise<void>;
+
+  retryDelay: (milliseconds: number) => Promise<void>;
+  config: any;
+  presenceState: any;
 };
 
 export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
-  /**
-   *   Effect Dispatcher for presence events
-   */
   constructor(engine: Engine<events.Events, effects.Effects>, dependencies: Dependencies) {
     super(dependencies);
 
     this.on(
       effects.heartbeat.type,
-      asyncHandler(async (payload, _, { heartbeat }) => {
+      asyncHandler(async (payload, _, { heartbeat, presenceState }) => {
         try {
           const result = await heartbeat({
             channels: payload.channels,
             channelGroups: payload.groups,
+            state: presenceState,
           });
 
           engine.transition(events.heartbeatSuccess());
@@ -37,32 +38,58 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
 
     this.on(
       effects.leave.type,
-      asyncHandler(async (payload, _, { leave }) => {
-        try {
-          const result = await leave({
-            channels: payload.channels,
-            channelGroups: payload.groups,
-          });
-
-          // engine.transition(events.leaveSuccess());
-        } catch (e) {
-          if (e instanceof PubNubError) {
-            // return engine.transition(events.leaveFailure(e));
-          }
+      asyncHandler(async (payload, _, { leave, config }) => {
+        if (!config.suppressLeaveEvents) {
+          try {
+            const result = await leave({
+              channels: payload.channels,
+              channelGroups: payload.groups,
+            });
+          } catch (e) {}
         }
       }),
     );
 
     this.on(
       effects.wait.type,
-      asyncHandler(async (_, abortSignal, { heartbeatDelay, getDelayTime }) => {
+      asyncHandler(async (_, abortSignal, { heartbeatDelay }) => {
         abortSignal.throwIfAborted();
 
-        await heartbeatDelay(getDelayTime());
+        await heartbeatDelay();
 
         abortSignal.throwIfAborted();
 
-        return engine.transition(events.leaveSuccess());
+        return engine.transition(events.timesUp());
+      }),
+    );
+
+    this.on(
+      effects.delayedHeartbeat.type,
+      asyncHandler(async (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) => {
+        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
+          abortSignal.throwIfAborted();
+          await retryDelay(config.retryConfiguration.getDelay(payload.attempts));
+          abortSignal.throwIfAborted();
+          try {
+            const result = await heartbeat({
+              channels: payload.channels,
+              channelGroups: payload.groups,
+              state: presenceState,
+            });
+            console.log(`after hb call`);
+            return engine.transition(events.heartbeatSuccess());
+          } catch (e) {
+            if (e instanceof Error && e.message === 'Aborted') {
+              return;
+            }
+
+            if (e instanceof PubNubError) {
+              return engine.transition(events.heartbeatFailure(e));
+            }
+          }
+        } else {
+          return engine.transition(events.heartbeatGiveup());
+        }
       }),
     );
   }

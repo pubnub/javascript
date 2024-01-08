@@ -14,7 +14,7 @@ export const subscriptionChange = createEvent(
 export const disconnect = createEvent('DISCONNECT', () => ({}));
 export const reconnect = createEvent('RECONNECT', () => ({}));
 export const restore = createEvent(
-  'RESTORE',
+  'SUBSCRIPTION_RESTORED',
   (channels: string[], groups: string[], timetoken?: string, region?: number) => ({
     channels,
     groups,
@@ -31,7 +31,6 @@ export const handshakingReconnectingSuccess = createEvent('HANDSHAKE_RECONNECT_S
 }));
 export const handshakingReconnectingFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error: PubNubError) => error);
 export const handshakingReconnectingGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', () => ({}));
-export const handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', () => ({}));
 
 export const receivingSuccess = createEvent('RECEIVE_SUCCESS', (cursor: Cursor, events: any[]) => ({
   cursor,
@@ -43,13 +42,15 @@ export const reconnectingSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', (cur
   cursor,
   events,
 }));
-export const reconnectingFailure = createEvent('RECEIVING_RECONNECTING_FAILURE', (error: PubNubError) => error);
+export const reconnectingFailure = createEvent('RECEIVE_RECONNECT_FAILURE', (error: PubNubError) => error);
 export const reconnectingGiveup = createEvent('RECEIVING_RECONNECTING_GIVEUP', () => ({}));
-export const reconnectingRetry = createEvent('RECEIVING_RECONNECTING_RETRY', () => ({}));
+export const reconnectingRetry = createEvent('RECONNECT', () => ({}));
+export const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => {});
 
 export type Events = MapOf<
   | typeof subscriptionChange
   | typeof disconnect
+  | typeof unsubscribeAll
   | typeof reconnect
   | typeof restore
   | typeof handshakingSuccess
@@ -57,7 +58,6 @@ export type Events = MapOf<
   | typeof handshakingReconnectingSuccess
   | typeof handshakingReconnectingGiveup
   | typeof handshakingReconnectingFailure
-  | typeof handshakingReconnectingRetry
   | typeof receivingSuccess
   | typeof receivingFailure
   | typeof reconnectingSuccess
