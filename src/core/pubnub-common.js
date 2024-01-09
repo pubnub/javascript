@@ -369,6 +369,9 @@ export default class {
           retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
           config: modules.config,
           presenceState: this.presenceState,
+          emitStatus: (status) => {
+            listenerManager.announceStatus(status);
+          },
         });
         this.presenceEventEngine = presenceEventEngine;
         this.join = this.presenceEventEngine.join.bind(presenceEventEngine);

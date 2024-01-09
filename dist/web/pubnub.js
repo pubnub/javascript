@@ -7147,7 +7147,7 @@
     }); });
     var receiveEvents = createManagedEffect('RECEIVE_MESSAGES', function (channels, groups, cursor) { return ({ channels: channels, groups: groups, cursor: cursor }); });
     var emitEvents = createEffect('EMIT_MESSAGES', function (events) { return events; });
-    var emitStatus = createEffect('EMIT_STATUS', function (status) { return status; });
+    var emitStatus$1 = createEffect('EMIT_STATUS', function (status) { return status; });
     var reconnect$2 = createManagedEffect('RECEIVE_RECONNECT', function (context) { return context; });
     var handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', function (context) { return context; });
 
@@ -7183,7 +7183,7 @@
     var reconnectingFailure = createEvent('RECEIVE_RECONNECT_FAILURE', function (error) { return error; });
     var reconnectingGiveup = createEvent('RECEIVING_RECONNECTING_GIVEUP', function () { return ({}); });
     var reconnectingRetry = createEvent('RECONNECT', function () { return ({}); });
-    var unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', function () { });
+    var unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', function () { return ({}); });
 
     var EventEngineDispatcher = /** @class */ (function (_super) {
         __extends(EventEngineDispatcher, _super);
@@ -7209,9 +7209,11 @@
                                     })];
                             case 2:
                                 result = _b.sent();
+                                console.log("handshake response = ".concat(JSON.stringify(result)));
                                 return [2 /*return*/, engine.transition(handshakingSuccess(result))];
                             case 3:
                                 e_1 = _b.sent();
+                                console.log('at effect, received error = ', e_1, '\n', "".concat(e_1));
                                 if (e_1 instanceof Error && e_1.message === 'Aborted') {
                                     return [2 /*return*/];
                                 }
@@ -7272,7 +7274,7 @@
                     });
                 });
             }));
-            _this.on(emitStatus.type, asyncHandler(function (payload, _, _a) {
+            _this.on(emitStatus$1.type, asyncHandler(function (payload, _, _a) {
                 var emitStatus = _a.emitStatus;
                 return __awaiter(_this, void 0, void 0, function () {
                     return __generator(this, function (_b) {
@@ -7462,14 +7464,14 @@
             channels: context.channels,
             cursor: context.cursor,
             reason: context.reason,
-        }, [emitStatus({ category: categories.PNDisconnectedUnexpectedlyCategory })]);
+        }, [emitStatus$1({ category: categories.PNDisconnectedUnexpectedlyCategory })]);
     });
     ReceiveReconnectingState.on(disconnect$1.type, function (context) {
         return ReceiveStoppedState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: context.cursor,
-        }, [emitStatus({ category: categories.PNDisconnectedCategory })]);
+        }, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
     ReceiveReconnectingState.on(restore.type, function (context, event) {
         var _a, _b;
@@ -7490,7 +7492,7 @@
         });
     });
     ReceiveReconnectingState.on(unsubscribeAll.type, function (_) {
-        return UnsubscribedState.with(undefined, [emitStatus({ category: categories.PNDisconnectedCategory })]);
+        return UnsubscribedState.with(undefined, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
 
     var ReceivingState = new State('RECEIVING');
@@ -7519,10 +7521,10 @@
             channels: context.channels,
             groups: context.groups,
             cursor: context.cursor,
-        }, [emitStatus({ category: categories.PNDisconnectedCategory })]);
+        }, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
     ReceivingState.on(unsubscribeAll.type, function (_) {
-        return UnsubscribedState.with(undefined, [emitStatus({ category: categories.PNDisconnectedCategory })]);
+        return UnsubscribedState.with(undefined, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
 
     var HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
@@ -7534,7 +7536,7 @@
             channels: context.channels,
             groups: context.groups,
             cursor: cursor,
-        }, [emitStatus({ category: categories.PNConnectedCategory })]);
+        }, [emitStatus$1({ category: categories.PNConnectedCategory })]);
     });
     HandshakeReconnectingState.on(handshakingReconnectingFailure.type, function (context, event) {
         return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: context.attempts + 1, reason: event.payload }));
@@ -7544,13 +7546,13 @@
             groups: context.groups,
             channels: context.channels,
             reason: context.reason,
-        }, [emitStatus({ category: categories.PNConnectionErrorCategory })]);
+        }, [emitStatus$1({ category: categories.PNConnectionErrorCategory })]);
     });
     HandshakeReconnectingState.on(disconnect$1.type, function (context) {
         return HandshakeStoppedState.with({
             channels: context.channels,
             groups: context.groups,
-        }, [emitStatus({ category: categories.PNDisconnectedCategory })]);
+        }, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
     HandshakeReconnectingState.on(subscriptionChange.type, function (_, event) {
         return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
@@ -7559,7 +7561,7 @@
         return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
     });
     HandshakeReconnectingState.on(unsubscribeAll.type, function (_) {
-        return UnsubscribedState.with(undefined, [emitStatus({ category: categories.PNDisconnectedCategory })]);
+        return UnsubscribedState.with(undefined, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
 
     var HandshakingState = new State('HANDSHAKING');
@@ -7579,7 +7581,7 @@
                 timetoken: context.timetoken && context.timetoken !== '0' ? context.timetoken : event.payload.timetoken,
                 region: event.payload.region,
             },
-        }, [emitStatus({ category: categories.PNConnectedCategory })]);
+        }, [emitStatus$1({ category: categories.PNConnectedCategory })]);
     });
     HandshakingState.on(handshakingFailure.type, function (context, event) {
         return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: 0, reason: event.payload }));
@@ -7719,7 +7721,7 @@
         groups: groups,
     }); });
     var leftAll = createEvent('LEFT_ALL', function () { return ({}); });
-    var heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', function () { return ({}); });
+    var heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', function (statusCode) { return ({ statusCode: statusCode }); });
     var heartbeatFailure = createEvent('HEARTBEAT_FAILURE', function (error) { return error; });
     var heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', function () { return ({}); });
     var timesUp = createEvent('TIMES_UP', function () { return ({}); });
@@ -7732,6 +7734,7 @@
         channels: channels,
         groups: groups,
     }); });
+    var emitStatus = createEffect('EMIT_STATUS', function (status) { return status; });
     var wait = createManagedEffect('WAIT', function () { return ({}); });
     var delayedHeartbeat = createManagedEffect('DELAYED_HEARTBEAT', function (context) { return context; });
 
@@ -7742,7 +7745,7 @@
             _this.on(heartbeat.type, asyncHandler(function (payload, _, _a) {
                 var heartbeat = _a.heartbeat, presenceState = _a.presenceState;
                 return __awaiter(_this, void 0, void 0, function () {
-                    var e_1;
+                    var result, e_1;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -7753,8 +7756,9 @@
                                         state: presenceState,
                                     })];
                             case 1:
-                                _b.sent();
-                                engine.transition(heartbeatSuccess());
+                                result = _b.sent();
+                                console.log('heartbeat Success: result = ', result, '\n\n', JSON.stringify(result));
+                                engine.transition(heartbeatSuccess(200));
                                 return [3 /*break*/, 3];
                             case 2:
                                 e_1 = _b.sent();
@@ -7831,8 +7835,7 @@
                                     })];
                             case 3:
                                 _b.sent();
-                                console.log("after hb call");
-                                return [2 /*return*/, engine.transition(heartbeatSuccess())];
+                                return [2 /*return*/, engine.transition(heartbeatSuccess(200))];
                             case 4:
                                 e_3 = _b.sent();
                                 if (e_3 instanceof Error && e_3.message === 'Aborted') {
@@ -7846,6 +7849,23 @@
                             case 6: return [2 /*return*/, engine.transition(heartbeatGiveup())];
                             case 7: return [2 /*return*/];
                         }
+                    });
+                });
+            }));
+            _this.on(emitStatus.type, asyncHandler(function (payload, _, _a) {
+                var emitStatus = _a.emitStatus, config = _a.config;
+                return __awaiter(_this, void 0, void 0, function () {
+                    var _b;
+                    return __generator(this, function (_c) {
+                        if (config.announceFailedHeartbeats && ((_b = payload === null || payload === void 0 ? void 0 : payload.status) === null || _b === void 0 ? void 0 : _b.error) === true) {
+                            console.log('failed => payload.status :', payload.status);
+                            emitStatus(payload.status);
+                        }
+                        else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
+                            console.log('need to announce... received event.payload = ', payload);
+                            emitStatus(__assign(__assign({}, payload), { operation: OPERATIONS.PNHeartbeatOperation, error: false }));
+                        }
+                        return [2 /*return*/];
                     });
                 });
             }));
@@ -7985,11 +8005,11 @@
 
     var HeartbeatingState = new State('HEARTBEATING');
     HeartbeatingState.onEnter(function (context) { return heartbeat(context.channels, context.groups); });
-    HeartbeatingState.on(heartbeatSuccess.type, function (context, _) {
+    HeartbeatingState.on(heartbeatSuccess.type, function (context, event) {
         return HeartbeatCooldownState.with({
             channels: context.channels,
             groups: context.groups,
-        });
+        }, [emitStatus(event.payload)]);
     });
     HeartbeatingState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
@@ -8004,7 +8024,7 @@
         }, [leave(event.payload.channels, event.payload.groups)]);
     });
     HeartbeatingState.on(heartbeatFailure.type, function (context, event) {
-        return HearbeatReconnectingState.with(__assign(__assign({}, context), { attempts: 0, reason: event.payload }));
+        return HearbeatReconnectingState.with(__assign(__assign({}, context), { attempts: 0, reason: event.payload }), [emitStatus(event.payload)]);
     });
     HeartbeatingState.on(disconnect.type, function (context) {
         return HeartbeatStoppedState.with({
@@ -8117,8 +8137,197 @@
         return RetryPolicy;
     }());
 
+    var EventEmitter = /** @class */ (function () {
+        function EventEmitter(_a) {
+            var modules = _a.modules, listenerManager = _a.listenerManager, getFileUrl = _a.getFileUrl;
+            this.modules = modules;
+            this.listenerManager = listenerManager;
+            this.getFileUrl = getFileUrl;
+            if (modules.cryptoModule)
+                this._decoder = new TextDecoder();
+        }
+        EventEmitter.prototype.emitEvent = function (e) {
+            var channel = e.channel, publishMetaData = e.publishMetaData;
+            var subscriptionMatch = e.subscriptionMatch;
+            if (channel === subscriptionMatch) {
+                subscriptionMatch = null;
+            }
+            if (e.channel.endsWith('-pnpres')) {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                if (channel) {
+                    announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
+                }
+                if (subscriptionMatch) {
+                    announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
+                }
+                announce.action = e.payload.action;
+                announce.state = e.payload.data;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.occupancy = e.payload.occupancy;
+                announce.uuid = e.payload.uuid;
+                announce.timestamp = e.payload.timestamp;
+                if (e.payload.join) {
+                    announce.join = e.payload.join;
+                }
+                if (e.payload.leave) {
+                    announce.leave = e.payload.leave;
+                }
+                if (e.payload.timeout) {
+                    announce.timeout = e.payload.timeout;
+                }
+                this.listenerManager.announcePresence(announce);
+            }
+            else if (e.messageType === 1) {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                announce.message = e.payload;
+                this.listenerManager.announceSignal(announce);
+            }
+            else if (e.messageType === 2) {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                announce.message = {
+                    event: e.payload.event,
+                    type: e.payload.type,
+                    data: e.payload.data,
+                };
+                this.listenerManager.announceObjects(announce);
+                if (e.payload.type === 'uuid') {
+                    var eventData = this._renameChannelField(announce);
+                    this.listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'user' }) }));
+                }
+                else if (message.payload.type === 'channel') {
+                    var eventData = this._renameChannelField(announce);
+                    this.listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) }));
+                }
+                else if (message.payload.type === 'membership') {
+                    var eventData = this._renameChannelField(announce);
+                    var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
+                    membershipData.user = user;
+                    membershipData.space = space;
+                    this.listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), data: membershipData }) }));
+                }
+            }
+            else if (e.messageType === 3) {
+                var announce = {};
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                announce.data = {
+                    messageTimetoken: e.payload.data.messageTimetoken,
+                    actionTimetoken: e.payload.data.actionTimetoken,
+                    type: e.payload.data.type,
+                    uuid: e.issuingClientId,
+                    value: e.payload.data.value,
+                };
+                announce.event = e.payload.event;
+                this.listenerManager.announceMessageAction(announce);
+            }
+            else if (e.messageType === 4) {
+                var announce = {};
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                var msgPayload = e.payload;
+                if (this.modules.cryptoModule) {
+                    var decryptedPayload = void 0;
+                    try {
+                        var decryptedData = this.modules.cryptoModule.decrypt(e.payload);
+                        decryptedPayload =
+                            decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
+                    }
+                    catch (e) {
+                        decryptedPayload = null;
+                        announce.error = "Error while decrypting message content: ".concat(e.message);
+                    }
+                    if (decryptedPayload !== null) {
+                        msgPayload = decryptedPayload;
+                    }
+                }
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                announce.message = msgPayload.message;
+                announce.file = {
+                    id: msgPayload.file.id,
+                    name: msgPayload.file.name,
+                    url: this.getFileUrl({
+                        id: msgPayload.file.id,
+                        name: msgPayload.file.name,
+                        channel: channel,
+                    }),
+                };
+                this.listenerManager.announceFile(announce);
+            }
+            else {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                if (this.modules.cryptoModule) {
+                    var decryptedPayload = void 0;
+                    try {
+                        var decryptedData = this.modules.cryptoModule.decrypt(e.payload);
+                        decryptedPayload =
+                            decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
+                    }
+                    catch (e) {
+                        decryptedPayload = null;
+                        announce.error = "Error while decrypting message content: ".concat(e.message);
+                    }
+                    if (decryptedPayload != null) {
+                        announce.message = decryptedPayload;
+                    }
+                    else {
+                        announce.message = e.payload;
+                    }
+                }
+                else {
+                    announce.message = e.payload;
+                }
+                this.listenerManager.announceMessage(announce);
+            }
+        };
+        EventEmitter.prototype.emitStatus = function (s) {
+        };
+        EventEmitter.prototype._renameEvent = function (e) {
+            return e === 'set' ? 'updated' : 'removed';
+        };
+        EventEmitter.prototype._renameChannelField = function (announce) {
+            var channel = announce.channel, eventData = __rest(announce, ["channel"]);
+            eventData.spaceId = channel;
+            return eventData;
+        };
+        return EventEmitter;
+    }());
+
     var default_1$3 = /** @class */ (function () {
-        //
         function default_1(setup) {
             var _this = this;
             var networking = setup.networking, cbor = setup.cbor;
@@ -8173,6 +8382,11 @@
             this.handshake = endpointCreator.bind(this, modules, endpoint$1);
             this.receiveMessages = endpointCreator.bind(this, modules, endpoint);
             if (config.enableEventEngine === true) {
+                this._eventEmitter = new EventEmitter({
+                    modules: modules,
+                    listenerManager: this._listenerManager,
+                    getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
+                });
                 if (config.maintainPresenceState) {
                     this.presenceState = {};
                     this.setState = function (args) {
@@ -8196,6 +8410,9 @@
                         retryDelay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
                         config: modules.config,
                         presenceState: this.presenceState,
+                        emitStatus: function (status) {
+                            listenerManager.announceStatus(status);
+                        },
                     });
                     this.presenceEventEngine = presenceEventEngine;
                     this.join = this.presenceEventEngine.join.bind(presenceEventEngine);
@@ -8216,7 +8433,7 @@
                         try {
                             for (var events_1 = __values(events), events_1_1 = events_1.next(); !events_1_1.done; events_1_1 = events_1.next()) {
                                 var event_1 = events_1_1.value;
-                                listenerManager.announceMessage(event_1);
+                                _this._eventEmitter.emitEvent(event_1);
                             }
                         }
                         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -9926,6 +10143,14 @@
         }
         if (isString(obj)) {
             return markBoxed(inspect(String(obj)));
+        }
+        // note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
+        /* eslint-env browser */
+        if (typeof window !== 'undefined' && obj === window) {
+            return '{ [object Window] }';
+        }
+        if (obj === commonjsGlobal) {
+            return '{ [object globalThis] }';
         }
         if (!isDate(obj) && !isRegExp$1(obj)) {
             var ys = arrObjKeys(obj, inspect);
