@@ -6,7 +6,7 @@ import {
   CryptoModule,
   AesCbcCryptor,
   LegacyCryptor,
-} from '../../../../lib/crypto/modules/NodeCryptoModule/nodeCryptoModule.js';
+} from '../../../../lib/crypto/modules/NodeCryptoModule/serverCryptoModule.js';
 
 Before(function () {
   this.useRandomIVs = true;
