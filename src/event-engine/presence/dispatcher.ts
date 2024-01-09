@@ -1,5 +1,6 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { asyncHandler, Dispatcher, Engine } from '../core';
+import PNOperations from '../../core/constants/operations';
 import * as effects from './effects';
 import * as events from './events';
 
@@ -11,6 +12,8 @@ export type Dependencies = {
   retryDelay: (milliseconds: number) => Promise<void>;
   config: any;
   presenceState: any;
+
+  emitStatus: (status: any) => void;
 };
 
 export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
@@ -26,8 +29,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
             channelGroups: payload.groups,
             state: presenceState,
           });
-
-          engine.transition(events.heartbeatSuccess());
+          engine.transition(events.heartbeatSuccess(200));
         } catch (e) {
           if (e instanceof PubNubError) {
             return engine.transition(events.heartbeatFailure(e));
@@ -76,8 +78,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
               channelGroups: payload.groups,
               state: presenceState,
             });
-            console.log(`after hb call`);
-            return engine.transition(events.heartbeatSuccess());
+            return engine.transition(events.heartbeatSuccess(200));
           } catch (e) {
             if (e instanceof Error && e.message === 'Aborted') {
               return;
@@ -89,6 +90,17 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
           }
         } else {
           return engine.transition(events.heartbeatGiveup());
+        }
+      }),
+    );
+
+    this.on(
+      effects.emitStatus.type,
+      asyncHandler(async (payload, _, { emitStatus, config }) => {
+        if (config.announceFailedHeartbeats && payload?.status?.error === true) {
+          emitStatus(payload.status);
+        } else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
+          emitStatus({ ...payload, operation: PNOperations.PNHeartbeatOperation, error: false });
         }
       }),
     );

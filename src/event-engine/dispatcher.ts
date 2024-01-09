@@ -35,7 +35,6 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             filterExpression: config.filterExpression,
             state: presenceState,
           });
-
           return engine.transition(events.handshakingSuccess(result));
         } catch (e) {
           if (e instanceof Error && e.message === 'Aborted') {
@@ -78,7 +77,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.emitEvents.type,
-      asyncHandler(async (payload, _, { emitEvents }) => {
+      asyncHandler( async (payload, _, { emitEvents }) => {
         if (payload.length > 0) {
           emitEvents(payload);
         }

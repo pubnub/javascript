@@ -10,7 +10,7 @@ import {
   left,
   leftAll,
 } from '../events';
-import { Effects, delayedHeartbeat, leave } from '../effects';
+import { Effects, delayedHeartbeat, emitStatus, leave } from '../effects';
 import { HeartbeatingState } from './heartbeating';
 import { HeartbeatStoppedState } from './heartbeat_stopped';
 import { HeartbeatCooldownState } from './heartbeat_cooldown';
@@ -59,15 +59,20 @@ HearbeatReconnectingState.on(disconnect.type, (context, _) => {
   );
 });
 
-HearbeatReconnectingState.on(heartbeatSuccess.type, (context, _) => {
-  return HeartbeatCooldownState.with({
-    channels: context.channels,
-    groups: context.groups,
-  });
+HearbeatReconnectingState.on(heartbeatSuccess.type, (context, event) => {
+  return HeartbeatCooldownState.with(
+    {
+      channels: context.channels,
+      groups: context.groups,
+    },
+    [emitStatus(event.payload)],
+  );
 });
 
 HearbeatReconnectingState.on(heartbeatFailure.type, (context, event) =>
-  HearbeatReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }),
+  HearbeatReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }, [
+    emitStatus(event.payload),
+  ]),
 );
 
 HearbeatReconnectingState.on(heartbeatGiveup.type, (context, event) => {

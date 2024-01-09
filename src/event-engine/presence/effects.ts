@@ -11,6 +11,8 @@ export const leave = createEffect('LEAVE', (channels: string[], groups: string[]
   groups,
 }));
 
+export const emitStatus = createEffect('EMIT_STATUS', (status: any) => status);
+
 export const wait = createManagedEffect('WAIT', () => ({}));
 
 export const delayedHeartbeat = createManagedEffect(
@@ -18,4 +20,4 @@ export const delayedHeartbeat = createManagedEffect(
   (context: HeartbeatReconnectingStateContext) => context,
 );
 
-export type Effects = MapOf<typeof heartbeat | typeof leave | typeof wait | typeof delayedHeartbeat>;
+export type Effects = MapOf<typeof heartbeat | typeof leave | typeof emitStatus |typeof wait | typeof delayedHeartbeat>;
