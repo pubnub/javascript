@@ -20,4 +20,6 @@ export const delayedHeartbeat = createManagedEffect(
   (context: HeartbeatReconnectingStateContext) => context,
 );
 
-export type Effects = MapOf<typeof heartbeat | typeof leave | typeof emitStatus |typeof wait | typeof delayedHeartbeat>;
+export type Effects = MapOf<
+  typeof heartbeat | typeof leave | typeof emitStatus | typeof wait | typeof delayedHeartbeat
+>;
