@@ -93,6 +93,7 @@ import uuidGenerator from './components/uuid';
 import { EventEngine } from '../event-engine';
 import { PresenceEventEngine } from '../event-engine/presence/presence';
 import { RetryPolicy } from '../event-engine/core/retryPolicy';
+import EventEmitter from './components/eventEmitter';
 
 export default class {
   _config;
@@ -273,7 +274,7 @@ export default class {
 
   decrypt;
 
-  //
+  _eventEmitter;
 
   constructor(setup) {
     const { networking, cbor } = setup;
@@ -341,6 +342,11 @@ export default class {
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
     if (config.enableEventEngine === true) {
+      this._eventEmitter = new EventEmitter({
+        modules: modules,
+        listenerManager: this._listenerManager,
+        getFileUrl: (params) => getFileUrlFunction(modules, params),
+      });
       if (config.maintainPresenceState) {
         this.presenceState = {};
         this.setState = (args) => {
@@ -380,7 +386,7 @@ export default class {
         config: modules.config,
         emitEvents: (events) => {
           for (const event of events) {
-            listenerManager.announceMessage(event);
+            this._eventEmitter.emitEvent(event);
           }
         },
         emitStatus: (status) => {
