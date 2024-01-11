@@ -97,7 +97,7 @@ export class EventEngine {
     }
   }
 
-  reconnect({timetoken, region } : {timetoken?:string, region?: number}) {
+  reconnect({ timetoken, region }: { timetoken?: string; region?: number }) {
     this.engine.transition(events.reconnect(timetoken, region));
   }
 

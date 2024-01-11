@@ -71,8 +71,8 @@ HandshakeReconnectingState.on(disconnect.type, (context) =>
     groups: context.groups,
     cursor: {
       timetoken: context.timetoken ?? '0',
-      region: 0
-    }
+      region: 0,
+    },
   }),
 );
 

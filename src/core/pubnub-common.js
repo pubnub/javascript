@@ -404,7 +404,6 @@ export default class {
       this.disconnect = eventEngine.disconnect.bind(eventEngine);
       this.destroy = eventEngine.dispose.bind(eventEngine);
       this.eventEngine = eventEngine;
-      
     } else {
       const subscriptionManager = new SubscriptionManager({
         timeEndpoint,

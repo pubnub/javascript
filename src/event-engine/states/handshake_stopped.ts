@@ -17,7 +17,7 @@ HandshakeStoppedState.on(subscriptionChange.type, (context, event) =>
   HandshakeStoppedState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    cursor: context.cursor
+    cursor: context.cursor,
   }),
 );
 

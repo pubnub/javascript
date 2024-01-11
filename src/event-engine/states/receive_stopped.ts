@@ -27,7 +27,7 @@ ReceiveStoppedState.on(restore.type, (context, event) =>
     groups: event.payload.groups,
     cursor: {
       timetoken: event.payload.timetoken,
-      region: event.payload?.region ?? context.cursor.region
+      region: event.payload?.region ?? context.cursor.region,
     },
   }),
 );
