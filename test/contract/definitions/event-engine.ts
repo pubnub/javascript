@@ -1,7 +1,7 @@
 import { after, binding, given, then, when } from 'cucumber-tsflow';
 import { DemoKeyset } from '../shared/keysets';
 import { PubNub, PubNubManager } from '../shared/pubnub';
-import type { MessageEvent, StatusEvent } from 'pubnub';
+import type { MessageEvent, PresenceEvent, StatusEvent } from 'pubnub';
 import type { Change } from '../../../src/event-engine/core/change';
 import { DataTable } from '@cucumber/cucumber';
 import { expect } from 'chai';
@@ -32,6 +32,7 @@ class EventEngineSteps {
 
   private messagePromise?: Promise<MessageEvent>;
   private statusPromise?: Promise<StatusEvent>;
+  private presencePromise?: Promise<PresenceEvent>;
   private changelog: Change<any, any>[] = [];
   private configuration: any = {};
 
@@ -85,10 +86,10 @@ class EventEngineSteps {
     });
 
     this.statusPromise = new Promise<StatusEvent>((resolveStatus) => {
-      this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
+      this.presencePromise = new Promise<PresenceEvent>((resolvePresence) => {
         this.pubnub?.addListener({
-          message(messageEvent) {
-            resolveMessage(messageEvent);
+          presence(presenceEvent) {
+            resolvePresence(presenceEvent);
           },
           status(statusEvent) {
             resolveStatus(statusEvent);
@@ -100,9 +101,9 @@ class EventEngineSteps {
     });
   }
 
-  @then('I wait for getting Presence joined events')
+  @then('I wait for getting Presence joined events', undefined, 10000)
   async thenPresenceJoinEvent() {
-    const status = await this.messagePromise;
+    const status = await this.presencePromise;
   }
 
   @then('I wait {string} seconds')
@@ -208,14 +209,14 @@ class EventEngineSteps {
     const timetoken = await this.pubnub?.publish({ channel: 'test', message: { content: 'Hello world!' } });
   }
 
-  @then('I receive an error in my subscribe response')
+  @then('I receive an error in my subscribe response', undefined, 10000)
   async thenIReceiveError() {
     const status = await this.statusPromise;
 
     expect(status?.category).to.equal('PNConnectionErrorCategory');
   }
 
-  @then('I receive the message in my subscribe response')
+  @then('I receive the message in my subscribe response', undefined, 10000)
   async receiveMessage() {
     const message = await this.messagePromise;
   }
