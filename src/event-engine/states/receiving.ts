@@ -1,7 +1,15 @@
 import { State } from '../core/state';
 import { Cursor } from '../../models/Cursor';
-import { Effects, emitEvents, emitStatus, receiveEvents } from '../effects';
-import { disconnect, Events, receivingFailure, receivingSuccess, subscriptionChange, unsubscribeAll } from '../events';
+import { Effects, emitMessages, emitStatus, receiveMessages } from '../effects';
+import {
+  disconnect,
+  Events,
+  receiveFailure,
+  receiveSuccess,
+  restore,
+  subscriptionChange,
+  unsubscribeAll,
+} from '../events';
 import { UnsubscribedState } from './unsubscribed';
 import { ReceiveReconnectingState } from './receive_reconnecting';
 import { ReceiveStoppedState } from './receive_stopped';
@@ -15,12 +23,12 @@ export type ReceivingStateContext = {
 
 export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');
 
-ReceivingState.onEnter((context) => receiveEvents(context.channels, context.groups, context.cursor));
-ReceivingState.onExit(() => receiveEvents.cancel);
+ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
+ReceivingState.onExit(() => receiveMessages.cancel);
 
-ReceivingState.on(receivingSuccess.type, (context, event) => {
+ReceivingState.on(receiveSuccess.type, (context, event) => {
   return ReceivingState.with({ channels: context.channels, groups: context.groups, cursor: event.payload.cursor }, [
-    emitEvents(event.payload.events),
+    emitMessages(event.payload.events),
   ]);
 });
 
@@ -36,7 +44,22 @@ ReceivingState.on(subscriptionChange.type, (context, event) => {
   });
 });
 
-ReceivingState.on(receivingFailure.type, (context, event) => {
+ReceivingState.on(restore.type, (context, event) => {
+  if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
+    return UnsubscribedState.with(undefined);
+  }
+
+  return ReceivingState.with({
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: {
+      timetoken: event.payload.timetoken,
+      region: event.payload?.region ?? context.cursor.region,
+    },
+  });
+});
+
+ReceivingState.on(receiveFailure.type, (context, event) => {
   return ReceiveReconnectingState.with({
     ...context,
     attempts: 0,
