@@ -8,16 +8,16 @@ export const handshake = createManagedEffect('HANDSHAKE', (channels: string[], g
   groups,
 }));
 
-export const receiveEvents = createManagedEffect(
+export const receiveMessages = createManagedEffect(
   'RECEIVE_MESSAGES',
   (channels: string[], groups: string[], cursor: Cursor) => ({ channels, groups, cursor }),
 );
 
-export const emitEvents = createEffect('EMIT_MESSAGES', (events: any[]) => events);
+export const emitMessages = createEffect('EMIT_MESSAGES', (events: any[]) => events);
 
 export const emitStatus = createEffect('EMIT_STATUS', (status: any) => status);
 
-export const reconnect = createManagedEffect(
+export const receiveReconnect = createManagedEffect(
   'RECEIVE_RECONNECT',
   (context: ReceiveReconnectingStateContext) => context,
 );
@@ -28,10 +28,10 @@ export const handshakeReconnect = createManagedEffect(
 );
 
 export type Effects = MapOf<
-  | typeof receiveEvents
+  | typeof receiveMessages
   | typeof handshake
-  | typeof emitEvents
-  | typeof reconnect
+  | typeof emitMessages
+  | typeof receiveReconnect
   | typeof handshakeReconnect
   | typeof emitStatus
 >;

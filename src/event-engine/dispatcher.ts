@@ -5,7 +5,7 @@ import * as events from './events';
 
 export type Dependencies = {
   handshake: any;
-  receiveEvents: any;
+  receiveMessages: any;
   join: any;
   leave: any;
   leaveAll: any;
@@ -14,7 +14,7 @@ export type Dependencies = {
 
   delay: (milliseconds: number) => Promise<void>;
 
-  emitEvents: (events: any[]) => void;
+  emitMessages: (events: any[]) => void;
   emitStatus: (status: any) => void;
 };
 
@@ -28,32 +28,33 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
         abortSignal.throwIfAborted();
 
         try {
-          const result = await handshake({
+          const handshakeParams: any = {
             abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
             filterExpression: config.filterExpression,
-            state: presenceState,
-          });
-          return engine.transition(events.handshakingSuccess(result));
+          };
+          if (config.maintainPresenceState) handshakeParams.state = presenceState;
+          const result = await handshake(handshakeParams);
+          return engine.transition(events.handshakeSuccess(result));
         } catch (e) {
           if (e instanceof Error && e.message === 'Aborted') {
             return;
           }
 
           if (e instanceof PubNubError) {
-            return engine.transition(events.handshakingFailure(e));
+            return engine.transition(events.handshakeFailure(e));
           }
         }
       }),
     );
 
     this.on(
-      effects.receiveEvents.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents, config }) => {
+      effects.receiveMessages.type,
+      asyncHandler(async (payload, abortSignal, { receiveMessages, config }) => {
         abortSignal.throwIfAborted();
         try {
-          const result = await receiveEvents({
+          const result = await receiveMessages({
             abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
@@ -62,24 +63,24 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             filterExpression: config.filterExpression,
           });
 
-          engine.transition(events.receivingSuccess(result.metadata, result.messages));
+          engine.transition(events.receiveSuccess(result.metadata, result.messages));
         } catch (error) {
           if (error instanceof Error && error.message === 'Aborted') {
             return;
           }
 
           if (error instanceof PubNubError && !abortSignal.aborted) {
-            return engine.transition(events.receivingFailure(error));
+            return engine.transition(events.receiveFailure(error));
           }
         }
       }),
     );
 
     this.on(
-      effects.emitEvents.type,
-      asyncHandler(async (payload, _, { emitEvents }) => {
+      effects.emitMessages.type,
+      asyncHandler(async (payload, _, { emitMessages }) => {
         if (payload.length > 0) {
-          emitEvents(payload);
+          emitMessages(payload);
         }
       }),
     );
@@ -92,8 +93,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
     );
 
     this.on(
-      effects.reconnect.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents, delay, config }) => {
+      effects.receiveReconnect.type,
+      asyncHandler(async (payload, abortSignal, { receiveMessages, delay, config }) => {
         if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
           abortSignal.throwIfAborted();
 
@@ -102,7 +103,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
           abortSignal.throwIfAborted();
 
           try {
-            const result = await receiveEvents({
+            const result = await receiveMessages({
               abortSignal: abortSignal,
               channels: payload.channels,
               channelGroups: payload.groups,
@@ -111,18 +112,22 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               filterExpression: config.filterExpression,
             });
 
-            return engine.transition(events.reconnectingSuccess(result.metadata, result.messages));
+            return engine.transition(events.receiveReconnectSuccess(result.metadata, result.messages));
           } catch (error) {
             if (error instanceof Error && error.message === 'Aborted') {
               return;
             }
 
             if (error instanceof PubNubError) {
-              return engine.transition(events.reconnectingFailure(error));
+              return engine.transition(events.receiveReconnectFailure(error));
             }
           }
         } else {
-          return engine.transition(events.reconnectingGiveup());
+          return engine.transition(
+            events.receiveReconnectGiveup(
+              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+            ),
+          );
         }
       }),
     );
@@ -138,26 +143,31 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
           abortSignal.throwIfAborted();
 
           try {
-            const result = await handshake({
+            const handshakeParams: any = {
               abortSignal: abortSignal,
               channels: payload.channels,
               channelGroups: payload.groups,
               filterExpression: config.filterExpression,
-              state: presenceState,
-            });
+            };
+            if (config.maintainPresenceState) handshakeParams.state = presenceState;
+            const result = await handshake(handshakeParams);
 
-            return engine.transition(events.handshakingReconnectingSuccess(result));
+            return engine.transition(events.handshakeReconnectSuccess(result));
           } catch (error) {
             if (error instanceof Error && error.message === 'Aborted') {
               return;
             }
 
             if (error instanceof PubNubError) {
-              return engine.transition(events.handshakingReconnectingFailure(error));
+              return engine.transition(events.handshakeReconnectFailure(error));
             }
           }
         } else {
-          return engine.transition(events.handshakingReconnectingGiveup());
+          return engine.transition(
+            events.handshakeReconnectGiveup(
+              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+            ),
+          );
         }
       }),
     );
