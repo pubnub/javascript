@@ -116,7 +116,7 @@ describe('EventEngine', () => {
 
     await forEvent('HEARTBEAT_SUCCESS', 1000);
 
-    await forState('HEARTBEATCOOLDOWN', 1000);
+    await forState('HEARTBEAT_COOLDOWN', 1000);
 
     pubnub.leaveAll();
 
