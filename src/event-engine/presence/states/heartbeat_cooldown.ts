@@ -10,7 +10,7 @@ export type HeartbeatCooldownStateContext = {
   groups: string[];
 };
 
-export const HeartbeatCooldownState = new State<HeartbeatCooldownStateContext, Events, Effects>('HEARTBEATCOOLDOWN');
+export const HeartbeatCooldownState = new State<HeartbeatCooldownStateContext, Events, Effects>('HEARTBEAT_COOLDOWN');
 
 HeartbeatCooldownState.onEnter(() => wait());
 HeartbeatCooldownState.onExit(() => wait.cancel);

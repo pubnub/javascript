@@ -1,6 +1,6 @@
 import { State } from '../../core/state';
-import { Effects, leave } from '../effects';
-import { Events, joined, left, reconnect, leftAll, disconnect } from '../events';
+import { Effects } from '../effects';
+import { Events, joined, left, reconnect, leftAll } from '../events';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
 import { HeartbeatingState } from './heartbeating';
 
@@ -19,13 +19,10 @@ HeartbeatStoppedState.on(joined.type, (context, event) =>
 );
 
 HeartbeatStoppedState.on(left.type, (context, event) =>
-  HeartbeatStoppedState.with(
-    {
-      channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
-      groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
-    },
-    [leave(event.payload.channels, event.payload.groups)],
-  ),
+  HeartbeatStoppedState.with({
+    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
+    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
+  }),
 );
 
 HeartbeatStoppedState.on(reconnect.type, (context, _) =>
@@ -35,16 +32,4 @@ HeartbeatStoppedState.on(reconnect.type, (context, _) =>
   }),
 );
 
-HeartbeatStoppedState.on(disconnect.type, (context, _) =>
-  HeartbeatStoppedState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-    },
-    [leave(context.channels, context.groups)],
-  ),
-);
-
-HeartbeatStoppedState.on(leftAll.type, (context, _) =>
-  HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]),
-);
+HeartbeatStoppedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined));

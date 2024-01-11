@@ -16,13 +16,10 @@ export const HeartbeatingState = new State<HeartbeatingStateContext, Events, Eff
 HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));
 
 HeartbeatingState.on(heartbeatSuccess.type, (context, event) => {
-  return HeartbeatCooldownState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-    },
-    [emitStatus(event.payload)],
-  );
+  return HeartbeatCooldownState.with({
+    channels: context.channels,
+    groups: context.groups,
+  });
 });
 
 HeartbeatingState.on(joined.type, (context, event) =>
@@ -43,14 +40,11 @@ HeartbeatingState.on(left.type, (context, event) => {
 });
 
 HeartbeatingState.on(heartbeatFailure.type, (context, event) => {
-  return HearbeatReconnectingState.with(
-    {
-      ...context,
-      attempts: 0,
-      reason: event.payload,
-    },
-    [emitStatus(event.payload)],
-  );
+  return HearbeatReconnectingState.with({
+    ...context,
+    attempts: 0,
+    reason: event.payload,
+  });
 });
 
 HeartbeatingState.on(disconnect.type, (context) =>

@@ -60,19 +60,14 @@ HearbeatReconnectingState.on(disconnect.type, (context, _) => {
 });
 
 HearbeatReconnectingState.on(heartbeatSuccess.type, (context, event) => {
-  return HeartbeatCooldownState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-    },
-    [emitStatus(event.payload)],
-  );
+  return HeartbeatCooldownState.with({
+    channels: context.channels,
+    groups: context.groups,
+  });
 });
 
 HearbeatReconnectingState.on(heartbeatFailure.type, (context, event) =>
-  HearbeatReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }, [
-    emitStatus(event.payload),
-  ]),
+  HearbeatReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }),
 );
 
 HearbeatReconnectingState.on(heartbeatGiveup.type, (context, event) => {

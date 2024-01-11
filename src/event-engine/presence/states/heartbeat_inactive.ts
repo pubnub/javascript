@@ -1,6 +1,6 @@
 import { State } from '../../core/state';
 import { Effects } from '../effects';
-import { Events, joined, left } from '../events';
+import { Events, joined } from '../events';
 import { HeartbeatingState } from './heartbeating';
 
 export const HeartbeatInactiveState = new State<void, Events, Effects>('HEARTBEAT_INACTIVE');
@@ -11,5 +11,3 @@ HeartbeatInactiveState.on(joined.type, (_, event) =>
     groups: event.payload.groups,
   }),
 );
-
-HeartbeatInactiveState.on(left.type, (_, event) => HeartbeatInactiveState.with());
