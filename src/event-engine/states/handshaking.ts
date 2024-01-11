@@ -4,21 +4,23 @@ import {
   disconnect,
   restore,
   Events,
-  handshakingFailure,
-  handshakingSuccess,
+  handshakeFailure,
+  handshakeSuccess,
   subscriptionChange,
   unsubscribeAll,
+  reconnect,
 } from '../events';
 import { HandshakeReconnectingState } from './handshake_reconnecting';
 import { HandshakeStoppedState } from './handshake_stopped';
 import { ReceivingState } from './receiving';
 import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
+import { Cursor } from '../../models/Cursor';
 
 export type HandshakingStateContext = {
   channels: string[];
   groups: string[];
-  timetoken?: string;
+  cursor?: Cursor;
 };
 
 export const HandshakingState = new State<HandshakingStateContext, Events, Effects>('HANDSHAKING');
@@ -34,27 +36,33 @@ HandshakingState.on(subscriptionChange.type, (context, event) => {
   return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
 });
 
-HandshakingState.on(handshakingSuccess.type, (context, event) =>
+HandshakingState.on(handshakeSuccess.type, (context, event) =>
   ReceivingState.with(
     {
       channels: context.channels,
       groups: context.groups,
       cursor: {
-        timetoken: context.timetoken && context.timetoken !== '0' ? context.timetoken : event.payload.timetoken,
+        timetoken: context.cursor?.timetoken ?? event.payload.timetoken,
         region: event.payload.region,
       },
     },
-    [emitStatus({ category: categoryConstants.PNConnectedCategory })],
+    [
+      emitStatus({
+        category: categoryConstants.PNConnectedCategory,
+      }),
+    ],
   ),
 );
 
-HandshakingState.on(handshakingFailure.type, (context, event) =>
-  HandshakeReconnectingState.with({
-    ...context,
+HandshakingState.on(handshakeFailure.type, (context, event) => {
+  return HandshakeReconnectingState.with({
+    channels: context.channels,
+    groups: context.groups,
+    timetoken: context.cursor?.timetoken,
     attempts: 0,
     reason: event.payload,
-  }),
-);
+  });
+});
 
 HandshakingState.on(disconnect.type, (context) =>
   HandshakeStoppedState.with({
@@ -63,12 +71,15 @@ HandshakingState.on(disconnect.type, (context) =>
   }),
 );
 
-HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
-
 HandshakingState.on(restore.type, (_, event) =>
   HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    timetoken: event.payload.timetoken,
+    cursor: {
+      timetoken: event.payload.timetoken,
+      region: event.payload?.region ?? 0,
+    },
   }),
 );
+
+HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());

@@ -1,19 +1,19 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { Cursor } from '../../models/Cursor';
 import { State } from '../core/state';
-import { Effects, emitEvents, reconnect, emitStatus } from '../effects';
+import { Effects, emitMessages, receiveReconnect, emitStatus } from '../effects';
 import {
   disconnect,
   Events,
-  reconnectingFailure,
-  reconnectingGiveup,
-  reconnectingSuccess,
+  receiveReconnectFailure,
+  receiveReconnectGiveup,
+  receiveReconnectSuccess,
   restore,
   subscriptionChange,
   unsubscribeAll,
 } from '../events';
 import { ReceivingState } from './receiving';
-import { ReceiveFailureState } from './receive_failure';
+import { ReceiveFailedState } from './receive_failed';
 import { ReceiveStoppedState } from './receive_stopped';
 import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
@@ -31,33 +31,33 @@ export const ReceiveReconnectingState = new State<ReceiveReconnectingStateContex
   'RECEIVE_RECONNECTING',
 );
 
-ReceiveReconnectingState.onEnter((context) => reconnect(context));
-ReceiveReconnectingState.onExit(() => reconnect.cancel);
+ReceiveReconnectingState.onEnter((context) => receiveReconnect(context));
+ReceiveReconnectingState.onExit(() => receiveReconnect.cancel);
 
-ReceiveReconnectingState.on(reconnectingSuccess.type, (context, event) =>
+ReceiveReconnectingState.on(receiveReconnectSuccess.type, (context, event) =>
   ReceivingState.with(
     {
       channels: context.channels,
       groups: context.groups,
       cursor: event.payload.cursor,
     },
-    [emitEvents(event.payload.events)],
+    [emitMessages(event.payload.events)],
   ),
 );
 
-ReceiveReconnectingState.on(reconnectingFailure.type, (context, event) =>
+ReceiveReconnectingState.on(receiveReconnectFailure.type, (context, event) =>
   ReceiveReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }),
 );
 
-ReceiveReconnectingState.on(reconnectingGiveup.type, (context) =>
-  ReceiveFailureState.with(
+ReceiveReconnectingState.on(receiveReconnectGiveup.type, (context, event) =>
+  ReceiveFailedState.with(
     {
       groups: context.groups,
       channels: context.channels,
       cursor: context.cursor,
-      reason: context.reason,
+      reason: event.payload,
     },
-    [emitStatus({ category: categoryConstants.PNDisconnectedUnexpectedlyCategory })],
+    [emitStatus({ category: categoryConstants.PNDisconnectedUnexpectedlyCategory, error: event.payload?.message })],
   ),
 );
 
@@ -77,8 +77,8 @@ ReceiveReconnectingState.on(restore.type, (context, event) =>
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: {
-      timetoken: event.payload.timetoken ?? context.cursor.timetoken,
-      region: event.payload.region ?? context.cursor.region,
+      timetoken: event.payload.timetoken,
+      region: event.payload?.region ?? context.cursor.region,
     },
   }),
 );

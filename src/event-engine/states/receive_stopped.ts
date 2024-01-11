@@ -3,7 +3,6 @@ import { State } from '../core/state';
 import { Effects } from '../effects';
 import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
 import { HandshakingState } from './handshaking';
-import { ReceivingState } from './receiving';
 import { UnsubscribedState } from './unsubscribed';
 
 type ReceiveStoppedStateContext = {
@@ -12,10 +11,10 @@ type ReceiveStoppedStateContext = {
   cursor: Cursor;
 };
 
-export const ReceiveStoppedState = new State<ReceiveStoppedStateContext, Events, Effects>('STOPPED');
+export const ReceiveStoppedState = new State<ReceiveStoppedStateContext, Events, Effects>('RECEIVE_STOPPED');
 
 ReceiveStoppedState.on(subscriptionChange.type, (context, event) =>
-  ReceivingState.with({
+  ReceiveStoppedState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: context.cursor,
@@ -23,17 +22,24 @@ ReceiveStoppedState.on(subscriptionChange.type, (context, event) =>
 );
 
 ReceiveStoppedState.on(restore.type, (context, event) =>
-  ReceivingState.with({
+  ReceiveStoppedState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    cursor: context.cursor,
+    cursor: {
+      timetoken: event.payload.timetoken,
+      region: event.payload?.region ?? context.cursor.region
+    },
   }),
 );
 
-ReceiveStoppedState.on(reconnect.type, (context) =>
+ReceiveStoppedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
+    cursor: {
+      timetoken: event.payload?.timetoken ?? context.cursor.timetoken,
+      region: event.payload?.region ?? context.cursor.region,
+    },
   }),
 );
 

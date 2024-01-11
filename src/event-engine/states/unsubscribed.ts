@@ -9,14 +9,16 @@ UnsubscribedState.on(subscriptionChange.type, (_, event) =>
   HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    timetoken: event.payload.timetoken,
   }),
 );
 
-UnsubscribedState.on(restore.type, (_, event) =>
-  HandshakingState.with({
+UnsubscribedState.on(restore.type, (_, event) => {
+  return HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    timetoken: event.payload.timetoken,
-  }),
-);
+    cursor: {
+      timetoken: event.payload.timetoken,
+      region: event.payload?.region ?? 0,
+    },
+  });
+});
