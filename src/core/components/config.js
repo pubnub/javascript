@@ -207,7 +207,7 @@ export default class {
     this.requestMessageCountThreshold = setup.requestMessageCountThreshold;
 
     if (setup.retryConfiguration) {
-      this.setRetryConfiguration(setup.retryConfiguration);
+      this._setRetryConfiguration(setup.retryConfiguration);
     }
 
     // set timeout to how long a transaction request will wait for the server (default 15 seconds)
@@ -361,7 +361,7 @@ export default class {
     return '7.4.5';
   }
 
-  setRetryConfiguration(configuration) {
+  _setRetryConfiguration(configuration) {
     if (configuration.minimumdelay < 2) {
       throw new Error('Minimum delay can not be set less than 2 seconds for retry');
     }

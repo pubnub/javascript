@@ -380,14 +380,14 @@ export default class {
       }
       const eventEngine = new EventEngine({
         handshake: this.handshake,
-        receiveEvents: this.receiveMessages,
+        receiveMessages: this.receiveMessages,
         delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
         join: this.join,
         leave: this.leave,
         leaveAll: this.leaveAll,
         presenceState: this.presenceState,
         config: modules.config,
-        emitEvents: (events) => {
+        emitMessages: (events) => {
           for (const event of events) {
             this._eventEmitter.emitEvent(event);
           }
@@ -402,7 +402,9 @@ export default class {
       this.unsubscribeAll = eventEngine.unsubscribeAll.bind(eventEngine);
       this.reconnect = eventEngine.reconnect.bind(eventEngine);
       this.disconnect = eventEngine.disconnect.bind(eventEngine);
+      this.destroy = eventEngine.dispose.bind(eventEngine);
       this.eventEngine = eventEngine;
+      
     } else {
       const subscriptionManager = new SubscriptionManager({
         timeEndpoint,
@@ -770,7 +772,6 @@ export default class {
     this.setUserId = modules.config.setUserId.bind(modules.config);
     this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
     this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
-    // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
     this.setCipherKey = (key) => modules.config.setCipherKey(key, setup, modules);
     this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
 
