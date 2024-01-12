@@ -7,8 +7,11 @@ export default class {
     this._listeners = [];
   }
 
-  addListener(newListeners) {
-    this._listeners.push(newListeners);
+  addListener(newListener) {
+    if (this._listeners.includes(newListener)) {
+      return;
+    }
+    this._listeners.push(newListener);
   }
 
   removeListener(deprecatedListener) {
