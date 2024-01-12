@@ -3222,8 +3222,11 @@
         function default_1() {
             this._listeners = [];
         }
-        default_1.prototype.addListener = function (newListeners) {
-            this._listeners.push(newListeners);
+        default_1.prototype.addListener = function (newListener) {
+            if (this._listeners.includes(newListener)) {
+                return;
+            }
+            this._listeners.push(newListener);
         };
         default_1.prototype.removeListener = function (deprecatedListener) {
             var newListeners = [];
@@ -7409,7 +7412,7 @@
         return HandshakeStoppedState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
-            cursor: context.cursor
+            cursor: context.cursor,
         });
     });
     HandshakeStoppedState.on(reconnect$1.type, function (context, event) {
@@ -7475,7 +7478,7 @@
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : context.cursor.region
+                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : context.cursor.region,
             },
         });
     });
@@ -7623,8 +7626,8 @@
             groups: context.groups,
             cursor: {
                 timetoken: (_a = context.timetoken) !== null && _a !== void 0 ? _a : '0',
-                region: 0
-            }
+                region: 0,
+            },
         });
     });
     HandshakeReconnectingState.on(subscriptionChange.type, function (_, event) {
