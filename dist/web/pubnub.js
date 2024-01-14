@@ -7161,8 +7161,10 @@
     var restore = createEvent('SUBSCRIPTION_RESTORED', function (channels, groups, timetoken, region) { return ({
         channels: channels,
         groups: groups,
-        timetoken: timetoken,
-        region: region,
+        cursor: {
+            timetoken: timetoken,
+            region: region !== null && region !== void 0 ? region : 0,
+        },
     }); });
     var handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', function (cursor) { return cursor; });
     var handshakeFailure = createEvent('HANDSHAKE_FAILURE', function (error) { return error; });
@@ -7184,8 +7186,10 @@
     var receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', function (error) { return error; });
     var disconnect$1 = createEvent('DISCONNECT', function () { return ({}); });
     var reconnect$1 = createEvent('RECONNECT', function (timetoken, region) { return ({
-        timetoken: timetoken,
-        region: region,
+        cursor: {
+            timetoken: timetoken !== null && timetoken !== void 0 ? timetoken : '',
+            region: region !== null && region !== void 0 ? region : 0,
+        },
     }); });
     var unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', function () { return ({}); });
 
@@ -7196,7 +7200,7 @@
             _this.on(handshake.type, asyncHandler(function (payload, abortSignal, _a) {
                 var handshake = _a.handshake, presenceState = _a.presenceState, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
-                    var handshakeParams, result, e_1;
+                    var result, e_1;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -7204,15 +7208,7 @@
                                 _b.label = 1;
                             case 1:
                                 _b.trys.push([1, 3, , 4]);
-                                handshakeParams = {
-                                    abortSignal: abortSignal,
-                                    channels: payload.channels,
-                                    channelGroups: payload.groups,
-                                    filterExpression: config.filterExpression,
-                                };
-                                if (config.maintainPresenceState)
-                                    handshakeParams.state = presenceState;
-                                return [4 /*yield*/, handshake(handshakeParams)];
+                                return [4 /*yield*/, handshake(__assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })))];
                             case 2:
                                 result = _b.sent();
                                 return [2 /*return*/, engine.transition(handshakeSuccess(result))];
@@ -7296,7 +7292,7 @@
                             case 0:
                                 if (!(config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts))) return [3 /*break*/, 6];
                                 abortSignal.throwIfAborted();
-                                return [4 /*yield*/, delay(config.retryConfiguration.getDelay(payload.attempts))];
+                                return [4 /*yield*/, delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason))];
                             case 1:
                                 _b.sent();
                                 abortSignal.throwIfAborted();
@@ -7333,28 +7329,20 @@
             _this.on(handshakeReconnect.type, asyncHandler(function (payload, abortSignal, _a) {
                 var handshake = _a.handshake, delay = _a.delay, presenceState = _a.presenceState, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
-                    var handshakeParams, result, error_3;
+                    var result, error_3;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
                                 if (!(config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts))) return [3 /*break*/, 6];
                                 abortSignal.throwIfAborted();
-                                return [4 /*yield*/, delay(config.retryConfiguration.getDelay(payload.attempts))];
+                                return [4 /*yield*/, delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason))];
                             case 1:
                                 _b.sent();
                                 abortSignal.throwIfAborted();
                                 _b.label = 2;
                             case 2:
                                 _b.trys.push([2, 4, , 5]);
-                                handshakeParams = {
-                                    abortSignal: abortSignal,
-                                    channels: payload.channels,
-                                    channelGroups: payload.groups,
-                                    filterExpression: config.filterExpression,
-                                };
-                                if (config.maintainPresenceState)
-                                    handshakeParams.state = presenceState;
-                                return [4 /*yield*/, handshake(handshakeParams)];
+                                return [4 /*yield*/, handshake(__assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })))];
                             case 3:
                                 result = _b.sent();
                                 return [2 /*return*/, engine.transition(handshakeReconnectSuccess(result))];
@@ -7384,24 +7372,20 @@
         return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
     });
     HandshakeFailedState.on(reconnect$1.type, function (context, event) {
-        var _a, _b, _c, _d, _e;
         return HandshakingState.with({
             channels: context.channels,
             groups: context.groups,
-            cursor: {
-                timetoken: (_c = (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.timetoken) !== null && _b !== void 0 ? _b : context.timetoken) !== null && _c !== void 0 ? _c : '0',
-                region: (_e = (_d = event.payload) === null || _d === void 0 ? void 0 : _d.region) !== null && _e !== void 0 ? _e : 0,
-            },
+            cursor: context.cursor,
         });
     });
-    HandshakeFailedState.on(restore.type, function (_, event) {
+    HandshakeFailedState.on(restore.type, function (context, event) {
         var _a, _b;
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
             },
         });
     });
@@ -7416,20 +7400,16 @@
         });
     });
     HandshakeStoppedState.on(reconnect$1.type, function (context, event) {
-        var _a, _b, _c, _d, _e, _f;
-        return HandshakingState.with(__assign(__assign({}, context), { cursor: {
-                timetoken: (_d = (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.timetoken) !== null && _b !== void 0 ? _b : (_c = context.cursor) === null || _c === void 0 ? void 0 : _c.timetoken) !== null && _d !== void 0 ? _d : '0',
-                region: (_f = (_e = event.payload) === null || _e === void 0 ? void 0 : _e.region) !== null && _f !== void 0 ? _f : 0,
-            } }));
+        return HandshakingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor }));
     });
-    HandshakeStoppedState.on(restore.type, function (_, event) {
+    HandshakeStoppedState.on(restore.type, function (context, event) {
         var _a, _b;
         return HandshakeStoppedState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
             },
         });
     });
@@ -7437,13 +7417,13 @@
 
     var ReceiveFailedState = new State('RECEIVE_FAILED');
     ReceiveFailedState.on(reconnect$1.type, function (context, event) {
-        var _a, _b, _c, _d;
+        var _a;
         return HandshakingState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: {
-                timetoken: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.timetoken) !== null && _b !== void 0 ? _b : '0',
-                region: (_d = (_c = event.payload) === null || _c === void 0 ? void 0 : _c.region) !== null && _d !== void 0 ? _d : 0,
+                timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
             },
         });
     });
@@ -7453,12 +7433,14 @@
             groups: event.payload.groups,
         });
     });
-    ReceiveFailedState.on(restore.type, function (_, event) {
-        var _a, _b;
+    ReceiveFailedState.on(restore.type, function (context, event) {
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
-            cursor: { timetoken: event.payload.timetoken, region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0 },
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+            },
         });
     });
     ReceiveFailedState.on(unsubscribeAll.type, function (_) { return UnsubscribedState.with(undefined); });
@@ -7472,24 +7454,23 @@
         });
     });
     ReceiveStoppedState.on(restore.type, function (context, event) {
-        var _a, _b;
         return ReceiveStoppedState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : context.cursor.region,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
             },
         });
     });
     ReceiveStoppedState.on(reconnect$1.type, function (context, event) {
-        var _a, _b, _c, _d;
+        var _a;
         return HandshakingState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: {
-                timetoken: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.timetoken) !== null && _b !== void 0 ? _b : context.cursor.timetoken,
-                region: (_d = (_c = event.payload) === null || _c === void 0 ? void 0 : _c.region) !== null && _d !== void 0 ? _d : context.cursor.region,
+                timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
             },
         });
     });
@@ -7525,13 +7506,12 @@
         }, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
     ReceiveReconnectingState.on(restore.type, function (context, event) {
-        var _a, _b;
         return ReceivingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : context.cursor.region,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
             },
         });
     });
@@ -7565,7 +7545,6 @@
         });
     });
     ReceivingState.on(restore.type, function (context, event) {
-        var _a, _b;
         if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
             return UnsubscribedState.with(undefined);
         }
@@ -7573,8 +7552,8 @@
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : context.cursor.region,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
             },
         });
     });
@@ -7596,9 +7575,9 @@
     HandshakeReconnectingState.onEnter(function (context) { return handshakeReconnect(context); });
     HandshakeReconnectingState.onExit(function () { return handshakeReconnect.cancel; });
     HandshakeReconnectingState.on(handshakeReconnectSuccess.type, function (context, event) {
-        var _a;
+        var _a, _b;
         var cursor = {
-            timetoken: (_a = context === null || context === void 0 ? void 0 : context.timetoken) !== null && _a !== void 0 ? _a : event.payload.cursor.timetoken,
+            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : event.payload.cursor.timetoken,
             region: event.payload.cursor.region,
         };
         return ReceivingState.with({
@@ -7615,32 +7594,28 @@
         return HandshakeFailedState.with({
             groups: context.groups,
             channels: context.channels,
-            timetoken: context.timetoken,
+            cursor: context.cursor,
             reason: event.payload,
         }, [emitStatus$1({ category: categories.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
     });
     HandshakeReconnectingState.on(disconnect$1.type, function (context) {
-        var _a;
         return HandshakeStoppedState.with({
             channels: context.channels,
             groups: context.groups,
-            cursor: {
-                timetoken: (_a = context.timetoken) !== null && _a !== void 0 ? _a : '0',
-                region: 0,
-            },
+            cursor: context.cursor,
         });
     });
     HandshakeReconnectingState.on(subscriptionChange.type, function (_, event) {
         return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
     });
-    HandshakeReconnectingState.on(restore.type, function (_, event) {
+    HandshakeReconnectingState.on(restore.type, function (context, event) {
         var _a, _b;
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
             },
         });
     });
@@ -7661,7 +7636,7 @@
             channels: context.channels,
             groups: context.groups,
             cursor: {
-                timetoken: (_b = (_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) !== null && _b !== void 0 ? _b : event.payload.timetoken,
+                timetoken: !!((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context === null || context === void 0 ? void 0 : context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : event.payload.timetoken,
                 region: event.payload.region,
             },
         }, [
@@ -7671,11 +7646,10 @@
         ]);
     });
     HandshakingState.on(handshakeFailure.type, function (context, event) {
-        var _a;
         return HandshakeReconnectingState.with({
             channels: context.channels,
             groups: context.groups,
-            timetoken: (_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken,
+            cursor: context.cursor,
             attempts: 0,
             reason: event.payload,
         });
@@ -7684,16 +7658,17 @@
         return HandshakeStoppedState.with({
             channels: context.channels,
             groups: context.groups,
+            cursor: context.cursor,
         });
     });
-    HandshakingState.on(restore.type, function (_, event) {
+    HandshakingState.on(restore.type, function (context, event) {
         var _a, _b;
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
             },
         });
     });
@@ -7707,14 +7682,10 @@
         });
     });
     UnsubscribedState.on(restore.type, function (_, event) {
-        var _a, _b;
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
-            cursor: {
-                timetoken: event.payload.timetoken,
-                region: (_b = (_a = event.payload) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
-            },
+            cursor: event.payload.cursor,
         });
     });
 
@@ -7847,18 +7818,12 @@
             _this.on(heartbeat.type, asyncHandler(function (payload, _, _a) {
                 var heartbeat = _a.heartbeat, presenceState = _a.presenceState, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
-                    var heartbeatParams, e_1;
+                    var e_1;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
                                 _b.trys.push([0, 2, , 3]);
-                                heartbeatParams = {
-                                    channels: payload.channels,
-                                    channelGroups: payload.groups,
-                                };
-                                if (config.maintainPresenceState)
-                                    heartbeatParams.state = presenceState;
-                                return [4 /*yield*/, heartbeat(heartbeatParams)];
+                                return [4 /*yield*/, heartbeat(__assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })))];
                             case 1:
                                 _b.sent();
                                 engine.transition(heartbeatSuccess(200));
@@ -7918,26 +7883,20 @@
             _this.on(delayedHeartbeat.type, asyncHandler(function (payload, abortSignal, _a) {
                 var heartbeat = _a.heartbeat, retryDelay = _a.retryDelay, presenceState = _a.presenceState, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
-                    var heartbeatParams, e_3;
+                    var e_3;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
                                 if (!(config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts))) return [3 /*break*/, 6];
                                 abortSignal.throwIfAborted();
-                                return [4 /*yield*/, retryDelay(config.retryConfiguration.getDelay(payload.attempts))];
+                                return [4 /*yield*/, retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason))];
                             case 1:
                                 _b.sent();
                                 abortSignal.throwIfAborted();
                                 _b.label = 2;
                             case 2:
                                 _b.trys.push([2, 4, , 5]);
-                                heartbeatParams = {
-                                    channels: payload.channels,
-                                    channelGroups: payload.groups,
-                                };
-                                if (config.maintainPresenceState)
-                                    heartbeatParams.state = presenceState;
-                                return [4 /*yield*/, heartbeat(heartbeatParams)];
+                                return [4 /*yield*/, heartbeat(__assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })))];
                             case 3:
                                 _b.sent();
                                 return [2 /*return*/, engine.transition(heartbeatSuccess(200))];
@@ -8195,12 +8154,15 @@
                 maximumRetry: configuration.maximumRetry,
                 shouldRetry: function (error, attempt) {
                     var _a;
-                    if (RetryPolicy.excludedErrorCodes.includes((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode)) {
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
                         return false;
                     }
                     return this.maximumRetry > attempt;
                 },
-                getDelay: function (_) {
+                getDelay: function (_, reason) {
+                    if (reason === null || reason === void 0 ? void 0 : reason.retryAfter) {
+                        return reason.retryAfter * 1000;
+                    }
                     return (this.delay + Math.random()) * 1000;
                 },
                 getGiveupReason: function (error, attempt) {
@@ -8208,8 +8170,8 @@
                     if (this.maximumRetry <= attempt) {
                         return 'retry attempts exhaused.';
                     }
-                    if (RetryPolicy.excludedErrorCodes.includes((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode)) {
-                        return 'forbidden or too many requests.';
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
+                        return 'forbidden operation.';
                     }
                     return 'unknown error';
                 },
@@ -8227,7 +8189,10 @@
                     }
                     return this.maximumRetry > attempt;
                 },
-                getDelay: function (attempt) {
+                getDelay: function (attempt, reason) {
+                    if (reason === null || reason === void 0 ? void 0 : reason.retryAfter) {
+                        return reason.retryAfter * 1000;
+                    }
                     var calculatedDelay = (Math.pow(2, attempt) + Math.random()) * 1000;
                     if (calculatedDelay > this.maximumDelay) {
                         return this.maximumDelay;
@@ -8241,14 +8206,13 @@
                     if (this.maximumRetry <= attempt) {
                         return 'retry attempts exhaused.';
                     }
-                    if (RetryPolicy.excludedErrorCodes.includes((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode)) {
-                        return 'forbidden or too many requests.';
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
+                        return 'forbidden operation.';
                     }
                     return 'unknown error';
                 },
             };
         };
-        RetryPolicy.excludedErrorCodes = [403, 429];
         return RetryPolicy;
     }());
 
