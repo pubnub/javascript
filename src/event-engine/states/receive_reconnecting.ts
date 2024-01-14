@@ -77,8 +77,8 @@ ReceiveReconnectingState.on(restore.type, (context, event) =>
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: {
-      timetoken: event.payload.timetoken,
-      region: event.payload?.region ?? context.cursor.region,
+      timetoken: event.payload.cursor.timetoken,
+      region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
     },
   }),
 );

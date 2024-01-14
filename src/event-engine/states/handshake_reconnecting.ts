@@ -17,11 +17,12 @@ import { HandshakingState } from './handshaking';
 import { ReceivingState } from './receiving';
 import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
+import { Cursor } from '../../models/Cursor';
 
 export type HandshakeReconnectingStateContext = {
   channels: string[];
   groups: string[];
-  timetoken?: string;
+  cursor?: Cursor;
 
   attempts: number;
   reason: PubNubError;
@@ -36,7 +37,7 @@ HandshakeReconnectingState.onExit(() => handshakeReconnect.cancel);
 
 HandshakeReconnectingState.on(handshakeReconnectSuccess.type, (context, event) => {
   const cursor = {
-    timetoken: context?.timetoken ?? event.payload.cursor.timetoken,
+    timetoken: !!context.cursor?.timetoken ? context.cursor?.timetoken : event.payload.cursor.timetoken,
     region: event.payload.cursor.region,
   };
   return ReceivingState.with(
@@ -58,7 +59,7 @@ HandshakeReconnectingState.on(handshakeReconnectGiveup.type, (context, event) =>
     {
       groups: context.groups,
       channels: context.channels,
-      timetoken: context.timetoken,
+      cursor: context.cursor,
       reason: event.payload,
     },
     [emitStatus({ category: categoryConstants.PNConnectionErrorCategory, error: event.payload?.message })],
@@ -69,10 +70,7 @@ HandshakeReconnectingState.on(disconnect.type, (context) =>
   HandshakeStoppedState.with({
     channels: context.channels,
     groups: context.groups,
-    cursor: {
-      timetoken: context.timetoken ?? '0',
-      region: 0,
-    },
+    cursor: context.cursor,
   }),
 );
 
@@ -80,13 +78,13 @@ HandshakeReconnectingState.on(subscriptionChange.type, (_, event) =>
   HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups }),
 );
 
-HandshakeReconnectingState.on(restore.type, (_, event) =>
+HandshakeReconnectingState.on(restore.type, (context, event) =>
   HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: {
-      timetoken: event.payload.timetoken,
-      region: event.payload?.region ?? 0,
+      timetoken: event.payload.cursor.timetoken,
+      region: event.payload.cursor.region ? event.payload.cursor.region : context?.cursor?.region ?? 0,
     },
   }),
 );

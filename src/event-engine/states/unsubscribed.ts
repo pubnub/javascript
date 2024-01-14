@@ -16,9 +16,6 @@ UnsubscribedState.on(restore.type, (_, event) => {
   return HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    cursor: {
-      timetoken: event.payload.timetoken,
-      region: event.payload?.region ?? 0,
-    },
+    cursor: event.payload.cursor,
   });
 });

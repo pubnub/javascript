@@ -21,8 +21,8 @@ ReceiveFailedState.on(reconnect.type, (context, event) =>
     channels: context.channels,
     groups: context.groups,
     cursor: {
-      timetoken: event.payload?.timetoken ?? '0',
-      region: event.payload?.region ?? 0,
+      timetoken: !!event.payload.cursor.timetoken ? event.payload.cursor?.timetoken : context.cursor.timetoken,
+      region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
     },
   }),
 );
@@ -34,11 +34,14 @@ ReceiveFailedState.on(subscriptionChange.type, (_, event) =>
   }),
 );
 
-ReceiveFailedState.on(restore.type, (_, event) =>
+ReceiveFailedState.on(restore.type, (context, event) =>
   HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
-    cursor: { timetoken: event.payload.timetoken, region: event.payload?.region ?? 0 },
+    cursor: {
+      timetoken: event.payload.cursor.timetoken,
+      region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+    },
   }),
 );
 

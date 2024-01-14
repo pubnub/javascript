@@ -24,20 +24,17 @@ HandshakeStoppedState.on(subscriptionChange.type, (context, event) =>
 HandshakeStoppedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     ...context,
-    cursor: {
-      timetoken: event.payload?.timetoken ?? context.cursor?.timetoken ?? '0',
-      region: event.payload?.region ?? 0,
-    },
+    cursor: event.payload.cursor,
   }),
 );
 
-HandshakeStoppedState.on(restore.type, (_, event) =>
+HandshakeStoppedState.on(restore.type, (context, event) =>
   HandshakeStoppedState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: {
-      timetoken: event.payload.timetoken,
-      region: event.payload?.region ?? 0,
+      timetoken: event.payload.cursor.timetoken,
+      region: event.payload.cursor.region ? event.payload.cursor.region : context?.cursor?.region ?? 0,
     },
   }),
 );

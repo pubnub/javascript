@@ -4,11 +4,12 @@ import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '
 import { PubNubError } from '../../core/components/endpoint';
 import { HandshakingState } from './handshaking';
 import { UnsubscribedState } from './unsubscribed';
+import { Cursor } from '../../models/Cursor';
 
 export type HandshakeFailedStateContext = {
   channels: string[];
   groups: string[];
-  timetoken?: string;
+  cursor?: Cursor;
 
   reason: PubNubError;
 };
@@ -23,20 +24,17 @@ HandshakeFailedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
-    cursor: {
-      timetoken: event.payload?.timetoken ?? context.timetoken ?? '0',
-      region: event.payload?.region ?? 0,
-    },
+    cursor: context.cursor,
   }),
 );
 
-HandshakeFailedState.on(restore.type, (_, event) =>
+HandshakeFailedState.on(restore.type, (context, event) =>
   HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
     cursor: {
-      timetoken: event.payload.timetoken,
-      region: event.payload?.region ?? 0,
+      timetoken: event.payload.cursor.timetoken,
+      region: event.payload.cursor.region ? event.payload.cursor.region : context?.cursor?.region ?? 0,
     },
   }),
 );
