@@ -24,12 +24,11 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
       effects.heartbeat.type,
       asyncHandler(async (payload, _, { heartbeat, presenceState, config }) => {
         try {
-          const heartbeatParams: any = {
+          const result = await heartbeat({
             channels: payload.channels,
             channelGroups: payload.groups,
-          };
-          if (config.maintainPresenceState) heartbeatParams.state = presenceState;
-          const result = await heartbeat(heartbeatParams);
+            ...(config.maintainPresenceState && { state: presenceState }),
+          });
           engine.transition(events.heartbeatSuccess(200));
         } catch (e) {
           if (e instanceof PubNubError) {
@@ -71,15 +70,14 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
       asyncHandler(async (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) => {
         if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
           abortSignal.throwIfAborted();
-          await retryDelay(config.retryConfiguration.getDelay(payload.attempts));
+          await retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
           abortSignal.throwIfAborted();
           try {
-            const heartbeatParams: any = {
+            const result = await heartbeat({
               channels: payload.channels,
               channelGroups: payload.groups,
-            };
-            if (config.maintainPresenceState) heartbeatParams.state = presenceState;
-            const result = await heartbeat(heartbeatParams);
+              ...(config.maintainPresenceState && { state: presenceState }),
+            });
             return engine.transition(events.heartbeatSuccess(200));
           } catch (e) {
             if (e instanceof Error && e.message === 'Aborted') {

@@ -28,14 +28,13 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
         abortSignal.throwIfAborted();
 
         try {
-          const handshakeParams: any = {
+          const result = await handshake({
             abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
             filterExpression: config.filterExpression,
-          };
-          if (config.maintainPresenceState) handshakeParams.state = presenceState;
-          const result = await handshake(handshakeParams);
+            ...(config.maintainPresenceState && { state: presenceState }),
+          });
           return engine.transition(events.handshakeSuccess(result));
         } catch (e) {
           if (e instanceof Error && e.message === 'Aborted') {
@@ -98,7 +97,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
         if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
           abortSignal.throwIfAborted();
 
-          await delay(config.retryConfiguration.getDelay(payload.attempts));
+          await delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
 
           abortSignal.throwIfAborted();
 
@@ -138,19 +137,18 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
         if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
           abortSignal.throwIfAborted();
 
-          await delay(config.retryConfiguration.getDelay(payload.attempts));
+          await delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
 
           abortSignal.throwIfAborted();
 
           try {
-            const handshakeParams: any = {
+            const result = await handshake({
               abortSignal: abortSignal,
               channels: payload.channels,
               channelGroups: payload.groups,
               filterExpression: config.filterExpression,
-            };
-            if (config.maintainPresenceState) handshakeParams.state = presenceState;
-            const result = await handshake(handshakeParams);
+              ...(config.maintainPresenceState && { state: presenceState }),
+            });
 
             return engine.transition(events.handshakeReconnectSuccess(result));
           } catch (error) {

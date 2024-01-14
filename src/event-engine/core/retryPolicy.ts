@@ -1,24 +1,26 @@
 export class RetryPolicy {
-  static excludedErrorCodes = [403, 429];
   static LinearRetryPolicy(configuration: LinearRetryPolicyConfiguration) {
     return {
       delay: configuration.delay,
       maximumRetry: configuration.maximumRetry,
       shouldRetry(error: any, attempt: number) {
-        if (RetryPolicy.excludedErrorCodes.includes(error?.status?.statusCode)) {
+        if (error?.status?.statusCode === 403) {
           return false;
         }
         return this.maximumRetry > attempt;
       },
-      getDelay(_: number) {
+      getDelay(_: number, reason: any) {
+        if (reason?.retryAfter) {
+          return reason.retryAfter * 1000;
+        }
         return (this.delay + Math.random()) * 1000;
       },
       getGiveupReason(error: any, attempt: number) {
         if (this.maximumRetry <= attempt) {
           return 'retry attempts exhaused.';
         }
-        if (RetryPolicy.excludedErrorCodes.includes(error?.status?.statusCode)) {
-          return 'forbidden or too many requests.';
+        if (error?.status?.statusCode === 403) {
+          return 'forbidden operation.';
         }
         return 'unknown error';
       },
@@ -38,7 +40,10 @@ export class RetryPolicy {
         return this.maximumRetry > attempt;
       },
 
-      getDelay(attempt: number) {
+      getDelay(attempt: number, reason: any) {
+        if (reason?.retryAfter) {
+          return reason.retryAfter * 1000;
+        }
         const calculatedDelay = (Math.pow(2, attempt) + Math.random()) * 1000;
         if (calculatedDelay > this.maximumDelay) {
           return this.maximumDelay;
@@ -51,8 +56,8 @@ export class RetryPolicy {
         if (this.maximumRetry <= attempt) {
           return 'retry attempts exhaused.';
         }
-        if (RetryPolicy.excludedErrorCodes.includes(error?.status?.statusCode)) {
-          return 'forbidden or too many requests.';
+        if (error?.status?.statusCode === 403) {
+          return 'forbidden operation.';
         }
         return 'unknown error';
       },
