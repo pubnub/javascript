@@ -12,8 +12,10 @@ export const restore = createEvent(
   (channels: string[], groups: string[], timetoken: string, region?: number) => ({
     channels,
     groups,
-    timetoken,
-    region,
+    cursor: {
+      timetoken: timetoken,
+      region: region ?? 0,
+    },
   }),
 );
 
@@ -41,8 +43,10 @@ export const receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', 
 export const disconnect = createEvent('DISCONNECT', () => ({}));
 
 export const reconnect = createEvent('RECONNECT', (timetoken?: string, region?: number) => ({
-  timetoken,
-  region,
+  cursor: {
+    timetoken: timetoken ?? '',
+    region: region ?? 0,
+  },
 }));
 export const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => ({}));
 
