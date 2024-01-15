@@ -16,15 +16,19 @@ export type HandshakeFailedStateContext = {
 
 export const HandshakeFailedState = new State<HandshakeFailedStateContext, Events, Effects>('HANDSHAKE_FAILED');
 
-HandshakeFailedState.on(subscriptionChange.type, (_, event) => {
-  return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
-});
+HandshakeFailedState.on(subscriptionChange.type, (context, event) =>
+  HandshakingState.with({
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: context.cursor,
+  }),
+);
 
 HandshakeFailedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
-    cursor: context.cursor || event.payload.cursor,
+    cursor: event.payload.cursor || context.cursor,
   }),
 );
 

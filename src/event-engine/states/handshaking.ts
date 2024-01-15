@@ -77,7 +77,7 @@ HandshakingState.on(restore.type, (context, event) =>
     groups: event.payload.groups,
     cursor: {
       timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region ? event.payload.cursor.region : context?.cursor?.region ?? 0,
+      region: event.payload.cursor.region || context?.cursor?.region || 0,
     },
   }),
 );

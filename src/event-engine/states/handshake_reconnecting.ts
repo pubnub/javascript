@@ -74,8 +74,12 @@ HandshakeReconnectingState.on(disconnect.type, (context) =>
   }),
 );
 
-HandshakeReconnectingState.on(subscriptionChange.type, (_, event) =>
-  HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups }),
+HandshakeReconnectingState.on(subscriptionChange.type, (context, event) =>
+  HandshakingState.with({
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: context.cursor,
+  }),
 );
 
 HandshakeReconnectingState.on(restore.type, (context, event) =>
@@ -84,7 +88,7 @@ HandshakeReconnectingState.on(restore.type, (context, event) =>
     groups: event.payload.groups,
     cursor: {
       timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region ? event.payload.cursor.region : context?.cursor?.region ?? 0,
+      region: event.payload.cursor?.region || context?.cursor?.region || 0,
     },
   }),
 );

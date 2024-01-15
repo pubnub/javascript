@@ -24,7 +24,7 @@ HandshakeStoppedState.on(subscriptionChange.type, (context, event) =>
 HandshakeStoppedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     ...context,
-    cursor: context.cursor || event.payload.cursor,
+    cursor: event.payload.cursor || context.cursor,
   }),
 );
 
@@ -34,7 +34,7 @@ HandshakeStoppedState.on(restore.type, (context, event) =>
     groups: event.payload.groups,
     cursor: {
       timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region ? event.payload.cursor.region : context?.cursor?.region ?? 0,
+      region: event.payload.cursor.region || context?.cursor?.region || 0,
     },
   }),
 );
