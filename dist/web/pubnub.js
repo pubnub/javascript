@@ -7375,7 +7375,7 @@
         return HandshakingState.with({
             channels: context.channels,
             groups: context.groups,
-            cursor: context.cursor,
+            cursor: context.cursor || event.payload.cursor,
         });
     });
     HandshakeFailedState.on(restore.type, function (context, event) {
@@ -7400,7 +7400,7 @@
         });
     });
     HandshakeStoppedState.on(reconnect$1.type, function (context, event) {
-        return HandshakingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor }));
+        return HandshakingState.with(__assign(__assign({}, context), { cursor: context.cursor || event.payload.cursor }));
     });
     HandshakeStoppedState.on(restore.type, function (context, event) {
         var _a, _b;

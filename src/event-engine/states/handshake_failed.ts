@@ -24,7 +24,7 @@ HandshakeFailedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
-    cursor: context.cursor,
+    cursor: context.cursor || event.payload.cursor,
   }),
 );
 

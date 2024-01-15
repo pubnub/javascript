@@ -24,7 +24,7 @@ HandshakeStoppedState.on(subscriptionChange.type, (context, event) =>
 HandshakeStoppedState.on(reconnect.type, (context, event) =>
   HandshakingState.with({
     ...context,
-    cursor: event.payload.cursor,
+    cursor: context.cursor || event.payload.cursor,
   }),
 );
 
