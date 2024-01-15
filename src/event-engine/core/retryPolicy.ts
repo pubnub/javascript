@@ -10,10 +10,8 @@ export class RetryPolicy {
         return this.maximumRetry > attempt;
       },
       getDelay(_: number, reason: any) {
-        if (reason?.retryAfter) {
-          return reason.retryAfter * 1000;
-        }
-        return (this.delay + Math.random()) * 1000;
+        const delay = reason.retryAfter ?? this.delay;
+        return (delay + Math.random()) * 1000;
       },
       getGiveupReason(error: any, attempt: number) {
         if (this.maximumRetry <= attempt) {
@@ -41,15 +39,8 @@ export class RetryPolicy {
       },
 
       getDelay(attempt: number, reason: any) {
-        if (reason?.retryAfter) {
-          return reason.retryAfter * 1000;
-        }
-        const calculatedDelay = (Math.pow(2, attempt) + Math.random()) * 1000;
-        if (calculatedDelay > this.maximumDelay) {
-          return this.maximumDelay;
-        } else {
-          return calculatedDelay;
-        }
+        const delay = reason.retryAfter ?? Math.min(Math.pow(2, attempt), this.maximumDelay);
+        return (delay + Math.random()) * 1000;
       },
 
       getGiveupReason(error: any, attempt: number) {
