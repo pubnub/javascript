@@ -7368,14 +7368,18 @@
     }(Dispatcher));
 
     var HandshakeFailedState = new State('HANDSHAKE_FAILED');
-    HandshakeFailedState.on(subscriptionChange.type, function (_, event) {
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+    HandshakeFailedState.on(subscriptionChange.type, function (context, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
     });
     HandshakeFailedState.on(reconnect$1.type, function (context, event) {
         return HandshakingState.with({
             channels: context.channels,
             groups: context.groups,
-            cursor: context.cursor || event.payload.cursor,
+            cursor: event.payload.cursor || context.cursor,
         });
     });
     HandshakeFailedState.on(restore.type, function (context, event) {
@@ -7400,16 +7404,16 @@
         });
     });
     HandshakeStoppedState.on(reconnect$1.type, function (context, event) {
-        return HandshakingState.with(__assign(__assign({}, context), { cursor: context.cursor || event.payload.cursor }));
+        return HandshakingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor || context.cursor }));
     });
     HandshakeStoppedState.on(restore.type, function (context, event) {
-        var _a, _b;
+        var _a;
         return HandshakeStoppedState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                region: event.payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0,
             },
         });
     });
@@ -7423,7 +7427,7 @@
             groups: context.groups,
             cursor: {
                 timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+                region: event.payload.cursor.region || context.cursor.region,
             },
         });
     });
@@ -7439,7 +7443,7 @@
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+                region: event.payload.cursor.region || context.cursor.region,
             },
         });
     });
@@ -7459,7 +7463,7 @@
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+                region: event.payload.cursor.region || context.cursor.region,
             },
         });
     });
@@ -7470,7 +7474,7 @@
             groups: context.groups,
             cursor: {
                 timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+                region: event.payload.cursor.region || context.cursor.region,
             },
         });
     });
@@ -7511,7 +7515,7 @@
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+                region: event.payload.cursor.region || context.cursor.region,
             },
         });
     });
@@ -7553,7 +7557,7 @@
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+                region: event.payload.cursor.region || context.cursor.region,
             },
         });
     });
@@ -7605,8 +7609,12 @@
             cursor: context.cursor,
         });
     });
-    HandshakeReconnectingState.on(subscriptionChange.type, function (_, event) {
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+    HandshakeReconnectingState.on(subscriptionChange.type, function (context, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
     });
     HandshakeReconnectingState.on(restore.type, function (context, event) {
         var _a, _b;
@@ -7615,7 +7623,7 @@
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                region: ((_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.region) || ((_b = context === null || context === void 0 ? void 0 : context.cursor) === null || _b === void 0 ? void 0 : _b.region) || 0,
             },
         });
     });
@@ -7662,13 +7670,13 @@
         });
     });
     HandshakingState.on(restore.type, function (context, event) {
-        var _a, _b;
+        var _a;
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
             cursor: {
                 timetoken: event.payload.cursor.timetoken,
-                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+                region: event.payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0,
             },
         });
     });
@@ -8166,10 +8174,9 @@
                     return this.maximumRetry > attempt;
                 },
                 getDelay: function (_, reason) {
-                    if (reason === null || reason === void 0 ? void 0 : reason.retryAfter) {
-                        return reason.retryAfter * 1000;
-                    }
-                    return (this.delay + Math.random()) * 1000;
+                    var _a;
+                    var delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : this.delay;
+                    return (delay + Math.random()) * 1000;
                 },
                 getGiveupReason: function (error, attempt) {
                     var _a;
@@ -8196,16 +8203,9 @@
                     return this.maximumRetry > attempt;
                 },
                 getDelay: function (attempt, reason) {
-                    if (reason === null || reason === void 0 ? void 0 : reason.retryAfter) {
-                        return reason.retryAfter * 1000;
-                    }
-                    var calculatedDelay = (Math.pow(2, attempt) + Math.random()) * 1000;
-                    if (calculatedDelay > this.maximumDelay) {
-                        return this.maximumDelay;
-                    }
-                    else {
-                        return calculatedDelay;
-                    }
+                    var _a;
+                    var delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : Math.min(Math.pow(2, attempt), this.maximumDelay);
+                    return (delay + Math.random()) * 1000;
                 },
                 getGiveupReason: function (error, attempt) {
                     var _a;
