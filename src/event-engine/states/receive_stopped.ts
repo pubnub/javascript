@@ -27,7 +27,7 @@ ReceiveStoppedState.on(restore.type, (context, event) =>
     groups: event.payload.groups,
     cursor: {
       timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+      region: event.payload.cursor.region || context.cursor.region,
     },
   }),
 );
@@ -38,7 +38,7 @@ ReceiveStoppedState.on(reconnect.type, (context, event) =>
     groups: context.groups,
     cursor: {
       timetoken: !!event.payload.cursor.timetoken ? event.payload.cursor?.timetoken : context.cursor.timetoken,
-      region: event.payload.cursor.region ? event.payload.cursor.region : context.cursor.region,
+      region: event.payload.cursor.region || context.cursor.region,
     },
   }),
 );
