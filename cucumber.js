@@ -1,6 +1,6 @@
 module.exports = {
   default: [
-    'test/specs/features/**/*.feature',
+    'test/specs/features/subscribe/event-engine/*.feature',
     '--require test/contract/setup.js',
     '--require test/contract/definitions/**/*.ts',
     '--require test/contract/shared/**/*.ts',

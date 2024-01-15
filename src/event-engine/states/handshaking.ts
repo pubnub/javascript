@@ -32,7 +32,11 @@ HandshakingState.on(subscriptionChange.type, (context, event) => {
     return UnsubscribedState.with(undefined);
   }
 
-  return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+  return HandshakingState.with({
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: context.cursor,
+  });
 });
 
 HandshakingState.on(handshakeSuccess.type, (context, event) =>

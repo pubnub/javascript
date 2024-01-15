@@ -27,10 +27,11 @@ ReceiveFailedState.on(reconnect.type, (context, event) =>
   }),
 );
 
-ReceiveFailedState.on(subscriptionChange.type, (_, event) =>
+ReceiveFailedState.on(subscriptionChange.type, (context, event) =>
   HandshakingState.with({
     channels: event.payload.channels,
     groups: event.payload.groups,
+    cursor: context.cursor,
   }),
 );
 

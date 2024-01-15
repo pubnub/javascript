@@ -7431,10 +7431,11 @@
             },
         });
     });
-    ReceiveFailedState.on(subscriptionChange.type, function (_, event) {
+    ReceiveFailedState.on(subscriptionChange.type, function (context, event) {
         return HandshakingState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
+            cursor: context.cursor,
         });
     });
     ReceiveFailedState.on(restore.type, function (context, event) {
@@ -7636,7 +7637,11 @@
         if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
             return UnsubscribedState.with(undefined);
         }
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
     });
     HandshakingState.on(handshakeSuccess.type, function (context, event) {
         var _a, _b;
