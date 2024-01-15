@@ -403,6 +403,8 @@ export default class {
       this.reconnect = eventEngine.reconnect.bind(eventEngine);
       this.disconnect = eventEngine.disconnect.bind(eventEngine);
       this.destroy = eventEngine.dispose.bind(eventEngine);
+      this.getSubscribedChannels = eventEngine.getSubscribedChannels.bind(eventEngine);
+      this.getSubscribedChannelGroups = eventEngine.getSubscribedChannelGroups.bind(eventEngine);
       this.eventEngine = eventEngine;
     } else {
       const subscriptionManager = new SubscriptionManager({

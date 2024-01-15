@@ -108,6 +108,14 @@ export class EventEngine {
     }
   }
 
+  getSubscribedChannels() {
+    return this.channels.slice(0);
+  }
+
+  getSubscribedChannelGroups() {
+    return this.groups.slice(0);
+  }
+
   dispose() {
     this.disconnect();
     this._unsubscribeEngine();
