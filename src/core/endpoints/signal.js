@@ -1,6 +1,5 @@
 /*       */
 
-import { SignalResponse, SignalArguments, ModulesInject } from '../flow_interfaces';
 import operationConstants from '../constants/operations';
 import utils from '../utils';
 

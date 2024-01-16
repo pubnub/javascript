@@ -1,6 +1,5 @@
 /*       */
 /* eslint max-classes-per-file: ["error", 5] */
-import { APNS2Configuration, APNS2Target } from '../flow_interfaces';
 
 class BaseNotificationPayload {
   _subtitle;

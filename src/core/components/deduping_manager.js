@@ -1,7 +1,6 @@
 /*       */
 
 import Config from './config';
-import { SubscribeMessage } from '../flow_interfaces';
 
 const hashCode = (payload) => {
   let hash = 0;

@@ -4,7 +4,6 @@ import PubNubCore from '../core/pubnub-common';
 import Networking from '../networking';
 import Database from '../db/common';
 import { del, get, post, patch } from '../networking/modules/nativescript';
-import { InternalSetupStruct } from '../core/flow_interfaces';
 
 export default class extends PubNubCore {
   constructor(setup) {
