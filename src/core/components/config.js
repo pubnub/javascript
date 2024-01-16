@@ -358,7 +358,7 @@ export default class {
   }
 
   getVersion() {
-    return '7.4.5';
+    return '7.5.0';
   }
 
   _setRetryConfiguration(configuration) {

@@ -28,8 +28,8 @@ Watch [Getting Started with PubNub JS SDK](https://app.dashcam.io/replay/64ee0d2
      npm install pubnub
      ```
    * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.4.5.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.4.5.min.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.5.0.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.7.5.0.min.js
 
 2. Configure your keys:
 

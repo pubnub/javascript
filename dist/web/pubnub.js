@@ -794,7 +794,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.4.5';
+            return '7.5.0';
         };
         default_1.prototype._setRetryConfiguration = function (configuration) {
             if (configuration.minimumdelay < 2) {
@@ -2665,6 +2665,7 @@
         return default_1;
     }());
 
+    /*       */
     var BaseNotificationPayload = /** @class */ (function () {
         function BaseNotificationPayload(payload, title, body) {
             this._payload = payload;
@@ -4014,7 +4015,6 @@
         handleResponse: handleResponse$m
     });
 
-    /*       */
     function getOperation$l() {
         return OPERATIONS.PNPushNotificationEnabledChannelsOperation;
     }
@@ -4367,7 +4367,6 @@
         handleResponse: handleResponse$f
     });
 
-    /*       */
     function getOperation$e() {
         return OPERATIONS.PNHereNowOperation;
     }
