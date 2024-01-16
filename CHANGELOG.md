@@ -1,3 +1,13 @@
+## v7.5.0
+January 16 2024
+
+#### Added
+- Added `enableEventEngine`, `maintainPresenceState` flags and `retryConfiguration` for retry policy configuration.
+
+#### Fixed
+- Fixes issue of allowing duplicate listener registration.
+- Fixes file name conflict in lib directory. Fixed the following issues reported by [@priyanshu102002](https://github.com/priyanshu102002): [#355](https://github.com/pubnub/javascript/issues/355).
+
 ## v7.4.5
 November 28 2023
 

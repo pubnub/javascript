@@ -5,11 +5,17 @@ import * as events from './events';
 
 export type Dependencies = {
   handshake: any;
-  receiveEvents: any;
+  receiveMessages: any;
+  join: any;
+  leave: any;
+  leaveAll: any;
+  presenceState: any;
+  config: any;
 
-  getRetryDelay: (attempts: number) => number;
-  shouldRetry: (error: Error, attempts: number) => boolean;
   delay: (milliseconds: number) => Promise<void>;
+
+  emitMessages: (events: any[]) => void;
+  emitStatus: (status: any) => void;
 };
 
 export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
@@ -18,7 +24,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.handshake.type,
-      asyncHandler(async (payload, abortSignal, { handshake }) => {
+      asyncHandler(async (payload, abortSignal, { handshake, presenceState, config }) => {
         abortSignal.throwIfAborted();
 
         try {
@@ -26,121 +32,140 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
+            filterExpression: config.filterExpression,
+            ...(config.maintainPresenceState && { state: presenceState }),
           });
-
-          engine.transition(events.handshakingSuccess(result));
+          return engine.transition(events.handshakeSuccess(result));
         } catch (e) {
           if (e instanceof Error && e.message === 'Aborted') {
             return;
           }
 
           if (e instanceof PubNubError) {
-            return engine.transition(events.handshakingFailure(e));
+            return engine.transition(events.handshakeFailure(e));
           }
         }
       }),
     );
 
     this.on(
-      effects.receiveEvents.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents }) => {
+      effects.receiveMessages.type,
+      asyncHandler(async (payload, abortSignal, { receiveMessages, config }) => {
         abortSignal.throwIfAborted();
-
         try {
-          const result = await receiveEvents({
+          const result = await receiveMessages({
             abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
             timetoken: payload.cursor.timetoken,
             region: payload.cursor.region,
+            filterExpression: config.filterExpression,
           });
 
-          engine.transition(events.receivingSuccess(result.metadata, result.messages));
+          engine.transition(events.receiveSuccess(result.metadata, result.messages));
         } catch (error) {
           if (error instanceof Error && error.message === 'Aborted') {
             return;
           }
 
-          if (error instanceof PubNubError) {
-            return engine.transition(events.receivingFailure(error));
+          if (error instanceof PubNubError && !abortSignal.aborted) {
+            return engine.transition(events.receiveFailure(error));
           }
         }
       }),
     );
 
     this.on(
-      effects.emitEvents.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents }) => {
+      effects.emitMessages.type,
+      asyncHandler(async (payload, _, { emitMessages }) => {
         if (payload.length > 0) {
-          console.log(payload);
+          emitMessages(payload);
         }
       }),
     );
 
     this.on(
-      effects.reconnect.type,
-      asyncHandler(async (payload, abortSignal, { receiveEvents, shouldRetry, getRetryDelay, delay }) => {
-        if (!shouldRetry(payload.reason, payload.attempts)) {
-          return engine.transition(events.reconnectingGiveup());
-        }
+      effects.emitStatus.type,
+      asyncHandler(async (payload, _, { emitStatus }) => {
+        emitStatus(payload);
+      }),
+    );
 
-        abortSignal.throwIfAborted();
+    this.on(
+      effects.receiveReconnect.type,
+      asyncHandler(async (payload, abortSignal, { receiveMessages, delay, config }) => {
+        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
+          abortSignal.throwIfAborted();
 
-        await delay(getRetryDelay(payload.attempts));
+          await delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
 
-        abortSignal.throwIfAborted();
+          abortSignal.throwIfAborted();
 
-        try {
-          const result = await receiveEvents({
-            abortSignal: abortSignal,
-            channels: payload.channels,
-            channelGroups: payload.groups,
-            timetoken: payload.cursor.timetoken,
-            region: payload.cursor.region,
-          });
+          try {
+            const result = await receiveMessages({
+              abortSignal: abortSignal,
+              channels: payload.channels,
+              channelGroups: payload.groups,
+              timetoken: payload.cursor.timetoken,
+              region: payload.cursor.region,
+              filterExpression: config.filterExpression,
+            });
 
-          return engine.transition(events.reconnectingSuccess(result.metadata, result.messages));
-        } catch (error) {
-          if (error instanceof Error && error.message === 'Aborted') {
-            return;
+            return engine.transition(events.receiveReconnectSuccess(result.metadata, result.messages));
+          } catch (error) {
+            if (error instanceof Error && error.message === 'Aborted') {
+              return;
+            }
+
+            if (error instanceof PubNubError) {
+              return engine.transition(events.receiveReconnectFailure(error));
+            }
           }
-
-          if (error instanceof PubNubError) {
-            return engine.transition(events.reconnectingFailure(error));
-          }
+        } else {
+          return engine.transition(
+            events.receiveReconnectGiveup(
+              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+            ),
+          );
         }
       }),
     );
 
     this.on(
       effects.handshakeReconnect.type,
-      asyncHandler(async (payload, abortSignal, { handshake, shouldRetry, getRetryDelay, delay }) => {
-        if (!shouldRetry(payload.reason, payload.attempts)) {
-          return engine.transition(events.handshakingReconnectingGiveup());
-        }
+      asyncHandler(async (payload, abortSignal, { handshake, delay, presenceState, config }) => {
+        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
+          abortSignal.throwIfAborted();
 
-        abortSignal.throwIfAborted();
+          await delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
 
-        await delay(getRetryDelay(payload.attempts));
+          abortSignal.throwIfAborted();
 
-        abortSignal.throwIfAborted();
+          try {
+            const result = await handshake({
+              abortSignal: abortSignal,
+              channels: payload.channels,
+              channelGroups: payload.groups,
+              filterExpression: config.filterExpression,
+              ...(config.maintainPresenceState && { state: presenceState }),
+            });
 
-        try {
-          const result = await handshake({
-            abortSignal: abortSignal,
-            channels: payload.channels,
-            channelGroups: payload.groups,
-          });
+            return engine.transition(events.handshakeReconnectSuccess(result));
+          } catch (error) {
+            if (error instanceof Error && error.message === 'Aborted') {
+              return;
+            }
 
-          return engine.transition(events.handshakingReconnectingSuccess(result.metadata));
-        } catch (error) {
-          if (error instanceof Error && error.message === 'Aborted') {
-            return;
+            if (error instanceof PubNubError) {
+              return engine.transition(events.handshakeReconnectFailure(error));
+            }
           }
-
-          if (error instanceof PubNubError) {
-            return engine.transition(events.handshakingReconnectingFailure(error));
-          }
+        } else {
+          return engine.transition(
+            events.handshakeReconnectGiveup(
+              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+            ),
+          );
         }
       }),
     );

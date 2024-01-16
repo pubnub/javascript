@@ -169,6 +169,7 @@ Then('Successfully decrypt an encrypted file with legacy code', async function (
     fileStream.pipe(outputStream);
     outputStream.on('end', () => {
       const actualFileBuffer = fs.readFileSync(tempFilePath);
+      //@ts-ignore
       expect(actualFileBuffer).to.equalBytes(this.fileDataBuffer);
       fs.unlink(tempFilePath, () => {});
     });

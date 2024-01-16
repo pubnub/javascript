@@ -1,7 +1,6 @@
 /*       */
 
 import { request as HttpRequest } from 'http';
-import { EndpointDefinition, StatusAnnouncement } from '../../core/flow_interfaces';
 import { buildUrl } from '../utils';
 
 function log(url, qs, res) {

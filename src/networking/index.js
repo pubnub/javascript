@@ -3,8 +3,6 @@
 import Config from '../core/components/config';
 import categoryConstants from '../core/constants/categories';
 
-import { EndpointDefinition, NetworkingModules } from '../core/flow_interfaces';
-
 export default class {
   _modules;
 

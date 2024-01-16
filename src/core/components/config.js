@@ -74,6 +74,9 @@ export default class {
   // when there changes in the networking
   autoNetworkDetection;
 
+  // configure retry policy configuration.
+  retryConfiguration;
+
   // alert when a heartbeat works out.
   announceSuccessfulHeartbeats;
 
@@ -140,7 +143,8 @@ export default class {
   // How many times the publish-file should be retried before giving up
   fileUploadPublishRetryLimit;
   useRandomIVs;
-  enableSubscribeBeta;
+  enableEventEngine;
+  maintainPresenceState;
 
   /*
     set cryptoModule to encrypt/decrypt messages and files.
@@ -183,8 +187,8 @@ export default class {
     this.fileUploadPublishRetryLimit = setup.fileUploadPublishRetryLimit ?? 5;
     this.useRandomIVs = setup.useRandomIVs ?? true;
 
-    // flag for beta subscribe feature enablement
-    this.enableSubscribeBeta = setup.enableSubscribeBeta ?? false;
+    this.enableEventEngine = setup.enableEventEngine ?? false;
+    this.maintainPresenceState = setup.maintainPresenceState ?? true;
 
     // if location config exist and we are in https, force secure to true.
     if (typeof location !== 'undefined' && location.protocol === 'https:') {
@@ -201,6 +205,10 @@ export default class {
     this.useRequestId = setup.useRequestId || false;
 
     this.requestMessageCountThreshold = setup.requestMessageCountThreshold;
+
+    if (setup.retryConfiguration) {
+      this._setRetryConfiguration(setup.retryConfiguration);
+    }
 
     // set timeout to how long a transaction request will wait for the server (default 15 seconds)
     this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
@@ -350,7 +358,22 @@ export default class {
   }
 
   getVersion() {
-    return '7.4.5';
+    return '7.5.0';
+  }
+
+  _setRetryConfiguration(configuration) {
+    if (configuration.minimumdelay < 2) {
+      throw new Error('Minimum delay can not be set less than 2 seconds for retry');
+    }
+    if (configuration.maximumDelay > 150) {
+      throw new Error('Maximum delay can not be set more than 150 seconds for retry');
+    }
+    if (configuration.maximumDelay && maximumRetry > 6) {
+      throw new Error('Maximum retry for exponential retry policy can not be more than 6');
+    } else if (configuration.maximumRetry > 10) {
+      throw new Error('Maximum retry for linear retry policy can not be more than 10');
+    }
+    this.retryConfiguration = configuration;
   }
 
   _addPnsdkSuffix(name, suffix) {

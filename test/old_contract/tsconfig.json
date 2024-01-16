@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/node12/tsconfig.json",
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "noImplicitAny": false
+  },
+  "include": ["**/*", "../contract/shared/enums.ts"],
+  "exclude": ["node_modules"]
+}

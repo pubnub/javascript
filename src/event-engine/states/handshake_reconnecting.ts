@@ -1,14 +1,28 @@
 import { PubNubError } from '../../core/components/endpoint';
 import { State } from '../core/state';
-import { Effects, emitEvents, handshakeReconnect, reconnect } from '../effects';
-import { disconnect, Events, reconnectingFailure, reconnectingGiveup, reconnectingSuccess } from '../events';
-import { HandshakeFailureState } from './handshake_failure';
+import { Effects, emitStatus, handshakeReconnect } from '../effects';
+import {
+  disconnect,
+  Events,
+  handshakeReconnectFailure,
+  handshakeReconnectGiveup,
+  handshakeReconnectSuccess,
+  restore,
+  subscriptionChange,
+  unsubscribeAll,
+} from '../events';
+import { HandshakeFailedState } from './handshake_failed';
 import { HandshakeStoppedState } from './handshake_stopped';
+import { HandshakingState } from './handshaking';
 import { ReceivingState } from './receiving';
+import { UnsubscribedState } from './unsubscribed';
+import categoryConstants from '../../core/constants/categories';
+import { Cursor } from '../../models/Cursor';
 
 export type HandshakeReconnectingStateContext = {
   channels: string[];
   groups: string[];
+  cursor?: Cursor;
 
   attempts: number;
   reason: PubNubError;
@@ -19,34 +33,64 @@ export const HandshakeReconnectingState = new State<HandshakeReconnectingStateCo
 );
 
 HandshakeReconnectingState.onEnter((context) => handshakeReconnect(context));
-HandshakeReconnectingState.onExit(() => reconnect.cancel);
+HandshakeReconnectingState.onExit(() => handshakeReconnect.cancel);
 
-HandshakeReconnectingState.on(reconnectingSuccess.type, (context, event) =>
-  ReceivingState.with(
+HandshakeReconnectingState.on(handshakeReconnectSuccess.type, (context, event) => {
+  const cursor = {
+    timetoken: !!context.cursor?.timetoken ? context.cursor?.timetoken : event.payload.cursor.timetoken,
+    region: event.payload.cursor.region,
+  };
+  return ReceivingState.with(
     {
       channels: context.channels,
       groups: context.groups,
-      cursor: event.payload.cursor,
+      cursor: cursor,
     },
-    [emitEvents(event.payload.events)],
-  ),
-);
+    [emitStatus({ category: categoryConstants.PNConnectedCategory })],
+  );
+});
 
-HandshakeReconnectingState.on(reconnectingFailure.type, (context, event) =>
+HandshakeReconnectingState.on(handshakeReconnectFailure.type, (context, event) =>
   HandshakeReconnectingState.with({ ...context, attempts: context.attempts + 1, reason: event.payload }),
 );
 
-HandshakeReconnectingState.on(reconnectingGiveup.type, (context) =>
-  HandshakeFailureState.with({
-    groups: context.groups,
-    channels: context.channels,
-    reason: context.reason,
-  }),
+HandshakeReconnectingState.on(handshakeReconnectGiveup.type, (context, event) =>
+  HandshakeFailedState.with(
+    {
+      groups: context.groups,
+      channels: context.channels,
+      cursor: context.cursor,
+      reason: event.payload,
+    },
+    [emitStatus({ category: categoryConstants.PNConnectionErrorCategory, error: event.payload?.message })],
+  ),
 );
 
 HandshakeReconnectingState.on(disconnect.type, (context) =>
   HandshakeStoppedState.with({
     channels: context.channels,
     groups: context.groups,
+    cursor: context.cursor,
   }),
 );
+
+HandshakeReconnectingState.on(subscriptionChange.type, (context, event) =>
+  HandshakingState.with({
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: context.cursor,
+  }),
+);
+
+HandshakeReconnectingState.on(restore.type, (context, event) =>
+  HandshakingState.with({
+    channels: event.payload.channels,
+    groups: event.payload.groups,
+    cursor: {
+      timetoken: event.payload.cursor.timetoken,
+      region: event.payload.cursor?.region || context?.cursor?.region || 0,
+    },
+  }),
+);
+
+HandshakeReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));

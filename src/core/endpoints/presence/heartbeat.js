@@ -1,6 +1,5 @@
 /*       */
 
-import { HeartbeatArguments, ModulesInject } from '../../flow_interfaces';
 import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
@@ -30,7 +29,7 @@ export function getRequestTimeout({ config }) {
 }
 
 export function prepareParams(modules, incomingParams) {
-  const { channelGroups = [], state = {} } = incomingParams;
+  const { channelGroups = [], state } = incomingParams;
   const { config } = modules;
   const params = {};
 
@@ -38,7 +37,9 @@ export function prepareParams(modules, incomingParams) {
     params['channel-group'] = channelGroups.join(',');
   }
 
-  params.state = JSON.stringify(state);
+  if (state) {
+    params.state = JSON.stringify(state);
+  }
   params.heartbeat = config.getPresenceTimeout();
   return params;
 }

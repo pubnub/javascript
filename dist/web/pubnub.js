@@ -626,7 +626,7 @@
     var default_1$b = /** @class */ (function () {
         function default_1(_a) {
             var setup = _a.setup;
-            var _b, _c, _d;
+            var _b, _c, _d, _e;
             this._PNSDKSuffix = {};
             this.instanceId = "pn-".concat(uuidGenerator.createUUID());
             this.secretKey = setup.secretKey || setup.secret_key;
@@ -654,8 +654,8 @@
             this.customDecrypt = setup.customDecrypt;
             this.fileUploadPublishRetryLimit = (_b = setup.fileUploadPublishRetryLimit) !== null && _b !== void 0 ? _b : 5;
             this.useRandomIVs = (_c = setup.useRandomIVs) !== null && _c !== void 0 ? _c : true;
-            // flag for beta subscribe feature enablement
-            this.enableSubscribeBeta = (_d = setup.enableSubscribeBeta) !== null && _d !== void 0 ? _d : false;
+            this.enableEventEngine = (_d = setup.enableEventEngine) !== null && _d !== void 0 ? _d : false;
+            this.maintainPresenceState = (_e = setup.maintainPresenceState) !== null && _e !== void 0 ? _e : true;
             // if location config exist and we are in https, force secure to true.
             if (typeof location !== 'undefined' && location.protocol === 'https:') {
                 this.secure = true;
@@ -667,6 +667,9 @@
             this.useInstanceId = setup.useInstanceId || false;
             this.useRequestId = setup.useRequestId || false;
             this.requestMessageCountThreshold = setup.requestMessageCountThreshold;
+            if (setup.retryConfiguration) {
+                this._setRetryConfiguration(setup.retryConfiguration);
+            }
             // set timeout to how long a transaction request will wait for the server (default 15 seconds)
             this.setTransactionTimeout(setup.transactionalRequestTimeout || 15 * 1000);
             // set timeout to how long a subscribe event loop will run (default 310 seconds)
@@ -791,7 +794,22 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.4.5';
+            return '7.5.0';
+        };
+        default_1.prototype._setRetryConfiguration = function (configuration) {
+            if (configuration.minimumdelay < 2) {
+                throw new Error('Minimum delay can not be set less than 2 seconds for retry');
+            }
+            if (configuration.maximumDelay > 150) {
+                throw new Error('Maximum delay can not be set more than 150 seconds for retry');
+            }
+            if (configuration.maximumDelay && maximumRetry > 6) {
+                throw new Error('Maximum retry for exponential retry policy can not be more than 6');
+            }
+            else if (configuration.maximumRetry > 10) {
+                throw new Error('Maximum retry for linear retry policy can not be more than 10');
+            }
+            this.retryConfiguration = configuration;
         };
         default_1.prototype._addPnsdkSuffix = function (name, suffix) {
             this._PNSDKSuffix[name] = suffix;
@@ -1847,6 +1865,9 @@
         PNReconnectedCategory: 'PNReconnectedCategory',
         PNConnectedCategory: 'PNConnectedCategory',
         PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory',
+        PNDisconnectedCategory: 'PNDisconnectedCategory',
+        PNConnectionErrorCategory: 'PNConnectionErrorCategory',
+        PNDisconnectedUnexpectedlyCategory: 'PNDisconnectedUnexpectedlyCategory',
     };
 
     var default_1$7 = /** @class */ (function () {
@@ -2644,6 +2665,7 @@
         return default_1;
     }());
 
+    /*       */
     var BaseNotificationPayload = /** @class */ (function () {
         function BaseNotificationPayload(payload, title, body) {
             this._payload = payload;
@@ -3201,8 +3223,11 @@
         function default_1() {
             this._listeners = [];
         }
-        default_1.prototype.addListener = function (newListeners) {
-            this._listeners.push(newListeners);
+        default_1.prototype.addListener = function (newListener) {
+            if (this._listeners.includes(newListener)) {
+                return;
+            }
+            this._listeners.push(newListener);
         };
         default_1.prototype.removeListener = function (deprecatedListener) {
             var newListeners = [];
@@ -3990,7 +4015,6 @@
         handleResponse: handleResponse$m
     });
 
-    /*       */
     function getOperation$l() {
         return OPERATIONS.PNPushNotificationEnabledChannelsOperation;
     }
@@ -4212,13 +4236,15 @@
         return config.getTransactionTimeout();
     }
     function prepareParams$h(modules, incomingParams) {
-        var _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a, _b = incomingParams.state, state = _b === void 0 ? {} : _b;
+        var _a = incomingParams.channelGroups, channelGroups = _a === void 0 ? [] : _a, state = incomingParams.state;
         var config = modules.config;
         var params = {};
         if (channelGroups.length > 0) {
             params['channel-group'] = channelGroups.join(',');
         }
-        params.state = JSON.stringify(state);
+        if (state) {
+            params.state = JSON.stringify(state);
+        }
         params.heartbeat = config.getPresenceTimeout();
         return params;
     }
@@ -4341,7 +4367,6 @@
         handleResponse: handleResponse$f
     });
 
-    /*       */
     function getOperation$e() {
         return OPERATIONS.PNHereNowOperation;
     }
@@ -6720,6 +6745,13 @@
                 outParams['channel-group'] = params.channelGroups.join(',');
             }
             outParams.tt = 0;
+            if (params.state) {
+                outParams.state = JSON.stringify(params.state);
+            }
+            if (params.filterExpression && params.filterExpression.length > 0) {
+                outParams['filter-expr'] = params.filterExpression;
+            }
+            outParams.ee = '';
             return outParams;
         },
         handleResponse: function (_, response) { return ({
@@ -6757,8 +6789,12 @@
             if (params.channelGroups && params.channelGroups.length > 0) {
                 outParams['channel-group'] = params.channelGroups.join(',');
             }
+            if (params.filterExpression && params.filterExpression.length > 0) {
+                outParams['filter-expr'] = params.filterExpression;
+            }
             outParams.tt = params.timetoken;
             outParams.tr = params.region;
+            outParams.ee = '';
             return outParams;
         },
         handleResponse: function (_, response) {
@@ -6979,6 +7015,23 @@
             }
             instance.start();
         };
+        Dispatcher.prototype.dispose = function () {
+            var e_1, _a;
+            try {
+                for (var _b = __values(this.instances.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var _d = __read(_c.value, 2), key = _d[0], instance = _d[1];
+                    instance.cancel();
+                    this.instances.delete(key);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        };
         return Dispatcher;
     }());
 
@@ -7074,7 +7127,10 @@
             return _this;
         }
         AsyncHandler.prototype.start = function () {
-            this.asyncFunction(this.payload, this.abortSignal, this.dependencies);
+            this.asyncFunction(this.payload, this.abortSignal, this.dependencies).catch(function (error) {
+                // console.log('Unhandled error:', error);
+                // swallow the error
+            });
         };
         AsyncHandler.prototype.cancel = function () {
             this.abortSignal.abort();
@@ -7091,50 +7147,57 @@
         channels: channels,
         groups: groups,
     }); });
-    var receiveEvents = createManagedEffect('RECEIVE_EVENTS', function (channels, groups, cursor) { return ({ channels: channels, groups: groups, cursor: cursor }); });
-    var emitEvents = createEffect('EMIT_EVENTS', function (events) { return events; });
-    var reconnect$1 = createManagedEffect('RECONNECT', function (context) { return context; });
+    var receiveMessages = createManagedEffect('RECEIVE_MESSAGES', function (channels, groups, cursor) { return ({ channels: channels, groups: groups, cursor: cursor }); });
+    var emitMessages = createEffect('EMIT_MESSAGES', function (events) { return events; });
+    var emitStatus$1 = createEffect('EMIT_STATUS', function (status) { return status; });
+    var receiveReconnect = createManagedEffect('RECEIVE_RECONNECT', function (context) { return context; });
     var handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', function (context) { return context; });
 
-    var subscriptionChange = createEvent('SUBSCRIPTION_CHANGE', function (channels, groups) { return ({
+    var subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', function (channels, groups) { return ({
         channels: channels,
         groups: groups,
     }); });
-    var disconnect = createEvent('DISCONNECT', function () { return ({}); });
-    var reconnect = createEvent('RECONNECT', function () { return ({}); });
-    createEvent('RESTORE', function (channels, groups, timetoken, region) { return ({
+    var restore = createEvent('SUBSCRIPTION_RESTORED', function (channels, groups, timetoken, region) { return ({
         channels: channels,
         groups: groups,
-        timetoken: timetoken,
-        region: region,
+        cursor: {
+            timetoken: timetoken,
+            region: region !== null && region !== void 0 ? region : 0,
+        },
     }); });
-    var handshakingSuccess = createEvent('HANDSHAKING_SUCCESS', function (cursor) { return cursor; });
-    var handshakingFailure = createEvent('HANDSHAKING_FAILURE', function (error) { return error; });
-    var handshakingReconnectingSuccess = createEvent('HANDSHAKING_RECONNECTING_SUCCESS', function (cursor) { return ({
+    var handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', function (cursor) { return cursor; });
+    var handshakeFailure = createEvent('HANDSHAKE_FAILURE', function (error) { return error; });
+    var handshakeReconnectSuccess = createEvent('HANDSHAKE_RECONNECT_SUCCESS', function (cursor) { return ({
         cursor: cursor,
     }); });
-    var handshakingReconnectingFailure = createEvent('HANDSHAKING_RECONNECTING_FAILURE', function (error) { return error; });
-    var handshakingReconnectingGiveup = createEvent('HANDSHAKING_RECONNECTING_GIVEUP', function () { return ({}); });
-    var handshakingReconnectingRetry = createEvent('HANDSHAKING_RECONNECTING_RETRY', function () { return ({}); });
-    var receivingSuccess = createEvent('RECEIVING_SUCCESS', function (cursor, events) { return ({
-        cursor: cursor,
-        events: events,
-    }); });
-    var receivingFailure = createEvent('RECEIVING_FAILURE', function (error) { return error; });
-    var reconnectingSuccess = createEvent('RECONNECTING_SUCCESS', function (cursor, events) { return ({
+    var handshakeReconnectFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', function (error) { return error; });
+    var handshakeReconnectGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', function (error) { return error; });
+    var receiveSuccess = createEvent('RECEIVE_SUCCESS', function (cursor, events) { return ({
         cursor: cursor,
         events: events,
     }); });
-    var reconnectingFailure = createEvent('RECONNECTING_FAILURE', function (error) { return error; });
-    var reconnectingGiveup = createEvent('RECONNECTING_GIVEUP', function () { return ({}); });
-    var reconnectingRetry = createEvent('RECONNECTING_RETRY', function () { return ({}); });
+    var receiveFailure = createEvent('RECEIVE_FAILURE', function (error) { return error; });
+    var receiveReconnectSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', function (cursor, events) { return ({
+        cursor: cursor,
+        events: events,
+    }); });
+    var receiveReconnectFailure = createEvent('RECEIVE_RECONNECT_FAILURE', function (error) { return error; });
+    var receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', function (error) { return error; });
+    var disconnect$1 = createEvent('DISCONNECT', function () { return ({}); });
+    var reconnect$1 = createEvent('RECONNECT', function (timetoken, region) { return ({
+        cursor: {
+            timetoken: timetoken !== null && timetoken !== void 0 ? timetoken : '',
+            region: region !== null && region !== void 0 ? region : 0,
+        },
+    }); });
+    var unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', function () { return ({}); });
 
     var EventEngineDispatcher = /** @class */ (function (_super) {
         __extends(EventEngineDispatcher, _super);
         function EventEngineDispatcher(engine, dependencies) {
             var _this = _super.call(this, dependencies) || this;
             _this.on(handshake.type, asyncHandler(function (payload, abortSignal, _a) {
-                var handshake = _a.handshake;
+                var handshake = _a.handshake, presenceState = _a.presenceState, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
                     var result, e_1;
                     return __generator(this, function (_b) {
@@ -7144,22 +7207,17 @@
                                 _b.label = 1;
                             case 1:
                                 _b.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, handshake({
-                                        abortSignal: abortSignal,
-                                        channels: payload.channels,
-                                        channelGroups: payload.groups,
-                                    })];
+                                return [4 /*yield*/, handshake(__assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })))];
                             case 2:
                                 result = _b.sent();
-                                engine.transition(handshakingSuccess(result));
-                                return [3 /*break*/, 4];
+                                return [2 /*return*/, engine.transition(handshakeSuccess(result))];
                             case 3:
                                 e_1 = _b.sent();
                                 if (e_1 instanceof Error && e_1.message === 'Aborted') {
                                     return [2 /*return*/];
                                 }
                                 if (e_1 instanceof PubNubError) {
-                                    return [2 /*return*/, engine.transition(handshakingFailure(e_1))];
+                                    return [2 /*return*/, engine.transition(handshakeFailure(e_1))];
                                 }
                                 return [3 /*break*/, 4];
                             case 4: return [2 /*return*/];
@@ -7167,8 +7225,8 @@
                     });
                 });
             }));
-            _this.on(receiveEvents.type, asyncHandler(function (payload, abortSignal, _a) {
-                var receiveEvents = _a.receiveEvents;
+            _this.on(receiveMessages.type, asyncHandler(function (payload, abortSignal, _a) {
+                var receiveMessages = _a.receiveMessages, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
                     var result, error_1;
                     return __generator(this, function (_b) {
@@ -7178,24 +7236,25 @@
                                 _b.label = 1;
                             case 1:
                                 _b.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, receiveEvents({
+                                return [4 /*yield*/, receiveMessages({
                                         abortSignal: abortSignal,
                                         channels: payload.channels,
                                         channelGroups: payload.groups,
                                         timetoken: payload.cursor.timetoken,
                                         region: payload.cursor.region,
+                                        filterExpression: config.filterExpression,
                                     })];
                             case 2:
                                 result = _b.sent();
-                                engine.transition(receivingSuccess(result.metadata, result.messages));
+                                engine.transition(receiveSuccess(result.metadata, result.messages));
                                 return [3 /*break*/, 4];
                             case 3:
                                 error_1 = _b.sent();
                                 if (error_1 instanceof Error && error_1.message === 'Aborted') {
                                     return [2 /*return*/];
                                 }
-                                if (error_1 instanceof PubNubError) {
-                                    return [2 /*return*/, engine.transition(receivingFailure(error_1))];
+                                if (error_1 instanceof PubNubError && !abortSignal.aborted) {
+                                    return [2 /*return*/, engine.transition(receiveFailure(error_1))];
                                 }
                                 return [3 /*break*/, 4];
                             case 4: return [2 /*return*/];
@@ -7203,95 +7262,101 @@
                     });
                 });
             }));
-            _this.on(emitEvents.type, asyncHandler(function (payload, abortSignal, _a) {
-                _a.receiveEvents;
+            _this.on(emitMessages.type, asyncHandler(function (payload, _, _a) {
+                var emitMessages = _a.emitMessages;
                 return __awaiter(_this, void 0, void 0, function () {
                     return __generator(this, function (_b) {
                         if (payload.length > 0) {
-                            console.log(payload);
+                            emitMessages(payload);
                         }
                         return [2 /*return*/];
                     });
                 });
             }));
-            _this.on(reconnect$1.type, asyncHandler(function (payload, abortSignal, _a) {
-                var receiveEvents = _a.receiveEvents, shouldRetry = _a.shouldRetry, getRetryDelay = _a.getRetryDelay, delay = _a.delay;
+            _this.on(emitStatus$1.type, asyncHandler(function (payload, _, _a) {
+                var emitStatus = _a.emitStatus;
+                return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_b) {
+                        emitStatus(payload);
+                        return [2 /*return*/];
+                    });
+                });
+            }));
+            _this.on(receiveReconnect.type, asyncHandler(function (payload, abortSignal, _a) {
+                var receiveMessages = _a.receiveMessages, delay = _a.delay, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
                     var result, error_2;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
-                                if (!shouldRetry(payload.reason, payload.attempts)) {
-                                    return [2 /*return*/, engine.transition(reconnectingGiveup())];
-                                }
+                                if (!(config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts))) return [3 /*break*/, 6];
                                 abortSignal.throwIfAborted();
-                                return [4 /*yield*/, delay(getRetryDelay(payload.attempts))];
+                                return [4 /*yield*/, delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason))];
                             case 1:
                                 _b.sent();
                                 abortSignal.throwIfAborted();
                                 _b.label = 2;
                             case 2:
                                 _b.trys.push([2, 4, , 5]);
-                                return [4 /*yield*/, receiveEvents({
+                                return [4 /*yield*/, receiveMessages({
                                         abortSignal: abortSignal,
                                         channels: payload.channels,
                                         channelGroups: payload.groups,
                                         timetoken: payload.cursor.timetoken,
                                         region: payload.cursor.region,
+                                        filterExpression: config.filterExpression,
                                     })];
                             case 3:
                                 result = _b.sent();
-                                return [2 /*return*/, engine.transition(reconnectingSuccess(result.metadata, result.messages))];
+                                return [2 /*return*/, engine.transition(receiveReconnectSuccess(result.metadata, result.messages))];
                             case 4:
                                 error_2 = _b.sent();
                                 if (error_2 instanceof Error && error_2.message === 'Aborted') {
                                     return [2 /*return*/];
                                 }
                                 if (error_2 instanceof PubNubError) {
-                                    return [2 /*return*/, engine.transition(reconnectingFailure(error_2))];
+                                    return [2 /*return*/, engine.transition(receiveReconnectFailure(error_2))];
                                 }
                                 return [3 /*break*/, 5];
-                            case 5: return [2 /*return*/];
+                            case 5: return [3 /*break*/, 7];
+                            case 6: return [2 /*return*/, engine.transition(receiveReconnectGiveup(new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts))))];
+                            case 7: return [2 /*return*/];
                         }
                     });
                 });
             }));
             _this.on(handshakeReconnect.type, asyncHandler(function (payload, abortSignal, _a) {
-                var handshake = _a.handshake, shouldRetry = _a.shouldRetry, getRetryDelay = _a.getRetryDelay, delay = _a.delay;
+                var handshake = _a.handshake, delay = _a.delay, presenceState = _a.presenceState, config = _a.config;
                 return __awaiter(_this, void 0, void 0, function () {
                     var result, error_3;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
-                                if (!shouldRetry(payload.reason, payload.attempts)) {
-                                    return [2 /*return*/, engine.transition(handshakingReconnectingGiveup())];
-                                }
+                                if (!(config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts))) return [3 /*break*/, 6];
                                 abortSignal.throwIfAborted();
-                                return [4 /*yield*/, delay(getRetryDelay(payload.attempts))];
+                                return [4 /*yield*/, delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason))];
                             case 1:
                                 _b.sent();
                                 abortSignal.throwIfAborted();
                                 _b.label = 2;
                             case 2:
                                 _b.trys.push([2, 4, , 5]);
-                                return [4 /*yield*/, handshake({
-                                        abortSignal: abortSignal,
-                                        channels: payload.channels,
-                                        channelGroups: payload.groups,
-                                    })];
+                                return [4 /*yield*/, handshake(__assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })))];
                             case 3:
                                 result = _b.sent();
-                                return [2 /*return*/, engine.transition(handshakingReconnectingSuccess(result.metadata))];
+                                return [2 /*return*/, engine.transition(handshakeReconnectSuccess(result))];
                             case 4:
                                 error_3 = _b.sent();
                                 if (error_3 instanceof Error && error_3.message === 'Aborted') {
                                     return [2 /*return*/];
                                 }
                                 if (error_3 instanceof PubNubError) {
-                                    return [2 /*return*/, engine.transition(handshakingReconnectingFailure(error_3))];
+                                    return [2 /*return*/, engine.transition(handshakeReconnectFailure(error_3))];
                                 }
                                 return [3 /*break*/, 5];
-                            case 5: return [2 /*return*/];
+                            case 5: return [3 /*break*/, 7];
+                            case 6: return [2 /*return*/, engine.transition(handshakeReconnectGiveup(new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts))))];
+                            case 7: return [2 /*return*/];
                         }
                     });
                 });
@@ -7301,27 +7366,90 @@
         return EventEngineDispatcher;
     }(Dispatcher));
 
-    var HandshakeStoppedState = new State('STOPPED');
-    HandshakeStoppedState.on(subscriptionChange.type, function (_context, event) {
+    var HandshakeFailedState = new State('HANDSHAKE_FAILED');
+    HandshakeFailedState.on(subscriptionChange.type, function (context, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
+    });
+    HandshakeFailedState.on(reconnect$1.type, function (context, event) {
+        return HandshakingState.with({
+            channels: context.channels,
+            groups: context.groups,
+            cursor: event.payload.cursor || context.cursor,
+        });
+    });
+    HandshakeFailedState.on(restore.type, function (context, event) {
+        var _a, _b;
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+            },
+        });
+    });
+    HandshakeFailedState.on(unsubscribeAll.type, function (_) { return UnsubscribedState.with(); });
+
+    var HandshakeStoppedState = new State('HANDSHAKE_STOPPED');
+    HandshakeStoppedState.on(subscriptionChange.type, function (context, event) {
         return HandshakeStoppedState.with({
             channels: event.payload.channels,
             groups: event.payload.groups,
+            cursor: context.cursor,
         });
     });
-    HandshakeStoppedState.on(reconnect.type, function (context) { return HandshakingState.with(__assign({}, context)); });
-
-    var HandshakeFailureState = new State('HANDSHAKE_FAILURE');
-    HandshakeFailureState.on(handshakingReconnectingRetry.type, function (context) {
-        return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: 0 }));
+    HandshakeStoppedState.on(reconnect$1.type, function (context, event) {
+        return HandshakingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor || context.cursor }));
     });
-    HandshakeFailureState.on(disconnect.type, function (context) {
+    HandshakeStoppedState.on(restore.type, function (context, event) {
+        var _a;
         return HandshakeStoppedState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0,
+            },
+        });
+    });
+    HandshakeStoppedState.on(unsubscribeAll.type, function (_) { return UnsubscribedState.with(); });
+
+    var ReceiveFailedState = new State('RECEIVE_FAILED');
+    ReceiveFailedState.on(reconnect$1.type, function (context, event) {
+        var _a;
+        return HandshakingState.with({
             channels: context.channels,
             groups: context.groups,
+            cursor: {
+                timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+                region: event.payload.cursor.region || context.cursor.region,
+            },
         });
     });
+    ReceiveFailedState.on(subscriptionChange.type, function (context, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
+    });
+    ReceiveFailedState.on(restore.type, function (context, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region || context.cursor.region,
+            },
+        });
+    });
+    ReceiveFailedState.on(unsubscribeAll.type, function (_) { return UnsubscribedState.with(undefined); });
 
-    var ReceiveStoppedState = new State('STOPPED');
+    var ReceiveStoppedState = new State('RECEIVE_STOPPED');
     ReceiveStoppedState.on(subscriptionChange.type, function (context, event) {
         return ReceiveStoppedState.with({
             channels: event.payload.channels,
@@ -7329,98 +7457,177 @@
             cursor: context.cursor,
         });
     });
-    ReceiveStoppedState.on(reconnect.type, function (context) { return ReceivingState.with(__assign({}, context)); });
-
-    var ReceiveFailureState = new State('RECEIVE_FAILURE');
-    ReceiveFailureState.on(reconnectingRetry.type, function (context) {
-        return ReceiveReconnectingState.with(__assign(__assign({}, context), { attempts: 0 }));
-    });
-    ReceiveFailureState.on(disconnect.type, function (context) {
+    ReceiveStoppedState.on(restore.type, function (context, event) {
         return ReceiveStoppedState.with({
-            channels: context.channels,
-            groups: context.groups,
-            cursor: context.cursor,
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region || context.cursor.region,
+            },
         });
     });
+    ReceiveStoppedState.on(reconnect$1.type, function (context, event) {
+        var _a;
+        return HandshakingState.with({
+            channels: context.channels,
+            groups: context.groups,
+            cursor: {
+                timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+                region: event.payload.cursor.region || context.cursor.region,
+            },
+        });
+    });
+    ReceiveStoppedState.on(unsubscribeAll.type, function () { return UnsubscribedState.with(undefined); });
 
     var ReceiveReconnectingState = new State('RECEIVE_RECONNECTING');
-    ReceiveReconnectingState.onEnter(function (context) { return reconnect$1(context); });
-    ReceiveReconnectingState.onExit(function () { return reconnect$1.cancel; });
-    ReceiveReconnectingState.on(reconnectingSuccess.type, function (context, event) {
+    ReceiveReconnectingState.onEnter(function (context) { return receiveReconnect(context); });
+    ReceiveReconnectingState.onExit(function () { return receiveReconnect.cancel; });
+    ReceiveReconnectingState.on(receiveReconnectSuccess.type, function (context, event) {
         return ReceivingState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: event.payload.cursor,
-        }, [emitEvents(event.payload.events)]);
+        }, [emitMessages(event.payload.events)]);
     });
-    ReceiveReconnectingState.on(reconnectingFailure.type, function (context, event) {
+    ReceiveReconnectingState.on(receiveReconnectFailure.type, function (context, event) {
         return ReceiveReconnectingState.with(__assign(__assign({}, context), { attempts: context.attempts + 1, reason: event.payload }));
     });
-    ReceiveReconnectingState.on(reconnectingGiveup.type, function (context) {
-        return ReceiveFailureState.with({
+    ReceiveReconnectingState.on(receiveReconnectGiveup.type, function (context, event) {
+        var _a;
+        return ReceiveFailedState.with({
             groups: context.groups,
             channels: context.channels,
             cursor: context.cursor,
-            reason: context.reason,
-        });
+            reason: event.payload,
+        }, [emitStatus$1({ category: categories.PNDisconnectedUnexpectedlyCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
     });
-    ReceiveReconnectingState.on(disconnect.type, function (context) {
+    ReceiveReconnectingState.on(disconnect$1.type, function (context) {
         return ReceiveStoppedState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: context.cursor,
+        }, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
+    });
+    ReceiveReconnectingState.on(restore.type, function (context, event) {
+        return ReceivingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region || context.cursor.region,
+            },
         });
+    });
+    ReceiveReconnectingState.on(subscriptionChange.type, function (context, event) {
+        return ReceivingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
+    });
+    ReceiveReconnectingState.on(unsubscribeAll.type, function (_) {
+        return UnsubscribedState.with(undefined, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
     });
 
     var ReceivingState = new State('RECEIVING');
-    ReceivingState.onEnter(function (context) { return receiveEvents(context.channels, context.groups, context.cursor); });
-    ReceivingState.onExit(function () { return receiveEvents.cancel; });
-    ReceivingState.on(receivingSuccess.type, function (context, event) {
-        return ReceivingState.with(__assign(__assign({}, context), { cursor: event.payload.cursor }), [emitEvents(event.payload.events)]);
+    ReceivingState.onEnter(function (context) { return receiveMessages(context.channels, context.groups, context.cursor); });
+    ReceivingState.onExit(function () { return receiveMessages.cancel; });
+    ReceivingState.on(receiveSuccess.type, function (context, event) {
+        return ReceivingState.with({ channels: context.channels, groups: context.groups, cursor: event.payload.cursor }, [
+            emitMessages(event.payload.events),
+        ]);
     });
     ReceivingState.on(subscriptionChange.type, function (context, event) {
         if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
             return UnsubscribedState.with(undefined);
         }
-        return ReceivingState.with(__assign(__assign({}, context), { channels: event.payload.channels, groups: event.payload.groups }));
+        return ReceivingState.with({
+            cursor: context.cursor,
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+        });
     });
-    ReceivingState.on(receivingFailure.type, function (context, event) {
+    ReceivingState.on(restore.type, function (context, event) {
+        if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
+            return UnsubscribedState.with(undefined);
+        }
+        return ReceivingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region || context.cursor.region,
+            },
+        });
+    });
+    ReceivingState.on(receiveFailure.type, function (context, event) {
         return ReceiveReconnectingState.with(__assign(__assign({}, context), { attempts: 0, reason: event.payload }));
     });
-    ReceivingState.on(disconnect.type, function (context) {
+    ReceivingState.on(disconnect$1.type, function (context) {
         return ReceiveStoppedState.with({
+            channels: context.channels,
+            groups: context.groups,
+            cursor: context.cursor,
+        }, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
+    });
+    ReceivingState.on(unsubscribeAll.type, function (_) {
+        return UnsubscribedState.with(undefined, [emitStatus$1({ category: categories.PNDisconnectedCategory })]);
+    });
+
+    var HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
+    HandshakeReconnectingState.onEnter(function (context) { return handshakeReconnect(context); });
+    HandshakeReconnectingState.onExit(function () { return handshakeReconnect.cancel; });
+    HandshakeReconnectingState.on(handshakeReconnectSuccess.type, function (context, event) {
+        var _a, _b;
+        var cursor = {
+            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : event.payload.cursor.timetoken,
+            region: event.payload.cursor.region,
+        };
+        return ReceivingState.with({
+            channels: context.channels,
+            groups: context.groups,
+            cursor: cursor,
+        }, [emitStatus$1({ category: categories.PNConnectedCategory })]);
+    });
+    HandshakeReconnectingState.on(handshakeReconnectFailure.type, function (context, event) {
+        return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: context.attempts + 1, reason: event.payload }));
+    });
+    HandshakeReconnectingState.on(handshakeReconnectGiveup.type, function (context, event) {
+        var _a;
+        return HandshakeFailedState.with({
+            groups: context.groups,
+            channels: context.channels,
+            cursor: context.cursor,
+            reason: event.payload,
+        }, [emitStatus$1({ category: categories.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
+    });
+    HandshakeReconnectingState.on(disconnect$1.type, function (context) {
+        return HandshakeStoppedState.with({
             channels: context.channels,
             groups: context.groups,
             cursor: context.cursor,
         });
     });
-
-    var HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
-    HandshakeReconnectingState.onEnter(function (context) { return handshakeReconnect(context); });
-    HandshakeReconnectingState.onExit(function () { return reconnect$1.cancel; });
-    HandshakeReconnectingState.on(reconnectingSuccess.type, function (context, event) {
-        return ReceivingState.with({
-            channels: context.channels,
-            groups: context.groups,
-            cursor: event.payload.cursor,
-        }, [emitEvents(event.payload.events)]);
-    });
-    HandshakeReconnectingState.on(reconnectingFailure.type, function (context, event) {
-        return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: context.attempts + 1, reason: event.payload }));
-    });
-    HandshakeReconnectingState.on(reconnectingGiveup.type, function (context) {
-        return HandshakeFailureState.with({
-            groups: context.groups,
-            channels: context.channels,
-            reason: context.reason,
+    HandshakeReconnectingState.on(subscriptionChange.type, function (context, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
         });
     });
-    HandshakeReconnectingState.on(disconnect.type, function (context) {
-        return HandshakeStoppedState.with({
-            channels: context.channels,
-            groups: context.groups,
+    HandshakeReconnectingState.on(restore.type, function (context, event) {
+        var _a, _b;
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: ((_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.region) || ((_b = context === null || context === void 0 ? void 0 : context.cursor) === null || _b === void 0 ? void 0 : _b.region) || 0,
+            },
         });
     });
+    HandshakeReconnectingState.on(unsubscribeAll.type, function (_) { return UnsubscribedState.with(undefined); });
 
     var HandshakingState = new State('HANDSHAKING');
     HandshakingState.onEnter(function (context) { return handshake(context.channels, context.groups); });
@@ -7429,28 +7636,69 @@
         if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
             return UnsubscribedState.with(undefined);
         }
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: context.cursor,
+        });
     });
-    HandshakingState.on(handshakingSuccess.type, function (context, event) {
+    HandshakingState.on(handshakeSuccess.type, function (context, event) {
+        var _a, _b;
         return ReceivingState.with({
             channels: context.channels,
             groups: context.groups,
-            cursor: event.payload,
+            cursor: {
+                timetoken: !!((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context === null || context === void 0 ? void 0 : context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : event.payload.timetoken,
+                region: event.payload.region,
+            },
+        }, [
+            emitStatus$1({
+                category: categories.PNConnectedCategory,
+            }),
+        ]);
+    });
+    HandshakingState.on(handshakeFailure.type, function (context, event) {
+        return HandshakeReconnectingState.with({
+            channels: context.channels,
+            groups: context.groups,
+            cursor: context.cursor,
+            attempts: 0,
+            reason: event.payload,
         });
     });
-    HandshakingState.on(handshakingFailure.type, function (context, event) {
-        return HandshakeReconnectingState.with(__assign(__assign({}, context), { attempts: 0, reason: event.payload }));
-    });
-    HandshakingState.on(disconnect.type, function (context) {
+    HandshakingState.on(disconnect$1.type, function (context) {
         return HandshakeStoppedState.with({
             channels: context.channels,
             groups: context.groups,
+            cursor: context.cursor,
         });
     });
+    HandshakingState.on(restore.type, function (context, event) {
+        var _a;
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: {
+                timetoken: event.payload.cursor.timetoken,
+                region: event.payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0,
+            },
+        });
+    });
+    HandshakingState.on(unsubscribeAll.type, function (_) { return UnsubscribedState.with(); });
 
     var UnsubscribedState = new State('UNSUBSCRIBED');
     UnsubscribedState.on(subscriptionChange.type, function (_, event) {
-        return HandshakingState.with({ channels: event.payload.channels, groups: event.payload.groups });
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+        });
+    });
+    UnsubscribedState.on(restore.type, function (_, event) {
+        return HandshakingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+            cursor: event.payload.cursor,
+        });
     });
 
     var EventEngine = /** @class */ (function () {
@@ -7459,8 +7707,9 @@
             this.engine = new Engine();
             this.channels = [];
             this.groups = [];
+            this.dependencies = dependencies;
             this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
-            this.engine.subscribe(function (change) {
+            this._unsubscribeEngine = this.engine.subscribe(function (change) {
                 if (change.type === 'invocationDispatched') {
                     _this.dispatcher.dispatch(change.invocation);
                 }
@@ -7475,33 +7724,697 @@
             configurable: true
         });
         EventEngine.prototype.subscribe = function (_a) {
-            var channels = _a.channels, groups = _a.groups;
+            var _this = this;
+            var channels = _a.channels, channelGroups = _a.channelGroups, timetoken = _a.timetoken, withPresence = _a.withPresence;
             this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
-            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((groups !== null && groups !== void 0 ? groups : [])), false);
-            this.engine.transition(subscriptionChange(this.channels, this.groups));
+            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false);
+            if (withPresence) {
+                this.channels.map(function (c) { return _this.channels.push("".concat(c, "-pnpres")); });
+                this.groups.map(function (g) { return _this.groups.push("".concat(g, "-pnpres")); });
+            }
+            if (timetoken) {
+                this.engine.transition(restore(this.channels, this.groups, timetoken));
+            }
+            else {
+                this.engine.transition(subscriptionChange(this.channels, this.groups));
+            }
+            if (this.dependencies.join) {
+                this.dependencies.join({
+                    channels: this.channels.filter(function (c) { return !c.endsWith('-pnpres'); }),
+                    groups: this.groups.filter(function (g) { return !g.endsWith('-pnpres'); }),
+                });
+            }
         };
         EventEngine.prototype.unsubscribe = function (_a) {
+            var _this = this;
             var channels = _a.channels, groups = _a.groups;
-            this.channels = this.channels.filter(function (channel) { var _a; return (_a = !(channels === null || channels === void 0 ? void 0 : channels.includes(channel))) !== null && _a !== void 0 ? _a : true; });
-            this.groups = this.groups.filter(function (group) { var _a; return (_a = !(groups === null || groups === void 0 ? void 0 : groups.includes(group))) !== null && _a !== void 0 ? _a : true; });
+            var channlesWithPres = channels === null || channels === void 0 ? void 0 : channels.slice(0);
+            channels === null || channels === void 0 ? void 0 : channels.map(function (c) { return channlesWithPres.push("".concat(c, "-pnpres")); });
+            this.channels = this.channels.filter(function (channel) { return !(channlesWithPres === null || channlesWithPres === void 0 ? void 0 : channlesWithPres.includes(channel)); });
+            var groupsWithPres = groups === null || groups === void 0 ? void 0 : groups.slice(0);
+            groups === null || groups === void 0 ? void 0 : groups.map(function (g) { return groupsWithPres.push("".concat(g, "-pnpres")); });
+            this.groups = this.groups.filter(function (group) { return !(groupsWithPres === null || groupsWithPres === void 0 ? void 0 : groupsWithPres.includes(group)); });
+            if (this.dependencies.presenceState) {
+                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) { return delete _this.dependencies.presenceState[c]; });
+                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) { return delete _this.dependencies.presenceState[g]; });
+            }
             this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
+            if (this.dependencies.leave) {
+                this.dependencies.leave({
+                    channels: channels,
+                    groups: groups,
+                });
+            }
         };
         EventEngine.prototype.unsubscribeAll = function () {
             this.channels = [];
             this.groups = [];
+            if (this.dependencies.presenceState) {
+                this.dependencies.presenceState = {};
+            }
             this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
+            if (this.dependencies.leaveAll) {
+                this.dependencies.leaveAll();
+            }
         };
-        EventEngine.prototype.reconnect = function () {
-            this.engine.transition(reconnect());
+        EventEngine.prototype.reconnect = function (_a) {
+            var timetoken = _a.timetoken, region = _a.region;
+            this.engine.transition(reconnect$1(timetoken, region));
         };
         EventEngine.prototype.disconnect = function () {
-            this.engine.transition(disconnect());
+            this.engine.transition(disconnect$1());
+            if (this.dependencies.leaveAll) {
+                this.dependencies.leaveAll();
+            }
+        };
+        EventEngine.prototype.getSubscribedChannels = function () {
+            return this.channels.slice(0);
+        };
+        EventEngine.prototype.getSubscribedChannelGroups = function () {
+            return this.groups.slice(0);
+        };
+        EventEngine.prototype.dispose = function () {
+            this.disconnect();
+            this._unsubscribeEngine();
+            this.dispatcher.dispose();
         };
         return EventEngine;
     }());
 
+    var reconnect = createEvent('RECONNECT', function () { return ({}); });
+    var disconnect = createEvent('DISCONNECT', function () { return ({}); });
+    var joined = createEvent('JOINED', function (channels, groups) { return ({
+        channels: channels,
+        groups: groups,
+    }); });
+    var left = createEvent('LEFT', function (channels, groups) { return ({
+        channels: channels,
+        groups: groups,
+    }); });
+    var leftAll = createEvent('LEFT_ALL', function () { return ({}); });
+    var heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', function (statusCode) { return ({ statusCode: statusCode }); });
+    var heartbeatFailure = createEvent('HEARTBEAT_FAILURE', function (error) { return error; });
+    var heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', function () { return ({}); });
+    var timesUp = createEvent('TIMES_UP', function () { return ({}); });
+
+    var heartbeat = createEffect('HEARTBEAT', function (channels, groups) { return ({
+        channels: channels,
+        groups: groups,
+    }); });
+    var leave = createEffect('LEAVE', function (channels, groups) { return ({
+        channels: channels,
+        groups: groups,
+    }); });
+    var emitStatus = createEffect('EMIT_STATUS', function (status) { return status; });
+    var wait = createManagedEffect('WAIT', function () { return ({}); });
+    var delayedHeartbeat = createManagedEffect('DELAYED_HEARTBEAT', function (context) { return context; });
+
+    var PresenceEventEngineDispatcher = /** @class */ (function (_super) {
+        __extends(PresenceEventEngineDispatcher, _super);
+        function PresenceEventEngineDispatcher(engine, dependencies) {
+            var _this = _super.call(this, dependencies) || this;
+            _this.on(heartbeat.type, asyncHandler(function (payload, _, _a) {
+                var heartbeat = _a.heartbeat, presenceState = _a.presenceState, config = _a.config;
+                return __awaiter(_this, void 0, void 0, function () {
+                    var e_1;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                _b.trys.push([0, 2, , 3]);
+                                return [4 /*yield*/, heartbeat(__assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })))];
+                            case 1:
+                                _b.sent();
+                                engine.transition(heartbeatSuccess(200));
+                                return [3 /*break*/, 3];
+                            case 2:
+                                e_1 = _b.sent();
+                                if (e_1 instanceof PubNubError) {
+                                    return [2 /*return*/, engine.transition(heartbeatFailure(e_1))];
+                                }
+                                return [3 /*break*/, 3];
+                            case 3: return [2 /*return*/];
+                        }
+                    });
+                });
+            }));
+            _this.on(leave.type, asyncHandler(function (payload, _, _a) {
+                var leave = _a.leave, config = _a.config;
+                return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                if (!!config.suppressLeaveEvents) return [3 /*break*/, 4];
+                                _b.label = 1;
+                            case 1:
+                                _b.trys.push([1, 3, , 4]);
+                                return [4 /*yield*/, leave({
+                                        channels: payload.channels,
+                                        channelGroups: payload.groups,
+                                    })];
+                            case 2:
+                                _b.sent();
+                                return [3 /*break*/, 4];
+                            case 3:
+                                _b.sent();
+                                return [3 /*break*/, 4];
+                            case 4: return [2 /*return*/];
+                        }
+                    });
+                });
+            }));
+            _this.on(wait.type, asyncHandler(function (_, abortSignal, _a) {
+                var heartbeatDelay = _a.heartbeatDelay;
+                return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                abortSignal.throwIfAborted();
+                                return [4 /*yield*/, heartbeatDelay()];
+                            case 1:
+                                _b.sent();
+                                abortSignal.throwIfAborted();
+                                return [2 /*return*/, engine.transition(timesUp())];
+                        }
+                    });
+                });
+            }));
+            _this.on(delayedHeartbeat.type, asyncHandler(function (payload, abortSignal, _a) {
+                var heartbeat = _a.heartbeat, retryDelay = _a.retryDelay, presenceState = _a.presenceState, config = _a.config;
+                return __awaiter(_this, void 0, void 0, function () {
+                    var e_3;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                if (!(config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts))) return [3 /*break*/, 6];
+                                abortSignal.throwIfAborted();
+                                return [4 /*yield*/, retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason))];
+                            case 1:
+                                _b.sent();
+                                abortSignal.throwIfAborted();
+                                _b.label = 2;
+                            case 2:
+                                _b.trys.push([2, 4, , 5]);
+                                return [4 /*yield*/, heartbeat(__assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })))];
+                            case 3:
+                                _b.sent();
+                                return [2 /*return*/, engine.transition(heartbeatSuccess(200))];
+                            case 4:
+                                e_3 = _b.sent();
+                                if (e_3 instanceof Error && e_3.message === 'Aborted') {
+                                    return [2 /*return*/];
+                                }
+                                if (e_3 instanceof PubNubError) {
+                                    return [2 /*return*/, engine.transition(heartbeatFailure(e_3))];
+                                }
+                                return [3 /*break*/, 5];
+                            case 5: return [3 /*break*/, 7];
+                            case 6: return [2 /*return*/, engine.transition(heartbeatGiveup())];
+                            case 7: return [2 /*return*/];
+                        }
+                    });
+                });
+            }));
+            _this.on(emitStatus.type, asyncHandler(function (payload, _, _a) {
+                var emitStatus = _a.emitStatus, config = _a.config;
+                return __awaiter(_this, void 0, void 0, function () {
+                    var _b;
+                    return __generator(this, function (_c) {
+                        if (config.announceFailedHeartbeats && ((_b = payload === null || payload === void 0 ? void 0 : payload.status) === null || _b === void 0 ? void 0 : _b.error) === true) {
+                            emitStatus(payload.status);
+                        }
+                        else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
+                            emitStatus(__assign(__assign({}, payload), { operation: OPERATIONS.PNHeartbeatOperation, error: false }));
+                        }
+                        return [2 /*return*/];
+                    });
+                });
+            }));
+            return _this;
+        }
+        return PresenceEventEngineDispatcher;
+    }(Dispatcher));
+
+    var HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
+    HeartbeatStoppedState.on(joined.type, function (context, event) {
+        return HeartbeatStoppedState.with({
+            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
+            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+        });
+    });
+    HeartbeatStoppedState.on(left.type, function (context, event) {
+        return HeartbeatStoppedState.with({
+            channels: context.channels.filter(function (channel) { return !event.payload.channels.includes(channel); }),
+            groups: context.groups.filter(function (group) { return !event.payload.groups.includes(group); }),
+        });
+    });
+    HeartbeatStoppedState.on(reconnect.type, function (context, _) {
+        return HeartbeatingState.with({
+            channels: context.channels,
+            groups: context.groups,
+        });
+    });
+    HeartbeatStoppedState.on(leftAll.type, function (context, _) { return HeartbeatInactiveState.with(undefined); });
+
+    var HeartbeatCooldownState = new State('HEARTBEAT_COOLDOWN');
+    HeartbeatCooldownState.onEnter(function () { return wait(); });
+    HeartbeatCooldownState.onExit(function () { return wait.cancel; });
+    HeartbeatCooldownState.on(timesUp.type, function (context, _) {
+        return HeartbeatingState.with({
+            channels: context.channels,
+            groups: context.groups,
+        });
+    });
+    HeartbeatCooldownState.on(joined.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
+            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+        });
+    });
+    HeartbeatCooldownState.on(left.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: context.channels.filter(function (channel) { return !event.payload.channels.includes(channel); }),
+            groups: context.groups.filter(function (group) { return !event.payload.groups.includes(group); }),
+        }, [leave(event.payload.channels, event.payload.groups)]);
+    });
+    HeartbeatCooldownState.on(disconnect.type, function (context) {
+        return HeartbeatStoppedState.with({
+            channels: context.channels,
+            groups: context.groups,
+        }, [leave(context.channels, context.groups)]);
+    });
+    HeartbeatCooldownState.on(leftAll.type, function (context, _) {
+        return HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]);
+    });
+
+    var HeartbeatFailedState = new State('HEARTBEAT_FAILED');
+    HeartbeatFailedState.on(joined.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
+            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+        });
+    });
+    HeartbeatFailedState.on(left.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: context.channels.filter(function (channel) { return !event.payload.channels.includes(channel); }),
+            groups: context.groups.filter(function (group) { return !event.payload.groups.includes(group); }),
+        }, [leave(event.payload.channels, event.payload.groups)]);
+    });
+    HeartbeatFailedState.on(reconnect.type, function (context, _) {
+        return HeartbeatingState.with({
+            channels: context.channels,
+            groups: context.groups,
+        });
+    });
+    HeartbeatFailedState.on(disconnect.type, function (context, _) {
+        return HeartbeatStoppedState.with({
+            channels: context.channels,
+            groups: context.groups,
+        }, [leave(context.channels, context.groups)]);
+    });
+    HeartbeatFailedState.on(leftAll.type, function (context, _) {
+        return HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]);
+    });
+
+    var HearbeatReconnectingState = new State('HEARBEAT_RECONNECTING');
+    HearbeatReconnectingState.onEnter(function (context) { return delayedHeartbeat(context); });
+    HearbeatReconnectingState.onExit(function () { return delayedHeartbeat.cancel; });
+    HearbeatReconnectingState.on(joined.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
+            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+        });
+    });
+    HearbeatReconnectingState.on(left.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: context.channels.filter(function (channel) { return !event.payload.channels.includes(channel); }),
+            groups: context.groups.filter(function (group) { return !event.payload.groups.includes(group); }),
+        }, [leave(event.payload.channels, event.payload.groups)]);
+    });
+    HearbeatReconnectingState.on(disconnect.type, function (context, _) {
+        HeartbeatStoppedState.with({
+            channels: context.channels,
+            groups: context.groups,
+        }, [leave(context.channels, context.groups)]);
+    });
+    HearbeatReconnectingState.on(heartbeatSuccess.type, function (context, event) {
+        return HeartbeatCooldownState.with({
+            channels: context.channels,
+            groups: context.groups,
+        });
+    });
+    HearbeatReconnectingState.on(heartbeatFailure.type, function (context, event) {
+        return HearbeatReconnectingState.with(__assign(__assign({}, context), { attempts: context.attempts + 1, reason: event.payload }));
+    });
+    HearbeatReconnectingState.on(heartbeatGiveup.type, function (context, event) {
+        return HeartbeatFailedState.with({
+            channels: context.channels,
+            groups: context.groups,
+        });
+    });
+    HearbeatReconnectingState.on(leftAll.type, function (context, _) {
+        return HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]);
+    });
+
+    var HeartbeatingState = new State('HEARTBEATING');
+    HeartbeatingState.onEnter(function (context) { return heartbeat(context.channels, context.groups); });
+    HeartbeatingState.on(heartbeatSuccess.type, function (context, event) {
+        return HeartbeatCooldownState.with({
+            channels: context.channels,
+            groups: context.groups,
+        });
+    });
+    HeartbeatingState.on(joined.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
+            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+        });
+    });
+    HeartbeatingState.on(left.type, function (context, event) {
+        return HeartbeatingState.with({
+            channels: context.channels.filter(function (channel) { return !event.payload.channels.includes(channel); }),
+            groups: context.groups.filter(function (group) { return !event.payload.groups.includes(group); }),
+        }, [leave(event.payload.channels, event.payload.groups)]);
+    });
+    HeartbeatingState.on(heartbeatFailure.type, function (context, event) {
+        return HearbeatReconnectingState.with(__assign(__assign({}, context), { attempts: 0, reason: event.payload }));
+    });
+    HeartbeatingState.on(disconnect.type, function (context) {
+        return HeartbeatStoppedState.with({
+            channels: context.channels,
+            groups: context.groups,
+        }, [leave(context.channels, context.groups)]);
+    });
+    HeartbeatingState.on(leftAll.type, function (context, _) {
+        return HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]);
+    });
+
+    var HeartbeatInactiveState = new State('HEARTBEAT_INACTIVE');
+    HeartbeatInactiveState.on(joined.type, function (_, event) {
+        return HeartbeatingState.with({
+            channels: event.payload.channels,
+            groups: event.payload.groups,
+        });
+    });
+
+    var PresenceEventEngine = /** @class */ (function () {
+        function PresenceEventEngine(dependencies) {
+            var _this = this;
+            this.engine = new Engine();
+            this.channels = [];
+            this.groups = [];
+            this.dispatcher = new PresenceEventEngineDispatcher(this.engine, dependencies);
+            this.dependencies = dependencies;
+            this._unsubscribeEngine = this.engine.subscribe(function (change) {
+                if (change.type === 'invocationDispatched') {
+                    _this.dispatcher.dispatch(change.invocation);
+                }
+            });
+            this.engine.start(HeartbeatInactiveState, undefined);
+        }
+        Object.defineProperty(PresenceEventEngine.prototype, "_engine", {
+            get: function () {
+                return this.engine;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        PresenceEventEngine.prototype.join = function (_a) {
+            var channels = _a.channels, groups = _a.groups;
+            this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
+            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((groups !== null && groups !== void 0 ? groups : [])), false);
+            this.engine.transition(joined(this.channels.slice(0), this.groups.slice(0)));
+        };
+        PresenceEventEngine.prototype.leave = function (_a) {
+            var _this = this;
+            var channels = _a.channels, groups = _a.groups;
+            if (this.dependencies.presenceState) {
+                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) { return delete _this.dependencies.presenceState[c]; });
+                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) { return delete _this.dependencies.presenceState[g]; });
+            }
+            this.engine.transition(left(channels !== null && channels !== void 0 ? channels : [], groups !== null && groups !== void 0 ? groups : []));
+        };
+        PresenceEventEngine.prototype.leaveAll = function () {
+            this.engine.transition(leftAll());
+        };
+        PresenceEventEngine.prototype.dispose = function () {
+            this._unsubscribeEngine();
+            this.dispatcher.dispose();
+        };
+        return PresenceEventEngine;
+    }());
+
+    var RetryPolicy = /** @class */ (function () {
+        function RetryPolicy() {
+        }
+        RetryPolicy.LinearRetryPolicy = function (configuration) {
+            return {
+                delay: configuration.delay,
+                maximumRetry: configuration.maximumRetry,
+                shouldRetry: function (error, attempt) {
+                    var _a;
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
+                        return false;
+                    }
+                    return this.maximumRetry > attempt;
+                },
+                getDelay: function (_, reason) {
+                    var _a;
+                    var delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : this.delay;
+                    return (delay + Math.random()) * 1000;
+                },
+                getGiveupReason: function (error, attempt) {
+                    var _a;
+                    if (this.maximumRetry <= attempt) {
+                        return 'retry attempts exhaused.';
+                    }
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
+                        return 'forbidden operation.';
+                    }
+                    return 'unknown error';
+                },
+            };
+        };
+        RetryPolicy.ExponentialRetryPolicy = function (configuration) {
+            return {
+                minimumDelay: configuration.minimumDelay,
+                maximumDelay: configuration.maximumDelay,
+                maximumRetry: configuration.maximumRetry,
+                shouldRetry: function (error, attempt) {
+                    var _a;
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
+                        return false;
+                    }
+                    return this.maximumRetry > attempt;
+                },
+                getDelay: function (attempt, reason) {
+                    var _a;
+                    var delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : Math.min(Math.pow(2, attempt), this.maximumDelay);
+                    return (delay + Math.random()) * 1000;
+                },
+                getGiveupReason: function (error, attempt) {
+                    var _a;
+                    if (this.maximumRetry <= attempt) {
+                        return 'retry attempts exhaused.';
+                    }
+                    if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
+                        return 'forbidden operation.';
+                    }
+                    return 'unknown error';
+                },
+            };
+        };
+        return RetryPolicy;
+    }());
+
+    var EventEmitter = /** @class */ (function () {
+        function EventEmitter(_a) {
+            var modules = _a.modules, listenerManager = _a.listenerManager, getFileUrl = _a.getFileUrl;
+            this.modules = modules;
+            this.listenerManager = listenerManager;
+            this.getFileUrl = getFileUrl;
+            if (modules.cryptoModule)
+                this._decoder = new TextDecoder();
+        }
+        EventEmitter.prototype.emitEvent = function (e) {
+            var channel = e.channel, publishMetaData = e.publishMetaData;
+            var subscriptionMatch = e.subscriptionMatch;
+            if (channel === subscriptionMatch) {
+                subscriptionMatch = null;
+            }
+            if (e.channel.endsWith('-pnpres')) {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                if (channel) {
+                    announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
+                }
+                if (subscriptionMatch) {
+                    announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
+                }
+                announce.action = e.payload.action;
+                announce.state = e.payload.data;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.occupancy = e.payload.occupancy;
+                announce.uuid = e.payload.uuid;
+                announce.timestamp = e.payload.timestamp;
+                if (e.payload.join) {
+                    announce.join = e.payload.join;
+                }
+                if (e.payload.leave) {
+                    announce.leave = e.payload.leave;
+                }
+                if (e.payload.timeout) {
+                    announce.timeout = e.payload.timeout;
+                }
+                this.listenerManager.announcePresence(announce);
+            }
+            else if (e.messageType === 1) {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                announce.message = e.payload;
+                this.listenerManager.announceSignal(announce);
+            }
+            else if (e.messageType === 2) {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                announce.message = {
+                    event: e.payload.event,
+                    type: e.payload.type,
+                    data: e.payload.data,
+                };
+                this.listenerManager.announceObjects(announce);
+                if (e.payload.type === 'uuid') {
+                    var eventData = this._renameChannelField(announce);
+                    this.listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'user' }) }));
+                }
+                else if (message.payload.type === 'channel') {
+                    var eventData = this._renameChannelField(announce);
+                    this.listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) }));
+                }
+                else if (message.payload.type === 'membership') {
+                    var eventData = this._renameChannelField(announce);
+                    var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
+                    membershipData.user = user;
+                    membershipData.space = space;
+                    this.listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), data: membershipData }) }));
+                }
+            }
+            else if (e.messageType === 3) {
+                var announce = {};
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                announce.data = {
+                    messageTimetoken: e.payload.data.messageTimetoken,
+                    actionTimetoken: e.payload.data.actionTimetoken,
+                    type: e.payload.data.type,
+                    uuid: e.issuingClientId,
+                    value: e.payload.data.value,
+                };
+                announce.event = e.payload.event;
+                this.listenerManager.announceMessageAction(announce);
+            }
+            else if (e.messageType === 4) {
+                var announce = {};
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                var msgPayload = e.payload;
+                if (this.modules.cryptoModule) {
+                    var decryptedPayload = void 0;
+                    try {
+                        var decryptedData = this.modules.cryptoModule.decrypt(e.payload);
+                        decryptedPayload =
+                            decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
+                    }
+                    catch (e) {
+                        decryptedPayload = null;
+                        announce.error = "Error while decrypting message content: ".concat(e.message);
+                    }
+                    if (decryptedPayload !== null) {
+                        msgPayload = decryptedPayload;
+                    }
+                }
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                announce.message = msgPayload.message;
+                announce.file = {
+                    id: msgPayload.file.id,
+                    name: msgPayload.file.name,
+                    url: this.getFileUrl({
+                        id: msgPayload.file.id,
+                        name: msgPayload.file.name,
+                        channel: channel,
+                    }),
+                };
+                this.listenerManager.announceFile(announce);
+            }
+            else {
+                var announce = {};
+                announce.channel = null;
+                announce.subscription = null;
+                announce.channel = channel;
+                announce.subscription = subscriptionMatch;
+                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.publisher = e.issuingClientId;
+                if (e.userMetadata) {
+                    announce.userMetadata = e.userMetadata;
+                }
+                if (this.modules.cryptoModule) {
+                    var decryptedPayload = void 0;
+                    try {
+                        var decryptedData = this.modules.cryptoModule.decrypt(e.payload);
+                        decryptedPayload =
+                            decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
+                    }
+                    catch (e) {
+                        decryptedPayload = null;
+                        announce.error = "Error while decrypting message content: ".concat(e.message);
+                    }
+                    if (decryptedPayload != null) {
+                        announce.message = decryptedPayload;
+                    }
+                    else {
+                        announce.message = e.payload;
+                    }
+                }
+                else {
+                    announce.message = e.payload;
+                }
+                this.listenerManager.announceMessage(announce);
+            }
+        };
+        EventEmitter.prototype._renameEvent = function (e) {
+            return e === 'set' ? 'updated' : 'removed';
+        };
+        EventEmitter.prototype._renameChannelField = function (announce) {
+            var channel = announce.channel, eventData = __rest(announce, ["channel"]);
+            eventData.spaceId = channel;
+            return eventData;
+        };
+        return EventEmitter;
+    }());
+
     var default_1$3 = /** @class */ (function () {
-        //
         function default_1(setup) {
             var _this = this;
             var networking = setup.networking, cbor = setup.cbor;
@@ -7555,10 +8468,81 @@
             this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
             this.handshake = endpointCreator.bind(this, modules, endpoint$1);
             this.receiveMessages = endpointCreator.bind(this, modules, endpoint);
-            if (config.enableSubscribeBeta === true) {
-                var eventEngine = new EventEngine({ handshake: this.handshake, receiveEvents: this.receiveMessages });
+            if (config.enableEventEngine === true) {
+                this._eventEmitter = new EventEmitter({
+                    modules: modules,
+                    listenerManager: this._listenerManager,
+                    getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
+                });
+                if (config.maintainPresenceState) {
+                    this.presenceState = {};
+                    this.setState = function (args) {
+                        var _a, _b;
+                        (_a = args.channels) === null || _a === void 0 ? void 0 : _a.forEach(function (channel) { return (_this.presenceState[channel] = args.state); });
+                        (_b = args.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach(function (group) { return (_this.presenceState[group] = args.state); });
+                        return _this.setPresenceState({
+                            channels: args.channels,
+                            channelGroups: args.channelGroups,
+                            state: _this.presenceState,
+                        });
+                    };
+                }
+                if (config.getHeartbeatInterval()) {
+                    var presenceEventEngine = new PresenceEventEngine({
+                        heartbeat: this.iAmHere,
+                        leave: this.iAmAway,
+                        heartbeatDelay: function () {
+                            return new Promise(function (resolve) { return setTimeout(resolve, modules.config.getHeartbeatInterval() * 1000); });
+                        },
+                        retryDelay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
+                        config: modules.config,
+                        presenceState: this.presenceState,
+                        emitStatus: function (status) {
+                            listenerManager.announceStatus(status);
+                        },
+                    });
+                    this.presenceEventEngine = presenceEventEngine;
+                    this.join = this.presenceEventEngine.join.bind(presenceEventEngine);
+                    this.leave = this.presenceEventEngine.leave.bind(presenceEventEngine);
+                    this.leaveAll = this.presenceEventEngine.leaveAll.bind(presenceEventEngine);
+                }
+                var eventEngine = new EventEngine({
+                    handshake: this.handshake,
+                    receiveMessages: this.receiveMessages,
+                    delay: function (amount) { return new Promise(function (resolve) { return setTimeout(resolve, amount); }); },
+                    join: this.join,
+                    leave: this.leave,
+                    leaveAll: this.leaveAll,
+                    presenceState: this.presenceState,
+                    config: modules.config,
+                    emitMessages: function (events) {
+                        var e_1, _a;
+                        try {
+                            for (var events_1 = __values(events), events_1_1 = events_1.next(); !events_1_1.done; events_1_1 = events_1.next()) {
+                                var event_1 = events_1_1.value;
+                                _this._eventEmitter.emitEvent(event_1);
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (events_1_1 && !events_1_1.done && (_a = events_1.return)) _a.call(events_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
+                        }
+                    },
+                    emitStatus: function (status) {
+                        listenerManager.announceStatus(status);
+                    },
+                });
                 this.subscribe = eventEngine.subscribe.bind(eventEngine);
                 this.unsubscribe = eventEngine.unsubscribe.bind(eventEngine);
+                this.unsubscribeAll = eventEngine.unsubscribeAll.bind(eventEngine);
+                this.reconnect = eventEngine.reconnect.bind(eventEngine);
+                this.disconnect = eventEngine.disconnect.bind(eventEngine);
+                this.destroy = eventEngine.dispose.bind(eventEngine);
+                this.getSubscribedChannels = eventEngine.getSubscribedChannels.bind(eventEngine);
+                this.getSubscribedChannelGroups = eventEngine.getSubscribedChannelGroups.bind(eventEngine);
                 this.eventEngine = eventEngine;
             }
             else {
@@ -7895,7 +8879,6 @@
             this.setUserId = modules.config.setUserId.bind(modules.config);
             this.getFilterExpression = modules.config.getFilterExpression.bind(modules.config);
             this.setFilterExpression = modules.config.setFilterExpression.bind(modules.config);
-            // this.setCipherKey = modules.config.setCipherKey.bind(modules.config);
             this.setCipherKey = function (key) { return modules.config.setCipherKey(key, setup, modules); };
             this.setHeartbeatInterval = modules.config.setHeartbeatInterval.bind(modules.config);
             if (networking.hasModule('proxy')) {
@@ -7933,6 +8916,8 @@
         };
         default_1.OPERATIONS = OPERATIONS;
         default_1.CATEGORIES = categories;
+        default_1.LinearRetryPolicy = RetryPolicy.LinearRetryPolicy;
+        default_1.ExponentialRetryPolicy = RetryPolicy.ExponentialRetryPolicy;
         return default_1;
     }());
 
@@ -9247,6 +10232,14 @@
         }
         if (isString(obj)) {
             return markBoxed(inspect(String(obj)));
+        }
+        // note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
+        /* eslint-env browser */
+        if (typeof window !== 'undefined' && obj === window) {
+            return '{ [object Window] }';
+        }
+        if (obj === commonjsGlobal) {
+            return '{ [object globalThis] }';
         }
         if (!isDate(obj) && !isRegExp$1(obj)) {
             var ys = arrObjKeys(obj, inspect);

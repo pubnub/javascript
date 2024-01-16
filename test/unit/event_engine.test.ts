@@ -22,7 +22,7 @@ describe('EventEngine', () => {
       subscribeKey: 'demo',
       publishKey: 'demo',
       uuid: 'test-js',
-      enableSubscribeBeta: true,
+      enableEventEngine: true,
     });
 
     engine = pubnub.eventEngine._engine;
@@ -105,19 +105,20 @@ describe('EventEngine', () => {
 
     pubnub.subscribe({ channels: ['test'] });
 
-    await forEvent('HANDSHAKING_SUCCESS', 1000);
+    await forEvent('HANDSHAKE_SUCCESS', 1000);
 
     pubnub.unsubscribe({ channels: ['test'] });
 
     await forState('UNSUBSCRIBED', 1000);
   });
 
-  it('should retry correctly', async () => {
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(500, '{"error": true}');
+  // TODO: retry with configuration
+  // it('should retry correctly', async () => {
+  //   utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
+  //   utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(500, '{"error": true}');
 
-    pubnub.subscribe({ channels: ['test'] });
+  //   pubnub.subscribe({ channels: ['test'] });
 
-    await forState('RECEIVE_RECONNECTING', 1000);
-  });
+  //   await forState('RECEIVE_RECONNECTING', 1000);
+  // });
 });

@@ -27,4 +27,10 @@ export default {
   PNConnectedCategory: 'PNConnectedCategory',
 
   PNRequestMessageCountExceededCategory: 'PNRequestMessageCountExceededCategory',
+
+  PNDisconnectedCategory: 'PNDisconnectedCategory',
+
+  PNConnectionErrorCategory: 'PNConnectionErrorCategory',
+
+  PNDisconnectedUnexpectedlyCategory: 'PNDisconnectedUnexpectedlyCategory',
 };
