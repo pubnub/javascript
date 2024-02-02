@@ -8232,6 +8232,8 @@
             this.modules = modules;
             this.listenerManager = listenerManager;
             this.getFileUrl = getFileUrl;
+            this._channelListenerMap = new Map();
+            this._groupListenerMap = new Map();
             if (modules.cryptoModule)
                 this._decoder = new TextDecoder();
         }
@@ -8267,6 +8269,7 @@
                     announce.timeout = e.payload.timeout;
                 }
                 this.listenerManager.announcePresence(announce);
+                this._announce('presence', announce, announce.channel, announce.subscription);
             }
             else if (e.messageType === 1) {
                 var announce = {};
@@ -8281,6 +8284,7 @@
                 }
                 announce.message = e.payload;
                 this.listenerManager.announceSignal(announce);
+                this._announce('signal', announce, announce.channel, announce.subscription);
             }
             else if (e.messageType === 2) {
                 var announce = {};
@@ -8299,20 +8303,27 @@
                     data: e.payload.data,
                 };
                 this.listenerManager.announceObjects(announce);
+                this._announce('objects', announce, announce.channel, announce.subscription);
                 if (e.payload.type === 'uuid') {
                     var eventData = this._renameChannelField(announce);
-                    this.listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'user' }) }));
+                    var userEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'user' }) });
+                    this.listenerManager.announceUser(userEvent);
+                    this._announce('user', userEvent, announce.channel, announce.subscription);
                 }
                 else if (message.payload.type === 'channel') {
                     var eventData = this._renameChannelField(announce);
-                    this.listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) }));
+                    var spaceEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) });
+                    this.listenerManager.announceSpace(spaceEvent);
+                    this._announce('space', spaceEvent, announce.channel, announce.subscription);
                 }
                 else if (message.payload.type === 'membership') {
                     var eventData = this._renameChannelField(announce);
                     var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
                     membershipData.user = user;
                     membershipData.space = space;
-                    this.listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), data: membershipData }) }));
+                    var membershipEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), data: membershipData }) });
+                    this.listenerManager.announceMembership(membershipEvent);
+                    this._announce('membership', membershipEvent, announce.channel, announce.subscription);
                 }
             }
             else if (e.messageType === 3) {
@@ -8330,6 +8341,7 @@
                 };
                 announce.event = e.payload.event;
                 this.listenerManager.announceMessageAction(announce);
+                this._announce('messageAction', announce, announce.channel, announce.subscription);
             }
             else if (e.messageType === 4) {
                 var announce = {};
@@ -8367,6 +8379,7 @@
                     }),
                 };
                 this.listenerManager.announceFile(announce);
+                this._announce('file', announce, announce.channel, announce.subscription);
             }
             else {
                 var announce = {};
@@ -8401,7 +8414,28 @@
                     announce.message = e.payload;
                 }
                 this.listenerManager.announceMessage(announce);
+                this._announce('message', announce, announce.channel, announce.subscription);
             }
+        };
+        EventEmitter.prototype.addListener = function (l, channels, groups) {
+            var _this = this;
+            channels.forEach(function (c) {
+                return _this._channelListenerMap[c] ? _this._channelListenerMap[c].push(l) : (_this._channelListenerMap[c] = [l]);
+            });
+            groups.forEach(function (g) {
+                return _this._groupListenerMap[g] ? _this._groupListenerMap[g].push(l) : (_this._groupListenerMap[g] = [l]);
+            });
+        };
+        EventEmitter.prototype.removeListener = function (listener, channels, groups) {
+            var _this = this;
+            channels.forEach(function (c) {
+                var _a;
+                _this._channelListenerMap[c] = (_a = _this._channelListenerMap[c]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
+            });
+            groups.forEach(function (g) {
+                var _a;
+                _this._groupListenerMap[g] = (_a = _this._groupListenerMap[g]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
+            });
         };
         EventEmitter.prototype._renameEvent = function (e) {
             return e === 'set' ? 'updated' : 'removed';
@@ -8411,7 +8445,196 @@
             eventData.spaceId = channel;
             return eventData;
         };
+        EventEmitter.prototype._announce = function (type, event, channel, group) {
+            var _a, _b;
+            (_a = this._channelListenerMap[channel]) === null || _a === void 0 ? void 0 : _a.forEach(function (l) { return l[type] && l[type](event); });
+            (_b = this._groupListenerMap[group]) === null || _b === void 0 ? void 0 : _b.forEach(function (l) { return l[type] && l[type](event); });
+        };
         return EventEmitter;
+    }());
+
+    var SubscriptionSet = /** @class */ (function () {
+        function SubscriptionSet(_a) {
+            var channels = _a.channels, channelGroups = _a.channelGroups, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
+            this.channelNames = [];
+            this.groupNames = [];
+            this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(channels), false);
+            this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(channelGroups), false);
+            this.options = subscriptionOptions;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+            this.subscriptions = [
+                new Subscription({
+                    channels: this.channelNames,
+                    channelGroups: this.groupNames,
+                    subscriptionOptions: this.options,
+                    eventEmitter: this.eventEmitter,
+                    pubnub: this.pubnub,
+                }),
+            ];
+        }
+        SubscriptionSet.prototype.subscribe = function () {
+            var _a, _b;
+            this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
+        };
+        SubscriptionSet.prototype.unsubscribe = function () {
+            this.pubnub.unsubscribe({ channels: this.channelNames, channelGroups: this.groupNames });
+        };
+        SubscriptionSet.prototype.addListener = function (listener) {
+            this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+        };
+        SubscriptionSet.prototype.removeListener = function (listener) {
+            this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
+        };
+        SubscriptionSet.prototype.addSubscription = function (subscription) {
+            this.subscriptions.push(subscription);
+            this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscription.channels), false);
+            this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscription.channelGroups), false);
+        };
+        SubscriptionSet.prototype.removeSubscription = function (subscription) {
+            var channelsToRemove = subscription.channels;
+            var groupsToRemove = subscription.channelGroups;
+            this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
+            this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
+            this.subscriptions = this.subscriptions.filter(function (s) { return s !== subscription; });
+        };
+        Object.defineProperty(SubscriptionSet.prototype, "channels", {
+            get: function () {
+                return this.channelNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscriptionSet.prototype, "channelGroups", {
+            get: function () {
+                return this.groupNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return SubscriptionSet;
+    }());
+
+    var Subscription = /** @class */ (function () {
+        function Subscription(_a) {
+            var channels = _a.channels, channelGroups = _a.channelGroups, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
+            this.channelNames = [];
+            this.groupNames = [];
+            this.channelNames = channels;
+            this.groupNames = channelGroups;
+            this.options = subscriptionOptions;
+            this.pubnub = pubnub;
+            this.eventEmitter = eventEmitter;
+        }
+        Subscription.prototype.subscribe = function () {
+            var _a, _b;
+            this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
+        };
+        Subscription.prototype.unsubscribe = function () {
+            this.pubnub.unsubscribe({ channels: this.channelNames, channelGroups: this.groupNames });
+        };
+        Subscription.prototype.addListener = function (listener) {
+            this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+        };
+        Subscription.prototype.removeListener = function (listener) {
+            this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
+        };
+        Subscription.prototype.addSubscription = function (subscription) {
+            return new SubscriptionSet({
+                channels: __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscription.channels), false),
+                channelGroups: __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscription.channelGroups), false),
+                subscriptionOptions: __assign(__assign({}, this.options), subscription === null || subscription === void 0 ? void 0 : subscription.options),
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        Object.defineProperty(Subscription.prototype, "channels", {
+            get: function () {
+                return this.channelNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Subscription.prototype, "channelGroups", {
+            get: function () {
+                return this.groupNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return Subscription;
+    }());
+
+    var Channel = /** @class */ (function () {
+        function Channel(channelName, eventEmitter, pubnub) {
+            this.name = channelName;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        Channel.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, "".concat(this.name, "-pnpres")] : [this.name],
+                channelGroups: [],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return Channel;
+    }());
+
+    var ChannelGroup = /** @class */ (function () {
+        function ChannelGroup(channelGroup, eventEmitter, pubnub) {
+            this.name = channelGroup;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        ChannelGroup.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: [],
+                channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, "".concat(this.name, "-pnpres")] : [this.name],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return ChannelGroup;
+    }());
+
+    var ChannelMetadata = /** @class */ (function () {
+        function ChannelMetadata(id, eventEmitter, pubnub) {
+            this.id = id;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        ChannelMetadata.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.id, "".concat(this.id, "-pnpres")] : [this.id],
+                channelGroups: [],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return ChannelMetadata;
+    }());
+
+    var UserMetadata = /** @class */ (function () {
+        function UserMetadata(id, eventEmitter, pubnub) {
+            this.id = id;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        UserMetadata.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: [this.id],
+                channelGroups: [],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return UserMetadata;
     }());
 
     var default_1$3 = /** @class */ (function () {
@@ -8629,6 +8852,11 @@
             this.getFileUrl = function (params) { return getFileUrlFunction(modules, params); };
             this.downloadFile = endpointCreator.bind(this, modules, endpoint$g);
             this.deleteFile = endpointCreator.bind(this, modules, endpoint$f);
+            // entities
+            this.channel = function (name) { return new Channel(name, _this._eventEmitter, _this); };
+            this.channelGroup = function (name) { return new ChannelGroup(name, _this._eventEmitter, _this); };
+            this.channelMetadata = function (id) { return new ChannelMetadata(id, _this._eventEmitter, _this); };
+            this.userMetadata = function (id) { return new UserMetadata(id, _this._eventEmitter, _this); };
             // Objects API v2
             this.objects = {
                 getAllUUIDMetadata: endpointCreator.bind(this, modules, endpoint$e),
