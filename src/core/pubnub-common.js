@@ -95,6 +95,11 @@ import { PresenceEventEngine } from '../event-engine/presence/presence';
 import { RetryPolicy } from '../event-engine/core/retryPolicy';
 import EventEmitter from './components/eventEmitter';
 
+import { Channel } from '../entities/Channel';
+import { ChannelGroup } from '../entities/ChannelGroup';
+import { ChannelMetadata } from '../entities/ChannelMetadata';
+import { UserMetadata } from '../entities/UserMetadata';
+
 export default class {
   _config;
 
@@ -510,6 +515,13 @@ export default class {
     this.downloadFile = endpointCreator.bind(this, modules, downloadFileEndpointConfig);
 
     this.deleteFile = endpointCreator.bind(this, modules, deleteFileEndpointConfig);
+
+    // entities
+
+    this.channel = (name) => new Channel(name, this._eventEmitter, this);
+    this.channelGroup = (name) => new ChannelGroup(name, this._eventEmitter, this);
+    this.channelMetadata = (id) => new ChannelMetadata(id, this._eventEmitter, this);
+    this.userMetadata = (id) => new UserMetadata(id, this._eventEmitter, this);
 
     // Objects API v2
 
