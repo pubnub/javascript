@@ -30,7 +30,7 @@ describe('#listeners', () => {
     pubnub.stop();
   });
 
-  it('should pass messages of subscribed channel to its listener', async () => {
+  it('should pass messages of subscribed channel to its listener', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1/0')
@@ -58,16 +58,15 @@ describe('#listeners', () => {
       );
     var channel = pubnub.channel('ch1');
     var subscription = channel.subscription();
-    var messagePromise = new Promise((resolveMessage) =>
-      subscription.addListener({
-        message: (m) => resolveMessage(m),
-      }),
-    );
-    subscription.subscribe();
-    const actual = await messagePromise;
-    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+    subscription.addListener({
+      message: (m) => {
+        expect(JSON.stringify(m.message)).to.equal('{"message":"My message!"}');
+        done();
+      },
+    }),
+      subscription.subscribe();
   });
-  it('should subscribed to channel and presence channels', async () => {
+  it('should subscribed to channel and presence channels', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch1-pnpres/0')
@@ -96,17 +95,17 @@ describe('#listeners', () => {
 
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription({ receivePresenceEvents: true });
-    const messagePromise = new Promise((resolveMessage) =>
-      subscription.addListener({
-        message: (m) => resolveMessage(m),
-      }),
-    );
-    subscription.subscribe();
-    const actual = await messagePromise;
-    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+
+    subscription.addListener({
+      message: (m) => {
+        expect(JSON.stringify(m.message)).to.equal('{"message":"My message!"}');
+        done();
+      },
+    }),
+      subscription.subscribe();
   });
 
-  it('should work with subscriptionSet', async () => {
+  it('should work with subscriptionSet', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch2/0')
@@ -136,17 +135,16 @@ describe('#listeners', () => {
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription();
     const subscriptionSet = subscription.addSubscription(pubnub.channel('ch2').subscription());
-    const messagePromise = new Promise((resolveMessage) =>
-      subscriptionSet.addListener({
-        message: (m) => resolveMessage(m),
-      }),
-    );
-    subscriptionSet.subscribe();
-    const actual = await messagePromise;
-    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+    subscriptionSet.addListener({
+      message: (m) => {
+        expect(JSON.stringify(m.message)).to.equal('{"message":"My message!"}');
+        done();
+      },
+    }),
+      subscriptionSet.subscribe();
   });
 
-  it('listener should route presence event to registered handler', async () => {
+  it('listener should route presence event to registered handler', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1%2Cch1-pnpres/0')
@@ -175,18 +173,18 @@ describe('#listeners', () => {
 
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription({ receivePresenceEvents: true });
-    const presencePromise = new Promise((resolvePresence) =>
-      subscription.addListener({
-        presence: (p) => resolvePresence(p),
-      }),
-    );
-    subscription.subscribe();
-    const actual = await presencePromise;
-    expect(actual.action).to.equal('join');
-    expect(actual.occupancy).to.equal(2);
+
+    subscription.addListener({
+      presence: (p) => {
+        expect(p.action).to.equal('join');
+        expect(p.occupancy).to.equal(2);
+        done();
+      },
+    }),
+      subscription.subscribe();
   });
 
-  it('add/remove listener should work on subscription', async () => {
+  it('add/remove listener should work on subscription', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/ch1/0')
@@ -217,19 +215,19 @@ describe('#listeners', () => {
     const subscription = channel.subscription();
     const listener = { message: (m) => messages.push(m) };
     subscription.addListener(listener);
-    const messagePromise = new Promise((resolveMessage) =>
-      subscription.addListener({
-        message: (m) => resolveMessage(m),
-      }),
-    );
-    subscription.removeListener(listener);
+
+    subscription.addListener({
+      message: (m) => {
+        expect(JSON.stringify(m.message)).to.equal('{"message":"My message!"}');
+        expect(messages.length).to.equal(0);
+        done();
+      },
+    }),
+      subscription.removeListener(listener);
     subscription.subscribe();
-    const actual = await messagePromise;
-    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
-    expect(messages.length).to.equal(0);
   });
 
-  it('should work with channel groups and their presence', async () => {
+  it('should work with channel groups and their presence', (done) => {
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/%2C/0')
@@ -261,11 +259,12 @@ describe('#listeners', () => {
     var subscription = channelGroup.subscription({ receivePresenceEvents: true });
     var messagePromise = new Promise((resolveMessage) =>
       subscription.addListener({
-        message: (m) => resolveMessage(m),
+        message: (m) => {
+          expect(JSON.stringify(m.message)).to.equal('{"message":"My message!"}');
+          done();
+        },
       }),
     );
     subscription.subscribe();
-    const actual = await messagePromise;
-    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
   });
 });
