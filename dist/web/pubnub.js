@@ -8474,7 +8474,7 @@
 
     var SubscriptionSet = /** @class */ (function () {
         function SubscriptionSet(_a) {
-            var channels = _a.channels, channelGroups = _a.channelGroups, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
+            var _b = _a.channels, channels = _b === void 0 ? [] : _b, _c = _a.channelGroups, channelGroups = _c === void 0 ? [] : _c, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
             this.channelNames = [];
             this.groupNames = [];
             this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(channels), false);
@@ -8482,7 +8482,7 @@
             this.options = subscriptionOptions;
             this.eventEmitter = eventEmitter;
             this.pubnub = pubnub;
-            this.subscriptions = [
+            this._subscriptions = [
                 new Subscription({
                     channels: this.channelNames,
                     channelGroups: this.groupNames,
@@ -8506,7 +8506,7 @@
             this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
         };
         SubscriptionSet.prototype.addSubscription = function (subscription) {
-            this.subscriptions.push(subscription);
+            this._subscriptions.push(subscription);
             this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscription.channels), false);
             this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscription.channelGroups), false);
         };
@@ -8515,7 +8515,19 @@
             var groupsToRemove = subscription.channelGroups;
             this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
             this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
-            this.subscriptions = this.subscriptions.filter(function (s) { return s !== subscription; });
+            this._subscriptions = this._subscriptions.filter(function (s) { return s !== subscription; });
+        };
+        SubscriptionSet.prototype.addSubscriptionSet = function (subscriptionSet) {
+            this._subscriptions = __spreadArray(__spreadArray([], __read(this._subscriptions), false), __read(subscriptionSet.subscriptions), false);
+            this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscriptionSet.channels), false);
+            this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscriptionSet.channelGroups), false);
+        };
+        SubscriptionSet.prototype.removeSubscriptionSet = function (subscriptionSet) {
+            var channelsToRemove = subscriptionSet.channels;
+            var groupsToRemove = subscriptionSet.channelGroups;
+            this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
+            this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
+            this._subscriptions = this._subscriptions.filter(function (s) { return !subscriptionSet.subscriptions.includes(s); });
         };
         Object.defineProperty(SubscriptionSet.prototype, "channels", {
             get: function () {
@@ -8527,6 +8539,13 @@
         Object.defineProperty(SubscriptionSet.prototype, "channelGroups", {
             get: function () {
                 return this.groupNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscriptionSet.prototype, "subscriptions", {
+            get: function () {
+                return this._subscriptions.slice(0);
             },
             enumerable: false,
             configurable: true
@@ -8876,6 +8895,15 @@
             this.channelGroup = function (name) { return new ChannelGroup(name, _this._eventEmitter, _this); };
             this.channelMetadata = function (id) { return new ChannelMetadata(id, _this._eventEmitter, _this); };
             this.userMetadata = function (id) { return new UserMetadata(id, _this._eventEmitter, _this); };
+            this.subscriptionSet = function (args) {
+                return new SubscriptionSet({
+                    channels: args.channels,
+                    channelGroups: args.channelGroups,
+                    subscriptionOptions: args.subscriptionOptions,
+                    eventEmitter: _this._eventEmitter,
+                    pubnub: _this,
+                });
+            };
             // Objects API v2
             this.objects = {
                 getAllUUIDMetadata: endpointCreator.bind(this, modules, endpoint$e),
