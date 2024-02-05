@@ -43,8 +43,8 @@ export class EventEngine {
     timetoken?: string;
     withPresence?: boolean;
   }) {
-    this.channels = [...this.channels, ...(channels ?? [])];
-    this.groups = [...this.groups, ...(channelGroups ?? [])];
+    this.channels = Array.from(new Set([...this.channels, ...(channels ?? [])]));
+    this.groups = Array.from(new Set([...this.groups, ...(channelGroups ?? [])]));
     if (withPresence) {
       this.channels.map((c) => this.channels.push(`${c}-pnpres`));
       this.groups.map((g) => this.groups.push(`${g}-pnpres`));

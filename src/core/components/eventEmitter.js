@@ -227,12 +227,20 @@ export default class EventEmitter {
   }
 
   addListener(l, channels, groups) {
-    channels.forEach((c) =>
-      this._channelListenerMap[c] ? this._channelListenerMap[c].push(l) : (this._channelListenerMap[c] = [l]),
-    );
-    groups.forEach((g) =>
-      this._groupListenerMap[g] ? this._groupListenerMap[g].push(l) : (this._groupListenerMap[g] = [l]),
-    );
+    channels.forEach((c) => {
+      if (this._channelListenerMap[c]) {
+        if (!this._channelListenerMap[c].includes(l)) this._channelListenerMap[c].push(l);
+      } else {
+        this._channelListenerMap[c] = [l];
+      }
+    });
+    groups.forEach((g) => {
+      if (this._groupListenerMap[g]) {
+        if (!this._groupListenerMap[g].includes(l)) this._groupListenerMap[g].push(l);
+      } else {
+        this._groupListenerMap[g] = [l];
+      }
+    });
   }
 
   removeListener(listener, channels, groups) {
