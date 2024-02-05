@@ -8,6 +8,12 @@ export default class {
 
   _latencies = {};
 
+  _telemetryExcludeOperations = [
+    operationConstants.PNSubscribeOperation,
+    operationConstants.PNReceiveMessagesOperation,
+    operationConstants.PNHandshakeOperation,
+  ];
+
   constructor(configuration) {
     this._maximumSamplesCount = configuration.maximumSamplesCount || this._maximumSamplesCount;
   }
@@ -33,7 +39,7 @@ export default class {
   }
 
   startLatencyMeasure(operationType, identifier) {
-    if (operationType === operationConstants.PNSubscribeOperation || !identifier) {
+    if (this._telemetryExcludeOperations.includes(operationType) || !identifier) {
       return;
     }
 
@@ -41,7 +47,7 @@ export default class {
   }
 
   stopLatencyMeasure(operationType, identifier) {
-    if (operationType === operationConstants.PNSubscribeOperation || !identifier) {
+    if (this._telemetryExcludeOperations.includes(operationType) || !identifier) {
       return;
     }
 
