@@ -9,5 +9,4 @@ export interface SubscribeCapable {
 export type SubscriptionOptions = {
   cursor?: { timetoken?: string; region?: number };
   receivePresenceEvents?: boolean;
-  filter?: string;
 };

@@ -146,6 +146,91 @@ describe('#listeners', () => {
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
   });
 
+  it('should able to create subscriptionSet', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
+      );
+
+    const subscriptionSet = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
+
+    const messagePromise = new Promise((resolveMessage) =>
+      subscriptionSet.addListener({
+        message: (m) => resolveMessage(m),
+      }),
+    );
+    subscriptionSet.subscribe();
+    const actual = await messagePromise;
+    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+  });
+
+  it('subscriptionSet works with add/remove with set', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch3%2Cch4/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch3%2Cch4/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch3","d":{"message":"My message!"}}]}',
+      );
+
+    const subscriptionSetCh34 = pubnub.subscriptionSet({ channels: ['ch3', 'ch4'] });
+
+    const subscriptionSetCh12 = pubnub
+      .channel('ch1')
+      .subscription()
+      .addSubscription(pubnub.channel('ch2').subscription());
+
+    subscriptionSetCh34.addSubscriptionSet(subscriptionSetCh12);
+    subscriptionSetCh34.removeSubscriptionSet(subscriptionSetCh12);
+
+    const messagePromise = new Promise((resolveMessage) =>
+      subscriptionSetCh34.addListener({
+        message: (m) => resolveMessage(m),
+      }),
+    );
+    subscriptionSetCh34.subscribe();
+    const actual = await messagePromise;
+    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+  });
   it('listener should route presence event to registered handler', async () => {
     utils
       .createNock()

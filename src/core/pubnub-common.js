@@ -99,6 +99,7 @@ import { Channel } from '../entities/Channel';
 import { ChannelGroup } from '../entities/ChannelGroup';
 import { ChannelMetadata } from '../entities/ChannelMetadata';
 import { UserMetadata } from '../entities/UserMetadata';
+import { SubscriptionSet } from '../entities/SubscriptionSet';
 
 export default class {
   _config;
@@ -522,6 +523,14 @@ export default class {
     this.channelGroup = (name) => new ChannelGroup(name, this._eventEmitter, this);
     this.channelMetadata = (id) => new ChannelMetadata(id, this._eventEmitter, this);
     this.userMetadata = (id) => new UserMetadata(id, this._eventEmitter, this);
+    this.subscriptionSet = (args) =>
+      new SubscriptionSet({
+        channels: args.channels,
+        channelGroups: args.channelGroups,
+        subscriptionOptions: args.subscriptionOptions,
+        eventEmitter: this._eventEmitter,
+        pubnub: this,
+      });
 
     // Objects API v2
 
