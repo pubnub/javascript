@@ -13,7 +13,7 @@ export class ChannelMetadata {
   }
   subscription(subscriptionOptions?: SubscriptionOptions) {
     return new Subscription({
-      channels: subscriptionOptions?.receivePresenceEvents ? [this.id, `${this.id}-pnpres`] : [this.id],
+      channels: [this.id],
       channelGroups: [],
       subscriptionOptions: subscriptionOptions,
       eventEmitter: this.eventEmitter,

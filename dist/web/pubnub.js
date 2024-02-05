@@ -8482,7 +8482,7 @@
             this.options = subscriptionOptions;
             this.eventEmitter = eventEmitter;
             this.pubnub = pubnub;
-            this._subscriptions = [
+            this.subscriptionList = [
                 new Subscription({
                     channels: this.channelNames,
                     channelGroups: this.groupNames,
@@ -8506,7 +8506,7 @@
             this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
         };
         SubscriptionSet.prototype.addSubscription = function (subscription) {
-            this._subscriptions.push(subscription);
+            this.subscriptionList.push(subscription);
             this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscription.channels), false);
             this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscription.channelGroups), false);
         };
@@ -8515,10 +8515,10 @@
             var groupsToRemove = subscription.channelGroups;
             this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
             this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
-            this._subscriptions = this._subscriptions.filter(function (s) { return s !== subscription; });
+            this.subscriptionList = this.subscriptionList.filter(function (s) { return s !== subscription; });
         };
         SubscriptionSet.prototype.addSubscriptionSet = function (subscriptionSet) {
-            this._subscriptions = __spreadArray(__spreadArray([], __read(this._subscriptions), false), __read(subscriptionSet.subscriptions), false);
+            this.subscriptionList = __spreadArray(__spreadArray([], __read(this.subscriptionList), false), __read(subscriptionSet.subscriptions), false);
             this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscriptionSet.channels), false);
             this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscriptionSet.channelGroups), false);
         };
@@ -8527,7 +8527,7 @@
             var groupsToRemove = subscriptionSet.channelGroups;
             this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
             this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
-            this._subscriptions = this._subscriptions.filter(function (s) { return !subscriptionSet.subscriptions.includes(s); });
+            this.subscriptionList = this.subscriptionList.filter(function (s) { return !subscriptionSet.subscriptions.includes(s); });
         };
         Object.defineProperty(SubscriptionSet.prototype, "channels", {
             get: function () {
@@ -8545,7 +8545,7 @@
         });
         Object.defineProperty(SubscriptionSet.prototype, "subscriptions", {
             get: function () {
-                return this._subscriptions.slice(0);
+                return this.subscriptionList.slice(0);
             },
             enumerable: false,
             configurable: true
@@ -8647,7 +8647,7 @@
         }
         ChannelMetadata.prototype.subscription = function (subscriptionOptions) {
             return new Subscription({
-                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.id, "".concat(this.id, "-pnpres")] : [this.id],
+                channels: [this.id],
                 channelGroups: [],
                 subscriptionOptions: subscriptionOptions,
                 eventEmitter: this.eventEmitter,
