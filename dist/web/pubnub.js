@@ -2565,13 +2565,17 @@
             return latencies;
         };
         default_1.prototype.startLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
+            if (operationType === OPERATIONS.PNSubscribeOperation ||
+                OPERATIONS.PNReceiveMessagesOperation ||
+                !identifier) {
                 return;
             }
             this._trackedLatencies[identifier] = Date.now();
         };
         default_1.prototype.stopLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
+            if (operationType === OPERATIONS.PNSubscribeOperation ||
+                OPERATIONS.PNReceiveMessagesOperation ||
+                !identifier) {
                 return;
             }
             var endpointName = this._endpointName(operationType);
@@ -6731,8 +6735,9 @@
         },
         getURL: function (_a, params) {
             var config = _a.config;
-            var channelsString = params.channels ? params.channels.join(',') : ',';
-            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(channelsString), "/0");
+            var _b = params.channels, channels = _b === void 0 ? [] : _b;
+            var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(stringifiedChannels), "/0");
         },
         getRequestTimeout: function (_a) {
             var config = _a.config;
@@ -6775,8 +6780,9 @@
         },
         getURL: function (_a, params) {
             var config = _a.config;
-            var channelsString = params.channels ? params.channels.join(',') : ',';
-            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(channelsString), "/0");
+            var _b = params.channels, channels = _b === void 0 ? [] : _b;
+            var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(stringifiedChannels), "/0");
         },
         getRequestTimeout: function (_a) {
             var config = _a.config;
@@ -7726,8 +7732,8 @@
         EventEngine.prototype.subscribe = function (_a) {
             var _this = this;
             var channels = _a.channels, channelGroups = _a.channelGroups, timetoken = _a.timetoken, withPresence = _a.withPresence;
-            this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
-            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false);
+            this.channels = Array.from(new Set(__spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false)));
+            this.groups = Array.from(new Set(__spreadArray(__spreadArray([], __read(this.groups), false), __read((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false)));
             if (withPresence) {
                 this.channels.map(function (c) { return _this.channels.push("".concat(c, "-pnpres")); });
                 this.groups.map(function (g) { return _this.groups.push("".concat(g, "-pnpres")); });
@@ -8420,10 +8426,22 @@
         EventEmitter.prototype.addListener = function (l, channels, groups) {
             var _this = this;
             channels.forEach(function (c) {
-                return _this._channelListenerMap[c] ? _this._channelListenerMap[c].push(l) : (_this._channelListenerMap[c] = [l]);
+                if (_this._channelListenerMap[c]) {
+                    if (!_this._channelListenerMap[c].includes(l))
+                        _this._channelListenerMap[c].push(l);
+                }
+                else {
+                    _this._channelListenerMap[c] = [l];
+                }
             });
             groups.forEach(function (g) {
-                return _this._groupListenerMap[g] ? _this._groupListenerMap[g].push(l) : (_this._groupListenerMap[g] = [l]);
+                if (_this._groupListenerMap[g]) {
+                    if (!_this._groupListenerMap[g].includes(l))
+                        _this._groupListenerMap[g].push(l);
+                }
+                else {
+                    _this._groupListenerMap[g] = [l];
+                }
             });
         };
         EventEmitter.prototype.removeListener = function (listener, channels, groups) {
