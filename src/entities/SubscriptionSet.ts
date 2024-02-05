@@ -22,8 +22,8 @@ export class SubscriptionSet implements SubscribeCapable {
     eventEmitter: any;
     pubnub: any;
   }) {
-    this.channelNames = [...this.channelNames, ...channels];
-    this.groupNames = [...this.groupNames, ...channelGroups];
+    this.channelNames = channels;
+    this.groupNames = channelGroups;
     this.options = subscriptionOptions;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;
