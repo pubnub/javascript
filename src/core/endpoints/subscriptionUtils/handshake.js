@@ -2,7 +2,7 @@ import operationConstants from '../../constants/operations';
 import utils from '../../utils';
 
 const endpoint = {
-  getOperation: () => operationConstants.PNHandshakeOperation,
+  getOperation: () => operationConstants.PNSubscribeOperation,
 
   validateParams: (_, params) => {
     if (!params?.channels && !params?.channelGroups) {

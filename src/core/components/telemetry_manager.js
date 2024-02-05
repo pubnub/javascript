@@ -33,11 +33,7 @@ export default class {
   }
 
   startLatencyMeasure(operationType, identifier) {
-    if (
-      operationType === operationConstants.PNSubscribeOperation ||
-      operationConstants.PNReceiveMessagesOperation ||
-      !identifier
-    ) {
+    if (operationType === operationConstants.PNSubscribeOperation || !identifier) {
       return;
     }
 
@@ -45,11 +41,7 @@ export default class {
   }
 
   stopLatencyMeasure(operationType, identifier) {
-    if (
-      operationType === operationConstants.PNSubscribeOperation ||
-      operationConstants.PNReceiveMessagesOperation ||
-      !identifier
-    ) {
+    if (operationType === operationConstants.PNSubscribeOperation || !identifier) {
       return;
     }
 
