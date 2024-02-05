@@ -85,5 +85,4 @@ export default {
   PNAccessManagerAudit: 'PNAccessManagerAudit',
   PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
   //
-
 };
