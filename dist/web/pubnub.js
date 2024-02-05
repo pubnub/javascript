@@ -2534,9 +2534,6 @@
         PNAccessManagerAudit: 'PNAccessManagerAudit',
         PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
         //
-        // subscription utilities
-        PNHandshakeOperation: 'PNHandshakeOperation',
-        PNReceiveMessagesOperation: 'PNReceiveMessagesOperation',
     };
 
     /*       */
@@ -2565,17 +2562,13 @@
             return latencies;
         };
         default_1.prototype.startLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation ||
-                OPERATIONS.PNReceiveMessagesOperation ||
-                !identifier) {
+            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
                 return;
             }
             this._trackedLatencies[identifier] = Date.now();
         };
         default_1.prototype.stopLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation ||
-                OPERATIONS.PNReceiveMessagesOperation ||
-                !identifier) {
+            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
                 return;
             }
             var endpointName = this._endpointName(operationType);
@@ -6727,7 +6720,7 @@
     });
 
     var endpoint$1 = {
-        getOperation: function () { return OPERATIONS.PNHandshakeOperation; },
+        getOperation: function () { return OPERATIONS.PNSubscribeOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channels) && !(params === null || params === void 0 ? void 0 : params.channelGroups)) {
                 return 'channels and channleGroups both should not be empty';
@@ -6766,7 +6759,7 @@
     };
 
     var endpoint = {
-        getOperation: function () { return OPERATIONS.PNReceiveMessagesOperation; },
+        getOperation: function () { return OPERATIONS.PNSubscribeOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channels) && !(params === null || params === void 0 ? void 0 : params.channelGroups)) {
                 return 'channels and channleGroups both should not be empty';
