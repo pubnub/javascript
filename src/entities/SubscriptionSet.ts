@@ -7,7 +7,7 @@ export class SubscriptionSet implements SubscribeCapable {
   private options: SubscriptionOptions;
   private pubnub: any;
   private eventEmitter: any;
-  private _subscriptions: Subscription[];
+  private subscriptionList: Subscription[];
 
   constructor({
     channels = [],
@@ -27,7 +27,7 @@ export class SubscriptionSet implements SubscribeCapable {
     this.options = subscriptionOptions;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;
-    this._subscriptions = [
+    this.subscriptionList = [
       new Subscription({
         channels: this.channelNames,
         channelGroups: this.groupNames,
@@ -60,7 +60,7 @@ export class SubscriptionSet implements SubscribeCapable {
   }
 
   addSubscription(subscription: Subscription) {
-    this._subscriptions.push(subscription);
+    this.subscriptionList.push(subscription);
     this.channelNames = [...this.channelNames, ...subscription.channels];
     this.groupNames = [...this.groupNames, ...subscription.channelGroups];
   }
@@ -70,11 +70,11 @@ export class SubscriptionSet implements SubscribeCapable {
     const groupsToRemove = subscription.channelGroups;
     this.channelNames = this.channelNames.filter((c) => !channelsToRemove.includes(c));
     this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
-    this._subscriptions = this._subscriptions.filter((s) => s !== subscription);
+    this.subscriptionList = this.subscriptionList.filter((s) => s !== subscription);
   }
 
   addSubscriptionSet(subscriptionSet: SubscriptionSet) {
-    this._subscriptions = [...this._subscriptions, ...subscriptionSet.subscriptions];
+    this.subscriptionList = [...this.subscriptionList, ...subscriptionSet.subscriptions];
     this.channelNames = [...this.channelNames, ...subscriptionSet.channels];
     this.groupNames = [...this.groupNames, ...subscriptionSet.channelGroups];
   }
@@ -84,7 +84,7 @@ export class SubscriptionSet implements SubscribeCapable {
     const groupsToRemove = subscriptionSet.channelGroups;
     this.channelNames = this.channelNames.filter((c) => !channelsToRemove.includes(c));
     this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
-    this._subscriptions = this._subscriptions.filter((s) => !subscriptionSet.subscriptions.includes(s));
+    this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
   }
 
   get channels() {
@@ -94,6 +94,6 @@ export class SubscriptionSet implements SubscribeCapable {
     return this.groupNames.slice(0);
   }
   get subscriptions() {
-    return this._subscriptions.slice(0);
+    return this.subscriptionList.slice(0);
   }
 }
