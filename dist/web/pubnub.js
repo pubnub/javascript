@@ -2534,6 +2534,9 @@
         PNAccessManagerAudit: 'PNAccessManagerAudit',
         PNAccessManagerRevokeToken: 'PNAccessManagerRevokeToken',
         //
+        // subscription utilities
+        PNHandshakeOperation: 'PNHandshakeOperation',
+        PNReceiveMessagesOperation: 'PNReceiveMessagesOperation',
     };
 
     /*       */
@@ -2542,6 +2545,11 @@
             this._maximumSamplesCount = 100;
             this._trackedLatencies = {};
             this._latencies = {};
+            this._telemetryExcludeOperations = [
+                OPERATIONS.PNSubscribeOperation,
+                OPERATIONS.PNReceiveMessagesOperation,
+                OPERATIONS.PNHandshakeOperation,
+            ];
             this._maximumSamplesCount = configuration.maximumSamplesCount || this._maximumSamplesCount;
         }
         /**
@@ -2562,13 +2570,13 @@
             return latencies;
         };
         default_1.prototype.startLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
+            if (this._telemetryExcludeOperations.includes(operationType) || !identifier) {
                 return;
             }
             this._trackedLatencies[identifier] = Date.now();
         };
         default_1.prototype.stopLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
+            if (this._telemetryExcludeOperations.includes(operationType) || !identifier) {
                 return;
             }
             var endpointName = this._endpointName(operationType);
@@ -6720,7 +6728,7 @@
     });
 
     var endpoint$1 = {
-        getOperation: function () { return OPERATIONS.PNSubscribeOperation; },
+        getOperation: function () { return OPERATIONS.PNHandshakeOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channels) && !(params === null || params === void 0 ? void 0 : params.channelGroups)) {
                 return 'channels and channleGroups both should not be empty';
@@ -6759,7 +6767,7 @@
     };
 
     var endpoint = {
-        getOperation: function () { return OPERATIONS.PNSubscribeOperation; },
+        getOperation: function () { return OPERATIONS.PNReceiveMessagesOperation; },
         validateParams: function (_, params) {
             if (!(params === null || params === void 0 ? void 0 : params.channels) && !(params === null || params === void 0 ? void 0 : params.channelGroups)) {
                 return 'channels and channleGroups both should not be empty';
