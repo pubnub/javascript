@@ -7,7 +7,7 @@ export class SubscriptionSet implements SubscribeCapable {
   private options: SubscriptionOptions;
   private pubnub: any;
   private eventEmitter: any;
-  private subscriptionList: Subscription[];
+  private subscriptionList: Subscription[] = [];
 
   constructor({
     channels = [],
@@ -22,20 +22,19 @@ export class SubscriptionSet implements SubscribeCapable {
     eventEmitter: any;
     pubnub: any;
   }) {
-    this.channelNames = channels;
-    this.groupNames = channelGroups;
     this.options = subscriptionOptions;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;
-    this.subscriptionList = [
-      new Subscription({
-        channels: this.channelNames,
-        channelGroups: this.groupNames,
-        subscriptionOptions: this.options,
-        eventEmitter: this.eventEmitter,
-        pubnub: this.pubnub,
-      }),
-    ];
+    channels.forEach((c) => {
+      const subscription = this.pubnub.channel(c).subscription(this.options);
+      this.channelNames = [...this.channelNames, ...subscription.channels];
+      this.subscriptionList.push(subscription);
+    });
+    channelGroups.forEach((cg) => {
+      const subscription = this.pubnub.channelGroup(cg).subscription(this.options);
+      this.groupNames = [...this.groupNames, ...subscription.channelGroups];
+      this.subscriptionList.push(subscription);
+    });
   }
   subscribe() {
     this.pubnub.subscribe({
