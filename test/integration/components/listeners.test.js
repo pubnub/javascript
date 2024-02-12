@@ -353,4 +353,118 @@ describe('#listeners', () => {
     const actual = await messagePromise;
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
   });
+
+  it('subscribe/unsubscribe handle edge case of having overlaping channel/group set', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
+      );
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '10',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
+      );
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '10',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
+      );
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch2%2Cch3/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '10',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
+      );
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch2%2Cch3/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '10',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch2","d":{"ch2":"My message!"}}]}',
+      );
+    const messages = [];
+    const channel = pubnub.channel('ch1');
+    const subscription = channel.subscription();
+    const listener = { message: (m) => messages.push(m) };
+    subscription.addListener(listener);
+    const messagePromise = new Promise((resolveMessage) =>
+      subscription.addListener({
+        message: (m) => resolveMessage(m),
+      }),
+    );
+    subscription.removeListener(listener);
+    subscription.subscribe();
+    const actual = await messagePromise;
+    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+    expect(messages.length).to.equal(0);
+    const subscriptionCh2 = pubnub.channel('ch2').subscription();
+    subscriptionCh2.subscribe();
+    const subscriptionCh3 = pubnub.channel('ch3').subscription();
+    const subscriptionSetCh23 = subscriptionCh3.addSubscription(pubnub.channel('ch2').subscription());
+    const messagePromiseChannel2 = new Promise((resolveMessage) =>
+      subscriptionSetCh23.addListener({
+        message: (m) => resolveMessage(m),
+      }),
+    );
+    subscriptionSetCh23.subscribe();
+    subscription.unsubscribe();
+    subscriptionCh2.unsubscribe();
+    const actualChannel2MessageAfterOneUnsubCh2 = await messagePromiseChannel2;
+    pubnub.destroy();
+    expect(JSON.stringify(actualChannel2MessageAfterOneUnsubCh2.message)).to.equal('{"ch2":"My message!"}');
+  });
 });
