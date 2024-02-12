@@ -28,6 +28,7 @@ describe('#listeners', () => {
 
   afterEach(() => {
     pubnub.stop();
+    pubnub.destroy();
   });
 
   it('should pass messages of subscribed channel to its listener', async () => {
