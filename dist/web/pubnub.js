@@ -108,7 +108,7 @@
         throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
     }
 
-    function __read(o, n) {
+    function __read$1(o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
         if (!m) return o;
         var i = m.call(o), r, ar = [], e;
@@ -125,7 +125,7 @@
         return ar;
     }
 
-    function __spreadArray(to, from, pack) {
+    function __spreadArray$1(to, from, pack) {
         if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
             if (ar || !(i in from)) {
                 if (!ar) ar = Array.prototype.slice.call(from, 0, i);
@@ -1837,12 +1837,29 @@
         }
         return buf;
     }
+    function removeSingleOccurance(source, elementsToRemove) {
+        var removed = Object.fromEntries(elementsToRemove.map(function (prop) { return [prop, false]; }));
+        return source.filter(function (e) {
+            if (elementsToRemove.includes(e) && !removed[e]) {
+                removed[e] = true;
+                return false;
+            }
+            return true;
+        });
+    }
+    function findUniqueCommonElements(a, b) {
+        return __spreadArray([], __read(a), false).filter(function (value) {
+            return b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value);
+        });
+    }
     var utils$5 = {
         signPamFromParams: signPamFromParams,
         endsWith: endsWith,
         createPromise: createPromise,
         encodeString: encodeString,
         stringToArrayBuffer: stringToArrayBuffer,
+        removeSingleOccurance: removeSingleOccurance,
+        findUniqueCommonElements: findUniqueCommonElements,
     };
 
     /*       */
@@ -5111,7 +5128,7 @@
             queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5274,7 +5291,7 @@
             queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5448,7 +5465,7 @@
             queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5541,7 +5558,7 @@
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5614,7 +5631,7 @@
             queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5706,7 +5723,7 @@
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -6462,7 +6479,7 @@
         var timetoken = incomingParams.timetoken, channelTimetokens = incomingParams.channelTimetokens;
         var outgoingParams = {};
         if (channelTimetokens && channelTimetokens.length === 1) {
-            var _a = __read(channelTimetokens, 1), tt = _a[0];
+            var _a = __read$1(channelTimetokens, 1), tt = _a[0];
             outgoingParams.timetoken = tt;
         }
         else if (channelTimetokens) {
@@ -6927,7 +6944,7 @@
             });
             var transition = this.currentState.transition(this.currentContext, event);
             if (transition) {
-                var _d = __read(transition, 3), newState = _d[0], newContext = _d[1], effects = _d[2];
+                var _d = __read$1(transition, 3), newState = _d[0], newContext = _d[1], effects = _d[2];
                 try {
                     for (var _e = __values(this.currentState.exitEffects), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var effect = _f.value;
@@ -7026,7 +7043,7 @@
             var e_1, _a;
             try {
                 for (var _b = __values(this.instances.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var _d = __read(_c.value, 2), key = _d[0], instance = _d[1];
+                    var _d = __read$1(_c.value, 2), key = _d[0], instance = _d[1];
                     instance.cancel();
                     this.instances.delete(key);
                 }
@@ -7051,7 +7068,7 @@
             }
             return {
                 type: type,
-                payload: fn === null || fn === void 0 ? void 0 : fn.apply(void 0, __spreadArray([], __read(args), false)),
+                payload: fn === null || fn === void 0 ? void 0 : fn.apply(void 0, __spreadArray$1([], __read$1(args), false)),
             };
         };
         creator.type = type;
@@ -7063,7 +7080,7 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            return { type: type, payload: fn.apply(void 0, __spreadArray([], __read(args), false)), managed: false };
+            return { type: type, payload: fn.apply(void 0, __spreadArray$1([], __read$1(args), false)), managed: false };
         };
         creator.type = type;
         return creator;
@@ -7074,7 +7091,7 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            return { type: type, payload: fn.apply(void 0, __spreadArray([], __read(args), false)), managed: true };
+            return { type: type, payload: fn.apply(void 0, __spreadArray$1([], __read$1(args), false)), managed: true };
         };
         creator.type = type;
         creator.cancel = { type: 'CANCEL', payload: type, managed: false };
@@ -7733,44 +7750,47 @@
         EventEngine.prototype.subscribe = function (_a) {
             var _this = this;
             var channels = _a.channels, channelGroups = _a.channelGroups, timetoken = _a.timetoken, withPresence = _a.withPresence;
-            this.channels = Array.from(new Set(__spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false)));
-            this.groups = Array.from(new Set(__spreadArray(__spreadArray([], __read(this.groups), false), __read((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false)));
+            this.channels = __spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false);
+            this.groups = __spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false);
             if (withPresence) {
                 this.channels.map(function (c) { return _this.channels.push("".concat(c, "-pnpres")); });
                 this.groups.map(function (g) { return _this.groups.push("".concat(g, "-pnpres")); });
             }
             if (timetoken) {
-                this.engine.transition(restore(this.channels, this.groups, timetoken));
+                this.engine.transition(restore(Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false))), Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false))), timetoken));
             }
             else {
-                this.engine.transition(subscriptionChange(this.channels, this.groups));
+                this.engine.transition(subscriptionChange(Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false))), Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false)))));
             }
             if (this.dependencies.join) {
                 this.dependencies.join({
-                    channels: this.channels.filter(function (c) { return !c.endsWith('-pnpres'); }),
-                    groups: this.groups.filter(function (g) { return !g.endsWith('-pnpres'); }),
+                    channels: Array.from(new Set(this.channels.filter(function (c) { return !c.endsWith('-pnpres'); }))),
+                    groups: Array.from(new Set(this.groups.filter(function (g) { return !g.endsWith('-pnpres'); }))),
                 });
             }
         };
         EventEngine.prototype.unsubscribe = function (_a) {
             var _this = this;
-            var channels = _a.channels, groups = _a.groups;
-            var channlesWithPres = channels === null || channels === void 0 ? void 0 : channels.slice(0);
-            channels === null || channels === void 0 ? void 0 : channels.map(function (c) { return channlesWithPres.push("".concat(c, "-pnpres")); });
-            this.channels = this.channels.filter(function (channel) { return !(channlesWithPres === null || channlesWithPres === void 0 ? void 0 : channlesWithPres.includes(channel)); });
-            var groupsWithPres = groups === null || groups === void 0 ? void 0 : groups.slice(0);
-            groups === null || groups === void 0 ? void 0 : groups.map(function (g) { return groupsWithPres.push("".concat(g, "-pnpres")); });
-            this.groups = this.groups.filter(function (group) { return !(groupsWithPres === null || groupsWithPres === void 0 ? void 0 : groupsWithPres.includes(group)); });
-            if (this.dependencies.presenceState) {
-                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) { return delete _this.dependencies.presenceState[c]; });
-                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) { return delete _this.dependencies.presenceState[g]; });
-            }
-            this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
-            if (this.dependencies.leave) {
-                this.dependencies.leave({
-                    channels: channels,
-                    groups: groups,
-                });
+            var _b = _a.channels, channels = _b === void 0 ? [] : _b, _c = _a.channelGroups, channelGroups = _c === void 0 ? [] : _c;
+            var filteredChannels = utils$5.removeSingleOccurance(this.channels, __spreadArray$1(__spreadArray$1([], __read$1(channels), false), __read$1(channels.map(function (c) { return "".concat(c, "-pnpres"); })), false));
+            var filteredGroups = utils$5.removeSingleOccurance(this.groups, __spreadArray$1(__spreadArray$1([], __read$1(channelGroups), false), __read$1(channelGroups.map(function (c) { return "".concat(c, "-pnpres"); })), false));
+            if (new Set(this.channels).size !== new Set(filteredChannels).size ||
+                new Set(this.groups).size !== new Set(filteredGroups).size) {
+                var channelsToLeave = utils$5.findUniqueCommonElements(this.channels, channels);
+                var groupstoLeave = utils$5.findUniqueCommonElements(this.groups, channelGroups);
+                if (this.dependencies.presenceState) {
+                    channelsToLeave === null || channelsToLeave === void 0 ? void 0 : channelsToLeave.forEach(function (c) { return delete _this.dependencies.presenceState[c]; });
+                    groupstoLeave === null || groupstoLeave === void 0 ? void 0 : groupstoLeave.forEach(function (g) { return delete _this.dependencies.presenceState[g]; });
+                }
+                this.channels = filteredChannels;
+                this.groups = filteredGroups;
+                this.engine.transition(subscriptionChange(Array.from(new Set(this.channels.slice(0))), Array.from(new Set(this.groups.slice(0)))));
+                if (this.dependencies.leave) {
+                    this.dependencies.leave({
+                        channels: channelsToLeave.slice(0),
+                        groups: groupstoLeave.slice(0),
+                    });
+                }
             }
         };
         EventEngine.prototype.unsubscribeAll = function () {
@@ -7964,8 +7984,8 @@
     var HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
     HeartbeatStoppedState.on(joined.type, function (context, event) {
         return HeartbeatStoppedState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatStoppedState.on(left.type, function (context, event) {
@@ -7993,8 +8013,8 @@
     });
     HeartbeatCooldownState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatCooldownState.on(left.type, function (context, event) {
@@ -8016,8 +8036,8 @@
     var HeartbeatFailedState = new State('HEARTBEAT_FAILED');
     HeartbeatFailedState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatFailedState.on(left.type, function (context, event) {
@@ -8047,8 +8067,8 @@
     HearbeatReconnectingState.onExit(function () { return delayedHeartbeat.cancel; });
     HearbeatReconnectingState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HearbeatReconnectingState.on(left.type, function (context, event) {
@@ -8092,8 +8112,8 @@
     });
     HeartbeatingState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatingState.on(left.type, function (context, event) {
@@ -8147,8 +8167,8 @@
         });
         PresenceEventEngine.prototype.join = function (_a) {
             var channels = _a.channels, groups = _a.groups;
-            this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
-            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((groups !== null && groups !== void 0 ? groups : [])), false);
+            this.channels = __spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false);
+            this.groups = __spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((groups !== null && groups !== void 0 ? groups : [])), false);
             this.engine.transition(joined(this.channels.slice(0), this.groups.slice(0)));
         };
         PresenceEventEngine.prototype.leave = function (_a) {
@@ -8475,29 +8495,33 @@
     var SubscriptionSet = /** @class */ (function () {
         function SubscriptionSet(_a) {
             var _b = _a.channels, channels = _b === void 0 ? [] : _b, _c = _a.channelGroups, channelGroups = _c === void 0 ? [] : _c, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
+            var _this = this;
             this.channelNames = [];
             this.groupNames = [];
-            this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(channels), false);
-            this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(channelGroups), false);
+            this.subscriptionList = [];
             this.options = subscriptionOptions;
             this.eventEmitter = eventEmitter;
             this.pubnub = pubnub;
-            this.subscriptionList = [
-                new Subscription({
-                    channels: this.channelNames,
-                    channelGroups: this.groupNames,
-                    subscriptionOptions: this.options,
-                    eventEmitter: this.eventEmitter,
-                    pubnub: this.pubnub,
-                }),
-            ];
+            channels.forEach(function (c) {
+                var subscription = _this.pubnub.channel(c).subscription(_this.options);
+                _this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(_this.channelNames), false), __read$1(subscription.channels), false);
+                _this.subscriptionList.push(subscription);
+            });
+            channelGroups.forEach(function (cg) {
+                var subscription = _this.pubnub.channelGroup(cg).subscription(_this.options);
+                _this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(_this.groupNames), false), __read$1(subscription.channelGroups), false);
+                _this.subscriptionList.push(subscription);
+            });
         }
         SubscriptionSet.prototype.subscribe = function () {
             var _a, _b;
             this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
         };
         SubscriptionSet.prototype.unsubscribe = function () {
-            this.pubnub.unsubscribe({ channels: this.channelNames, channelGroups: this.groupNames });
+            this.pubnub.unsubscribe({
+                channels: this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }),
+                channelGroups: this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }),
+            });
         };
         SubscriptionSet.prototype.addListener = function (listener) {
             this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
@@ -8507,8 +8531,8 @@
         };
         SubscriptionSet.prototype.addSubscription = function (subscription) {
             this.subscriptionList.push(subscription);
-            this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscription.channels), false);
-            this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscription.channelGroups), false);
+            this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscription.channels), false);
+            this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(this.groupNames), false), __read$1(subscription.channelGroups), false);
         };
         SubscriptionSet.prototype.removeSubscription = function (subscription) {
             var channelsToRemove = subscription.channels;
@@ -8518,9 +8542,9 @@
             this.subscriptionList = this.subscriptionList.filter(function (s) { return s !== subscription; });
         };
         SubscriptionSet.prototype.addSubscriptionSet = function (subscriptionSet) {
-            this.subscriptionList = __spreadArray(__spreadArray([], __read(this.subscriptionList), false), __read(subscriptionSet.subscriptions), false);
-            this.channelNames = __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscriptionSet.channels), false);
-            this.groupNames = __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscriptionSet.channelGroups), false);
+            this.subscriptionList = __spreadArray$1(__spreadArray$1([], __read$1(this.subscriptionList), false), __read$1(subscriptionSet.subscriptions), false);
+            this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscriptionSet.channels), false);
+            this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(this.groupNames), false), __read$1(subscriptionSet.channelGroups), false);
         };
         SubscriptionSet.prototype.removeSubscriptionSet = function (subscriptionSet) {
             var channelsToRemove = subscriptionSet.channels;
@@ -8569,7 +8593,10 @@
             this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
         };
         Subscription.prototype.unsubscribe = function () {
-            this.pubnub.unsubscribe({ channels: this.channelNames, channelGroups: this.groupNames });
+            this.pubnub.unsubscribe({
+                channels: this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }),
+                channelGroups: this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }),
+            });
         };
         Subscription.prototype.addListener = function (listener) {
             this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
@@ -8579,8 +8606,8 @@
         };
         Subscription.prototype.addSubscription = function (subscription) {
             return new SubscriptionSet({
-                channels: __spreadArray(__spreadArray([], __read(this.channelNames), false), __read(subscription.channels), false),
-                channelGroups: __spreadArray(__spreadArray([], __read(this.groupNames), false), __read(subscription.channelGroups), false),
+                channels: __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscription.channels), false),
+                channelGroups: __spreadArray$1(__spreadArray$1([], __read$1(this.groupNames), false), __read$1(subscription.channelGroups), false),
                 subscriptionOptions: __assign(__assign({}, this.options), subscription === null || subscription === void 0 ? void 0 : subscription.options),
                 eventEmitter: this.eventEmitter,
                 pubnub: this.pubnub,
@@ -8920,18 +8947,18 @@
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'set' }, parameters)], __read(rest), false));
+                        endpoint$5, __assign({ type: 'set' }, parameters)], __read$1(rest), false));
                 },
                 removeChannelMembers: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read(rest), false));
+                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read$1(rest), false));
                 },
                 getMemberships: endpointCreator.bind(this, modules, endpoint$4),
                 setMemberships: function (parameters) {
@@ -8939,18 +8966,18 @@
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'set' }, parameters)], __read(rest), false));
+                        endpoint$3, __assign({ type: 'set' }, parameters)], __read$1(rest), false));
                 },
                 removeMemberships: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read(rest), false));
+                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read$1(rest), false));
                 },
             };
             // User Apis
@@ -9067,7 +9094,7 @@
                         },
                         sort: params.sort != null
                             ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
-                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                var _b = __read$1(_a, 2), k = _b[0], v = _b[1];
                                 return [k.replace('user', 'uuid'), v];
                             }))
                             : null,
@@ -9103,7 +9130,7 @@
                         },
                         sort: params.sort != null
                             ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
-                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                var _b = __read$1(_a, 2), k = _b[0], v = _b[1];
                                 return [k.replace('space', 'channel'), v];
                             }))
                             : null,
@@ -14410,7 +14437,7 @@
             return new this({ default: defaultCryptor });
         };
         CryptoModule.prototype.getAllCryptors = function () {
-            return __spreadArray([this.defaultCryptor], __read(this.cryptors), false);
+            return __spreadArray$1([this.defaultCryptor], __read$1(this.cryptors), false);
         };
         CryptoModule.prototype.encrypt = function (data) {
             var encrypted = this.defaultCryptor.encrypt(data);
