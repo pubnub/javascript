@@ -44,7 +44,10 @@ export class SubscriptionSet implements SubscribeCapable {
     });
   }
   unsubscribe() {
-    this.pubnub.unsubscribe({ channels: this.channelNames, channelGroups: this.groupNames });
+    this.pubnub.unsubscribe({
+      channels: this.channelNames.filter((c) => !c.endsWith('-pnpres')),
+      channelGroups: this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
+    });
   }
 
   addListener(listener: any) {
