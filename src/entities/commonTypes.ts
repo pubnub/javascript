@@ -3,8 +3,8 @@ export interface SubscribeCapable {
   subscribe(): void;
   unsubscribe(): void;
 
-  addListener(listener: any): void;
-  removeListener(listener: any): void;
+  addListener(listener: Listener): void;
+  removeListener(listener: Listener): void;
 }
 
 export type SubscriptionOptions = {
