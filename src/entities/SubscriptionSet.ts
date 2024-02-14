@@ -1,12 +1,13 @@
 import { Subscription } from './Subscription';
-import { SubscribeCapable, SubscriptionOptions } from './commonTypes';
+import { SubscribeCapable, SubscriptionOptions, EventEmitter, Listener } from './commonTypes';
+import type PubNub from '../core/pubnub-common';
 
 export class SubscriptionSet implements SubscribeCapable {
   private channelNames: string[] = [];
   private groupNames: string[] = [];
   private options: SubscriptionOptions;
-  private pubnub: any;
-  private eventEmitter: any;
+  private pubnub: PubNub;
+  private eventEmitter: EventEmitter;
   private subscriptionList: Subscription[] = [];
 
   constructor({
@@ -19,8 +20,8 @@ export class SubscriptionSet implements SubscribeCapable {
     channels: string[];
     channelGroups: string[];
     subscriptionOptions: SubscriptionOptions;
-    eventEmitter: any;
-    pubnub: any;
+    eventEmitter: EventEmitter;
+    pubnub: PubNub;
   }) {
     this.options = subscriptionOptions;
     this.eventEmitter = eventEmitter;
@@ -50,14 +51,14 @@ export class SubscriptionSet implements SubscribeCapable {
     });
   }
 
-  addListener(listener: any) {
+  addListener(listener: Listener) {
     this.eventEmitter.addListener(
       listener,
       this.channelNames.filter((c) => !c.endsWith('-pnpres')),
       this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
     );
   }
-  removeListener(listener: any) {
+  removeListener(listener: Listener) {
     this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
   }
 
@@ -89,13 +90,13 @@ export class SubscriptionSet implements SubscribeCapable {
     this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
   }
 
-  get channels() {
+  get channels(): string[] {
     return this.channelNames.slice(0);
   }
-  get channelGroups() {
+  get channelGroups(): string[] {
     return this.groupNames.slice(0);
   }
-  get subscriptions() {
+  get subscriptions(): Subscription[] {
     return this.subscriptionList.slice(0);
   }
 }

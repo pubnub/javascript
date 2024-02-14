@@ -1,12 +1,13 @@
 import { Subscription } from './Subscription';
-import { SubscriptionOptions } from './commonTypes';
+import { SubscriptionOptions, EventEmitter } from './commonTypes';
+import type PubNub from '../core/pubnub-common';
 
 export class ChannelGroup {
   private name: string;
-  private eventEmitter: any;
-  private pubnub: any;
+  private eventEmitter: EventEmitter;
+  private pubnub: PubNub;
 
-  constructor(channelGroup: string, eventEmitter: any, pubnub: any) {
+  constructor(channelGroup: string, eventEmitter: EventEmitter, pubnub: PubNub) {
     this.name = channelGroup;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;

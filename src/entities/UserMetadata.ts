@@ -1,12 +1,13 @@
 import { Subscription } from './Subscription';
-import { SubscriptionOptions } from './commonTypes';
+import { SubscriptionOptions, EventEmitter } from './commonTypes';
+import type PubNub from '../core/pubnub-common';
 
 export class UserMetadata {
   private id: string;
-  private eventEmitter: any;
-  private pubnub: any;
+  private eventEmitter: EventEmitter;
+  private pubnub: PubNub;
 
-  constructor(id: string, eventEmitter: any, pubnub: any) {
+  constructor(id: string, eventEmitter: EventEmitter, pubnub: PubNub) {
     this.id = id;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;

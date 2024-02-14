@@ -1,12 +1,13 @@
 import { SubscriptionSet } from './SubscriptionSet';
-import { SubscribeCapable, SubscriptionOptions } from './commonTypes';
+import { SubscribeCapable, SubscriptionOptions, EventEmitter, Listener } from './commonTypes';
+import type PubNub from '../core/pubnub-common';
 
 export class Subscription implements SubscribeCapable {
   private channelNames: string[] = [];
   private groupNames: string[] = [];
   private options?: SubscriptionOptions;
-  private pubnub: any;
-  private eventEmitter: any;
+  private pubnub: PubNub;
+  private eventEmitter: EventEmitter;
 
   constructor({
     channels,
@@ -18,8 +19,8 @@ export class Subscription implements SubscribeCapable {
     channels: string[];
     channelGroups: string[];
     subscriptionOptions?: SubscriptionOptions;
-    eventEmitter: any;
-    pubnub: any;
+    eventEmitter: EventEmitter;
+    pubnub: PubNub;
   }) {
     this.channelNames = channels;
     this.groupNames = channelGroups;
@@ -42,14 +43,14 @@ export class Subscription implements SubscribeCapable {
     });
   }
 
-  addListener(listener: any) {
+  addListener(listener: Listener) {
     this.eventEmitter.addListener(
       listener,
       this.channelNames.filter((c) => !c.endsWith('-pnpres')),
       this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
     );
   }
-  removeListener(listener: any) {
+  removeListener(listener: Listener) {
     this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
   }
 
@@ -63,10 +64,10 @@ export class Subscription implements SubscribeCapable {
     });
   }
 
-  get channels() {
+  get channels(): string[] {
     return this.channelNames.slice(0);
   }
-  get channelGroups() {
+  get channelGroups(): string[] {
     return this.groupNames.slice(0);
   }
 }

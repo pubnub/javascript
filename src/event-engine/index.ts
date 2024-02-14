@@ -9,7 +9,7 @@ import * as utils from '../core/utils';
 export class EventEngine {
   private engine: Engine<events.Events, effects.Effects> = new Engine();
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;
-  private dependencies: any;
+  private dependencies: Dependencies;
 
   get _engine() {
     return this.engine;
@@ -43,7 +43,7 @@ export class EventEngine {
     channelGroups?: string[];
     timetoken?: string;
     withPresence?: boolean;
-  }) {
+  }): void {
     this.channels = [...this.channels, ...(channels ?? [])];
     this.groups = [...this.groups, ...(channelGroups ?? [])];
     if (withPresence) {
@@ -74,7 +74,7 @@ export class EventEngine {
     }
   }
 
-  unsubscribe({ channels = [], channelGroups = [] }: { channels?: string[]; channelGroups?: string[] }) {
+  unsubscribe({ channels = [], channelGroups = [] }: { channels?: string[]; channelGroups?: string[] }): void {
     const filteredChannels = utils.removeSingleOccurance(this.channels, [
       ...channels,
       ...channels.map((c) => `${c}-pnpres`),
@@ -111,7 +111,7 @@ export class EventEngine {
     }
   }
 
-  unsubscribeAll() {
+  unsubscribeAll(): void {
     this.channels = [];
     this.groups = [];
 
@@ -124,26 +124,26 @@ export class EventEngine {
     }
   }
 
-  reconnect({ timetoken, region }: { timetoken?: string; region?: number }) {
+  reconnect({ timetoken, region }: { timetoken?: string; region?: number }): void {
     this.engine.transition(events.reconnect(timetoken, region));
   }
 
-  disconnect() {
+  disconnect(): void {
     this.engine.transition(events.disconnect());
     if (this.dependencies.leaveAll) {
       this.dependencies.leaveAll();
     }
   }
 
-  getSubscribedChannels() {
+  getSubscribedChannels(): string[] {
     return this.channels.slice(0);
   }
 
-  getSubscribedChannelGroups() {
+  getSubscribedChannelGroups(): string[] {
     return this.groups.slice(0);
   }
 
-  dispose() {
+  dispose(): void {
     this.disconnect();
     this._unsubscribeEngine();
     this.dispatcher.dispose();
