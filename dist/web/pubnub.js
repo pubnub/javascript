@@ -2209,7 +2209,6 @@
             messages.forEach(function (message) {
                 message.channel;
                 message.subscriptionMatch;
-                message.publishMetaData;
                 if (dedupeOnSubscribe) {
                     if (_this._dedupingManager.isDuplicate(message)) {
                         return;
@@ -8307,7 +8306,7 @@
         EventEmitter.prototype.removeListener = function (listener, channels, groups) {
             var _this = this;
             if (!(channels && groups)) {
-                this.listenerManager.removeListener(l);
+                this.listenerManager.removeListener(listener);
             }
             else {
                 channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) {
