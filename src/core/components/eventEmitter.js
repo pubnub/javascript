@@ -257,7 +257,7 @@ export default class EventEmitter {
 
   removeListener(listener, channels, groups) {
     if (!(channels && groups)) {
-      this.listenerManager.removeListener(l);
+      this.listenerManager.removeListener(listener);
     } else {
       channels?.forEach((c) => {
         this._channelListenerMap[c] = this._channelListenerMap[c]?.filter((l) => l !== listener);
