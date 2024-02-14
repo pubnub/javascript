@@ -13,9 +13,9 @@ export type SubscriptionOptions = {
 };
 
 export type EventEmitter = {
-  emitEvent(e: any): void;
-  addListener(l: any, channels: any, groups: any): void;
-  removeListener(listener: any, channels: any, groups: any): void;
+  emitEvent(e: Event): void;
+  addListener(l: Listener, channels?: string[], groups?: string[]): void;
+  removeListener(listener: Listener, channels?: string[], groups?: string[]): void;
   removeAllListeners(): void;
 };
 
@@ -28,3 +28,11 @@ export type Listener = {
   file?(f: PubNub.FileEvent): void;
   status?(s: PubNub.StatusEvent): void;
 };
+
+type Event =
+  | PubNub.MessageEvent
+  | PubNub.PresenceEvent
+  | PubNub.SignalEvent
+  | PubNub.ObjectsEvent
+  | PubNub.MessageActionEvent
+  | PubNub.FileEvent;
