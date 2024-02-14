@@ -1802,66 +1802,6 @@
         return default_1;
     }());
 
-    function objectToList(o) {
-        var l = [];
-        Object.keys(o).forEach(function (key) { return l.push(key); });
-        return l;
-    }
-    function encodeString(input) {
-        return encodeURIComponent(input).replace(/[!~*'()]/g, function (x) { return "%".concat(x.charCodeAt(0).toString(16).toUpperCase()); });
-    }
-    function objectToListSorted(o) {
-        return objectToList(o).sort();
-    }
-    function signPamFromParams(params) {
-        var l = objectToListSorted(params);
-        return l.map(function (paramKey) { return "".concat(paramKey, "=").concat(encodeString(params[paramKey])); }).join('&');
-    }
-    function endsWith(searchString, suffix) {
-        return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
-    }
-    function createPromise() {
-        var successResolve;
-        var failureResolve;
-        var promise = new Promise(function (fulfill, reject) {
-            successResolve = fulfill;
-            failureResolve = reject;
-        });
-        return { promise: promise, reject: failureResolve, fulfill: successResolve };
-    }
-    function stringToArrayBuffer(str) {
-        var buf = new ArrayBuffer(str.length * 2);
-        var bufView = new Uint16Array(buf);
-        for (var i = 0, strLen = str.length; i < strLen; i++) {
-            bufView[i] = str.charCodeAt(i);
-        }
-        return buf;
-    }
-    function removeSingleOccurance(source, elementsToRemove) {
-        var removed = Object.fromEntries(elementsToRemove.map(function (prop) { return [prop, false]; }));
-        return source.filter(function (e) {
-            if (elementsToRemove.includes(e) && !removed[e]) {
-                removed[e] = true;
-                return false;
-            }
-            return true;
-        });
-    }
-    function findUniqueCommonElements(a, b) {
-        return __spreadArray([], __read(a), false).filter(function (value) {
-            return b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value);
-        });
-    }
-    var utils$5 = {
-        signPamFromParams: signPamFromParams,
-        endsWith: endsWith,
-        createPromise: createPromise,
-        encodeString: encodeString,
-        stringToArrayBuffer: stringToArrayBuffer,
-        removeSingleOccurance: removeSingleOccurance,
-        findUniqueCommonElements: findUniqueCommonElements,
-    };
-
     /*       */
     var categories = {
         // SDK will announce when the network appears to be connected again.
@@ -1889,7 +1829,7 @@
 
     var default_1$7 = /** @class */ (function () {
         function default_1(_a) {
-            var subscribeEndpoint = _a.subscribeEndpoint, leaveEndpoint = _a.leaveEndpoint, heartbeatEndpoint = _a.heartbeatEndpoint, setStateEndpoint = _a.setStateEndpoint, timeEndpoint = _a.timeEndpoint, getFileUrl = _a.getFileUrl, config = _a.config, crypto = _a.crypto, listenerManager = _a.listenerManager, cryptoModule = _a.cryptoModule;
+            var subscribeEndpoint = _a.subscribeEndpoint, leaveEndpoint = _a.leaveEndpoint, heartbeatEndpoint = _a.heartbeatEndpoint, setStateEndpoint = _a.setStateEndpoint, timeEndpoint = _a.timeEndpoint, getFileUrl = _a.getFileUrl, config = _a.config, crypto = _a.crypto, listenerManager = _a.listenerManager, cryptoModule = _a.cryptoModule, eventEmitter = _a.eventEmitter;
             this._listenerManager = listenerManager;
             this._config = config;
             this._leaveEndpoint = leaveEndpoint;
@@ -1916,6 +1856,7 @@
             this._dedupingManager = new default_1$8({ config: config });
             if (this._cryptoModule)
                 this._decoder = new TextDecoder();
+            this._eventEmitter = eventEmitter;
         }
         default_1.prototype.adaptStateChange = function (args, callback) {
             var _this = this;
@@ -2266,191 +2207,16 @@
                 this._listenerManager.announceStatus(countAnnouncement);
             }
             messages.forEach(function (message) {
-                var channel = message.channel;
-                var subscriptionMatch = message.subscriptionMatch;
-                var publishMetaData = message.publishMetaData;
-                if (channel === subscriptionMatch) {
-                    subscriptionMatch = null;
-                }
+                message.channel;
+                message.subscriptionMatch;
+                message.publishMetaData;
                 if (dedupeOnSubscribe) {
                     if (_this._dedupingManager.isDuplicate(message)) {
                         return;
                     }
                     _this._dedupingManager.addEntry(message);
                 }
-                if (utils$5.endsWith(message.channel, '-pnpres')) {
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    // deprecated -->
-                    announce.actualChannel = subscriptionMatch != null ? channel : null;
-                    announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-                    // <-- deprecated
-                    if (channel) {
-                        announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
-                    }
-                    if (subscriptionMatch) {
-                        announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
-                    }
-                    announce.action = message.payload.action;
-                    announce.state = message.payload.data;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.occupancy = message.payload.occupancy;
-                    announce.uuid = message.payload.uuid;
-                    announce.timestamp = message.payload.timestamp;
-                    if (message.payload.join) {
-                        announce.join = message.payload.join;
-                    }
-                    if (message.payload.leave) {
-                        announce.leave = message.payload.leave;
-                    }
-                    if (message.payload.timeout) {
-                        announce.timeout = message.payload.timeout;
-                    }
-                    _this._listenerManager.announcePresence(announce);
-                }
-                else if (message.messageType === 1) {
-                    // this is a signal message
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    announce.message = message.payload;
-                    _this._listenerManager.announceSignal(announce);
-                }
-                else if (message.messageType === 2) {
-                    // this is an object message
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    announce.message = {
-                        event: message.payload.event,
-                        type: message.payload.type,
-                        data: message.payload.data,
-                    };
-                    _this._listenerManager.announceObjects(announce);
-                    if (message.payload.type === 'uuid') {
-                        var eventData = _this._renameChannelField(announce);
-                        _this._listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'user' }) }));
-                    }
-                    else if (message.payload.type === 'channel') {
-                        var eventData = _this._renameChannelField(announce);
-                        _this._listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'space' }) }));
-                    }
-                    else if (message.payload.type === 'membership') {
-                        var eventData = _this._renameChannelField(announce);
-                        var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
-                        membershipData.user = user;
-                        membershipData.space = space;
-                        _this._listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), data: membershipData }) }));
-                    }
-                }
-                else if (message.messageType === 3) {
-                    // this is a message action
-                    var announce = {};
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    announce.data = {
-                        messageTimetoken: message.payload.data.messageTimetoken,
-                        actionTimetoken: message.payload.data.actionTimetoken,
-                        type: message.payload.data.type,
-                        uuid: message.issuingClientId,
-                        value: message.payload.data.value,
-                    };
-                    announce.event = message.payload.event;
-                    _this._listenerManager.announceMessageAction(announce);
-                }
-                else if (message.messageType === 4) {
-                    // this is a file message
-                    var announce = {};
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    var msgPayload = message.payload;
-                    if (_this._cryptoModule) {
-                        var decryptedPayload = void 0;
-                        try {
-                            var decryptedData = _this._cryptoModule.decrypt(message.payload);
-                            decryptedPayload =
-                                decryptedData instanceof ArrayBuffer ? JSON.parse(_this._decoder.decode(decryptedData)) : decryptedData;
-                        }
-                        catch (e) {
-                            decryptedPayload = null;
-                            announce.error = "Error while decrypting message content: ".concat(e.message);
-                        }
-                        if (decryptedPayload !== null) {
-                            msgPayload = decryptedPayload;
-                        }
-                    }
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    announce.message = msgPayload.message;
-                    announce.file = {
-                        id: msgPayload.file.id,
-                        name: msgPayload.file.name,
-                        url: _this._getFileUrl({
-                            id: msgPayload.file.id,
-                            name: msgPayload.file.name,
-                            channel: channel,
-                        }),
-                    };
-                    _this._listenerManager.announceFile(announce);
-                }
-                else {
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    // deprecated -->
-                    announce.actualChannel = subscriptionMatch != null ? channel : null;
-                    announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-                    // <-- deprecated
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    if (_this._cryptoModule) {
-                        var decryptedPayload = void 0;
-                        try {
-                            var decryptedData = _this._cryptoModule.decrypt(message.payload);
-                            decryptedPayload =
-                                decryptedData instanceof ArrayBuffer ? JSON.parse(_this._decoder.decode(decryptedData)) : decryptedData;
-                        }
-                        catch (e) {
-                            decryptedPayload = null;
-                            announce.error = "Error while decrypting message content: ".concat(e.message);
-                        }
-                        if (decryptedPayload != null) {
-                            announce.message = decryptedPayload;
-                        }
-                        else {
-                            announce.message = message.payload;
-                        }
-                    }
-                    else {
-                        announce.message = message.payload;
-                    }
-                    _this._listenerManager.announceMessage(announce);
-                }
+                _this._eventEmitter.emitEvent(message);
             });
             this._region = payload.metadata.region;
             this._startSubscribeLoop();
@@ -3460,6 +3226,66 @@
         };
         return default_1;
     }());
+
+    function objectToList(o) {
+        var l = [];
+        Object.keys(o).forEach(function (key) { return l.push(key); });
+        return l;
+    }
+    function encodeString(input) {
+        return encodeURIComponent(input).replace(/[!~*'()]/g, function (x) { return "%".concat(x.charCodeAt(0).toString(16).toUpperCase()); });
+    }
+    function objectToListSorted(o) {
+        return objectToList(o).sort();
+    }
+    function signPamFromParams(params) {
+        var l = objectToListSorted(params);
+        return l.map(function (paramKey) { return "".concat(paramKey, "=").concat(encodeString(params[paramKey])); }).join('&');
+    }
+    function endsWith(searchString, suffix) {
+        return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+    }
+    function createPromise() {
+        var successResolve;
+        var failureResolve;
+        var promise = new Promise(function (fulfill, reject) {
+            successResolve = fulfill;
+            failureResolve = reject;
+        });
+        return { promise: promise, reject: failureResolve, fulfill: successResolve };
+    }
+    function stringToArrayBuffer(str) {
+        var buf = new ArrayBuffer(str.length * 2);
+        var bufView = new Uint16Array(buf);
+        for (var i = 0, strLen = str.length; i < strLen; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+        return buf;
+    }
+    function removeSingleOccurance(source, elementsToRemove) {
+        var removed = Object.fromEntries(elementsToRemove.map(function (prop) { return [prop, false]; }));
+        return source.filter(function (e) {
+            if (elementsToRemove.includes(e) && !removed[e]) {
+                removed[e] = true;
+                return false;
+            }
+            return true;
+        });
+    }
+    function findUniqueCommonElements(a, b) {
+        return __spreadArray([], __read(a), false).filter(function (value) {
+            return b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value);
+        });
+    }
+    var utils$5 = {
+        signPamFromParams: signPamFromParams,
+        endsWith: endsWith,
+        createPromise: createPromise,
+        encodeString: encodeString,
+        stringToArrayBuffer: stringToArrayBuffer,
+        removeSingleOccurance: removeSingleOccurance,
+        findUniqueCommonElements: findUniqueCommonElements,
+    };
 
     var PubNubError = /** @class */ (function (_super) {
         __extends(PubNubError, _super);
@@ -8295,6 +8121,10 @@
                 if (e.payload.timeout) {
                     announce.timeout = e.payload.timeout;
                 }
+                // deprecated -->
+                announce.actualChannel = subscriptionMatch != null ? channel : null;
+                announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+                // <-- deprecated
                 this.listenerManager.announcePresence(announce);
                 this._announce('presence', announce, announce.channel, announce.subscription);
             }
@@ -8440,41 +8270,58 @@
                 else {
                     announce.message = e.payload;
                 }
+                // deprecated -->
+                announce.actualChannel = subscriptionMatch != null ? channel : null;
+                announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+                // <-- deprecated
                 this.listenerManager.announceMessage(announce);
                 this._announce('message', announce, announce.channel, announce.subscription);
             }
         };
         EventEmitter.prototype.addListener = function (l, channels, groups) {
             var _this = this;
-            channels.forEach(function (c) {
-                if (_this._channelListenerMap[c]) {
-                    if (!_this._channelListenerMap[c].includes(l))
-                        _this._channelListenerMap[c].push(l);
-                }
-                else {
-                    _this._channelListenerMap[c] = [l];
-                }
-            });
-            groups.forEach(function (g) {
-                if (_this._groupListenerMap[g]) {
-                    if (!_this._groupListenerMap[g].includes(l))
-                        _this._groupListenerMap[g].push(l);
-                }
-                else {
-                    _this._groupListenerMap[g] = [l];
-                }
-            });
+            if (!(channels && groups)) {
+                this.listenerManager.addListener(l);
+            }
+            else {
+                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) {
+                    if (_this._channelListenerMap[c]) {
+                        if (!_this._channelListenerMap[c].includes(l))
+                            _this._channelListenerMap[c].push(l);
+                    }
+                    else {
+                        _this._channelListenerMap[c] = [l];
+                    }
+                });
+                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) {
+                    if (_this._groupListenerMap[g]) {
+                        if (!_this._groupListenerMap[g].includes(l))
+                            _this._groupListenerMap[g].push(l);
+                    }
+                    else {
+                        _this._groupListenerMap[g] = [l];
+                    }
+                });
+            }
         };
         EventEmitter.prototype.removeListener = function (listener, channels, groups) {
             var _this = this;
-            channels.forEach(function (c) {
-                var _a;
-                _this._channelListenerMap[c] = (_a = _this._channelListenerMap[c]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
-            });
-            groups.forEach(function (g) {
-                var _a;
-                _this._groupListenerMap[g] = (_a = _this._groupListenerMap[g]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
-            });
+            if (!(channels && groups)) {
+                this.listenerManager.removeListener(l);
+            }
+            else {
+                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) {
+                    var _a;
+                    _this._channelListenerMap[c] = (_a = _this._channelListenerMap[c]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
+                });
+                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) {
+                    var _a;
+                    _this._groupListenerMap[g] = (_a = _this._groupListenerMap[g]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
+                });
+            }
+        };
+        EventEmitter.prototype.removeAllListeners = function () {
+            this.listenerManager.removeAllListeners();
         };
         EventEmitter.prototype._renameEvent = function (e) {
             return e === 'set' ? 'updated' : 'removed';
@@ -8756,12 +8603,12 @@
             this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
             this.handshake = endpointCreator.bind(this, modules, endpoint$1);
             this.receiveMessages = endpointCreator.bind(this, modules, endpoint);
+            this._eventEmitter = new EventEmitter({
+                modules: modules,
+                listenerManager: this._listenerManager,
+                getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
+            });
             if (config.enableEventEngine === true) {
-                this._eventEmitter = new EventEmitter({
-                    modules: modules,
-                    listenerManager: this._listenerManager,
-                    getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
-                });
                 if (config.maintainPresenceState) {
                     this.presenceState = {};
                     this.setState = function (args) {
@@ -8845,6 +8692,7 @@
                     listenerManager: listenerManager,
                     getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
                     cryptoModule: modules.cryptoModule,
+                    eventEmitter: this._eventEmitter,
                 });
                 this.subscribe = subscriptionManager_1.adaptSubscribeChange.bind(subscriptionManager_1);
                 this.unsubscribe = subscriptionManager_1.adaptUnsubscribeChange.bind(subscriptionManager_1);
@@ -8860,9 +8708,9 @@
                     subscriptionManager_1.disconnect();
                 };
             }
-            this.addListener = listenerManager.addListener.bind(listenerManager);
-            this.removeListener = listenerManager.removeListener.bind(listenerManager);
-            this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+            this.addListener = this._eventEmitter.addListener.bind(this._eventEmitter);
+            this.removeListener = this._eventEmitter.removeListener.bind(this._eventEmitter);
+            this.removeAllListeners = this._eventEmitter.removeAllListeners.bind(this._eventEmitter);
             this.parseToken = tokenManager.parseToken.bind(tokenManager);
             this.setToken = tokenManager.setToken.bind(tokenManager);
             this.getToken = tokenManager.getToken.bind(tokenManager);
