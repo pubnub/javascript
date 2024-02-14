@@ -347,12 +347,12 @@ export default class {
     this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
+    this._eventEmitter = new EventEmitter({
+      modules: modules,
+      listenerManager: this._listenerManager,
+      getFileUrl: (params) => getFileUrlFunction(modules, params),
+    });
     if (config.enableEventEngine === true) {
-      this._eventEmitter = new EventEmitter({
-        modules: modules,
-        listenerManager: this._listenerManager,
-        getFileUrl: (params) => getFileUrlFunction(modules, params),
-      });
       if (config.maintainPresenceState) {
         this.presenceState = {};
         this.setState = (args) => {
@@ -424,6 +424,7 @@ export default class {
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
         cryptoModule: modules.cryptoModule,
+        eventEmitter: this._eventEmitter,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
@@ -443,9 +444,9 @@ export default class {
       };
     }
 
-    this.addListener = listenerManager.addListener.bind(listenerManager);
-    this.removeListener = listenerManager.removeListener.bind(listenerManager);
-    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+    this.addListener = this._eventEmitter.addListener.bind(this._eventEmitter);
+    this.removeListener = this._eventEmitter.removeListener.bind(this._eventEmitter);
+    this.removeAllListeners = this._eventEmitter.removeAllListeners.bind(this._eventEmitter);
 
     this.parseToken = tokenManager.parseToken.bind(tokenManager);
     this.setToken = tokenManager.setToken.bind(tokenManager);

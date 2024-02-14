@@ -52,6 +52,10 @@ export default class EventEmitter {
       if (e.payload.timeout) {
         announce.timeout = e.payload.timeout;
       }
+      // deprecated -->
+      announce.actualChannel = subscriptionMatch != null ? channel : null;
+      announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+      // <-- deprecated
 
       this.listenerManager.announcePresence(announce);
       this._announce('presence', announce, announce.channel, announce.subscription);
@@ -220,6 +224,10 @@ export default class EventEmitter {
       } else {
         announce.message = e.payload;
       }
+      // deprecated -->
+      announce.actualChannel = subscriptionMatch != null ? channel : null;
+      announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+      // <-- deprecated
 
       this.listenerManager.announceMessage(announce);
       this._announce('message', announce, announce.channel, announce.subscription);
@@ -227,29 +235,41 @@ export default class EventEmitter {
   }
 
   addListener(l, channels, groups) {
-    channels.forEach((c) => {
-      if (this._channelListenerMap[c]) {
-        if (!this._channelListenerMap[c].includes(l)) this._channelListenerMap[c].push(l);
-      } else {
-        this._channelListenerMap[c] = [l];
-      }
-    });
-    groups.forEach((g) => {
-      if (this._groupListenerMap[g]) {
-        if (!this._groupListenerMap[g].includes(l)) this._groupListenerMap[g].push(l);
-      } else {
-        this._groupListenerMap[g] = [l];
-      }
-    });
+    if (!(channels && groups)) {
+      this.listenerManager.addListener(l);
+    } else {
+      channels?.forEach((c) => {
+        if (this._channelListenerMap[c]) {
+          if (!this._channelListenerMap[c].includes(l)) this._channelListenerMap[c].push(l);
+        } else {
+          this._channelListenerMap[c] = [l];
+        }
+      });
+      groups?.forEach((g) => {
+        if (this._groupListenerMap[g]) {
+          if (!this._groupListenerMap[g].includes(l)) this._groupListenerMap[g].push(l);
+        } else {
+          this._groupListenerMap[g] = [l];
+        }
+      });
+    }
   }
 
   removeListener(listener, channels, groups) {
-    channels.forEach((c) => {
-      this._channelListenerMap[c] = this._channelListenerMap[c]?.filter((l) => l !== listener);
-    });
-    groups.forEach((g) => {
-      this._groupListenerMap[g] = this._groupListenerMap[g]?.filter((l) => l !== listener);
-    });
+    if (!(channels && groups)) {
+      this.listenerManager.removeListener(l);
+    } else {
+      channels?.forEach((c) => {
+        this._channelListenerMap[c] = this._channelListenerMap[c]?.filter((l) => l !== listener);
+      });
+      groups?.forEach((g) => {
+        this._groupListenerMap[g] = this._groupListenerMap[g]?.filter((l) => l !== listener);
+      });
+    }
+  }
+
+  removeAllListeners() {
+    this.listenerManager.removeAllListeners();
   }
 
   _renameEvent(e) {

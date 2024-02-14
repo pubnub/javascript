@@ -722,7 +722,6 @@ describe('#components/subscription_manager', () => {
     pubnubWithCrypto.addListener({
       message(messagePayload) {
         incomingPayloads.push(messagePayload);
-        console.log('\n\n\n incomingpayload = ', JSON.stringify(incomingPayloads));
         if (incomingPayloads.length === 1) {
           assert.equal(scope.isDone(), true);
           assert.deepEqual(incomingPayloads, [
