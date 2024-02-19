@@ -468,4 +468,77 @@ describe('#listeners', () => {
     pubnub.destroy();
     expect(JSON.stringify(actualChannel2MessageAfterOneUnsubCh2.message)).to.equal('{"ch2":"My message!"}');
   });
+
+  it('should work with event type specific listener registraction', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
+      );
+    var channel = pubnub.channel('ch1');
+    var subscription = channel.subscription();
+    var messagePromise = new Promise((resolveMessage) => (subscription.onMessage = (m) => resolveMessage(m)));
+    subscription.subscribe();
+    const actual = await messagePromise;
+    expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
+  });
+
+  it('with presence should work with event type specific listener registraction', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1%2Cch1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"p":{"t":"8","r":2},"k":"subKey","c":"ch1-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "testid", "occupancy": 1},"b":"ch1-pnpres"}]}',
+      );
+
+    const channel = pubnub.channel('ch1');
+    const subscription = channel.subscription({ receivePresenceEvents: true });
+    const presencePromise = new Promise(
+      (resolvePresenceEvent) => (subscription.onPresence = (p) => resolvePresenceEvent(p)),
+    );
+    subscription.subscribe();
+    const actual = await presencePromise;
+    expect(JSON.stringify(actual)).to.equal(
+      '{"channel":"ch1","subscription":null,"action":"join","occupancy":1,"uuid":"testid","timestamp":1461451222,"actualChannel":null,"subscribedChannel":"ch1-pnpres"}',
+    );
+  });
 });

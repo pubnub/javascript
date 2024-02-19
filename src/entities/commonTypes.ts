@@ -1,11 +1,4 @@
 import PubNub from 'pubnub';
-export interface SubscribeCapable {
-  subscribe(): void;
-  unsubscribe(): void;
-
-  addListener(listener: Listener): void;
-  removeListener(listener: Listener): void;
-}
 
 export type SubscriptionOptions = {
   cursor?: { timetoken?: string; region?: number };
