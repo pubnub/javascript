@@ -8338,16 +8338,95 @@
         return EventEmitter;
     }());
 
-    var SubscriptionSet = /** @class */ (function () {
+    var SubscribeCapable = /** @class */ (function () {
+        function SubscribeCapable() {
+        }
+        SubscribeCapable.prototype.subscribe = function () {
+            var _a, _b;
+            this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
+        };
+        SubscribeCapable.prototype.unsubscribe = function () {
+            this.pubnub.unsubscribe({
+                channels: this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }),
+                channelGroups: this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }),
+            });
+        };
+        Object.defineProperty(SubscribeCapable.prototype, "onMessage", {
+            set: function (onMessagelistener) {
+                this.listener.message = onMessagelistener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onPresence", {
+            set: function (onPresencelistener) {
+                this.listener.presence = onPresencelistener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onSignal", {
+            set: function (onSignalListener) {
+                this.listener.signal = onSignalListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onObjects", {
+            set: function (onObjectsListener) {
+                this.listener.objects = onObjectsListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onMessageAction", {
+            set: function (messageActionEventListener) {
+                this.listener.messageAction = messageActionEventListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onFile", {
+            set: function (fileEventListener) {
+                this.listener.file = fileEventListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        SubscribeCapable.prototype.addListener = function (listener) {
+            this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+        };
+        SubscribeCapable.prototype.removeListener = function (listener) {
+            this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
+        };
+        Object.defineProperty(SubscribeCapable.prototype, "channels", {
+            get: function () {
+                return this.channelNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "channelGroups", {
+            get: function () {
+                return this.groupNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return SubscribeCapable;
+    }());
+
+    var SubscriptionSet = /** @class */ (function (_super) {
+        __extends(SubscriptionSet, _super);
         function SubscriptionSet(_a) {
             var _b = _a.channels, channels = _b === void 0 ? [] : _b, _c = _a.channelGroups, channelGroups = _c === void 0 ? [] : _c, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
-            var _this = this;
-            this.channelNames = [];
-            this.groupNames = [];
-            this.subscriptionList = [];
-            this.options = subscriptionOptions;
-            this.eventEmitter = eventEmitter;
-            this.pubnub = pubnub;
+            var _this = _super.call(this) || this;
+            _this.channelNames = [];
+            _this.groupNames = [];
+            _this.subscriptionList = [];
+            _this.options = subscriptionOptions;
+            _this.eventEmitter = eventEmitter;
+            _this.pubnub = pubnub;
             channels.forEach(function (c) {
                 var subscription = _this.pubnub.channel(c).subscription(_this.options);
                 _this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(_this.channelNames), false), __read$1(subscription.channels), false);
@@ -8358,23 +8437,10 @@
                 _this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(_this.groupNames), false), __read$1(subscription.channelGroups), false);
                 _this.subscriptionList.push(subscription);
             });
+            _this.listener = {};
+            eventEmitter.addListener(_this.listener, _this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), _this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+            return _this;
         }
-        SubscriptionSet.prototype.subscribe = function () {
-            var _a, _b;
-            this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
-        };
-        SubscriptionSet.prototype.unsubscribe = function () {
-            this.pubnub.unsubscribe({
-                channels: this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }),
-                channelGroups: this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }),
-            });
-        };
-        SubscriptionSet.prototype.addListener = function (listener) {
-            this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
-        };
-        SubscriptionSet.prototype.removeListener = function (listener) {
-            this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
-        };
         SubscriptionSet.prototype.addSubscription = function (subscription) {
             this.subscriptionList.push(subscription);
             this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscription.channels), false);
@@ -8399,20 +8465,6 @@
             this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
             this.subscriptionList = this.subscriptionList.filter(function (s) { return !subscriptionSet.subscriptions.includes(s); });
         };
-        Object.defineProperty(SubscriptionSet.prototype, "channels", {
-            get: function () {
-                return this.channelNames.slice(0);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(SubscriptionSet.prototype, "channelGroups", {
-            get: function () {
-                return this.groupNames.slice(0);
-            },
-            enumerable: false,
-            configurable: true
-        });
         Object.defineProperty(SubscriptionSet.prototype, "subscriptions", {
             get: function () {
                 return this.subscriptionList.slice(0);
@@ -8421,35 +8473,24 @@
             configurable: true
         });
         return SubscriptionSet;
-    }());
+    }(SubscribeCapable));
 
-    var Subscription = /** @class */ (function () {
+    var Subscription = /** @class */ (function (_super) {
+        __extends(Subscription, _super);
         function Subscription(_a) {
             var channels = _a.channels, channelGroups = _a.channelGroups, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
-            this.channelNames = [];
-            this.groupNames = [];
-            this.channelNames = channels;
-            this.groupNames = channelGroups;
-            this.options = subscriptionOptions;
-            this.pubnub = pubnub;
-            this.eventEmitter = eventEmitter;
+            var _this = _super.call(this) || this;
+            _this.channelNames = [];
+            _this.groupNames = [];
+            _this.channelNames = channels;
+            _this.groupNames = channelGroups;
+            _this.options = subscriptionOptions;
+            _this.pubnub = pubnub;
+            _this.eventEmitter = eventEmitter;
+            _this.listener = {};
+            eventEmitter.addListener(_this.listener, _this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), _this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+            return _this;
         }
-        Subscription.prototype.subscribe = function () {
-            var _a, _b;
-            this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
-        };
-        Subscription.prototype.unsubscribe = function () {
-            this.pubnub.unsubscribe({
-                channels: this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }),
-                channelGroups: this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }),
-            });
-        };
-        Subscription.prototype.addListener = function (listener) {
-            this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
-        };
-        Subscription.prototype.removeListener = function (listener) {
-            this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
-        };
         Subscription.prototype.addSubscription = function (subscription) {
             return new SubscriptionSet({
                 channels: __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscription.channels), false),
@@ -8459,22 +8500,8 @@
                 pubnub: this.pubnub,
             });
         };
-        Object.defineProperty(Subscription.prototype, "channels", {
-            get: function () {
-                return this.channelNames.slice(0);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Subscription.prototype, "channelGroups", {
-            get: function () {
-                return this.groupNames.slice(0);
-            },
-            enumerable: false,
-            configurable: true
-        });
         return Subscription;
-    }());
+    }(SubscribeCapable));
 
     var Channel = /** @class */ (function () {
         function Channel(channelName, eventEmitter, pubnub) {
