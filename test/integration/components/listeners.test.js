@@ -435,7 +435,7 @@ describe('#listeners', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch2","d":{"ch2":"My message!"}}]}',
+        '{"t":{"t":"12","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch2","d":{"ch2":"My message!"}}]}',
       );
     const messages = [];
     const channel = pubnub.channel('ch1');
