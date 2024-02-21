@@ -794,7 +794,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.5.0';
+            return '7.6.0';
         };
         default_1.prototype._setRetryConfiguration = function (configuration) {
             if (configuration.minimumdelay < 2) {
