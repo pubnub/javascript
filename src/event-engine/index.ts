@@ -136,11 +136,11 @@ export class EventEngine {
   }
 
   getSubscribedChannels(): string[] {
-    return this.channels.slice(0);
+    return Array.from(new Set(this.channels.slice(0)));
   }
 
   getSubscribedChannelGroups(): string[] {
-    return this.groups.slice(0);
+    return Array.from(new Set(this.groups.slice(0)));
   }
 
   dispose(): void {

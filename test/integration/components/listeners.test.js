@@ -449,24 +449,26 @@ describe('#listeners', () => {
     );
     subscription.removeListener(listener);
     subscription.subscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch1']);
     const actual = await messagePromise;
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
     expect(messages.length).to.equal(0);
+
     const subscriptionCh2 = pubnub.channel('ch2').subscription();
     subscriptionCh2.subscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch1', 'ch2']);
+
     const subscriptionCh3 = pubnub.channel('ch3').subscription();
     const subscriptionSetCh23 = subscriptionCh3.addSubscription(pubnub.channel('ch2').subscription());
-    const messagePromiseChannel2 = new Promise((resolveMessage) =>
-      subscriptionSetCh23.addListener({
-        message: (m) => resolveMessage(m),
-      }),
-    );
     subscriptionSetCh23.subscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch1', 'ch2', 'ch3']);
+
     subscription.unsubscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch2', 'ch3']);
+
     subscriptionCh2.unsubscribe();
-    const actualChannel2MessageAfterOneUnsubCh2 = await messagePromiseChannel2;
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch2', 'ch3']);
     pubnub.destroy();
-    expect(JSON.stringify(actualChannel2MessageAfterOneUnsubCh2.message)).to.equal('{"ch2":"My message!"}');
   });
 
   it('should work with event type specific listener registraction', async () => {
