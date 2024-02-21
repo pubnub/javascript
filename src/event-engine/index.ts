@@ -2,13 +2,14 @@ import { Dispatcher, Engine } from './core';
 import { Dependencies, EventEngineDispatcher } from './dispatcher';
 import * as effects from './effects';
 import * as events from './events';
-
 import { UnsubscribedState } from './states/unsubscribed';
+
+import * as utils from '../core/utils';
 
 export class EventEngine {
   private engine: Engine<events.Events, effects.Effects> = new Engine();
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;
-  private dependencies: any;
+  private dependencies: Dependencies;
 
   get _engine() {
     return this.engine;
@@ -42,7 +43,7 @@ export class EventEngine {
     channelGroups?: string[];
     timetoken?: string;
     withPresence?: boolean;
-  }) {
+  }): void {
     this.channels = [...this.channels, ...(channels ?? [])];
     this.groups = [...this.groups, ...(channelGroups ?? [])];
     if (withPresence) {
@@ -50,41 +51,67 @@ export class EventEngine {
       this.groups.map((g) => this.groups.push(`${g}-pnpres`));
     }
     if (timetoken) {
-      this.engine.transition(events.restore(this.channels, this.groups, timetoken));
+      this.engine.transition(
+        events.restore(
+          Array.from(new Set([...this.channels, ...(channels ?? [])])),
+          Array.from(new Set([...this.groups, ...(channelGroups ?? [])])),
+          timetoken,
+        ),
+      );
     } else {
-      this.engine.transition(events.subscriptionChange(this.channels, this.groups));
+      this.engine.transition(
+        events.subscriptionChange(
+          Array.from(new Set([...this.channels, ...(channels ?? [])])),
+          Array.from(new Set([...this.groups, ...(channelGroups ?? [])])),
+        ),
+      );
     }
     if (this.dependencies.join) {
       this.dependencies.join({
-        channels: this.channels.filter((c) => !c.endsWith('-pnpres')),
-        groups: this.groups.filter((g) => !g.endsWith('-pnpres')),
+        channels: Array.from(new Set(this.channels.filter((c) => !c.endsWith('-pnpres')))),
+        groups: Array.from(new Set(this.groups.filter((g) => !g.endsWith('-pnpres')))),
       });
     }
   }
 
-  unsubscribe({ channels, groups }: { channels?: string[]; groups?: string[] }) {
-    const channlesWithPres: any = channels?.slice(0);
-    channels?.map((c) => channlesWithPres.push(`${c}-pnpres`));
-    this.channels = this.channels.filter((channel) => !channlesWithPres?.includes(channel));
+  unsubscribe({ channels = [], channelGroups = [] }: { channels?: string[]; channelGroups?: string[] }): void {
+    const filteredChannels = utils.removeSingleOccurance(this.channels, [
+      ...channels,
+      ...channels.map((c) => `${c}-pnpres`),
+    ]);
+    const filteredGroups = utils.removeSingleOccurance(this.groups, [
+      ...channelGroups,
+      ...channelGroups.map((c) => `${c}-pnpres`),
+    ]);
 
-    const groupsWithPres: any = groups?.slice(0);
-    groups?.map((g) => groupsWithPres.push(`${g}-pnpres`));
-    this.groups = this.groups.filter((group) => !groupsWithPres?.includes(group));
-
-    if (this.dependencies.presenceState) {
-      channels?.forEach((c) => delete this.dependencies.presenceState[c]);
-      groups?.forEach((g) => delete this.dependencies.presenceState[g]);
-    }
-    this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
-    if (this.dependencies.leave) {
-      this.dependencies.leave({
-        channels: channels,
-        groups: groups,
-      });
+    if (
+      new Set(this.channels).size !== new Set(filteredChannels).size ||
+      new Set(this.groups).size !== new Set(filteredGroups).size
+    ) {
+      const channelsToLeave = utils.findUniqueCommonElements(this.channels, channels);
+      const groupstoLeave = utils.findUniqueCommonElements(this.groups, channelGroups);
+      if (this.dependencies.presenceState) {
+        channelsToLeave?.forEach((c) => delete this.dependencies.presenceState[c]);
+        groupstoLeave?.forEach((g) => delete this.dependencies.presenceState[g]);
+      }
+      this.channels = filteredChannels;
+      this.groups = filteredGroups;
+      this.engine.transition(
+        events.subscriptionChange(
+          Array.from(new Set(this.channels.slice(0))),
+          Array.from(new Set(this.groups.slice(0))),
+        ),
+      );
+      if (this.dependencies.leave) {
+        this.dependencies.leave({
+          channels: channelsToLeave.slice(0),
+          groups: groupstoLeave.slice(0),
+        });
+      }
     }
   }
 
-  unsubscribeAll() {
+  unsubscribeAll(): void {
     this.channels = [];
     this.groups = [];
 
@@ -97,26 +124,26 @@ export class EventEngine {
     }
   }
 
-  reconnect({ timetoken, region }: { timetoken?: string; region?: number }) {
+  reconnect({ timetoken, region }: { timetoken?: string; region?: number }): void {
     this.engine.transition(events.reconnect(timetoken, region));
   }
 
-  disconnect() {
+  disconnect(): void {
     this.engine.transition(events.disconnect());
     if (this.dependencies.leaveAll) {
       this.dependencies.leaveAll();
     }
   }
 
-  getSubscribedChannels() {
+  getSubscribedChannels(): string[] {
     return this.channels.slice(0);
   }
 
-  getSubscribedChannelGroups() {
+  getSubscribedChannelGroups(): string[] {
     return this.groups.slice(0);
   }
 
-  dispose() {
+  dispose(): void {
     this.disconnect();
     this._unsubscribeEngine();
     this.dispatcher.dispose();

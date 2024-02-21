@@ -108,7 +108,7 @@
         throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
     }
 
-    function __read(o, n) {
+    function __read$1(o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
         if (!m) return o;
         var i = m.call(o), r, ar = [], e;
@@ -125,7 +125,7 @@
         return ar;
     }
 
-    function __spreadArray(to, from, pack) {
+    function __spreadArray$1(to, from, pack) {
         if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
             if (ar || !(i in from)) {
                 if (!ar) ar = Array.prototype.slice.call(from, 0, i);
@@ -794,7 +794,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.5.0';
+            return '7.6.0';
         };
         default_1.prototype._setRetryConfiguration = function (configuration) {
             if (configuration.minimumdelay < 2) {
@@ -1802,49 +1802,6 @@
         return default_1;
     }());
 
-    function objectToList(o) {
-        var l = [];
-        Object.keys(o).forEach(function (key) { return l.push(key); });
-        return l;
-    }
-    function encodeString(input) {
-        return encodeURIComponent(input).replace(/[!~*'()]/g, function (x) { return "%".concat(x.charCodeAt(0).toString(16).toUpperCase()); });
-    }
-    function objectToListSorted(o) {
-        return objectToList(o).sort();
-    }
-    function signPamFromParams(params) {
-        var l = objectToListSorted(params);
-        return l.map(function (paramKey) { return "".concat(paramKey, "=").concat(encodeString(params[paramKey])); }).join('&');
-    }
-    function endsWith(searchString, suffix) {
-        return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
-    }
-    function createPromise() {
-        var successResolve;
-        var failureResolve;
-        var promise = new Promise(function (fulfill, reject) {
-            successResolve = fulfill;
-            failureResolve = reject;
-        });
-        return { promise: promise, reject: failureResolve, fulfill: successResolve };
-    }
-    function stringToArrayBuffer(str) {
-        var buf = new ArrayBuffer(str.length * 2);
-        var bufView = new Uint16Array(buf);
-        for (var i = 0, strLen = str.length; i < strLen; i++) {
-            bufView[i] = str.charCodeAt(i);
-        }
-        return buf;
-    }
-    var utils$5 = {
-        signPamFromParams: signPamFromParams,
-        endsWith: endsWith,
-        createPromise: createPromise,
-        encodeString: encodeString,
-        stringToArrayBuffer: stringToArrayBuffer,
-    };
-
     /*       */
     var categories = {
         // SDK will announce when the network appears to be connected again.
@@ -1872,7 +1829,7 @@
 
     var default_1$7 = /** @class */ (function () {
         function default_1(_a) {
-            var subscribeEndpoint = _a.subscribeEndpoint, leaveEndpoint = _a.leaveEndpoint, heartbeatEndpoint = _a.heartbeatEndpoint, setStateEndpoint = _a.setStateEndpoint, timeEndpoint = _a.timeEndpoint, getFileUrl = _a.getFileUrl, config = _a.config, crypto = _a.crypto, listenerManager = _a.listenerManager, cryptoModule = _a.cryptoModule;
+            var subscribeEndpoint = _a.subscribeEndpoint, leaveEndpoint = _a.leaveEndpoint, heartbeatEndpoint = _a.heartbeatEndpoint, setStateEndpoint = _a.setStateEndpoint, timeEndpoint = _a.timeEndpoint, getFileUrl = _a.getFileUrl, config = _a.config, crypto = _a.crypto, listenerManager = _a.listenerManager, cryptoModule = _a.cryptoModule, eventEmitter = _a.eventEmitter;
             this._listenerManager = listenerManager;
             this._config = config;
             this._leaveEndpoint = leaveEndpoint;
@@ -1899,6 +1856,7 @@
             this._dedupingManager = new default_1$8({ config: config });
             if (this._cryptoModule)
                 this._decoder = new TextDecoder();
+            this._eventEmitter = eventEmitter;
         }
         default_1.prototype.adaptStateChange = function (args, callback) {
             var _this = this;
@@ -2249,191 +2207,15 @@
                 this._listenerManager.announceStatus(countAnnouncement);
             }
             messages.forEach(function (message) {
-                var channel = message.channel;
-                var subscriptionMatch = message.subscriptionMatch;
-                var publishMetaData = message.publishMetaData;
-                if (channel === subscriptionMatch) {
-                    subscriptionMatch = null;
-                }
+                message.channel;
+                message.subscriptionMatch;
                 if (dedupeOnSubscribe) {
                     if (_this._dedupingManager.isDuplicate(message)) {
                         return;
                     }
                     _this._dedupingManager.addEntry(message);
                 }
-                if (utils$5.endsWith(message.channel, '-pnpres')) {
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    // deprecated -->
-                    announce.actualChannel = subscriptionMatch != null ? channel : null;
-                    announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-                    // <-- deprecated
-                    if (channel) {
-                        announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
-                    }
-                    if (subscriptionMatch) {
-                        announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
-                    }
-                    announce.action = message.payload.action;
-                    announce.state = message.payload.data;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.occupancy = message.payload.occupancy;
-                    announce.uuid = message.payload.uuid;
-                    announce.timestamp = message.payload.timestamp;
-                    if (message.payload.join) {
-                        announce.join = message.payload.join;
-                    }
-                    if (message.payload.leave) {
-                        announce.leave = message.payload.leave;
-                    }
-                    if (message.payload.timeout) {
-                        announce.timeout = message.payload.timeout;
-                    }
-                    _this._listenerManager.announcePresence(announce);
-                }
-                else if (message.messageType === 1) {
-                    // this is a signal message
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    announce.message = message.payload;
-                    _this._listenerManager.announceSignal(announce);
-                }
-                else if (message.messageType === 2) {
-                    // this is an object message
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    announce.message = {
-                        event: message.payload.event,
-                        type: message.payload.type,
-                        data: message.payload.data,
-                    };
-                    _this._listenerManager.announceObjects(announce);
-                    if (message.payload.type === 'uuid') {
-                        var eventData = _this._renameChannelField(announce);
-                        _this._listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'user' }) }));
-                    }
-                    else if (message.payload.type === 'channel') {
-                        var eventData = _this._renameChannelField(announce);
-                        _this._listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), type: 'space' }) }));
-                    }
-                    else if (message.payload.type === 'membership') {
-                        var eventData = _this._renameChannelField(announce);
-                        var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
-                        membershipData.user = user;
-                        membershipData.space = space;
-                        _this._listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: _this._renameEvent(eventData.message.event), data: membershipData }) }));
-                    }
-                }
-                else if (message.messageType === 3) {
-                    // this is a message action
-                    var announce = {};
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    announce.data = {
-                        messageTimetoken: message.payload.data.messageTimetoken,
-                        actionTimetoken: message.payload.data.actionTimetoken,
-                        type: message.payload.data.type,
-                        uuid: message.issuingClientId,
-                        value: message.payload.data.value,
-                    };
-                    announce.event = message.payload.event;
-                    _this._listenerManager.announceMessageAction(announce);
-                }
-                else if (message.messageType === 4) {
-                    // this is a file message
-                    var announce = {};
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    var msgPayload = message.payload;
-                    if (_this._cryptoModule) {
-                        var decryptedPayload = void 0;
-                        try {
-                            var decryptedData = _this._cryptoModule.decrypt(message.payload);
-                            decryptedPayload =
-                                decryptedData instanceof ArrayBuffer ? JSON.parse(_this._decoder.decode(decryptedData)) : decryptedData;
-                        }
-                        catch (e) {
-                            decryptedPayload = null;
-                            announce.error = "Error while decrypting message content: ".concat(e.message);
-                        }
-                        if (decryptedPayload !== null) {
-                            msgPayload = decryptedPayload;
-                        }
-                    }
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    announce.message = msgPayload.message;
-                    announce.file = {
-                        id: msgPayload.file.id,
-                        name: msgPayload.file.name,
-                        url: _this._getFileUrl({
-                            id: msgPayload.file.id,
-                            name: msgPayload.file.name,
-                            channel: channel,
-                        }),
-                    };
-                    _this._listenerManager.announceFile(announce);
-                }
-                else {
-                    var announce = {};
-                    announce.channel = null;
-                    announce.subscription = null;
-                    // deprecated -->
-                    announce.actualChannel = subscriptionMatch != null ? channel : null;
-                    announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-                    // <-- deprecated
-                    announce.channel = channel;
-                    announce.subscription = subscriptionMatch;
-                    announce.timetoken = publishMetaData.publishTimetoken;
-                    announce.publisher = message.issuingClientId;
-                    if (message.userMetadata) {
-                        announce.userMetadata = message.userMetadata;
-                    }
-                    if (_this._cryptoModule) {
-                        var decryptedPayload = void 0;
-                        try {
-                            var decryptedData = _this._cryptoModule.decrypt(message.payload);
-                            decryptedPayload =
-                                decryptedData instanceof ArrayBuffer ? JSON.parse(_this._decoder.decode(decryptedData)) : decryptedData;
-                        }
-                        catch (e) {
-                            decryptedPayload = null;
-                            announce.error = "Error while decrypting message content: ".concat(e.message);
-                        }
-                        if (decryptedPayload != null) {
-                            announce.message = decryptedPayload;
-                        }
-                        else {
-                            announce.message = message.payload;
-                        }
-                    }
-                    else {
-                        announce.message = message.payload;
-                    }
-                    _this._listenerManager.announceMessage(announce);
-                }
+                _this._eventEmitter.emitEvent(message);
             });
             this._region = payload.metadata.region;
             this._startSubscribeLoop();
@@ -2545,6 +2327,11 @@
             this._maximumSamplesCount = 100;
             this._trackedLatencies = {};
             this._latencies = {};
+            this._telemetryExcludeOperations = [
+                OPERATIONS.PNSubscribeOperation,
+                OPERATIONS.PNReceiveMessagesOperation,
+                OPERATIONS.PNHandshakeOperation,
+            ];
             this._maximumSamplesCount = configuration.maximumSamplesCount || this._maximumSamplesCount;
         }
         /**
@@ -2565,13 +2352,13 @@
             return latencies;
         };
         default_1.prototype.startLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
+            if (this._telemetryExcludeOperations.includes(operationType) || !identifier) {
                 return;
             }
             this._trackedLatencies[identifier] = Date.now();
         };
         default_1.prototype.stopLatencyMeasure = function (operationType, identifier) {
-            if (operationType === OPERATIONS.PNSubscribeOperation || !identifier) {
+            if (this._telemetryExcludeOperations.includes(operationType) || !identifier) {
                 return;
             }
             var endpointName = this._endpointName(operationType);
@@ -3438,6 +3225,66 @@
         };
         return default_1;
     }());
+
+    function objectToList(o) {
+        var l = [];
+        Object.keys(o).forEach(function (key) { return l.push(key); });
+        return l;
+    }
+    function encodeString(input) {
+        return encodeURIComponent(input).replace(/[!~*'()]/g, function (x) { return "%".concat(x.charCodeAt(0).toString(16).toUpperCase()); });
+    }
+    function objectToListSorted(o) {
+        return objectToList(o).sort();
+    }
+    function signPamFromParams(params) {
+        var l = objectToListSorted(params);
+        return l.map(function (paramKey) { return "".concat(paramKey, "=").concat(encodeString(params[paramKey])); }).join('&');
+    }
+    function endsWith(searchString, suffix) {
+        return searchString.indexOf(suffix, this.length - suffix.length) !== -1;
+    }
+    function createPromise() {
+        var successResolve;
+        var failureResolve;
+        var promise = new Promise(function (fulfill, reject) {
+            successResolve = fulfill;
+            failureResolve = reject;
+        });
+        return { promise: promise, reject: failureResolve, fulfill: successResolve };
+    }
+    function stringToArrayBuffer(str) {
+        var buf = new ArrayBuffer(str.length * 2);
+        var bufView = new Uint16Array(buf);
+        for (var i = 0, strLen = str.length; i < strLen; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+        return buf;
+    }
+    function removeSingleOccurance(source, elementsToRemove) {
+        var removed = Object.fromEntries(elementsToRemove.map(function (prop) { return [prop, false]; }));
+        return source.filter(function (e) {
+            if (elementsToRemove.includes(e) && !removed[e]) {
+                removed[e] = true;
+                return false;
+            }
+            return true;
+        });
+    }
+    function findUniqueCommonElements(a, b) {
+        return __spreadArray([], __read(a), false).filter(function (value) {
+            return b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value);
+        });
+    }
+    var utils$5 = {
+        signPamFromParams: signPamFromParams,
+        endsWith: endsWith,
+        createPromise: createPromise,
+        encodeString: encodeString,
+        stringToArrayBuffer: stringToArrayBuffer,
+        removeSingleOccurance: removeSingleOccurance,
+        findUniqueCommonElements: findUniqueCommonElements,
+    };
 
     var PubNubError = /** @class */ (function (_super) {
         __extends(PubNubError, _super);
@@ -5106,7 +4953,7 @@
             queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5269,7 +5116,7 @@
             queryParams.limit = (_h = params === null || params === void 0 ? void 0 : params.limit) !== null && _h !== void 0 ? _h : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5443,7 +5290,7 @@
             queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5536,7 +5383,7 @@
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5609,7 +5456,7 @@
             queryParams.limit = (_o = params === null || params === void 0 ? void 0 : params.limit) !== null && _o !== void 0 ? _o : 100;
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_p = params.sort) !== null && _p !== void 0 ? _p : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -5701,7 +5548,7 @@
             }
             if (params === null || params === void 0 ? void 0 : params.sort) {
                 queryParams.sort = Object.entries((_j = params.sort) !== null && _j !== void 0 ? _j : {}).map(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], value = _b[1];
+                    var _b = __read$1(_a, 2), key = _b[0], value = _b[1];
                     if (value === 'asc' || value === 'desc') {
                         return "".concat(key, ":").concat(value);
                     }
@@ -6457,7 +6304,7 @@
         var timetoken = incomingParams.timetoken, channelTimetokens = incomingParams.channelTimetokens;
         var outgoingParams = {};
         if (channelTimetokens && channelTimetokens.length === 1) {
-            var _a = __read(channelTimetokens, 1), tt = _a[0];
+            var _a = __read$1(channelTimetokens, 1), tt = _a[0];
             outgoingParams.timetoken = tt;
         }
         else if (channelTimetokens) {
@@ -6731,8 +6578,9 @@
         },
         getURL: function (_a, params) {
             var config = _a.config;
-            var channelsString = params.channels ? params.channels.join(',') : ',';
-            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(channelsString), "/0");
+            var _b = params.channels, channels = _b === void 0 ? [] : _b;
+            var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(stringifiedChannels), "/0");
         },
         getRequestTimeout: function (_a) {
             var config = _a.config;
@@ -6775,8 +6623,9 @@
         },
         getURL: function (_a, params) {
             var config = _a.config;
-            var channelsString = params.channels ? params.channels.join(',') : ',';
-            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(channelsString), "/0");
+            var _b = params.channels, channels = _b === void 0 ? [] : _b;
+            var stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+            return "/v2/subscribe/".concat(config.subscribeKey, "/").concat(utils$5.encodeString(stringifiedChannels), "/0");
         },
         getRequestTimeout: function (_a) {
             var config = _a.config;
@@ -6920,7 +6769,7 @@
             });
             var transition = this.currentState.transition(this.currentContext, event);
             if (transition) {
-                var _d = __read(transition, 3), newState = _d[0], newContext = _d[1], effects = _d[2];
+                var _d = __read$1(transition, 3), newState = _d[0], newContext = _d[1], effects = _d[2];
                 try {
                     for (var _e = __values(this.currentState.exitEffects), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var effect = _f.value;
@@ -7019,7 +6868,7 @@
             var e_1, _a;
             try {
                 for (var _b = __values(this.instances.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var _d = __read(_c.value, 2), key = _d[0], instance = _d[1];
+                    var _d = __read$1(_c.value, 2), key = _d[0], instance = _d[1];
                     instance.cancel();
                     this.instances.delete(key);
                 }
@@ -7044,7 +6893,7 @@
             }
             return {
                 type: type,
-                payload: fn === null || fn === void 0 ? void 0 : fn.apply(void 0, __spreadArray([], __read(args), false)),
+                payload: fn === null || fn === void 0 ? void 0 : fn.apply(void 0, __spreadArray$1([], __read$1(args), false)),
             };
         };
         creator.type = type;
@@ -7056,7 +6905,7 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            return { type: type, payload: fn.apply(void 0, __spreadArray([], __read(args), false)), managed: false };
+            return { type: type, payload: fn.apply(void 0, __spreadArray$1([], __read$1(args), false)), managed: false };
         };
         creator.type = type;
         return creator;
@@ -7067,7 +6916,7 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            return { type: type, payload: fn.apply(void 0, __spreadArray([], __read(args), false)), managed: true };
+            return { type: type, payload: fn.apply(void 0, __spreadArray$1([], __read$1(args), false)), managed: true };
         };
         creator.type = type;
         creator.cancel = { type: 'CANCEL', payload: type, managed: false };
@@ -7726,44 +7575,47 @@
         EventEngine.prototype.subscribe = function (_a) {
             var _this = this;
             var channels = _a.channels, channelGroups = _a.channelGroups, timetoken = _a.timetoken, withPresence = _a.withPresence;
-            this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
-            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false);
+            this.channels = __spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false);
+            this.groups = __spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false);
             if (withPresence) {
                 this.channels.map(function (c) { return _this.channels.push("".concat(c, "-pnpres")); });
                 this.groups.map(function (g) { return _this.groups.push("".concat(g, "-pnpres")); });
             }
             if (timetoken) {
-                this.engine.transition(restore(this.channels, this.groups, timetoken));
+                this.engine.transition(restore(Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false))), Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false))), timetoken));
             }
             else {
-                this.engine.transition(subscriptionChange(this.channels, this.groups));
+                this.engine.transition(subscriptionChange(Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false))), Array.from(new Set(__spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])), false)))));
             }
             if (this.dependencies.join) {
                 this.dependencies.join({
-                    channels: this.channels.filter(function (c) { return !c.endsWith('-pnpres'); }),
-                    groups: this.groups.filter(function (g) { return !g.endsWith('-pnpres'); }),
+                    channels: Array.from(new Set(this.channels.filter(function (c) { return !c.endsWith('-pnpres'); }))),
+                    groups: Array.from(new Set(this.groups.filter(function (g) { return !g.endsWith('-pnpres'); }))),
                 });
             }
         };
         EventEngine.prototype.unsubscribe = function (_a) {
             var _this = this;
-            var channels = _a.channels, groups = _a.groups;
-            var channlesWithPres = channels === null || channels === void 0 ? void 0 : channels.slice(0);
-            channels === null || channels === void 0 ? void 0 : channels.map(function (c) { return channlesWithPres.push("".concat(c, "-pnpres")); });
-            this.channels = this.channels.filter(function (channel) { return !(channlesWithPres === null || channlesWithPres === void 0 ? void 0 : channlesWithPres.includes(channel)); });
-            var groupsWithPres = groups === null || groups === void 0 ? void 0 : groups.slice(0);
-            groups === null || groups === void 0 ? void 0 : groups.map(function (g) { return groupsWithPres.push("".concat(g, "-pnpres")); });
-            this.groups = this.groups.filter(function (group) { return !(groupsWithPres === null || groupsWithPres === void 0 ? void 0 : groupsWithPres.includes(group)); });
-            if (this.dependencies.presenceState) {
-                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) { return delete _this.dependencies.presenceState[c]; });
-                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) { return delete _this.dependencies.presenceState[g]; });
-            }
-            this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
-            if (this.dependencies.leave) {
-                this.dependencies.leave({
-                    channels: channels,
-                    groups: groups,
-                });
+            var _b = _a.channels, channels = _b === void 0 ? [] : _b, _c = _a.channelGroups, channelGroups = _c === void 0 ? [] : _c;
+            var filteredChannels = utils$5.removeSingleOccurance(this.channels, __spreadArray$1(__spreadArray$1([], __read$1(channels), false), __read$1(channels.map(function (c) { return "".concat(c, "-pnpres"); })), false));
+            var filteredGroups = utils$5.removeSingleOccurance(this.groups, __spreadArray$1(__spreadArray$1([], __read$1(channelGroups), false), __read$1(channelGroups.map(function (c) { return "".concat(c, "-pnpres"); })), false));
+            if (new Set(this.channels).size !== new Set(filteredChannels).size ||
+                new Set(this.groups).size !== new Set(filteredGroups).size) {
+                var channelsToLeave = utils$5.findUniqueCommonElements(this.channels, channels);
+                var groupstoLeave = utils$5.findUniqueCommonElements(this.groups, channelGroups);
+                if (this.dependencies.presenceState) {
+                    channelsToLeave === null || channelsToLeave === void 0 ? void 0 : channelsToLeave.forEach(function (c) { return delete _this.dependencies.presenceState[c]; });
+                    groupstoLeave === null || groupstoLeave === void 0 ? void 0 : groupstoLeave.forEach(function (g) { return delete _this.dependencies.presenceState[g]; });
+                }
+                this.channels = filteredChannels;
+                this.groups = filteredGroups;
+                this.engine.transition(subscriptionChange(Array.from(new Set(this.channels.slice(0))), Array.from(new Set(this.groups.slice(0)))));
+                if (this.dependencies.leave) {
+                    this.dependencies.leave({
+                        channels: channelsToLeave.slice(0),
+                        groups: groupstoLeave.slice(0),
+                    });
+                }
             }
         };
         EventEngine.prototype.unsubscribeAll = function () {
@@ -7957,8 +7809,8 @@
     var HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
     HeartbeatStoppedState.on(joined.type, function (context, event) {
         return HeartbeatStoppedState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatStoppedState.on(left.type, function (context, event) {
@@ -7986,8 +7838,8 @@
     });
     HeartbeatCooldownState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatCooldownState.on(left.type, function (context, event) {
@@ -8009,8 +7861,8 @@
     var HeartbeatFailedState = new State('HEARTBEAT_FAILED');
     HeartbeatFailedState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatFailedState.on(left.type, function (context, event) {
@@ -8040,8 +7892,8 @@
     HearbeatReconnectingState.onExit(function () { return delayedHeartbeat.cancel; });
     HearbeatReconnectingState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HearbeatReconnectingState.on(left.type, function (context, event) {
@@ -8085,8 +7937,8 @@
     });
     HeartbeatingState.on(joined.type, function (context, event) {
         return HeartbeatingState.with({
-            channels: __spreadArray(__spreadArray([], __read(context.channels), false), __read(event.payload.channels), false),
-            groups: __spreadArray(__spreadArray([], __read(context.groups), false), __read(event.payload.groups), false),
+            channels: __spreadArray$1(__spreadArray$1([], __read$1(context.channels), false), __read$1(event.payload.channels), false),
+            groups: __spreadArray$1(__spreadArray$1([], __read$1(context.groups), false), __read$1(event.payload.groups), false),
         });
     });
     HeartbeatingState.on(left.type, function (context, event) {
@@ -8140,8 +7992,8 @@
         });
         PresenceEventEngine.prototype.join = function (_a) {
             var channels = _a.channels, groups = _a.groups;
-            this.channels = __spreadArray(__spreadArray([], __read(this.channels), false), __read((channels !== null && channels !== void 0 ? channels : [])), false);
-            this.groups = __spreadArray(__spreadArray([], __read(this.groups), false), __read((groups !== null && groups !== void 0 ? groups : [])), false);
+            this.channels = __spreadArray$1(__spreadArray$1([], __read$1(this.channels), false), __read$1((channels !== null && channels !== void 0 ? channels : [])), false);
+            this.groups = __spreadArray$1(__spreadArray$1([], __read$1(this.groups), false), __read$1((groups !== null && groups !== void 0 ? groups : [])), false);
             this.engine.transition(joined(this.channels.slice(0), this.groups.slice(0)));
         };
         PresenceEventEngine.prototype.leave = function (_a) {
@@ -8232,6 +8084,8 @@
             this.modules = modules;
             this.listenerManager = listenerManager;
             this.getFileUrl = getFileUrl;
+            this._channelListenerMap = new Map();
+            this._groupListenerMap = new Map();
             if (modules.cryptoModule)
                 this._decoder = new TextDecoder();
         }
@@ -8266,7 +8120,12 @@
                 if (e.payload.timeout) {
                     announce.timeout = e.payload.timeout;
                 }
+                // deprecated -->
+                announce.actualChannel = subscriptionMatch != null ? channel : null;
+                announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+                // <-- deprecated
                 this.listenerManager.announcePresence(announce);
+                this._announce('presence', announce, announce.channel, announce.subscription);
             }
             else if (e.messageType === 1) {
                 var announce = {};
@@ -8281,6 +8140,7 @@
                 }
                 announce.message = e.payload;
                 this.listenerManager.announceSignal(announce);
+                this._announce('signal', announce, announce.channel, announce.subscription);
             }
             else if (e.messageType === 2) {
                 var announce = {};
@@ -8299,20 +8159,27 @@
                     data: e.payload.data,
                 };
                 this.listenerManager.announceObjects(announce);
+                this._announce('objects', announce, announce.channel, announce.subscription);
                 if (e.payload.type === 'uuid') {
                     var eventData = this._renameChannelField(announce);
-                    this.listenerManager.announceUser(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'user' }) }));
+                    var userEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'user' }) });
+                    this.listenerManager.announceUser(userEvent);
+                    this._announce('user', userEvent, announce.channel, announce.subscription);
                 }
                 else if (message.payload.type === 'channel') {
                     var eventData = this._renameChannelField(announce);
-                    this.listenerManager.announceSpace(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) }));
+                    var spaceEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) });
+                    this.listenerManager.announceSpace(spaceEvent);
+                    this._announce('space', spaceEvent, announce.channel, announce.subscription);
                 }
                 else if (message.payload.type === 'membership') {
                     var eventData = this._renameChannelField(announce);
                     var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
                     membershipData.user = user;
                     membershipData.space = space;
-                    this.listenerManager.announceMembership(__assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), data: membershipData }) }));
+                    var membershipEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), data: membershipData }) });
+                    this.listenerManager.announceMembership(membershipEvent);
+                    this._announce('membership', membershipEvent, announce.channel, announce.subscription);
                 }
             }
             else if (e.messageType === 3) {
@@ -8330,6 +8197,7 @@
                 };
                 announce.event = e.payload.event;
                 this.listenerManager.announceMessageAction(announce);
+                this._announce('messageAction', announce, announce.channel, announce.subscription);
             }
             else if (e.messageType === 4) {
                 var announce = {};
@@ -8367,6 +8235,7 @@
                     }),
                 };
                 this.listenerManager.announceFile(announce);
+                this._announce('file', announce, announce.channel, announce.subscription);
             }
             else {
                 var announce = {};
@@ -8400,8 +8269,58 @@
                 else {
                     announce.message = e.payload;
                 }
+                // deprecated -->
+                announce.actualChannel = subscriptionMatch != null ? channel : null;
+                announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
+                // <-- deprecated
                 this.listenerManager.announceMessage(announce);
+                this._announce('message', announce, announce.channel, announce.subscription);
             }
+        };
+        EventEmitter.prototype.addListener = function (l, channels, groups) {
+            var _this = this;
+            if (!(channels && groups)) {
+                this.listenerManager.addListener(l);
+            }
+            else {
+                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) {
+                    if (_this._channelListenerMap[c]) {
+                        if (!_this._channelListenerMap[c].includes(l))
+                            _this._channelListenerMap[c].push(l);
+                    }
+                    else {
+                        _this._channelListenerMap[c] = [l];
+                    }
+                });
+                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) {
+                    if (_this._groupListenerMap[g]) {
+                        if (!_this._groupListenerMap[g].includes(l))
+                            _this._groupListenerMap[g].push(l);
+                    }
+                    else {
+                        _this._groupListenerMap[g] = [l];
+                    }
+                });
+            }
+        };
+        EventEmitter.prototype.removeListener = function (listener, channels, groups) {
+            var _this = this;
+            if (!(channels && groups)) {
+                this.listenerManager.removeListener(listener);
+            }
+            else {
+                channels === null || channels === void 0 ? void 0 : channels.forEach(function (c) {
+                    var _a;
+                    _this._channelListenerMap[c] = (_a = _this._channelListenerMap[c]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
+                });
+                groups === null || groups === void 0 ? void 0 : groups.forEach(function (g) {
+                    var _a;
+                    _this._groupListenerMap[g] = (_a = _this._groupListenerMap[g]) === null || _a === void 0 ? void 0 : _a.filter(function (l) { return l !== listener; });
+                });
+            }
+        };
+        EventEmitter.prototype.removeAllListeners = function () {
+            this.listenerManager.removeAllListeners();
         };
         EventEmitter.prototype._renameEvent = function (e) {
             return e === 'set' ? 'updated' : 'removed';
@@ -8411,7 +8330,249 @@
             eventData.spaceId = channel;
             return eventData;
         };
+        EventEmitter.prototype._announce = function (type, event, channel, group) {
+            var _a, _b;
+            (_a = this._channelListenerMap[channel]) === null || _a === void 0 ? void 0 : _a.forEach(function (l) { return l[type] && l[type](event); });
+            (_b = this._groupListenerMap[group]) === null || _b === void 0 ? void 0 : _b.forEach(function (l) { return l[type] && l[type](event); });
+        };
         return EventEmitter;
+    }());
+
+    var SubscribeCapable = /** @class */ (function () {
+        function SubscribeCapable() {
+        }
+        SubscribeCapable.prototype.subscribe = function () {
+            var _a, _b;
+            this.pubnub.subscribe(__assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
+        };
+        SubscribeCapable.prototype.unsubscribe = function () {
+            this.pubnub.unsubscribe({
+                channels: this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }),
+                channelGroups: this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }),
+            });
+        };
+        Object.defineProperty(SubscribeCapable.prototype, "onMessage", {
+            set: function (onMessagelistener) {
+                this.listener.message = onMessagelistener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onPresence", {
+            set: function (onPresencelistener) {
+                this.listener.presence = onPresencelistener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onSignal", {
+            set: function (onSignalListener) {
+                this.listener.signal = onSignalListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onObjects", {
+            set: function (onObjectsListener) {
+                this.listener.objects = onObjectsListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onMessageAction", {
+            set: function (messageActionEventListener) {
+                this.listener.messageAction = messageActionEventListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "onFile", {
+            set: function (fileEventListener) {
+                this.listener.file = fileEventListener;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        SubscribeCapable.prototype.addListener = function (listener) {
+            this.eventEmitter.addListener(listener, this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+        };
+        SubscribeCapable.prototype.removeListener = function (listener) {
+            this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
+        };
+        Object.defineProperty(SubscribeCapable.prototype, "channels", {
+            get: function () {
+                return this.channelNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SubscribeCapable.prototype, "channelGroups", {
+            get: function () {
+                return this.groupNames.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return SubscribeCapable;
+    }());
+
+    var SubscriptionSet = /** @class */ (function (_super) {
+        __extends(SubscriptionSet, _super);
+        function SubscriptionSet(_a) {
+            var _b = _a.channels, channels = _b === void 0 ? [] : _b, _c = _a.channelGroups, channelGroups = _c === void 0 ? [] : _c, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
+            var _this = _super.call(this) || this;
+            _this.channelNames = [];
+            _this.groupNames = [];
+            _this.subscriptionList = [];
+            _this.options = subscriptionOptions;
+            _this.eventEmitter = eventEmitter;
+            _this.pubnub = pubnub;
+            channels.forEach(function (c) {
+                var subscription = _this.pubnub.channel(c).subscription(_this.options);
+                _this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(_this.channelNames), false), __read$1(subscription.channels), false);
+                _this.subscriptionList.push(subscription);
+            });
+            channelGroups.forEach(function (cg) {
+                var subscription = _this.pubnub.channelGroup(cg).subscription(_this.options);
+                _this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(_this.groupNames), false), __read$1(subscription.channelGroups), false);
+                _this.subscriptionList.push(subscription);
+            });
+            _this.listener = {};
+            eventEmitter.addListener(_this.listener, _this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), _this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+            return _this;
+        }
+        SubscriptionSet.prototype.addSubscription = function (subscription) {
+            this.subscriptionList.push(subscription);
+            this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscription.channels), false);
+            this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(this.groupNames), false), __read$1(subscription.channelGroups), false);
+        };
+        SubscriptionSet.prototype.removeSubscription = function (subscription) {
+            var channelsToRemove = subscription.channels;
+            var groupsToRemove = subscription.channelGroups;
+            this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
+            this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
+            this.subscriptionList = this.subscriptionList.filter(function (s) { return s !== subscription; });
+        };
+        SubscriptionSet.prototype.addSubscriptionSet = function (subscriptionSet) {
+            this.subscriptionList = __spreadArray$1(__spreadArray$1([], __read$1(this.subscriptionList), false), __read$1(subscriptionSet.subscriptions), false);
+            this.channelNames = __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscriptionSet.channels), false);
+            this.groupNames = __spreadArray$1(__spreadArray$1([], __read$1(this.groupNames), false), __read$1(subscriptionSet.channelGroups), false);
+        };
+        SubscriptionSet.prototype.removeSubscriptionSet = function (subscriptionSet) {
+            var channelsToRemove = subscriptionSet.channels;
+            var groupsToRemove = subscriptionSet.channelGroups;
+            this.channelNames = this.channelNames.filter(function (c) { return !channelsToRemove.includes(c); });
+            this.groupNames = this.groupNames.filter(function (cg) { return !groupsToRemove.includes(cg); });
+            this.subscriptionList = this.subscriptionList.filter(function (s) { return !subscriptionSet.subscriptions.includes(s); });
+        };
+        Object.defineProperty(SubscriptionSet.prototype, "subscriptions", {
+            get: function () {
+                return this.subscriptionList.slice(0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return SubscriptionSet;
+    }(SubscribeCapable));
+
+    var Subscription = /** @class */ (function (_super) {
+        __extends(Subscription, _super);
+        function Subscription(_a) {
+            var channels = _a.channels, channelGroups = _a.channelGroups, subscriptionOptions = _a.subscriptionOptions, eventEmitter = _a.eventEmitter, pubnub = _a.pubnub;
+            var _this = _super.call(this) || this;
+            _this.channelNames = [];
+            _this.groupNames = [];
+            _this.channelNames = channels;
+            _this.groupNames = channelGroups;
+            _this.options = subscriptionOptions;
+            _this.pubnub = pubnub;
+            _this.eventEmitter = eventEmitter;
+            _this.listener = {};
+            eventEmitter.addListener(_this.listener, _this.channelNames.filter(function (c) { return !c.endsWith('-pnpres'); }), _this.groupNames.filter(function (cg) { return !cg.endsWith('-pnpres'); }));
+            return _this;
+        }
+        Subscription.prototype.addSubscription = function (subscription) {
+            return new SubscriptionSet({
+                channels: __spreadArray$1(__spreadArray$1([], __read$1(this.channelNames), false), __read$1(subscription.channels), false),
+                channelGroups: __spreadArray$1(__spreadArray$1([], __read$1(this.groupNames), false), __read$1(subscription.channelGroups), false),
+                subscriptionOptions: __assign(__assign({}, this.options), subscription === null || subscription === void 0 ? void 0 : subscription.options),
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return Subscription;
+    }(SubscribeCapable));
+
+    var Channel = /** @class */ (function () {
+        function Channel(channelName, eventEmitter, pubnub) {
+            this.name = channelName;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        Channel.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, "".concat(this.name, "-pnpres")] : [this.name],
+                channelGroups: [],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return Channel;
+    }());
+
+    var ChannelGroup = /** @class */ (function () {
+        function ChannelGroup(channelGroup, eventEmitter, pubnub) {
+            this.name = channelGroup;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        ChannelGroup.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: [],
+                channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, "".concat(this.name, "-pnpres")] : [this.name],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return ChannelGroup;
+    }());
+
+    var ChannelMetadata = /** @class */ (function () {
+        function ChannelMetadata(id, eventEmitter, pubnub) {
+            this.id = id;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        ChannelMetadata.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: [this.id],
+                channelGroups: [],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return ChannelMetadata;
+    }());
+
+    var UserMetadata = /** @class */ (function () {
+        function UserMetadata(id, eventEmitter, pubnub) {
+            this.id = id;
+            this.eventEmitter = eventEmitter;
+            this.pubnub = pubnub;
+        }
+        UserMetadata.prototype.subscription = function (subscriptionOptions) {
+            return new Subscription({
+                channels: [this.id],
+                channelGroups: [],
+                subscriptionOptions: subscriptionOptions,
+                eventEmitter: this.eventEmitter,
+                pubnub: this.pubnub,
+            });
+        };
+        return UserMetadata;
     }());
 
     var default_1$3 = /** @class */ (function () {
@@ -8468,12 +8629,12 @@
             this.setPresenceState = endpointCreator.bind(this, modules, presenceSetStateConfig);
             this.handshake = endpointCreator.bind(this, modules, endpoint$1);
             this.receiveMessages = endpointCreator.bind(this, modules, endpoint);
+            this._eventEmitter = new EventEmitter({
+                modules: modules,
+                listenerManager: this._listenerManager,
+                getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
+            });
             if (config.enableEventEngine === true) {
-                this._eventEmitter = new EventEmitter({
-                    modules: modules,
-                    listenerManager: this._listenerManager,
-                    getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
-                });
                 if (config.maintainPresenceState) {
                     this.presenceState = {};
                     this.setState = function (args) {
@@ -8557,6 +8718,7 @@
                     listenerManager: listenerManager,
                     getFileUrl: function (params) { return getFileUrlFunction(modules, params); },
                     cryptoModule: modules.cryptoModule,
+                    eventEmitter: this._eventEmitter,
                 });
                 this.subscribe = subscriptionManager_1.adaptSubscribeChange.bind(subscriptionManager_1);
                 this.unsubscribe = subscriptionManager_1.adaptUnsubscribeChange.bind(subscriptionManager_1);
@@ -8572,9 +8734,9 @@
                     subscriptionManager_1.disconnect();
                 };
             }
-            this.addListener = listenerManager.addListener.bind(listenerManager);
-            this.removeListener = listenerManager.removeListener.bind(listenerManager);
-            this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+            this.addListener = this._eventEmitter.addListener.bind(this._eventEmitter);
+            this.removeListener = this._eventEmitter.removeListener.bind(this._eventEmitter);
+            this.removeAllListeners = this._eventEmitter.removeAllListeners.bind(this._eventEmitter);
             this.parseToken = tokenManager.parseToken.bind(tokenManager);
             this.setToken = tokenManager.setToken.bind(tokenManager);
             this.getToken = tokenManager.getToken.bind(tokenManager);
@@ -8629,6 +8791,20 @@
             this.getFileUrl = function (params) { return getFileUrlFunction(modules, params); };
             this.downloadFile = endpointCreator.bind(this, modules, endpoint$g);
             this.deleteFile = endpointCreator.bind(this, modules, endpoint$f);
+            // entities
+            this.channel = function (name) { return new Channel(name, _this._eventEmitter, _this); };
+            this.channelGroup = function (name) { return new ChannelGroup(name, _this._eventEmitter, _this); };
+            this.channelMetadata = function (id) { return new ChannelMetadata(id, _this._eventEmitter, _this); };
+            this.userMetadata = function (id) { return new UserMetadata(id, _this._eventEmitter, _this); };
+            this.subscriptionSet = function (args) {
+                return new SubscriptionSet({
+                    channels: args.channels,
+                    channelGroups: args.channelGroups,
+                    subscriptionOptions: args.subscriptionOptions,
+                    eventEmitter: _this._eventEmitter,
+                    pubnub: _this,
+                });
+            };
             // Objects API v2
             this.objects = {
                 getAllUUIDMetadata: endpointCreator.bind(this, modules, endpoint$e),
@@ -8645,18 +8821,18 @@
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'set' }, parameters)], __read(rest), false));
+                        endpoint$5, __assign({ type: 'set' }, parameters)], __read$1(rest), false));
                 },
                 removeChannelMembers: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read(rest), false));
+                        endpoint$5, __assign({ type: 'delete' }, parameters)], __read$1(rest), false));
                 },
                 getMemberships: endpointCreator.bind(this, modules, endpoint$4),
                 setMemberships: function (parameters) {
@@ -8664,18 +8840,18 @@
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'set' }, parameters)], __read(rest), false));
+                        endpoint$3, __assign({ type: 'set' }, parameters)], __read$1(rest), false));
                 },
                 removeMemberships: function (parameters) {
                     var rest = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         rest[_i - 1] = arguments[_i];
                     }
-                    return endpointCreator.call.apply(endpointCreator, __spreadArray([_this,
+                    return endpointCreator.call.apply(endpointCreator, __spreadArray$1([_this,
                         modules,
-                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read(rest), false));
+                        endpoint$3, __assign({ type: 'delete' }, parameters)], __read$1(rest), false));
                 },
             };
             // User Apis
@@ -8792,7 +8968,7 @@
                         },
                         sort: params.sort != null
                             ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
-                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                var _b = __read$1(_a, 2), k = _b[0], v = _b[1];
                                 return [k.replace('user', 'uuid'), v];
                             }))
                             : null,
@@ -8828,7 +9004,7 @@
                         },
                         sort: params.sort != null
                             ? Object.fromEntries(Object.entries(params.sort).map(function (_a) {
-                                var _b = __read(_a, 2), k = _b[0], v = _b[1];
+                                var _b = __read$1(_a, 2), k = _b[0], v = _b[1];
                                 return [k.replace('space', 'channel'), v];
                             }))
                             : null,
@@ -14135,7 +14311,7 @@
             return new this({ default: defaultCryptor });
         };
         CryptoModule.prototype.getAllCryptors = function () {
-            return __spreadArray([this.defaultCryptor], __read(this.cryptors), false);
+            return __spreadArray$1([this.defaultCryptor], __read$1(this.cryptors), false);
         };
         CryptoModule.prototype.encrypt = function (data) {
             var encrypted = this.defaultCryptor.encrypt(data);

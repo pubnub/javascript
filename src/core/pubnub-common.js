@@ -95,6 +95,12 @@ import { PresenceEventEngine } from '../event-engine/presence/presence';
 import { RetryPolicy } from '../event-engine/core/retryPolicy';
 import EventEmitter from './components/eventEmitter';
 
+import { Channel } from '../entities/Channel';
+import { ChannelGroup } from '../entities/ChannelGroup';
+import { ChannelMetadata } from '../entities/ChannelMetadata';
+import { UserMetadata } from '../entities/UserMetadata';
+import { SubscriptionSet } from '../entities/SubscriptionSet';
+
 export default class {
   _config;
 
@@ -341,12 +347,12 @@ export default class {
     this.handshake = endpointCreator.bind(this, modules, handshakeEndpointConfig);
     this.receiveMessages = endpointCreator.bind(this, modules, receiveMessagesConfig);
 
+    this._eventEmitter = new EventEmitter({
+      modules: modules,
+      listenerManager: this._listenerManager,
+      getFileUrl: (params) => getFileUrlFunction(modules, params),
+    });
     if (config.enableEventEngine === true) {
-      this._eventEmitter = new EventEmitter({
-        modules: modules,
-        listenerManager: this._listenerManager,
-        getFileUrl: (params) => getFileUrlFunction(modules, params),
-      });
       if (config.maintainPresenceState) {
         this.presenceState = {};
         this.setState = (args) => {
@@ -418,6 +424,7 @@ export default class {
         listenerManager,
         getFileUrl: (params) => getFileUrlFunction(modules, params),
         cryptoModule: modules.cryptoModule,
+        eventEmitter: this._eventEmitter,
       });
 
       this.subscribe = subscriptionManager.adaptSubscribeChange.bind(subscriptionManager);
@@ -437,9 +444,9 @@ export default class {
       };
     }
 
-    this.addListener = listenerManager.addListener.bind(listenerManager);
-    this.removeListener = listenerManager.removeListener.bind(listenerManager);
-    this.removeAllListeners = listenerManager.removeAllListeners.bind(listenerManager);
+    this.addListener = this._eventEmitter.addListener.bind(this._eventEmitter);
+    this.removeListener = this._eventEmitter.removeListener.bind(this._eventEmitter);
+    this.removeAllListeners = this._eventEmitter.removeAllListeners.bind(this._eventEmitter);
 
     this.parseToken = tokenManager.parseToken.bind(tokenManager);
     this.setToken = tokenManager.setToken.bind(tokenManager);
@@ -510,6 +517,21 @@ export default class {
     this.downloadFile = endpointCreator.bind(this, modules, downloadFileEndpointConfig);
 
     this.deleteFile = endpointCreator.bind(this, modules, deleteFileEndpointConfig);
+
+    // entities
+
+    this.channel = (name) => new Channel(name, this._eventEmitter, this);
+    this.channelGroup = (name) => new ChannelGroup(name, this._eventEmitter, this);
+    this.channelMetadata = (id) => new ChannelMetadata(id, this._eventEmitter, this);
+    this.userMetadata = (id) => new UserMetadata(id, this._eventEmitter, this);
+    this.subscriptionSet = (args) =>
+      new SubscriptionSet({
+        channels: args.channels,
+        channelGroups: args.channelGroups,
+        subscriptionOptions: args.subscriptionOptions,
+        eventEmitter: this._eventEmitter,
+        pubnub: this,
+      });
 
     // Objects API v2
 

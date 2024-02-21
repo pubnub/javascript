@@ -17,8 +17,9 @@ const endpoint = {
   },
 
   getURL: ({ config }, params) => {
-    const channelsString = params.channels ? params.channels.join(',') : ',';
-    return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(channelsString)}/0`;
+    const { channels = [] } = params;
+    const stringifiedChannels = channels.length > 0 ? channels.join(',') : ',';
+    return `/v2/subscribe/${config.subscribeKey}/${utils.encodeString(stringifiedChannels)}/0`;
   },
 
   getRequestTimeout: ({ config }) => config.getSubscribeTimeout(),
