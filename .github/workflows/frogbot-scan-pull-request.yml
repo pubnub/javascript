@@ -22,6 +22,6 @@ jobs:
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JF_PATH_EXCLUSIONS: "*git*;*node_modules*;*target*;*venv*;*test*;*karma*;*dist*;*lib*"
           JF_MIN_SEVERITY: "Medium"
-          JF_ALLOWED_LICENSES: "MIT, Apache-2.0"
+          JF_ALLOWED_LICENSES: "Apache-2.0"
           # JF_AVOID_EXTRA_MESSAGES: "TRUE"
           # JF_PR_COMMENT_TITLE: ""
