@@ -7640,10 +7640,10 @@
             }
         };
         EventEngine.prototype.getSubscribedChannels = function () {
-            return this.channels.slice(0);
+            return Array.from(new Set(this.channels.slice(0)));
         };
         EventEngine.prototype.getSubscribedChannelGroups = function () {
-            return this.groups.slice(0);
+            return Array.from(new Set(this.groups.slice(0)));
         };
         EventEngine.prototype.dispose = function () {
             this.disconnect();
