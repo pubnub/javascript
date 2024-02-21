@@ -12,6 +12,8 @@ jobs:
     # "frogbot" GitHub environment can approve the pull request to be scanned.
     environment: frogbot
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - uses: jfrog/frogbot@v2
         env:
           JF_URL: ${{ secrets.JF_URL }}

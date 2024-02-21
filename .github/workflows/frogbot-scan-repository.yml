@@ -16,6 +16,8 @@ jobs:
         # The repository scanning will be triggered periodically on the following branches.
         branch: ["master"]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - uses: jfrog/frogbot@v2
         env:
           JF_URL: ${{ secrets.JF_URL }}
