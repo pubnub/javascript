@@ -1,3 +1,9 @@
+## v7.6.0
+February 21 2024
+
+#### Added
+- Adding channel, channelGroup, channelMetadata and userMetadata entities to be first-class citizens to access APIs related to them. Currently, access is provided only for subscription API.
+
 ## v7.5.0
 January 16 2024
 

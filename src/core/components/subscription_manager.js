@@ -64,6 +64,8 @@ export default class {
 
   _dedupingManager;
 
+  _eventEmitter;
+
   constructor({
     subscribeEndpoint,
     leaveEndpoint,
@@ -75,6 +77,7 @@ export default class {
     crypto,
     listenerManager,
     cryptoModule,
+    eventEmitter,
   }) {
     this._listenerManager = listenerManager;
     this._config = config;
@@ -112,6 +115,8 @@ export default class {
     this._dedupingManager = new DedupingManager({ config });
 
     if (this._cryptoModule) this._decoder = new TextDecoder();
+
+    this._eventEmitter = eventEmitter;
   }
 
   adaptStateChange(args, callback) {
@@ -534,7 +539,6 @@ export default class {
     messages.forEach((message) => {
       const { channel } = message;
       let { subscriptionMatch } = message;
-      const { publishMetaData } = message;
 
       if (channel === subscriptionMatch) {
         subscriptionMatch = null;
@@ -547,222 +551,7 @@ export default class {
         this._dedupingManager.addEntry(message);
       }
 
-      if (utils.endsWith(message.channel, '-pnpres')) {
-        const announce = {};
-        announce.channel = null;
-        announce.subscription = null;
-
-        // deprecated -->
-        announce.actualChannel = subscriptionMatch != null ? channel : null;
-        announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-        // <-- deprecated
-
-        if (channel) {
-          announce.channel = channel.substring(0, channel.lastIndexOf('-pnpres'));
-        }
-
-        if (subscriptionMatch) {
-          announce.subscription = subscriptionMatch.substring(0, subscriptionMatch.lastIndexOf('-pnpres'));
-        }
-
-        announce.action = message.payload.action;
-        announce.state = message.payload.data;
-        announce.timetoken = publishMetaData.publishTimetoken;
-        announce.occupancy = message.payload.occupancy;
-        announce.uuid = message.payload.uuid;
-        announce.timestamp = message.payload.timestamp;
-
-        if (message.payload.join) {
-          announce.join = message.payload.join;
-        }
-
-        if (message.payload.leave) {
-          announce.leave = message.payload.leave;
-        }
-
-        if (message.payload.timeout) {
-          announce.timeout = message.payload.timeout;
-        }
-
-        this._listenerManager.announcePresence(announce);
-      } else if (message.messageType === 1) {
-        // this is a signal message
-        const announce = {};
-        announce.channel = null;
-        announce.subscription = null;
-
-        announce.channel = channel;
-        announce.subscription = subscriptionMatch;
-        announce.timetoken = publishMetaData.publishTimetoken;
-        announce.publisher = message.issuingClientId;
-
-        if (message.userMetadata) {
-          announce.userMetadata = message.userMetadata;
-        }
-
-        announce.message = message.payload;
-
-        this._listenerManager.announceSignal(announce);
-      } else if (message.messageType === 2) {
-        // this is an object message
-
-        const announce = {};
-
-        announce.channel = null;
-        announce.subscription = null;
-
-        announce.channel = channel;
-        announce.subscription = subscriptionMatch;
-        announce.timetoken = publishMetaData.publishTimetoken;
-        announce.publisher = message.issuingClientId;
-
-        if (message.userMetadata) {
-          announce.userMetadata = message.userMetadata;
-        }
-
-        announce.message = {
-          event: message.payload.event,
-          type: message.payload.type,
-          data: message.payload.data,
-        };
-
-        this._listenerManager.announceObjects(announce);
-
-        if (message.payload.type === 'uuid') {
-          const eventData = this._renameChannelField(announce);
-          this._listenerManager.announceUser({
-            ...eventData,
-            message: {
-              ...eventData.message,
-              event: this._renameEvent(eventData.message.event),
-              type: 'user',
-            },
-          });
-        } else if (message.payload.type === 'channel') {
-          const eventData = this._renameChannelField(announce);
-          this._listenerManager.announceSpace({
-            ...eventData,
-            message: {
-              ...eventData.message,
-              event: this._renameEvent(eventData.message.event),
-              type: 'space',
-            },
-          });
-        } else if (message.payload.type === 'membership') {
-          const eventData = this._renameChannelField(announce);
-          const { uuid: user, channel: space, ...membershipData } = eventData.message.data;
-          membershipData.user = user;
-          membershipData.space = space;
-          this._listenerManager.announceMembership({
-            ...eventData,
-            message: {
-              ...eventData.message,
-              event: this._renameEvent(eventData.message.event),
-              data: membershipData,
-            },
-          });
-        }
-      } else if (message.messageType === 3) {
-        // this is a message action
-        const announce = {};
-        announce.channel = channel;
-        announce.subscription = subscriptionMatch;
-        announce.timetoken = publishMetaData.publishTimetoken;
-        announce.publisher = message.issuingClientId;
-
-        announce.data = {
-          messageTimetoken: message.payload.data.messageTimetoken,
-          actionTimetoken: message.payload.data.actionTimetoken,
-          type: message.payload.data.type,
-          uuid: message.issuingClientId,
-          value: message.payload.data.value,
-        };
-
-        announce.event = message.payload.event;
-
-        this._listenerManager.announceMessageAction(announce);
-      } else if (message.messageType === 4) {
-        // this is a file message
-        const announce = {};
-        announce.channel = channel;
-        announce.subscription = subscriptionMatch;
-        announce.timetoken = publishMetaData.publishTimetoken;
-        announce.publisher = message.issuingClientId;
-
-        let msgPayload = message.payload;
-
-        if (this._cryptoModule) {
-          let decryptedPayload;
-          try {
-            const decryptedData = this._cryptoModule.decrypt(message.payload);
-            decryptedPayload =
-              decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
-          } catch (e) {
-            decryptedPayload = null;
-            announce.error = `Error while decrypting message content: ${e.message}`;
-          }
-          if (decryptedPayload !== null) {
-            msgPayload = decryptedPayload;
-          }
-        }
-
-        if (message.userMetadata) {
-          announce.userMetadata = message.userMetadata;
-        }
-
-        announce.message = msgPayload.message;
-
-        announce.file = {
-          id: msgPayload.file.id,
-          name: msgPayload.file.name,
-          url: this._getFileUrl({
-            id: msgPayload.file.id,
-            name: msgPayload.file.name,
-            channel,
-          }),
-        };
-
-        this._listenerManager.announceFile(announce);
-      } else {
-        const announce = {};
-        announce.channel = null;
-        announce.subscription = null;
-
-        // deprecated -->
-        announce.actualChannel = subscriptionMatch != null ? channel : null;
-        announce.subscribedChannel = subscriptionMatch != null ? subscriptionMatch : channel;
-        // <-- deprecated
-
-        announce.channel = channel;
-        announce.subscription = subscriptionMatch;
-        announce.timetoken = publishMetaData.publishTimetoken;
-        announce.publisher = message.issuingClientId;
-
-        if (message.userMetadata) {
-          announce.userMetadata = message.userMetadata;
-        }
-
-        if (this._cryptoModule) {
-          let decryptedPayload;
-          try {
-            const decryptedData = this._cryptoModule.decrypt(message.payload);
-            decryptedPayload =
-              decryptedData instanceof ArrayBuffer ? JSON.parse(this._decoder.decode(decryptedData)) : decryptedData;
-          } catch (e) {
-            decryptedPayload = null;
-            announce.error = `Error while decrypting message content: ${e.message}`;
-          }
-          if (decryptedPayload != null) {
-            announce.message = decryptedPayload;
-          } else {
-            announce.message = message.payload;
-          }
-        } else {
-          announce.message = message.payload;
-        }
-
-        this._listenerManager.announceMessage(announce);
-      }
+      this._eventEmitter.emitEvent(message);
     });
 
     this._region = payload.metadata.region;

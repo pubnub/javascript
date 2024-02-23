@@ -41,10 +41,31 @@ function stringToArrayBuffer(str) {
   return buf;
 }
 
+function removeSingleOccurance(source, elementsToRemove) {
+  let removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
+
+  return source.filter((e) => {
+    if (elementsToRemove.includes(e) && !removed[e]) {
+      removed[e] = true;
+      return false;
+    }
+    return true;
+  });
+}
+
+function findUniqueCommonElements(a, b) {
+  return [...a].filter(
+    (value) =>
+      b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value),
+  );
+}
+
 module.exports = {
   signPamFromParams,
   endsWith,
   createPromise,
   encodeString,
   stringToArrayBuffer,
+  removeSingleOccurance,
+  findUniqueCommonElements,
 };
