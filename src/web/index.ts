@@ -12,6 +12,9 @@ import { del, get, post, patch, getfile, postfile } from '../networking/modules/
 import WebCryptography from '../crypto/modules/web';
 import PubNubFile from '../file/modules/web';
 import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
+import { PrivateWebConfigurationOptions, WebConfiguration } from './configuration';
+import { WebTransport } from '../transport/web-transport';
+import { BaseConfiguration } from '../core/interfaces/configuration';
 
 function sendBeacon(url) {
   if (navigator && navigator.sendBeacon) {
@@ -23,7 +26,7 @@ function sendBeacon(url) {
 
 export default class extends PubNubCore {
   static CryptoModule = CryptoModule;
-  constructor(setup) {
+  constructor(setup: Exclude<WebConfiguration, PrivateWebConfigurationOptions>) {
     // extract config.
     const { listenToBrowserNetworkEvents = true } = setup;
     setup.sdkFamily = 'Web';
@@ -51,7 +54,13 @@ export default class extends PubNubCore {
       });
     };
 
+    {
+      const network = new WebTransport();
+    }
+
     super(setup);
+
+    this.some(setup);
 
     if (listenToBrowserNetworkEvents) {
       // mount network events.

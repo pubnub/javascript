@@ -1,4 +1,5 @@
 import { PubNubError, createValidationError } from '../../components/endpoint';
+import { FileInterface } from '../../interfaces/file';
 
 const sendFile = function ({
   generateUploadUrl,

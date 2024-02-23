@@ -9,10 +9,12 @@ import { keepAlive, proxy } from '../networking/modules/node';
 import NodeCryptography from '../crypto/modules/node';
 import PubNubFile from '../file/modules/node';
 import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import { NodeTransport } from '../transport/node-transport';
+import { NodeConfiguration, PrivateNodeConfigurationOptions } from './configuration';
 
 export = class extends PubNubCore {
   static CryptoModule = CryptoModule;
-  constructor(setup: any) {
+  constructor(setup: Exclude<NodeConfiguration, PrivateNodeConfigurationOptions>) {
     setup.cbor = new Cbor((buffer: ArrayBuffer) => CborReader.decode(Buffer.from(buffer)), decode);
     setup.networking = new Networking({
       keepAlive,
@@ -41,6 +43,11 @@ export = class extends PubNubCore {
 
     if (!('ssl' in setup)) {
       setup.ssl = true;
+    }
+
+    {
+      const { keepAlive, keepAliveSettings } = setup;
+      const network = new NodeTransport(keepAlive, keepAliveSettings);
     }
 
     super(setup);

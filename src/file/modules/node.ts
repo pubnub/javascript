@@ -1,37 +1,57 @@
 import { Readable, PassThrough } from 'stream';
-import fs from 'fs';
 import { basename } from 'path';
+import fs from 'fs';
 
-const PubNubFile = class PubNubFile {
-  static supportsBlob = false;
+import { FileInterface, FileObject } from '../../core/interfaces/file';
 
-  static supportsFile = false;
-
-  static supportsBuffer = typeof Buffer !== 'undefined';
-
-  static supportsStream = true;
-
-  static supportsString = true;
-
-  static supportsArrayBuffer = false;
-
-  static supportsEncryptFile = true;
-
-  static supportsFileUri = false;
+const PubNubFile = class PubNubFile implements FileInterface {
+  contentLength;
+  mimeType;
 
   data;
 
   name;
 
-  mimeType;
-
-  contentLength;
-
-  static create(config) {
-    return new this(config);
+  supportsFile() {
+    return false;
   }
 
-  constructor({ stream, data, encoding, name, mimeType }) {
+  supportsBlob() {
+    return false;
+  }
+
+  static supportsArrayBuffer() {
+    return false;
+  }
+
+  supportsBuffer() {
+    return typeof Buffer !== 'undefined';
+  }
+
+  supportsStream() {
+    return true;
+  }
+
+  supportsString() {
+    return true;
+  }
+
+  supportsEncryptFile() {
+    return true;
+  }
+
+  supportsFileUri() {
+    return false;
+  }
+
+  constructor({ stream, data, encoding, name, mimeType }, ed: FileObject) {
+    if ('encoding' in ed) {
+      const { stream, data, encoding, name, mimeType } = ed;
+      if (stream instanceof Readable) {
+      } else if (data instanceof Buffer) {
+      } else if (typeof data === 'string') {
+      }
+    }
     if (stream instanceof Readable) {
       this.data = stream;
 
@@ -40,6 +60,8 @@ const PubNubFile = class PubNubFile {
         this.name = basename(stream.path);
         this.contentLength = fs.statSync(stream.path).size;
       }
+    } else if ('encoding' in data) {
+      let d = data;
     } else if (data instanceof Buffer) {
       this.data = Buffer.from(data);
     } else if (typeof data === 'string') {

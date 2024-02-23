@@ -13,7 +13,7 @@ import tsConfig from './tsconfig.rollup.json';
 
 export default [
   {
-    input: 'src/web/index.js',
+    input: 'src/web/index.ts',
     output: {
       file: browser,
       format: 'umd',
@@ -22,7 +22,7 @@ export default [
     plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), terser()],
   },
   {
-    input: 'src/web/index.js',
+    input: 'src/web/index.ts',
     output: {
       file: join(dirname(browser), basename(browser, '.min.js') + '.js'),
       format: 'umd',
@@ -31,7 +31,7 @@ export default [
     plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig)],
   },
   {
-    input: 'src/web/index.js',
+    input: 'src/web/index.ts',
     output: {
       file: `upload/gzip/pubnub.${version}.min.js`,
       format: 'umd',
@@ -47,7 +47,7 @@ export default [
     ],
   },
   {
-    input: 'src/web/index.js',
+    input: 'src/web/index.ts',
     output: {
       file: `upload/gzip/pubnub.${version}.js`,
       format: 'umd',
@@ -56,7 +56,7 @@ export default [
     plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), gzipPlugin({ fileName: '' })],
   },
   {
-    input: 'src/web/index.js',
+    input: 'src/web/index.ts',
     output: {
       file: `upload/normal/pubnub.${version}.min.js`,
       format: 'umd',
@@ -65,7 +65,7 @@ export default [
     plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), terser()],
   },
   {
-    input: 'src/web/index.js',
+    input: 'src/web/index.ts',
     output: {
       file: `upload/normal/pubnub.${version}.js`,
       format: 'umd',

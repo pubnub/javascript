@@ -29,6 +29,7 @@ function getHttpClient() {
   if (Ti.Platform.osname === 'mobileweb') {
     return new XMLHttpRequest();
   }
+
   return Ti.Network.createHTTPClient();
 }
 

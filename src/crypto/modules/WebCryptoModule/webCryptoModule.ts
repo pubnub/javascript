@@ -3,32 +3,21 @@ import AesCbcCryptor from './aesCbcCryptor';
 import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
 import { decode } from '../../../core/components/base64_codec';
+import { CryptoModule, CryptorConfiguration } from '../../../core/interfaces/crypto-module';
 
 export { LegacyCryptor, AesCbcCryptor };
 
 type CryptorType = ICryptor | ILegacyCryptor<PubNubFileType>;
 
-type CryptoModuleConfiguration = {
-  default: CryptorType;
-  cryptors?: Array<CryptorType>;
-};
-
-export class CryptoModule {
+export class WebCryptoModule extends CryptoModule<CryptorType> {
   static LEGACY_IDENTIFIER = '';
   static encoder = new TextEncoder();
   static decoder = new TextDecoder();
-  defaultCryptor: CryptorType;
-  cryptors: Array<CryptorType>;
-
-  constructor(cryptoModuleConfiguration: CryptoModuleConfiguration) {
-    this.defaultCryptor = cryptoModuleConfiguration.default;
-    this.cryptors = cryptoModuleConfiguration.cryptors ?? [];
-  }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore: type detection issue with old Config type assignment
-  static legacyCryptoModule(config) {
-    return new this({
+  static legacyCryptoModule(config: CryptorConfiguration) {
+    return new WebCryptoModule({
       default: new LegacyCryptor({
         cipherKey: config.cipherKey,
         useRandomIVs: config.useRandomIVs ?? true,
@@ -37,8 +26,8 @@ export class CryptoModule {
     });
   }
 
-  static aesCbcCryptoModule(config: any) {
-    return new this({
+  static aesCbcCryptoModule(config: CryptorConfiguration) {
+    return new WebCryptoModule({
       default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
       cryptors: [
         new LegacyCryptor({
