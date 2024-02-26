@@ -6659,8 +6659,9 @@
                     issuingClientId: envelope.i,
                     subscribeKey: envelope.k,
                     originationTimetoken: envelope.o,
+                    userMetadata: envelope.u,
                     publishMetaData: {
-                        timetoken: envelope.p.t,
+                        publishTimetoken: envelope.p.t,
                         region: envelope.p.r,
                     },
                 };
@@ -8166,13 +8167,13 @@
                     this.listenerManager.announceUser(userEvent);
                     this._announce('user', userEvent, announce.channel, announce.subscription);
                 }
-                else if (message.payload.type === 'channel') {
+                else if (e.payload.type === 'channel') {
                     var eventData = this._renameChannelField(announce);
                     var spaceEvent = __assign(__assign({}, eventData), { message: __assign(__assign({}, eventData.message), { event: this._renameEvent(eventData.message.event), type: 'space' }) });
                     this.listenerManager.announceSpace(spaceEvent);
                     this._announce('space', spaceEvent, announce.channel, announce.subscription);
                 }
-                else if (message.payload.type === 'membership') {
+                else if (e.payload.type === 'membership') {
                     var eventData = this._renameChannelField(announce);
                     var _a = eventData.message.data, user = _a.uuid, space = _a.channel, membershipData = __rest(_a, ["uuid", "channel"]);
                     membershipData.user = user;
