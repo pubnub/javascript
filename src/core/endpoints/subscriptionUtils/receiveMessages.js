@@ -58,7 +58,7 @@ const endpoint = {
         originationTimetoken: envelope.o,
         userMetadata: envelope.u,
         publishMetaData: {
-          publishTimetoken: envelope.p.t,
+          timetoken: envelope.p.t,
           region: envelope.p.r,
         },
       };

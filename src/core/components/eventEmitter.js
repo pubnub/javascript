@@ -36,7 +36,7 @@ export default class EventEmitter {
 
       announce.action = e.payload.action;
       announce.state = e.payload.data;
-      announce.timetoken = publishMetaData.publishTimetoken;
+      announce.timetoken = publishMetaData.timetoken;
       announce.occupancy = e.payload.occupancy;
       announce.uuid = e.payload.uuid;
       announce.timestamp = e.payload.timestamp;
@@ -66,7 +66,7 @@ export default class EventEmitter {
 
       announce.channel = channel;
       announce.subscription = subscriptionMatch;
-      announce.timetoken = publishMetaData.publishTimetoken;
+      announce.timetoken = publishMetaData.timetoken;
       announce.publisher = e.issuingClientId;
       if (e.userMetadata) {
         announce.userMetadata = e.userMetadata;
@@ -82,7 +82,7 @@ export default class EventEmitter {
       announce.subscription = null;
       announce.channel = channel;
       announce.subscription = subscriptionMatch;
-      announce.timetoken = publishMetaData.publishTimetoken;
+      announce.timetoken = publishMetaData.timetoken;
       announce.publisher = e.issuingClientId;
       if (e.userMetadata) {
         announce.userMetadata = e.userMetadata;
@@ -138,7 +138,7 @@ export default class EventEmitter {
       const announce = {};
       announce.channel = channel;
       announce.subscription = subscriptionMatch;
-      announce.timetoken = publishMetaData.publishTimetoken;
+      announce.timetoken = publishMetaData.timetoken;
       announce.publisher = e.issuingClientId;
       announce.data = {
         messageTimetoken: e.payload.data.messageTimetoken,
@@ -154,7 +154,7 @@ export default class EventEmitter {
       const announce = {};
       announce.channel = channel;
       announce.subscription = subscriptionMatch;
-      announce.timetoken = publishMetaData.publishTimetoken;
+      announce.timetoken = publishMetaData.timetoken;
       announce.publisher = e.issuingClientId;
 
       let msgPayload = e.payload;
@@ -199,7 +199,7 @@ export default class EventEmitter {
 
       announce.channel = channel;
       announce.subscription = subscriptionMatch;
-      announce.timetoken = publishMetaData.publishTimetoken;
+      announce.timetoken = publishMetaData.timetoken;
       announce.publisher = e.issuingClientId;
 
       if (e.userMetadata) {

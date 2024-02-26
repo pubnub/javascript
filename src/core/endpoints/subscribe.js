@@ -61,7 +61,7 @@ export function handleResponse(modules, serverResponse) {
 
   serverResponse.m.forEach((rawMessage) => {
     const publishMetaData = {
-      publishTimetoken: rawMessage.p.t,
+      timetoken: rawMessage.p.t,
       region: rawMessage.p.r,
     };
     const parsedMessage = {
