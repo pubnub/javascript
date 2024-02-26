@@ -1,3 +1,9 @@
+## v7.6.1
+February 26 2024
+
+#### Fixed
+- Fixes issue of App context event handling for channel and membership.
+
 ## v7.6.0
 February 21 2024
 

@@ -56,6 +56,7 @@ const endpoint = {
         issuingClientId: envelope.i,
         subscribeKey: envelope.k,
         originationTimetoken: envelope.o,
+        userMetadata: envelope.u,
         publishMetaData: {
           timetoken: envelope.p.t,
           region: envelope.p.r,

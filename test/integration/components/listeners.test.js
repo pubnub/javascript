@@ -449,24 +449,26 @@ describe('#listeners', () => {
     );
     subscription.removeListener(listener);
     subscription.subscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch1']);
     const actual = await messagePromise;
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
     expect(messages.length).to.equal(0);
+
     const subscriptionCh2 = pubnub.channel('ch2').subscription();
     subscriptionCh2.subscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch1', 'ch2']);
+
     const subscriptionCh3 = pubnub.channel('ch3').subscription();
     const subscriptionSetCh23 = subscriptionCh3.addSubscription(pubnub.channel('ch2').subscription());
-    const messagePromiseChannel2 = new Promise((resolveMessage) =>
-      subscriptionSetCh23.addListener({
-        message: (m) => resolveMessage(m),
-      }),
-    );
     subscriptionSetCh23.subscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch1', 'ch2', 'ch3']);
+
     subscription.unsubscribe();
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch2', 'ch3']);
+
     subscriptionCh2.unsubscribe();
-    const actualChannel2MessageAfterOneUnsubCh2 = await messagePromiseChannel2;
+    expect(pubnub.getSubscribedChannels()).to.deep.equal(['ch2', 'ch3']);
     pubnub.destroy();
-    expect(JSON.stringify(actualChannel2MessageAfterOneUnsubCh2.message)).to.equal('{"ch2":"My message!"}');
   });
 
   it('should work with event type specific listener registraction', async () => {
@@ -538,7 +540,127 @@ describe('#listeners', () => {
     subscription.subscribe();
     const actual = await presencePromise;
     expect(JSON.stringify(actual)).to.equal(
-      '{"channel":"ch1","subscription":null,"action":"join","occupancy":1,"uuid":"testid","timestamp":1461451222,"actualChannel":null,"subscribedChannel":"ch1-pnpres"}',
+      '{"channel":"ch1","subscription":null,"action":"join","timetoken":"8","occupancy":1,"uuid":"testid","timestamp":1461451222,"actualChannel":null,"subscribedChannel":"ch1-pnpres"}',
+    );
+  });
+
+  it('should work with objects data - membership', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"17087917617921775","r":31},"m":[{"a":"0","f":0,"e":2,"p":{"t":"17087917617921775","r":31},"k":"mySubKey","c":"ch1","d":{"source":"objects","version":"2.0","event":"set","type":"membership","data":{"channel":{"id":"c1"},"eTag":"AZO/t53al7m8fw","updated":"2024-02-24T16:22:41.786844939Z","uuid":{"id":"userIdTest"}}},"b":"ch1"}]}`,
+      );
+    var channel = pubnub.channel('ch1');
+    var subscription = channel.subscription();
+    var membershipPromise = new Promise((resolveObjects) =>
+      subscription.addListener({
+        objects: (objectsEvent) => resolveObjects(objectsEvent),
+      }),
+    );
+    subscription.subscribe();
+    const actual = await membershipPromise;
+    expect(JSON.stringify(actual)).to.equal(
+      `{"channel":"ch1","subscription":null,"timetoken":"17087917617921775","message":{"event":"set","type":"membership","data":{"channel":{"id":"c1"},"eTag":"AZO/t53al7m8fw","updated":"2024-02-24T16:22:41.786844939Z","uuid":{"id":"userIdTest"}}}}`,
+    );
+  });
+
+  it('should work with objects data - channel', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"17087625097482155","r":33},"m":[{"a":"0","f":0,"e":2,"p":{"t":"17087625097482155","r":33},"k":"mySubKey","c":"ch1","d":{"source":"objects","version":"2.0","event":"set","type":"channel","data":{"custom":{"occupancy":1},"eTag":"125aasww","id":"user-1","updated":"2024-02-24T08:15:09.744661Z"}},"b":"ch1"}]}`,
+      );
+    var channel = pubnub.channel('ch1');
+    var subscription = channel.subscription();
+    var objectsEventPromise = new Promise((resolveObjects) =>
+      subscription.addListener({
+        objects: (objectsEvent) => resolveObjects(objectsEvent),
+      }),
+    );
+    subscription.subscribe();
+    const actual = await objectsEventPromise;
+    expect(JSON.stringify(actual)).to.equal(
+      '{"channel":"ch1","subscription":null,"timetoken":"17087625097482155","message":{"event":"set","type":"channel","data":{"custom":{"occupancy":1},"eTag":"125aasww","id":"user-1","updated":"2024-02-24T08:15:09.744661Z"}}}',
+    );
+  });
+
+  it('should work with message actions', async () => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        state: '{}',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"3","r":1},"m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/ch1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '3',
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"17087942541729876","r":31},"m":[{"a":"0","f":0,"e":3,"i":"userIdTest","p":{"t":"17087942541729876","r":31},"k":"mySubKey","c":"ch1","d":{"source":"actions","version":"1.0","data":{"messageTimetoken":"17087942466262824","type":"reaction","value":"smiley","actionTimetoken":"17087942541639760"},"event":"added"},"b":"ch1"}]}`,
+      );
+    var channel = pubnub.channel('ch1');
+    var subscription = channel.subscription();
+    var messageActionPromise = new Promise((resolveMessageActionEvent) =>
+      subscription.addListener({
+        messageAction: (messageActionEvent) => resolveMessageActionEvent(messageActionEvent),
+      }),
+    );
+    subscription.subscribe();
+    const actual = await messageActionPromise;
+    expect(JSON.stringify(actual)).to.equal(
+      '{"channel":"ch1","subscription":null,"timetoken":"17087942541729876","publisher":"userIdTest","data":{"messageTimetoken":"17087942466262824","actionTimetoken":"17087942541639760","type":"reaction","uuid":"userIdTest","value":"smiley"},"event":"added"}',
     );
   });
 });
