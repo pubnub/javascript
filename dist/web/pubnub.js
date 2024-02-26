@@ -6533,7 +6533,7 @@
         var messages = [];
         serverResponse.m.forEach(function (rawMessage) {
             var publishMetaData = {
-                publishTimetoken: rawMessage.p.t,
+                timetoken: rawMessage.p.t,
                 region: rawMessage.p.r,
             };
             var parsedMessage = {
@@ -6661,7 +6661,7 @@
                     originationTimetoken: envelope.o,
                     userMetadata: envelope.u,
                     publishMetaData: {
-                        publishTimetoken: envelope.p.t,
+                        timetoken: envelope.p.t,
                         region: envelope.p.r,
                     },
                 };
@@ -7641,10 +7641,10 @@
             }
         };
         EventEngine.prototype.getSubscribedChannels = function () {
-            return Array.from(new Set(this.channels.slice(0)));
+            return Array.from(new Set(this.channels));
         };
         EventEngine.prototype.getSubscribedChannelGroups = function () {
-            return Array.from(new Set(this.groups.slice(0)));
+            return Array.from(new Set(this.groups));
         };
         EventEngine.prototype.dispose = function () {
             this.disconnect();
@@ -8108,7 +8108,7 @@
                 }
                 announce.action = e.payload.action;
                 announce.state = e.payload.data;
-                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.timetoken = publishMetaData.timetoken;
                 announce.occupancy = e.payload.occupancy;
                 announce.uuid = e.payload.uuid;
                 announce.timestamp = e.payload.timestamp;
@@ -8134,7 +8134,7 @@
                 announce.subscription = null;
                 announce.channel = channel;
                 announce.subscription = subscriptionMatch;
-                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.timetoken = publishMetaData.timetoken;
                 announce.publisher = e.issuingClientId;
                 if (e.userMetadata) {
                     announce.userMetadata = e.userMetadata;
@@ -8149,7 +8149,7 @@
                 announce.subscription = null;
                 announce.channel = channel;
                 announce.subscription = subscriptionMatch;
-                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.timetoken = publishMetaData.timetoken;
                 announce.publisher = e.issuingClientId;
                 if (e.userMetadata) {
                     announce.userMetadata = e.userMetadata;
@@ -8187,7 +8187,7 @@
                 var announce = {};
                 announce.channel = channel;
                 announce.subscription = subscriptionMatch;
-                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.timetoken = publishMetaData.timetoken;
                 announce.publisher = e.issuingClientId;
                 announce.data = {
                     messageTimetoken: e.payload.data.messageTimetoken,
@@ -8204,7 +8204,7 @@
                 var announce = {};
                 announce.channel = channel;
                 announce.subscription = subscriptionMatch;
-                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.timetoken = publishMetaData.timetoken;
                 announce.publisher = e.issuingClientId;
                 var msgPayload = e.payload;
                 if (this.modules.cryptoModule) {
@@ -8244,7 +8244,7 @@
                 announce.subscription = null;
                 announce.channel = channel;
                 announce.subscription = subscriptionMatch;
-                announce.timetoken = publishMetaData.publishTimetoken;
+                announce.timetoken = publishMetaData.timetoken;
                 announce.publisher = e.issuingClientId;
                 if (e.userMetadata) {
                     announce.userMetadata = e.userMetadata;
