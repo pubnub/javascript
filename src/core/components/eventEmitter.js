@@ -106,7 +106,7 @@ export default class EventEmitter {
         };
         this.listenerManager.announceUser(userEvent);
         this._announce('user', userEvent, announce.channel, announce.subscription);
-      } else if (message.payload.type === 'channel') {
+      } else if (e.payload.type === 'channel') {
         const eventData = this._renameChannelField(announce);
         const spaceEvent = {
           ...eventData,
@@ -118,7 +118,7 @@ export default class EventEmitter {
         };
         this.listenerManager.announceSpace(spaceEvent);
         this._announce('space', spaceEvent, announce.channel, announce.subscription);
-      } else if (message.payload.type === 'membership') {
+      } else if (e.payload.type === 'membership') {
         const eventData = this._renameChannelField(announce);
         const { uuid: user, channel: space, ...membershipData } = eventData.message.data;
         membershipData.user = user;
