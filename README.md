@@ -91,9 +91,8 @@ pubnub.subscribe({
 
 ## Documentation
 
-* [Build your first realtime JS app with PubNub](https://www.pubnub.com/docs/platform/quickstarts/javascript)
-* [API reference for JavaScript (web)](https://www.pubnub.com/docs/web-javascript/pubnub-javascript-sdk)
-* [API reference for JavaScript (Node.js)](https://www.pubnub.com/docs/nodejs-javascript/pubnub-javascript-sdk)
+* [Start with PubNub first steps here](https://www.pubnub.com/docs/basics/set-up-your-account)
+* [API reference for JavaScript, including node.js ](https://www.pubnub.com/docs/sdks/javascript)
 
 ## Support
 
