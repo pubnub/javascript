@@ -35,13 +35,16 @@ export function isAuthSupported() {
 }
 
 export function prepareParams(modules, incomingParams) {
-  const { pushGateway, environment = 'development', topic } = incomingParams;
+  const { pushGateway, environment = 'development', topic, start, count } = incomingParams;
   let parameters = { type: pushGateway };
 
   if (pushGateway === 'apns2') {
     parameters = { ...parameters, environment, topic };
     delete parameters.type;
   }
+
+  if (start) parameters.start = start;
+  if (count && count > 0) parameters.count = count;
 
   return parameters;
 }
