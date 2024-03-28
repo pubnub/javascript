@@ -4,7 +4,7 @@ changelog:
     version: v7.6.2
     changes:
       - type: feature
-        text: "Added support for pagination params for listChannels api of push notification devices."
+        text: "Added support for pagination params for listChannels API of push notification devices."
   - date: 2024-02-26
     version: v7.6.1
     changes:
