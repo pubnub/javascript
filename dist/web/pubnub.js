@@ -794,7 +794,7 @@
             return this;
         };
         default_1.prototype.getVersion = function () {
-            return '7.6.1';
+            return '7.6.2';
         };
         default_1.prototype._setRetryConfiguration = function (configuration) {
             if (configuration.minimumdelay < 2) {
@@ -3893,12 +3893,16 @@
         return true;
     }
     function prepareParams$l(modules, incomingParams) {
-        var pushGateway = incomingParams.pushGateway, _a = incomingParams.environment, environment = _a === void 0 ? 'development' : _a, topic = incomingParams.topic;
+        var pushGateway = incomingParams.pushGateway, _a = incomingParams.environment, environment = _a === void 0 ? 'development' : _a, topic = incomingParams.topic, start = incomingParams.start, count = incomingParams.count;
         var parameters = { type: pushGateway };
         if (pushGateway === 'apns2') {
             parameters = __assign(__assign({}, parameters), { environment: environment, topic: topic });
             delete parameters.type;
         }
+        if (start)
+            parameters.start = start;
+        if (count && count > 0)
+            parameters.count = count;
         return parameters;
     }
     function handleResponse$l(modules, serverResponse) {

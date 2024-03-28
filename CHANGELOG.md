@@ -1,3 +1,9 @@
+## v7.6.2
+March 28 2024
+
+#### Added
+- Added support for pagination params for listChannels api of push notification devices.
+
 ## v7.6.1
 February 26 2024
 

@@ -395,6 +395,61 @@ describe('push endpoints', () => {
       );
     });
 
+    it('supports channel listing with start and count params', async () => {
+      const scope = utils
+        .createNock()
+        .get('/v1/push/sub-key/mySubKey/devices/coolDevice')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          type: 'apns',
+          uuid: 'myUUID',
+          start: 'ch1',
+          count: 10,
+        })
+        .reply(200, '["ch1", "ch2", "ch3"]');
+
+      var res = await pubnub.push.listChannels(
+        { device: 'coolDevice', pushGateway: 'apns', start: 'ch1', count: 10 },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
+          assert.equal(scope.isDone(), true);
+          done();
+        },
+      );
+    });
+
+    it('supports channel listing with(APNS2) start and count params', async () => {
+      const scope = utils
+        .createNock()
+        .get('/v2/push/sub-key/mySubKey/devices-apns2/coolDevice')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          environment: 'production',
+          topic: 'com.test.apns',
+          uuid: 'myUUID',
+          start: 'ch1',
+          count: 10,
+        })
+        .reply(200, '["ch1", "ch2", "ch3"]');
+      pubnub.push.listChannels(
+        {
+          device: 'coolDevice',
+          pushGateway: 'apns2',
+          environment: 'production',
+          topic: 'com.test.apns',
+          start: 'ch1',
+          count: 10,
+        },
+        (status, response) => {
+          assert.equal(status.error, false);
+          assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
+          assert.equal(scope.isDone(), true);
+          done();
+        },
+      );
+    });
+
     it('should add push disable for channels API telemetry information', (done) => {
       let scope = utils.createNock().get('/v1/push/sub-key/mySubKey/devices/niceDevice').query(true);
       const delays = [100, 200, 300, 400];
