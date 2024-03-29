@@ -1,7 +1,7 @@
-import { Cursor } from '../models/Cursor';
 import { createEffect, createManagedEffect, MapOf } from './core';
 import { HandshakeReconnectingStateContext } from './states/handshake_reconnecting';
 import { ReceiveReconnectingStateContext } from './states/receive_reconnecting';
+import * as Subscription from '../core/types/api/subscription';
 
 export const handshake = createManagedEffect('HANDSHAKE', (channels: string[], groups: string[]) => ({
   channels,
@@ -10,11 +10,16 @@ export const handshake = createManagedEffect('HANDSHAKE', (channels: string[], g
 
 export const receiveMessages = createManagedEffect(
   'RECEIVE_MESSAGES',
-  (channels: string[], groups: string[], cursor: Cursor) => ({ channels, groups, cursor }),
+  (channels: string[], groups: string[], cursor: Subscription.SubscriptionCursor) => ({ channels, groups, cursor }),
 );
 
-export const emitMessages = createEffect('EMIT_MESSAGES', (events: any[]) => events);
+export const emitMessages = createEffect(
+  'EMIT_MESSAGES',
+  (events: Subscription.SubscriptionResponse['messages']) => events,
+);
 
+// TODO: Find out actual `status` type.
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 export const emitStatus = createEffect('EMIT_STATUS', (status: any) => status);
 
 export const receiveReconnect = createManagedEffect(

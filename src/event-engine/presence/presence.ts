@@ -8,7 +8,6 @@ import { HeartbeatInactiveState } from './states/heartbeat_inactive';
 export class PresenceEventEngine {
   private engine: Engine<events.Events, effects.Effects> = new Engine();
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;
-  private dependencies: any;
 
   get _engine() {
     return this.engine;
@@ -16,9 +15,8 @@ export class PresenceEventEngine {
 
   private _unsubscribeEngine!: () => void;
 
-  constructor(dependencies: Dependencies) {
+  constructor(private dependencies: Dependencies) {
     this.dispatcher = new PresenceEventEngineDispatcher(this.engine, dependencies);
-    this.dependencies = dependencies;
 
     this._unsubscribeEngine = this.engine.subscribe((change) => {
       if (change.type === 'invocationDispatched') {

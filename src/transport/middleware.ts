@@ -1,52 +1,33 @@
-import { Transport } from '../core/interfaces/transport';
 import { TransportMethod, TransportRequest } from '../core/types/transport-request';
-import { TransportResponse } from '../core/types/transport-response';
-import uuidGenerator from '../core/components/uuid';
+import { PrivateClientConfiguration } from '../core/interfaces/configuration';
+import TokenManager from '../core/components/token_manager';
+import { Transport } from '../core/interfaces/transport';
 import { encodeString } from '../core/utils';
+import { Query } from '../core/types/api';
 
-// Current SDK version.
-const PUBNUB_SDK_VERSION = '7.5.0';
-
+/**
+ * Transport middleware configuration options.
+ */
 type PubNubMiddlewareConfiguration = {
-  userId: string;
-  authKey?: string;
-  accessToken?: string;
+  /**
+   * Private client configuration.
+   */
+  clientConfiguration: PrivateClientConfiguration;
 
   /**
-   * Whether or not to include the PubNub object instance ID in outgoing requests.
+   * REST API endpoints access tokens manager.
    */
-  useInstanceId: boolean;
+  tokenManager: TokenManager;
 
   /**
-   * Unique PubNub client instance identifier.
+   * HMAC-SHA256 hash generator from provided `data`.
    */
-  instanceId: string;
-
-  /**
-   * PubNub service origin which should be for REST API calls.
-   */
-  origin: string;
+  shaHMAC?: (data: string) => string;
 
   /**
    * Platform-specific transport for requests processing.
    */
   transport: Transport;
-
-  /**
-   * Track of the SDK family for identifier generator.
-   */
-  sdkFamily: string;
-
-  /**
-   * If the SDK is running as part of another SDK built atop of it, allow a custom pnsdk with
-   * name and version.
-   */
-  sdkName: string;
-
-  /**
-   * If the SDK is operated by a partner, allow a custom pnsdk item for them.
-   */
-  partnerId?: string;
 };
 
 export class RequestSignature {
@@ -66,14 +47,14 @@ export class RequestSignature {
   public signature(req: TransportRequest): string {
     const method = req.path.startsWith('/publish') ? TransportMethod.GET : req.method;
 
-    let signatureInput = `${method}\n${this.publishKey}\n${req.path}\n${this.queryParameters(req.queryParameters)}\n`;
+    let signatureInput = `${method}\n${this.publishKey}\n${req.path}\n${this.queryParameters(req.queryParameters!)}\n`;
     if (method === TransportMethod.POST || method === TransportMethod.PATCH) {
       const body = req.body;
       let payload: string | undefined;
 
       if (body && body instanceof ArrayBuffer) {
         payload = RequestSignature.textDecoder.decode(body);
-      } else if (body) {
+      } else if (body && typeof body !== 'object') {
         payload = body;
       }
 
@@ -92,25 +73,52 @@ export class RequestSignature {
    * @param query - Key / value pair of the request query parameters.
    * @private
    */
-  private queryParameters(query: Record<string, string> = {}) {
+  private queryParameters(query: Query) {
     return Object.keys(query)
       .sort()
-      .map((key) => `${key}=${encodeString(query[key])}`)
+      .map((key) => {
+        const queryValue = query[key];
+        if (!Array.isArray(queryValue)) return `${key}=${encodeString(queryValue)}`;
+
+        return queryValue
+          .sort()
+          .map((value) => `${key}=${encodeString(value)}`)
+          .join('&');
+      })
       .join('&');
   }
 }
 
 export class PubNubMiddleware implements Transport {
-  constructor(private configuration: PubNubMiddlewareConfiguration) {}
+  /**
+   * Request signature generator.
+   */
+  signatureGenerator?: RequestSignature;
 
-  async send(req: TransportRequest): Promise<TransportResponse> {
+  constructor(private configuration: PubNubMiddlewareConfiguration) {
+    const {
+      clientConfiguration: { keySet },
+      shaHMAC,
+    } = configuration;
+
+    if (keySet.secretKey && shaHMAC)
+      this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC);
+  }
+
+  makeSendable(req: TransportRequest) {
+    return this.configuration.transport.makeSendable(this.request(req));
+  }
+
+  request(req: TransportRequest): TransportRequest {
+    const { clientConfiguration } = this.configuration;
     if (!req.queryParameters) req.queryParameters = {};
 
     // Modify request with required information.
-    req.queryParameters['uuid'] = this.configuration.userId;
-    req.queryParameters['requestid'] = uuidGenerator.createUUID();
-    if (this.configuration.useInstanceId) req.queryParameters['instanceid'] = this.configuration.instanceId;
+    if (clientConfiguration.useInstanceId) req.queryParameters['instanceid'] = clientConfiguration.instanceId!;
+    if (!req.queryParameters['uuid']) req.queryParameters['uuid'] = clientConfiguration.userId;
+    req.queryParameters['requestid'] = req.identifier;
     req.queryParameters['pnsdk'] = this.generatePNSDK();
+    req.origin ??= clientConfiguration.origin as string;
 
     // Authenticate request if required.
     this.authenticateRequest(req);
@@ -118,33 +126,47 @@ export class PubNubMiddleware implements Transport {
     // Sign request if it is required.
     this.signRequest(req);
 
-    return this.configuration.transport.send(req);
+    return req;
   }
 
   private authenticateRequest(req: TransportRequest) {
-    if (!req.path.startsWith('/v2/auth/') && !req.path.startsWith('/v3/pam/')) return;
-    if (!req.queryParameters) req.queryParameters = {};
+    // Access management endpoints doesn't need authentication (signature required instead).
+    if (req.path.startsWith('/v2/auth/') || req.path.startsWith('/v3/pam/') || req.path.startsWith('/time')) return;
 
-    const accessKey = this.configuration.accessToken ?? this.configuration.authKey;
-    if (accessKey) req.queryParameters['auth'] = accessKey;
+    const { clientConfiguration, tokenManager } = this.configuration;
+    const accessKey = tokenManager.getToken() ?? clientConfiguration.authKey;
+    if (accessKey) req.queryParameters!['auth'] = accessKey;
   }
 
+  /**
+   * Compute and append request signature.
+   *
+   * @param req - Transport request with information which should be used to generate signature.
+   */
   private signRequest(req: TransportRequest) {
-    if (!req.queryParameters) req.queryParameters = {};
+    if (!this.signatureGenerator || req.path.startsWith('/time')) return;
 
-    req.queryParameters['timestamp'] = String(Math.floor(new Date().getTime() / 1000));
-    // TODO: ADD CALL TO THE SIGNATURE
-    req.queryParameters['signature'] = 'dfff';
+    req.queryParameters!['timestamp'] = String(Math.floor(new Date().getTime() / 1000));
+    req.queryParameters!['signature'] = this.signatureGenerator.signature(req);
   }
 
+  /**
+   * Compose `pnsdk` query parameter.
+   *
+   * SDK provides ability to set custom name or append vendor information to the `pnsdk` query
+   * parameter.
+   *
+   * @returns Finalized `pnsdk` query parameter value.
+   */
   private generatePNSDK() {
-    if (this.configuration.sdkName) return this.configuration.sdkName;
+    const { clientConfiguration } = this.configuration;
+    if (clientConfiguration.sdkName) return clientConfiguration.sdkName;
 
-    let base = `PubNub-JS-${this.configuration.sdkFamily}`;
-    if (this.configuration.partnerId) base += `-${this.configuration.partnerId}`;
-    base += `/${PUBNUB_SDK_VERSION}`;
+    let base = `PubNub-JS-${clientConfiguration.sdkFamily}`;
+    if (clientConfiguration.partnerId) base += `-${clientConfiguration.partnerId}`;
+    base += `/${clientConfiguration.version}`;
 
-    const pnsdkSuffix = config._getPnsdkSuffix(' ');
+    const pnsdkSuffix = clientConfiguration._getPnsdkSuffix(' ');
     if (pnsdkSuffix.length > 0) base += pnsdkSuffix;
 
     return base;

@@ -1,21 +1,26 @@
-import { PubNubError } from '../core/components/endpoint';
+import { PrivateClientConfiguration } from '../core/interfaces/configuration';
+import * as Subscription from '../core/types/api/subscription';
+import { PubNubError } from '../models/PubNubError';
 import { asyncHandler, Dispatcher, Engine } from './core';
 import * as effects from './effects';
 import * as events from './events';
+import { Payload, StatusEvent } from '../core/types/api';
 
 export type Dependencies = {
-  handshake: any;
-  receiveMessages: any;
-  join: any;
-  leave: any;
-  leaveAll: any;
-  presenceState: any;
-  config: any;
+  handshake: (parameters: Subscription.CancelableSubscribeParameters) => Promise<Subscription.SubscriptionCursor>;
+  receiveMessages: (
+    parameters: Subscription.CancelableSubscribeParameters,
+  ) => Promise<Subscription.SubscriptionResponse>;
+  join?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  leave?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  leaveAll?: () => void;
+  presenceState: Record<string, Payload>;
+  config: PrivateClientConfiguration;
 
   delay: (milliseconds: number) => Promise<void>;
 
-  emitMessages: (events: any[]) => void;
-  emitStatus: (status: any) => void;
+  emitMessages: (events: Subscription.SubscriptionResponse['messages']) => void;
+  emitStatus: (status: StatusEvent) => void;
 };
 
 export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
@@ -62,7 +67,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             filterExpression: config.filterExpression,
           });
 
-          engine.transition(events.receiveSuccess(result.metadata, result.messages));
+          engine.transition(events.receiveSuccess(result.cursor, result.messages));
         } catch (error) {
           if (error instanceof Error && error.message === 'Aborted') {
             return;
@@ -111,7 +116,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               filterExpression: config.filterExpression,
             });
 
-            return engine.transition(events.receiveReconnectSuccess(result.metadata, result.messages));
+            return engine.transition(events.receiveReconnectSuccess(result.cursor, result.messages));
           } catch (error) {
             if (error instanceof Error && error.message === 'Aborted') {
               return;
@@ -124,7 +129,11 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
         } else {
           return engine.transition(
             events.receiveReconnectGiveup(
-              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+              new PubNubError(
+                config.retryConfiguration
+                  ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
+                  : 'Unable to complete subscribe messages receive.',
+              ),
             ),
           );
         }
@@ -163,7 +172,11 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
         } else {
           return engine.transition(
             events.handshakeReconnectGiveup(
-              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+              new PubNubError(
+                config.retryConfiguration
+                  ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
+                  : 'Unable to complete subscribe handshake',
+              ),
             ),
           );
         }

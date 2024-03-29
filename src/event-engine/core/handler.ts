@@ -1,7 +1,10 @@
 import { AbortSignal } from '../../core/components/abort_signal';
 
 export abstract class Handler<Payload, Dependencies> {
-  constructor(protected payload: Payload, protected readonly dependencies: Dependencies) {}
+  constructor(
+    protected payload: Payload,
+    protected readonly dependencies: Dependencies,
+  ) {}
 
   abstract start(): void;
   abstract cancel(): void;

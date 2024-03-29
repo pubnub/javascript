@@ -1,158 +1,257 @@
+/**
+ * Node.js {@link PubNub} File object module.
+ */
+
 import { Readable, PassThrough } from 'stream';
+import { Buffer } from 'buffer';
 import { basename } from 'path';
 import fs from 'fs';
 
-import { FileInterface, FileObject } from '../../core/interfaces/file';
+import { PubNubFileInterface } from '../../core/types/file';
 
-const PubNubFile = class PubNubFile implements FileInterface {
-  contentLength;
-  mimeType;
+// --------------------------------------------------------
+// ------------------------ Types -------------------------
+// --------------------------------------------------------
 
-  data;
+// region Types
+/**
+ * PubNub File instance creation parameters.
+ */
+export type PubNubFileParameters<StringEncoding extends BufferEncoding = BufferEncoding> = {
+  /**
+   * Readable stream represents file object content.
+   */
+  stream?: Readable;
 
-  name;
+  /**
+   * Buffer or string represents file object content.
+   */
+  data?: Buffer | ArrayBuffer | string;
 
-  supportsFile() {
-    return false;
+  /**
+   * String {@link PubNubFileParameters#data|data} encoding.
+   *
+   * @default `utf8`
+   */
+  encoding?: StringEncoding;
+
+  /**
+   * File object name.
+   */
+  name: string;
+
+  /**
+   * File object content type.
+   */
+  mimeType?: string;
+};
+// endregion
+
+/**
+ * Node.js implementation for {@link PubNub} File object.
+ *
+ * **Important:** Class should implement constructor and class fields from {@link PubNubFileConstructor}.
+ */
+export default class PubNubFile implements PubNubFileInterface {
+  // region Class properties
+  /**
+   * Whether {@link Blob} data supported by platform or not.
+   */
+  static supportsBlob = false;
+
+  /**
+   * Whether {@link File} data supported by platform or not.
+   */
+  static supportsFile = false;
+
+  /**
+   * Whether {@link Buffer} data supported by platform or not.
+   */
+  static supportsBuffer = true;
+
+  /**
+   * Whether {@link Stream} data supported by platform or not.
+   */
+  static supportsStream = true;
+
+  /**
+   * Whether {@link String} data supported by platform or not.
+   */
+  static supportsString = true;
+
+  /**
+   * Whether {@link ArrayBuffer} supported by platform or not.
+   */
+  static supportsArrayBuffer = true;
+
+  /**
+   * Whether {@link PubNub} File object encryption supported or not.
+   */
+  static supportsEncryptFile = true;
+
+  /**
+   * Whether `File Uri` data supported by platform or not.
+   */
+  static supportsFileUri = false;
+  // endregion
+
+  // region Instance properties
+  /**
+   * File object content source.
+   */
+  readonly data: Readable | Buffer;
+
+  /**
+   * File object content length.
+   */
+  contentLength?: number;
+
+  /**
+   * File object content type.
+   */
+  mimeType: string;
+
+  /**
+   * File object name.
+   */
+  name: string;
+  // endregion
+
+  static create(file: PubNubFileParameters) {
+    return new PubNubFile(file);
   }
 
-  supportsBlob() {
-    return false;
-  }
+  constructor(file: PubNubFileParameters) {
+    const { stream, data, encoding, name, mimeType } = file;
+    let fileData: Readable | Buffer | undefined;
+    let contentLength: number | undefined;
+    let fileMimeType: string | undefined;
+    let fileName: string | undefined;
 
-  static supportsArrayBuffer() {
-    return false;
-  }
-
-  supportsBuffer() {
-    return typeof Buffer !== 'undefined';
-  }
-
-  supportsStream() {
-    return true;
-  }
-
-  supportsString() {
-    return true;
-  }
-
-  supportsEncryptFile() {
-    return true;
-  }
-
-  supportsFileUri() {
-    return false;
-  }
-
-  constructor({ stream, data, encoding, name, mimeType }, ed: FileObject) {
-    if ('encoding' in ed) {
-      const { stream, data, encoding, name, mimeType } = ed;
-      if (stream instanceof Readable) {
-      } else if (data instanceof Buffer) {
-      } else if (typeof data === 'string') {
-      }
-    }
-    if (stream instanceof Readable) {
-      this.data = stream;
+    if (stream && stream instanceof Readable) {
+      fileData = stream;
 
       if (stream instanceof fs.ReadStream) {
-        // $FlowFixMe: incomplete flow node definitions
-        this.name = basename(stream.path);
-        this.contentLength = fs.statSync(stream.path).size;
+        const streamFilePath = stream.path instanceof Buffer ? new TextDecoder().decode(stream.path) : stream.path;
+        fileName = basename(streamFilePath);
+        contentLength = fs.statSync(streamFilePath).size;
       }
-    } else if ('encoding' in data) {
-      let d = data;
     } else if (data instanceof Buffer) {
-      this.data = Buffer.from(data);
+      contentLength = data.length;
+      // Copy content of the source Buffer.
+      fileData = Buffer.alloc(contentLength!);
+      data.copy(fileData);
+    } else if (data instanceof ArrayBuffer) {
+      contentLength = data.byteLength;
+      fileData = Buffer.from(data);
     } else if (typeof data === 'string') {
-      // $FlowFixMe: incomplete flow node definitions
-      this.data = Buffer.from(data, encoding ?? 'utf8');
+      fileData = Buffer.from(data, encoding ?? 'utf8');
+      contentLength = fileData.length;
     }
 
-    if (name) {
-      this.name = basename(name);
-    }
+    if (contentLength) this.contentLength = contentLength;
+    if (mimeType) fileMimeType = mimeType;
+    else fileMimeType = 'application/octet-stream';
+    if (name) fileName = basename(name);
 
-    if (mimeType) {
-      this.mimeType = mimeType;
-    }
+    if (fileData === undefined) throw new Error("Couldn't construct a file out of supplied options.");
+    if (fileName === undefined) throw new Error("Couldn't guess filename out of the options. Please provide one.");
 
-    if (this.data === undefined) {
-      throw new Error("Couldn't construct a file out of supplied options.");
-    }
-
-    if (this.name === undefined) {
-      throw new Error("Couldn't guess filename out of the options. Please provide one.");
-    }
+    this.mimeType = fileMimeType;
+    this.data = fileData;
+    this.name = fileName;
   }
 
-  toBuffer() {
-    if (this.data instanceof Buffer) {
-      return Promise.resolve(Buffer.from(this.data));
-    }
+  /**
+   * Convert {@link PubNub} File object content to {@link Buffer}.
+   *
+   * @returns Asynchronous results of conversion to the {@link Buffer}.
+   */
+  async toBuffer(): Promise<Buffer> {
+    if (this.data instanceof Buffer) return this.data;
 
-    if (this.data instanceof Readable) {
-      const stream = this.data;
-      return new Promise((resolve, reject) => {
-        const chunks = [];
+    const stream = this.data;
+    return new Promise((resolve, reject) => {
+      const chunks: Uint8Array[] = [];
 
-        stream.on('data', (chunk) => chunks.push(chunk));
-        stream.once('error', reject);
-        stream.once('end', () => {
-          resolve(Buffer.concat(chunks));
-        });
+      stream.on('data', (chunk) => {
+        chunks.push(chunk);
       });
-    }
+      stream.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
 
-    if (typeof this.data === 'string') {
-      return Promise.resolve(Buffer.from(this.data));
-    }
-
-    throw new Error("Can't cast to 'buffer'.");
+      // Handle any errors during streaming
+      stream.on('error', (error) => reject(error));
+    });
   }
 
-  async toArrayBuffer() {
-    throw new Error('This feature is only supported in browser environments.');
+  /**
+   * Convert {@link PubNub} File object content to {@link ArrayBuffer}.
+   *
+   * @returns Asynchronous results of conversion to the {@link ArrayBuffer}.
+   */
+  async toArrayBuffer(): Promise<ArrayBuffer> {
+    return this.toBuffer().then((buffer) => buffer.buffer);
   }
 
-  async toString(encoding = 'utf8') {
-    const buffer = await this.toBuffer();
-
-    return buffer.toString(encoding);
+  /**
+   * Convert {@link PubNub} File object content to {@link string}.
+   *
+   * @returns Asynchronous results of conversion to the {@link string}.
+   */
+  async toString(encoding: BufferEncoding = 'utf8') {
+    return this.toBuffer().then((buffer) => buffer.toString(encoding));
   }
 
+  /**
+   * Convert {@link PubNub} File object content to {@link Readable} stream.
+   *
+   * @returns Asynchronous results of conversion to the {@link Readable} stream.
+   */
   async toStream() {
-    if (!(this.data instanceof Readable)) {
-      const input = this.data;
-
-      return new Readable({
-        read() {
-          this.push(Buffer.from(input));
-          this.push(null);
-        },
-      });
-    }
-
-    const stream = new PassThrough();
-
     if (this.data instanceof Readable) {
+      const stream = new PassThrough();
       this.data.pipe(stream);
+
+      return stream;
     }
 
-    return stream;
+    return this.toBuffer().then(
+      (buffer) =>
+        new Readable({
+          read() {
+            this.push(buffer);
+            this.push(null);
+          },
+        }),
+    );
   }
 
+  /**
+   * Convert {@link PubNub} File object content to {@link File}.
+   *
+   * @throws Error because {@link File} not available in Node.js environment.
+   */
   async toFile() {
     throw new Error('This feature is only supported in browser environments.');
   }
 
+  /**
+   * Convert {@link PubNub} File object content to file `Uri`.
+   *
+   * @throws Error because file `Uri` not available in Node.js environment.
+   */
   async toFileUri() {
-    throw new Error('This feature is only supported in react native environments.');
+    throw new Error('This feature is only supported in React Native environments.');
   }
 
+  /**
+   * Convert {@link PubNub} File object content to {@link Blob}.
+   *
+   * @throws Error because {@link Blob} not available in Node.js environment.
+   */
   async toBlob() {
     throw new Error('This feature is only supported in browser environments.');
   }
-};
-
-export default PubNubFile;
+}

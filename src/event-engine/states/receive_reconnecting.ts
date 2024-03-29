@@ -1,5 +1,4 @@
-import { PubNubError } from '../../core/components/endpoint';
-import { Cursor } from '../../models/Cursor';
+import { PubNubError } from '../../models/PubNubError';
 import { State } from '../core/state';
 import { Effects, emitMessages, receiveReconnect, emitStatus } from '../effects';
 import {
@@ -17,11 +16,12 @@ import { ReceiveFailedState } from './receive_failed';
 import { ReceiveStoppedState } from './receive_stopped';
 import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
+import * as Subscription from '../../core/types/api/subscription';
 
 export type ReceiveReconnectingStateContext = {
   channels: string[];
   groups: string[];
-  cursor: Cursor;
+  cursor: Subscription.SubscriptionCursor;
 
   attempts: number;
   reason: PubNubError;

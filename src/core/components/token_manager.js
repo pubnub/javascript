@@ -1,12 +1,9 @@
 export default class {
-  _config;
-
   _cbor;
 
   _token;
 
-  constructor(config, cbor) {
-    this._config = config;
+  constructor(cbor) {
     this._cbor = cbor;
   }
 

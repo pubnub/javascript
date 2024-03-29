@@ -1,5 +1,5 @@
-import {TransportRequest} from "../types/transport-request";
-import {TransportResponse} from "../types/transport-response";
+import { CancellationController, TransportRequest } from '../types/transport-request';
+import { TransportResponse } from '../types/transport-response';
 
 /**
  * Represents the configuration options for keeping the transport connection alive.
@@ -32,7 +32,7 @@ export type TransportKeepAlive = {
    * @default 30000
    */
   timeout?: number;
-}
+};
 
 /**
  * This interface is used to send requests to the PubNub API.
@@ -44,10 +44,24 @@ export type TransportKeepAlive = {
  */
 export interface Transport {
   /**
-   * Async send method for handling transport requests.
+   * Make request sendable.
    *
    * @param req - The transport request to be processed.
-   * @returns - A promise that resolves to a transport response.
+   *
+   * @returns - A promise that resolves to a transport response and request cancellation
+   * controller (if required).
    */
-  send(req: TransportRequest): Promise<TransportResponse>;
+  makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined];
+
+  /**
+   * Pre-processed request.
+   *
+   * Transport implementation may pre-process original transport requests before making
+   * platform-specific request objects from it.
+   *
+   * @param req - Transport request provided by the PubNub client.
+   *
+   * @returns Transport request with updated properties (if it was required).
+   */
+  request(req: TransportRequest): TransportRequest;
 }

@@ -15,7 +15,7 @@ export class EventEngine {
     return this.engine;
   }
 
-  private _unsubscribeEngine!: () => void;
+  private readonly _unsubscribeEngine!: () => void;
 
   constructor(dependencies: Dependencies) {
     this.dependencies = dependencies;
@@ -41,7 +41,7 @@ export class EventEngine {
   }: {
     channels?: string[];
     channelGroups?: string[];
-    timetoken?: string;
+    timetoken?: string | number;
     withPresence?: boolean;
   }): void {
     this.channels = [...this.channels, ...(channels ?? [])];
@@ -136,11 +136,11 @@ export class EventEngine {
   }
 
   getSubscribedChannels(): string[] {
-    return this.channels.slice(0);
+    return Array.from(new Set(this.channels.slice(0)));
   }
 
   getSubscribedChannelGroups(): string[] {
-    return this.groups.slice(0);
+    return Array.from(new Set(this.groups.slice(0)));
   }
 
   dispose(): void {

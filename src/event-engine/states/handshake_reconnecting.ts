@@ -1,4 +1,4 @@
-import { PubNubError } from '../../core/components/endpoint';
+import { PubNubError } from '../../models/PubNubError';
 import { State } from '../core/state';
 import { Effects, emitStatus, handshakeReconnect } from '../effects';
 import {
@@ -17,12 +17,12 @@ import { HandshakingState } from './handshaking';
 import { ReceivingState } from './receiving';
 import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
-import { Cursor } from '../../models/Cursor';
+import * as Subscription from '../../core/types/api/subscription';
 
 export type HandshakeReconnectingStateContext = {
   channels: string[];
   groups: string[];
-  cursor?: Cursor;
+  cursor?: Subscription.SubscriptionCursor;
 
   attempts: number;
   reason: PubNubError;

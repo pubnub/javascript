@@ -1,17 +1,15 @@
+import type { PubNubCore as PubNub } from '../core/pubnub-common';
+import EventEmitter from '../core/components/eventEmitter';
+import { SubscriptionOptions } from './commonTypes';
 import { Subscription } from './Subscription';
-import { SubscriptionOptions, EventEmitter } from './commonTypes';
-import type PubNub from '../core/pubnub-common';
 
 export class ChannelMetadata {
-  private id: string;
-  private eventEmitter: EventEmitter;
-  private pubnub: PubNub;
+  constructor(
+    private readonly id: string,
+    private readonly eventEmitter: EventEmitter,
+    private readonly pubnub: PubNub<unknown, unknown>,
+  ) {}
 
-  constructor(id: string, eventEmitter: EventEmitter, pubnub: PubNub) {
-    this.id = id;
-    this.eventEmitter = eventEmitter;
-    this.pubnub = pubnub;
-  }
   subscription(subscriptionOptions?: SubscriptionOptions) {
     return new Subscription({
       channels: [this.id],

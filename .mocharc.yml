@@ -1,5 +1,5 @@
 spec: test/**/*.test.{ts,js}
-require: test/setup.js
+require: test/setup.cjs
 exclude:
   - test/dist/*.js
   - test/feature/*.js

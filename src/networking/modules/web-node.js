@@ -5,28 +5,21 @@ import superagent from 'superagent';
 import categories from '../../core/constants/categories';
 
 function log(req) {
-  const _pickLogger = () => {
-    if (console && console.log) return console; // eslint-disable-line no-console
-    if (window && window.console && window.console.log) return window.console;
-    return console;
-  };
-
   const start = new Date().getTime();
   const timestamp = new Date().toISOString();
-  const logger = _pickLogger();
-  logger.log('<<<<<');
-  logger.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs);
-  logger.log('-----');
+  console.log('<<<<<');
+  console.log(`[${timestamp}]`, '\n', req.url, '\n', req.qs);
+  console.log('-----');
 
   req.on('response', (res) => {
     const now = new Date().getTime();
     const elapsed = now - start;
     const timestampDone = new Date().toISOString();
 
-    logger.log('>>>>>>');
+    console.log('>>>>>>');
 
-    logger.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text);
-    logger.log('-----');
+    console.log(`[${timestampDone} / ${elapsed}]`, '\n', req.url, '\n', req.qs, '\n', res.text);
+    console.log('-----');
   });
 }
 

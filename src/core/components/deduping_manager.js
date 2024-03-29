@@ -1,7 +1,5 @@
 /*       */
 
-import Config from './config';
-
 const hashCode = (payload) => {
   let hash = 0;
   if (payload.length === 0) return hash;

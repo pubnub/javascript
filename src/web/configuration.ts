@@ -1,16 +1,32 @@
-import { BaseConfiguration, PrivateConfigurationOptions } from '../core/interfaces/configuration';
-import { TransportKeepAlive } from '../core/interfaces/transport';
-import { CryptoModule } from '../crypto/modules/WebCryptoModule/webCryptoModule';
-import { FileConstructor } from '../core/interfaces/file';
+import {
+  UserConfiguration,
+  ExtendedConfiguration,
+  setDefaults as setBaseDefaults,
+} from '../core/interfaces/configuration';
 
-export type PrivateWebConfigurationOptions = PrivateConfigurationOptions | 'PubNubFile';
+// --------------------------------------------------------
+// ----------------------- Defaults -----------------------
+// --------------------------------------------------------
+// region Defaults
+
+/**
+ * Whether PubNub client should update its state using browser's reachability events or not.
+ *
+ * If the browser fails to detect the network changes from Wi-Fi to LAN and vice versa, or you get
+ * reconnection issues, set the flag to `false`. This allows the SDK reconnection logic to take over.
+ */
+const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
+
+/**
+ * Whether PubNub client should try utilize existing TCP connection for new requests or not.
+ */
+const KEEP_ALIVE = true;
+// endregion
 
 /**
  * Browser platform PubNub client configuration.
  */
-export interface WebConfiguration extends BaseConfiguration {
-  platform: 'browser';
-
+export type PubNubConfiguration = UserConfiguration & {
   /**
    * If the browser fails to detect the network changes from WiFi to LAN and vice versa or you
    * get reconnection issues, set the flag to `false`. This allows the SDK reconnection logic to
@@ -24,41 +40,22 @@ export interface WebConfiguration extends BaseConfiguration {
    * If set to `true`, SDK will use the same TCP connection for each HTTP request, instead of
    * opening a new one for each new request.
    *
-   * @default `false`
+   * @default `true`
    */
   keepAlive?: boolean;
+};
 
-  /**
-   * Set a custom parameters for setting your connection `keepAlive` if this is set to `true`.
-   */
-  keepAliveSettings?: TransportKeepAlive;
-
-  /**
-   * The cryptography module used for encryption and decryption of messages and files. Takes the
-   * `cipherKey` and `useRandomIVs` parameters as arguments.
-   *
-   * For more information, refer to the {@link /docs/sdks/javascript/api-reference/configuration#cryptomodule|cryptoModule} section.
-   *
-   * @default `not set`
-   */
-  cryptoModule?: CryptoModule;
-
-  /**
-   * If passed, will encrypt the payloads.
-   *
-   * @deprecated Pass it to `cryptoModule` instead.
-   */
-  cipherKey?: string;
-
-  /**
-   * When `true` the initialization vector (IV) is random for all requests (not just for file
-   * upload).
-   * When `false` the IV is hard-coded for all requests except for file upload.
-   *
-   * @default `true`
-   * @deprecated Pass it to `cryptoModule` instead.
-   */
-  useRandomIVs?: boolean;
-}
-
-export type PubNubConfiguration = Exclude<WebConfiguration, 'platform'>;
+/**
+ * Apply configuration default values.
+ *
+ * @param configuration - User-provided configuration.
+ */
+export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
+  return {
+    // Set base configuration defaults.
+    ...setBaseDefaults(configuration),
+    // Set platform-specific options.
+    listenToBrowserNetworkEvents: configuration.listenToBrowserNetworkEvents ?? LISTEN_TO_BROWSER_NETWORK_EVENTS,
+    keepAlive: configuration.keepAlive ?? KEEP_ALIVE,
+  };
+};

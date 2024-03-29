@@ -1,13 +1,15 @@
-import { SubscriptionSet } from './SubscriptionSet';
-import { SubscriptionOptions, EventEmitter, Listener } from './commonTypes';
-import type PubNub from '../core/pubnub-common';
+import type { PubNubCore as PubNub } from '../core/pubnub-common';
+import { Listener } from '../core/components/listener_manager';
+import EventEmitter from '../core/components/eventEmitter';
 import { SubscribeCapable } from './SubscribeCapable';
+import { SubscriptionOptions } from './commonTypes';
+import { SubscriptionSet } from './SubscriptionSet';
 
 export class Subscription extends SubscribeCapable {
   protected channelNames: string[] = [];
   protected groupNames: string[] = [];
   protected options?: SubscriptionOptions;
-  protected pubnub: PubNub;
+  protected pubnub: PubNub<unknown, unknown>;
   protected eventEmitter: EventEmitter;
   protected listener: Listener;
 
@@ -22,7 +24,7 @@ export class Subscription extends SubscribeCapable {
     channelGroups: string[];
     subscriptionOptions?: SubscriptionOptions;
     eventEmitter: EventEmitter;
-    pubnub: PubNub;
+    pubnub: PubNub<unknown, unknown>;
   }) {
     super();
     this.channelNames = channels;

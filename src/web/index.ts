@@ -2,68 +2,76 @@
 /* global navigator, window */
 
 import CborReader from 'cbor-js';
-import PubNubCore from '../core/pubnub-common';
-import Networking from '../networking';
-import { decode } from '../core/components/base64_codec';
+
+import { WebCryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
 import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
-import Cbor from '../cbor/common';
-import { del, get, post, patch, getfile, postfile } from '../networking/modules/web-node';
-
-import WebCryptography from '../crypto/modules/web';
-import PubNubFile from '../file/modules/web';
-import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
-import { PrivateWebConfigurationOptions, WebConfiguration } from './configuration';
+import { CryptorConfiguration } from '../core/interfaces/crypto-module';
+import { PubNubFileParameters, PubNubFile } from '../file/modules/web';
+import { makeConfiguration } from '../core/components/configuration';
+import { PubNubConfiguration, setDefaults } from './configuration';
+import TokenManager from '../core/components/token_manager';
+import { PubNubMiddleware } from '../transport/middleware';
 import { WebTransport } from '../transport/web-transport';
-import { BaseConfiguration } from '../core/interfaces/configuration';
+import { decode } from '../core/components/base64_codec';
+import Crypto from '../core/components/cryptography';
+import WebCryptography from '../crypto/modules/web';
+import { PubNubCore } from '../core/pubnub-common';
+import Cbor from '../cbor/common';
 
-function sendBeacon(url) {
-  if (navigator && navigator.sendBeacon) {
-    navigator.sendBeacon(url);
-  } else {
-    return false;
-  }
-}
+/**
+ * PubNub client for browser platform.
+ */
+export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileParameters, PubNubFile> {
+  /**
+   * Data encryption / decryption module constructor.
+   */
+  static CryptoModule = WebCryptoModule;
 
-export default class extends PubNubCore {
-  static CryptoModule = CryptoModule;
-  constructor(setup: Exclude<WebConfiguration, PrivateWebConfigurationOptions>) {
-    // extract config.
-    const { listenToBrowserNetworkEvents = true } = setup;
-    setup.sdkFamily = 'Web';
-    setup.networking = new Networking({
-      del,
-      get,
-      post,
-      patch,
-      sendBeacon,
-      getfile,
-      postfile,
-    });
-    setup.cbor = new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode);
+  constructor(configuration: PubNubConfiguration) {
+    const configurationCopy = setDefaults(configuration);
+    const platformConfiguration = { ...configurationCopy, sdkFamily: 'Nodejs', PubNubFile };
 
-    setup.PubNubFile = PubNubFile;
-    setup.cryptography = new WebCryptography();
+    // Prepare full client configuration.
+    const clientConfiguration = makeConfiguration(
+      platformConfiguration,
+      (cryptoConfiguration: CryptorConfiguration) => {
+        if (!cryptoConfiguration.cipherKey) return undefined;
 
-    setup.initCryptoModule = (cryptoConfiguration) => {
-      return new CryptoModule({
-        default: new LegacyCryptor({
-          cipherKey: cryptoConfiguration.cipherKey,
-          useRandomIVs: cryptoConfiguration.useRandomIVs,
-        }),
-        cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
-      });
-    };
+        return new WebCryptoModule({
+          default: new LegacyCryptor({ ...cryptoConfiguration }),
+          cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+        });
+      },
+    );
 
-    {
-      const network = new WebTransport();
+    // Prepare Token manager.
+    const tokenManager = new TokenManager(
+      new Cbor((arrayBuffer: ArrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode),
+    );
+
+    // Legacy crypto (legacy data encryption / decryption and request signature support).
+    let crypto: Crypto | undefined;
+    if (clientConfiguration.cipherKey || clientConfiguration.secretKey) {
+      const { secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt } = clientConfiguration;
+      crypto = new Crypto({ secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt });
     }
 
-    super(setup);
+    // Setup transport provider.
+    const transportMiddleware = new PubNubMiddleware({
+      clientConfiguration,
+      tokenManager,
+      transport: new WebTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
+    });
 
-    this.some(setup);
+    super({
+      configuration: clientConfiguration,
+      transport: transportMiddleware,
+      cryptography: new WebCryptography(),
+      tokenManager,
+      crypto,
+    });
 
-    if (listenToBrowserNetworkEvents) {
-      // mount network events.
+    if (configuration.listenToBrowserNetworkEvents ?? true) {
       window.addEventListener('offline', () => {
         this.networkDownDetected();
       });
@@ -72,5 +80,17 @@ export default class extends PubNubCore {
         this.networkUpDetected();
       });
     }
+  }
+
+  private networkDownDetected() {
+    this.listenerManager.announceNetworkDown();
+
+    if (this._configuration.restore) this.disconnect();
+    else this.destroy(true);
+  }
+
+  private networkUpDetected() {
+    this.listenerManager.announceNetworkUp();
+    this.reconnect();
   }
 }

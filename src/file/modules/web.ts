@@ -1,110 +1,156 @@
 /* global File, FileReader */
+/**
+ * Browser {@link PubNub} File object module.
+ */
 
-import { FileInterface, FileObject } from '../../core/interfaces/file';
+import { PubNubFileInterface } from '../../core/types/file';
 
-const PubNubFile = class PubNubFile implements FileInterface {
-  mimeType;
-  name;
-  data;
+// --------------------------------------------------------
+// ------------------------ Types -------------------------
+// --------------------------------------------------------
 
-  supportsFile() {
-    return typeof File !== 'undefined';
+// region Types
+/**
+ * PubNub File instance creation parameters.
+ */
+export type PubNubFileParameters =
+  | File
+  | { data: string | Blob | ArrayBuffer | ArrayBufferView; name: string; mimeType?: string };
+// endregion
+
+/**
+ * Web implementation for {@link PubNub} File object.
+ *
+ * **Important:** Class should implement constructor and class fields from {@link PubNubFileConstructor}.
+ */
+export class PubNubFile implements PubNubFileInterface {
+  // region Class properties
+  /**
+   * Whether {@link Blob} data supported by platform or not.
+   */
+  static supportsBlob = typeof Blob !== 'undefined';
+
+  /**
+   * Whether {@link File} data supported by platform or not.
+   */
+  static supportsFile = typeof File !== 'undefined';
+
+  /**
+   * Whether {@link Buffer} data supported by platform or not.
+   */
+  static supportsBuffer = false;
+
+  /**
+   * Whether {@link Stream} data supported by platform or not.
+   */
+  static supportsStream = false;
+
+  /**
+   * Whether {@link String} data supported by platform or not.
+   */
+  static supportsString = true;
+
+  /**
+   * Whether {@link ArrayBuffer} supported by platform or not.
+   */
+  static supportsArrayBuffer = true;
+
+  /**
+   * Whether {@link PubNub} File object encryption supported or not.
+   */
+  static supportsEncryptFile = true;
+
+  /**
+   * Whether `File Uri` data supported by platform or not.
+   */
+  static supportsFileUri = false;
+  // endregion
+
+  // region Instance properties
+  /**
+   * File object content source.
+   */
+  readonly data: File;
+
+  /**
+   * File object content length.
+   */
+  contentLength?: number;
+
+  /**
+   * File object content type.
+   */
+  mimeType: string;
+
+  /**
+   * File object name.
+   */
+  name: string;
+  // endregion
+
+  static create(file: PubNubFileParameters) {
+    return new PubNubFile(file);
   }
 
-  supportsBlob() {
-    return typeof Blob !== 'undefined';
-  }
+  constructor(file: PubNubFileParameters) {
+    let fileMimeType: string | undefined;
+    let fileName: string | undefined;
+    let fileData: File | undefined;
 
-  supportsArrayBuffer() {
-    return typeof ArrayBuffer !== 'undefined';
-  }
+    if (file instanceof File) {
+      fileData = file;
 
-  supportsBuffer() {
-    return false;
-  }
+      fileName = file.name;
+      fileMimeType = file.type;
+    } else if ('data' in file) {
+      const contents = file.data;
 
-  supportsStream() {
-    return false;
-  }
-
-  supportsString() {
-    return true;
-  }
-
-  supportsEncryptFile() {
-    return true;
-  }
-
-  supportsFileUri() {
-    return false;
-  }
-
-  constructor(config: FileObject) {
-    let data, name, mimeType;
-    if (config instanceof File) {
-      data = config;
-
-      name = data.name;
-      mimeType = data.type;
-    } else if (config.data) {
-      const contents = config.data;
-
-      data = new File(contents, config.name, { type: config.mimeType });
-
-      name = config.name;
-
-      if (config.mimeType) {
-        mimeType = config.mimeType;
-      }
+      fileMimeType = file.mimeType;
+      fileName = file.name;
+      fileData = new File([contents], fileName, { type: fileMimeType });
     }
 
-    if (data === undefined) {
-      throw new Error("Couldn't construct a file out of supplied options.");
-    }
+    if (fileData === undefined) throw new Error("Couldn't construct a file out of supplied options.");
+    if (fileName === undefined) throw new Error("Couldn't guess filename out of the options. Please provide one.");
 
-    if (name === undefined) {
-      throw new Error("Couldn't guess filename out of the options. Please provide one.");
-    }
-
-    this.data = data;
-    this.name = name;
-    this.mimeType = mimeType;
+    this.mimeType = fileMimeType!;
+    this.data = fileData;
+    this.name = fileName;
   }
 
+  /**
+   * Convert {@link PubNub} File object content to {@link Buffer}.
+   *
+   * @throws Error because {@link Buffer} not available in browser environment.
+   */
   async toBuffer() {
     throw new Error('This feature is only supported in Node.js environments.');
   }
 
-  async toStream() {
-    throw new Error('This feature is only supported in Node.js environments.');
-  }
-
-  async toFileUri() {
-    throw new Error('This feature is only supported in react native environments.');
-  }
-
-  async toBlob<File>() {
-    return this.data as File;
-  }
-
-  async toArrayBuffer<ArrayBuffer>() {
-    return new Promise<ArrayBuffer>((resolve, reject) => {
+  /**
+   * Convert {@link PubNub} File object content to {@link ArrayBuffer}.
+   *
+   * @returns Asynchronous results of conversion to the {@link ArrayBuffer}.
+   */
+  async toArrayBuffer(): Promise<ArrayBuffer> {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = () => {
-        if (reader.result instanceof ArrayBuffer) {
-          resolve(reader.result as ArrayBuffer);
-        }
-      };
-
-      reader.onerror = () => reject(reader.error);
-
+      reader.addEventListener('load', () => {
+        if (reader.result instanceof ArrayBuffer) return resolve(reader.result);
+      });
+      reader.addEventListener('error', () => reject(reader.error));
       reader.readAsArrayBuffer(this.data);
     });
   }
 
+  /**
+   * Convert {@link PubNub} File object content to {@link string}.
+   *
+   * @returns Asynchronous results of conversion to the {@link string}.
+   */
   async toString() {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
       reader.addEventListener('load', () => {
@@ -121,9 +167,39 @@ const PubNubFile = class PubNubFile implements FileInterface {
     });
   }
 
-  async toFile<File>() {
-    return this.data as File;
+  /**
+   * Convert {@link PubNub} File object content to {@link Readable} stream.
+   *
+   * @throws Error because {@link Readable} stream not available in browser environment.
+   */
+  async toStream() {
+    throw new Error('This feature is only supported in Node.js environments.');
   }
-};
 
-export default PubNubFile;
+  /**
+   * Convert {@link PubNub} File object content to {@link File}.
+   *
+   * @returns Asynchronous results of conversion to the {@link File}.
+   */
+  async toFile() {
+    return this.data;
+  }
+
+  /**
+   * Convert {@link PubNub} File object content to file `Uri`.
+   *
+   * @throws Error because file `Uri` not available in browser environment.
+   */
+  async toFileUri() {
+    throw new Error('This feature is only supported in React Native environments.');
+  }
+
+  /**
+   * Convert {@link PubNub} File object content to {@link Blob}.
+   *
+   * @returns Asynchronous results of conversion to the {@link Blob}.
+   */
+  async toBlob() {
+    return this.data;
+  }
+}

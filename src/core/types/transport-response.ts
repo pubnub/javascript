@@ -1,12 +1,12 @@
 /**
  * Represents a transport response from a service.
- *
- * @typedef {Object} TransportResponse
- * @property status - The response status code.
- * @property headers - The response headers.
- * @property body - The response body.
  */
 export type TransportResponse = {
+  /**
+   * Full remote resource URL used to retrieve response.
+   */
+  url: string;
+
   /**
    * Service response status code.
    */
@@ -14,6 +14,8 @@ export type TransportResponse = {
 
   /**
    * Service response headers.
+   *
+   * **Important:** Header names are in lowercase.
    */
   headers: Record<string, string>;
 

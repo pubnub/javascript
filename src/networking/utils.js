@@ -1,5 +1,8 @@
 /*       */
 
+import { Query } from '../core/types/api';
+import { encodeString } from '../core/utils';
+
 export function encodedKeyValuePair(pairs, key, value) {
   if (value != null) {
     if (Array.isArray(value)) {

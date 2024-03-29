@@ -1,14 +1,14 @@
-import { Cursor } from '../../models/Cursor';
 import { State } from '../core/state';
 import { Effects } from '../effects';
 import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
 import { HandshakingState } from './handshaking';
 import { UnsubscribedState } from './unsubscribed';
+import * as Subscription from '../../core/types/api/subscription';
 
 type HandshakeStoppedStateContext = {
   channels: string[];
   groups: string[];
-  cursor?: Cursor;
+  cursor?: Subscription.SubscriptionCursor;
 };
 
 export const HandshakeStoppedState = new State<HandshakeStoppedStateContext, Events, Effects>('HANDSHAKE_STOPPED');

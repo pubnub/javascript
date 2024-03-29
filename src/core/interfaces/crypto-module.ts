@@ -1,3 +1,13 @@
+/**
+ * Crypto module.
+ */
+
+import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
+import { Payload } from '../types/api';
+
+/**
+ * Crypto module configuration.
+ */
 export type CryptoModuleConfiguration<C> = {
   default: C;
   cryptors?: C[];
@@ -7,31 +17,128 @@ export type CryptorConfiguration = {
   /**
    * Data encryption / decryption key.
    */
-  cipherKey: string;
+  cipherKey?: string;
+
+  /**
+   * Request sign secret key.
+   */
+  secretKey?: string;
 
   /**
    * Whether random initialization vector should be used or not.
+   *
+   * @default `true`
    */
   useRandomIVs?: boolean;
+
+  /**
+   * Custom data encryption method.
+   *
+   * @deprecated Instead use {@link cryptoModule} for data encryption.
+   */
+  get customEncrypt(): ((data: string) => string) | undefined;
+
+  /**
+   * Custom data decryption method.
+   *
+   * @deprecated Instead use {@link cryptoModule} for data decryption.
+   */
+  get customDecrypt(): ((data: string) => string) | undefined;
 };
 
-export abstract class CryptoModule<C> {
+/**
+ * Base crypto module interface.
+ */
+export interface CryptoModule {
+  // --------------------------------------------------------
+  // --------------------- Encryption -----------------------
+  // --------------------------------------------------------
+  // region Encryption
+
+  /**
+   * Encrypt data.
+   *
+   * @param data - Data which should be encrypted using `CryptoModule`.
+   *
+   * @returns Data encryption result.
+   */
+  encrypt(data: ArrayBuffer | string): ArrayBuffer | string;
+
+  /**
+   * Encrypt file object.
+   *
+   * @param file - File object with data for encryption.
+   * @param File - File object constructor to create instance for encrypted data representation.
+   *
+   * @returns Asynchronous file encryption result.
+   */
+  encryptFile(
+    file: PubNubFileInterface,
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    File: PubNubFileConstructor<PubNubFileInterface, any>,
+  ): Promise<PubNubFileInterface | undefined>;
+  // endregion
+
+  // --------------------------------------------------------
+  // --------------------- Decryption -----------------------
+  // --------------------------------------------------------
+  // region Decryption
+
+  /**
+   * Encrypt data.
+   *
+   * @param data - Dta which should be encrypted using `CryptoModule`.
+   *
+   * @returns Data decryption result.
+   */
+  decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+
+  /**
+   * Decrypt file object.
+   *
+   * @param file - Encrypted file object with data for decryption.
+   * @param File - File object constructor to create instance for decrypted data representation.
+   *
+   * @returns Asynchronous file decryption result.
+   */
+  decryptFile(
+    file: PubNubFileInterface,
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    File: PubNubFileConstructor<PubNubFileInterface, any>,
+  ): Promise<PubNubFileInterface | undefined>;
+  // endregion
+}
+
+export abstract class AbstractCryptoModule<C> implements CryptoModule {
+  /**
+   * `String` to {@link ArrayBuffer} response decoder.
+   */
+  protected static encoder = new TextEncoder();
+
+  /**
+   *  {@link ArrayBuffer} to {@link string} decoder.
+   */
+  protected static decoder = new TextDecoder();
+
   defaultCryptor: C;
   cryptors: C[];
 
-  protected constructor(configuration: CryptoModuleConfiguration<C>) {
-    this.defaultCryptor = configuration.default;
-    this.cryptors = configuration.cryptors ?? [];
-  }
+  // --------------------------------------------------------
+  // --------------- Convenience functions ------------------
+  // --------------------------------------------------------
+  // region Convenience functions
 
   /**
    * Construct crypto module with legacy cryptor for encryption and both legacy and AES-CBC
    * cryptors for decryption.
    *
    * @param config Cryptors configuration options.
-   * @returns {CryptoModule} Crypto module which encrypts data using legacy cryptor.
+   *
+   * @returns Crypto module which encrypts data using legacy cryptor.
+   *
+   * @throws Error if `config.cipherKey` not set.
    */
-  static legacyCryptoModule(config: CryptorConfiguration): CryptoModule<C> {
+  static legacyCryptoModule(config: CryptorConfiguration): CryptoModule {
     throw new Error('Should be implemented by concrete crypto module implementation.');
   }
 
@@ -40,23 +147,89 @@ export abstract class CryptoModule<C> {
    * cryptors for decryption.
    *
    * @param config Cryptors configuration options.
-   * @returns {CryptoModule} Crypto module which encrypts data using AES-CBC cryptor.
+   *
+   * @returns Crypto module which encrypts data using AES-CBC cryptor.
+   *
+   * @throws Error if `config.cipherKey` not set.
    */
-  static aesCbcCryptoModule(config: CryptorConfiguration): CryptoModule<C> {
+  static aesCbcCryptoModule(config: CryptorConfiguration): CryptoModule {
     throw new Error('Should be implemented by concrete crypto module implementation.');
   }
+  // endregion
 
-  static withDefaultCryptor(cryptor: C): CryptoModule<C> {
-    throw new Error('Should be implemented by concrete crypto module implementation.');
+  constructor(configuration: CryptoModuleConfiguration<C>) {
+    this.defaultCryptor = configuration.default;
+    this.cryptors = configuration.cryptors ?? [];
   }
 
-  abstract encrypt(data: ArrayBuffer | string);
+  // --------------------------------------------------------
+  // --------------------- Encryption -----------------------
+  // --------------------------------------------------------
+  // region Encryption
+
+  /**
+   * Encrypt data.
+   *
+   * @param data - Data which should be encrypted using {@link CryptoModule}.
+   *
+   * @returns Data encryption result.
+   */
+  abstract encrypt(data: ArrayBuffer | string): ArrayBuffer | string;
+
+  /**
+   * Encrypt file object.
+   *
+   * @param file - File object with data for encryption.
+   * @param File - File object constructor to create instance for encrypted data representation.
+   *
+   * @returns Asynchronous file encryption result.
+   */
+  abstract encryptFile(
+    file: PubNubFileInterface,
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    File: PubNubFileConstructor<PubNubFileInterface, any>,
+  ): Promise<PubNubFileInterface | undefined>;
+  // endregion
+
+  // --------------------------------------------------------
+  // --------------------- Decryption -----------------------
+  // --------------------------------------------------------
+  // region Decryption
+
+  /**
+   * Encrypt data.
+   *
+   * @param data - Dta which should be encrypted using `CryptoModule`.
+   *
+   * @returns Data decryption result.
+   */
+  abstract decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+
+  /**
+   * Decrypt file object.
+   *
+   * @param file - Encrypted file object with data for decryption.
+   * @param File - File object constructor to create instance for decrypted data representation.
+   *
+   * @returns Asynchronous file decryption result.
+   */
+  abstract decryptFile(
+    file: PubNubFileInterface,
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    File: PubNubFileConstructor<PubNubFileInterface, any>,
+  ): Promise<PubNubFileInterface | undefined>;
+  // endregion
+
+  // --------------------------------------------------------
+  // ----------------------- Helpers ------------------------
+  // --------------------------------------------------------
+  // region Helpers
 
   /**
    * Retrieve list of module's cryptors.
-   * @protected
    */
   protected getAllCryptors() {
     return [this.defaultCryptor, ...this.cryptors];
   }
+  // endregion
 }

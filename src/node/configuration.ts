@@ -1,24 +1,30 @@
-import { BaseConfiguration, PrivateConfigurationOptions } from '../core/interfaces/configuration';
-import { TransportKeepAlive } from '../core/interfaces/transport';
-import { CryptoModule } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
-import { FileConstructor } from '../core/interfaces/file';
+/**
+ * Node.js specific {@link PubNub} client configuration module.
+ */
 
-export type PrivateNodeConfigurationOptions = PrivateConfigurationOptions;
+import {
+  UserConfiguration,
+  ExtendedConfiguration,
+  setDefaults as setBaseDefaults,
+} from '../core/interfaces/configuration';
+import { CryptoModule } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import { TransportKeepAlive } from '../core/interfaces/transport';
+
+// --------------------------------------------------------
+// ----------------------- Defaults -----------------------
+// --------------------------------------------------------
+
+// region Defaults
+/**
+ * Whether PubNub client should try utilize existing TCP connection for new requests or not.
+ */
+const KEEP_ALIVE = false;
+// endregion
 
 /**
  * NodeJS platform PubNub client configuration.
  */
-export interface NodeConfiguration extends BaseConfiguration {
-  platform: 'node';
-
-  /**
-   * If set to `true`, SDK will use the same TCP connection for each HTTP request, instead of
-   * opening a new one for each new request.
-   *
-   * @default `false`
-   */
-  keepAlive?: boolean;
-
+export type PubNubConfiguration = UserConfiguration & {
   /**
    * Set a custom parameters for setting your connection `keepAlive` if this is set to `true`.
    */
@@ -26,18 +32,20 @@ export interface NodeConfiguration extends BaseConfiguration {
 
   /**
    * The cryptography module used for encryption and decryption of messages and files. Takes the
-   * `cipherKey` and `useRandomIVs` parameters as arguments.
+   * {@link cipherKey} and {@link useRandomIVs} parameters as arguments.
    *
-   * For more information, refer to the {@link /docs/sdks/javascript/api-reference/configuration#cryptomodule|cryptoModule} section.
+   * For more information, refer to the
+   * {@link /docs/sdks/javascript/api-reference/configuration#cryptomodule|cryptoModule} section.
    *
    * @default `not set`
    */
   cryptoModule?: CryptoModule;
 
+  // region Deprecated parameters
   /**
    * If passed, will encrypt the payloads.
    *
-   * @deprecated Pass it to `cryptoModule` instead.
+   * @deprecated Pass it to {@link cryptoModule} instead.
    */
   cipherKey?: string;
 
@@ -47,7 +55,39 @@ export interface NodeConfiguration extends BaseConfiguration {
    * When `false` the IV is hard-coded for all requests except for file upload.
    *
    * @default `true`
-   * @deprecated Pass it to `cryptoModule` instead.
+   *
+   * @deprecated Pass it to {@link cryptoModule} instead.
    */
   useRandomIVs?: boolean;
-}
+
+  /**
+   * Custom data encryption method.
+   *
+   * @deprecated Instead use {@link cryptoModule} for data encryption.
+   */
+  customEncrypt?: (data: string) => string;
+
+  /**
+   * Custom data decryption method.
+   *
+   * @deprecated Instead use {@link cryptoModule} for data decryption.
+   */
+  customDecrypt?: (data: string) => string;
+  // endregion
+};
+
+/**
+ * Apply configuration default values.
+ *
+ * @param configuration - User-provided configuration.
+ *
+ * @returns Extended {@link PubNub} client configuration object pre-filled with default values.
+ */
+export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
+  return {
+    // Set base configuration defaults.
+    ...setBaseDefaults(configuration),
+    // Set platform-specific options.
+    keepAlive: configuration.keepAlive ?? KEEP_ALIVE,
+  };
+};
