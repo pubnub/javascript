@@ -10,5 +10,16 @@
     "outDir": "./lib"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "src/node/**/*"]
+  "exclude": [
+    "node_modules",
+    "test",
+    "src/file/modules/node.ts",
+    "src/file/modules/react-native.ts.ts",
+    "src/node/**/*",
+    "src/react_native/**/*",
+    "src/nativescript/**/*",
+    "src/titanium/**/*",
+    "src/transport/node-transport.ts",
+    "src/transport/react-native-transport.ts"
+  ]
 }

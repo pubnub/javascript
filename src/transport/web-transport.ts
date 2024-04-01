@@ -77,13 +77,17 @@ export class WebTransport implements Transport {
    * Complete PubNub Web Worker setup.
    */
   private setupWorker() {
-    this.worker = new Worker(
-      URL.createObjectURL(new Blob([WEB_WORKER_PLACEHOLDER], { type: 'application/javascript' })),
-      {
-        name: '/pubnub',
-        type: 'module',
-      },
-    );
+    // this.worker = new Worker(
+    //   URL.createObjectURL(new Blob([WEB_WORKER_PLACEHOLDER], { type: 'application/javascript' })),
+    //   {
+    //     name: '/pubnub',
+    //     type: 'module',
+    //   },
+    // );
+    this.worker = new Worker(WEB_WORKER_PLACEHOLDER, {
+      name: '/pubnub',
+      type: 'module',
+    });
     this.callbacks = new Map();
 
     // Complete Web Worker initialization.

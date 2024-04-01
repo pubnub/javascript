@@ -55,7 +55,7 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
    * Abort request if possible.
    */
   abort(): void {
-    if (this.cancellationController) this.cancellationController.abort();
+    if (this && this.cancellationController) this.cancellationController.abort();
   }
 
   /**
