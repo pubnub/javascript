@@ -11969,7 +11969,7 @@
 	    constructor(configuration) {
 	        var _a;
 	        const configurationCopy = setDefaults(configuration);
-	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Nodejs', PubNubFile });
+	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Web', PubNubFile });
 	        // Prepare full client configuration.
 	        const clientConfiguration = makeConfiguration(platformConfiguration, (cryptoConfiguration) => {
 	            if (!cryptoConfiguration.cipherKey)

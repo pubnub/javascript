@@ -59,8 +59,7 @@
     "form-data": "^4.0.0",
     "lil-uuid": "^0.1.1",
     "node-fetch": "^3.3.2",
-    "proxy-agent": "^6.3.0",
-    "superagent": "^8.1.2"
+    "proxy-agent": "^6.3.0"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^7.3.1",
