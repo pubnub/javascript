@@ -29,7 +29,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
 
   constructor(configuration: PubNubConfiguration) {
     const configurationCopy = setDefaults(configuration);
-    const platformConfiguration = { ...configurationCopy, sdkFamily: 'Nodejs', PubNubFile };
+    const platformConfiguration = { ...configurationCopy, sdkFamily: 'Web', PubNubFile };
 
     // Prepare full client configuration.
     const clientConfiguration = makeConfiguration(
