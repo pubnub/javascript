@@ -2,7 +2,7 @@
  * PAM Grant REST API module.
  */
 
-import { createValidationError, PubNubError } from '../../../models/PubNubError';
+import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
@@ -138,7 +138,7 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
     if (!serviceResponse)
-      throw new PubNubError(
+      throw new PubnubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );

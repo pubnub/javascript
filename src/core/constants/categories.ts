@@ -28,6 +28,18 @@ enum StatusCategory {
   PNAccessDeniedCategory = 'PNAccessDeniedCategory',
 
   /**
+   * Incomplete parameters provided for used endpoint.
+   */
+  PNValidationErrorCategory = 'PNValidationErrorCategory',
+
+  /**
+   * PubNub request acknowledgment status.
+   *
+   * Some API endpoints respond with request processing status w/o useful data.
+   */
+  PNAcknowledgmentCategory = 'PNAcknowledgmentCategory',
+
+  /**
    * Something strange happened; please check the logs.
    */
   PNUnknownCategory = 'PNUnknownCategory',

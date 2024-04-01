@@ -318,15 +318,12 @@ const sendRequestEventHandler = (req: TransportRequest) => {
       fetch(request, { signal: abortControllers.get(req.identifier)?.signal, keepalive: keepAlive }),
       requestTimeout,
     ])
-      .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer | undefined] => {
-        if (parseInt(response.headers.get('Content-Length')!, 10) > 0) {
-          return response.arrayBuffer().then((buffer) => [response, buffer]);
-        }
-
-        return [response, undefined];
-      })
+      .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
+        response.arrayBuffer().then((buffer) => [response, buffer]),
+      )
       .then((response) => {
-        if (logVerbosity) {
+        const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
+        if (logVerbosity && responseBody) {
           const contentType = response[0].headers.get('Content-Type');
           const timestampDone = new Date().toISOString();
           const now = new Date().getTime();
@@ -335,11 +332,12 @@ const sendRequestEventHandler = (req: TransportRequest) => {
 
           if (
             contentType &&
-            (contentType.includes('application/json') ||
-              contentType.includes('text/plain') ||
-              contentType.includes('text/html'))
+            (contentType.indexOf('text/javascript') !== -1 ||
+              contentType.indexOf('application/json') !== -1 ||
+              contentType.indexOf('text/plain') !== -1 ||
+              contentType.indexOf('text/html') !== -1)
           ) {
-            body = decoder.decode(response[1]);
+            body = decoder.decode(responseBody);
           }
 
           notifyRequestProcessing('end', request, timestampDone, req.queryParameters, body, elapsed);
@@ -350,7 +348,7 @@ const sendRequestEventHandler = (req: TransportRequest) => {
           postMessage(requestProcessingError(req.identifier, request.url, undefined, response));
         else postMessage(requestProcessingSuccess(req.identifier, request.url, response));
       })
-      .catch((error) => postMessage(requestProcessingError(error, request.url)));
+      .catch((error) => postMessage(requestProcessingError(req.identifier, request.url, error)));
   })();
 };
 // endregion
@@ -404,10 +402,11 @@ const notifyRequestProcessing = (
 const requestProcessingSuccess = (
   identifier: string,
   url: string,
-  res: [Response, ArrayBuffer | undefined],
+  res: [Response, ArrayBuffer],
 ): RequestSendingSuccess => {
   const [response, body] = res;
-  const contentLength = parseInt(response.headers.get('Content-Length')!, 10);
+  const responseBody = body.byteLength > 0 ? body : undefined;
+  const contentLength = parseInt(response.headers.get('Content-Length') ?? '0', 10);
   const contentType = response.headers.get('Content-Type')!;
   const headers: Record<string, string> = {};
 
@@ -423,7 +422,7 @@ const requestProcessingSuccess = (
       contentType,
       headers,
       status: response.status,
-      body,
+      body: responseBody,
     },
   };
 };
@@ -443,7 +442,7 @@ const requestProcessingError = (
   identifier: string,
   url: string,
   error?: unknown,
-  res?: [Response, ArrayBuffer | undefined],
+  res?: [Response, ArrayBuffer],
 ): RequestSendingError => {
   // User service response as error information source.
   if (res) {
@@ -539,5 +538,4 @@ const queryStringFromObject = (query: Query) => {
 const encodeString = (input: string | number) => {
   return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
 };
-
 // endregion

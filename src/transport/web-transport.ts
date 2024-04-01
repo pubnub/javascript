@@ -1,11 +1,10 @@
-/* global window */
 /**
  * Web Transport provider module.
  */
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { TransportResponse } from '../core/types/transport-response';
-import { PubNubAPIError, Query } from '../core/types/api';
+import { PubNubAPIError } from '../errors/pubnub-api-error';
 import StatusCategory from '../core/constants/categories';
 import { Transport } from '../core/interfaces/transport';
 import * as PubNubWebWorker from './web-worker';
@@ -122,16 +121,19 @@ export class WebTransport implements Transport {
           // Handle service error response.
           else if (data.response) {
             return reject(
-              PubNubAPIError.create({
-                url: data.url,
-                headers: data.response.headers,
-                body: data.response.body,
-                status: data.response.status,
-              }),
+              PubNubAPIError.create(
+                {
+                  url: data.url,
+                  headers: data.response.headers,
+                  body: data.response.body,
+                  status: data.response.status,
+                },
+                data.response.body,
+              ),
             );
           }
 
-          reject(new PubNubAPIError(message, category, 0));
+          reject(new PubNubAPIError(message, category, 0, new Error(message)));
         }
       }
     };

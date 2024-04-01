@@ -1,4 +1,4 @@
-import { PubNubError } from '../../models/PubNubError';
+import { PubnubError } from '../../errors/pubnub-error';
 import { State } from '../core/state';
 import { Effects, emitStatus, handshakeReconnect } from '../effects';
 import {
@@ -25,7 +25,7 @@ export type HandshakeReconnectingStateContext = {
   cursor?: Subscription.SubscriptionCursor;
 
   attempts: number;
-  reason: PubNubError;
+  reason: PubnubError;
 };
 
 export const HandshakeReconnectingState = new State<HandshakeReconnectingStateContext, Events, Effects>(

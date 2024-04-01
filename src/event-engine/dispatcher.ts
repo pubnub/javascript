@@ -1,6 +1,6 @@
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
 import * as Subscription from '../core/types/api/subscription';
-import { PubNubError } from '../models/PubNubError';
+import { PubnubError } from '../errors/pubnub-error';
 import { asyncHandler, Dispatcher, Engine } from './core';
 import * as effects from './effects';
 import * as events from './events';
@@ -46,7 +46,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             return;
           }
 
-          if (e instanceof PubNubError) {
+          if (e instanceof PubnubError) {
             return engine.transition(events.handshakeFailure(e));
           }
         }
@@ -73,7 +73,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             return;
           }
 
-          if (error instanceof PubNubError && !abortSignal.aborted) {
+          if (error instanceof PubnubError && !abortSignal.aborted) {
             return engine.transition(events.receiveFailure(error));
           }
         }
@@ -122,14 +122,14 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               return;
             }
 
-            if (error instanceof PubNubError) {
+            if (error instanceof PubnubError) {
               return engine.transition(events.receiveReconnectFailure(error));
             }
           }
         } else {
           return engine.transition(
             events.receiveReconnectGiveup(
-              new PubNubError(
+              new PubnubError(
                 config.retryConfiguration
                   ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
                   : 'Unable to complete subscribe messages receive.',
@@ -165,14 +165,14 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               return;
             }
 
-            if (error instanceof PubNubError) {
+            if (error instanceof PubnubError) {
               return engine.transition(events.handshakeReconnectFailure(error));
             }
           }
         } else {
           return engine.transition(
             events.handshakeReconnectGiveup(
-              new PubNubError(
+              new PubnubError(
                 config.retryConfiguration
                   ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
                   : 'Unable to complete subscribe handshake',

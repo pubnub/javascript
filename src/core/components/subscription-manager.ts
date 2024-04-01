@@ -256,8 +256,23 @@ export class SubscriptionManager {
 
     if (this.configuration.suppressLeaveEvents === false && !isOffline) {
       this.leaveCall({ channels: actualChannels, channelGroups: actualChannelGroups }, (status) => {
+        const { error, ...restOfStatus } = status;
+        let errorMessage: string | undefined;
+
+        if (error) {
+          if (
+            status.errorData &&
+            typeof status.errorData === 'object' &&
+            'message' in status.errorData &&
+            typeof status.errorData.message === 'string'
+          )
+            errorMessage = status.errorData.message;
+          else if ('message' in status && typeof status.message === 'string') errorMessage = status.message;
+        }
+
         this.listenerManager.announceStatus({
-          ...status,
+          ...restOfStatus,
+          error: errorMessage,
           affectedChannels: actualChannels,
           affectedChannelGroups: actualChannelGroups,
           currentTimetoken: this.currentTimetoken,

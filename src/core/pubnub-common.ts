@@ -12,7 +12,7 @@ import uuidGenerator from './components/uuid';
 // endregion
 
 // region Types
-import { ResultCallback, StatusCallback, Payload, Status, PubNubAPIError } from './types/api';
+import { Payload, ResultCallback, Status, StatusCallback } from './types/api';
 // endregion
 
 // region Component Interfaces
@@ -26,26 +26,24 @@ import RequestOperation from './constants/operations';
 import StatusCategory from './constants/categories';
 // endregion
 
-import { createValidationError, PubNubError } from '../models/PubNubError';
+import { createValidationError, PubnubError } from '../errors/pubnub-error';
+import { PubNubAPIError } from '../errors/pubnub-api-error';
 
 // region Event Engine
 import { PresenceEventEngine } from '../event-engine/presence/presence';
 import { RetryPolicy } from '../event-engine/core/retryPolicy';
 import { EventEngine } from '../event-engine';
 // endregion
-
 // region Publish & Signal
 import * as Publish from './endpoints/publish';
 import * as Signal from './endpoints/signal';
 // endregion
-
 // region Subscription
 import { RequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
 import { ReceiveMessagesSubscribeRequest } from './endpoints/subscriptionUtils/receiveMessages';
 import { HandshakeSubscribeRequest } from './endpoints/subscriptionUtils/handshake';
 import * as Subscription from './types/api/subscription';
 // endregion
-
 // region Presence
 import { GetPresenceStateRequest } from './endpoints/presence/get_state';
 import { SetPresenceStateRequest } from './endpoints/presence/set_state';
@@ -55,7 +53,6 @@ import { WhereNowRequest } from './endpoints/presence/where_now';
 import { HereNowRequest } from './endpoints/presence/here_now';
 import * as Presence from './types/api/presence';
 // endregion
-
 // region Message Storage
 import { DeleteMessageRequest } from './endpoints/history/delete_messages';
 import { MessageCountRequest } from './endpoints/history/message_counts';
@@ -63,14 +60,12 @@ import { GetHistoryRequest } from './endpoints/history/get_history';
 import { FetchMessagesRequest } from './endpoints/fetch_messages';
 import * as History from './types/api/history';
 // endregion
-
 // region Message Actions
 import { GetMessageActionsRequest } from './endpoints/actions/get_message_actions';
 import { AddMessageActionRequest } from './endpoints/actions/add_message_action';
 import { RemoveMessageAction } from './endpoints/actions/remove_message_action';
 import * as MessageAction from './types/api/message-action';
 // endregion
-
 // region File sharing
 import { PublishFileMessageRequest } from './endpoints/file_upload/publish_file';
 import { GetFileDownloadUrlRequest } from './endpoints/file_upload/get_file_url';
@@ -80,7 +75,6 @@ import { SendFileRequest } from './endpoints/file_upload/send_file';
 import * as FileSharing from './types/api/file-sharing';
 import { PubNubFileInterface } from './types/file';
 // endregion
-
 // region PubNub Access Manager
 import { RevokeTokenRequest } from './endpoints/access_manager/revoke_token';
 import { GrantTokenRequest } from './endpoints/access_manager/grant_token';
@@ -88,7 +82,6 @@ import { GrantRequest } from './endpoints/access_manager/grant';
 import { AuditRequest } from './endpoints/access_manager/audit';
 import * as PAM from './types/api/access-panager';
 // endregion
-
 // region Entities
 import { SubscriptionOptions } from '../entities/commonTypes';
 import { ChannelMetadata } from '../entities/ChannelMetadata';
@@ -97,24 +90,19 @@ import { ChannelGroup } from '../entities/ChannelGroup';
 import { UserMetadata } from '../entities/UserMetadata';
 import { Channel } from '../entities/Channel';
 // endregion
-
 // region Channel Groups
 import PubNubChannelGroups from './pubnub-channel-groups';
 // endregion
-
 // region Push Notifications
 import PubNubPushNotifications from './pubnub-push';
 // endregion
-
 // region App Context
 import * as AppContext from './types/api/app-context';
 import PubNubObjects from './pubnub-objects';
 // endregion
-
 // region Time
 import * as Time from './endpoints/time';
 // endregion
-
 import { encodeString } from './utils';
 import { DownloadFileRequest } from './endpoints/file_upload/download_file';
 // endregion
@@ -287,9 +275,9 @@ export class PubNubCore<
     this.crypto = configuration.crypto;
 
     // API group entry points initialization.
-    this._objects = new PubNubObjects(this._configuration, this.sendRequest);
-    this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest);
-    this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest);
+    this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
+    this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
+    this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
 
     // Prepare for real-time events announcement.
     this.listenerManager = new ListenerManager();
@@ -301,12 +289,12 @@ export class PubNubCore<
 
       if (heartbeatInterval) {
         this.presenceEventEngine = new PresenceEventEngine({
-          heartbeat: this.heartbeat,
-          leave: this.unsubscribe,
+          heartbeat: this.heartbeat.bind(this),
+          leave: this.unsubscribe.bind(this),
           heartbeatDelay: () =>
             new Promise((resolve, reject) => {
               heartbeatInterval = this._configuration.getHeartbeatInterval();
-              if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
+              if (!heartbeatInterval) reject(new PubnubError('Heartbeat interval has been reset.'));
               else setTimeout(resolve, heartbeatInterval * 1000);
             }),
           retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
@@ -317,12 +305,12 @@ export class PubNubCore<
       }
 
       this.eventEngine = new EventEngine({
-        handshake: this.subscribeHandshake,
-        receiveMessages: this.subscribeReceiveMessages,
+        handshake: this.subscribeHandshake.bind(this),
+        receiveMessages: this.subscribeReceiveMessages.bind(this),
         delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-        join: this.presenceEventEngine?.join,
-        leave: this.presenceEventEngine?.leave,
-        leaveAll: this.presenceEventEngine?.leaveAll,
+        join: this.presenceEventEngine?.join.bind(this.presenceEventEngine),
+        leave: this.presenceEventEngine?.leave.bind(this.presenceEventEngine),
+        leaveAll: this.presenceEventEngine?.leaveAll.bind(this.presenceEventEngine),
         presenceState: this.presenceState,
         config: this._configuration,
         emitMessages: (events) => events.forEach((event) => this.eventEmitter.emitEvent(event)),
@@ -333,10 +321,10 @@ export class PubNubCore<
         this._configuration,
         this.listenerManager,
         this.eventEmitter,
-        this.makeSubscribe,
-        this.heartbeat,
-        this.makeUnsubscribe,
-        this.time,
+        this.makeSubscribe.bind(this),
+        this.heartbeat.bind(this),
+        this.makeUnsubscribe.bind(this),
+        this.time.bind(this),
       );
     }
   }
@@ -697,7 +685,7 @@ export class PubNubCore<
    * @returns Asynchronous request execution and response parsing result or `void` in case if
    * `callback` provided.
    *
-   * @throws PubNubError in case of request processing error.
+   * @throws PubnubError in case of request processing error.
    */
   private async sendRequest<ResponseType>(
     request: AbstractRequest<ResponseType>,
@@ -707,7 +695,7 @@ export class PubNubCore<
     const validationResult = request.validate();
     if (validationResult) {
       if (callback) return callback(createValidationError(validationResult), null);
-      throw new PubNubError('Validation failed, check status for details', createValidationError(validationResult));
+      throw new PubnubError('Validation failed, check status for details', createValidationError(validationResult));
     }
 
     // Complete request configuration.
@@ -729,6 +717,7 @@ export class PubNubCore<
     const status: Status = {
       error: false,
       operation: request.operation(),
+      category: StatusCategory.PNAcknowledgmentCategory,
       statusCode: 0,
     };
 
@@ -755,18 +744,10 @@ export class PubNubCore<
         return parsed;
       })
       .catch((error: PubNubAPIError) => {
-        console.log(`~~~~~~~> WHAT HERE?:`, error);
-        if (error instanceof PubNubError) {
-          console.log(`~~~~~~> OH, WE ARE REGULAR PUBNUB ERROR`);
-          // @ts-expect-error I allow this for debug
-          console.log(`~~~~~~~~> WHAT IN STATUS?: `, error['status']);
-        }
-        // const errorStatus = error.toStatus(request.operation());
-        const errorStatus = { error: true };
         // Notify callback (if possible).
-        if (callback) callback(errorStatus, null);
+        if (callback) callback(error.toStatus(request.operation()), null);
 
-        throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+        throw error.toPubNubError(request.operation(), 'REST API request processing error, check status for details');
       });
   }
 
@@ -2788,6 +2769,7 @@ export class PubNubCore<
     const status: Status = {
       error: false,
       operation: RequestOperation.PNPublishFileOperation,
+      category: StatusCategory.PNAcknowledgmentCategory,
       statusCode: 0,
     };
 
@@ -2805,7 +2787,7 @@ export class PubNubCore<
         // Notify callback (if possible).
         if (callback) callback(errorStatus, null);
 
-        throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+        throw new PubnubError('REST API request processing error, check status for details', errorStatus);
       });
   }
   // endregion

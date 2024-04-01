@@ -4,10 +4,12 @@ import { CryptoModule } from '../../interfaces/crypto-module';
 import { Cryptography } from '../../interfaces/cryptography';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
-import { PubNubError } from '../../../models/PubNubError';
+import { PubnubError } from '../../../errors/pubnub-error';
 import RequestOperation from '../../constants/operations';
-import { KeySet, PubNubAPIError } from '../../types/api';
 import { UploadFileRequest } from './upload-file';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
+import { KeySet } from '../../types/api';
+import StatusCategory from '../../constants/categories';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -101,7 +103,7 @@ export class SendFileRequest<FileConstructorParameters> {
       .then(() => this.publishFileMessage(fileId!, fileName!))
       .catch((error: Error) => {
         const errorStatus = PubNubAPIError.create(error).toStatus(RequestOperation.PNPublishFileOperation);
-        throw new PubNubError('File upload error.', errorStatus);
+        throw new PubnubError('File upload error.', errorStatus);
       });
   }
 
@@ -152,21 +154,30 @@ export class SendFileRequest<FileConstructorParameters> {
   private async publishFileMessage(fileId: string, fileName: string): Promise<FileSharing.SendFileResponse> {
     let result: FileSharing.PublishFileMessageResponse = { timetoken: '0' };
     let retries = this.parameters.fileUploadPublishRetryLimit;
+    let publishError: PubnubError | undefined;
     let wasSuccessful = false;
 
     do {
       try {
         result = await this.parameters.publishFile({ ...this.parameters, fileId, fileName });
         wasSuccessful = true;
-      } catch (_) {
+      } catch (error: unknown) {
+        if (error instanceof PubnubError) publishError = error;
         retries -= 1;
       }
     } while (!wasSuccessful && retries > 0);
 
     if (!wasSuccessful) {
-      throw new PubNubError(
+      throw new PubnubError(
         'Publish failed. You may want to execute that operation manually using pubnub.publishFile',
-        { error: true, channel: this.parameters.channel, id: fileId, name: fileName },
+        {
+          error: true,
+          category: publishError!.status?.category ?? StatusCategory.PNUnknownCategory,
+          statusCode: publishError!.status?.statusCode ?? 0,
+          channel: this.parameters.channel,
+          id: fileId,
+          name: fileName,
+        },
       );
     } else return { status: 200, timetoken: result.timetoken, id: fileId, name: fileName };
   }

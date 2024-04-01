@@ -9,7 +9,7 @@ import { CancellationController, TransportRequest } from '../core/types/transpor
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
 import { TransportResponse } from '../core/types/transport-response';
 import { queryStringFromObject } from '../core/utils';
-import { PubNubAPIError } from '../core/types/api';
+import { PubNubAPIError } from '../errors/pubnub-api-error';
 
 /**
  * Class representing a fetch-based Node.js transport provider.
@@ -76,14 +76,11 @@ export class NodeTransport implements Transport {
           signal: abortController?.signal,
           timeout: req.timeout * 1000,
         } as RequestInit)
-          .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer | undefined] => {
-            if (parseInt(response.headers.get('Content-Length')!, 10) > 0) {
-              return response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]);
-            }
-
-            return [response, undefined];
-          })
+          .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
+            response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]),
+          )
           .then((response) => {
+            const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
             const { status, headers: requestHeaders } = response[0];
             const headers: Record<string, string> = {};
 
@@ -94,12 +91,12 @@ export class NodeTransport implements Transport {
               status,
               url: request.url,
               headers,
-              body: response[1],
+              body: responseBody,
             };
 
             if (status >= 400) throw PubNubAPIError.create(transportResponse);
 
-            this.logRequestProcessProgress(request, new Date().getTime() - start, response[1]);
+            this.logRequestProcessProgress(request, new Date().getTime() - start, responseBody);
 
             return transportResponse;
           })

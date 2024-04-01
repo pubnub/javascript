@@ -14,7 +14,7 @@ import { PubNubMiddleware } from '../transport/middleware';
 import { decode } from '../core/components/base64_codec';
 import NodeCryptography from '../crypto/modules/node';
 import Crypto from '../core/components/cryptography';
-import { PubNubError } from '../models/PubNubError';
+import { PubnubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
 
@@ -95,7 +95,7 @@ export default class PubNub extends PubNubCore<
    */
   public setProxy(configuration?: ProxyAgentOptions) {
     if (configuration && (this._configuration.keepAlive ?? false))
-      throw new PubNubError("Can't set 'proxy' because already configured for 'keepAlive'");
+      throw new PubnubError("Can't set 'proxy' because already configured for 'keepAlive'");
 
     this.nodeTransport.setProxy(configuration);
     this.reconnect();

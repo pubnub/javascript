@@ -6,7 +6,7 @@ import { AbstractCryptoModule, CryptorConfiguration } from '../../../core/interf
 import { PubNubFile, PubNubFileParameters } from '../../../file/modules/web';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { decode } from '../../../core/components/base64_codec';
-import { PubNubError } from '../../../models/PubNubError';
+import { PubnubError } from '../../../errors/pubnub-error';
 import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
@@ -37,7 +37,7 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
   // region Convenience functions
 
   static legacyCryptoModule(config: CryptorConfiguration) {
-    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+    if (!config.cipherKey) throw new PubnubError('Crypto module error: cipher key not set.');
 
     return new WebCryptoModule({
       default: new LegacyCryptor({
@@ -49,7 +49,7 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
   }
 
   static aesCbcCryptoModule(config: CryptorConfiguration) {
-    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+    if (!config.cipherKey) throw new PubnubError('Crypto module error: cipher key not set.');
 
     return new WebCryptoModule({
       default: new AesCbcCryptor({ cipherKey: config.cipherKey }),

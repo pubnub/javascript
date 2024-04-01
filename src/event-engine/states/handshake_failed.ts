@@ -1,7 +1,7 @@
 import { State } from '../core/state';
 import { Effects } from '../effects';
 import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
-import { PubNubError } from '../../models/PubNubError';
+import { PubnubError } from '../../errors/pubnub-error';
 import { HandshakingState } from './handshaking';
 import { UnsubscribedState } from './unsubscribed';
 import * as Subscription from '../../core/types/api/subscription';
@@ -11,7 +11,7 @@ export type HandshakeFailedStateContext = {
   groups: string[];
   cursor?: Subscription.SubscriptionCursor;
 
-  reason: PubNubError;
+  reason: PubnubError;
 };
 
 export const HandshakeFailedState = new State<HandshakeFailedStateContext, Events, Effects>('HANDSHAKE_FAILED');

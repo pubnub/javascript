@@ -1,4 +1,4 @@
-import { PubNubError } from '../../models/PubNubError';
+import { PubnubError } from '../../errors/pubnub-error';
 import { createEvent, MapOf } from '../core';
 
 export const reconnect = createEvent('RECONNECT', () => ({}));
@@ -18,7 +18,7 @@ export const leftAll = createEvent('LEFT_ALL', () => ({}));
 
 export const heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', (statusCode: number) => ({ statusCode }));
 
-export const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error: PubNubError) => error);
+export const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error: PubnubError) => error);
 
 export const heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', () => ({}));
 

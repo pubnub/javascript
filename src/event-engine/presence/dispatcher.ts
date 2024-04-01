@@ -2,7 +2,7 @@ import { PrivateClientConfiguration } from '../../core/interfaces/configuration'
 import { asyncHandler, Dispatcher, Engine } from '../core';
 import PNOperations from '../../core/constants/operations';
 import * as Presence from '../../core/types/api/presence';
-import { PubNubError } from '../../models/PubNubError';
+import { PubnubError } from '../../errors/pubnub-error';
 import { Payload } from '../../core/types/api';
 import * as effects from './effects';
 import * as events from './events';
@@ -39,7 +39,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
           });
           engine.transition(events.heartbeatSuccess(200));
         } catch (e) {
-          if (e instanceof PubNubError) {
+          if (e instanceof PubnubError) {
             return engine.transition(events.heartbeatFailure(e));
           }
         }
@@ -95,7 +95,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
               return;
             }
 
-            if (e instanceof PubNubError) {
+            if (e instanceof PubnubError) {
               return engine.transition(events.heartbeatFailure(e));
             }
           }
