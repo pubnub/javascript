@@ -312,7 +312,7 @@ export type UserConfiguration = {
    * If the SDK is running as part of another SDK built atop of it, allow a custom `pnsdk` with
    * name and version.
    */
-  sdkName: string;
+  sdkName?: string;
 
   /**
    * If the SDK is operated by a partner, allow a custom `pnsdk` item for them.

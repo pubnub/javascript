@@ -2,7 +2,7 @@
 /* eslint no-console: 0, object-shorthand: 0 */
 
 import assert from 'assert';
-import PubNub from '../../../src/node/index';
+import PubNub from '../../../src/node/index.ts';
 
 describe('components/config', () => {
   describe('AuthKey parameter', () => {
@@ -11,7 +11,7 @@ describe('components/config', () => {
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         authKey: 'authKey1',
-        uuid: 'myUUID',
+        userId: 'myUUID',
       });
       assert.equal(pubnub.getAuthKey(), 'authKey1');
       pubnub.setAuthKey('authKey2');

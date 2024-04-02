@@ -1,7 +1,7 @@
 import {
-  UserConfiguration,
-  ExtendedConfiguration,
   setDefaults as setBaseDefaults,
+  ExtendedConfiguration,
+  UserConfiguration,
 } from '../core/interfaces/configuration';
 
 /**

@@ -8,11 +8,11 @@ import { PubNubFileParameters } from '../file/modules/react-native';
 import TokenManager from '../core/components/token_manager';
 import { PubNubMiddleware } from '../transport/middleware';
 import { decode } from '../core/components/base64_codec';
-import Crypto from '../core/components/cryptography';
 import PubNubFile from '../file/modules/react-native';
 import { PubNubConfiguration } from './configuration';
+import Crypto from '../core/components/cryptography';
 import { PubNubCore } from '../core/pubnub-common';
-import { setDefaults } from '../web/configuration';
+import { setDefaults } from './configuration';
 import Cbor from '../cbor/common';
 
 global.Buffer = global.Buffer || Buffer;

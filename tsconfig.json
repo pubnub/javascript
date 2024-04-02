@@ -4,17 +4,19 @@
     "target": "ES6",
     "module": "ES6",
     "moduleResolution": "Node",
-    "esModuleInterop": true,
     "allowJs": true,
     "noEmitOnError": true,
     "strict": true,
+    "esModuleInterop": true,
     "outDir": "./lib",
-    "downlevelIteration": true
+    "downlevelIteration": true,
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/titanium",
+    "src/transport/titanium-transport.ts",
   ]
 }

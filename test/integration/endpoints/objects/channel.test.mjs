@@ -2,7 +2,7 @@ import nock from 'nock';
 import utils from '../../../utils';
 import PubNub from '../../../../src/node/index';
 
-import { asResponse, allChannels, channel1 } from './fixtures';
+import { asResponse, allChannels, channel1 } from './fixtures.mjs';
 
 describe('objects channel', () => {
   const SUBSCRIBE_KEY = 'mySubKey';

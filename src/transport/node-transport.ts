@@ -39,8 +39,8 @@ export class NodeTransport implements Transport {
    * @returns Transport for performing network requests.
    */
   constructor(
-    private keepAlive: boolean = false,
-    private keepAliveSettings: TransportKeepAlive = { timeout: 30000 },
+    private readonly keepAlive: boolean = false,
+    private readonly keepAliveSettings: TransportKeepAlive = { timeout: 30000 },
     private readonly logVerbosity: boolean = false,
   ) {}
 
@@ -189,8 +189,8 @@ export class NodeTransport implements Transport {
   /**
    * Log out request processing progress and result.
    *
-   * @param request - Platform-specific
-   * @param [elapsed] - How many time passed since request processing started.
+   * @param request - Platform-specific request object.
+   * @param [elapsed] - How many times passed since request processing started.
    * @param [body] - Service response (if available).
    */
   protected logRequestProcessProgress(request: Request, elapsed?: number, body?: ArrayBuffer) {

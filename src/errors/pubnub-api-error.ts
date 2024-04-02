@@ -47,9 +47,15 @@ export class PubNubAPIError extends Error {
       errorName = error.name;
     }
 
-    if (errorName === 'AbortError') {
+    if (errorName === 'AbortError' || message.indexOf('Aborted') !== -1) {
       category = StatusCategory.PNCancelledCategory;
       message = 'Request cancelled';
+    } else if (message.indexOf('timeout') !== -1) {
+      category = StatusCategory.PNTimeoutCategory;
+      message = 'Request timeout';
+    } else if (message.indexOf('network') !== -1) {
+      category = StatusCategory.PNNetworkIssuesCategory;
+      message = 'Network issues';
     } else if (errorName === 'FetchError') {
       const errorCode = (error as Record<string, string>).code;
 

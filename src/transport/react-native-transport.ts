@@ -4,9 +4,9 @@
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { TransportResponse } from '../core/types/transport-response';
+import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { Transport } from '../core/interfaces/transport';
 import { queryStringFromObject } from '../core/utils';
-import { PubNubAPIError } from '../errors/pubnub-api-error';
 
 /**
  * Class representing a fetch-based React Native transport provider.

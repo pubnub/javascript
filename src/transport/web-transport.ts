@@ -77,13 +77,6 @@ export class WebTransport implements Transport {
    * Complete PubNub Web Worker setup.
    */
   private setupWorker() {
-    // this.worker = new Worker(
-    //   URL.createObjectURL(new Blob([WEB_WORKER_PLACEHOLDER], { type: 'application/javascript' })),
-    //   {
-    //     name: '/pubnub',
-    //     type: 'module',
-    //   },
-    // );
     this.worker = new Worker(WEB_WORKER_PLACEHOLDER, {
       name: '/pubnub',
       type: 'module',
@@ -120,7 +113,8 @@ export class WebTransport implements Transport {
           if (data.error) {
             if (data.error.type === 'NETWORK_ISSUE') category = StatusCategory.PNNetworkIssuesCategory;
             else if (data.error.type === 'TIMEOUT') category = StatusCategory.PNTimeoutCategory;
-            message = data.error.message;
+            else if (data.error.type === 'ABORTED') category = StatusCategory.PNCancelledCategory;
+            message = `${data.error.message} (${data.identifier})`;
           }
           // Handle service error response.
           else if (data.response) {
@@ -151,18 +145,14 @@ export class WebTransport implements Transport {
   private logRequestProgress(information: PubNubWebWorker.RequestSendingProgress) {
     if (information.type === 'request-progress-start') {
       console.log('<<<<<');
-      console.log(`[${information.timestamp}]`, '\n', information.url, '\n', JSON.stringify(information.query ?? {}));
+      console.log(`[${information.timestamp}] ${information.url}\n${JSON.stringify(information.query ?? {})}`);
       console.log('-----');
     } else {
       console.log('>>>>>>');
       console.log(
-        `[${information.timestamp} / ${information.duration}]`,
-        '\n',
-        information.url,
-        '\n',
-        JSON.stringify(information.query ?? {}),
-        '\n',
-        information.response,
+        `[${information.timestamp} / ${information.duration}] ${information.url}\n${JSON.stringify(
+          information.query ?? {},
+        )}\n${information.response}`,
       );
       console.log('-----');
     }

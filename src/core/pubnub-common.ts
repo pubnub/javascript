@@ -988,7 +988,7 @@ export class PubNubCore<
     });
 
     this.sendRequest(request, (status, result) => {
-      if (this.subscriptionManager && this.subscriptionManager.abort === request.abort)
+      if (this.subscriptionManager && this.subscriptionManager.abort?.identifier === request.requestIdentifier)
         this.subscriptionManager.abort = null;
 
       callback(status, result);
@@ -1000,7 +1000,13 @@ export class PubNubCore<
      * **Note:** Had to be done after scheduling because transport provider return cancellation
      * controller only when schedule new request.
      */
-    if (this.subscriptionManager) this.subscriptionManager.abort = request.abort;
+    if (this.subscriptionManager) {
+      // Creating identifiable abort caller.
+      const callableAbort = () => request.abort();
+      callableAbort.identifier = request.requestIdentifier;
+
+      this.subscriptionManager.abort = callableAbort;
+    }
   }
 
   /**

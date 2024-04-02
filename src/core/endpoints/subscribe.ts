@@ -614,6 +614,11 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
           type: PubNubEventType.Files,
           data: this.fileFromEnvelope(envelope),
         };
+      } else if (eventType == PubNubEventType.Message) {
+        return {
+          type: PubNubEventType.Message,
+          data: this.messageFromEnvelope(envelope),
+        };
       } else if (eventType === PubNubEventType.Presence) {
         return {
           type: PubNubEventType.Presence,

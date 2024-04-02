@@ -2,7 +2,7 @@ import nock from 'nock';
 import utils from '../../../utils';
 import PubNub from '../../../../src/node/index';
 
-import { asResponse, allUsers, user1 } from './fixtures';
+import { asResponse, allUsers, user1 } from './fixtures.mjs';
 
 describe('objects UUID', () => {
   const SUBSCRIBE_KEY = 'mySubKey';

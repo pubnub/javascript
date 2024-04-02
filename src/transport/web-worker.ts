@@ -312,6 +312,7 @@ const sendRequestEventHandler = (req: TransportRequest) => {
         reject(new Error('Request timeout'));
       }, req.timeout * 1000);
     });
+
     if (logVerbosity) notifyRequestProcessing('start', request, timestamp, req.queryParameters);
 
     Promise.race([

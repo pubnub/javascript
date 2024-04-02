@@ -10,9 +10,9 @@ import { ReconnectionManager } from './reconnection_manager';
 import * as Subscription from '../types/api/subscription';
 import { ListenerManager } from './listener_manager';
 import StatusCategory from '../constants/categories';
+import Categories from '../constants/categories';
 import * as Presence from '../types/api/presence';
 import DedupingManager from './deduping_manager';
-import Categories from '../constants/categories';
 import { PubNubCore } from '../pubnub-common';
 import EventEmitter from './eventEmitter';
 
@@ -112,7 +112,17 @@ export class SubscriptionManager {
    *
    * **Note:** Reference updated with each subscribe call.
    */
-  private _subscribeAbort?: (() => void) | null;
+  private _subscribeAbort?: {
+    /**
+     * Request abort caller.
+     */
+    (): void;
+
+    /**
+     * Abort controller owner identifier.
+     */
+    identifier: string;
+  } | null;
 
   constructor(
     private readonly configuration: PrivateClientConfiguration,
@@ -159,7 +169,11 @@ export class SubscriptionManager {
     return Object.keys(this.channelGroups);
   }
 
-  set abort(call: (() => void) | null) {
+  get abort() {
+    return this._subscribeAbort;
+  }
+
+  set abort(call: typeof this._subscribeAbort) {
     this._subscribeAbort = call;
   }
   // endregion
@@ -346,7 +360,12 @@ export class SubscriptionManager {
   private processSubscribeResponse(status: Status, result: Subscription.SubscriptionResponse | null) {
     if (status.error) {
       // Ignore aborted request.
-      if (typeof status.errorData === 'object' && 'name' in status.errorData && status.errorData.name === 'AbortError')
+      if (
+        (typeof status.errorData === 'object' &&
+          'name' in status.errorData &&
+          status.errorData.name === 'AbortError') ||
+        status.category === StatusCategory.PNCancelledCategory
+      )
         return;
 
       if (status.category === Categories.PNTimeoutCategory) {

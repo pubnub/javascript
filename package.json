@@ -8,15 +8,15 @@
     "build:web": "rollup -c rollup.config.js --bundleConfigAsCjs",
     "build:node": "tsc -p tsconfig.json",
     "test": "npm run test:web && npm run test:node",
-    "test:web": "karma start ./karma/web.config.js",
+    "test:web": "karma start karma/web.config.cjs",
     "test:node": "ts-mocha -p tsconfig.mocha.json --config .mocharc.yml",
     "clean": "rimraf lib dist upload",
     "lint": "eslint \"src/**/*\" --config .eslintrc.cjs",
     "ci": "npm run clean && npm run build && npm run lint && npm run test",
-    "ci:web": "npm run clean && npm run build && npm run lint && npm run test:web",
-    "ci:node": "npm run clean && npm run build && npm run lint && npm run test:node",
-    "test:feature:objectsv2:node": "ts-mocha -p tsconfig.mocha.json --no-config --require test/setup.cjs --reporter spec test/dist/objectsv2.test.js",
-    "test:feature:fileupload:node": "ts-mocha -p tsconfig.mocha.json --no-config --require test/setup.cjs --reporter spec test/feature/file_upload.node.test.js",
+    "ci:web": "npm run clean && npm run build:web && npm run lint && npm run test:web",
+    "ci:node": "npm run clean && npm run build:node && npm run lint && npm run test:node",
+    "test:feature:objectsv2:node": "ts-mocha -p tsconfig.mocha.json --no-config --require test/setup.ts --reporter spec test/dist/objectsv2.test.js",
+    "test:feature:fileupload:node": "ts-mocha -p tsconfig.mocha.json --no-config --require test/setup.ts --reporter spec test/feature/file_upload.node.test.js",
     "test:contract": "npm run test:contract:prepare && npm run test:contract:start",
     "test:contract:prepare": "rimraf test/specs && git clone --branch master --depth 1 git@github.com:pubnub/sdk-specifications.git test/specs",
     "test:contract:start": "cucumber-js -p default --tags 'not @na=js'",
@@ -35,7 +35,6 @@
   "metro": "./lib/react_native/index.js",
   "nativescript": "./lib/nativescript/index.js",
   "browser": "./dist/web/pubnub.min.js",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
@@ -90,7 +89,7 @@
     "eslint-plugin-mocha": "^10.4.1",
     "eslint-plugin-prettier": "^5.1.3",
     "js-yaml": "^3.13.1",
-    "karma": "^5.0.3",
+    "karma": "6.4.3",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-mocha": "^2.0.1",
@@ -98,7 +97,7 @@
     "karma-sinon-chai": "^2.0.2",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-spec-reporter": "0.0.32",
-    "mocha": "^9.2.1",
+    "mocha": "10.4.0",
     "nock": "^9.6.1",
     "phantomjs-prebuilt": "^2.1.16",
     "prettier": "^3.2.5",
@@ -109,13 +108,13 @@
     "sinon": "^7.5.0",
     "sinon-chai": "^3.3.0",
     "source-map-support": "^0.5.21",
-    "ts-mocha": "^9.0.2",
+    "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.3",
     "underscore": "^1.9.2"
   },
   "license": "SEE LICENSE IN LICENSE",
   "engine": {
-    "node": ">=0.8"
+    "node": ">=18"
   }
 }

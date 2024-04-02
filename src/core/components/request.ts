@@ -21,6 +21,11 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
   private _cancellationController: CancellationController | null;
 
   /**
+   * Unique request identifier.
+   */
+  requestIdentifier = uuidGenerator.createUUID();
+
+  /**
    * Construct base request.
    *
    * Constructed request by default won't be cancellable and performed using `GET` HTTP method.
@@ -95,7 +100,7 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
       queryParameters: this.queryParameters,
       cancellable: this.params?.cancellable ?? false,
       timeout: 10000,
-      identifier: uuidGenerator.createUUID(),
+      identifier: this.requestIdentifier,
     };
 
     // Attach headers (if required).
